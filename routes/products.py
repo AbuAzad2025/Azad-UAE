@@ -320,9 +320,6 @@ def import_products():
                             # Auto-generate barcode if missing (using SKU or random)
                             barcode = sku 
                         
-                        # Check existing (per-tenant)
-                        from utils.tenanting import get_active_tenant_id
-
                         tid = get_active_tenant_id(current_user)
                         dup_q = Product.query.filter(
                             (Product.sku == sku) | (Product.barcode == barcode)
@@ -845,7 +842,6 @@ def edit(id):
             if current_user.can_see_costs():
                 new_cost = safe_float(request.form.get('cost_price'), default=0)
                 if new_cost != (product.cost_price or 0):
-                    from services.stock_service import StockService
                     total_stock = StockService.get_product_stock(product.id)
                     if total_stock > 0:
                         if _wants_json():

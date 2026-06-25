@@ -223,7 +223,9 @@ Sitemap: {base_url}/sitemap.xml
 # معدل الزحف (Crawl-delay)
 Crawl-delay: 1
 """
-    
+    return Response(robots_content, mimetype='text/plain')
+
+
 @public_bp.route('/suspended/<int:tenant_id>')
 def tenant_suspend_page(tenant_id):
     """Public page shown when a tenant is suspended."""

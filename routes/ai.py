@@ -525,7 +525,7 @@ def _user_can_ai_execute_actions(user):
 def _process_user_action(message, user):
     """معالجة أوامر المستخدم المباشرة - جميع عمليات النظام"""
     try:
-        from models import Customer, Product, Sale, SaleLine, Supplier, Purchase, PurchaseLine, Payment, Expense, Cheque
+        from models import Customer, Product, Sale, SaleLine, Supplier, Purchase, PurchaseLine, Payment, Expense, Cheque, Warehouse
         from extensions import db
         from datetime import datetime, timezone
         from decimal import Decimal
@@ -957,8 +957,6 @@ def _process_user_action(message, user):
                 
                 try:
                     from models.customer import Customer
-                    from utils.tenanting import assign_tenant_id
-                    
                     # إنشاء العميل الجديد
                     customer = Customer(
                         name=data['name'],
@@ -1300,8 +1298,6 @@ def _process_user_action(message, user):
                     total_amount = data['product_price'] * data['quantity']
                     
                     from models.sale import Sale, SaleLine
-                    from models.warehouse import Warehouse
-                    from utils.tenanting import assign_tenant_id
                     from utils.helpers import generate_number
                     
                     # إنشاء الفاتورة
@@ -1463,7 +1459,6 @@ def _process_user_action(message, user):
                     
                     # تسجيل الدفعة
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
@@ -1606,7 +1601,6 @@ def _process_user_action(message, user):
                     
                     # تسجيل الدفعة (سالبة لأننا نعطي للعميل)
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
@@ -1735,7 +1729,6 @@ def _process_user_action(message, user):
                     from models.expense import Expense
                     
                     # إنشاء المصروف الجديد
-                    from utils.tenanting import assign_tenant_id
                     from utils.helpers import generate_number
                     expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=getattr(current_user, 'branch_id', None))
                     expense = Expense(
@@ -1891,8 +1884,6 @@ def _process_user_action(message, user):
                 
                 try:
                     from models.supplier import Supplier
-                    from utils.tenanting import assign_tenant_id
-                    
                     supplier = Supplier(
                         name=data['name'],
                         phone=data['phone'],
@@ -2039,8 +2030,6 @@ def _process_user_action(message, user):
                     
                     from models.purchase import Purchase, PurchaseLine
                     from models.product import Product
-                    from models.warehouse import Warehouse
-                    from utils.tenanting import assign_tenant_id
                     from utils.helpers import generate_number
                     
                     purchase_number = generate_number('P', Purchase, 'purchase_number', branch_id=getattr(current_user, 'branch_id', None))
@@ -2268,7 +2257,6 @@ def _process_user_action(message, user):
         
         # ========== نظام الحوار التفاعلي للرقم 1 (عرض المستودعات) ==========
         if msg_lower.strip() == '1' and ctx.get('last_action') == 'مستودع':
-            from models.warehouse import Warehouse
             warehouses = Warehouse.query.filter_by(is_active=True, tenant_id=tid).all()
             
             del ctx
@@ -2985,7 +2973,6 @@ http://localhost:5000/ai/assistant
                     category = parts[2] if len(parts) > 2 else 'عام'
                     
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=getattr(current_user, 'branch_id', None))
                     expense = Expense(
                         expense_number=expense_number,
@@ -3030,7 +3017,6 @@ http://localhost:5000/ai/assistant
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
@@ -3112,7 +3098,6 @@ http://localhost:5000/ai/assistant
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
@@ -3199,7 +3184,6 @@ http://localhost:5000/ai/assistant
                     
                     # تسجيل العملية كدفعة سالبة
                     from utils.helpers import generate_number
-                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,

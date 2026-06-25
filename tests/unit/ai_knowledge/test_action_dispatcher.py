@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -29,38 +29,38 @@ class TestHelpers:
             g.active_tenant_id = 99
             assert _get_active_tenant_id() == 99
 
-    def test_get_active_tenant_from_user(self, mocker):
-        mocker.patch(
+    def test_get_active_tenant_from_user(self):
+        with patch(
             'ai_knowledge.action_dispatcher.current_user',
             SimpleNamespace(is_authenticated=True, tenant_id=5),
-        )
-        assert _get_active_tenant_id() == 5
+        ):
+            assert _get_active_tenant_id() == 5
 
-    def test_has_permission_true(self, mocker):
+    def test_has_permission_true(self):
         user = SimpleNamespace(is_authenticated=True, has_permission=MagicMock(return_value=True))
-        mocker.patch('ai_knowledge.action_dispatcher.current_user', user)
-        assert _has_permission('manage_sales') is True
+        with patch('ai_knowledge.action_dispatcher.current_user', user):
+            assert _has_permission('manage_sales') is True
 
-    def test_has_permission_failure_returns_false(self, mocker):
+    def test_has_permission_failure_returns_false(self):
         user = MagicMock(is_authenticated=True)
         user.has_permission.side_effect = RuntimeError('x')
-        mocker.patch('ai_knowledge.action_dispatcher.current_user', user)
-        assert _has_permission('manage_sales') is False
+        with patch('ai_knowledge.action_dispatcher.current_user', user):
+            assert _has_permission('manage_sales') is False
 
-    def test_is_owner(self, mocker):
+    def test_is_owner(self):
         user = SimpleNamespace(is_owner=True)
-        mocker.patch('ai_knowledge.action_dispatcher.current_user', user)
-        mocker.patch('ai_knowledge.action_dispatcher._has_permission', return_value=False)
-        assert _is_owner() is True
+        with patch('ai_knowledge.action_dispatcher.current_user', user), \
+             patch('ai_knowledge.action_dispatcher._has_permission', return_value=False):
+            assert _is_owner() is True
 
-    def test_audit_logs_warning_on_failure(self, mocker):
-        mocker.patch('ai_knowledge.action_dispatcher.LoggingCore.log_audit', side_effect=RuntimeError())
-        _audit('create', 'Customer', 1, {'name': 'x'})
+    def test_audit_logs_warning_on_failure(self):
+        with patch('ai_knowledge.action_dispatcher.LoggingCore.log_audit', side_effect=RuntimeError()):
+            _audit('create', 'Customer', 1, {'name': 'x'})
 
-    def test_log_ai_error_rollback(self, mocker):
-        mocker.patch('ai_knowledge.action_dispatcher.db.session')
-        mocker.patch('models.ErrorAuditLog', side_effect=RuntimeError())
-        _log_ai_error('test', 'boom')
+    def test_log_ai_error_rollback(self):
+        with patch('ai_knowledge.action_dispatcher.db.session'), \
+             patch('models.ErrorAuditLog', side_effect=RuntimeError()):
+            _log_ai_error('test', 'boom')
 
 
 class TestActionResult:
@@ -124,9 +124,9 @@ class TestParseChatAction:
     def test_profit_summary(self, dispatcher):
         assert dispatcher.parse_chat_action('تقرير الأرباح')[0] == 'profit_summary'
 
-    def test_greeting(self, dispatcher, mocker):
-        mocker.patch('ai_knowledge.action_dispatcher.current_user', SimpleNamespace(full_name='Ali'))
-        assert dispatcher.parse_chat_action('مرحبا')[0] == 'greeting'
+    def test_greeting(self, dispatcher):
+        with patch('ai_knowledge.action_dispatcher.current_user', SimpleNamespace(full_name='Ali')):
+            assert dispatcher.parse_chat_action('مرحبا')[0] == 'greeting'
 
     def test_help(self, dispatcher):
         assert dispatcher.parse_chat_action('مساعدة')[0] == 'help'
@@ -143,38 +143,38 @@ class TestDispatch:
         result = action_dispatcher.dispatch('not_real', {})
         assert result.success is False
 
-    def test_permission_denied(self, mocker):
-        mocker.patch('ai_knowledge.action_dispatcher._is_owner', return_value=False)
-        mocker.patch('ai_knowledge.action_dispatcher._has_permission', return_value=False)
-        mocker.patch('ai_knowledge.action_dispatcher._log_ai_error')
-        result = action_dispatcher.dispatch('create_customer', {'name': 'x'})
-        assert result.success is False
-        assert result.needs_permission
+    def test_permission_denied(self):
+        with patch('ai_knowledge.action_dispatcher._is_owner', return_value=False), \
+             patch('ai_knowledge.action_dispatcher._has_permission', return_value=False), \
+             patch('ai_knowledge.action_dispatcher._log_ai_error'):
+            result = action_dispatcher.dispatch('create_customer', {'name': 'x'})
+            assert result.success is False
+            assert result.needs_permission
 
-    def test_create_customer_success(self, mocker, mock_ai_user):
-        mocker.patch('ai_knowledge.action_dispatcher._get_active_tenant_id', return_value=1)
-        mocker.patch('ai_knowledge.action_dispatcher._is_owner', return_value=True)
+    def test_create_customer_success(self, mock_ai_user):
         customer = MagicMock(id=10)
-        Customer = mocker.patch('models.Customer')
-        Customer.return_value = customer
-        mocker.patch('ai_knowledge.action_dispatcher.db.session')
-        mocker.patch('ai_knowledge.action_dispatcher._audit')
-        result = action_dispatcher.dispatch('create_customer', {'name': 'Acme'})
-        assert result.success is True
+        with patch('ai_knowledge.action_dispatcher._get_active_tenant_id', return_value=1), \
+             patch('ai_knowledge.action_dispatcher._is_owner', return_value=True), \
+             patch('models.Customer') as Customer, \
+             patch('ai_knowledge.action_dispatcher.db.session'), \
+             patch('ai_knowledge.action_dispatcher._audit'):
+            Customer.return_value = customer
+            result = action_dispatcher.dispatch('create_customer', {'name': 'Acme'})
+            assert result.success is True
 
-    def test_list_customers_search_escaped(self, mocker, mock_ai_user):
-        mocker.patch('ai_knowledge.action_dispatcher._get_active_tenant_id', return_value=1)
-        mocker.patch('ai_knowledge.action_dispatcher._is_owner', return_value=True)
+    def test_list_customers_search_escaped(self, mock_ai_user):
         mock_q = MagicMock()
         mock_q.filter_by.return_value = mock_q
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value.limit.return_value.all.return_value = []
-        Product = mocker.patch('models.Customer')
-        Product.query = mock_q
-        Product.name = MagicMock()
-        result = action_dispatcher.dispatch('list_customers', {'search': '%_drop'})
-        assert result.success is True
-        mock_q.filter.assert_called_once()
+        with patch('ai_knowledge.action_dispatcher._get_active_tenant_id', return_value=1), \
+             patch('ai_knowledge.action_dispatcher._is_owner', return_value=True), \
+             patch('models.Customer') as Customer:
+            Customer.query = mock_q
+            Customer.name = MagicMock()
+            result = action_dispatcher.dispatch('list_customers', {'search': '%_drop'})
+            assert result.success is True
+            mock_q.filter.assert_called_once()
 
     def test_registered_actions_nonempty(self):
         assert 'create_customer' in action_dispatcher.get_registered_actions()
