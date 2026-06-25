@@ -338,13 +338,16 @@ class AIService:
         """جلب معلومات المستخدم (للمالك فقط) — بدون كشف password_hash."""
         from models import User
 
+        session = db.session
+        user_q = session.query(User)
+
         if username:
             term = username.strip()
-            user = User.query.filter(
+            user = user_q.filter(
                 or_(User.username == term, User.email == term)
             ).first()
             if not user:
-                user = User.query.filter(
+                user = session.query(User).filter(
                     or_(
                         AIService._ilike_contains(User.username, term),
                         AIService._ilike_contains(User.email, term),
@@ -363,7 +366,7 @@ class AIService:
             )
             return {'success': True, 'user': summary}
 
-        users = User.query.all()
+        users = session.query(User).all()
         return {
             'success': True,
             'users': [AIService._user_summary(u) for u in users],

@@ -29,12 +29,6 @@ def _app_context(app):
 
 
 @pytest.fixture(autouse=True)
-def _transaction_rollback(db_session):
-    yield
-    db_session.rollback()
-
-
-@pytest.fixture(autouse=True)
 def _reset_ai_singletons():
     saved = {a: getattr(AIService, a) for a in _SINGLETON_ATTRS}
     for a in _SINGLETON_ATTRS:
@@ -133,6 +127,8 @@ class TestUserInfoForOwner:
         assert result['success'] is False
 
     def test_user_found_no_password_hash(self, db_session, sample_user):
+        db_session.refresh(sample_user)
+        assert db.session.query(User).filter_by(id=sample_user.id).first() is not None
         result = AIService.get_user_info_for_owner(sample_user.username)
         assert result['success'] is True
         assert 'password_hash' not in result['user']
