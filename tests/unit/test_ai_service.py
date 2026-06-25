@@ -22,6 +22,31 @@ _SINGLETON_ATTRS = (
 )
 
 
+def _mock_session_get(mocker, mapping):
+    """Patch db.session.get; mapping keys are (model_cls, pk)."""
+    def _get(model, pk, *args, **kwargs):
+        return mapping.get((model, pk))
+    mocker.patch.object(db.session, 'get', side_effect=_get)
+
+
+def _mock_customer_analysis_queries(mocker, *, sales=None, payments=None):
+    """Patch db.session.query for Sale/Payment paths in customer analysis."""
+    from models import Payment
+
+    sales = [] if sales is None else sales
+    payments = [] if payments is None else payments
+
+    def _query(model):
+        q = MagicMock(name=f'query_{getattr(model, "__name__", model)}')
+        if model is Sale:
+            q.options.return_value.filter.return_value.all.return_value = sales
+        elif model is Payment:
+            q.filter.return_value.all.return_value = payments
+        return q
+
+    mocker.patch.object(db.session, 'query', side_effect=_query)
+
+
 @pytest.fixture(autouse=True)
 def _app_context(app):
     with app.app_context():
@@ -219,29 +244,22 @@ class TestCustomerAnalysis:
     def test_missing_customer(self):
         assert AIService.analyze_customer_behavior(999999) is None
 
-    def test_risk_levels(self, mocker):
-        customer = MagicMock()
-        customer.id = 1
-        customer.get_balance_aed.return_value = Decimal('1000')
-        mocker.patch.object(Customer, 'query')
-        Customer.query.get.return_value = customer
+    def test_risk_levels(self, mocker, sample_customer):
+        sample_customer.get_balance_aed = MagicMock(return_value=Decimal('1000'))
         sale = MagicMock(
             total_amount=Decimal('100'),
             created_at=datetime.now(timezone.utc),
-            customer=customer,
+            customer=sample_customer,
             lines=[],
         )
         payment = MagicMock(
             amount=Decimal('50'),
             created_at=datetime.now(timezone.utc) + timedelta(days=2),
-            customer_id=1,
+            customer_id=sample_customer.id,
         )
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = [payment]
-        result = AIService.analyze_customer_behavior(1)
+        _mock_session_get(mocker, {(Customer, sample_customer.id): sample_customer})
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
+        result = AIService.analyze_customer_behavior(sample_customer.id)
         assert result['risk_level'] == 'high'
 
     def test_get_risk_recommendation_unknown(self):
@@ -258,11 +276,7 @@ class TestCustomerAnalysis:
         pay_dt.__sub__ = MagicMock(side_effect=TypeError('bad'))
         pay_dt.__ge__ = MagicMock(return_value=True)
         payment = MagicMock(amount=Decimal('50'), created_at=pay_dt)
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = [payment]
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal('0'))
         result = AIService._perform_analysis(sample_customer)
         assert result['avg_payment_delay_days'] == 0
@@ -1006,11 +1020,7 @@ class TestCoverageGaps:
             amount=Decimal('200'),
             created_at=datetime.now(timezone.utc),
         )
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = [payment]
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal('300'))
         result = AIService._perform_analysis(sample_customer)
         assert result['risk_level'] == 'medium'
@@ -1018,11 +1028,7 @@ class TestCoverageGaps:
     def test_perform_analysis_skip_sale_without_created_at(self, mocker, sample_customer):
         sale = MagicMock(total_amount=Decimal('100'), created_at=None, customer=sample_customer, lines=[])
         payment = MagicMock(amount=Decimal('10'), created_at=datetime.now(timezone.utc))
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = [payment]
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal('0'))
         assert AIService._perform_analysis(sample_customer)['avg_payment_delay_days'] == 0
 
@@ -1034,11 +1040,7 @@ class TestCoverageGaps:
             lines=[],
         )
         payment = MagicMock(amount=Decimal('10'), created_at=None)
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = [payment]
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[payment])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal('0'))
         AIService._perform_analysis(sample_customer)
 
@@ -1244,11 +1246,7 @@ class TestCoverageGaps:
     def test_normalize_timezone_aware_datetime(self, mocker, sample_customer):
         aware = datetime.now(timezone.utc)
         sale = MagicMock(total_amount=Decimal('100'), created_at=aware, customer=sample_customer, lines=[])
-        mocker.patch.object(Sale, 'query')
-        Sale.query.options.return_value.filter.return_value.all.return_value = [sale]
-        from models import Payment
-        mocker.patch.object(Payment, 'query')
-        Payment.query.filter.return_value.all.return_value = []
+        _mock_customer_analysis_queries(mocker, sales=[sale], payments=[])
         sample_customer.get_balance_aed = MagicMock(return_value=Decimal('0'))
         AIService._perform_analysis(sample_customer)
 

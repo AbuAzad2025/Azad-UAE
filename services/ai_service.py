@@ -473,7 +473,8 @@ class AIService:
                 return value.replace(tzinfo=timezone.utc)
             return value
 
-        sales = Sale.query.options(
+        session = db.session
+        sales = session.query(Sale).options(
             joinedload(Sale.customer),
             joinedload(Sale.lines)
         ).filter(
@@ -482,7 +483,7 @@ class AIService:
             Sale.created_at >= last_90_days
         ).all()
         
-        payments = Payment.query.filter(
+        payments = session.query(Payment).filter(
             Payment.customer_id == customer.id,
             Payment.created_at != None,  # noqa: E711
             Payment.created_at >= last_90_days
