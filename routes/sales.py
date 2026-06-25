@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
-from extensions import db, csrf, limiter
-from models import Sale, SaleLine, Customer, Product, InvoiceSettings
+from extensions import db, limiter
+from models import Sale, Customer, Product, InvoiceSettings
 from services.sale_service import SaleService
 from services.stock_service import StockService
-from services.currency_service import CurrencyService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from services.logging_core import LoggingCore
@@ -13,8 +12,7 @@ from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_act
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
 from services.store_service import StoreService
-from utils.gl_tenant import reverse_document_gl
-from utils.gl_reference_types import GLRef, delete_entries_by_ref
+from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
 
@@ -33,12 +31,14 @@ def index():
     
     query = tenant_query(Sale)
     
-    # إخفاء المبيعات المؤرشفة
     from models import ArchivedRecord
     from sqlalchemy import select
-    archived_sales = select(ArchivedRecord.record_id).filter(
-        ArchivedRecord.table_name == 'sales'
-    ).scalar_subquery()
+    tid = get_active_tenant_id(current_user)
+    archived_filter = ArchivedRecord.table_name == 'sales'
+    archived_sales_q = select(ArchivedRecord.record_id).filter(archived_filter)
+    if tid is not None:
+        archived_sales_q = archived_sales_q.filter(ArchivedRecord.tenant_id == tid)
+    archived_sales = archived_sales_q.scalar_subquery()
     query = query.filter(~Sale.id.in_(archived_sales))
     
     if search:
@@ -164,7 +164,8 @@ def create():
                 notes = (notes or '') + f'\n[كوبون] {coupon_code}'
             if exchange_rate_manual and exchange_rate_server and user_exchange_rate:
                 if user_exchange_rate < exchange_rate_server:
-                    audit_note = f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {exchange_rate_diff:.2f}%)"
+                    diff_pct = exchange_rate_diff if exchange_rate_diff is not None else 0
+                    audit_note = f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {diff_pct:.2f}%)"
                     notes = (notes or '') + audit_note
             
             payment_amount = request.form.get('payment_amount', type=float, default=0)
@@ -373,7 +374,7 @@ def edit(id):
             
             # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
             sale.notes = request.form.get('notes', '')
-            discount_amount = request.form.get('discount_amount', type=float, default=0)
+            discount_amount = max(0, request.form.get('discount_amount', type=float, default=0) or 0)
             sale.discount_amount = discount_amount
             
             # إعادة حساب الإجماليات
@@ -503,6 +504,10 @@ def delete(id):
     from services.sale_service import SaleService
     
     sale = tenant_get_or_404(Sale, id)
+    from utils.decorators import branch_scope_id
+    scoped_branch_id = branch_scope_id()
+    if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
     
     # منع الحذف المادي للفواتير المؤكدة أو المنفذة مخزنياً — استخدم الإلغاء بدلاً من الحذف
     if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
@@ -564,6 +569,10 @@ def archive(id):
     from services.sale_service import SaleService
     
     sale = tenant_get_or_404(Sale, id)
+    from utils.decorators import branch_scope_id
+    scoped_branch_id = branch_scope_id()
+    if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
     
     try:
         if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
@@ -615,7 +624,7 @@ def restore(id):
 def api_calculate_sale_totals():
     """API لحساب إجماليات فاتورة المبيعات - Backend Calculation"""
     try:
-        from decimal import Decimal
+        from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
         
         data = request.get_json(force=True)
         if not data:
@@ -637,12 +646,12 @@ def api_calculate_sale_totals():
                 price = Decimal(str(line.get('unit_price', 0)))
                 discount_percent = Decimal(str(line.get('discount_percent', 0)))
                 
-                if qty > 0 and price > 0:
+                if qty > 0:
                     line_subtotal = qty * price
                     line_discount = line_subtotal * (discount_percent / Decimal('100'))
                     line_total = line_subtotal - line_discount
                     subtotal += line_total
-            except (ValueError, TypeError, KeyError):
+            except (ValueError, TypeError, KeyError, InvalidOperation):
                 continue
         
         # حساب الإجماليات
@@ -656,21 +665,31 @@ def api_calculate_sale_totals():
             else:
                 taxable_amount = after_discount
                 tax_amount = Decimal('0')
-            total = after_discount
+            total = after_discount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if isinstance(after_discount, Decimal) else after_discount
         else:
-            tax_amount = after_discount * (tax_rate / Decimal('100'))
-            total = after_discount + tax_amount
+            tax_amount = (after_discount * (tax_rate / Decimal('100'))).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            total = (after_discount + tax_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
+        subtotal = subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        positive_lines = 0
+        for line in lines:
+            try:
+                if Decimal(str(line.get('quantity', 0))) > 0:
+                    positive_lines += 1
+            except (InvalidOperation, ValueError, TypeError):
+                continue
         return jsonify({
             'success': True,
             'subtotal': float(subtotal),
             'discount': float(discount_amount),
             'shipping': float(shipping_cost),
             'tax_rate': float(tax_rate),
-            'tax_amount': float(tax_amount),
-            'total': float(total),
+            'tax_amount': float(tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
+            'total': float(total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total),
             'prices_include_vat': prices_include_vat,
-            'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
+            'line_count': positive_lines,
         }), 200
         
     except Exception:

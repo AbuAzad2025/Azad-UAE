@@ -36,6 +36,19 @@ def _resolve_branch_code(branch_code=None, branch_id=None):
     return f'BR{int(branch_id):02d}'
 
 
+def _build_number_pattern(prefix, resolved_branch_code, year):
+    if resolved_branch_code:
+        return f'{prefix}-{resolved_branch_code}-{year}-%'
+    return f'{prefix}-{year}-%'
+
+
+def _parse_sequence_suffix(number_value):
+    try:
+        return int(str(number_value).split('-')[-1])
+    except (TypeError, ValueError):
+        return None
+
+
 def generate_number(
     prefix,
     model,
@@ -48,10 +61,7 @@ def generate_number(
     year = datetime.now().strftime(date_format)
 
     resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
-    if resolved_branch_code:
-        pattern = f'{prefix}-{resolved_branch_code}-{year}-%'
-    else:
-        pattern = f'{prefix}-{year}-%'
+    pattern = _build_number_pattern(prefix, resolved_branch_code, year)
 
     q = db.session.query(model).filter(getattr(model, field_name).like(pattern))
     if tenant_id is not None and hasattr(model, 'tenant_id'):
@@ -61,11 +71,8 @@ def generate_number(
     ).first()
     
     if latest:
-        try:
-            last_number = int(str(getattr(latest, field_name)).split('-')[-1])
-            next_number = last_number + 1
-        except (TypeError, ValueError):
-            next_number = 1
+        last_number = _parse_sequence_suffix(getattr(latest, field_name))
+        next_number = (last_number + 1) if last_number is not None else 1
     else:
         next_number = 1
 
@@ -109,12 +116,9 @@ def generate_number_and_save(
 
 
 def get_next_number(prefix, model_class, number_field='number', branch_code=None, branch_id=None):
-    year = datetime.now().year
+    year = datetime.now().strftime('%Y')
     resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
-    if resolved_branch_code:
-        pattern = f'{prefix}-{resolved_branch_code}-{year}-%'
-    else:
-        pattern = f'{prefix}-{year}-%'
+    pattern = _build_number_pattern(prefix, resolved_branch_code, year)
     
     last_record = db.session.query(model_class).filter(
         getattr(model_class, number_field).like(pattern)
@@ -122,18 +126,12 @@ def get_next_number(prefix, model_class, number_field='number', branch_code=None
         getattr(model_class, number_field).desc()
     ).first()
     
-    if last_record:
-        try:
-            last_num = int(getattr(last_record, number_field).split('-')[-1])
-        except (TypeError, ValueError):
-            last_num = 0
-        if resolved_branch_code:
-            return f'{prefix}-{resolved_branch_code}-{year}-{last_num + 1:04d}'
-        return f'{prefix}-{year}-{last_num + 1:04d}'
+    last_num = _parse_sequence_suffix(getattr(last_record, number_field)) if last_record else None
+    next_num = (last_num + 1) if last_num is not None else 1
 
     if resolved_branch_code:
-        return f'{prefix}-{resolved_branch_code}-{year}-0001'
-    return f'{prefix}-{year}-0001'
+        return f'{prefix}-{resolved_branch_code}-{year}-{next_num:04d}'
+    return f'{prefix}-{year}-{next_num:04d}'
 
 
 def calculate_discount(amount, discount_percent):
@@ -150,6 +148,30 @@ def calculate_vat(amount, vat_rate):
     return (amount * vat_rate / Decimal('100')).quantize(Decimal('0.01'))
 
 
+def _resolve_format_currency_settings():
+    settings_currency = None
+    settings_symbol = None
+    settings_position = None
+    settings_decimals = None
+    try:
+        from models.system_settings import SystemSettings
+        settings = SystemSettings.get_current()
+        settings_currency = (getattr(settings, "default_currency", None) or "").strip() or None
+        settings_symbol = (getattr(settings, "currency_symbol", None) or "").strip() or None
+        settings_position = (getattr(settings, "currency_position", None) or "").strip() or None
+        settings_decimals = getattr(settings, "decimal_places", None)
+    except Exception:
+        pass
+    try:
+        from models.tenant import Tenant
+        tenant = Tenant.get_current()
+        if tenant and tenant.default_currency:
+            settings_currency = settings_currency or tenant.default_currency
+    except Exception:
+        pass
+    return settings_currency, settings_symbol, settings_position, settings_decimals
+
+
 def format_currency(amount, currency=None, lang='ar'):
     if not amount:
         return '0.00'
@@ -158,27 +180,7 @@ def format_currency(amount, currency=None, lang='ar'):
         if isinstance(amount, (int, float)):
             amount = Decimal(str(amount))
 
-        settings_currency = None
-        settings_symbol = None
-        settings_position = None
-        settings_decimals = None
-        try:
-            from models.system_settings import SystemSettings
-            settings = SystemSettings.get_current()
-            settings_currency = (getattr(settings, "default_currency", None) or "").strip() or None
-            settings_symbol = (getattr(settings, "currency_symbol", None) or "").strip() or None
-            settings_position = (getattr(settings, "currency_position", None) or "").strip() or None
-            settings_decimals = getattr(settings, "decimal_places", None)
-        except Exception:
-            pass
-
-        try:
-            from models.tenant import Tenant
-            tenant = Tenant.get_current()
-            if tenant and tenant.default_currency:
-                settings_currency = settings_currency or tenant.default_currency
-        except Exception:
-            pass
+        settings_currency, settings_symbol, settings_position, settings_decimals = _resolve_format_currency_settings()
 
         from utils.currency_utils import get_system_default_currency, get_currency_symbol
         currency = (currency or settings_currency or get_system_default_currency()).upper()

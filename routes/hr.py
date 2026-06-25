@@ -4,7 +4,7 @@ from extensions import db
 from models import Attendance, LeaveRequest, LeaveType, Department, HRContract, Branch, User
 from services.hr_service import HRService
 from utils.decorators import permission_required, branch_scope_id
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 from utils.branching import should_show_all_branch_columns
 
 hr_bp = Blueprint('hr', __name__, url_prefix='/hr')
@@ -24,8 +24,8 @@ def attendance():
         filters['date_to'] = request.args['date_to']
     records = HRService.report_attendance(filters, current_user)
     tid = get_active_tenant_id(current_user)
-    departments = Department.query.filter_by(is_active=True).order_by(Department.name).all()
-    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
+    departments = HRService.list_departments(current_user)
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.full_name).all() if tid else []
     return render_template(
         'hr/attendance.html',
         records=records,
@@ -66,8 +66,8 @@ def leaves_list():
     filters = {k: v for k, v in request.args.items() if v}
     leaves = HRService.list_leaves(filters, current_user)
     tid = get_active_tenant_id(current_user)
-    leave_types = LeaveType.query.filter_by(is_active=True).all()
-    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
+    leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.full_name).all() if tid else []
     return render_template(
         'hr/leave_list.html',
         leaves=leaves,
@@ -87,7 +87,7 @@ def request_leave():
             return redirect(url_for('hr.leaves_list'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
-    leave_types = LeaveType.query.filter_by(is_active=True).all()
+    leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if get_active_tenant_id(current_user) else []
     return render_template('hr/leave_form.html', leave_types=leave_types)
 
 
@@ -95,6 +95,7 @@ def request_leave():
 @login_required
 @permission_required('hr.manage')
 def approve_leave(leave_id):
+    tenant_get_or_404(LeaveRequest, leave_id)
     try:
         HRService.approve_leave(leave_id, current_user)
         flash('تم الموافقة على طلب الإجازة', 'success')
@@ -107,6 +108,7 @@ def approve_leave(leave_id):
 @login_required
 @permission_required('hr.manage')
 def refuse_leave(leave_id):
+    tenant_get_or_404(LeaveRequest, leave_id)
     reason = request.form.get('rejected_reason', '')
     try:
         HRService.refuse_leave(leave_id, current_user, reason)
