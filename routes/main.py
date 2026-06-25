@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from extensions import db
-from models import Sale, Customer, Product, Payment, Receipt, GLAccount, GLJournalLine, User
+from models import Sale, SaleLine, Customer, Product, Payment, Receipt, GLAccount, GLJournalLine, User
 from services.stock_service import StockService
 from utils.decorators import branch_scope_id
 from utils.branching import get_visible_products_query
@@ -99,16 +99,22 @@ def dashboard():
         stats['month_sales_amount'] = float(month_sales[1] or 0)
         
         if current_user.can_see_costs():
-            month_profit_query = db.session.query(
-                func.sum(Sale.amount_aed)
+            profit_expr = func.sum(
+                (SaleLine.unit_price - func.coalesce(SaleLine.cost_price, 0))
+                * SaleLine.quantity
+                * (100 - func.coalesce(SaleLine.discount_percent, 0)) / 100
+            )
+            month_profit_query = db.session.query(profit_expr).select_from(SaleLine).join(
+                Sale, SaleLine.sale_id == Sale.id
             ).filter(
                 func.date(Sale.sale_date) >= month_start,
-                Sale.status == 'confirmed'
+                Sale.status == 'confirmed',
+                Sale.tenant_id == tid,
             )
             if scoped_branch_id is not None:
                 month_profit_query = month_profit_query.filter(Sale.branch_id == scoped_branch_id)
             month_profit = month_profit_query.scalar() or Decimal('0')
-            
+
             stats['month_profit'] = float(month_profit)
         
         total_receivables_query = db.session.query(

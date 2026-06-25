@@ -270,27 +270,36 @@ class BankReconciliationService:
         ملخص المطابقة قبل الإنشاء
         """
         from services.gl_service import GLService
-        
+        from utils.tenanting import tenant_get_or_404
+
+        bank_account = tenant_get_or_404(GLAccount, bank_account_id)
+        tid = bank_account.tenant_id
+
         statement = GLService.get_account_statement(
             bank_account_id,
             date_from=period_start,
             date_to=period_end
         )
         
-        # الشيكات المعلقة
-        outstanding_cheques_in = Cheque.query.filter(
+        in_q = Cheque.query.filter(
             Cheque.cheque_type == 'incoming',
             Cheque.status.in_(['pending', 'deposited']),
             Cheque.is_active == True,
-            Cheque.due_date.between(period_start, period_end)
-        ).all()
+            Cheque.due_date.between(period_start, period_end),
+        )
+        if tid:
+            in_q = in_q.filter(Cheque.tenant_id == tid)
+        outstanding_cheques_in = in_q.all()
         
-        outstanding_cheques_out = Cheque.query.filter(
+        out_q = Cheque.query.filter(
             Cheque.cheque_type == 'outgoing',
             Cheque.status.in_(['pending', 'deposited']),
             Cheque.is_active == True,
-            Cheque.due_date.between(period_start, period_end)
-        ).all()
+            Cheque.due_date.between(period_start, period_end),
+        )
+        if tid:
+            out_q = out_q.filter(Cheque.tenant_id == tid)
+        outstanding_cheques_out = out_q.all()
         
         outstanding_deposits = sum(c.amount_aed for c in outstanding_cheques_in)
         outstanding_withdrawals = sum(c.amount_aed for c in outstanding_cheques_out)
@@ -411,8 +420,13 @@ class BankReconciliationService:
         from decimal import Decimal as _D
         from sqlalchemy import and_
 
-        stmt = db.session.get(BankStatementLine,stmt_line_id)
-        if not stmt or stmt.status not in ('imported', 'suggested_match'):
+        stmt = db.session.get(BankStatementLine, stmt_line_id)
+        if (
+            not stmt
+            or stmt.tenant_id != tenant_id
+            or stmt.bank_account_id != bank_account_id
+            or stmt.status not in ('imported', 'suggested_match')
+        ):
             return None
 
         stmt_amount = _D(str(stmt.amount))
@@ -563,6 +577,10 @@ class BankReconciliationService:
             db.session.add(item)
 
         reconciliation.calculate_reconciliation()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
         return reconciliation
 

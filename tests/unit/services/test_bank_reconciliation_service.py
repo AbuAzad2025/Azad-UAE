@@ -123,9 +123,13 @@ class TestCompleteReconciliation:
 
 
 class TestSummaryAndImport:
-    def test_get_reconciliation_summary(self, mocker, db_session, bank_gl_account, incoming_cheque):
+    def test_get_reconciliation_summary(self, mocker, db_session, bank_gl_account, incoming_cheque, sample_tenant):
         incoming_cheque.due_date = date(2026, 3, 10)
         db_session.flush()
+        mocker.patch(
+            'utils.tenanting.tenant_get_or_404',
+            return_value=bank_gl_account,
+        )
         mocker.patch(
             'services.gl_service.GLService.get_account_statement',
             return_value={'closing_balance': 3000},
@@ -317,6 +321,61 @@ class TestSuspenseAndApply:
 
     def test_import_bank_statement_empty(self, db_session, sample_tenant, bank_gl_account):
         assert BankReconciliationService.import_bank_statement(sample_tenant.id, bank_gl_account.id, []) == 0
+
+    def test_match_transaction_wrong_tenant(self, db_session, sample_tenant, bank_gl_account):
+        stmt = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 6, 1),
+            transaction_date=date(2026, 6, 10),
+            amount=Decimal('300'),
+            status='imported',
+        )
+        db_session.add(stmt)
+        db_session.flush()
+        assert BankReconciliationService.match_transaction(99999, bank_gl_account.id, stmt.id) is None
+
+    def test_match_transaction_bad_status(self, db_session, sample_tenant, bank_gl_account):
+        stmt = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 6, 1),
+            transaction_date=date(2026, 6, 10),
+            amount=Decimal('300'),
+            status='matched',
+        )
+        db_session.add(stmt)
+        db_session.flush()
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_gl_account.id, stmt.id) is None
+
+    def test_add_bank_interest_rejects_completed(self, db_session, draft_reconciliation):
+        draft_reconciliation.status = 'completed'
+        db_session.flush()
+        with pytest.raises(ValueError, match='معتمدة'):
+            BankReconciliationService.add_bank_interest(draft_reconciliation.id, Decimal('5'), 'int')
+
+    def test_route_orphans_empty_period(self, db_session, sample_tenant, bank_gl_account):
+        assert BankReconciliationService.route_orphans_to_suspense(
+            sample_tenant.id, bank_gl_account.id, date(2026, 1, 1), date(2026, 1, 31),
+        ) == []
+
+    def test_route_orphans_post_failure(self, mocker, db_session, sample_tenant, bank_gl_account):
+        stmt = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 7, 1),
+            transaction_date=date(2026, 7, 5),
+            amount=Decimal('400'),
+            status='imported',
+        )
+        db_session.add(stmt)
+        db_session.flush()
+        mocker.patch('services.gl_posting.post_or_fail', side_effect=RuntimeError('gl'))
+        results = BankReconciliationService.route_orphans_to_suspense(
+            sample_tenant.id, bank_gl_account.id, date(2026, 7, 1), date(2026, 7, 31),
+        )
+        assert results == []
+        assert stmt.status == 'ignored'
 
     def test_route_orphans_ignores_tiny_amount(self, mocker, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(

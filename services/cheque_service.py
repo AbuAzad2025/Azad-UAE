@@ -573,10 +573,16 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     if create_gl:
         _create_cancel_journal_entry(cheque)
 
-    # تحديث المدفوعات والسندات المرتبطة
-    for payment in Payment.query.filter_by(cheque_id=cheque.id).all():
+    tid = getattr(cheque, 'tenant_id', None)
+    pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+    for payment in pmt_q.all():
         payment.reject_payment(reason or 'تم إلغاء الشيك')
-    for receipt in Receipt.query.filter_by(cheque_id=cheque.id).all():
+    rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+    for receipt in rcpt_q.all():
         receipt.reject_receipt(reason or 'تم إلغاء الشيك')
 
     # Cancelling an outgoing supplier cheque restores AP in the GL, so restore

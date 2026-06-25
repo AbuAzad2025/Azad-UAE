@@ -257,9 +257,12 @@ class StockService:
             if product.current_stock < 0 and not warehouse.allow_negative_inventory:
                 raise ValueError(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')
 
-            current_app.logger.info(
-                f'Stock movement: {movement_type} {quantity} of product #{product_id}'
-            )
+            try:
+                current_app.logger.info(
+                    f'Stock movement: {movement_type} {quantity} of product #{product_id}'
+                )
+            except Exception:
+                pass
 
             return movement
 

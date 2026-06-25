@@ -15,7 +15,7 @@ def validate_decimal_precision(value, max_digits=15, decimal_places=3):
         if total_digits > max_digits:
             return False
         return True
-    except:
+    except (ArithmeticError, ValueError, TypeError):
         return False
 
 
