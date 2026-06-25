@@ -379,7 +379,15 @@ def api_checkout():
         )
         db.session.add(kds_order)
         db.session.commit()
-        _notify_kds({'type': 'new_order', 'order_id': kds_order.id, 'order_number': kds_order.order_number})
+        _notify_kds(
+            {
+                'type': 'new_order',
+                'order_id': kds_order.id,
+                'order_number': kds_order.order_number,
+                'tenant_id': sale.tenant_id,
+            },
+            tenant_id=sale.tenant_id,
+        )
 
     return jsonify(
         {
@@ -541,31 +549,40 @@ import os as _os
 import urllib.request
 
 _HARDWARE_AGENT_URL = _os.environ.get('POS_HARDWARE_AGENT_URL', 'http://127.0.0.1:8567')
-_KDS_SUBSCRIBERS: list[_queue.Queue] = []
+_KDS_SUBSCRIBERS: list[tuple[int | None, _queue.Queue]] = []
 
 
-def _notify_kds(data):
+def _notify_kds(data, tenant_id: int | None = None):
     msg = f'data: {json.dumps(data, ensure_ascii=False)}\n\n'
-    for q in _KDS_SUBSCRIBERS[:]:
+    target_tid = tenant_id if tenant_id is not None else data.get('tenant_id')
+    stale: list[tuple[int | None, _queue.Queue]] = []
+    for sub_tid, q in _KDS_SUBSCRIBERS[:]:
+        if target_tid is not None and sub_tid is not None and sub_tid != target_tid:
+            continue
         try:
             q.put_nowait(msg)
         except Exception:
-            _KDS_SUBSCRIBERS.remove(q)
+            stale.append((sub_tid, q))
+    for entry in stale:
+        if entry in _KDS_SUBSCRIBERS:
+            _KDS_SUBSCRIBERS.remove(entry)
 
 
 @pos_bp.route("/api/kds/stream")
 @login_required
 @permission_required("manage_sales")
 def kds_stream():
+    subscriber_tid = get_active_tenant_id(current_user)
+
     def stream():
         q = _queue.Queue()
-        _KDS_SUBSCRIBERS.append(q)
+        _KDS_SUBSCRIBERS.append((subscriber_tid, q))
         try:
             while True:
                 msg = q.get()
                 yield msg
         except GeneratorExit:
-            _KDS_SUBSCRIBERS.remove(q)
+            _KDS_SUBSCRIBERS[:] = [entry for entry in _KDS_SUBSCRIBERS if entry[1] is not q]
 
     return stream(), {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive'}
 
@@ -605,7 +622,10 @@ def kds_update_status(order_id):
         order.completed_at = datetime.now(timezone.utc)
     order.updated_at = datetime.now(timezone.utc)
     db.session.commit()
-    _notify_kds({'type': 'status_update', 'order_id': order.id, 'status': new_status})
+    _notify_kds(
+        {'type': 'status_update', 'order_id': order.id, 'status': new_status, 'tenant_id': tid},
+        tenant_id=tid,
+    )
     return jsonify({'success': True})
 
 
@@ -618,12 +638,16 @@ def kds_dashboard():
 
 @pos_bp.route("/api/customer-display/<int:session_id>/stream")
 def customer_display_stream(session_id):
+    display_tenant_id = request.args.get('tenant_id', type=int)
+
     def stream():
         last_status = None
         while True:
-            from models import PosSession
+            if not display_tenant_id:
+                yield f'data: {json.dumps({"type":"closed"})}\n\n'
+                break
             session = db.session.get(PosSession, session_id)
-            if not session:
+            if not session or session.tenant_id != display_tenant_id:
                 yield f'data: {json.dumps({"type":"closed"})}\n\n'
                 break
             from models import Sale
@@ -637,7 +661,10 @@ def customer_display_stream(session_id):
                 continue
             latest = sales[0]
             from models import PosKdsOrder
-            kds_order = PosKdsOrder.query.filter_by(sale_id=latest.id).first()
+            kds_order = PosKdsOrder.query.filter_by(
+                sale_id=latest.id,
+                tenant_id=session.tenant_id,
+            ).first()
             status = kds_order.status if kds_order else 'confirmed'
             if status != last_status:
                 last_status = status
@@ -650,9 +677,7 @@ def customer_display_stream(session_id):
                     })
                 yield f'data: {json.dumps({"type":"order_update","order_number":latest.sale_number,"items":items,"total":float(latest.total_amount or 0),"status":status})}\n\n'
             import time; time.sleep(3)
-    resp = stream()
-    resp.close = lambda: None
-    return resp, {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache'}
+    return stream(), {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache'}
 
 
 @pos_bp.route("/customer-display")

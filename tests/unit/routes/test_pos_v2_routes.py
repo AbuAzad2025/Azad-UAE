@@ -442,10 +442,20 @@ class TestPosSessionApi:
             resp = pos_client.post('/pos/api/session/close', json={'closing_balance': 120})
         assert resp.get_json()['success'] is True
 
+    def test_session_close_requires_json(self, pos_client):
+        with _pos_api_patches():
+            resp = pos_client.post('/pos/api/session/close', data='not-json')
+        assert resp.status_code == 415
+
     def test_session_close_missing(self, pos_client):
         with _pos_api_patches(), patch('routes.pos.require_active_session', side_effect=ValueError('no session')):
             resp = pos_client.post('/pos/api/session/close', json={'closing_balance': 0})
         assert resp.status_code == 404
+
+    def test_session_open_requires_json(self, pos_client):
+        with _pos_api_patches(session=None):
+            resp = pos_client.post('/pos/api/session/open', data='not-json')
+        assert resp.status_code == 415
 
     def test_session_open_error(self, pos_client):
         with _pos_api_patches(session=None), patch('routes.pos.create_pos_session', side_effect=RuntimeError('fail')):
@@ -503,6 +513,17 @@ class TestPosHardware:
             resp = pos_client.post('/pos/api/hardware/open-drawer', json={})
         assert resp.status_code == 200
 
+    def test_open_drawer_generic_error(self, pos_client):
+        with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', side_effect=RuntimeError('boom')):
+            resp = pos_client.post('/pos/api/hardware/open-drawer', json={})
+        assert resp.status_code == 500
+
+    def test_open_drawer_agent_down(self, pos_client):
+        import urllib.error
+        with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', side_effect=urllib.error.URLError('down')):
+            resp = pos_client.post('/pos/api/hardware/open-drawer', json={})
+        assert resp.status_code == 503
+
     def test_hardware_status_connected(self, pos_client):
         response = MagicMock()
         response.read.return_value = json.dumps({'status': 'ok'}).encode()
@@ -511,6 +532,19 @@ class TestPosHardware:
         with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', return_value=response):
             resp = pos_client.get('/pos/api/hardware/status')
         assert resp.get_json()['status'] == 'ok'
+
+    def test_hardware_status_agent_down(self, pos_client):
+        import urllib.error
+        with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', side_effect=urllib.error.URLError('down')):
+            resp = pos_client.get('/pos/api/hardware/status')
+        data = resp.get_json()
+        assert data['status'] == 'disconnected'
+
+    def test_hardware_status_generic_error(self, pos_client):
+        with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', side_effect=RuntimeError('boom')):
+            resp = pos_client.get('/pos/api/hardware/status')
+        data = resp.get_json()
+        assert data['status'] == 'error'
 
 
 class TestPosKds:
@@ -533,6 +567,68 @@ class TestPosKds:
             q.filter_by.return_value.first.return_value = order
             resp = pos_client.post('/pos/api/kds/orders/1/status', json={'status': 'ready'})
         assert resp.get_json()['success'] is True
+
+    def test_kds_update_status_served_sets_completed_at(self, pos_client):
+        order = MagicMock(id=1)
+        with _pos_api_patches(), patch('models.PosKdsOrder.query') as q, patch('routes.pos._notify_kds'):
+            q.filter_by.return_value.first.return_value = order
+            resp = pos_client.post('/pos/api/kds/orders/1/status', json={'status': 'served'})
+        assert resp.get_json()['success'] is True
+        assert order.completed_at is not None
+
+    def test_notify_kds_delivers_to_subscriber(self):
+        import queue
+        from routes import pos as pos_module
+        q = queue.Queue()
+        pos_module._KDS_SUBSCRIBERS.append((1, q))
+        try:
+            pos_module._notify_kds({'type': 'ping', 'tenant_id': 1}, tenant_id=1)
+            msg = q.get_nowait()
+            assert 'ping' in msg
+        finally:
+            pos_module._KDS_SUBSCRIBERS[:] = [
+                entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not q
+            ]
+
+    def test_notify_kds_skips_other_tenant_subscribers(self):
+        import queue
+        from routes import pos as pos_module
+        tenant_a = queue.Queue()
+        tenant_b = queue.Queue()
+        pos_module._KDS_SUBSCRIBERS.extend([(1, tenant_a), (2, tenant_b)])
+        try:
+            pos_module._notify_kds({'type': 'ping', 'tenant_id': 1}, tenant_id=1)
+            assert not tenant_b.qsize()
+            assert tenant_a.get_nowait()
+        finally:
+            pos_module._KDS_SUBSCRIBERS.clear()
+
+    def test_notify_kds_removes_failed_subscriber(self):
+        from routes import pos as pos_module
+        bad_q = MagicMock()
+        bad_q.put_nowait.side_effect = Exception('queue full')
+        pos_module._KDS_SUBSCRIBERS.append((1, bad_q))
+        try:
+            pos_module._notify_kds({'type': 'ping', 'tenant_id': 1}, tenant_id=1)
+            assert (1, bad_q) not in pos_module._KDS_SUBSCRIBERS
+        finally:
+            pos_module._KDS_SUBSCRIBERS[:] = [
+                entry for entry in pos_module._KDS_SUBSCRIBERS if entry[1] is not bad_q
+            ]
+
+    def test_kds_stream_subscribe_and_cleanup(self, pos_client, bypass_permission_auth):
+        import queue
+        from routes.pos import _KDS_SUBSCRIBERS, kds_stream
+        real_q = queue.Queue()
+        with _pos_api_patches(), patch('routes.pos._queue.Queue', return_value=real_q):
+            with pos_client.application.test_request_context():
+                with patch('flask_login.utils._get_user', return_value=bypass_permission_auth):
+                    gen, headers = kds_stream()
+                real_q.put('event-data')
+                assert next(gen) == 'event-data'
+                gen.close()
+        assert headers['Content-Type'] == 'text/event-stream'
+        assert not any(entry[1] is real_q for entry in _KDS_SUBSCRIBERS)
 
     def test_print_receipt_generic_error(self, pos_client):
         with _pos_api_patches(), patch('routes.pos.urllib.request.urlopen', side_effect=RuntimeError('boom')):
@@ -583,6 +679,12 @@ class TestPosFloors:
             resp = pos_client.get('/pos/api/floors/1/tables')
         assert resp.status_code == 200
 
+    def test_floor_tables_not_found(self, pos_client):
+        with _pos_api_patches(), patch('models.PosFloor.query') as fq:
+            fq.filter_by.return_value.first.return_value = None
+            resp = pos_client.get('/pos/api/floors/99/tables')
+        assert resp.status_code == 404
+
     def test_table_create(self, pos_client):
         floor = MagicMock(id=1)
         table = MagicMock(id=4)
@@ -591,12 +693,36 @@ class TestPosFloors:
             resp = pos_client.post('/pos/api/tables/create', json={'floor_id': 1, 'label': 'T2'})
         assert resp.get_json()['success'] is True
 
+    def test_table_create_missing_fields(self, pos_client):
+        with _pos_api_patches():
+            resp = pos_client.post('/pos/api/tables/create', json={'floor_id': 1})
+        assert resp.status_code == 400
+
+    def test_table_create_floor_not_found(self, pos_client):
+        with _pos_api_patches(), patch('models.PosFloor.query') as fq:
+            fq.filter_by.return_value.first.return_value = None
+            resp = pos_client.post('/pos/api/tables/create', json={'floor_id': 99, 'label': 'T9'})
+        assert resp.status_code == 404
+
     def test_table_status_update(self, pos_client):
         table = MagicMock(id=5)
         with _pos_api_patches(), patch('models.PosTable.query') as tq:
             tq.filter_by.return_value.first.return_value = table
             resp = pos_client.post('/pos/api/tables/5/status', json={'status': 'occupied'})
         assert resp.get_json()['success'] is True
+
+    def test_table_status_not_found(self, pos_client):
+        with _pos_api_patches(), patch('models.PosTable.query') as tq:
+            tq.filter_by.return_value.first.return_value = None
+            resp = pos_client.post('/pos/api/tables/5/status', json={'status': 'free'})
+        assert resp.status_code == 404
+
+    def test_table_status_invalid(self, pos_client):
+        table = MagicMock(id=5)
+        with _pos_api_patches(), patch('models.PosTable.query') as tq:
+            tq.filter_by.return_value.first.return_value = table
+            resp = pos_client.post('/pos/api/tables/5/status', json={'status': 'bogus'})
+        assert resp.status_code == 400
 
     def test_table_assign(self, pos_client):
         table = MagicMock(id=6)
@@ -605,9 +731,131 @@ class TestPosFloors:
             resp = pos_client.post('/pos/api/tables/6/assign', json={'sale_id': 100})
         assert resp.get_json()['success'] is True
 
+    def test_table_assign_not_found(self, pos_client):
+        with _pos_api_patches(), patch('models.PosTable.query') as tq:
+            tq.filter_by.return_value.first.return_value = None
+            resp = pos_client.post('/pos/api/tables/6/assign', json={'sale_id': 100})
+        assert resp.status_code == 404
+
+    def test_table_assign_missing_sale_id(self, pos_client):
+        table = MagicMock(id=6)
+        with _pos_api_patches(), patch('models.PosTable.query') as tq:
+            tq.filter_by.return_value.first.return_value = table
+            resp = pos_client.post('/pos/api/tables/6/assign', json={})
+        assert resp.status_code == 400
+
 
 class TestPosCustomerDisplay:
+    def _tenant_request(self, tenant_id=1):
+        req = MagicMock()
+        req.args.get = lambda key, type=int, default=None: tenant_id if key == 'tenant_id' else default
+        return patch('routes.pos.request', req)
+
     def test_customer_display_page(self, pos_client):
         with _pos_enabled_patches():
             resp = pos_client.get('/pos/customer-display')
         assert resp.status_code == 200
+
+    def test_customer_display_stream_missing_tenant(self):
+        from routes.pos import customer_display_stream
+        req = MagicMock()
+        req.args.get = lambda key, type=int, default=None: None
+        with patch('routes.pos.request', req):
+            gen, headers = customer_display_stream(1)
+        assert headers['Content-Type'] == 'text/event-stream'
+        assert '"closed"' in next(gen)
+        with pytest.raises(StopIteration):
+            next(gen)
+
+    def test_customer_display_stream_closed(self):
+        from routes.pos import customer_display_stream
+        with self._tenant_request(1), patch('routes.pos.db.session') as sess:
+            sess.get.return_value = None
+            gen, headers = customer_display_stream(999)
+        assert headers['Content-Type'] == 'text/event-stream'
+        msg = next(gen)
+        assert '"closed"' in msg
+        with pytest.raises(StopIteration):
+            next(gen)
+
+    def test_customer_display_stream_tenant_mismatch(self):
+        from routes.pos import customer_display_stream
+        session = MagicMock(tenant_id=2)
+        with self._tenant_request(1), patch('routes.pos.db.session') as sess:
+            sess.get.return_value = session
+            gen, headers = customer_display_stream(1)
+        assert headers['Content-Type'] == 'text/event-stream'
+        assert '"closed"' in next(gen)
+
+    def test_customer_display_stream_waiting(self):
+        from routes.pos import customer_display_stream
+        session = MagicMock(tenant_id=1)
+        calls = {'get': 0}
+
+        def get_session(model, sid):
+            calls['get'] += 1
+            return session if calls['get'] == 1 else None
+
+        with self._tenant_request(1), patch('routes.pos.db.session') as sess, \
+             patch('models.Sale.query') as sale_q, \
+             patch('time.sleep') as sleep:
+            sess.get.side_effect = get_session
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+            gen, _ = customer_display_stream(1)
+            msg = next(gen)
+            assert '"waiting"' in msg
+            msg2 = next(gen)
+            assert '"closed"' in msg2
+            sleep.assert_called()
+
+    def test_customer_display_stream_order_update(self):
+        from routes.pos import customer_display_stream
+        session = MagicMock(tenant_id=1)
+        line = MagicMock()
+        line.product.name_ar = 'صنف'
+        line.product.name = 'Item'
+        line.quantity = Decimal('2')
+        line.line_total = Decimal('50')
+        sale = MagicMock(id=100, sale_number='S-100', total_amount=Decimal('50'), lines=[line])
+        with self._tenant_request(1), patch('routes.pos.db.session') as sess, \
+             patch('models.Sale.query') as sale_q, \
+             patch('models.PosKdsOrder.query') as kds_q, \
+             patch('time.sleep'):
+            sess.get.return_value = session
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [sale]
+            kds_q.filter_by.return_value.first.return_value = None
+            gen, _ = customer_display_stream(1)
+            msg = next(gen)
+        data = json.loads(msg.split('data: ', 1)[1])
+        assert data['type'] == 'order_update'
+        assert data['status'] == 'confirmed'
+
+    def test_customer_display_stream_same_status_polls(self):
+        from routes.pos import customer_display_stream
+        session = MagicMock(tenant_id=1)
+        line = MagicMock()
+        line.product.name_ar = None
+        line.product.name = 'Item'
+        line.quantity = Decimal('1')
+        line.line_total = Decimal('10')
+        sale = MagicMock(id=100, sale_number='S-100', total_amount=Decimal('10'), lines=[line])
+        kds_order = MagicMock(status='preparing')
+        calls = {'get': 0}
+
+        def get_session(model, sid):
+            calls['get'] += 1
+            return session if calls['get'] <= 2 else None
+
+        with self._tenant_request(1), patch('routes.pos.db.session') as sess, \
+             patch('models.Sale.query') as sale_q, \
+             patch('models.PosKdsOrder.query') as kds_q, \
+             patch('time.sleep') as sleep:
+            sess.get.side_effect = get_session
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [sale]
+            kds_q.filter_by.return_value.first.return_value = kds_order
+            gen, _ = customer_display_stream(1)
+            first = json.loads(next(gen).split('data: ', 1)[1])
+            assert first['status'] == 'preparing'
+            second = json.loads(next(gen).split('data: ', 1)[1])
+            assert second['type'] == 'closed'
+            sleep.assert_called()

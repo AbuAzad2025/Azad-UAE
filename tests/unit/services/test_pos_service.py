@@ -125,6 +125,23 @@ class TestWalkinCustomer:
         mocker.patch('utils.pos_helpers.get_active_tenant_id', return_value=1)
         assert get_pos_walkin_customer(1) is existing
 
+    def test_creates_walkin_when_query_empty(self, mocker):
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.first.return_value = None
+        mocker.patch('utils.pos_helpers.tenant_query', return_value=mock_query)
+        mocker.patch('utils.pos_helpers.db.or_', return_value=MagicMock())
+        mocker.patch('utils.pos_helpers.get_active_tenant_id', return_value=1)
+        created = MagicMock(id=99)
+        mocker.patch('utils.pos_helpers.Customer', return_value=created)
+        add = mocker.patch('utils.pos_helpers.db.session.add')
+        flush = mocker.patch('utils.pos_helpers.db.session.flush')
+        result = get_pos_walkin_customer(1)
+        add.assert_called_once_with(created)
+        flush.assert_called_once()
+        assert result is created
+
     def test_creates_walkin_when_missing(self, app, db_session, sample_tenant):
         with app.app_context():
             first = get_pos_walkin_customer(sample_tenant.id)
@@ -195,6 +212,11 @@ class TestProductSearch:
         from utils.pos_helpers import _warehouse_ids_for_stock
         assert _warehouse_ids_for_stock(5, user=MagicMock()) == [5]
 
+    def test_warehouse_ids_for_stock_accessible(self, mocker):
+        mocker.patch('utils.pos_helpers.get_accessible_warehouse_ids', return_value=[1, 2])
+        from utils.pos_helpers import _warehouse_ids_for_stock
+        assert _warehouse_ids_for_stock(None, user=MagicMock()) == [1, 2]
+
     def test_get_active_session_no_tenant(self, mocker):
         mocker.patch('utils.pos_helpers.get_active_tenant_id', return_value=None)
         assert get_active_session(MagicMock()) is None
@@ -224,6 +246,11 @@ class TestPosSessions:
         mocker.patch('utils.pos_helpers.get_active_session', return_value=None)
         with pytest.raises(ValueError, match='جلسة'):
             require_active_session(MagicMock())
+
+    def test_require_active_session_returns_session(self, mocker):
+        session = MagicMock()
+        mocker.patch('utils.pos_helpers.get_active_session', return_value=session)
+        assert require_active_session(MagicMock()) is session
 
     def test_create_pos_session(self, mocker):
         mocker.patch('utils.pos_helpers.get_active_tenant_id', return_value=1)

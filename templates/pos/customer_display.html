@@ -35,9 +35,10 @@
 (function(){
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
-  if (!sessionId) { document.getElementById('cdOrderNumber').textContent = 'رابط غير صالح'; return; }
+  const tenantId = params.get('tenant_id');
+  if (!sessionId || !tenantId) { document.getElementById('cdOrderNumber').textContent = 'رابط غير صالح'; return; }
 
-  const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream');
+  const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId));
   es.onmessage = function(e) {
     try {
       const d = JSON.parse(e.data);
