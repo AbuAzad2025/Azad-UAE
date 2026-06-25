@@ -43,6 +43,7 @@ class BankReconciliationService:
         reconciliation_number = generate_number('BR', BankReconciliation, 'reconciliation_number')
         
         reconciliation = BankReconciliation(
+            tenant_id=bank_account.tenant_id,
             reconciliation_number=reconciliation_number,
             bank_account_id=bank_account_id,
             period_start=period_start,
@@ -89,6 +90,7 @@ class BankReconciliationService:
         
         for cheque in outstanding_cheques_in:
             item = BankReconciliationItem(
+                tenant_id=tid,
                 reconciliation_id=reconciliation.id,
                 item_type='outstanding_deposit',
                 transaction_date=cheque.issue_date,
@@ -112,6 +114,7 @@ class BankReconciliationService:
         
         for cheque in outstanding_cheques_out:
             item = BankReconciliationItem(
+                tenant_id=tid,
                 reconciliation_id=reconciliation.id,
                 item_type='outstanding_withdrawal',
                 transaction_date=cheque.issue_date,
@@ -133,6 +136,7 @@ class BankReconciliationService:
             raise ValueError('لا يمكن تعديل مطابقة معتمدة')
         
         item = BankReconciliationItem(
+            tenant_id=reconciliation.tenant_id,
             reconciliation_id=reconciliation_id,
             item_type='bank_charge',
             transaction_date=transaction_date or reconciliation.period_end,
@@ -163,6 +167,7 @@ class BankReconciliationService:
             raise ValueError('لا يمكن تعديل مطابقة معتمدة')
         
         item = BankReconciliationItem(
+            tenant_id=reconciliation.tenant_id,
             reconciliation_id=reconciliation_id,
             item_type='bank_interest',
             transaction_date=transaction_date or reconciliation.period_end,
@@ -346,7 +351,7 @@ class BankReconciliationService:
                 # Match by exact amount
                 if abs(stmt_amount - gl_amount) <= amount_tolerance:
                     # Check date proximity
-                    gl_date = gl.entry.date if gl.entry else stmt.transaction_date
+                    gl_date = gl.entry.entry_date if gl.entry else stmt.transaction_date
                     date_diff = abs((stmt.transaction_date - gl_date).days)
                     if date_diff <= date_tolerance_days:
                         match_type = 'exact' if abs(stmt_amount - gl_amount) < Decimal('0.001') else 'amount_date'
@@ -470,16 +475,13 @@ class BankReconciliationService:
         if not orphans:
             return []
 
-        suspense_account_code = str(GLAccount.query.filter_by(
+        suspense_gl = GLAccount.query.filter_by(
             tenant_id=tenant_id,
             type='liability',
         ).filter(
             GLAccount.code.like('2999%')
-        ).first().code) if GLAccount.query.filter_by(
-            tenant_id=tenant_id,
-        ).filter(
-            GLAccount.code.like('2999%')
-        ).first() else '2999'
+        ).first()
+        suspense_account_code = str(suspense_gl.code) if suspense_gl else '2999'
 
         results = []
         for stmt in orphans:

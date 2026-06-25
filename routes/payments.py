@@ -121,6 +121,52 @@ def _scoped_customers_query():
     return query.filter(Customer.id.in_(sale_ids.union(payment_ids, receipt_ids)))
 
 
+def _receipt_item_status(item):
+    return 'COMPLETED' if item.get('payment_confirmed') else 'PENDING'
+
+
+def _build_receipts_json_response(paginated_items, pagination):
+    payload = []
+    total_incoming = 0.0
+    total_outgoing = 0.0
+    for item in paginated_items:
+        amount_value = float(item.get('amount') or 0)
+        direction = item.get('direction')
+        if direction == 'incoming':
+            total_incoming += amount_value
+        elif direction == 'outgoing':
+            total_outgoing += amount_value
+        payload.append({
+            'id': item.get('id'),
+            'type': item.get('type'),
+            'number': item.get('number'),
+            'payment_date': item.get('date').isoformat() if item.get('date') else None,
+            'total_amount': amount_value,
+            'currency': item.get('currency'),
+            'method': item.get('payment_method'),
+            'direction': direction,
+            'status': _receipt_item_status(item),
+            'notes': item.get('notes') or '',
+            'entity_display': item.get('customer_name') or item.get('supplier_name') or '-',
+            'customer_name': item.get('customer_name'),
+            'supplier_name': item.get('supplier_name'),
+            'source_type': item.get('source_type'),
+            'payment_confirmed': bool(item.get('payment_confirmed')),
+        })
+    totals = {
+        'total_incoming': total_incoming,
+        'total_outgoing': total_outgoing,
+        'net_total': total_incoming - total_outgoing,
+        'grand_total': total_incoming + total_outgoing,
+    }
+    return jsonify({
+        'payments': payload,
+        'current_page': pagination.page,
+        'total_pages': pagination.pages or 1,
+        'totals': totals,
+    })
+
+
 def _scoped_suppliers_query():
     from models import Payment, Purchase
     from utils.decorators import branch_scope_id
@@ -304,49 +350,7 @@ def receipts():
 
     wants_json = request.args.get('format') == 'json' or request.accept_mimetypes.best == 'application/json'
     if wants_json:
-        def _status_for_item(item):
-            return 'COMPLETED' if item.get('payment_confirmed') else 'PENDING'
-
-        payload = []
-        total_incoming = 0.0
-        total_outgoing = 0.0
-        for item in paginated_items:
-            amount_value = float(item.get('amount') or 0)
-            if item.get('direction') == 'incoming':
-                total_incoming += amount_value
-            elif item.get('direction') == 'outgoing':
-                total_outgoing += amount_value
-
-            payload.append({
-                'id': item.get('id'),
-                'type': item.get('type'),
-                'number': item.get('number'),
-                'payment_date': item.get('date').isoformat() if item.get('date') else None,
-                'total_amount': amount_value,
-                'currency': item.get('currency'),
-                'method': item.get('payment_method'),
-                'direction': item.get('direction'),
-                'status': _status_for_item(item),
-                'notes': item.get('notes') or '',
-                'entity_display': item.get('customer_name') or item.get('supplier_name') or '-',
-                'customer_name': item.get('customer_name'),
-                'supplier_name': item.get('supplier_name'),
-                'source_type': item.get('source_type'),
-                'payment_confirmed': bool(item.get('payment_confirmed')),
-            })
-
-        totals = {
-            'total_incoming': total_incoming,
-            'total_outgoing': total_outgoing,
-            'net_total': total_incoming - total_outgoing,
-            'grand_total': total_incoming + total_outgoing,
-        }
-        return jsonify({
-            'payments': payload,
-            'current_page': pagination.page,
-            'total_pages': pagination.pages or 1,
-            'totals': totals,
-        })
+        return _build_receipts_json_response(paginated_items, pagination)
 
     return render_template('payments/receipts.html',
                          receipts=paginated_items,
@@ -1383,6 +1387,7 @@ def delete_receipt(id):
 @permission_required('manage_payments')
 def delete_payment(id):
     """حذف أو أرشفة سند صرف"""
+    from decimal import Decimal
     from models import Payment, Cheque
     from services.archive_service import ArchiveService
 
