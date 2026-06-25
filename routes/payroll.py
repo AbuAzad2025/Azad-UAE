@@ -10,6 +10,26 @@ from utils.tenanting import get_active_tenant_id
 
 payroll_bp = Blueprint('payroll', __name__, url_prefix='/payroll')
 
+
+def _assert_employee_scope(employee, scoped_branch_id, tid):
+    if not employee:
+        raise ValueError('الموظف غير موجود.')
+    if tid is not None and int(employee.tenant_id) != int(tid):
+        raise ValueError('الموظف لا ينتمي إلى شركتك النشطة.')
+    if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
+        raise ValueError('لا يمكنك التعامل مع موظف من فرع آخر.')
+
+
+def _assert_branch_scope(branch_id, scoped_branch_id, tid):
+    branch = db.session.get(Branch, int(branch_id))
+    if not branch:
+        raise ValueError('الفرع المحدد غير موجود.')
+    if tid is not None and int(branch.tenant_id) != int(tid):
+        raise ValueError('الفرع لا ينتمي إلى شركتك النشطة.')
+    if scoped_branch_id is not None and int(branch_id) != int(scoped_branch_id):
+        raise ValueError('لا يمكنك معالجة رواتب فرع آخر.')
+
+
 @payroll_bp.route('/employees')
 @login_required
 @permission_required('manage_payroll')
@@ -27,6 +47,7 @@ def employees_list():
         employees=employees,
         show_branch_columns=should_show_all_branch_columns(current_user),
     )
+
 
 @payroll_bp.route('/employees/add', methods=['GET', 'POST'])
 @login_required
@@ -50,7 +71,7 @@ def add_employee():
             return redirect(url_for('payroll.employees_list'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
-            
+
     tid = get_active_tenant_id(current_user)
     branches_query = Branch.query.filter_by(is_active=True)
     if tid is not None:
@@ -60,6 +81,7 @@ def add_employee():
     branches = branches_query.order_by(Branch.code, Branch.name).all()
     return render_template('payroll/add_employee.html', branches=branches)
 
+
 @payroll_bp.route('/advances', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_payroll')
@@ -67,13 +89,10 @@ def advances():
     if request.method == 'POST':
         try:
             scoped_branch_id = branch_scope_id()
+            tid = get_active_tenant_id(current_user)
             employee_id = int(request.form.get('employee_id'))
-            # التحقق من نطاق الفرع
             employee = db.session.get(Employee, employee_id)
-            if not employee:
-                raise ValueError('الموظف غير موجود.')
-            if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
-                raise ValueError('لا يمكنك إضافة سلفة لموظف من فرع آخر.')
+            _assert_employee_scope(employee, scoped_branch_id, tid)
             PayrollService.create_advance(
                 employee_id=employee_id,
                 amount=float(request.form.get('amount')),
@@ -84,7 +103,7 @@ def advances():
             flash('تم تسجيل السلفة بنجاح', 'success')
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
-            
+
     scoped_branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
@@ -99,6 +118,7 @@ def advances():
     advances = advances_query.order_by(SalaryAdvance.date.desc()).limit(50).all()
     return render_template('payroll/advances.html', advances=advances, employees=employees)
 
+
 @payroll_bp.route('/process', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_payroll')
@@ -108,24 +128,21 @@ def process_payroll():
         if 'generate_branch' in request.form:
             try:
                 branch_id = int(request.form.get('branch_id'))
-                if scoped_branch_id is not None and branch_id != scoped_branch_id:
-                    raise ValueError('لا يمكنك معالجة رواتب فرع آخر.')
+                tid = get_active_tenant_id(current_user)
+                _assert_branch_scope(branch_id, scoped_branch_id, tid)
                 month = int(request.form.get('month'))
                 year = int(request.form.get('year'))
-                
+
                 gen, skipped = PayrollService.generate_branch_payroll(branch_id, month, year, current_user.id)
                 flash(f'تم توليد الرواتب بنجاح: {gen} موظف، وتم تخطي {skipped} (تمت معالجتهم سابقاً أو نظام مياومة)', 'success')
             except Exception as e:
                 flash(f'حدث خطأ: {e}', 'danger')
         else:
             try:
+                tid = get_active_tenant_id(current_user)
                 employee_id = int(request.form.get('employee_id'))
-                # التحقق من نطاق الفرع للموظف
                 employee = db.session.get(Employee, employee_id)
-                if not employee:
-                    raise ValueError('الموظف غير موجود.')
-                if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
-                    raise ValueError('لا يمكنك معالجة راتب لموظف من فرع آخر.')
+                _assert_employee_scope(employee, scoped_branch_id, tid)
                 PayrollService.process_payroll(
                     employee_id=employee_id,
                     month=int(request.form.get('month')),
@@ -139,7 +156,7 @@ def process_payroll():
                 flash('تم صرف الراتب بنجاح', 'success')
             except Exception as e:
                 flash(f'حدث خطأ: {e}', 'danger')
-            
+
     tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
     branches_query = Branch.query.filter_by(is_active=True)
@@ -158,6 +175,7 @@ def process_payroll():
     today = datetime.now()
     return render_template('payroll/process.html', transactions=transactions, employees=employees, branches=branches, today=today)
 
+
 @payroll_bp.route('/slip/<int:id>')
 @login_required
 @permission_required('manage_payroll')
@@ -171,6 +189,7 @@ def salary_slip(id):
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
     return render_template('payroll/slip.html', slip=transaction)
+
 
 @payroll_bp.route('/statement/<int:id>')
 @login_required
@@ -191,8 +210,7 @@ def statement(id):
         payments = payments.filter(PayrollTransaction.tenant_id == tid)
     advances = advances.all()
     payments = payments.all()
-    
-    # Combine history (Simplified)
+
     history = []
     for a in advances:
         history.append({
@@ -208,7 +226,7 @@ def statement(id):
             'amount': p.net_salary,
             'desc': f'راتب {p.month}/{p.year}'
         })
-        
+
     history.sort(key=lambda x: x['date'])
-    
+
     return render_template('payroll/statement.html', employee=employee, history=history)
