@@ -1,16 +1,19 @@
 import os
 import secrets
 import logging
+
 logger = logging.getLogger(__name__)
+
+
 def ensure_secret_key(instance_dir: str, env_value: str | None = None) -> str:
-    key = env_value
+    key = (env_value or "").strip() or None
     if key:
         return key
     secret_file = os.path.join(instance_dir, "secret_key")
     if os.path.exists(secret_file):
         try:
             with open(secret_file, "r", encoding="utf-8") as f:
-                key = f.read().strip()
+                key = (f.read() or "").strip() or None
         except Exception:
             key = None
     if not key:
@@ -23,15 +26,17 @@ def ensure_secret_key(instance_dir: str, env_value: str | None = None) -> str:
             pass
         logger.info("[Dev] SECRET_KEY generated for development")
     return key
+
+
 def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) -> str:
-    key = env_value
+    key = (env_value or "").strip() or None
     if key:
         return key
     key_path = os.path.join(instance_dir, ".card_encryption_key")
     try:
         if os.path.exists(key_path):
             with open(key_path, "r", encoding="utf-8") as f:
-                key = (f.read() or "").strip()
+                key = (f.read() or "").strip() or None
     except Exception:
         key = None
     if not key:
@@ -43,6 +48,8 @@ def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) 
         except Exception:
             pass
     return key
+
+
 def bootstrap_keys(app, instance_dir: str | None = None) -> None:
     if instance_dir is None:
         instance_dir = os.path.join(

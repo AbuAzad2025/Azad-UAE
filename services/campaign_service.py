@@ -1,9 +1,26 @@
 from datetime import datetime, timezone
 from decimal import Decimal
+
 from extensions import db
 
 
 class CampaignService:
+
+    @staticmethod
+    def _filter_json_overlap(campaigns, attr, ids):
+        allowed = set(ids)
+        matched = []
+        for campaign in campaigns:
+            values = getattr(campaign, attr, None)
+            if not values:
+                matched.append(campaign)
+                continue
+            if not isinstance(values, list):
+                matched.append(campaign)
+                continue
+            if set(values) & allowed:
+                matched.append(campaign)
+        return matched
 
     @staticmethod
     def calculate_roi(cost, revenue):
@@ -15,7 +32,6 @@ class CampaignService:
 
     @staticmethod
     def get_campaign_roi_metrics(campaign, total_revenue=None):
-        from decimal import Decimal
         cost = Decimal(str(campaign.discount_value or 0))
         usage = int(getattr(campaign, 'usage_count', 0) or 0)
         total_cost = cost * Decimal(str(usage))
@@ -57,19 +73,22 @@ class CampaignService:
         )
 
         if product_ids:
-            product_ids = set(product_ids)
-            query = query.filter(
-                (Campaign.applicable_products.is_(None)) |
-                (Campaign.applicable_products == []) |
-                (Campaign.applicable_products.overlap(product_ids))
+            campaigns = CampaignService._filter_json_overlap(
+                query.order_by(Campaign.created_at.desc()).all(),
+                'applicable_products',
+                product_ids,
             )
+            if category_ids:
+                return CampaignService._filter_json_overlap(
+                    campaigns, 'applicable_categories', category_ids,
+                )
+            return campaigns
 
         if category_ids:
-            category_ids = set(category_ids)
-            query = query.filter(
-                (Campaign.applicable_categories.is_(None)) |
-                (Campaign.applicable_categories == []) |
-                (Campaign.applicable_categories.overlap(category_ids))
+            return CampaignService._filter_json_overlap(
+                query.order_by(Campaign.created_at.desc()).all(),
+                'applicable_categories',
+                category_ids,
             )
 
         return query.order_by(Campaign.created_at.desc()).all()

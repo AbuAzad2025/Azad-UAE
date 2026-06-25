@@ -93,3 +93,27 @@ class TestBootstrapKeys:
         assert len(app.config['CARD_ENCRYPTION_KEY']) == 64
         assert os.path.exists(os.path.join(str(tmp_path), 'secret_key'))
         assert os.path.exists(os.path.join(str(tmp_path), '.card_encryption_key'))
+
+    def test_whitespace_env_falls_through(self, tmp_path):
+        assert ensure_secret_key(str(tmp_path), '   ') != '   '
+        assert len(ensure_secret_key(str(tmp_path), '   ')) == 64
+
+    def test_empty_file_regenerates(self, tmp_path):
+        secret_file = tmp_path / 'secret_key'
+        secret_file.write_text('   \n', encoding='utf-8')
+        key = ensure_secret_key(str(tmp_path), None)
+        assert len(key) == 64
+        assert secret_file.read_text(encoding='utf-8') == key
+
+    def test_corrupt_card_key_file_regenerates(self, tmp_path):
+        key_path = tmp_path / '.card_encryption_key'
+        key_path.write_text('', encoding='utf-8')
+        key = ensure_card_encryption_key(str(tmp_path), None)
+        assert len(key) == 64
+
+    def test_bootstrap_with_empty_config_keys(self, tmp_path):
+        app = MagicMock()
+        app.config = {'SECRET_KEY': '', 'CARD_ENCRYPTION_KEY': '  '}
+        bootstrap_keys(app, instance_dir=str(tmp_path))
+        assert len(app.config['SECRET_KEY']) == 64
+        assert len(app.config['CARD_ENCRYPTION_KEY']) == 64

@@ -3,7 +3,16 @@ Base LocalizationStrategy — Abstract interface for country-specific compliance
 """
 
 from abc import ABC, abstractmethod
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
+
+
+def coerce_decimal(value, default=None):
+    if value is None:
+        return default
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return default
 
 
 class LocalizationStrategy(ABC):

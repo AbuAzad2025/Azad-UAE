@@ -1,10 +1,16 @@
 """Tenant-aware GL helpers used by GLService."""
 from __future__ import annotations
 
+import logging
+import re
 from datetime import datetime, timezone
 
 from extensions import db
 from models import GLAccount, GLJournalEntry
+
+logger = logging.getLogger(__name__)
+
+_ENTRY_NUMBER_RE = re.compile(r'^JE-(\d{4})-(\d+)$')
 
 
 def resolve_tenant_id(branch_id=None, user_id=None):
@@ -49,7 +55,6 @@ def resolve_tenant_id(branch_id=None, user_id=None):
             except Exception:
                 pass
 
-    # ── LAST RESORT: only safe when exactly 1 active tenant exists ──
     if tenant_id is None:
         try:
             from models import Tenant
@@ -79,11 +84,6 @@ def resolve_tenant_id(branch_id=None, user_id=None):
     return int(tenant_id)
 
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
 def get_account(code, tenant_id=None):
     code = str(code)
     if tenant_id is not None:
@@ -101,21 +101,23 @@ def next_entry_number(tenant_id, entry_date=None):
     latest = query.order_by(GLJournalEntry.entry_number.desc()).first()
     last_num = 0
     if latest:
-        try:
-            last_num = int(latest.entry_number.split('-')[-1])
-        except Exception as e:
+        match = _ENTRY_NUMBER_RE.match(latest.entry_number or '')
+        if match:
+            last_num = int(match.group(2))
+        else:
+            err = ValueError(f"Unparseable entry_number: {latest.entry_number}")
             import sys
             import traceback
-            sys.stderr.write(f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {e}\n")
+            sys.stderr.write(f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {err}\n")
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
                 LoggingCore.log_error(
-                    message=str(e),
+                    message=str(err),
                     category="GL",
                     source="services.gl_helpers.next_entry_number.parse_entry_number",
                     level="WARNING",
-                    exception=e
+                    exception=err
                 )
             except Exception:
                 pass
