@@ -616,14 +616,19 @@ def restore_scoped_to_target(
         uploads_arc = os.path.join(extract_dir, "uploads.tar.gz")
         if os.path.isfile(uploads_arc):
             dest_abs = os.path.abspath(restore_uploads_dir)
-            with tarfile.open(uploads_arc, "r:gz") as tar:
-                for member in tar.getmembers():
-                    target = os.path.abspath(os.path.join(restore_uploads_dir, member.name))
-                    if not target.startswith(dest_abs + os.sep) and target != dest_abs:
-                        outcome["warnings"].append(f"skipped unsafe path {member.name}")
-                        continue
-                tar.extractall(restore_uploads_dir, filter="data")
-            outcome["uploads_restored_to"] = restore_uploads_dir
+            try:
+                with tarfile.open(uploads_arc, "r:gz") as tar:
+                    for member in tar.getmembers():
+                        target = os.path.abspath(os.path.join(restore_uploads_dir, member.name))
+                        if not target.startswith(dest_abs + os.sep) and target != dest_abs:
+                            outcome["warnings"].append(f"skipped unsafe path {member.name}")
+                            continue
+                    tar.extractall(restore_uploads_dir, filter="data")
+                outcome["uploads_restored_to"] = restore_uploads_dir
+            except (tarfile.TarError, EOFError, OSError) as exc:
+                outcome["ok"] = False
+                outcome["errors"].append(f"uploads restore failed: {type(exc).__name__}")
+                return outcome
 
     outcome["target_tenant_id"] = force_tid
     return outcome

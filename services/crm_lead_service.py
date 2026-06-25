@@ -33,12 +33,17 @@ class CRMLeadService:
         CRMLeadService._branch_scope_check(user, branch_id)
         if branch_id:
             branch = db.session.get(Branch, int(branch_id))
-            if branch and tid is None:
-                tid = int(branch.tenant_id)
+            if branch:
+                if tid is None:
+                    tid = int(branch.tenant_id)
+                elif int(branch.tenant_id) != int(tid):
+                    raise ValueError('الفرع لا ينتمي إلى شركتك.')
         stage_id = data.get('stage_id')
         if stage_id:
             stage = db.session.get(CRMStage, int(stage_id))
-            if stage and int(stage.tenant_id) != int(tid or 0):
+            if not stage:
+                raise ValueError('المرحلة غير صالحة.')
+            if int(stage.tenant_id) != int(tid or 0):
                 raise ValueError('المرحلة لا تنتمي إلى شركتك.')
         lead = CRMLead(
             tenant_id=int(tid) if tid else 0,
@@ -85,7 +90,9 @@ class CRMLeadService:
             lead.assigned_user_id = int(data['assigned_user_id']) if data['assigned_user_id'] else None
         if data.get('stage_id'):
             stage = db.session.get(CRMStage, int(data['stage_id']))
-            if stage and int(stage.tenant_id) != int(lead.tenant_id):
+            if not stage:
+                raise ValueError('المرحلة غير صالحة.')
+            if int(stage.tenant_id) != int(lead.tenant_id):
                 raise ValueError('المرحلة لا تنتمي إلى شركتك.')
             lead.stage_id = int(data['stage_id'])
             if stage and stage.is_won:
@@ -228,7 +235,6 @@ class CRMLeadService:
             name=lead.name,
             email=lead.email,
             phone=lead.phone,
-            company=lead.company if hasattr(lead, 'company') else None,
         )
         db.session.add(customer)
         db.session.flush()
@@ -304,6 +310,7 @@ class CRMLeadService:
         if not lead:
             raise ValueError('العميل المتوقع غير موجود.')
         CRMLeadService._validate_tenant(lead, user)
+        CRMLeadService._branch_scope_check(user, lead.branch_id)
         activity = CRMActivity(
             tenant_id=lead.tenant_id,
             lead_id=lead.id,

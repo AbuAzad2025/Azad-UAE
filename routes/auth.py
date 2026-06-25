@@ -42,7 +42,7 @@ def verify_payment_status_token(payment_id: str, token: str | None) -> bool:
             token,
             max_age=_PAYMENT_STATUS_TOKEN_MAX_AGE,
         )
-    except (BadSignature, SignatureExpired, Exception):
+    except (BadSignature, SignatureExpired):
         return False
     return str(data.get('pid')) == str(payment_id)
 
@@ -70,6 +70,7 @@ def _login_company_display():
     name_ar = ""
     address = ""
     try:
+        from models.tenant import Tenant
         tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
         if tenant and (tenant.name_ar or "").strip():
             name_ar = (tenant.name_ar or "").strip()
@@ -399,7 +400,7 @@ def _is_nowpayments_ip(remote_addr: str | None) -> bool:
         return False
     whitelist = current_app.config.get("NOWPAYMENTS_IP_WHITELIST", [])
     if not whitelist:
-        return True  # allow if not configured (backward compat)
+        return False
     try:
         ip = ipaddress.ip_address(remote_addr)
     except ValueError:
