@@ -4,7 +4,7 @@ Analytics Service - خدمة التحليلات
 """
 from datetime import datetime, timezone, timedelta
 from extensions import db
-from models import Donation, PackagePurchase, Package, Sale, Product, SaleLine, Customer
+import models
 from sqlalchemy import func, desc
 import logging
 
@@ -19,29 +19,29 @@ class AnalyticsService:
         # TODO: optimize N+1 queries in a separate behavior-preserving patch
         customers_data = []
         session = db.session
-        customers_query = session.query(Customer).filter_by(is_active=True, tenant_id=tenant_id)
+        customers_query = session.query(models.Customer).filter_by(is_active=True, tenant_id=tenant_id)
         if branch_id is not None:
-            customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == branch_id).distinct()
+            customers_query = customers_query.join(models.Sale, models.Customer.id == models.Sale.customer_id).filter(models.Sale.branch_id == branch_id).distinct()
 
         for customer in customers_query.all():
-            total_sales = session.query(func.sum(Sale.total_amount)).filter(
-                Sale.customer_id == customer.id,
-                Sale.status == 'confirmed',
-                Sale.tenant_id == tenant_id,
+            total_sales = session.query(func.sum(models.Sale.total_amount)).filter(
+                models.Sale.customer_id == customer.id,
+                models.Sale.status == 'confirmed',
+                models.Sale.tenant_id == tenant_id,
             )
             if branch_id is not None:
-                total_sales = total_sales.filter(Sale.branch_id == branch_id)
+                total_sales = total_sales.filter(models.Sale.branch_id == branch_id)
             total_sales = total_sales.scalar() or 0
 
-            sales_count = session.query(Sale).filter_by(customer_id=customer.id, status='confirmed', tenant_id=tenant_id)
+            sales_count = session.query(models.Sale).filter_by(customer_id=customer.id, status='confirmed', tenant_id=tenant_id)
             if branch_id is not None:
-                sales_count = sales_count.filter(Sale.branch_id == branch_id)
+                sales_count = sales_count.filter(models.Sale.branch_id == branch_id)
             sales_count = sales_count.count()
 
-            last_sale = session.query(Sale).filter_by(customer_id=customer.id, tenant_id=tenant_id)
+            last_sale = session.query(models.Sale).filter_by(customer_id=customer.id, tenant_id=tenant_id)
             if branch_id is not None:
-                last_sale = last_sale.filter(Sale.branch_id == branch_id)
-            last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
+                last_sale = last_sale.filter(models.Sale.branch_id == branch_id)
+            last_sale = last_sale.order_by(models.Sale.sale_date.desc()).first()
 
             if last_sale:
                 sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, 'date') else last_sale.sale_date
@@ -66,36 +66,36 @@ class AnalyticsService:
         last_30_days = today - timedelta(days=30)
 
         daily_sales = db.session.query(
-            func.date(Sale.sale_date).label('date'),
-            func.count(Sale.id).label('count'),
-            func.sum(Sale.total_amount).label('total')
+            func.date(models.Sale.sale_date).label('date'),
+            func.count(models.Sale.id).label('count'),
+            func.sum(models.Sale.total_amount).label('total')
         ).filter(
-            Sale.sale_date >= last_30_days,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tenant_id,
+            models.Sale.sale_date >= last_30_days,
+            models.Sale.status == 'confirmed',
+            models.Sale.tenant_id == tenant_id,
         )
         if branch_id is not None:
-            daily_sales = daily_sales.filter(Sale.branch_id == branch_id)
-        daily_sales = daily_sales.group_by(func.date(Sale.sale_date)).all()
+            daily_sales = daily_sales.filter(models.Sale.branch_id == branch_id)
+        daily_sales = daily_sales.group_by(func.date(models.Sale.sale_date)).all()
 
         top_products = db.session.query(
-            Product.name,
-            func.sum(SaleLine.quantity).label('total_qty'),
-            func.sum(SaleLine.line_total).label('total_revenue')
-        ).select_from(Product).join(
-            SaleLine, SaleLine.product_id == Product.id
+            models.Product.name,
+            func.sum(models.SaleLine.quantity).label('total_qty'),
+            func.sum(models.SaleLine.line_total).label('total_revenue')
+        ).select_from(models.Product).join(
+            models.SaleLine, models.SaleLine.product_id == models.Product.id
         ).join(
-            Sale, Sale.id == SaleLine.sale_id
+            models.Sale, models.Sale.id == models.SaleLine.sale_id
         ).filter(
-            Sale.sale_date >= last_30_days,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tenant_id,
+            models.Sale.sale_date >= last_30_days,
+            models.Sale.status == 'confirmed',
+            models.Sale.tenant_id == tenant_id,
         )
         if branch_id is not None:
-            top_products = top_products.filter(Sale.branch_id == branch_id)
+            top_products = top_products.filter(models.Sale.branch_id == branch_id)
         top_products = top_products.group_by(
-            Product.id,
-            Product.name,
+            models.Product.id,
+            models.Product.name,
         ).order_by(desc('total_revenue')).limit(10).all()
 
         insights = {
@@ -106,35 +106,33 @@ class AnalyticsService:
 
     @staticmethod
     def get_product_performance(tenant_id, branch_id=None):
-        from models import Product, SaleLine, Sale
-        from sqlalchemy import func
         from decimal import Decimal
         last_90_days = datetime.now().date() - timedelta(days=90)
 
         query = db.session.query(
-            Product.id,
-            Product.name,
-            Product.sku,
-            Product.cost_price,
-            func.sum(SaleLine.quantity).label('total_sold'),
-            func.sum(SaleLine.line_total).label('total_revenue'),
-            func.count(func.distinct(Sale.id)).label('transactions')
-        ).select_from(Product).join(
-            SaleLine, SaleLine.product_id == Product.id
+            models.Product.id,
+            models.Product.name,
+            models.Product.sku,
+            models.Product.cost_price,
+            func.sum(models.SaleLine.quantity).label('total_sold'),
+            func.sum(models.SaleLine.line_total).label('total_revenue'),
+            func.count(func.distinct(models.Sale.id)).label('transactions')
+        ).select_from(models.Product).join(
+            models.SaleLine, models.SaleLine.product_id == models.Product.id
         ).join(
-            Sale, Sale.id == SaleLine.sale_id
+            models.Sale, models.Sale.id == models.SaleLine.sale_id
         ).filter(
-            Sale.sale_date >= last_90_days,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tenant_id,
+            models.Sale.sale_date >= last_90_days,
+            models.Sale.status == 'confirmed',
+            models.Sale.tenant_id == tenant_id,
         )
         if branch_id is not None:
-            query = query.filter(Sale.branch_id == branch_id)
+            query = query.filter(models.Sale.branch_id == branch_id)
         products_perf = query.group_by(
-            Product.id,
-            Product.name,
-            Product.sku,
-            Product.cost_price,
+            models.Product.id,
+            models.Product.name,
+            models.Product.sku,
+            models.Product.cost_price,
         ).all()
 
         sold_values = [float(p.total_sold or 0) for p in products_perf if p.total_sold]
@@ -174,14 +172,14 @@ class AnalyticsService:
                 month_end = month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)
             else:
                 month_end = month_start.replace(month=month_start.month+1, day=1) - timedelta(days=1)
-            revenue = db.session.query(func.sum(Sale.total_amount)).filter(
-                Sale.sale_date >= month_start,
-                Sale.sale_date <= month_end,
-                Sale.status == 'confirmed',
-                Sale.tenant_id == tenant_id,
+            revenue = db.session.query(func.sum(models.Sale.total_amount)).filter(
+                models.Sale.sale_date >= month_start,
+                models.Sale.sale_date <= month_end,
+                models.Sale.status == 'confirmed',
+                models.Sale.tenant_id == tenant_id,
             )
             if branch_id is not None:
-                revenue = revenue.filter(Sale.branch_id == branch_id)
+                revenue = revenue.filter(models.Sale.branch_id == branch_id)
             revenue = revenue.scalar() or 0
             historical_data.append({'month': month_start.strftime('%Y-%m'), 'revenue': float(revenue)})
         historical_data.reverse()
@@ -210,12 +208,12 @@ class AnalyticsService:
         start_date = end_date - timedelta(days=30 * months)
 
         # جلب جميع المعاملات المكتملة للمستأجر
-        query = db.session.query(Donation).filter(
-            Donation.status == 'completed',
-            Donation.created_at >= start_date
+        query = db.session.query(models.Donation).filter(
+            models.Donation.status == 'completed',
+            models.Donation.created_at >= start_date
         )
         if tid:
-            query = query.filter(Donation.tenant_id == tid)
+            query = query.filter(models.Donation.tenant_id == tid)
         donations = query.all()
 
         # تجميع البيانات حسب الفترة
@@ -267,14 +265,14 @@ class AnalyticsService:
         from utils.tenanting import active_tenant_id
         tid = tenant_id or active_tenant_id()
 
-        query = db.session.query(Package).filter_by(is_active=True)
+        query = db.session.query(models.Package).filter_by(is_active=True)
         if tid:
             query = query.filter_by(tenant_id=tid)
         packages = query.all()
 
         performance = []
         for package in packages:
-            purchases = db.session.query(PackagePurchase).filter_by(package_id=package.id)
+            purchases = db.session.query(models.PackagePurchase).filter_by(package_id=package.id)
             if tid:
                 purchases = purchases.filter_by(tenant_id=tid)
             purchases = purchases.all()
@@ -301,7 +299,7 @@ class AnalyticsService:
         from utils.tenanting import active_tenant_id
         tid = tenant_id or active_tenant_id()
 
-        query = db.session.query(Donation).filter_by(status='completed')
+        query = db.session.query(models.Donation).filter_by(status='completed')
         if tid:
             query = query.filter_by(tenant_id=tid)
         donations = query.all()
@@ -328,7 +326,7 @@ class AnalyticsService:
         tid = tenant_id or active_tenant_id()
 
         # جلب جميع المشتريات
-        query = db.session.query(PackagePurchase)
+        query = db.session.query(models.PackagePurchase)
         if tid:
             query = query.filter_by(tenant_id=tid)
         purchases = query.all()
@@ -403,7 +401,7 @@ class AnalyticsService:
         tid = tenant_id or active_tenant_id()
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        query = db.session.query(Donation).filter(Donation.created_at >= today_start)
+        query = db.session.query(models.Donation).filter(models.Donation.created_at >= today_start)
         if tid:
             query = query.filter_by(tenant_id=tid)
         today_donations = query.all()

@@ -15,24 +15,26 @@ def _patch_tenanting_active_id(mocker):
     mocker.patch.object(tenanting_mod, 'active_tenant_id', lambda: 1, create=True)
 
 
+def _model_name(target):
+    return getattr(target, '__name__', None)
+
+
 def _patch_session_query(mocker, handler):
-    """Patch analytics_service.db.session.query with a per-model handler."""
-    session = mocker.patch('services.analytics_service.db.session')
+    """Patch db.session.query for analytics_service (extensions + module alias)."""
+    from extensions import db as ext_db
 
     def _query(target):
         result = handler(target)
         return result if result is not None else MagicMock()
 
-    session.query.side_effect = _query
-    return session
+    mocker.patch.object(ext_db.session, 'query', side_effect=_query)
+    mocker.patch('services.analytics_service.db.session.query', side_effect=_query)
 
 
 class TestCustomerInsights:
     """get_customer_insights — LTV sorting and branch scope."""
 
     def test_sorts_by_lifetime_value_desc_and_caps_fifty(self, mocker):
-        from models import Customer, Sale
-
         customers = [MagicMock(id=i, name=f'C{i}') for i in range(55)]
         cust_q = MagicMock()
         cust_q.filter_by.return_value = cust_q
@@ -55,11 +57,12 @@ class TestCustomerInsights:
         sum_q.scalar.side_effect = [1000 - i for i in range(55)]
 
         def _handler(target):
-            if target is Customer:
+            name = _model_name(target)
+            if name == 'Customer':
                 q = MagicMock()
                 q.filter_by.return_value = cust_q
                 return q
-            if target is Sale:
+            if name == 'Sale':
                 q = MagicMock()
                 q.filter_by.side_effect = lambda **kw: sale_count_q if 'status' in kw else last_sale_q
                 return q
@@ -76,8 +79,6 @@ class TestCustomerInsights:
         assert result[0]['lifetime_value'] >= result[1]['lifetime_value']
 
     def test_branch_filter_applied_to_customer_query(self, mocker):
-        from models import Customer
-
         cust_q = MagicMock()
         cust_q.filter_by.return_value = cust_q
         cust_q.join.return_value = cust_q
@@ -86,7 +87,7 @@ class TestCustomerInsights:
         cust_q.all.return_value = []
 
         def _handler(target):
-            if target is Customer:
+            if _model_name(target) == 'Customer':
                 q = MagicMock()
                 q.filter_by.return_value = cust_q
                 return q
@@ -235,8 +236,6 @@ class TestForecastingAndPackages:
         assert forecast['confidence'] in ('عالية', 'متوسطة', 'منخفضة')
 
     def test_package_performance_completed_vs_pending(self, mocker):
-        from models import Package, PackagePurchase
-
         pkg = MagicMock(id=1, name_ar='Gold')
         pkg_q = MagicMock()
         pkg_q.filter_by.return_value = pkg_q
@@ -251,11 +250,12 @@ class TestForecastingAndPackages:
         pp_q.all.return_value = purchases
 
         def _handler(target):
-            if target is Package:
+            name = _model_name(target)
+            if name == 'Package':
                 q = MagicMock()
                 q.filter_by.return_value = pkg_q
                 return q
-            if target is PackagePurchase:
+            if name == 'PackagePurchase':
                 q = MagicMock()
                 q.filter_by.return_value = pp_q
                 return q
@@ -275,8 +275,6 @@ class TestDonationAnalytics:
     """get_payment_method_stats, predict_revenue, get_daily_stats."""
 
     def test_payment_method_aggregation(self, mocker):
-        from models import Donation
-
         donations = [
             MagicMock(payment_method='card', amount_usd=50, status='completed'),
             MagicMock(payment_method='card', amount_usd=30, status='completed'),
@@ -287,7 +285,7 @@ class TestDonationAnalytics:
         don_q.all.return_value = donations
 
         def _handler(target):
-            if target is Donation:
+            if _model_name(target) == 'Donation':
                 q = MagicMock()
                 q.filter_by.return_value = don_q
                 return q

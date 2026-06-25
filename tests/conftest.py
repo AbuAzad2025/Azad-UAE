@@ -179,6 +179,33 @@ def _restore_polluted_model_queries():
             delattr(real_cls, 'query')
 
 
+def _resync_service_model_bindings():
+    """Rebind models.* on loaded service modules after mock patches."""
+    import sys
+    from unittest.mock import MagicMock, NonCallableMock
+
+    import models
+
+    polluted_types = (MagicMock, NonCallableMock)
+    model_exports = [
+        name for name in models.__all__
+        if isinstance(getattr(models, name, None), type)
+    ]
+
+    for mod_name, mod in list(sys.modules.items()):
+        if not mod_name.startswith('services.'):
+            continue
+        if mod is None:
+            continue
+        for name in model_exports:
+            if not hasattr(mod, name):
+                continue
+            bound = getattr(mod, name)
+            real = getattr(models, name)
+            if bound is not real or isinstance(bound, polluted_types):
+                setattr(mod, name, real)
+
+
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
     """Force a clean DB + Flask session slate before and after every test."""
@@ -232,11 +259,13 @@ def auto_cleanup_isolation(app):
 
     _scrub_db()
     _restore_polluted_model_queries()
+    _resync_service_model_bindings()
     yield
     _scrub_db()
     _scrub_flask_session()
     _restore_app_logger()
     _restore_polluted_model_queries()
+    _resync_service_model_bindings()
 
 
 @pytest.fixture(autouse=True)
