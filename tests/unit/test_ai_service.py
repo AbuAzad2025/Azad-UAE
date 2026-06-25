@@ -146,7 +146,9 @@ class TestUserInfoForOwner:
 
 class TestRecommendPrice:
     def test_missing_entities(self):
-        assert AIService.recommend_price(999999, 999999) is None
+        result = AIService.recommend_price(999999, 999999)
+        assert result is None
+        assert not isinstance(result, MagicMock)
 
     def test_merchant_with_history(
         self, db_session, sample_product, sample_customer, sample_user, sample_tenant,

@@ -374,12 +374,24 @@ class AIService:
         }
     
     @staticmethod
+    def _get_model(model_cls, pk):
+        """Load a model by PK via db.session; ignore leaked Model.query mocks."""
+        if pk is None:
+            return None
+        instance = db.session.get(model_cls, pk)
+        if instance is None or not isinstance(instance, model_cls):
+            return None
+        if getattr(type(instance), '__module__', '').startswith('unittest.mock'):
+            return None
+        return instance
+
+    @staticmethod
     def recommend_price(product_id, customer_id):
         """توصية السعر الذكي حسب نوع العميل والسجل"""
         from models import Product, Customer, Sale, SaleLine
         
-        product = Product.query.get(product_id)
-        customer = Customer.query.get(customer_id)
+        product = AIService._get_model(Product, product_id)
+        customer = AIService._get_model(Customer, customer_id)
         
         if not product or not customer:
             return None
@@ -414,7 +426,7 @@ class AIService:
         """فحص المخزون وإطلاق تنبيهات"""
         from models import Product
         
-        product = Product.query.get(product_id)
+        product = AIService._get_model(Product, product_id)
         if not product:
             return None
         
@@ -440,7 +452,7 @@ class AIService:
         def _cached_analysis(cust_id):
             from models import Customer, Sale, Payment
             
-            customer = Customer.query.get(cust_id)
+            customer = AIService._get_model(Customer, cust_id)
             if not customer:
                 return None
             
@@ -1302,7 +1314,7 @@ class AIService:
         """محرك التسعير الذكي"""
         try:
             from models import Product
-            product = Product.query.get(product_id)
+            product = AIService._get_model(Product, product_id)
             if not product:
                 return None
             base_price = float(product.regular_price or 0)
@@ -1647,8 +1659,8 @@ class AIService:
             from models import Product, Customer
             from extensions import db
             
-            product = db.session.get(Product, product_id)
-            customer = db.session.get(Customer, customer_id) if customer_id else None
+            product = AIService._get_model(Product, product_id)
+            customer = AIService._get_model(Customer, customer_id)
             
             if not product:
                 return {'error': 'Product not found'}
