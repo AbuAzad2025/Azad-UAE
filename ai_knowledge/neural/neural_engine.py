@@ -587,10 +587,7 @@ class AzadNeuralEngine:
                 'net_cash_flow': net_cash_flow
             })
         
-        if len(monthly_data) < 3:
-            return {'success': False, 'error': 'Not enough monthly data'}
-        
-        # تحضير للتدريب
+        # تحضير للتدريب (always 12 months from the loop above)
         X = []
         y = []
         
@@ -1630,7 +1627,7 @@ class AzadNeuralEngine:
         # حساب كمية الطلب الاقتصادية (EOQ)
         annual_demand = sales_rate * 365
         ordering_cost = 100  # تكلفة الطلب (افتراضية)
-        holding_cost = float(product_data.cost_price or 10) * 0.25  # 25% من التكلفة
+        holding_cost = float(product_data.cost_price or 0) * 0.25  # 25% of cost
         
         if holding_cost > 0:
             eoq = np.sqrt((2 * annual_demand * ordering_cost) / holding_cost)

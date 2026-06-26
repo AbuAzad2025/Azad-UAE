@@ -421,37 +421,17 @@ class AzadResponses:
             else:
                 return margins.get('message', 'لا توجد مبيعات للتحليل')
         
-        # معلومات النظام
-        elif any(kw in msg_lower for kw in ['استخدام', 'كيف استخدم', 'دليل', 'guide', 'شرح']):
+        # استخدام النظام (keywords not handled by the help branch above)
+        elif 'استخدام' in msg_lower:
             return get_system_guide()
         
         # السوق
         elif any(kw in msg_lower for kw in ['سوق', 'market', 'منافسة', 'استراتيجية']):
             return get_market_insights()
         
-        # استعلامات النظام - رصيد العميل
-        elif any(kw in msg_lower for kw in ['رصيد', 'ديون', 'ذمم', 'balance', 'debt']) and any(kw in msg_lower for kw in ['عميل', 'زبون', 'customer']):
-            return AzadResponses._handle_customer_balance_query(message)
-        
-        # استعلامات النظام - بيانات العميل
-        elif any(kw in msg_lower for kw in ['عميل', 'زبون', 'customer']) and any(kw in msg_lower for kw in ['بيانات', 'معلومات', 'info', 'data']):
-            return AzadResponses._handle_customer_info_query(message)
-        
-        # استعلامات النظام - مخزون المنتج
-        elif any(kw in msg_lower for kw in ['مخزون', 'stock', 'كمية']) and any(kw in msg_lower for kw in ['منتج', 'product', 'قطعة']):
-            return AzadResponses._handle_product_stock_query(message)
-        
-        # استعلامات النظام - ملخص النظام
+        # ملخص النظام
         elif any(kw in msg_lower for kw in ['ملخص', 'summary', 'إحصائيات', 'statistics']) and any(kw in msg_lower for kw in ['نظام', 'system', 'كلي']):
             return AzadResponses._handle_system_summary_query()
-        
-        # إضافة عميل جديد
-        elif any(kw in msg_lower for kw in ['أضف', 'add', 'إنشاء', 'create']) and any(kw in msg_lower for kw in ['عميل', 'زبون', 'customer']):
-            return AzadResponses._handle_add_customer_query(message)
-        
-        # البحث في النظام (تأكد من كلمة كاملة)
-        elif any(kw in msg_lower for kw in ['ابحث', 'search', 'find']) or (' جد ' in msg_lower or msg_lower.startswith('جد ')):
-            return AzadResponses._handle_search_query(message)
         
         # إضافة مصدر معرفة
         elif any(kw in msg_lower for kw in ['أضف', 'add']) and any(kw in msg_lower for kw in ['موقع', 'website', 'كتاب', 'book', 'مصدر', 'source']):
@@ -462,56 +442,35 @@ class AzadResponses:
             return AzadResponses._show_system_quick_links()
         
         # عرض المصادر المتاحة
-        elif any(kw in msg_lower for kw in ['مصادر', 'sources', 'روابط', 'links', 'websites', 'مواقع']):
+        elif any(kw in msg_lower for kw in ['مصادر', 'sources', 'websites', 'مواقع']):
             return AzadResponses._show_knowledge_sources(message)
         
         # توصية بمصادر للاستفسار
         elif any(kw in msg_lower for kw in ['أين', 'where', 'وين']) and any(kw in msg_lower for kw in ['أجد', 'find', 'معلومات', 'information']):
             return AzadResponses._recommend_sources(message)
         
-        # البحث في المعرفة الموسعة
-        elif any(kw in msg_lower for kw in ['ابحث', 'search']) and any(kw in msg_lower for kw in ['معرفة', 'knowledge', 'معلومات', 'info']):
-            return AzadResponses._handle_knowledge_search(message)
-        
-        # إنشاء فاتورة مباشرة
-        elif any(kw in msg_lower for kw in ['فاتورة', 'invoice', 'بيع']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
+        # إنشاء فاتورة / سند
+        elif any(kw in msg_lower for kw in ['فاتورة', 'invoice']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
             return AzadResponses._quick_invoice_link()
         
-        # إنشاء سند قبض
-        elif any(kw in msg_lower for kw in ['سند', 'receipt', 'دفع', 'payment']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
+        elif any(kw in msg_lower for kw in ['سند', 'receipt']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
             return AzadResponses._quick_receipt_link()
         
         # توليد المستندات
         elif any(kw in msg_lower for kw in ['سند', 'receipt', 'فاتورة', 'invoice']) and any(kw in msg_lower for kw in ['ولد', 'generate', 'أنشئ', 'create']):
             return AzadResponses._handle_document_generation(message)
         
-        # التصدير إلى Excel
-        elif any(kw in msg_lower for kw in ['صدر', 'export', 'excel', 'أكسل']) and any(kw in msg_lower for kw in ['بيانات', 'data', 'مبيعات', 'sales']):
-            return AzadResponses._handle_excel_export(message)
-        
-        # التقارير السريعة
-        elif any(kw in msg_lower for kw in ['تقرير', 'report']) and any(kw in msg_lower for kw in ['مبيعات', 'sales', 'مشتريات', 'purchases', 'مخزون', 'inventory', 'ذمم', 'receivables']):
-            return AzadResponses._quick_report_links(message)
-        
         # التقارير العامة
         elif any(kw in msg_lower for kw in ['تقرير', 'report', 'كشف', 'statement']) and any(kw in msg_lower for kw in ['ولد', 'generate', 'أنشئ', 'create']):
             return AzadResponses._handle_report_generation(message)
         
-        # القوانين الضريبية
-        elif any(kw in msg_lower for kw in ['قانون', 'law', 'ضريبة', 'tax', 'ضرائب']) and any(kw in msg_lower for kw in ['فلسطين', 'palestine', 'اسرائيل', 'israel', 'خليج', 'gulf']):
-            return AzadResponses._handle_tax_laws_query(message)
-        
-        # قوانين الشحن والتخليص
-        elif any(kw in msg_lower for kw in ['شحن', 'shipping', 'تخليص', 'customs', 'جمارك']) and any(kw in msg_lower for kw in ['قانون', 'law', 'إجراءات', 'procedures']):
+        # قوانين الشحن
+        elif any(kw in msg_lower for kw in ['شحن', 'shipping']) and any(kw in msg_lower for kw in ['قانون', 'law', 'إجراءات', 'procedures']):
             return AzadResponses._handle_shipping_laws_query(message)
         
         # جودة البضائع
         elif any(kw in msg_lower for kw in ['جودة', 'quality', 'معايير', 'standards', 'شهادة', 'certificate']):
             return AzadResponses._handle_quality_standards_query(message)
-        
-        # نكتة مهنية
-        elif any(kw in msg_lower for kw in ['نكتة', 'joke', 'ضحك', 'laugh', 'مرح', 'fun']):
-            return azad_personality.get_professional_joke()
         
         # رد عام ذكي
         else:
