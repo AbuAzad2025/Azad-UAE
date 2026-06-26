@@ -12,7 +12,7 @@ class TestSupplierCreate:
         """New supplier must be auto-linked to the active tenant."""
         from models import Tenant, Branch, Role, User, Supplier
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'SuppT {tid}', name_ar=f'SuppT {tid}', slug=f'supp-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -56,7 +56,7 @@ class TestSupplierBranchIsolation:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'BrS {tid}', name_ar=f'BrS {tid}', slug=f'brs-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -112,7 +112,7 @@ class TestSupplierBranchIsolation:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'BrR {tid}', name_ar=f'BrR {tid}', slug=f'brr-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -169,7 +169,7 @@ class TestSupplierStatement:
         """Supplier statement must show purchases (debit) and payments (credit)."""
         from models import Tenant, Branch, Role, User, Supplier, Purchase, Payment
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'StS {tid}', name_ar=f'StS {tid}', slug=f'sts-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -226,7 +226,7 @@ class TestPayablesReport:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Pay {tid}', name_ar=f'Pay {tid}', slug=f'pay-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -274,7 +274,7 @@ class TestSupplierChequeReport:
         """Supplier statement must show payments linked to outgoing cheques."""
         from models import Tenant, Branch, Role, User, Supplier, Purchase, Payment, Cheque
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'ChS {tid}', name_ar=f'ChS {tid}', slug=f'chs-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -340,7 +340,7 @@ class TestSupplierAgeing:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Age {tid}', name_ar=f'Age {tid}', slug=f'age-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -391,7 +391,7 @@ class TestSupplierDelete:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Del {tid}', name_ar=f'Del {tid}', slug=f'del-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -440,7 +440,7 @@ class TestSupplierDelete:
         """Supplier with NO linked records must be hard-deleted."""
         from models import Tenant, Branch, Role, User, Supplier
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Del2 {tid}', name_ar=f'Del2 {tid}', slug=f'del2-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -481,7 +481,7 @@ class TestSupplierSearch:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Sch {tid}', name_ar=f'Sch {tid}', slug=f'sch-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -530,7 +530,7 @@ class TestSupplierCrossTenant:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         t1 = Tenant(name=f'T1S {tid}', name_ar=f'T1S {tid}', slug=f't1s-{tid}',
                     default_currency='AED', base_currency='AED')
         t2 = Tenant(name=f'T2S {tid}', name_ar=f'T2S {tid}', slug=f't2s-{tid}',
@@ -587,7 +587,7 @@ class TestSupplierCreditLimit:
         from models import Tenant, Branch, Role, User, Supplier, Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Lim {tid}', name_ar=f'Lim {tid}', slug=f'lim-{tid}',
                         default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()

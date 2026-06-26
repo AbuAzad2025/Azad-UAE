@@ -799,9 +799,15 @@ class TestAdditionalStockCoverage:
         db_session.add(pwc)
         db_session.flush()
         with app.app_context():
+            old_mwac = app.config.get('ENABLE_MWAC')
+            old_landed = app.config.get('ENABLE_LANDED_COST_CAPITALIZATION')
             app.config['ENABLE_MWAC'] = True
             app.config['ENABLE_LANDED_COST_CAPITALIZATION'] = False
-            StockService.process_purchase_lines(purchase)
+            try:
+                StockService.process_purchase_lines(purchase)
+            finally:
+                app.config['ENABLE_MWAC'] = old_mwac
+                app.config['ENABLE_LANDED_COST_CAPITALIZATION'] = old_landed
 
     def test_resolve_cogs_last_purchase(self, db_session, sample_tenant, sample_product, sample_warehouse):
         pch = ProductCostHistory(

@@ -353,7 +353,15 @@ def _restore_session_app_config(app):
     """Prevent session-scoped app config mutations from leaking across tests."""
     snapshot = {
         key: app.config.get(key)
-        for key in ('DEBUG', 'APP_ENV', 'CORS_ORIGINS', 'PORT', 'CLIENT_ERROR_TRUSTED_ORIGINS')
+        for key in (
+            'DEBUG',
+            'APP_ENV',
+            'CORS_ORIGINS',
+            'PORT',
+            'CLIENT_ERROR_TRUSTED_ORIGINS',
+            'ENABLE_MWAC',
+            'ENABLE_LANDED_COST_CAPITALIZATION',
+        )
     }
     yield
     for key, value in snapshot.items():

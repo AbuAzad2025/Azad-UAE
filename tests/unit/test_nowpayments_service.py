@@ -256,7 +256,9 @@ class TestVerifyIpn:
 
 
 class TestProcessPaymentCallback:
-    def _donation(self, db_session, payment_id='np-cb-1'):
+    def _donation(self, db_session, payment_id=None):
+        if payment_id is None:
+            payment_id = f'np-cb-{uuid.uuid4().hex[:12]}'
         row = Donation(
             amount_usd=Decimal('20'),
             payment_method='crypto',
@@ -280,9 +282,10 @@ class TestProcessPaymentCallback:
         }) is False
 
     def test_finished_marks_completed(self, svc, db_session):
-        d = self._donation(db_session)
+        payment_id = f'np-finish-{uuid.uuid4().hex[:12]}'
+        d = self._donation(db_session, payment_id=payment_id)
         assert svc.process_payment_callback({
-            'payment_id': 'np-cb-1',
+            'payment_id': payment_id,
             'payment_status': 'finished',
         }) is True
         db_session.refresh(d)
@@ -290,17 +293,19 @@ class TestProcessPaymentCallback:
         assert d.completed_at is not None
 
     def test_failed_and_refunded_statuses(self, svc, db_session):
-        d_fail = self._donation(db_session, payment_id='np-fail')
+        fail_id = f'np-fail-{uuid.uuid4().hex[:12]}'
+        d_fail = self._donation(db_session, payment_id=fail_id)
         assert svc.process_payment_callback({
-            'payment_id': 'np-fail',
+            'payment_id': fail_id,
             'payment_status': 'failed',
         }) is True
         db_session.refresh(d_fail)
         assert d_fail.status == 'failed'
 
-        d_ref = self._donation(db_session, payment_id='np-ref')
+        ref_id = f'np-ref-{uuid.uuid4().hex[:12]}'
+        d_ref = self._donation(db_session, payment_id=ref_id)
         assert svc.process_payment_callback({
-            'payment_id': 'np-ref',
+            'payment_id': ref_id,
             'payment_status': 'refunded',
         }) is True
         db_session.refresh(d_ref)

@@ -253,12 +253,17 @@ class NOWPaymentsService:
             if not payment_id:
                 return False
 
-            donation = Donation.query.filter(
-                db.or_(
-                    Donation.transaction_hash == payment_id,
-                    Donation.gateway_transaction_id == payment_id,
+            donation = (
+                Donation.query.filter(
+                    db.or_(
+                        Donation.transaction_hash == payment_id,
+                        Donation.gateway_transaction_id == payment_id,
+                    ),
+                    Donation.status == 'pending',
                 )
-            ).first()
+                .order_by(Donation.id.desc())
+                .first()
+            )
 
             if not donation:
                 return False

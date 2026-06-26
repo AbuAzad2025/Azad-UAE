@@ -206,9 +206,11 @@ class TestSubscribe:
 
 class TestUnsubscribe:
     def test_by_email(self, db_session, sample_tenant):
+        import uuid
+        email = f'leave-{uuid.uuid4().hex[:12]}@example.com'
         lst = _email_list(db_session, sample_tenant.id)
-        sub = _subscriber(db_session, lst, email='leave@example.com')
-        count = EmailMarketingService.unsubscribe('leave@example.com')
+        sub = _subscriber(db_session, lst, email=email)
+        count = EmailMarketingService.unsubscribe(email)
         assert count == 1
         db_session.refresh(sub)
         assert sub.status == 'unsubscribed'

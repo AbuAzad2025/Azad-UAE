@@ -396,12 +396,13 @@ class TestTenantIsolationHardening:
         db_session.flush()
 
         # Create a suspended tenant
+        suspended_uid = uuid.uuid4().hex[:8]
         suspended_tenant = self._create_second_tenant(
             db_session,
-            name="Suspended Company",
-            name_ar="شركة معلقة",
-            slug=f"suspended-company-{uuid.uuid4().hex[:8]}",
-            email="suspended@example.com",
+            name=f"Suspended Company {suspended_uid}",
+            name_ar=f"شركة معلقة {suspended_uid}",
+            slug=f"suspended-company-{suspended_uid}",
+            email=f"suspended-{suspended_uid}@example.com",
             is_active=True,
             is_suspended=True,
         )
