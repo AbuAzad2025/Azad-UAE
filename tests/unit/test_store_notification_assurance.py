@@ -59,9 +59,30 @@ class TestOrderSummary:
 
         assert '?' in StoreNotificationService._safe_log_text('مرحبا')
 
+    def test_safe_log_text_none_returns_empty(self):
+        from services.store_notification_service import StoreNotificationService
+
+        assert StoreNotificationService._safe_log_text(None) == ''
+
 
 class TestEmailDispatch:
     """notify_new_order — email channel triggers and fallbacks."""
+
+    def test_skips_when_mail_not_configured(self, app, mocker):
+        sale, store = _sale_and_store()
+        app.config.pop('MAIL_USERNAME', None)
+        app.config.pop('MAIL_PASSWORD', None)
+        with app.app_context():
+            from flask import current_app
+            logger = MagicMock()
+            mocker.patch.object(current_app, 'logger', logger)
+            from services.store_notification_service import StoreNotificationService
+            StoreNotificationService.notify_new_order(sale, store)
+        skip_calls = [
+            c for c in logger.info.call_args_list
+            if c.args and 'mail not configured' in str(c.args[0])
+        ]
+        assert skip_calls
 
     def test_skips_when_notify_email_disabled(self, app, mocker):
         sale, store = _sale_and_store()

@@ -362,3 +362,97 @@ class TestStoreAdminCoupons:
                 "code": "",
             })
         assert resp.status_code in (302, 303)
+
+    def test_coupons_create_generic_error(self, store_client):
+        with patch("routes.store.StoreCouponService.create_coupon", side_effect=RuntimeError("db fail")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/coupons", data={
+                "action": "create",
+                "code": "SAVE5",
+            })
+        assert resp.status_code in (302, 303)
+
+
+class TestStoreSettingsExtended:
+    def test_settings_syncs_warehouse_id(self, store_client, store_service_mocks):
+        store_service_mocks["store"].warehouse_id = 99
+        resp = store_client.get("/store/admin/settings")
+        assert resp.status_code == 200
+
+    def test_settings_post_min_order_and_subdomain(self, store_client, store_service_mocks):
+        resp = store_client.post("/store/admin/settings", data={
+            "title": "My Store",
+            "store_slug": "demo-store",
+            "min_order_amount": "50",
+            "subdomain": "myshop",
+            "low_stock_threshold": "3",
+        })
+        assert resp.status_code in (302, 303)
+
+    def test_settings_post_logo_upload(self, store_client, store_service_mocks):
+        from io import BytesIO
+        resp = store_client.post(
+            "/store/admin/settings",
+            data={
+                "title": "Logo Store",
+                "store_slug": "demo-store",
+                "logo": (BytesIO(b"fake-png"), "logo.png"),
+            },
+            content_type="multipart/form-data",
+        )
+        assert resp.status_code in (302, 303)
+
+    def test_settings_post_generic_exception(self, store_client, store_service_mocks):
+        with patch("routes.store.db.session.commit", side_effect=RuntimeError("commit fail")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/settings", data={
+                "title": "Fail Store",
+                "store_slug": "demo-store",
+            })
+        assert resp.status_code == 200
+
+
+class TestStoreTransferExtended:
+    def test_transfer_from_online_default_source(self, store_client, store_service_mocks):
+        resp = store_client.post("/store/admin/transfer", data={
+            "direction": "from_online",
+            "product_id": "5",
+            "source_warehouse_id": "",
+            "quantity": "2",
+        })
+        assert resp.status_code in (302, 303)
+
+    def test_transfer_generic_exception(self, store_client, store_service_mocks):
+        with patch("routes.store.StockService.transfer_stock", side_effect=RuntimeError("xfer fail")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/transfer", data={
+                "direction": "to_online",
+                "product_id": "5",
+                "source_warehouse_id": "20",
+                "quantity": "1",
+            })
+        assert resp.status_code == 200
+
+
+class TestStoreOrdersExtended:
+    def test_order_confirm_generic_exception(self, store_client, store_service_mocks):
+        with patch("routes.store.StoreOrderService.confirm_order", side_effect=RuntimeError("confirm fail")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/orders/100/confirm")
+        assert resp.status_code in (302, 303)
+
+    def test_order_cancel_generic_exception(self, store_client, store_service_mocks):
+        with patch("routes.store.StoreOrderService.cancel_order", side_effect=RuntimeError("cancel fail")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/orders/100/cancel")
+        assert resp.status_code in (302, 303)
+
+    def test_order_cancel_value_error(self, store_client, store_service_mocks):
+        with patch("routes.store.StoreOrderService.cancel_order", side_effect=ValueError("cannot cancel")), \
+             patch("routes.store.db.session.rollback"):
+            resp = store_client.post("/store/admin/orders/100/cancel")
+        assert resp.status_code in (302, 303)
+
+    def test_order_detail_pending_shows_whatsapp(self, store_client, store_service_mocks):
+        resp = store_client.get("/store/admin/orders/100")
+        assert resp.status_code == 200

@@ -343,8 +343,6 @@ class StoreService:
             qty = stock_map.get(product.id, Decimal('0'))
             if qty <= 0:
                 continue
-            if in_stock_only and qty <= 0:
-                continue
             items.append({'product': product, 'quantity': qty})
         if min_price is not None:
             items = [i for i in items if float(i['product'].regular_price or 0) >= float(min_price)]

@@ -261,3 +261,188 @@ class TestCreateWebOrder:
             shop_account=account,
         )
         assert create.call_args.kwargs['customer'].id == sample_customer.id
+
+    def test_load_order_token_non_dict_returns_none(self, app):
+        with app.app_context():
+            token = StoreCheckoutService._serializer().dumps(['not', 'a', 'dict'])
+            assert StoreCheckoutService.load_order_token(token) is None
+
+    def test_build_lines_skips_invalid_qty(self, mocker, sample_tenant, online_warehouse, sample_product_with_stock):
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        cart = {str(sample_product_with_stock.id): 0, '999': -1}
+        with pytest.raises(ValueError, match='فارغة'):
+            StoreCheckoutService.build_lines_from_cart(
+                sample_tenant.id, cart, online_warehouse.id,
+            )
+
+    def test_get_or_create_customer_updates_existing_email(self, db_session, sample_tenant):
+        customer = StoreCheckoutService.get_or_create_customer(
+            sample_tenant.id, 'First', '05055556666',
+        )
+        updated = StoreCheckoutService.get_or_create_customer(
+            sample_tenant.id, 'Renamed', '05055556666', email='new@mail.test',
+        )
+        assert updated.id == customer.id
+        assert updated.name == 'Renamed'
+        assert updated.email == 'new@mail.test'
+
+    def test_shop_account_missing_customer_recreates(self, mocker, tenant_store, sample_user, sample_product_with_stock, online_warehouse):
+        mocker.patch(
+            'services.store_checkout_service.StorePaymentMethodService.validate_for_checkout',
+            return_value=MagicMock(code='cod', name_ar='COD'),
+        )
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        mocker.patch(
+            'services.store_checkout_service.StockService.check_availability_in_warehouse',
+            return_value=(True, ''),
+        )
+
+        def get_side_effect(model, pk):
+            from models import Warehouse as WH
+            if model is WH:
+                return online_warehouse
+            return None
+
+        mocker.patch('extensions.db.session.get', side_effect=get_side_effect)
+        create_customer = mocker.patch(
+            'services.store_checkout_service.StoreCheckoutService.get_or_create_customer',
+            return_value=MagicMock(id=1),
+        )
+        mocker.patch('services.store_checkout_service.SaleService.create_sale', return_value=MagicMock(id=1))
+        mocker.patch('services.store_notification_service.StoreNotificationService.notify_new_order')
+        sample_user.is_owner = True
+        account = MagicMock(customer_id=999)
+        StoreCheckoutService.create_web_order(
+            tenant_store, {str(sample_product_with_stock.id): 1},
+            'Ghost', '05044443333', 'Addr', shop_account=account,
+        )
+        create_customer.assert_called_once()
+
+    def test_create_web_order_with_notes_and_email(
+        self, mocker, tenant_store, sample_user, sample_product_with_stock,
+    ):
+        mocker.patch(
+            'services.store_checkout_service.StorePaymentMethodService.validate_for_checkout',
+            return_value=MagicMock(code='cod', name_ar='COD'),
+        )
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        mocker.patch(
+            'services.store_checkout_service.StockService.check_availability_in_warehouse',
+            return_value=(True, ''),
+        )
+        sale_mock = MagicMock(id=200)
+        mocker.patch('services.store_checkout_service.SaleService.create_sale', return_value=sale_mock)
+        mocker.patch('services.store_notification_service.StoreNotificationService.notify_new_order')
+        sample_user.is_owner = True
+        StoreCheckoutService.create_web_order(
+            tenant_store, {str(sample_product_with_stock.id): 1},
+            'Note User', '05022221111', 'Addr',
+            notes='Leave at door', customer_email='note@test.com',
+        )
+
+    def test_coupon_commit_failure_rolls_back(
+        self, mocker, tenant_store, sample_tenant, sample_user, sample_product_with_stock,
+    ):
+        from models.store_coupon import StoreCoupon
+
+        coupon = StoreCoupon(
+            tenant_id=sample_tenant.id, code='FAIL10',
+            discount_amount=Decimal('5'), is_active=True,
+        )
+        db.session.add(coupon)
+        db.session.flush()
+        mocker.patch(
+            'services.store_checkout_service.StorePaymentMethodService.validate_for_checkout',
+            return_value=MagicMock(code='cod', name_ar='COD'),
+        )
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        mocker.patch(
+            'services.store_checkout_service.StockService.check_availability_in_warehouse',
+            return_value=(True, ''),
+        )
+        mocker.patch('services.store_checkout_service.SaleService.create_sale', return_value=MagicMock(id=1))
+        mocker.patch('services.store_notification_service.StoreNotificationService.notify_new_order')
+        mocker.patch('services.store_coupon_service.StoreCouponService.mark_used')
+        mocker.patch('extensions.db.session.commit', side_effect=RuntimeError('commit fail'))
+        rollback = mocker.patch('extensions.db.session.rollback')
+        sample_user.is_owner = True
+        with pytest.raises(RuntimeError):
+            StoreCheckoutService.create_web_order(
+                tenant_store, {str(sample_product_with_stock.id): 1},
+                'Coupon Fail', '05088887777', 'Addr', coupon_code='FAIL10',
+            )
+        rollback.assert_called()
+
+    def test_get_or_create_customer_sets_address_when_empty(self, db_session, sample_tenant):
+        customer = StoreCheckoutService.get_or_create_customer(
+            sample_tenant.id, 'Addr User', '05066667777',
+        )
+        updated = StoreCheckoutService.get_or_create_customer(
+            sample_tenant.id, 'Addr User', '05066667777', address='New Street',
+        )
+        assert updated.address == 'New Street'
+
+    def test_build_lines_skips_unparseable_product_id(self, mocker, sample_tenant, online_warehouse, sample_product_with_stock):
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        mocker.patch(
+            'services.store_checkout_service.StockService.check_availability_in_warehouse',
+            return_value=(True, ''),
+        )
+        lines = StoreCheckoutService.build_lines_from_cart(
+            sample_tenant.id,
+            {'bad-id': 1, str(sample_product_with_stock.id): 1},
+            online_warehouse.id,
+        )
+        assert len(lines) == 1
+
+    def test_shop_account_updates_customer_email(
+        self, mocker, tenant_store, sample_customer, sample_user, sample_product_with_stock, online_warehouse,
+    ):
+        mocker.patch(
+            'services.store_checkout_service.StorePaymentMethodService.validate_for_checkout',
+            return_value=MagicMock(code='cod', name_ar='COD'),
+        )
+        mocker.patch(
+            'services.store_checkout_service.StoreService.online_stock_map',
+            return_value={sample_product_with_stock.id: Decimal('10')},
+        )
+        mocker.patch(
+            'services.store_checkout_service.StockService.check_availability_in_warehouse',
+            return_value=(True, ''),
+        )
+        mocker.patch('services.store_checkout_service.SaleService.create_sale', return_value=MagicMock(id=1))
+        mocker.patch('services.store_notification_service.StoreNotificationService.notify_new_order')
+
+        def get_side_effect(model, pk):
+            from models import Warehouse as WH, Customer as C
+            if model is WH:
+                return online_warehouse
+            if model is C:
+                return sample_customer
+            return None
+
+        mocker.patch('extensions.db.session.get', side_effect=get_side_effect)
+        sample_customer.email = None
+        sample_user.is_owner = True
+        account = MagicMock(customer_id=sample_customer.id)
+        StoreCheckoutService.create_web_order(
+            tenant_store, {str(sample_product_with_stock.id): 1},
+            'Email User', '05033334444', 'Addr',
+            shop_account=account, customer_email='newbuyer@test.com',
+        )
+        assert sample_customer.email == 'newbuyer@test.com'

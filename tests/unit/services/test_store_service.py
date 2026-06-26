@@ -15,6 +15,9 @@ class TestSlugHelpers:
     def test_normalize_slug(self):
         assert StoreService.normalize_slug('  Hello World!  ') == 'hello-world'
 
+    def test_validate_slug_accepts_normalized(self):
+        assert StoreService.validate_slug('My Store Name') == 'my-store-name'
+
     def test_validate_slug_rejects_invalid(self, mocker):
         mocker.patch.object(StoreService, 'normalize_slug', return_value='bad_slug')
         with pytest.raises(ValueError, match='رابط'):
@@ -310,3 +313,190 @@ class TestLoyaltyAndVariants:
         mocker.patch('services.store_service.require_active_tenant_id', return_value=42)
         assert StoreService.resolve_tenant_id(MagicMock()) == 42
         assert StoreService.active_tenant_id_for_user(MagicMock()) == 42
+
+
+class TestStoreServiceExtended:
+    def test_get_online_warehouse_create_true_bootstraps(self, db_session, sample_tenant, sample_branch):
+        wh = StoreService.get_online_warehouse(sample_tenant.id, create=True)
+        assert wh is not None
+        assert wh.is_online is True
+
+    def test_get_tenant_store_create_true(self, db_session, sample_tenant, sample_branch):
+        store = StoreService.get_tenant_store(sample_tenant.id, create=True)
+        assert store is not None
+        assert store.tenant_id == sample_tenant.id
+
+    def test_ensure_online_warehouse_code_name_collision(self, mocker, sample_tenant, sample_branch):
+        tenant = mocker.MagicMock()
+        tenant.name = 'Acme'
+        tenant.name_ar = 'Acme AR'
+        mocker.patch('services.store_service.StoreService.get_online_warehouse', return_value=None)
+        mocker.patch('services.store_service.db.session.get', return_value=tenant)
+        branch = mocker.MagicMock(id=sample_branch.id)
+        mocker.patch('services.store_service.Branch.query').filter_by.return_value.order_by.return_value.first.return_value = branch
+        filter_by = mocker.patch('services.store_service.Warehouse.query').filter_by
+        filter_by.return_value.first.side_effect = [MagicMock(), MagicMock()]
+        added = []
+        mocker.patch('services.store_service.db.session.add', side_effect=lambda o: added.append(o))
+        mocker.patch('services.store_service.db.session.flush')
+        wh = StoreService.ensure_online_warehouse(sample_tenant.id)
+        assert wh.code.startswith('ONLINE-T')
+        assert 'T' in wh.name
+
+    def test_get_related_products_filters(self, mocker, sample_tenant):
+        p1 = MagicMock(id=1, category_id=5, has_serial_number=False)
+        p2 = MagicMock(id=2, category_id=5, has_serial_number=True)
+        p3 = MagicMock(id=3, category_id=9, has_serial_number=False)
+        p4 = MagicMock(id=4, category_id=5, has_serial_number=False)
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=([p1, p2, p3, p4], {1: Decimal('1'), 4: Decimal('0')}),
+        )
+        related = StoreService.get_related_products(sample_tenant.id, 99, 5, limit=2)
+        assert len(related) == 1
+        assert related[0]['product'].id == 1
+
+    def test_assert_single_online_warehouse_excludes_self(self, online_warehouse, sample_tenant):
+        StoreService.assert_single_online_warehouse(sample_tenant.id, warehouse_id=online_warehouse.id)
+
+    def test_set_platform_disabled_rollback_on_error(self, tenant_store, mocker):
+        mocker.patch('extensions.db.session.commit', side_effect=RuntimeError('fail'))
+        rollback = mocker.patch('extensions.db.session.rollback')
+        with pytest.raises(RuntimeError):
+            StoreService.set_platform_disabled(tenant_store, True)
+        rollback.assert_called_once()
+
+    def test_get_store_by_host_empty(self):
+        assert StoreService.get_store_by_host('') is None
+        assert StoreService.get_store_by_host(None) is None
+
+    def test_ensure_unique_subdomain_excludes_self(self, db_session, tenant_store):
+        slug = StoreService.ensure_unique_subdomain(tenant_store.subdomain, tenant_id=tenant_store.tenant_id)
+        assert slug == tenant_store.subdomain
+
+    def test_get_public_catalog_sort_and_filters(self, mocker, sample_tenant):
+        p = MagicMock()
+        p.id = 1
+        p.has_serial_number = False
+        p.category_id = 2
+        p.name = 'Alpha'
+        p.name_ar = ''
+        p.sku = 'A1'
+        p.regular_price = Decimal('100')
+        p.get_display_name.return_value = 'Alpha'
+        p.created_at = None
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=([p], {1: Decimal('5')}),
+        )
+        result = StoreService.get_public_catalog(
+            sample_tenant.id, category_id=2, search='alpha',
+            sort='price_desc', min_price=50, max_price=200,
+            in_stock_only=True, page=1, per_page=10,
+        )
+        assert result['total'] == 1
+
+    def test_get_public_catalog_name_sort(self, mocker, sample_tenant):
+        from types import SimpleNamespace
+        pa = SimpleNamespace(
+            id=1, has_serial_number=False, category_id=None,
+            name='B', name_ar='', sku='', regular_price=10, created_at=None,
+        )
+        pb = SimpleNamespace(
+            id=2, has_serial_number=False, category_id=None,
+            name='A', name_ar='', sku='', regular_price=20, created_at=None,
+        )
+        pa.get_display_name = lambda lang='en': 'B'
+        pb.get_display_name = lambda lang='en': 'A'
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=([pa, pb], {1: Decimal('1'), 2: Decimal('1')}),
+        )
+        asc = StoreService.get_public_catalog(sample_tenant.id, sort='name_asc')
+        desc = StoreService.get_public_catalog(sample_tenant.id, sort='name_desc')
+        newest = StoreService.get_public_catalog(sample_tenant.id, sort='newest')
+        assert asc['items'][0]['product'].name == 'A'
+        assert desc['items'][0]['product'].name == 'B'
+        assert newest['total'] == 2
+
+    def test_cart_totals_skips_missing_product(self, mocker, sample_tenant):
+        mocker.patch('services.store_service.StoreService.online_stock_map', return_value={99: Decimal('5')})
+        mocker.patch('services.store_service.Product.query').filter_by.return_value.first.return_value = None
+        totals = StoreService.cart_totals(sample_tenant.id, {'99': 2})
+        assert totals['lines'] == []
+
+    def test_cart_totals_caps_quantity(self, mocker, sample_tenant, sample_product):
+        mocker.patch(
+            'services.store_service.StoreService.online_stock_map',
+            return_value={sample_product.id: Decimal('1')},
+        )
+        mocker.patch('services.store_service.Product.query').filter_by.return_value.first.return_value = sample_product
+        totals = StoreService.cart_totals(sample_tenant.id, {str(sample_product.id): 5})
+        assert totals['lines'][0]['quantity'] == Decimal('1')
+
+    def test_earn_loyalty_no_account_id(self):
+        StoreService.earn_loyalty_points(1, 0, 1, Decimal('10'))
+
+    def test_get_tenant_store_existing(self, tenant_store):
+        found = StoreService.get_tenant_store(tenant_store.tenant_id, create=False)
+        assert found.id == tenant_store.id
+
+    def test_get_store_by_host_strips_www(self, db_session, tenant_store):
+        tenant_store.custom_domain = 'example-shop.test'
+        db.session.flush()
+        found = StoreService.get_store_by_host('www.example-shop.test')
+        assert found is not None
+        assert found.id == tenant_store.id
+
+    def test_get_related_products_respects_limit(self, mocker, sample_tenant):
+        products = []
+        stock = {}
+        for i in range(1, 5):
+            p = MagicMock(id=i, category_id=3, has_serial_number=False)
+            products.append(p)
+            stock[i] = Decimal('5')
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=(products, stock),
+        )
+        related = StoreService.get_related_products(sample_tenant.id, 99, 3, limit=2)
+        assert len(related) == 2
+
+    def test_get_public_catalog_excludes_serial_and_filters(self, mocker, sample_tenant):
+        serial = MagicMock(id=1, has_serial_number=True, category_id=None, name='S', name_ar='', sku='', regular_price=10)
+        wrong_cat = MagicMock(id=2, has_serial_number=False, category_id=9, name='W', name_ar='', sku='', regular_price=10)
+        no_stock = MagicMock(id=3, has_serial_number=False, category_id=None, name='N', name_ar='', sku='', regular_price=10)
+        match = MagicMock(id=4, has_serial_number=False, category_id=None, name='Alpha Product', name_ar='', sku='', regular_price=10)
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=([serial, wrong_cat, no_stock, match], {1: Decimal('1'), 2: Decimal('1'), 3: Decimal('0'), 4: Decimal('2')}),
+        )
+        result = StoreService.get_public_catalog(
+            sample_tenant.id, category_id=5, search='zzz',
+        )
+        assert result['total'] == 0
+        result2 = StoreService.get_public_catalog(sample_tenant.id, search='alpha')
+        assert result2['total'] == 1
+
+    def test_get_public_catalog_skips_zero_stock(self, mocker, sample_tenant):
+        product = MagicMock(
+            id=1, has_serial_number=False, category_id=None,
+            name='Zero', name_ar='', sku='', regular_price=10,
+        )
+        mocker.patch(
+            'services.store_service.StoreService.get_catalog_products',
+            return_value=([product], {1: Decimal('0')}),
+        )
+        assert StoreService.get_public_catalog(sample_tenant.id)['total'] == 0
+
+    def test_cart_totals_zero_qty_after_cap_skipped(self, mocker, sample_tenant, sample_product):
+        mocker.patch(
+            'services.store_service.StoreService.online_stock_map',
+            return_value={sample_product.id: Decimal('0')},
+        )
+        mocker.patch('services.store_service.Product.query').filter_by.return_value.first.return_value = sample_product
+        totals = StoreService.cart_totals(sample_tenant.id, {str(sample_product.id): 3})
+        assert totals['lines'] == []
+
+    def test_get_recently_viewed_empty_ids(self, sample_tenant):
+        assert StoreService.get_recently_viewed_products(sample_tenant.id, []) == []
