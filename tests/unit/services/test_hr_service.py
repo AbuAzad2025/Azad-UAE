@@ -421,3 +421,161 @@ class TestHrEdgeCases:
         assert r['debt'] == Decimal('400.00')
 
 
+class TestHrServiceCommitRollbackPaths:
+    def test_clock_in_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.clock_in(hr_user)
+        rollback.assert_called_once()
+
+    def test_clock_out_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        HRService.clock_in(hr_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.clock_out(hr_user)
+        rollback.assert_called_once()
+
+    def test_request_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.request_leave({
+                'leave_type_id': leave_type.id,
+                'date_from': '2026-07-01',
+                'date_to': '2026-07-02',
+            }, hr_user)
+        rollback.assert_called_once()
+
+    def test_approve_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        leave = HRService.request_leave({
+            'leave_type_id': leave_type.id,
+            'date_from': '2026-08-01',
+            'date_to': '2026-08-02',
+        }, hr_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.approve_leave(leave.id, _user(user_id=2))
+        rollback.assert_called_once()
+
+    def test_refuse_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        leave = HRService.request_leave({
+            'leave_type_id': leave_type.id,
+            'date_from': '2026-09-01',
+            'date_to': '2026-09-02',
+        }, hr_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.refuse_leave(leave.id, _user(user_id=2), reason='no')
+        rollback.assert_called_once()
+
+    def test_create_department_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.create_department({'name': 'Fail Dept'}, hr_user)
+        rollback.assert_called_once()
+
+    def test_create_contract_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
+        mocker.patch('services.hr_service.is_global_owner_user', return_value=True)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            HRService.create_contract({'user_id': hr_user.id}, hr_user)
+        rollback.assert_called_once()
+
+
+class TestPayrollEngineCoverageGaps:
+    def test_assert_mutable_raises(self):
+        from services.hr_service import PayrollEngine, ImmutableRecordError
+        tx = MagicMock(status='approved')
+        with pytest.raises(ImmutableRecordError):
+            PayrollEngine.assert_mutable(tx)
+
+    def test_compute_net_daily_rate_days_worked_and_basic_as_days(self):
+        from services.hr_service import PayrollEngine
+        assert PayrollEngine.compute_net_salary(
+            Decimal('0'), daily_rate=Decimal('100'), days_worked=15,
+        ) == Decimal('1500.00')
+        assert PayrollEngine.compute_net_salary(
+            Decimal('20'), daily_rate=Decimal('50'),
+        ) == Decimal('1000.00')
+        assert PayrollEngine.compute_net_salary(
+            Decimal('5000'), daily_rate=Decimal('50'),
+        ) == Decimal('5000.00')
+
+    def test_process_negative_guard_positive_net(self):
+        from services.hr_service import PayrollEngine
+        PayrollEngine._debt_registry.clear()
+        r = PayrollEngine.process_with_negative_guard(Decimal('1000'), Decimal('100'))
+        assert r['clamped'] is False
+        assert r['net_salary'] == Decimal('1100.00')
+
+    def test_process_negative_guard_registers_debt(self):
+        from services.hr_service import PayrollEngine
+        PayrollEngine._debt_registry.clear()
+        r = PayrollEngine.process_with_negative_guard(
+            Decimal('100'), deductions=Decimal('500'),
+            employee_id=7, tenant_id=1, month=6, year=2026, convert_to_debt=True,
+        )
+        assert r['clamped'] is True
+        assert len(PayrollEngine._debt_registry) == 1
+
+    def test_can_edit_locked_returns_false(self):
+        from services.hr_service import PayrollEngine
+        tx = MagicMock(status='paid')
+        assert PayrollEngine.can_edit(tx) is False
+
+    def test_can_edit_mutable_returns_true(self):
+        from services.hr_service import PayrollEngine
+        tx = MagicMock(status='draft')
+        assert PayrollEngine.can_edit(tx) is True
+
+    def test_unpaid_leave_deduction_end_date_month(self, mocker):
+        from services.hr_service import PayrollEngine
+        leave = MagicMock()
+        leave.leave_type = 'unpaid'
+        leave.status = 'approved'
+        leave.start_date = MagicMock(year=2026, month=5)
+        leave.end_date = MagicMock(year=2026, month=6)
+        leave.days_taken = 2
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [leave]
+        mocker.patch('models.payroll.EmployeeLeave.query', mock_q)
+        assert PayrollEngine.get_unpaid_leave_deduction(MagicMock(id=1), 6, 2026) == 2
+
+    def test_update_allowances_locked_batch_raises(self):
+        from services.hr_service import PayrollService, PayrollBatch, ImmutableRecordError
+        batch = PayrollBatch([], status='approved')
+        tx = MagicMock(status='draft')
+        with pytest.raises(ImmutableRecordError):
+            PayrollService.update_allowances(tx, Decimal('1'), batch=batch)
+
+    def test_delete_transaction_locked_batch_raises(self):
+        from services.hr_service import PayrollService, PayrollBatch, ImmutableRecordError
+        batch = PayrollBatch([], status='paid')
+        tx = MagicMock(status='draft')
+        with pytest.raises(ImmutableRecordError):
+            PayrollService.delete_transaction(tx, batch=batch)
+
+    def test_compute_net_basic_as_days(self):
+        from services.hr_service import PayrollEngine
+        net = PayrollEngine.compute_net_salary(Decimal('20'), daily_rate=Decimal('50'))
+        assert net == Decimal('1000.00')
+
+    def test_can_edit_mutable_returns_true(self):
+        from services.hr_service import PayrollEngine
+        tx = MagicMock(status='draft')
+        assert PayrollEngine.can_edit(tx) is True
+
+

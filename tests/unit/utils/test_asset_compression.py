@@ -140,3 +140,19 @@ class TestRegisterCompressionCli:
         result = runner.invoke(real_app.cli, ['compress-assets'])
         assert result.exit_code == 0
 
+
+class TestProcessJsCoverageGaps:
+    def test_skips_already_minified(self, tmp_path):
+        js_dir = tmp_path / 'js'
+        js_dir.mkdir()
+        (js_dir / 'app.min.js').write_text('var x=1;', encoding='utf-8')
+        assert AssetCompressor.process_js_files(str(js_dir)) == []
+
+    def test_handles_read_error(self, tmp_path, mocker):
+        js_dir = tmp_path / 'js'
+        js_dir.mkdir()
+        (js_dir / 'bad.js').write_text('x', encoding='utf-8')
+        mocker.patch('utils.asset_compression.click.echo')
+        mocker.patch('builtins.open', side_effect=OSError('read fail'))
+        assert AssetCompressor.process_js_files(str(js_dir)) == []
+

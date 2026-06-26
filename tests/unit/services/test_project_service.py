@@ -235,3 +235,69 @@ class TestProjectEdgeCases:
                 'date_start': '2026-01-01',
             }, sample_user)
 
+
+class TestProjectServiceCommitRollbackPaths:
+    def test_create_project_flush_failure(self, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('flush failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='flush failed'):
+            ProjectService.create_project({'name': 'Flush Fail'}, sample_user)
+        rollback.assert_called_once()
+
+    def test_create_project_commit_failure(self, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.create_project({'name': 'Commit Fail'}, sample_user)
+        rollback.assert_called_once()
+
+    def test_update_project_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        project = ProjectService.create_project({'name': 'Upd Fail'}, sample_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.update_project(project.id, {'name': 'New'}, sample_user)
+        rollback.assert_called_once()
+
+    def test_create_task_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        project = ProjectService.create_project({'name': 'Task Fail'}, sample_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.create_task(project.id, {'name': 'T'}, sample_user)
+        rollback.assert_called_once()
+
+    def test_move_task_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        project = ProjectService.create_project({'name': 'Move Fail'}, sample_user)
+        stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
+        task = ProjectService.create_task(project.id, {'name': 'M'}, sample_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.move_task(task.id, stages[0].id, sample_user)
+        rollback.assert_called_once()
+
+    def test_log_timesheet_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        project = ProjectService.create_project({'name': 'TS Fail'}, sample_user)
+        task = ProjectService.create_task(project.id, {'name': 'W'}, sample_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.log_timesheet(task.id, {'hours': '1'}, sample_user)
+        rollback.assert_called_once()
+
+    def test_add_member_commit_failure(self, db_session, sample_user, sample_tenant, mocker):
+        _patch_tenant(mocker, sample_tenant.id)
+        project = ProjectService.create_project({'name': 'Mem Fail'}, sample_user)
+        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
+        rollback = mocker.patch.object(db.session, 'rollback')
+        with pytest.raises(RuntimeError, match='commit failed'):
+            ProjectService.add_member(project.id, sample_user.id, 'member', sample_user)
+        rollback.assert_called_once()
+

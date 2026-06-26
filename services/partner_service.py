@@ -365,6 +365,7 @@ class PartnerService:
             reference_number=reference_number,
         )
         db.session.add(tx)
+        db.session.flush()
         partner.current_balance = new_bal
         if transaction_type == 'withdrawal':
             partner.total_withdrawals = (Decimal(str(partner.total_withdrawals or 0)) + abs(amount_base))

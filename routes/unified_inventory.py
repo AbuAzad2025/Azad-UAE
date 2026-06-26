@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import Campaign, WarrantyClaim, Shipment
 from utils.decorators import permission_required
-from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
+from utils.tenanting import get_active_tenant_id
 from services.logging_core import LoggingCore
 
 uinv_bp = Blueprint('unified_inventory', __name__, url_prefix='/uinv')

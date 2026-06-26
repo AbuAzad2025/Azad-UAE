@@ -154,7 +154,12 @@ class AdvancedJournalEntryManager:
                 f"إنشاء قيد عكسي للقيد {entry.entry_number}", reversed_by
             )
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return reversal_entry
     
     @staticmethod
@@ -230,9 +235,11 @@ class AdvancedJournalEntryManager:
         return entry
     
     @staticmethod
-    def get_entry_history(entry_id):
+    def get_entry_history(entry_id, tenant_id=None):
         """الحصول على تاريخ القيد"""
-        entry = GLJournalEntry.query.get(entry_id)
+        from utils.gl_tenant import gl_entry_query, active_tenant_id
+        tid = tenant_id if tenant_id is not None else active_tenant_id()
+        entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
         if not entry:
             return []
         return JournalEntryAudit.query.filter_by(

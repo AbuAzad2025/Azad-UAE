@@ -52,7 +52,10 @@ def repair_accounting_data():
         db.session.flush()
 
     updated_products = 0
-    products_without_merchant = Product.query.filter(Product.merchant_customer_id.is_(None)).all()
+    products_without_merchant = Product.query.filter(
+        Product.merchant_customer_id.is_(None),
+        Product.tenant_id == tenant_id,
+    ).all()
     for product in products_without_merchant:
         product.merchant_customer_id = merchant.id
         updated_products += 1
@@ -162,7 +165,11 @@ def repair_accounting_data():
     else:
         posted_inventory_adjustment = Decimal("0")
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     current_app.logger.info(
         "AccountingRepair: merchant_id=%s products_linked=%s legacy_cheque_refs=%s inventory_adjustment=%s",
