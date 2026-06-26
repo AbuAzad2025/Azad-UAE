@@ -385,18 +385,18 @@ class AzadResponses:
         elif any(kw in msg_lower for kw in ['مخزون', 'stock', 'صحة', 'health', 'inventory']):
             health = AIService.analyze_inventory_health()
             if health.get('success'):
-                s = health['summary']
+                s = health.get('summary', {})
                 return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
-• إجمالي المنتجات: {s['total']}
-• حالة جيدة: {s['good']} ✅
-• منخفض: {s['low']} ⚠️
-• نفذ: {s['out']} 🔴
+• إجمالي المنتجات: {s.get('total', 0)}
+• حالة جيدة: {s.get('good', 0)} ✅
+• منخفض: {s.get('low', 0)} ⚠️
+• نفذ: {s.get('out', 0)} 🔴
 
-🏆 **التقييم:** {health['rating']} ({health['health_score']}%)
+🏆 **التقييم:** {health.get('rating', 'غير محدد')} ({health.get('health_score', 0)}%)
 
-💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s['low'] > 0 or s['out'] > 0 else 'المخزون ممتاز!'}"""
+💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s.get('low', 0) > 0 or s.get('out', 0) > 0 else 'المخزون ممتاز!'}"""
             else:
                 return health.get('message', 'لا توجد منتجات للتحليل')
         
@@ -720,8 +720,8 @@ class AzadResponses:
         customer = result['customer']
         sales_summary = system_integrator.get_customer_sales_summary(customer['id'])
         
-        if sales_summary['success']:
-            summary = sales_summary['summary']
+        if sales_summary.get('success'):
+            summary = sales_summary.get('summary', {})
             response = f"""👤 **بيانات العميل: {customer['name']}**
 
 📋 **المعلومات الشخصية:**
@@ -731,15 +731,15 @@ class AzadResponses:
 • الإيميل: {customer['email'] or 'غير محدد'}
 
 💼 **إحصائيات الأعمال:**
-• إجمالي المبيعات: {summary['total_sales']}
-• إجمالي المبلغ: {summary['total_amount']:,.2f} AED
-• المبلغ المدفوع: {summary['paid_amount']:,.2f} AED
-• المتبقي: {summary['balance_due']:,.2f} AED
+• إجمالي المبيعات: {summary.get('total_sales', 0)}
+• إجمالي المبلغ: {summary.get('total_amount', 0):,.2f} AED
+• المبلغ المدفوع: {summary.get('paid_amount', 0):,.2f} AED
+• المتبقي: {summary.get('balance_due', 0):,.2f} AED
 
 📅 **آخر 5 مبيعات:**
-{chr(10).join([f"• فاتورة #{sale['id']} - {sale['date']} - {sale['amount']:,.2f} AED ({sale['status']})" for sale in summary['recent_sales']])}
+{chr(10).join([f"• فاتورة #{sale.get('id', '')} - {sale.get('date', '')} - {sale.get('amount', 0):,.2f} AED ({sale.get('status', '')})" for sale in summary.get('recent_sales', [])])}
 
-💡 **التوصية:** {'يحتاج متابعة للدفع' if summary['balance_due'] > 1000 else 'عميل جيد'}"""
+💡 **التوصية:** {'يحتاج متابعة للدفع' if summary.get('balance_due', 0) > 1000 else 'عميل جيد'}"""
         else:
             response = f"""👤 **بيانات العميل: {customer['name']}**
 
@@ -822,14 +822,14 @@ class AzadResponses:
         summary = system_integrator.get_system_summary()
         financial = system_integrator.get_financial_summary()
         
-        if not summary['success']:
-            return f"❌ {summary['error']}"
-        
-        if not financial['success']:
-            return f"❌ {financial['error']}"
-        
-        sys_data = summary['summary']
-        fin_data = financial['financial']
+        if not summary.get('success'):
+            return f"❌ {summary.get('error', 'خطأ في جلب الملخص')}"
+
+        if not financial.get('success'):
+            return f"❌ {financial.get('error', 'خطأ في جلب الملخص المالي')}"
+
+        sys_data = summary.get('summary', {})
+        fin_data = financial.get('financial', {})
         
         response = f"""📊 **ملخص النظام الشامل**
 
@@ -1183,16 +1183,16 @@ class AzadResponses:
             response = f"""🌐 **مصادر المعرفة المتاحة لأزاد:**
 
 **الإحصائيات:**
-• إجمالي الفئات: {summary['total_categories']}
-• إجمالي المصادر: {summary['total_sources']}
+• إجمالي الفئات: {summary.get('total_categories', 0)}
+• إجمالي المصادر: {summary.get('total_sources', 0)}
 
 📚 **الفئات:**
 
 """
-            for category, info in summary['categories'].items():
-                response += f"**{category.upper()}** ({info['count']} مصادر):\n"
-                for source in info['sources'][:3]:  # أول 3
-                    response += f"  • [{source['name']}]({source['url']})\n"
+            for category, info in summary.get('categories', {}).items():
+                response += f"**{category.upper()}** ({info.get('count', 0)} مصادر):\n"
+                for source in info.get('sources', [])[:3]:
+                    response += f"  • [{source.get('name', '')}]({source.get('url', '')})\n"
                 response += "\n"
             
             response += "**للحصول على مصادر محددة، اسأل عن موضوع معين!**"
@@ -1352,18 +1352,18 @@ class AzadResponses:
         from services.ai_service import AIService
         health = AIService.analyze_inventory_health()
         if health.get('success'):
-            s = health['summary']
+            s = health.get('summary', {})
             return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
-• إجمالي المنتجات: {s['total']}
-• حالة جيدة: {s['good']} ✅
-• منخفض: {s['low']} ⚠️
-• نفذ: {s['out']} 🔴
+• إجمالي المنتجات: {s.get('total', 0)}
+• حالة جيدة: {s.get('good', 0)} ✅
+• منخفض: {s.get('low', 0)} ⚠️
+• نفذ: {s.get('out', 0)} 🔴
 
-🏆 **التقييم:** {health['rating']} ({health['health_score']}%)
+🏆 **التقييم:** {health.get('rating', 'غير محدد')} ({health.get('health_score', 0)}%)
 
-💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s['low'] > 0 or s['out'] > 0 else 'المخزون ممتاز!'}"""
+💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s.get('low', 0) > 0 or s.get('out', 0) > 0 else 'المخزون ممتاز!'}"""
         return health.get('message', 'لا توجد منتجات للتحليل')
 
     @staticmethod

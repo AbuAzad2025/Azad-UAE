@@ -259,63 +259,71 @@ class IntelligentAssistant:
 
             data = {}
 
-            # بيانات عامة للنظام
-            data['system_stats'] = {
-                'total_customers': _f(Customer).filter_by(is_active=True).count(),
-                'total_products': _f(Product).filter_by(is_active=True).count(),
-                'total_sales_today': _f(Sale).filter(
-                    func.date(Sale.sale_date) == datetime.now().date()
-                ).count()
-            }
-            
-            # بيانات حسب النية
-            if intent in ['sales_analysis', 'customer_balance', 'inventory_check']:
-                # مبيعات آخر 30 يوم
-                thirty_days_ago = datetime.now() - timedelta(days=30)
-                recent_sales = _f(Sale).filter(Sale.sale_date >= thirty_days_ago).all()
-                
-                data['recent_sales'] = {
-                    'count': len(recent_sales),
-                    'total_amount': sum(float(s.total_amount) for s in recent_sales),
-                    'avg_amount': sum(float(s.total_amount) for s in recent_sales) / len(recent_sales) if recent_sales else 0,
-                    'sales': [
-                        {
-                            'id': s.id,
-                            'date': s.sale_date.strftime('%Y-%m-%d'),
-                            'amount': float(s.total_amount),
-                            'customer': s.customer.name if s.customer else 'غير محدد'
-                        }
-                        for s in recent_sales[-10:]  # آخر 10 فقط
-                    ]
+            try:
+                data['system_stats'] = {
+                    'total_customers': _f(Customer).filter_by(is_active=True).count(),
+                    'total_products': _f(Product).filter_by(is_active=True).count(),
+                    'total_sales_today': _f(Sale).filter(
+                        func.date(Sale.sale_date) == datetime.now().date()
+                    ).count()
                 }
+            except Exception as exc:
+                logger.debug('System stats collection failed: %s', exc)
+                data['system_stats'] = {}
+            
+            if intent in ['sales_analysis', 'customer_balance', 'inventory_check']:
+                try:
+                    thirty_days_ago = datetime.now() - timedelta(days=30)
+                    recent_sales = _f(Sale).filter(Sale.sale_date >= thirty_days_ago).all()
+                    
+                    data['recent_sales'] = {
+                        'count': len(recent_sales),
+                        'total_amount': sum(float(s.total_amount) for s in recent_sales),
+                        'avg_amount': sum(float(s.total_amount) for s in recent_sales) / len(recent_sales) if recent_sales else 0,
+                        'sales': [
+                            {
+                                'id': s.id,
+                                'date': s.sale_date.strftime('%Y-%m-%d'),
+                                'amount': float(s.total_amount),
+                                'customer': s.customer.name if s.customer else 'غير محدد'
+                            }
+                            for s in recent_sales[-10:]
+                        ]
+                    }
+                except Exception as exc:
+                    logger.debug('Recent sales collection failed: %s', exc)
             
             if intent in ['customer_balance'] and entities.get('names'):
-                # بحث عن العميل المحدد
-                customer_name = entities['names'][0]
-                customer = _f(Customer).filter(
-                    Customer.name.ilike(f'%{customer_name}%')
-                ).first()
-                
-                if customer:
-                    data['customer_data'] = self.data_analyzer.analyze_customer_debt(customer.id)
+                try:
+                    customer_name = entities['names'][0]
+                    customer = _f(Customer).filter(
+                        Customer.name.ilike(f'%{customer_name}%')
+                    ).first()
+                    
+                    if customer:
+                        data['customer_data'] = self.data_analyzer.analyze_customer_debt(customer.id)
+                except Exception as exc:
+                    logger.debug('Customer data collection failed: %s', exc)
             
             if intent in ['inventory_check']:
-                # المنتجات بمخزون منخفض
-                low_stock = _f(Product).filter(
-                    Product.is_active == True,
-                    Product.current_stock <= Product.min_stock_alert
-                ).all()
-                
-                data['low_stock_products'] = [
-                    {
-                        'id': p.id,
-                        'name': p.name,
-                        'current_stock': float(p.current_stock),
-                        'min_alert': float(p.min_stock_alert),
-                        'deficit': float(p.min_stock_alert - p.current_stock)
-                    }
-                    for p in low_stock
-                ]
+                try:
+                    low_stock = _f(Product).filter(
+                        Product.is_active == True,
+                        Product.current_stock <= Product.min_stock_alert
+                    ).all()
+                    
+                    data['low_stock_products'] = [
+                        {
+                            'id': p.id,
+                            'name': p.name,
+                            'current_stock': float(p.current_stock),
+                            'min_alert': float(p.min_stock_alert),
+                            'deficit': float(p.min_stock_alert - p.current_stock)
+                        }
+                        for p in low_stock
+                    ]
+                except Exception as exc:
+                    logger.debug('Inventory collection failed: %s', exc)
             
             return data
         
@@ -489,28 +497,25 @@ class IntelligentAssistant:
                     response_parts.append("")
             
             # إضافة الرؤى
-            if analysis['insights']:
+            if analysis.get('insights'):
                 response_parts.append("💡 **رؤى:**")
                 for insight in analysis['insights']:
                     response_parts.append(insight)
                 response_parts.append("")
             
-            # إضافة التحذيرات
-            if analysis['warnings']:
+            if analysis.get('warnings'):
                 response_parts.append("⚠️ **تنبيهات:**")
                 for warning in analysis['warnings']:
                     response_parts.append(warning)
                 response_parts.append("")
             
-            # إضافة التوصيات
-            if analysis['recommendations']:
+            if analysis.get('recommendations'):
                 response_parts.append("🎯 **توصياتي لك:**")
                 for rec in analysis['recommendations']:
                     response_parts.append(rec)
                 response_parts.append("")
             
-            # إضافة التنبؤات
-            if analysis['predictions']:
+            if analysis.get('predictions'):
                 response_parts.append("🔮 **التنبؤات:**")
                 for pred in analysis['predictions']:
                     response_parts.append(pred)
@@ -524,13 +529,25 @@ class IntelligentAssistant:
     def _learn_from_interaction(self, message: str, response: str, user_id: int):
         """التعلم من التفاعل"""
         try:
-            # حفظ في الذاكرة
+            tenant_id = None
+            try:
+                from flask import has_request_context
+                from utils.tenanting import get_active_tenant_id
+                from flask_login import current_user
+                if has_request_context():
+                    tenant_id = get_active_tenant_id(current_user)
+            except Exception as exc:
+                logger.debug('Tenant resolution for learning failed: %s', exc)
+
             if user_id:
                 self.memory_system.remember_conversation(user_id, message, response)
             
-            # التعلم الذاتي
             from ai_knowledge.core.learning_system import learning_system
-            learning_system.learn_from_interaction(message, response, context={'user_id': user_id})
+            learning_system.learn_from_interaction(
+                message, response,
+                context={'user_id': user_id},
+                tenant_id=tenant_id,
+            )
         
         except Exception as e:
             logger.error(f"Learning failed: {e}")

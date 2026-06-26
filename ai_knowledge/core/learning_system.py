@@ -30,6 +30,51 @@ class AzadLearningSystem:
         self.feedback_log = self._load_feedback()
 
     @staticmethod
+    def _default_knowledge():
+        return {
+            'new_terms': {},
+            'customer_preferences': {},
+            'market_trends': {},
+            'successful_responses': {},
+            'failed_responses': [],
+            'expertise_areas': defaultdict(int),
+            'learning_stats': {
+                'total_interactions': 0,
+                'successful_answers': 0,
+                'learning_rate': 0.0,
+                'last_updated': None
+            }
+        }
+
+    @staticmethod
+    def _tenant_path(filename, tenant_id=None):
+        from ai_knowledge import get_knowledge_path
+        if tenant_id is None:
+            return get_knowledge_path(filename)
+        stem, ext = os.path.splitext(filename)
+        return get_knowledge_path(f"{stem}_tenant_{tenant_id}{ext}")
+
+    @staticmethod
+    def _normalize_loaded_data(data):
+        if not isinstance(data, dict):
+            return AzadLearningSystem._default_knowledge()
+        exp = data.get('expertise_areas', {})
+        if not isinstance(exp, defaultdict):
+            data['expertise_areas'] = defaultdict(int, exp if isinstance(exp, dict) else {})
+        if not isinstance(data.get('failed_responses'), list):
+            data['failed_responses'] = []
+        if not isinstance(data.get('successful_responses'), dict):
+            data['successful_responses'] = {}
+        if not isinstance(data.get('customer_preferences'), dict):
+            data['customer_preferences'] = {}
+        for key in ('new_terms', 'market_trends'):
+            if not isinstance(data.get(key), dict):
+                data[key] = {}
+        if 'learning_stats' not in data or not isinstance(data['learning_stats'], dict):
+            data['learning_stats'] = AzadLearningSystem._default_knowledge()['learning_stats']
+        return data
+
+    @staticmethod
     def _empty_patterns():
         return {
             'question_patterns': defaultdict(list),
@@ -66,33 +111,10 @@ class AzadLearningSystem:
         if os.path.exists(self.knowledge_file):
             try:
                 with open(self.knowledge_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    exp = data.get('expertise_areas', {})
-                    if not isinstance(exp, defaultdict):
-                        data['expertise_areas'] = defaultdict(int, exp)
-                    failed = data.get('failed_responses')
-                    if not isinstance(failed, list):
-                        data['failed_responses'] = []
-                    successful = data.get('successful_responses')
-                    if not isinstance(successful, dict):
-                        data['successful_responses'] = {}
-                    return data
+                    return self._normalize_loaded_data(json.load(f))
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug('Could not load knowledge file: %s', exc)
-        return {
-            'new_terms': {},
-            'customer_preferences': {},
-            'market_trends': {},
-            'successful_responses': {},
-            'failed_responses': [],
-            'expertise_areas': defaultdict(int),
-            'learning_stats': {
-                'total_interactions': 0,
-                'successful_answers': 0,
-                'learning_rate': 0.0,
-                'last_updated': None
-            }
-        }
+        return self._default_knowledge()
     
     def _load_interactions(self):
         """تحميل سجل التفاعلات"""
@@ -148,10 +170,14 @@ class AzadLearningSystem:
         # تحديث المعرفة
         self._update_knowledge(question, response, interaction['success'])
         
-        # حفظ البيانات
+        if tenant_id is not None:
+            prefs = self.learned_knowledge.setdefault('customer_preferences', {})
+            tenant_prefs = prefs.setdefault(str(tenant_id), {})
+            tenant_prefs['last_question'] = question
+            tenant_prefs['last_updated'] = datetime.now().isoformat()
+            self._save_tenant_data(tenant_id)
+
         self._save_data()
-        
-        # تحديث الإحصائيات
         self._update_stats()
     
     def _analyze_patterns(self, question, response, success):
@@ -245,6 +271,32 @@ class AzadLearningSystem:
                 'timestamp': datetime.now().isoformat()
             })
     
+    def _save_tenant_data(self, tenant_id):
+        try:
+            tenant_interactions = [
+                i for i in self.interactions
+                if i.get('context', {}).get('tenant_id') == tenant_id
+            ][-1000:]
+            interactions_file = self._tenant_path('interactions_log.json', tenant_id)
+            with open(interactions_file, 'w', encoding='utf-8') as f:
+                json.dump(tenant_interactions, f, ensure_ascii=False, indent=2)
+            knowledge_file = self._tenant_path('learned_knowledge.json', tenant_id)
+            to_save = dict(self.learned_knowledge)
+            ea = self.learned_knowledge.get('expertise_areas', {})
+            try:
+                to_save['expertise_areas'] = dict(ea)
+            except (TypeError, ValueError):
+                to_save['expertise_areas'] = {}
+            prefs = to_save.get('customer_preferences', {})
+            if isinstance(prefs, dict):
+                to_save['customer_preferences'] = {
+                    k: v for k, v in prefs.items() if str(k) == str(tenant_id)
+                }
+            with open(knowledge_file, 'w', encoding='utf-8') as f:
+                json.dump(to_save, f, ensure_ascii=False, indent=2)
+        except Exception as exc:
+            logger.warning('Error saving tenant learning data: %s', exc)
+
     def _save_data(self):
         """حفظ البيانات"""
         try:
@@ -282,9 +334,22 @@ class AzadLearningSystem:
             'last_updated': datetime.now().isoformat()
         }
     
-    def get_learning_insights(self):
+    def get_learning_insights(self, tenant_id=None):
         """الحصول على رؤى التعلم"""
-        stats = self.learned_knowledge['learning_stats']
+        interactions = self.interactions
+        if tenant_id is not None:
+            interactions = [
+                i for i in self.interactions
+                if i.get('context', {}).get('tenant_id') == tenant_id
+            ]
+        total_interactions = len(interactions)
+        successful_answers = sum(1 for i in interactions if i.get('success', False))
+        stats = {
+            'total_interactions': total_interactions,
+            'successful_answers': successful_answers,
+            'learning_rate': successful_answers / total_interactions if total_interactions else 0,
+            'last_updated': self.learned_knowledge.get('learning_stats', {}).get('last_updated'),
+        }
         expertise = self.learned_knowledge['expertise_areas']
         
         # ترتيب مجالات الخبرة

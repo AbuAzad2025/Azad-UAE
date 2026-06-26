@@ -599,8 +599,7 @@ class TestSecurityRulesFinal:
         long_text = 'a' * 1100
         assert len(SecurityRules.sanitize_input(long_text)) <= 1003
         with patch('ai_knowledge.specialized.security_rules.current_user', owner):
-            with pytest.raises(NameError):
-                SecurityRules.log_security_event('login', 'test event')
+            SecurityRules.log_security_event('login', 'test event')
         ok, msg = SecurityRules.rate_limit_check(1, 'chat')
         assert ok is True
         assert security_rules is not None

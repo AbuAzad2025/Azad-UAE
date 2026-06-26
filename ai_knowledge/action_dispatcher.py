@@ -48,6 +48,22 @@ def _get_active_tenant_id():
     return None
 
 
+def _require_tenant():
+    """Return active tenant_id or None if missing."""
+    return _get_active_tenant_id()
+
+
+def _tenant_guard():
+    """Block create operations when no tenant context is active."""
+    tid = _get_active_tenant_id()
+    if not tid:
+        return None, ActionResult(
+            False,
+            "لا يوجد تينانت نشط — يرجى تسجيل الدخول لشركة محددة",
+        )
+    return tid, None
+
+
 def _has_permission(perm_code: str) -> bool:
     """Check if current user has a specific permission."""
     try:
@@ -147,7 +163,9 @@ class ActionDispatcher:
                 return ActionResult(False, "يرجى إدخال اسم العميل")
             try:
                 from models import Customer
-                tid = _get_active_tenant_id()
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
                 customer = Customer(
                     tenant_id=tid, name=name,
                     phone=args.get("phone", ""),
@@ -214,7 +232,9 @@ class ActionDispatcher:
                 return ActionResult(False, "يرجى إدخال اسم المنتج")
             try:
                 from models import Product
-                tid = _get_active_tenant_id()
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
                 product = Product(
                     tenant_id=tid, name=name,
                     sku=args.get("sku", ""),
@@ -359,7 +379,9 @@ class ActionDispatcher:
                 return ActionResult(False, "يرجى إدخال الوصف والمبلغ")
             try:
                 from models import Expense
-                tid = _get_active_tenant_id()
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
                 expense = Expense(
                     tenant_id=tid, description=description,
                     amount=amount, currency="AED", amount_aed=amount,
@@ -387,7 +409,9 @@ class ActionDispatcher:
                 return ActionResult(False, "يرجى إدخال اسم المورد")
             try:
                 from models import Supplier
-                tid = _get_active_tenant_id()
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
                 supplier = Supplier(
                     tenant_id=tid, name=name,
                     company_name=args.get("company", ""),
@@ -513,7 +537,9 @@ class ActionDispatcher:
             try:
                 from models import User, Role
                 from werkzeug.security import generate_password_hash
-                tid = _get_active_tenant_id()
+                tid, guard = _tenant_guard()
+                if guard:
+                    return guard
                 role = Role.query.filter_by(slug=role_slug).first()
                 user = User(
                     tenant_id=tid, username=username,
