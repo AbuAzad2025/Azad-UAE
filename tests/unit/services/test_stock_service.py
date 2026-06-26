@@ -104,15 +104,30 @@ class TestCreateMovement:
                 warehouse_id=999999,
             )
 
-    def test_cross_tenant_warehouse_raises(self, db_session, sample_product, mocker):
-        foreign_wh = MagicMock(id=500, tenant_id=sample_product.tenant_id + 1, is_active=True)
-
-        def filter_by(**kwargs):
-            if kwargs.get('id') == 500:
-                return MagicMock(first=MagicMock(return_value=foreign_wh))
-            return MagicMock(first=MagicMock(return_value=None))
-
-        mocker.patch.object(Warehouse.query, 'filter_by', side_effect=filter_by)
+    def test_cross_tenant_warehouse_raises(self, db_session, sample_product):
+        uid = uuid.uuid4().hex[:12]
+        foreign_tenant = Tenant(
+            name=f'Foreign Co {uid}',
+            name_ar=f'شركة أجنبية {uid}',
+            slug=f'foreign-co-{uid}',
+            email=f'foreign-{uid}@example.com',
+            phone_1='0500000099',
+            country='AE',
+            subscription_plan='basic',
+            default_currency='AED',
+            base_currency='AED',
+            is_active=True,
+        )
+        db_session.add(foreign_tenant)
+        db_session.flush()
+        foreign_wh = Warehouse(
+            tenant_id=foreign_tenant.id,
+            name=f'Foreign WH {uid}',
+            name_ar=f'مستودع أجنبي {uid}',
+            is_active=True,
+        )
+        db_session.add(foreign_wh)
+        db_session.flush()
         with pytest.raises(ValueError, match='لا ينتمي'):
             StockService.create_movement(
                 sample_product.id,
