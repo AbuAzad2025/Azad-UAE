@@ -39,7 +39,7 @@ def post_or_fail(
         try:
             t = db.session.get(Tenant, tenant_id) if tenant_id else Tenant.get_current()
             currency = resolve_default_currency(t)
-        except Exception:
+        except (LookupError, AttributeError, TypeError, ValueError):
             currency = get_system_default_currency()
 
     if not lines:

@@ -752,6 +752,7 @@ class TestAdditionalStockCoverage:
             tenant_id=sample_tenant.id,
             warehouse_id=sample_warehouse.id,
             sale_number='S-MWAC',
+            id=1,
             lines=[line],
         )
         with enable_mwac.app_context():
@@ -1012,3 +1013,62 @@ class TestAdditionalStockCoverage:
                 wh2.id,
                 Decimal('5'),
             )
+
+    def test_create_movement_user_resolution_failure(self, db_session, sample_product, sample_warehouse, mocker, app):
+        broken_user = MagicMock()
+        broken_user.is_authenticated = True
+        type(broken_user).id = property(lambda self: (_ for _ in ()).throw(RuntimeError('no user')))
+        mocker.patch('services.stock_service.current_user', broken_user)
+        with app.app_context():
+            movement = StockService.add_stock(sample_product.id, Decimal('2'), warehouse_id=sample_warehouse.id)
+        assert movement.user_id is None
+
+    def test_check_availability_missing_product(self):
+        ok, msg = StockService.check_availability(999999, 1)
+        assert ok is False
+        assert 'غير موجود' in msg
+
+    def test_check_availability_inactive_product(self, db_session, sample_product):
+        sample_product.is_active = False
+        db_session.flush()
+        ok, msg = StockService.check_availability(sample_product.id, 1)
+        assert ok is False
+        assert 'غير نشط' in msg
+
+    def test_check_availability_insufficient(self, db_session, sample_product):
+        sample_product.current_stock = Decimal('1')
+        db_session.flush()
+        ok, msg = StockService.check_availability(sample_product.id, 5)
+        assert ok is False
+        assert 'غير كاف' in msg
+
+    def test_check_availability_success(self, db_session, sample_product):
+        sample_product.current_stock = Decimal('10')
+        db_session.flush()
+        ok, msg = StockService.check_availability(sample_product.id, 3)
+        assert ok is True
+        assert msg == 'متوفر'
+
+    def test_calculate_sale_cogs_negative_with_existing_pwc(self, db_session, sample_tenant, sample_product, sample_warehouse, enable_mwac):
+        sample_warehouse.allow_negative_inventory = True
+        pwc = ProductWarehouseCost(
+            tenant_id=sample_tenant.id,
+            product_id=sample_product.id,
+            warehouse_id=sample_warehouse.id,
+            total_quantity=Decimal('-1'),
+            total_value=Decimal('-50'),
+            average_cost=Decimal('50'),
+        )
+        db_session.add(pwc)
+        db_session.flush()
+        line = SimpleNamespace(product_id=sample_product.id, quantity=Decimal('2'), cost_price=Decimal('50'))
+        sale = SimpleNamespace(
+            tenant_id=sample_tenant.id,
+            warehouse_id=sample_warehouse.id,
+            sale_number='S-NEG-PWC',
+            id=3,
+            lines=[line],
+        )
+        with enable_mwac.app_context():
+            total = StockService.calculate_sale_cogs_and_deduct(sale)
+        assert total == Decimal('100.000')

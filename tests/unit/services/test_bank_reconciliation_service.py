@@ -394,3 +394,53 @@ class TestSuspenseAndApply:
         )
         assert results == []
         assert stmt.status == 'ignored'
+
+
+class TestBankReconciliationModel:
+    def test_status_ar_known_and_unknown(self, draft_reconciliation):
+        draft_reconciliation.status = 'draft'
+        assert draft_reconciliation.status_ar == 'مسودة'
+        draft_reconciliation.status = 'unknown'
+        assert draft_reconciliation.status_ar == 'unknown'
+
+    def test_calculate_reconciliation_balanced(self, draft_reconciliation):
+        draft_reconciliation.closing_balance_per_books = Decimal('1000')
+        draft_reconciliation.closing_balance_per_bank = Decimal('1000')
+        draft_reconciliation.outstanding_deposits = Decimal('0')
+        draft_reconciliation.outstanding_withdrawals = Decimal('0')
+        draft_reconciliation.bank_charges = Decimal('0')
+        draft_reconciliation.bank_interest = Decimal('0')
+        draft_reconciliation.errors_in_books = Decimal('0')
+        draft_reconciliation.errors_in_bank = Decimal('0')
+        result = draft_reconciliation.calculate_reconciliation()
+        assert result['is_balanced'] is True
+        assert draft_reconciliation.is_balanced is True
+
+    def test_approve_balanced(self, db_session, draft_reconciliation, sample_user):
+        draft_reconciliation.closing_balance_per_books = Decimal('500')
+        draft_reconciliation.closing_balance_per_bank = Decimal('500')
+        draft_reconciliation.calculate_reconciliation()
+        draft_reconciliation.approve(sample_user.id)
+        assert draft_reconciliation.status == 'approved'
+        assert draft_reconciliation.approved_by == sample_user.id
+        assert draft_reconciliation.approved_at is not None
+
+    def test_approve_unbalanced_raises(self, draft_reconciliation, sample_user):
+        draft_reconciliation.closing_balance_per_books = Decimal('500')
+        draft_reconciliation.closing_balance_per_bank = Decimal('400')
+        draft_reconciliation.calculate_reconciliation()
+        with pytest.raises(ValueError, match='غير متوازنة'):
+            draft_reconciliation.approve(sample_user.id)
+
+    def test_item_type_ar(self, db_session, draft_reconciliation, sample_tenant):
+        item = BankReconciliationItem(
+            tenant_id=sample_tenant.id,
+            reconciliation_id=draft_reconciliation.id,
+            item_type='bank_charge',
+            transaction_date=date(2026, 6, 1),
+            description='Fee',
+            amount=Decimal('10'),
+        )
+        assert item.item_type_ar == 'مصروف بنكي'
+        item.item_type = 'custom_type'
+        assert item.item_type_ar == 'custom_type'

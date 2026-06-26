@@ -260,3 +260,85 @@ class TestSaveAndLegacy:
         mock_res = MagicMock(status_code=500)
         mocker.patch('services.exchange_rate_service.requests.get', return_value=mock_res)
         assert ExchangeRateService._fetch_frankfurter('USD', ('AED',)) is None
+
+    def test_requests_unavailable(self, mocker):
+        mocker.patch('services.exchange_rate_service.REQUESTS_AVAILABLE', False)
+        assert ExchangeRateService._fetch_primary('USD', ('AED',)) is None
+        assert ExchangeRateService._fetch_frankfurter('USD', ('AED',)) is None
+        assert ExchangeRateService._fetch_fallbacks('USD', ('AED',)) is None
+
+    def test_api_timeout_invalid_config(self, app):
+        app.config['CURRENCY_API_TIMEOUT'] = 'not-a-number'
+        assert ExchangeRateService._api_timeout() == 5
+
+    def test_primary_non_success_result(self, mocker):
+        mock_res = MagicMock(status_code=200)
+        mock_res.json.return_value = {'result': 'error', 'rates': {}}
+        mocker.patch('services.exchange_rate_service.requests.get', return_value=mock_res)
+        assert ExchangeRateService._fetch_primary('USD', ('AED',)) is None
+
+    def test_primary_invalid_rate_value_skipped(self, mocker):
+        mock_res = MagicMock(status_code=200)
+        mock_res.json.return_value = {
+            'result': 'success',
+            'rates': {'USD': 1.0, 'AED': 'bad'},
+        }
+        mocker.patch('services.exchange_rate_service.requests.get', return_value=mock_res)
+        assert ExchangeRateService._fetch_primary('USD', ('AED',)) is None
+
+    def test_frankfurter_provider_path(self, mocker):
+        mocker.patch.object(ExchangeRateService, '_fetch_primary', return_value=None)
+        mocker.patch.object(
+            ExchangeRateService,
+            '_fetch_frankfurter',
+            return_value={'USD': 1.0, 'AED': 3.67},
+        )
+        result = ExchangeRateService.get_online_rates_for_display('USD', ('AED',))
+        assert result['provider'] == 'frankfurter'
+
+    def test_fallback_provider_path(self, mocker):
+        mocker.patch.object(ExchangeRateService, '_fetch_primary', return_value=None)
+        mocker.patch.object(ExchangeRateService, '_fetch_frankfurter', return_value=None)
+        mocker.patch.object(
+            ExchangeRateService,
+            '_fetch_fallbacks',
+            return_value={'USD': 1.0, 'AED': 3.67},
+        )
+        result = ExchangeRateService.get_online_rates_for_display('USD', ('AED',))
+        assert result['provider'] == 'fallback'
+
+    def test_fallback_with_api_key(self, app, mocker):
+        app.config['CURRENCY_API_FALLBACKS'] = ['https://example.com/{base}?key={api_key}']
+        app.config['CURRENCY_API_KEY'] = 'secret'
+        mock_res = MagicMock(status_code=200)
+        mock_res.json.return_value = {'rates': {'AED': 3.67}}
+        get = mocker.patch('services.exchange_rate_service.requests.get', return_value=mock_res)
+        rates = ExchangeRateService._fetch_fallbacks('USD', ('AED',))
+        assert rates is not None
+        assert 'secret' in get.call_args.args[0]
+
+    def test_fallback_skips_missing_api_key(self, app, mocker):
+        app.config['CURRENCY_API_FALLBACKS'] = ['https://example.com/{base}?key={api_key}']
+        app.config['CURRENCY_API_KEY'] = ''
+        get = mocker.patch('services.exchange_rate_service.requests.get')
+        assert ExchangeRateService._fetch_fallbacks('USD', ('AED',)) is None
+        get.assert_not_called()
+
+    def test_get_admin_rate_exception(self, mocker):
+        chain = mocker.MagicMock()
+        chain.filter_by.return_value.order_by.return_value.first.side_effect = RuntimeError('db')
+        mocker.patch('models.ExchangeRateRecord.query', chain)
+        assert ExchangeRateService._get_admin_rate('USD', 'AED', tenant_id=1) is None
+
+    def test_fetch_and_store_online_rate_failure(self, mocker):
+        mocker.patch(
+            'services.currency_service.CurrencyService.get_exchange_rate',
+            side_effect=RuntimeError('api'),
+        )
+        assert ExchangeRateService._fetch_and_store_online_rate('USD', 'AED') is None
+
+    def test_get_last_known_rate_exception(self, mocker):
+        chain = mocker.MagicMock()
+        chain.filter_by.return_value.order_by.return_value.first.side_effect = RuntimeError('db')
+        mocker.patch('models.ExchangeRateRecord.query', chain)
+        assert ExchangeRateService._get_last_known_rate('USD', 'AED') is None

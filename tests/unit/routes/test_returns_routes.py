@@ -82,6 +82,18 @@ class TestReturnsScopedQuery:
             _scoped_returns_query()
         q.filter.assert_called()
 
+    def test_scoped_query_branch_filter(self, bypass_permission_auth):
+        from routes.returns import _scoped_returns_query
+        q = MagicMock()
+        q.join.return_value = q
+        q.filter.return_value = q
+        with patch('routes.returns.ProductReturn.query', q), \
+             patch('routes.returns.get_active_tenant_id', return_value=1), \
+             patch('routes.returns.is_platform_owner', return_value=False), \
+             patch('routes.returns.branch_scope_id', return_value=7):
+            _scoped_returns_query()
+        assert q.filter.call_count >= 2
+
 
 class TestReturnsAuth:
     def test_index_requires_login(self, returns_client):

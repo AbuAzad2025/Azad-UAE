@@ -87,6 +87,13 @@ class TestWantsJsonErrorResponse:
         with app_with_handlers.test_request_context('/page', headers={'X-Requested-With': 'XMLHttpRequest'}):
             assert _wants_json_error_response() is True
 
+    def test_accept_mimetypes_json(self, app_with_handlers):
+        with app_with_handlers.test_request_context(
+            '/page',
+            headers={'Accept': 'application/json'},
+        ):
+            assert _wants_json_error_response() is True
+
 
 class TestCsrfHandler:
     def test_csrf_json(self, app_with_handlers):
@@ -134,6 +141,55 @@ class TestHttpErrorHandlers:
                 handler = _handler(app, Exception('fail'))
                 with pytest.raises(Exception, match='fail'):
                     handler(Exception('fail'))
+
+    def test_handle_500_production_direct(self, app_with_handlers):
+        from werkzeug.exceptions import InternalServerError
+        with patch('app.handlers.LoggingCore.log_error'), \
+             patch('app.handlers.render_template', return_value='error'):
+            with app_with_handlers.test_request_context('/page'):
+                resp = _invoke(app_with_handlers, InternalServerError())
+        assert resp.status_code == 500
+
+    def test_handle_500_debug_reraises_direct(self):
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        app.config['TESTING'] = True
+        register_error_handlers(app)
+        from werkzeug.exceptions import InternalServerError
+        with patch('app.handlers.LoggingCore.log_error'):
+            with app.test_request_context('/'):
+                handler = _handler(app, InternalServerError())
+                with pytest.raises(InternalServerError):
+                    handler(InternalServerError())
+
+    def test_handle_404_debug_reraises(self):
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        app.config['TESTING'] = True
+        register_error_handlers(app)
+        with patch('app.handlers.LoggingCore.log_error'):
+            with app.test_request_context('/missing'):
+                handler = _handler(app, NotFound())
+                with pytest.raises(NotFound):
+                    handler(NotFound())
+
+    def test_handle_403_debug_reraises(self):
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        app.config['TESTING'] = True
+        register_error_handlers(app)
+        with patch('app.handlers.LoggingCore.log_error'):
+            with app.test_request_context('/secret'):
+                handler = _handler(app, Forbidden())
+                with pytest.raises(Forbidden):
+                    handler(Forbidden())
+
+    def test_generic_handler_http_exception_passthrough(self, app_with_handlers):
+        spec = app_with_handlers.error_handler_spec.get(None, {})
+        generic_handler = spec[None][Exception]
+        exc = NotFound()
+        result = generic_handler(exc)
+        assert result is exc
 
     def test_handle_404_skips_vite_paths(self, app_with_handlers):
         with patch('app.handlers.LoggingCore.log_error') as log_err, \
