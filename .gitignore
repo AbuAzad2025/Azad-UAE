@@ -93,6 +93,9 @@ celerybeat.pid
 .pytest-temp/
 .coverage
 htmlcov/
+coverage*.json
+tests/.pytest-*.txt
+tests/.coverage-*.txt
 node_modules/
 
 # Generated artifacts / reports
