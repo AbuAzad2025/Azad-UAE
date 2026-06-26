@@ -188,6 +188,17 @@ class TestDeleteEntry:
         mock_db.session.delete.assert_called_once_with(entry)
         mock_db.session.commit.assert_called_once()
 
+    def test_delete_rollback_on_commit_failure(self, mocker):
+        entry = _mock_entry()
+        mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
+        mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
+        mocker.patch('services.advanced_journal_manager.GLJournalLine')
+        mock_db = mocker.patch('services.advanced_journal_manager.db')
+        mock_db.session.commit.side_effect = RuntimeError('delete fail')
+        with pytest.raises(RuntimeError):
+            AdvancedJournalEntryManager.delete_entry(1, 1, 'cleanup')
+        mock_db.session.rollback.assert_called_once()
+
 
 class TestApproveEntry:
     def test_rejects_already_posted(self):
@@ -262,6 +273,13 @@ class TestLogAudit:
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         AdvancedJournalEntryManager._log_audit(1, 'create', None, {'x': 1}, 'reason', 5)
         mock_db.session.add.assert_called_once()
+
+    def test_log_audit_when_entry_missing(self, mocker):
+        mocker.patch('services.advanced_journal_manager.GLJournalEntry').query.get.return_value = None
+        mock_db = mocker.patch('services.advanced_journal_manager.db')
+        AdvancedJournalEntryManager._log_audit(99, 'delete', {'id': 1}, None, 'gone', 2)
+        added = mock_db.session.add.call_args[0][0]
+        assert added.tenant_id is None
 
 
 class TestHelperMethods:

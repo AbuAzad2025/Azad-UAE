@@ -153,3 +153,27 @@ class TestRepairAccountingData:
         mocker.patch('runtime_core.accounting_repair.db')
         repair_accounting_data()
         ensure.assert_called_with(tenant_id=7)
+
+    def test_skips_entry_without_cheque_number_pattern(self, app, mocker):
+        self._base_patches(mocker)
+        entry = MagicMock(description='generic journal without id', reference_type=None)
+        mocker.patch('models.gl.GLJournalEntry').query.filter.return_value.all.return_value = [entry]
+        result = repair_accounting_data()
+        assert result['legacy_cheque_refs'] == 0
+
+    def test_skips_unrecognized_cheque_description(self, app, mocker):
+        self._base_patches(mocker)
+        entry = MagicMock(description='رقم CH-9 without known action', reference_type=None)
+        mocker.patch('models.gl.GLJournalEntry').query.filter.return_value.all.return_value = [entry]
+        mocker.patch('models.Cheque').query.filter.return_value.first.return_value = MagicMock(id=1)
+        result = repair_accounting_data()
+        assert entry.reference_type is None
+        assert result['legacy_cheque_refs'] == 0
+
+    def test_commit_rollback_on_failure(self, app, mocker):
+        mock_db, merchant, product = self._base_patches(mocker)
+        mocker.patch('services.gl_service.GLService.post_entry')
+        mock_db.session.commit.side_effect = RuntimeError('commit fail')
+        with pytest.raises(RuntimeError):
+            repair_accounting_data()
+        mock_db.session.rollback.assert_called_once()

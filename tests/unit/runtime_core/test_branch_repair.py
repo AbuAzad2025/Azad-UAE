@@ -39,6 +39,9 @@ class TestHelpers:
     def test_first_non_null(self):
         assert _first_non_null(None, 0, 5) == 0
 
+    def test_first_non_null_all_none(self):
+        assert _first_non_null(None, None) is None
+
     def test_ensure_column_skips_existing(self, mocker):
         mocker.patch('runtime_core.branch_repair.inspect', return_value=_inspector(['branch_id']))
         conn = MagicMock()

@@ -470,12 +470,18 @@ class TestAutoCleanup:
     def test_capture_warnings_hook(self, app):
         LoggingCore._capture_warnings(app)
 
-    def test_register_request_hooks_slow_and_fast(self, app):
+    def test_register_request_hooks_slow_and_fast(self):
+        app = Flask(__name__)
         LoggingCore._register_request_hooks(app)
-        client = app.test_client()
-        with patch('services.logging_core.time.time', side_effect=[0, 2.0]):
-            with app.test_request_context('/slow'):
-                g.request_start_time = 0
-                for func in app.after_request_funcs[None]:
+        with app.test_request_context('/slow'):
+            g.request_start_time = 0
+            for func in app.after_request_funcs[None]:
+                with patch('services.logging_core.time.time', return_value=2.0):
+                    resp = func(MagicMock(status_code=200))
+                    assert resp is not None
+        with app.test_request_context('/medium'):
+            g.request_start_time = 0
+            for func in app.after_request_funcs[None]:
+                with patch('services.logging_core.time.time', return_value=0.75):
                     resp = func(MagicMock(status_code=200))
                     assert resp is not None

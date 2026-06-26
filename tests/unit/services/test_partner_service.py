@@ -202,6 +202,22 @@ class TestDistributionLifecycle:
         mock_db.session.get.return_value = MagicMock(status='draft')
         assert PartnerService.pay_distribution(1) is False
 
+    def test_pay_distribution_wrong_tenant_returns_false(self, mocker):
+        dist = MagicMock(status='approved', tenant_id=2, net_due=100.0, id=8)
+        mock_db = mocker.patch('services.partner_service.db')
+        mock_db.session.get.return_value = dist
+        assert PartnerService.pay_distribution(8, tenant_id=1) is False
+        mock_db.session.commit.assert_not_called()
+
+    def test_pay_distribution_commit_rollback(self, mocker):
+        dist = MagicMock(status='approved', tenant_id=1, net_due=0.0, id=9)
+        mock_db = mocker.patch('services.partner_service.db')
+        mock_db.session.get.return_value = dist
+        mock_db.session.commit.side_effect = RuntimeError('pay fail')
+        with pytest.raises(RuntimeError):
+            PartnerService.pay_distribution(9, tenant_id=1)
+        mock_db.session.rollback.assert_called_once()
+
 
 class TestAddTransaction:
     def test_partner_not_found(self, mocker):
