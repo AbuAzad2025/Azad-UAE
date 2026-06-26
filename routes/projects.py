@@ -46,7 +46,7 @@ def project_detail(project_id):
     tasks = Task.query.filter_by(project_id=project.id, is_active=True).order_by(Task.sort_order).all()
     tid = get_active_tenant_id(current_user)
     members = ProjectMember.query.filter_by(project_id=project.id).all()
-    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.full_name).all() if tid else []
     return render_template(
         'projects/detail.html',
         project=project,

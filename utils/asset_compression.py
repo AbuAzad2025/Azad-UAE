@@ -161,13 +161,14 @@ class AssetCompressor:
         click.echo(f"JS Files: {len(js_results)}")
         click.echo(f"Total Original: {total_original:,} bytes")
         click.echo(f"Total Compressed: {total_compressed:,} bytes")
-        click.echo(f"Total Savings: {round((1 - total_compressed/total_original) * 100, 2)}%")
+        total_savings = 0.0 if total_original == 0 else round((1 - total_compressed / total_original) * 100, 2)
+        click.echo(f"Total Savings: {total_savings}%")
         click.echo("="*60)
         
         return {
             'css': css_results,
             'js': js_results,
-            'total_savings': round((1 - total_compressed/total_original) * 100, 2)
+            'total_savings': total_savings,
         }
 
 

@@ -1179,12 +1179,21 @@ class GLService:
         """مقارنة أرصدة GL مع الأرصدة الدفترية — للكشف عن الانحرافات."""
         from sqlalchemy import func
         from decimal import Decimal
+        from services.gl_account_resolver import is_dynamic_gl_mapping_enabled
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
         def _gl_balance(concept_code):
+            legacy_codes = {'AR': '1131', 'AP': '2111'}
+            if is_dynamic_gl_mapping_enabled():
+                line = {'concept_code': concept_code}
+            else:
+                account_code = legacy_codes.get(concept_code)
+                if not account_code:
+                    return Decimal('0')
+                line = {'account': account_code}
             acc = GLService._resolve_journal_line_account(
-                {'concept_code': concept_code}, tenant_id, branch_id=branch_id,
+                line, tenant_id, branch_id=branch_id,
                 ensure_core=False, missing_ok=True,
             )
             if not acc:

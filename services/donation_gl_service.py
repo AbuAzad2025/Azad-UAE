@@ -22,7 +22,8 @@ class DonationGLService:
         credit = (getattr(vault, 'donation_credit_account', None) or '4200').strip()
         debit_account = GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
         if debit in ('1110', '1120') or getattr(debit_account, 'is_header', False):
-            debit = GLService.get_default_liquidity_account('bank', tenant_id=tenant_id)
+            liquidity_kind = 'cash' if debit == '1110' else 'bank'
+            debit = GLService.get_default_liquidity_account(liquidity_kind, tenant_id=tenant_id)
         return debit, credit
 
     @staticmethod
