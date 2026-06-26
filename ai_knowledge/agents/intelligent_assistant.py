@@ -257,6 +257,8 @@ class IntelligentAssistant:
                     q = q.filter_by(tenant_id=tid)
                 return q
 
+            data = {}
+
             # بيانات عامة للنظام
             data['system_stats'] = {
                 'total_customers': _f(Customer).filter_by(is_active=True).count(),
@@ -359,8 +361,10 @@ class IntelligentAssistant:
                         )
                 except Exception as exc:
                     logger.debug('Sales prediction failed: %s', exc)
+
+            elif intent == 'inventory_check' and 'low_stock_products' in data:
                 low_stock = data['low_stock_products']
-                
+
                 if len(low_stock) == 0:
                     analysis['insights'].append("✅ المخزون صحي - لا توجد منتجات بمخزون منخفض")
                 elif len(low_stock) < 5:
@@ -369,11 +373,9 @@ class IntelligentAssistant:
                 else:
                     analysis['warnings'].append(f"🔴 {len(low_stock)} منتج بمخزون منخفض - عاجل!")
                     analysis['recommendations'].append("💡 اطلب من الموردين فوراً!")
-                    
-                    # حساب التكلفة المتوقعة
                     total_deficit = sum(p['deficit'] for p in low_stock)
                     analysis['insights'].append(f"📊 العجز الكلي: {total_deficit:.0f} وحدة")
-            
+
             elif intent == 'customer_balance' and 'customer_data' in data:
                 customer_data = data['customer_data']
                 

@@ -70,6 +70,12 @@ class AzadLearningSystem:
                     exp = data.get('expertise_areas', {})
                     if not isinstance(exp, defaultdict):
                         data['expertise_areas'] = defaultdict(int, exp)
+                    failed = data.get('failed_responses')
+                    if not isinstance(failed, list):
+                        data['failed_responses'] = []
+                    successful = data.get('successful_responses')
+                    if not isinstance(successful, dict):
+                        data['successful_responses'] = {}
                     return data
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug('Could not load knowledge file: %s', exc)
@@ -78,7 +84,7 @@ class AzadLearningSystem:
             'customer_preferences': {},
             'market_trends': {},
             'successful_responses': {},
-            'failed_responses': {},
+            'failed_responses': [],
             'expertise_areas': defaultdict(int),
             'learning_stats': {
                 'total_interactions': 0,
@@ -230,8 +236,7 @@ class AzadLearningSystem:
             # تحديث مجالات الخبرة
             self.learned_knowledge['expertise_areas'][question_type] += 1
         else:
-            # تسجيل الردود الفاشلة للتحسين
-            if 'failed_responses' not in self.learned_knowledge:
+            if not isinstance(self.learned_knowledge.get('failed_responses'), list):
                 self.learned_knowledge['failed_responses'] = []
             
             self.learned_knowledge['failed_responses'].append({

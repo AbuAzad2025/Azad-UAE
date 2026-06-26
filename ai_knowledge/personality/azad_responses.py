@@ -269,7 +269,7 @@ class AzadResponses:
             if 'نصيحة' in msg_lower or 'تعامل' in msg_lower:
                 return get_customer_service_tip()
             else:
-                from .customer_service import CUSTOMER_SERVICE
+                from ai_knowledge.specialized.customer_service import CUSTOMER_SERVICE
                 return "👥 **التعامل مع العملاء:**\n\n" + "\n".join(CUSTOMER_SERVICE['principles'][:5])
         
         # 🏪 إدارة الموردين - نظام جديد ⭐
@@ -1343,6 +1343,29 @@ class AzadResponses:
         
         return "ما نوع المنتج الذي تريد معرفة معاييره؟ طعام، إلكترونيات، أم عام؟"
     
+    @staticmethod
+    def _handle_balance_query(message):
+        return AzadResponses._handle_customer_balance_query(message)
+
+    @staticmethod
+    def _inventory_status():
+        from services.ai_service import AIService
+        health = AIService.analyze_inventory_health()
+        if health.get('success'):
+            s = health['summary']
+            return f"""📦 **صحة المخزون:**
+
+**الإحصائيات:**
+• إجمالي المنتجات: {s['total']}
+• حالة جيدة: {s['good']} ✅
+• منخفض: {s['low']} ⚠️
+• نفذ: {s['out']} 🔴
+
+🏆 **التقييم:** {health['rating']} ({health['health_score']}%)
+
+💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s['low'] > 0 or s['out'] > 0 else 'المخزون ممتاز!'}"""
+        return health.get('message', 'لا توجد منتجات للتحليل')
+
     @staticmethod
     def _smart_sales_analysis(context):
         """تحليل مبيعات ذكي"""

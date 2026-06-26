@@ -274,13 +274,74 @@ def get_continuous_learner():
     return _continuous_learner_instance
 
 
-# =====================
-# Self-test integration — delegates to consolidated learning_engine
-# =====================
+def evaluate_and_learn(qa_tests: list, ai_service=None):
+    """Run QA tests, evaluate by keyword heuristics, and learn from outcomes."""
+    try:
+        from services.ai_service import AIService as DefaultAI
+    except ImportError:
+        DefaultAI = None
+    svc = ai_service or DefaultAI
+    results = []
+    if not svc:
+        return results
+    memory = None
+    try:
+        memory = svc.get_learning_system()
+    except Exception as exc:
+        logger.debug('Cannot get learning system: %s', exc)
+        memory = None
+    for test in qa_tests:
+        q = test.get('question', '').strip()
+        expected = [k.lower() for k in (test.get('expected_keywords') or [])]
+        context = test.get('context') or {}
+        if not q:
+            continue
+        try:
+            ans = svc.ask_genius(q, context=context)
+            text = '' if ans is None else (ans.get('answer') if isinstance(ans, dict) else str(ans))
+            text_l = (text or '').lower()
+            hits = sum(1 for k in expected if k in text_l)
+            score = 0.0 if not expected else hits / len(expected)
+            success = score >= 0.6 or (hits >= 2 and len(expected) >= 3)
+            results.append({
+                'question': q,
+                'expected': expected,
+                'answer': text,
+                'hits': hits,
+                'score': round(score, 3),
+                'success': success,
+            })
+            if memory:
+                try:
+                    memory.learn_from_interaction(
+                        question=q,
+                        response=text,
+                        user_feedback=5 if success else 2,
+                        context={'expected': expected, 'score': score},
+                    )
+                except Exception as learn_exc:
+                    logger.debug('Feedback learn failed: %s', learn_exc)
+        except Exception as exc:
+            results.append({
+                'question': q,
+                'expected': expected,
+                'answer': f'ERROR: {exc}',
+                'hits': 0,
+                'score': 0.0,
+                'success': False,
+            })
+            if memory:
+                try:
+                    memory.learn_from_interaction(
+                        question=q,
+                        response=str(exc),
+                        user_feedback=1,
+                        context={'expected': expected, 'error': True},
+                    )
+                except Exception as inner_exc:
+                    logger.debug('Error feedback learn failed: %s', inner_exc)
+    return results
 
-from ai_knowledge.learning_engine import evaluate_and_learn  # noqa: F401
 
-
-# إنشاء instance عام
 continuous_learner = ContinuousLearner()
 

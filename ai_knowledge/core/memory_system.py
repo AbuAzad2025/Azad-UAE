@@ -53,13 +53,18 @@ class LongTermMemory:
     def _load_memory(self, memory_type):
         """تحميل نوع محدد من الذاكرة"""
         file_path = os.path.join(self.memory_dir, f'{memory_type}_memory.json')
-        
+        default = {} if memory_type == 'preferences' else {'memories': []}
+
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                if memory_type != 'preferences' and not isinstance(data.get('memories'), list):
+                    return default
+                return data
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug('Could not load %s memory: %s', memory_type, exc)
+        return default
     
     def _save_memory(self, memory_type, data):
         """حفظ الذاكرة"""

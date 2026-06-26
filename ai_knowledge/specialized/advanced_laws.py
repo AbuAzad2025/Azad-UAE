@@ -1,4 +1,145 @@
-"""Backward-compatible shim — canonical implementation lives in specialized_knowledge."""
-from ai_knowledge.specialized_knowledge import AdvancedLaws, advanced_laws
+"""Advanced laws knowledge for Azad."""
 
-__all__ = ['AdvancedLaws', 'advanced_laws']
+class AdvancedLaws:
+    """معرفة القوانين المتقدمة لأزاد"""
+
+    PALESTINIAN_TAX_LAWS = {
+        'vat_rate': 16,
+        'income_tax_rates': {
+            'individual': {
+                '0-48000': 0,
+                '48001-96000': 5,
+                '96001-192000': 10,
+                '192001-384000': 15,
+                '384001+': 20,
+            },
+            'corporate': {'standard': 15},
+        },
+        'customs_duties': {'agricultural': 10, 'industrial': 15, 'luxury': 30},
+        'special_regulations': [
+            'الإعفاء الضريبي للمشاريع الصغيرة والمتوسطة',
+            'الضرائب على الاستيراد والتصدير',
+            'الضرائب على الخدمات المالية',
+        ],
+    }
+
+    ISRAELI_TAX_LAWS = {
+        'vat_rate': 17,
+        'income_tax_rates': {
+            'individual': {
+                '0-77480': 10,
+                '77481-110880': 14,
+                '110881-178080': 20,
+                '178081-247440': 31,
+                '247441-514920': 35,
+                '514921+': 47,
+            },
+            'corporate': {'standard': 23},
+        },
+        'customs_duties': {'agricultural': 12, 'industrial': 18, 'luxury': 35},
+        'special_regulations': [
+            'قانون ضريبة القيمة المضافة',
+            'الضرائب على الأرباح الرأسمالية',
+            'الضرائب على الميراث والهبات',
+        ],
+    }
+
+    GULF_TAX_LAWS = {
+        'uae': {
+            'vat_rate': 5,
+            'corporate_tax_rate': 9,
+            'excise_tax': {'tobacco': 100, 'energy_drinks': 100, 'soft_drinks': 50},
+        },
+        'saudi': {'vat_rate': 15, 'corporate_tax_rate': 20, 'zakat_rate': 2.5},
+        'kuwait': {'vat_rate': 0, 'corporate_tax_rate': 15},
+        'qatar': {'vat_rate': 0, 'corporate_tax_rate': 10},
+    }
+
+    SHIPPING_LAWS = {
+        'documentation_required': [
+            'فاتورة تجارية', 'قائمة تعبئة', 'شهادة منشأ', 'وثيقة نقل', 'تأمين الشحن',
+        ],
+        'customs_procedures': {
+            'declaration': 'إقرار جمركي',
+            'inspection': 'فحص جمركي',
+            'duty_calculation': 'حساب الرسوم',
+            'clearance': 'تخليص جمركي',
+        },
+        'restricted_items': [
+            'الأسلحة والذخيرة', 'المخدرات والمواد المخدرة', 'المواد المتفجرة',
+            'المنتجات الغذائية غير المعتمدة', 'الأدوية غير المرخصة',
+        ],
+        'duty_free_allowances': {
+            'personal_effects': 'الأغراض الشخصية',
+            'gifts_under_value': 'الهدايا تحت قيمة معينة',
+            'diplomatic_items': 'الأغراض الدبلوماسية',
+        },
+    }
+
+    QUALITY_LAWS = {
+        'standards_organizations': {
+            'uae': 'هيئة الإمارات للمواصفات والمقاييس',
+            'saudi': 'الهيئة السعودية للمواصفات والمقاييس',
+            'kuwait': 'معهد الكويت للأبحاث العلمية',
+            'qatar': 'هيئة التقييس لدول مجلس التعاون',
+        },
+        'certification_required': [
+            'شهادة مطابقة للمواصفات', 'شهادة منشأ', 'شهادة جودة', 'شهادة سلامة',
+        ],
+        'quality_marks': {
+            'halal': 'حلال', 'organic': 'عضوي',
+            'iso_9001': 'نظام إدارة الجودة', 'iso_14001': 'نظام الإدارة البيئية',
+        },
+    }
+
+    @staticmethod
+    def get_tax_info(country, tax_type):
+        if country.lower() in ['palestine', 'فلسطين']:
+            laws = AdvancedLaws.PALESTINIAN_TAX_LAWS
+        elif country.lower() in ['israel', 'اسرائيل']:
+            laws = AdvancedLaws.ISRAELI_TAX_LAWS
+        elif country.lower() in ['uae', 'الامارات', 'دبي']:
+            laws = AdvancedLaws.GULF_TAX_LAWS['uae']
+        elif country.lower() in ['saudi', 'السعودية']:
+            laws = AdvancedLaws.GULF_TAX_LAWS['saudi']
+        else:
+            return None
+        if tax_type.lower() == 'vat':
+            return f"ضريبة القيمة المضافة: {laws['vat_rate']}%"
+        if tax_type.lower() == 'corporate':
+            if 'corporate_tax_rate' in laws:
+                return f"ضريبة الشركات: {laws['corporate_tax_rate']}%"
+            if 'income_tax_rates' in laws:
+                return f"ضريبة الشركات: {laws['income_tax_rates']['corporate']['standard']}%"
+        return 'معلومات ضريبية غير متاحة'
+
+    @staticmethod
+    def get_shipping_info(shipping_type):
+        if shipping_type.lower() in ['sea', 'بحر', 'بحري']:
+            return 'الشحن البحري: أبطأ وأرخص طريقة'
+        if shipping_type.lower() in ['air', 'جو', 'جوي']:
+            return 'الشحن الجوي: أسرع طريقة'
+        if shipping_type.lower() in ['land', 'بر', 'بري']:
+            return 'الشحن البري: متوسط السرعة والسعر'
+        return 'نوع الشحن غير محدد'
+
+    @staticmethod
+    def get_customs_info(country):
+        if country.lower() in ['uae', 'الامارات']:
+            return 'التخليص الجمركي في الإمارات: رسوم 5%'
+        if country.lower() in ['saudi', 'السعودية']:
+            return 'التخليص الجمركي في السعودية: ضريبة 15%'
+        return 'معلومات جمركية غير متاحة لهذا البلد'
+
+    @staticmethod
+    def get_quality_standards(product_category):
+        if product_category.lower() in ['food', 'طعام', 'غذاء']:
+            return 'معايير جودة الأغذية: شهادة حلال'
+        if product_category.lower() in ['electronics', 'إلكترونيات']:
+            return 'معايير جودة الإلكترونيات: شهادة CE'
+        if product_category.lower() in ['textiles', 'أقمشة', 'ملابس']:
+            return 'معايير جودة المنسوجات'
+        return 'معايير جودة عامة: شهادة ISO 9001'
+
+
+advanced_laws = AdvancedLaws()

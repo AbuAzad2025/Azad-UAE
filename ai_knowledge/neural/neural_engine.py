@@ -37,6 +37,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
+from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
 
@@ -211,6 +212,7 @@ class AzadNeuralEngine:
         """التدريب الداخلي لنموذج الصيانة"""
         from models import Product, Sale, SaleLine, StockMovement
         from extensions import db
+        from sqlalchemy import func
         
         # جمع بيانات استخدام المنتجات
         products = db.session.query(

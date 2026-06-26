@@ -168,10 +168,10 @@ class TestCoreEngineConsolidated:
         from ai_knowledge.core_engine import ContextEngine
         assert ContextEngine.analyze_context('مرحبا')['intent'] == 'greeting'
         assert ContextEngine.analyze_context('حلل المبيعات')['intent'] == 'analysis'
-        with patch('ai_knowledge.core_engine.data_analyzer') as mock_da, \
-             patch('ai_knowledge.core_engine.system_integrator') as mock_si, \
-             patch('ai_knowledge.core_engine.knowledge_expander') as mock_ke, \
-             patch('ai_knowledge.core_engine.learning_system') as mock_ls:
+        with patch('ai_knowledge.core.context_engine.data_analyzer') as mock_da, \
+             patch('ai_knowledge.core.context_engine.system_integrator') as mock_si, \
+             patch('ai_knowledge.core.context_engine.knowledge_expander') as mock_ke, \
+             patch('ai_knowledge.core.context_engine.learning_system') as mock_ls:
             mock_da.get_financial_ratios.return_value = {'success': True, 'ratios': {'gross_profit_margin': 30, 'net_profit_margin': 12}}
             mock_si.get_system_summary.return_value = {'success': True, 'summary': {'total_customers': 5, 'total_products': 10, 'today_sales': 1000}}
             mock_ke.search_knowledge.return_value = {'success': True, 'results': [{'title': 'hit'}]}
@@ -430,11 +430,11 @@ class TestPersonalityCoreFinal:
         from ai_knowledge.personality_core import AzadResponses
         responses = AzadResponses()
         assert 'أزاد' in responses.smart_response('من أنت')
-        with patch('ai_knowledge.personality_core.system_integrator') as mock_si, \
-             patch('ai_knowledge.personality_core.understand_message', return_value={'intent': 'general', 'confidence': 0.1}), \
-             patch('ai_knowledge.personality_core.intelligent_assistant') as mock_ia, \
-             patch('ai_knowledge.personality_core.learning_system') as mock_ls, \
-             patch('ai_knowledge.personality_core.azad_personality') as mock_p, \
+        with patch('ai_knowledge.personality.azad_responses.system_integrator') as mock_si, \
+             patch('ai_knowledge.personality.azad_responses.understand_message', return_value={'intent': 'general', 'confidence': 0.1}), \
+             patch('ai_knowledge.personality.azad_responses.intelligent_assistant') as mock_ia, \
+             patch('ai_knowledge.personality.azad_responses.learning_system') as mock_ls, \
+             patch('ai_knowledge.personality.azad_responses.azad_personality') as mock_p, \
              patch('services.ai_service.AIService') as MockAI:
             MockAI.is_sensitive_request.return_value = (False, False, {})
             mock_p.is_inappropriate_message.return_value = 'normal'
