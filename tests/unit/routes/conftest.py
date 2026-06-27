@@ -334,3 +334,59 @@ def shop_client(app_factory, bypass_shop_auth):
         with client.session_transaction() as sess:
             sess["shop_lang_demo-store"] = "ar"
         yield client
+
+@pytest.fixture
+def bypass_customers_auth(mock_user):
+    customer = MagicMock()
+    customer.id = 1
+    customer.name = "Test Customer"
+    customer.phone = "0500000000"
+    customer.email = "c@test.com"
+    customer.customer_type = "regular"
+    customer.customer_classification = "regular"
+    customer.is_active = True
+    customer.tenant_id = 1
+    customer.balance = Decimal("0")
+    customer.created_at = MagicMock(strftime=lambda fmt: "2025-01-01")
+    customer.name_ar = ""
+    customer.preferred_currency = "AED"
+    customer.to_dict.return_value = {"id": 1, "name": "Test Customer"}
+    patches = [
+        patch("flask_login.utils._get_user", return_value=mock_user),
+        patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+        patch("utils.decorators.is_global_owner_user", return_value=True),
+        patch("utils.decorators.is_admin_surface_user", return_value=True),
+        patch("extensions.limiter.limit", return_value=lambda f: f),
+        patch("utils.tenanting.get_active_tenant_id", return_value=1),
+        patch("utils.decorators.branch_scope_id", return_value=None),
+        patch("utils.decorators.report_branch_scope_id", return_value=None),
+        patch("routes.customers.render_template", return_value="ok"),
+        patch("routes.customers.tenant_query", side_effect=lambda model: _chain_query(all=[customer])),
+        patch("routes.customers.tenant_get_or_404", return_value=customer),
+        patch("routes.customers.assert_tenant_record"),
+        patch("routes.customers.PaymentService.get_customer_balance_aed", return_value=Decimal("0")),
+        patch("routes.customers.PaymentService.get_customer_balance_scoped", return_value=Decimal("0")),
+        patch("routes.customers.should_show_all_branch_columns", return_value=False),
+        patch("routes.customers.LoggingCore.log_audit"),
+        patch("routes.customers._customer_in_scope", return_value=True),
+        patch("routes.customers._get_unpaid_sales", return_value=[]),
+        patch("routes.customers.Sale"),
+        patch("routes.customers.db"),
+    ]
+    for p in patches:
+        p.start()
+    from routes.customers import Sale as SaleMod, db as cust_db
+    SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    cust_db.session.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+    cust_db.session.query.return_value.filter.return_value.all.return_value = []
+    yield mock_user, customer
+    for p in reversed(patches):
+        p.stop()
+
+
+@pytest.fixture
+def customers_client(app_factory, bypass_customers_auth):
+    from routes.customers import customers_bp
+    app = app_factory(customers_bp)
+    return app.test_client()
+
