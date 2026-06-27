@@ -119,11 +119,20 @@ class TestConfig:
     PORT = 5000
 
 
+_PYTEST_TEMP_INITIALIZED = False
+
+
 def pytest_configure(config):
-    """Clean up previous pytest temp dir to prevent PermissionError at exit on Windows."""
+    """Ensure basetemp exists; clean only once per process (importlib may re-call)."""
+    global _PYTEST_TEMP_INITIALIZED
     temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
-    if os.path.isdir(temp_dir):
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    if not _PYTEST_TEMP_INITIALIZED:
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        os.makedirs(temp_dir, exist_ok=True)
+        _PYTEST_TEMP_INITIALIZED = True
+    elif not os.path.isdir(temp_dir):
+        os.makedirs(temp_dir, exist_ok=True)
 
 
 @pytest.fixture(scope="session")

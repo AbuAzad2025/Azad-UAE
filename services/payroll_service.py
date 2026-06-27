@@ -457,9 +457,6 @@ class PayrollService:
                 'description': f'Leave Accrual Liability - {employee.name} {month}/{year}'
             })
 
-        if not accrual_lines:
-            return None
-
         gl_entry = post_or_fail(
             accrual_lines,
             description=f"Payroll Accruals {month}/{year} - {employee.name}",
