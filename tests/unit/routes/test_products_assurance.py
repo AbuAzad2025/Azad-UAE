@@ -499,60 +499,105 @@ class TestEditAssurance:
             )
         assert resp.status_code == 302
 
-    def test_edit_partner_no_tenant(self, product_client):
+    def test_edit_partner_no_tenant(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
         product.tenant_id = None
-        with _products_patches(product=product), patch("forms.product.ProductForm", return_value=form), patch(
-            "routes.products._parse_product_partners",
-            return_value=([{"partner_customer_id": 1, "percentage": 10}], None),
-        ), patch("routes.products.render_template", return_value="edit") as render, patch(
+        product.cost_price = Decimal("0")
+        partner = MagicMock(id=1, tenant_id=1)
+
+        def _scoped_query(customer_type=None):
+            query = MagicMock()
+            query.order_by.return_value.all.return_value = []
+            query.filter.return_value.first.return_value = partner
+            return query
+
+        with _products_patches(product=product), patch(
+            "forms.product.ProductForm", return_value=form
+        ), patch("routes.products._scoped_customers_query", side_effect=_scoped_query), patch(
             "models.ProductPriceTier"
         ) as tier_model:
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = product_client.post(
                 "/products/1/edit",
-                data={"name": "X", "regular_price": "10", "current_stock": "5"},
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "10",
+                    "warehouse_id": "1",
+                    "partner_customer_id[]": "1",
+                    "partner_percentage[]": "10",
+                },
             )
         assert resp.status_code == 200
 
-    def test_edit_partner_customer_missing(self, product_client):
+    def test_edit_partner_customer_missing(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
         product.tenant_id = 1
-        customer_query = MagicMock()
-        customer_query.filter_by.return_value.first.return_value = None
-        with _products_patches(product=product), patch("forms.product.ProductForm", return_value=form), patch(
-            "routes.products._parse_product_partners",
-            return_value=([{"partner_customer_id": 99, "percentage": 10}], None),
-        ), patch("routes.products.Customer") as cust_cls, patch(
-            "routes.products.render_template", return_value="edit"
-        ), patch("models.ProductPriceTier") as tier_model:
+        product.cost_price = Decimal("0")
+        partner = MagicMock(id=99, tenant_id=1)
+
+        def _scoped_query(customer_type=None):
+            query = MagicMock()
+            query.order_by.return_value.all.return_value = []
+            query.filter.return_value.first.return_value = partner
+            return query
+
+        with _products_patches(product=product), patch(
+            "forms.product.ProductForm", return_value=form
+        ), patch("routes.products._scoped_customers_query", side_effect=_scoped_query), patch(
+            "routes.products.Customer"
+        ) as cust_cls, patch("models.ProductPriceTier") as tier_model:
             cust_cls.query.filter_by.return_value.first.return_value = None
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = product_client.post(
                 "/products/1/edit",
-                data={"name": "X", "regular_price": "10", "current_stock": "5"},
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "10",
+                    "warehouse_id": "1",
+                    "partner_customer_id[]": "99",
+                    "partner_percentage[]": "10",
+                },
             )
         assert resp.status_code == 200
 
-    def test_edit_partner_wrong_tenant(self, product_client):
+    def test_edit_partner_wrong_tenant(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
         product.tenant_id = 1
-        wrong_partner = MagicMock()
-        wrong_partner.tenant_id = 2
-        with _products_patches(product=product), patch("forms.product.ProductForm", return_value=form), patch(
-            "routes.products._parse_product_partners",
-            return_value=([{"partner_customer_id": 8, "percentage": 10}], None),
-        ), patch("routes.products.Customer") as cust_cls, patch(
-            "routes.products.render_template", return_value="edit"
-        ), patch("models.ProductPriceTier") as tier_model:
+        product.cost_price = Decimal("0")
+        partner = MagicMock(id=8, tenant_id=1)
+        wrong_partner = MagicMock(id=8, tenant_id=2)
+
+        def _scoped_query(customer_type=None):
+            query = MagicMock()
+            query.order_by.return_value.all.return_value = []
+            query.filter.return_value.first.return_value = partner
+            return query
+
+        with _products_patches(product=product), patch(
+            "forms.product.ProductForm", return_value=form
+        ), patch("routes.products._scoped_customers_query", side_effect=_scoped_query), patch(
+            "routes.products.Customer"
+        ) as cust_cls, patch("models.ProductPriceTier") as tier_model:
             cust_cls.query.filter_by.return_value.first.return_value = wrong_partner
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = product_client.post(
                 "/products/1/edit",
-                data={"name": "X", "regular_price": "10", "current_stock": "5"},
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "10",
+                    "warehouse_id": "1",
+                    "partner_customer_id[]": "8",
+                    "partner_percentage[]": "10",
+                },
             )
         assert resp.status_code == 200
 
@@ -579,30 +624,46 @@ class TestEditAssurance:
         assert resp.status_code == 302
         assert existing_tier.is_active is False
 
-    def test_edit_exception_rollback(self, product_client):
+    def test_edit_exception_rollback(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
-        session = MagicMock()
-        session.commit.side_effect = RuntimeError("fail")
-        with _products_patches(product=product), patch("forms.product.ProductForm", return_value=form), patch(
-            "routes.products.db.session", session
+        product.cost_price = Decimal("0")
+        with _products_patches(product=product) as ctx, patch(
+            "forms.product.ProductForm", return_value=form
+        ), patch(
+            "routes.products._parse_product_partners", return_value=([], None)
         ), patch("routes.products.StockService.get_product_stock", return_value=10.0), patch(
             "models.ProductPriceTier"
-        ) as tier_model:
+        ) as tier_model, patch(
+            "routes.products.render_template", return_value="edit"
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
+            ctx["session"].commit.side_effect = RuntimeError("fail")
             resp = product_client.post(
                 "/products/1/edit",
-                data={"name": "X", "regular_price": "10", "current_stock": "10", "warehouse_id": "1"},
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "10",
+                    "warehouse_id": "1",
+                },
             )
         assert resp.status_code == 200
+        ctx["session"].rollback.assert_called_once()
 
     def test_edit_merchant_missing(self, product_client):
         form = _mock_product_form(validate=True)
         product = _product()
-        customer_query = MagicMock()
-        customer_query.filter.return_value.first.return_value = None
+
+        def _scoped_query(customer_type=None):
+            query = MagicMock()
+            query.order_by.return_value.all.return_value = []
+            query.filter.return_value.first.return_value = None
+            return query
+
         with _products_patches(product=product), patch("forms.product.ProductForm", return_value=form), patch(
-            "routes.products.tenant_query", return_value=customer_query
+            "routes.products._scoped_customers_query", side_effect=_scoped_query
         ), patch("routes.products.render_template", return_value="edit"), patch(
             "models.ProductPriceTier"
         ) as tier_model:
@@ -1058,10 +1119,12 @@ class TestProductsRemainingCoverage:
         assert resp.status_code == 200
         assert render.call_args[0][0] == 'products/create.html'
 
-    def test_edit_exception_rolls_back(self, product_client):
+    def test_edit_exception_rolls_back(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
         product.tenant_id = 1
+        product.cost_price = Decimal("0")
         product.partner_shares = MagicMock()
         product.partner_shares.clear = MagicMock()
         with _products_patches(product=product), \
@@ -1075,12 +1138,21 @@ class TestProductsRemainingCoverage:
                 data={'name': 'X', 'regular_price': '10'},
             )
         assert resp.status_code == 200
+        session.rollback.assert_called_once()
 
     def test_delete_exception_redirects(self, product_client):
         product = _product()
+        sl = MagicMock()
+        pl = MagicMock()
+        sl.query.filter_by.return_value.filter.return_value.count.return_value = 0
+        pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
+        session = MagicMock()
+        session.commit.side_effect = RuntimeError('delete fail')
         with _products_patches(product=product), \
-             patch('routes.products.db.session') as session:
-            session.commit.side_effect = RuntimeError('delete fail')
+             patch('routes.products.StockService.get_product_stock', return_value=0.0), \
+             patch('routes.products.db.session', session), \
+             patch('models.SaleLine', sl), \
+             patch('models.PurchaseLine', pl):
             resp = product_client.post(f'/products/{product.id}/delete', follow_redirects=False)
         assert resp.status_code == 302
 
@@ -1165,10 +1237,12 @@ class TestProductsRemainingCoverage:
         _assert_import_index_redirect(resp)
         pc_cls.assert_called_once()
 
-    def test_edit_rejects_partners_without_tenant(self, product_client):
+    def test_edit_rejects_partners_without_tenant(self, product_client, bypass_product_auth):
+        bypass_product_auth.can_see_costs.return_value = False
         form = _mock_product_form(validate=True)
         product = _product()
         product.tenant_id = None
+        product.cost_price = Decimal("0")
         product.partner_shares = MagicMock()
         product.partner_shares.clear = MagicMock()
         with _products_patches(product=product), \

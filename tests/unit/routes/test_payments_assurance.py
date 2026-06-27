@@ -732,19 +732,22 @@ class TestCreateFromSaleCurrencyFallback:
     def test_create_from_sale_log_error_inner_except(self, payments_client, mocker):
         sale = MagicMock(
             id=5, branch_id=1, balance_due=Decimal('100'), exchange_rate=1,
-            currency='AED', customer=MagicMock(), tenant_id=1,
+            currency='', customer=MagicMock(), tenant_id=1,
         )
         receipt = MagicMock(id=12)
         mocker.patch('routes.payments.tenant_get_or_404', return_value=sale)
         mocker.patch('routes.payments.PaymentService.create_receipt', return_value=receipt)
         mocker.patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('curr fail'))
         mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
-        with patch('utils.decorators.branch_scope_id', return_value=None), \
-             patch('routes.payments.CurrencyService.get_all_rates', return_value={}):
-            resp = payments_client.post('/payments/create_from_sale/5', data={
-                'amount': '40',
-                'payment_method': 'cash',
-            }, follow_redirects=False)
+        with payments_client.application.test_request_context(
+            '/payments/create_from_sale/5',
+            method='POST',
+            data={'amount': '40', 'payment_method': 'cash'},
+        ):
+            with patch('utils.decorators.branch_scope_id', return_value=None), \
+                 patch('routes.payments.CurrencyService.get_all_rates', return_value={}):
+                from routes.payments import create_from_sale
+                resp = create_from_sale(5)
         assert resp.status_code == 302
 
 
@@ -797,10 +800,29 @@ class TestArchivedPaymentsInScope:
 
 
 class TestPaymentsFinalGaps:
-    def test_create_from_sale_currency_log_error_inner_except(self, payments_client, mocker):
+    def test_create_from_sale_post_receipt_redirect(self, payments_client, mocker):
         sale = MagicMock(
             id=5, branch_id=1, customer_id=1, customer=MagicMock(),
             balance_due=Decimal('100'), exchange_rate=Decimal('1'), currency='AED', tenant_id=1,
+        )
+        receipt = MagicMock(id=11)
+        mocker.patch('routes.payments.tenant_get_or_404', return_value=sale)
+        mocker.patch('routes.payments.PaymentService.create_receipt', return_value=receipt)
+        with patch('utils.decorators.branch_scope_id', return_value=None), \
+             patch('routes.payments.LoggingCore.log_audit'), \
+             patch('routes.payments.url_for', return_value='/payments/receipts/11'):
+            resp = payments_client.post(
+                '/payments/create_from_sale/5',
+                data={'amount': '50', 'payment_method': 'cash', 'currency': 'AED'},
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+        assert '/receipts/11' in resp.location
+
+    def test_create_from_sale_currency_log_error_inner_except(self, payments_client, mocker):
+        sale = MagicMock(
+            id=5, branch_id=1, customer_id=1, customer=MagicMock(),
+            balance_due=Decimal('100'), exchange_rate=Decimal('1'), currency='', tenant_id=1,
         )
         receipt = MagicMock(id=12)
         mocker.patch('routes.payments.tenant_get_or_404', return_value=sale)
@@ -808,16 +830,13 @@ class TestPaymentsFinalGaps:
         mocker.patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('curr fail'))
         mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
         with payments_client.application.test_request_context(
-            '/payments/create_from_sale/5', method='POST',
+            '/payments/create_from_sale/5',
+            method='POST',
+            data={'amount': '40', 'payment_method': 'cash'},
         ):
-            from werkzeug.datastructures import ImmutableMultiDict
-            with patch('routes.payments.request') as req, \
-                 patch('utils.decorators.branch_scope_id', return_value=None):
-                req.method = 'POST'
-                req.form = ImmutableMultiDict([
-                    ('amount', '40'),
-                    ('payment_method', 'cash'),
-                ])
+            with patch('routes.payments.tenant_get_or_404', return_value=sale), \
+                 patch('utils.decorators.branch_scope_id', return_value=None), \
+                 patch('routes.payments.CurrencyService.get_all_rates', return_value={}):
                 from routes.payments import create_from_sale
                 resp = create_from_sale(5)
         assert resp.status_code == 302

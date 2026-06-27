@@ -1067,9 +1067,10 @@ class TestProductsExtendedCoverage:
             )
         assert resp.status_code == 200
 
-    def test_edit_post_branch_stock_without_warehouse(self, products_client):
+    def test_edit_post_branch_stock_without_warehouse(self, products_client, mock_user):
         form = _mock_product_form(validate=True)
         product = _product()
+        mock_user.can_see_costs.return_value = False
         with _products_patches(product=product, branch_scope=2), \
              patch("forms.product.ProductForm", return_value=form), \
              patch("routes.products.StockService.get_product_stock", return_value=5.0), \
@@ -1081,6 +1082,29 @@ class TestProductsExtendedCoverage:
                 data={"name": "X", "regular_price": "10", "current_stock": "8"},
             )
         assert resp.status_code == 200
+
+    def test_edit_post_branch_stock_with_warehouse(self, products_client, mock_user):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        mock_user.can_see_costs.return_value = False
+        adjust = MagicMock()
+        with _products_patches(product=product, branch_scope=2), \
+             patch("forms.product.ProductForm", return_value=form), \
+             patch("routes.products.StockService.get_product_stock", return_value=5.0), \
+             patch("routes.products.StockService.adjust_stock", adjust), \
+             patch("models.ProductPriceTier") as tier_model:
+            tier_model.query.filter_by.return_value.first.return_value = None
+            resp = products_client.post(
+                "/products/1/edit",
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "8",
+                    "warehouse_id": "1",
+                },
+            )
+        assert resp.status_code == 302
+        adjust.assert_called_once()
 
     def test_edit_post_with_image_and_existing_tier(self, products_client, mock_user):
         form = _mock_product_form(validate=True)
@@ -1101,12 +1125,36 @@ class TestProductsExtendedCoverage:
                     "regular_price": "10",
                     "current_stock": "10",
                     "warehouse_id": "1",
-                    "tier_retail_price": "0",
+                    "tier_retail_price": "99",
                     "image": (BytesIO(b"img"), "pic.png"),
                 },
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 302
+        assert existing_tier.price == 99
+
+    def test_edit_post_clears_empty_extra_field(self, products_client, mock_user):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        product.extra_fields = {"color": "red"}
+        mock_user.can_see_costs.return_value = False
+        with _products_patches(product=product), \
+             patch("forms.product.ProductForm", return_value=form), \
+             patch("routes.products.StockService.get_product_stock", return_value=10.0), \
+             patch("models.ProductPriceTier") as tier_model:
+            tier_model.query.filter_by.return_value.first.return_value = None
+            resp = products_client.post(
+                "/products/1/edit",
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "current_stock": "10",
+                    "warehouse_id": "1",
+                    "extra_color": "",
+                },
+            )
+        assert resp.status_code == 302
+        assert product.extra_fields is None
 
     def test_delete_json_with_stock_error(self, products_client):
         product = _product()
@@ -1118,6 +1166,22 @@ class TestProductsExtendedCoverage:
             )
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
+
+    def test_delete_exception_redirects(self, products_client):
+        product = _product()
+        sl = MagicMock()
+        pl = MagicMock()
+        sl.query.filter_by.return_value.filter.return_value.count.return_value = 0
+        pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
+        session = MagicMock()
+        session.commit.side_effect = RuntimeError("delete fail")
+        with _products_patches(product=product), \
+             patch("routes.products.StockService.get_product_stock", return_value=0.0), \
+             patch("routes.products.db.session", session), \
+             patch("models.SaleLine", sl), \
+             patch("models.PurchaseLine", pl):
+            resp = products_client.post("/products/1/delete", follow_redirects=False)
+        assert resp.status_code == 302
 
     def test_delete_exception_json(self, products_client):
         product = _product()

@@ -589,7 +589,7 @@ class TestPaymentsExtendedCoverage:
              patch('routes.payments.resolve_default_currency', return_value='AED'), \
              patch('models.Branch') as branch_q, \
              patch('routes.payments.render_template', side_effect=[RuntimeError('tpl'), 'ok']) as render, \
-             patch('routes.payments.LoggingCore.log_error'):
+             patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
             branch_q.query.filter_by.return_value.first.return_value = None
             resp = payments_client.get('/payments/receipts/1/print')
         assert resp.status_code == 200
@@ -655,16 +655,20 @@ class TestPaymentsExtendedCoverage:
             id=5, tenant_id=1,
         )
         receipt = MagicMock(id=11)
-        mocker.patch('routes.payments.PaymentService.create_receipt', return_value=receipt)
+        create_receipt = mocker.patch(
+            'routes.payments.PaymentService.create_receipt', return_value=receipt
+        )
         with patch('routes.payments.tenant_get_or_404', return_value=sale), \
              patch('utils.decorators.branch_scope_id', return_value=None), \
-             patch('routes.payments.CurrencyService.get_all_rates', return_value={}):
-            resp = payments_client.post('/payments/create_from_sale/5', data={
-                'amount': '50',
-                'payment_method': 'cash',
-                'currency': 'AED',
-            }, follow_redirects=False)
+             patch('routes.payments.LoggingCore.log_audit'), \
+             patch('routes.payments.url_for', return_value='/payments/receipts/11'):
+            resp = payments_client.post(
+                '/payments/create_from_sale/5',
+                data={'amount': '50', 'payment_method': 'cash', 'currency': 'AED'},
+                follow_redirects=False,
+            )
         assert resp.status_code == 302
+        create_receipt.assert_called_once()
 
     def test_voucher_outgoing_customer_cash(self, payments_client, mocker):
         customer = MagicMock(id=1, name='Cust', tenant_id=1)

@@ -573,7 +573,6 @@ def create_from_sale(sale_id):
                 sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.logging_core import LoggingCore
                     LoggingCore.log_error(
                         message=str(e),
                         category="PAYMENTS",
@@ -711,7 +710,6 @@ def create_voucher_submit():
             sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n")
             traceback.print_exc()
             try:
-                from services.logging_core import LoggingCore
                 LoggingCore.log_error(
                     message=str(e),
                     category="PAYMENTS",
@@ -1136,7 +1134,6 @@ def print_receipt(id):
         sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n")
         traceback.print_exc()
         try:
-            from services.logging_core import LoggingCore
             LoggingCore.log_error(
                 message=str(e),
                 category="PAYMENTS",
@@ -1497,7 +1494,6 @@ def create_payment(purchase_id):
                 sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (create from purchase): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.logging_core import LoggingCore
                     LoggingCore.log_error(
                         message=str(e),
                         category="PAYMENTS",
