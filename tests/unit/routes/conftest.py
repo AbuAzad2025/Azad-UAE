@@ -2,10 +2,51 @@ from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask, make_response
+
+# Stub heavy optional deps before route package imports (pytest-cov loads routes early).
+for _mod in ('numpy', 'pandas'):
+    if _mod not in sys.modules:
+        sys.modules[_mod] = MagicMock()
+
+# Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
+try:
+    import sqlalchemy.inspection as _sa_inspection
+
+    _orig_inspects_factory = _sa_inspection._inspects
+
+    def _safe_inspects(*types):
+        _orig_decorator = _orig_inspects_factory(*types)
+
+        def decorate(fn_or_cls):
+            try:
+                return _orig_decorator(fn_or_cls)
+            except AssertionError as exc:
+                if "already registered" in str(exc):
+                    return fn_or_cls
+                raise
+
+        return decorate
+
+    _sa_inspection._inspects = _safe_inspects
+except Exception:
+    pass
+
+
+def pytest_configure(config):
+    """Pre-load SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
+    if not config.pluginmanager.hasplugin('_cov'):
+        return
+    import importlib
+
+    import sqlalchemy.orm.dependency as _dep
+
+    if not hasattr(_dep, '_direction_to_processor'):
+        importlib.reload(_dep)
 
 
 @pytest.fixture
@@ -71,11 +112,13 @@ def _anon_user():
 
 @contextmanager
 def unauthenticated_client(client):
+    from flask import Response
     login_manager = MagicMock()
-    login_manager.unauthorized.return_value = make_response("unauthorized", 401)
+    login_manager.unauthorized.return_value = Response("unauthorized", status=401)
     client.application.login_manager = login_manager
-    with patch("flask_login.utils._get_user", return_value=_anon_user()):
-        yield
+    with client.application.app_context():
+        with patch("flask_login.utils._get_user", return_value=_anon_user()):
+            yield
 
 
 @pytest.fixture

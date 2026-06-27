@@ -2,6 +2,7 @@
 tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
 Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
+import sys
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
@@ -9,6 +10,46 @@ from itertools import cycle
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
+
+# Stub heavy optional deps before route/model imports under pytest-cov.
+for _mod in ('numpy', 'pandas'):
+    if _mod not in sys.modules:
+        sys.modules[_mod] = MagicMock()
+
+# Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
+try:
+    import sqlalchemy.inspection as _sa_inspection
+
+    _orig_inspects_factory = _sa_inspection._inspects
+
+    def _safe_inspects(*types):
+        _orig_decorator = _orig_inspects_factory(*types)
+
+        def decorate(fn_or_cls):
+            try:
+                return _orig_decorator(fn_or_cls)
+            except AssertionError as exc:
+                if "already registered" in str(exc):
+                    return fn_or_cls
+                raise
+
+        return decorate
+
+    _sa_inspection._inspects = _safe_inspects
+except Exception:
+    pass
+
+
+def pytest_configure(config):
+    """Pre-load SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
+    if not config.pluginmanager.hasplugin('_cov'):
+        return
+    import importlib
+
+    import sqlalchemy.orm.dependency as _dep
+
+    if not hasattr(_dep, '_direction_to_processor'):
+        importlib.reload(_dep)
 
 
 # ---------------------------------------------------------------------------
@@ -281,10 +322,9 @@ def model_patch(mocker):
 @pytest.fixture
 def mock_db(mocker):
     """Patch ``extensions.db.session`` so add/commit/rollback are no-ops."""
-    from extensions import db
     mock_session = mocker.MagicMock(name="mock_db_session")
     mock_session.get.return_value = None
-    mocker.patch.object(db, "session", mock_session)
+    mocker.patch("extensions.db.session", mock_session, create=True)
     yield mock_session
     mock_session.get.reset_mock(side_effect=True, return_value=True)
 

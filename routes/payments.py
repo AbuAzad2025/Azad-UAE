@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort
 from flask_login import login_required, current_user
@@ -1527,7 +1527,7 @@ def create_payment(purchase_id):
                     )
                 except Exception:
                     pass
-                default_currency = (purchase.currency or '').strip() or resolve_default_currency()
+                default_currency = (purchase.currency or '').strip() or get_system_default_currency()
             currency = request.form.get('currency') or default_currency
 
             reference_number = request.form.get('reference_number')
@@ -1607,7 +1607,7 @@ def create_payment(purchase_id):
                         currency=currency,
                         exchange_rate=exchange_rate_decimal,
                         amount_aed=amount_aed,
-                        issue_date=datetime.utcnow().date(),
+                        issue_date=datetime.now(timezone.utc).date(),
                         due_date=cheque_date if cheque_date else None,
                         bank_name=bank_name,
                         status='pending',

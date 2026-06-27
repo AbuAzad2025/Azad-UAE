@@ -10,7 +10,10 @@ import pytest
 
 from tests.unit.routes.conftest import _chain_query, app_factory, bypass_permission_auth, unauthenticated_client
 
-import routes.payments as payments_module
+
+def _pm():
+    import routes.payments as payments_module
+    return payments_module
 
 
 def _mock_receipt(**kwargs):
@@ -148,18 +151,20 @@ def payments_client(app_factory, bypass_permission_auth):
 class TestPaymentHelpers:
     def test_in_scope_branch_none_scope(self):
         with patch('utils.decorators.branch_scope_id', return_value=None):
-            assert payments_module._in_scope_branch(99) is True
+            assert _pm()._in_scope_branch(99) is True
 
     def test_in_scope_branch_mismatch(self):
         with patch('utils.decorators.branch_scope_id', return_value=2):
-            assert payments_module._in_scope_branch(5) is False
+            assert _pm()._in_scope_branch(5) is False
 
     def test_archived_item_branch_id(self):
         rec = MagicMock(data={'branch_id': 3})
-        assert payments_module._archived_item_branch_id(rec) == 3
-        assert payments_module._archived_item_branch_id(MagicMock(data=None)) is None
+        assert _pm()._archived_item_branch_id(rec) == 3
+        assert _pm()._archived_item_branch_id(MagicMock(data=None)) is None
 
-    def test_build_receipts_json_response(self):
+    def test_build_receipts_json_response(self, app_factory):
+        from routes.payments import payments_bp, _build_receipts_json_response
+        app = app_factory(payments_bp)
         items = [{
             'id': 1,
             'type': 'receipt',
@@ -176,8 +181,9 @@ class TestPaymentHelpers:
             'source_type': 'manual',
         }]
         pag = MagicMock(page=1, pages=1)
-        resp = payments_module._build_receipts_json_response(items, pag)
-        data = resp.get_json()
+        with app.test_request_context():
+            resp = _build_receipts_json_response(items, pag)
+            data = resp.get_json()
         assert data['totals']['total_incoming'] == 100.0
         assert data['payments'][0]['status'] == 'COMPLETED'
 
@@ -185,7 +191,7 @@ class TestPaymentHelpers:
         mocker.patch('routes.payments.ExchangeRateService.resolve_exchange_rate_for_transaction', return_value={'rate': '3.67'})
         mocker.patch('routes.payments.resolve_tenant_base_currency', return_value='AED')
         mocker.patch('routes.payments.get_active_tenant_id', return_value=1)
-        rate = payments_module._resolve_transaction_rate('USD', 3.67)
+        rate = _pm()._resolve_transaction_rate('USD', 3.67)
         assert rate == Decimal('3.67')
 
 class TestPaymentsAuth:
@@ -727,14 +733,14 @@ class TestPaymentsDeepCoverage:
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = [sale]
         mocker.patch('routes.payments.tenant_query', return_value=q)
-        result = payments_module._scoped_customer_unpaid_sales(1)
+        result = _pm()._scoped_customer_unpaid_sales(1)
         assert result == [sale]
 
     def test_ensure_customer_scope_returns_none(self, mocker):
         q = MagicMock()
         q.filter.return_value.first.return_value = None
         mocker.patch('routes.payments._scoped_customers_query', return_value=q)
-        assert payments_module._ensure_customer_scope(99) is None
+        assert _pm()._ensure_customer_scope(99) is None
 
     def test_voucher_submit_exception_redirects(self, payments_client, mocker):
         mocker.patch('routes.payments._ensure_customer_scope', side_effect=RuntimeError('boom'))
@@ -751,7 +757,7 @@ class TestPaymentsDeepCoverage:
         q = MagicMock()
         q.filter.return_value.first.return_value = None
         mocker.patch('routes.payments._scoped_suppliers_query', return_value=q)
-        assert payments_module._ensure_supplier_scope(88) is None
+        assert _pm()._ensure_supplier_scope(88) is None
 
     def test_scoped_customers_query_branch_scoped(self, mocker):
         base_q = MagicMock()
@@ -760,7 +766,7 @@ class TestPaymentsDeepCoverage:
         scoped_q.filter.return_value = scoped_q
         mocker.patch('routes.payments.tenant_query', return_value=base_q)
         with patch('utils.decorators.branch_scope_id', return_value=2):
-            result = payments_module._scoped_customers_query()
+            result = _pm()._scoped_customers_query()
         assert result is scoped_q
         assert base_q.filter.call_count >= 1
 
@@ -771,7 +777,7 @@ class TestPaymentsDeepCoverage:
         scoped_q.filter.return_value = scoped_q
         mocker.patch('routes.payments.tenant_query', return_value=base_q)
         with patch('utils.decorators.branch_scope_id', return_value=3):
-            result = payments_module._scoped_suppliers_query()
+            result = _pm()._scoped_suppliers_query()
         assert result is scoped_q
 
     def test_receipts_branch_scope_filter(self, payments_client):
@@ -1204,7 +1210,7 @@ class TestPaymentsDeepCoverage:
         assert resp.status_code == 302
 
     def test_receipt_item_status_pending(self):
-        assert payments_module._receipt_item_status({'payment_confirmed': False}) == 'PENDING'
+        assert _pm()._receipt_item_status({'payment_confirmed': False}) == 'PENDING'
 
     def test_view_receipt_sale_branch_scope(self, payments_client):
         receipt = _mock_receipt(branch_id=2, source_type='sale', source_id=10, user_id=42)

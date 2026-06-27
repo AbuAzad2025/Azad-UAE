@@ -8,10 +8,34 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytest_plugins = ['tests.unit.conftest']
+
+import models.cheque as cheque_mod
+from models.cheque import Cheque
+
+_GET_INCOMING = Cheque.get_incoming_cheques
+_GET_OUTGOING = Cheque.get_outgoing_cheques
+_GET_DUE_SOON = Cheque.get_due_soon_cheques
+_GET_OVERDUE = Cheque.get_overdue_cheques
+_UPDATE_ALL = Cheque.update_all_statuses
+_GET_STATS = Cheque.get_statistics
+
+_COL_DUE_DATE = Cheque.due_date
+_COL_DAYS_UNTIL_DUE = Cheque.days_until_due
+_COL_TENANT_ID = Cheque.tenant_id
+_COL_BRANCH_ID = Cheque.branch_id
+_COL_AMOUNT_AED = Cheque.amount_aed
+_COL_IS_OVERDUE = Cheque.is_overdue
+_COL_IS_ACTIVE = Cheque.is_active
+_COL_STATUS = Cheque.status
+
+
+@pytest.fixture(autouse=True)
+def _autouse_mock_db(mock_db):
+    pass
+
 
 def _cheque_stub(**kwargs):
-    from models.cheque import Cheque
-
     class Stub:
         id = kwargs.get('id', 1)
         cheque_number = kwargs.get('cheque_number', 'CHQ-001')
@@ -135,93 +159,99 @@ class TestChequeProperties:
 
 
 class TestChequeQueries:
-    def _mock_query(self, mocker, all_rows=None, count_val=0, scalar_val=Decimal('0')):
-        from models import cheque as cheque_mod
+    def _fake_cheque_cls(self, query):
+        return SimpleNamespace(
+            query=query,
+            due_date=_COL_DUE_DATE,
+            tenant_id=_COL_TENANT_ID,
+            branch_id=_COL_BRANCH_ID,
+            days_until_due=_COL_DAYS_UNTIL_DUE,
+            is_overdue=_COL_IS_OVERDUE,
+            is_active=_COL_IS_ACTIVE,
+            status=_COL_STATUS,
+            amount_aed=_COL_AMOUNT_AED,
+        )
 
+    def test_get_incoming_cheques_scoped(self, mocker, mock_db):
+        row = SimpleNamespace(due_date=date.today())
         q = MagicMock()
         q.filter_by.return_value = q
         q.filter.return_value = q
-        q.order_by.return_value.all.return_value = all_rows or []
-        q.count.return_value = count_val
-        mocker.patch.object(cheque_mod.Cheque, 'query', q)
-        return q
+        q.order_by.return_value.all.return_value = [row]
+        mocker.patch.object(cheque_mod, 'Cheque', self._fake_cheque_cls(q))
 
-    def test_get_incoming_cheques_scoped(self, mocker):
-        row = SimpleNamespace(due_date=date.today())
-        q = self._mock_query(mocker, all_rows=[row])
-        from models.cheque import Cheque
-
-        result = Cheque.get_incoming_cheques(tenant_id=1, customer_id=2, status='pending')
+        result = _GET_INCOMING(tenant_id=1, customer_id=2, status='pending')
         assert result == [row]
         q.filter_by.assert_any_call(cheque_type='incoming', is_active=True)
 
-    def test_get_outgoing_cheques(self, mocker):
-        q = self._mock_query(mocker, all_rows=[])
-        from models.cheque import Cheque
+    def test_get_outgoing_cheques(self, mocker, mock_db):
+        q = MagicMock()
+        q.filter_by.return_value = q
+        q.filter.return_value = q
+        q.order_by.return_value.all.return_value = []
+        mocker.patch.object(cheque_mod, 'Cheque', self._fake_cheque_cls(q))
 
-        Cheque.get_outgoing_cheques(tenant_id=3, supplier_id=4, status='pending')
+        _GET_OUTGOING(tenant_id=3, supplier_id=4, status='pending')
         q.filter_by.assert_any_call(supplier_id=4)
 
-    def test_update_all_statuses(self, mocker):
+    def test_update_all_statuses(self, mocker, mock_db):
         pending = _cheque_stub(status='pending', due_date=date.today() + timedelta(days=1))
         q = MagicMock()
         q.filter_by.return_value = q
         q.filter.return_value = q
         q.all.return_value = [pending]
-        mocker.patch('models.cheque.Cheque.query', q)
-        from models.cheque import Cheque
+        mocker.patch.object(cheque_mod, 'Cheque', self._fake_cheque_cls(q))
 
-        Cheque.update_all_statuses(tenant_id=1, branch_id=2)
+        _UPDATE_ALL(tenant_id=1, branch_id=2)
         assert pending.days_until_due is not None
 
-    def test_get_statistics(self, mocker):
-        from models import cheque as cheque_mod
-
+    def test_get_statistics(self, mocker, mock_db):
         base_q = MagicMock()
         base_q.filter_by.return_value = base_q
         base_q.filter.return_value = base_q
         base_q.count.side_effect = [2, 1, 1, 0, 0, 0, 0]
-        mocker.patch.object(cheque_mod.Cheque, 'query', base_q)
+        mocker.patch.object(cheque_mod, 'Cheque', self._fake_cheque_cls(base_q))
 
         amount_q = MagicMock()
         amount_q.filter_by.return_value = amount_q
         amount_q.filter.return_value = amount_q
         amount_q.scalar.side_effect = [Decimal('1500'), Decimal('800')]
-        mocker.patch('models.cheque.db.session.query', return_value=amount_q)
+        session = MagicMock()
+        session.query.return_value = amount_q
+        mocker.patch.object(cheque_mod, 'db', SimpleNamespace(session=session, func=cheque_mod.db.func))
 
-        from models.cheque import Cheque
-
-        stats = Cheque.get_statistics(tenant_id=1, branch_id=3)
+        stats = _GET_STATS(tenant_id=1, branch_id=3)
         assert stats['total_incoming'] == 2
         assert stats['incoming_amount'] == 1500.0
         assert stats['bounced'] == 0
 
-    def test_get_due_soon_filters_branch(self, mocker):
-        mocker.patch('models.cheque.Cheque.update_all_statuses')
+    def test_get_due_soon_filters_branch(self, mocker, mock_db):
         q = MagicMock()
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = []
-        mocker.patch('models.cheque.Cheque.query', q)
-        from models.cheque import Cheque
-        Cheque.get_due_soon_cheques(tenant_id=1, branch_id=9)
+        fake = self._fake_cheque_cls(q)
+        fake.update_all_statuses = MagicMock()
+        mocker.patch.object(cheque_mod, 'Cheque', fake)
+        _GET_DUE_SOON(tenant_id=1, branch_id=9)
+        assert q.filter.called
+        fake.update_all_statuses.assert_called_once_with(tenant_id=1, branch_id=9)
+
+    def test_get_overdue_filters_tenant(self, mocker, mock_db):
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value.all.return_value = []
+        fake = self._fake_cheque_cls(q)
+        fake.update_all_statuses = MagicMock()
+        mocker.patch.object(cheque_mod, 'Cheque', fake)
+        _GET_OVERDUE(tenant_id=1)
         assert q.filter.called
 
-    def test_get_overdue_filters_tenant(self, mocker):
-        mocker.patch('models.cheque.Cheque.update_all_statuses')
+    def test_get_overdue_filters_branch(self, mocker, mock_db):
         q = MagicMock()
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = []
-        mocker.patch('models.cheque.Cheque.query', q)
-        from models.cheque import Cheque
-        Cheque.get_overdue_cheques(tenant_id=1)
-        assert q.filter.called
-
-    def test_get_overdue_filters_branch(self, mocker):
-        mocker.patch('models.cheque.Cheque.update_all_statuses')
-        q = MagicMock()
-        q.filter.return_value = q
-        q.order_by.return_value.all.return_value = []
-        mocker.patch('models.cheque.Cheque.query', q)
-        from models.cheque import Cheque
-        Cheque.get_overdue_cheques(branch_id=9)
+        fake = self._fake_cheque_cls(q)
+        fake.update_all_statuses = MagicMock()
+        mocker.patch.object(cheque_mod, 'Cheque', fake)
+        _GET_OVERDUE(branch_id=9)
         assert q.filter.called

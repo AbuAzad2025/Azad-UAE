@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import routes.products as products_mod
+
 from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 
 
@@ -104,7 +106,7 @@ def _products_patches(
         stack.enter_context(patch("routes.products.render_template", return_value="ok"))
         session = stack.enter_context(patch("routes.products.db.session"))
         stack.enter_context(patch("routes.products.db.session.query", return_value=session_query))
-        stack.enter_context(patch("routes.products.ProductCategory.query", category_query))
+        stack.enter_context(patch.object(products_mod, "ProductCategory", MagicMock(query=category_query)))
         stack.enter_context(patch("routes.products.branch_scope_id", return_value=branch_scope))
         stack.enter_context(patch("routes.products.get_accessible_warehouses", return_value=[_warehouse()]))
         stack.enter_context(patch("routes.products.get_accessible_warehouse_ids", return_value=[1]))
@@ -118,7 +120,8 @@ def _products_patches(
         stack.enter_context(patch("routes.products.generate_sku", return_value="AUTO-SKU"))
         stack.enter_context(patch("routes.products.generate_barcode", return_value="AUTO-BC"))
         stack.enter_context(patch("routes.products.save_uploaded_file", return_value="products/img.png"))
-        product_query_patch = stack.enter_context(patch("routes.products.Product.query"))
+        product_query_mock = MagicMock()
+        stack.enter_context(patch.object(products_mod, "Product", MagicMock(query=product_query_mock)))
         stack.enter_context(patch("utils.tenant_limits.check_products_limit"))
         yield {
             "visible_query": visible_query,
@@ -127,7 +130,7 @@ def _products_patches(
             "category_query": category_query,
             "session": session,
             "customer_query": customer_query,
-            "product_query": product_query_patch,
+            "product_query": product_query_mock,
             "warehouse_query": warehouse_query,
         }
 
