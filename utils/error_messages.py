@@ -177,7 +177,9 @@ class ErrorMessages:
                 'إذا استمرت المشكلة، اتصل بالدعم الفني.')
     
     @staticmethod
-    def unexpected_error():
+    def unexpected_error(error_id=None):
+        if error_id:
+            return f'حدث خطأ غير متوقع. رقم المرجع: {error_id}'
         return ('حدث خطأ غير متوقع.\n'
                 'إذا استمرت المشكلة، اتصل بالدعم الفني.')
     
@@ -302,10 +304,6 @@ class ErrorMessages:
     @staticmethod
     def csrf_error():
         return 'خطأ في التحقق الأمني (CSRF).\nقد تكون الجلسة انتهت. حدّث الصفحة وحاول مرة أخرى.'
-    
-    @staticmethod
-    def unexpected_error(error_id):
-        return (f'حدث خطأ غير متوقع. رقم المرجع: {error_id}')
     
     @staticmethod
     def required_field(field_name):
