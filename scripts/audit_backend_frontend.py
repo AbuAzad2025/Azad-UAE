@@ -39,7 +39,7 @@ def extract_routes_and_blueprints():
 
 def extract_template_url_fors():
     templates_dir = PROJECT / 'templates'
-    url_for_pattern = re.compile(r"url_for\('([^']+)'\")
+    url_for_pattern = re.compile(r"url_for\('([^']+)'\)")
     url_fors = defaultdict(list)
     for path in templates_dir.rglob('*.html'):
         text = path.read_text(encoding='utf-8')
