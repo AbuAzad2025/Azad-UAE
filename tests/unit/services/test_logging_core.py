@@ -253,7 +253,7 @@ class TestAuditAndSecurity:
             LoggingCore.log_audit('create', 'sales', 1, {'x': 1})
 
     def test_log_audit_fallback(self, app, mocker):
-        mocker.patch('models.audit.AuditLog', side_effect=RuntimeError('db'))
+        mocker.patch('extensions.db.session.add', side_effect=RuntimeError('db'))
         fb = mocker.patch.object(LoggingCore, '_fallback_write')
         LoggingCore.log_audit('create', 'sales', 1)
         fb.assert_called_once()
