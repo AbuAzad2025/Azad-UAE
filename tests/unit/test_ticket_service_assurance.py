@@ -168,3 +168,99 @@ class TestCommentsAndSearch:
         with app.app_context():
             TicketService.search_tickets({'status': 'open', 'search': 'printer'}, MagicMock())
         assert mock_q.filter.called
+
+
+class TestTicketEdgeCases:
+    def test_next_number_bad_format(self, app, mocker):
+        from models import Ticket
+        last = MagicMock(number='TKT-BAD')
+        mock_q = MagicMock()
+        mock_q.filter.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mock_q.first.return_value = last
+        mocker.patch.object(Ticket, 'query', new_callable=mocker.PropertyMock, return_value=mock_q)
+        from services.ticket_service import TicketService
+        with app.app_context():
+            num = TicketService._next_number(1)
+        assert num.endswith('-0001')
+
+    def test_create_ticket_no_active_tenant_non_owner(self, app, mocker):
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=None)
+        mocker.patch('services.ticket_service.is_global_owner_user', return_value=False)
+        from services.ticket_service import TicketService
+        with app.app_context():
+            with pytest.raises(ValueError, match='شركة نشطة'):
+                TicketService.create_ticket({'subject': 'x'}, MagicMock())
+
+    def test_create_ticket_commit_failure(self, app, mocker):
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
+        mocker.patch('services.ticket_service.is_global_owner_user', return_value=False)
+        mocker.patch('services.ticket_service.TicketService._next_number', return_value='TKT-202506-0001')
+        mock_session = mocker.patch('services.ticket_service.db.session')
+        mock_session.commit.side_effect = RuntimeError('db')
+        from services.ticket_service import TicketService
+        with app.app_context():
+            with pytest.raises(RuntimeError, match='db'):
+                TicketService.create_ticket({'subject': 'x'}, MagicMock())
+
+    def test_assign_missing_ticket(self, app, mocker):
+        mock_session = mocker.patch('services.ticket_service.db.session')
+        mock_session.get.return_value = None
+        from services.ticket_service import TicketService
+        with app.app_context():
+            with pytest.raises(ValueError, match='غير موجودة'):
+                TicketService.assign_ticket(1, 2, MagicMock())
+
+    def test_get_ticket(self, app, mocker):
+        ticket = MagicMock(tenant_id=1)
+        mock_session = mocker.patch('services.ticket_service.db.session')
+        mock_session.get.return_value = ticket
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
+        from services.ticket_service import TicketService
+        with app.app_context():
+            assert TicketService.get_ticket(1, MagicMock()) is ticket
+
+    def test_add_comment_success(self, app, mocker):
+        ticket = MagicMock(tenant_id=1, id=1, status='open')
+        mock_session = mocker.patch('services.ticket_service.db.session')
+        mock_session.get.return_value = ticket
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
+        from services.ticket_service import TicketService
+        with app.app_context():
+            comment = TicketService.add_comment(1, {'body': 'note'}, MagicMock(id=5))
+        assert comment.body == 'note'
+
+    def test_search_with_branch_scope(self, app, mocker):
+        from models import Ticket
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
+        mocker.patch('services.ticket_service.is_global_owner_user', return_value=False)
+        mocker.patch('services.ticket_service.branch_scope_id_for', return_value=7)
+        mock_q = MagicMock()
+        mock_q.filter.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mock_q.all.return_value = []
+        mocker.patch.object(Ticket, 'query', new_callable=mocker.PropertyMock, return_value=mock_q)
+        from services.ticket_service import TicketService
+        with app.app_context():
+            TicketService.search_tickets({'category_id': '3', 'assigned_user_id': '9'}, MagicMock())
+        assert mock_q.filter.called
+
+    @pytest.mark.parametrize('method_name', ['assign_ticket', 'resolve_ticket', 'close_ticket', 'reopen_ticket', 'add_comment'])
+    def test_commit_failure_rolls_back(self, app, mocker, method_name):
+        ticket = MagicMock(tenant_id=1, id=1, status='open')
+        mock_session = mocker.patch('services.ticket_service.db.session')
+        mock_session.get.return_value = ticket
+        mock_session.commit.side_effect = RuntimeError('db fail')
+        mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
+        from services.ticket_service import TicketService
+        args = {
+            'assign_ticket': (1, 2, MagicMock()),
+            'resolve_ticket': (1, MagicMock()),
+            'close_ticket': (1, MagicMock()),
+            'reopen_ticket': (1, MagicMock()),
+            'add_comment': (1, {'body': 'x'}, MagicMock(id=1)),
+        }[method_name]
+        with app.app_context():
+            with pytest.raises(RuntimeError, match='db fail'):
+                getattr(TicketService, method_name)(*args)
+        mock_session.rollback.assert_called()

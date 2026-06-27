@@ -20,7 +20,8 @@ class AzadPlatformFeeService:
         """Read platform fee rate from SystemSettings (owner-configurable)."""
         from models import SystemSettings
         settings = SystemSettings.get_current()
-        rate = Decimal(str(settings.azad_platform_fee_rate or 1.00))
+        stored = settings.azad_platform_fee_rate
+        rate = Decimal(str(stored if stored is not None else 1.00))
         return (rate / Decimal('100')).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP), rate
 
     @staticmethod

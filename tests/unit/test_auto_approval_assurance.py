@@ -147,3 +147,78 @@ class TestRunAutoApproval:
         result = AutoApprovalService.run_auto_approval()
         assert result['total_approved'] == 3
         assert result['total_amount'] == 150.0
+
+
+class TestScheduleAutoApproval:
+    def test_starts_daemon_thread(self, mocker):
+        mock_thread = mocker.patch('threading.Thread')
+        mock_thread.return_value.start = MagicMock()
+        app = MagicMock()
+        from services.auto_approval_service import schedule_auto_approval
+        schedule_auto_approval(app)
+        mock_thread.assert_called_once()
+        assert mock_thread.call_args.kwargs.get('daemon') is True
+        mock_thread.return_value.start.assert_called_once()
+
+    def test_purchase_commit_failure(self, app, mocker):
+        purchase = MagicMock()
+        purchase.amount_paid = 100.0
+        purchase.package = MagicMock(slug='gold', name_ar='Gold')
+        purchase.customer_email = 'a@test.com'
+        purchase.payment_status = 'pending'
+        purchase.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [purchase]
+        mocker.patch('services.auto_approval_service.PackagePurchase.query', mock_q)
+        mocker.patch('services.auto_approval_service.Donation.query')
+        mocker.patch('services.auto_approval_service.LoggingCore.log_audit')
+        mock_session = mocker.patch('services.auto_approval_service.db.session')
+        mock_session.commit.side_effect = RuntimeError('db error')
+
+        from services.auto_approval_service import AutoApprovalService
+        with app.app_context():
+            result = AutoApprovalService.approve_pending_purchases()
+        assert result['success'] is False
+        assert 'db error' in result['error']
+
+    def test_empty_donations_success(self, app, mocker):
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = []
+        mocker.patch('services.auto_approval_service.Donation.query', mock_q)
+        mocker.patch('services.auto_approval_service.db.session')
+        from services.auto_approval_service import AutoApprovalService
+        with app.app_context():
+            result = AutoApprovalService.approve_pending_donations()
+        assert result['approved_count'] == 0
+
+    def test_scheduler_task_runs_once(self, app, mocker):
+        mocker.patch('services.auto_approval_service.AutoApprovalService.run_auto_approval', return_value={'total_approved': 0})
+        mocker.patch('time.sleep', side_effect=InterruptedError('stop'))
+        captured = {}
+
+        def fake_thread(target=None, daemon=None):
+            captured['target'] = target
+            return MagicMock(start=lambda: None)
+
+        mocker.patch('threading.Thread', side_effect=fake_thread)
+        from services.auto_approval_service import schedule_auto_approval
+        schedule_auto_approval(app)
+        with app.app_context():
+            with pytest.raises(InterruptedError):
+                captured['target']()
+
+    def test_scheduler_logs_errors(self, app, mocker):
+        mocker.patch('services.auto_approval_service.AutoApprovalService.run_auto_approval', side_effect=RuntimeError('boom'))
+        mocker.patch('time.sleep', side_effect=InterruptedError('stop'))
+        captured = {}
+
+        def fake_thread(target=None, daemon=None):
+            captured['target'] = target
+            return MagicMock(start=lambda: None)
+
+        mocker.patch('threading.Thread', side_effect=fake_thread)
+        from services.auto_approval_service import schedule_auto_approval
+        schedule_auto_approval(app)
+        with app.app_context():
+            with pytest.raises(InterruptedError):
+                captured['target']()

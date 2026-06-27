@@ -165,3 +165,96 @@ class TestPlatformFeeReporting:
         with app.app_context():
             with pytest.raises(ValueError, match='No settled fees'):
                 AzadPlatformFeeService.confirm_settlement_paid([1])
+
+    def test_missing_tenant_id_raises(self, app):
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        sale = _online_sale()
+        sale.tenant_id = None
+        with app.app_context():
+            with pytest.raises(ValueError, match='tenant_id'):
+                AzadPlatformFeeService.record_store_online_fee(sale)
+
+    def test_zero_fee_amount_skips(self, app, mocker):
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = None
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        settings = MagicMock(azad_platform_fee_rate=Decimal('0'))
+        mocker.patch('models.SystemSettings.get_current', return_value=settings)
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            assert AzadPlatformFeeService.record_store_online_fee(_online_sale()) is None
+
+    def test_settle_fees_posts_gl(self, app, mocker):
+        fee = MagicMock(id=1, fee_amount_aed=Decimal('10'), status='accrued', gl_posted=True)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.all.return_value = [fee]
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        mocker.patch('services.azad_platform_fee_service._resolve_main_branch', return_value=1)
+        mock_post = mocker.patch('services.azad_platform_fee_service.post_or_fail')
+        mocker.patch('services.azad_platform_fee_service.db.session')
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            results = AzadPlatformFeeService.settle_fees(1)
+        assert results[0]['tenant_id'] == 1
+        assert fee.status == 'settled'
+        mock_post.assert_called_once()
+
+    def test_settle_fees_skips_empty(self, app, mocker):
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.all.return_value = []
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            assert AzadPlatformFeeService.settle_fees([1, 2]) == []
+
+    def test_confirm_settlement_paid_success(self, app, mocker):
+        fee = MagicMock(fee_amount_aed=Decimal('25'), status='settled')
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [fee]
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        vault = MagicMock()
+        vault.transactions = []
+        mocker.patch('services.azad_platform_fee_service.PaymentVault.get_platform_vault', return_value=vault)
+        mocker.patch('utils.helpers.generate_number', return_value='001')
+        mocker.patch('services.azad_platform_fee_service.db.session')
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            result = AzadPlatformFeeService.confirm_settlement_paid(1)
+        assert result['count'] == 1
+        assert fee.status == 'paid'
+
+    def test_base_amount_from_sale_when_no_payment(self):
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        sale = _online_sale(amount_aed=Decimal('500'))
+        assert AzadPlatformFeeService._base_amount_aed(sale, None) == Decimal('500.000')
+
+    def test_settle_fees_skips_zero_total(self, app, mocker):
+        fee = MagicMock(fee_amount_aed=Decimal('0'), status='accrued', gl_posted=True)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.all.return_value = [fee]
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            assert AzadPlatformFeeService.settle_fees(1) == []
+
+    def test_confirm_settlement_paid_zero_total(self, app, mocker):
+        fee = MagicMock(fee_amount_aed=Decimal('0'), status='settled')
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [fee]
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        mocker.patch('services.azad_platform_fee_service.PaymentVault.get_platform_vault', return_value=MagicMock())
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            with pytest.raises(ValueError, match='zero'):
+                AzadPlatformFeeService.confirm_settlement_paid(1)
+
+    def test_confirm_settlement_paid_missing_vault(self, app, mocker):
+        fee = MagicMock(fee_amount_aed=Decimal('10'), status='settled')
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [fee]
+        mocker.patch('services.azad_platform_fee_service.AzadPlatformFee.query', mock_q)
+        mocker.patch('services.azad_platform_fee_service.PaymentVault.get_platform_vault', return_value=None)
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            with pytest.raises(ValueError, match='Platform vault'):
+                AzadPlatformFeeService.confirm_settlement_paid(1)
