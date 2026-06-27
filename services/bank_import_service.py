@@ -66,16 +66,18 @@ class BankImportService:
         pass
 
     @staticmethod
-    def confirm_match(line_id, journal_entry_id, user_id):
+    def confirm_match(line_id, journal_entry_id, user_id, tenant_id=None):
         """
-        Manually confirm a match
+        Manually confirm a match. When tenant_id is supplied, enforces tenant isolation.
         """
         line = BankStatementLine.query.get(line_id)
-        if line and line.tenant_id == tenant_id:
-            line.status = 'matched'
-            line.matched_journal_entry_id = journal_entry_id
-            line.matched_at = datetime.now(timezone.utc)
-            line.matched_by = user_id
-            db.session.commit()
-            return True
-        return False
+        if not line:
+            return False
+        if tenant_id is not None and int(line.tenant_id) != int(tenant_id):
+            return False
+        line.status = 'matched'
+        line.matched_journal_entry_id = journal_entry_id
+        line.matched_at = datetime.now(timezone.utc)
+        line.matched_by = user_id
+        db.session.commit()
+        return True

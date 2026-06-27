@@ -13,33 +13,6 @@ api_docs_bp = Blueprint('api_docs', __name__, url_prefix='/api-docs')
 def _api_docs_public() -> bool:
     app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
     debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
-    return debug or app_env != 'production'
-
-
-@api_docs_bp.before_request
-def _protect_api_docs_in_production():
-    if _api_docs_public():
-        return None
-    if not current_user.is_authenticated:
-        abort(404)
-    return None
-
-
-"""
-API Documentation using OpenAPI/Swagger
-"""
-import os
-import copy
-
-from flask import Blueprint, jsonify, render_template_string, current_app, abort
-from flask_login import current_user
-
-api_docs_bp = Blueprint('api_docs', __name__, url_prefix='/api-docs')
-
-
-def _api_docs_public() -> bool:
-    app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
-    debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
     enable_swagger = (os.environ.get('ENABLE_SWAGGER_UI') or 'false').strip().lower() in ('1', 'true', 'yes', 'y')
     return debug or (app_env != 'production' and enable_swagger)
 

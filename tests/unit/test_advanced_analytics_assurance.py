@@ -174,6 +174,18 @@ class TestComparativeAndBreakdown:
         assert 'bogus' not in data
         assert data['current']['margin'] == pytest.approx(0.0)
 
+    def test_comparative_last_month_and_year(self, mocker):
+        mocker.patch(
+            'services.advanced_analytics.AdvancedFinancialAnalytics._calculate_account_type_balance',
+            return_value=Decimal('200'),
+        )
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+
+        data = AdvancedFinancialAnalytics.get_comparative_analysis(
+            periods=['current', 'last_month', 'last_year']
+        )
+        assert set(data.keys()) == {'current', 'last_month', 'last_year'}
+
     def test_expense_breakdown_zero_total_percentages(self, mocker):
         acct = MagicMock()
         acct.code = '5100'
@@ -211,6 +223,22 @@ class TestForecasting:
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
         assert AdvancedFinancialAnalytics.get_forecasting_data() == []
+
+    def test_forecast_builds_months_ahead(self, mocker):
+        historical = [
+            {'revenue': 1000, 'expenses': 400, 'change': 5},
+            {'revenue': 1100, 'expenses': 450, 'change': 10},
+            {'revenue': 1200, 'expenses': 500, 'change': 8},
+        ]
+        mocker.patch(
+            'services.advanced_analytics.AdvancedFinancialAnalytics.get_trend_analysis',
+            return_value=historical,
+        )
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+
+        forecasts = AdvancedFinancialAnalytics.get_forecasting_data(months_ahead=2)
+        assert len(forecasts) == 2
+        assert forecasts[0]['is_forecast'] is True
 
     def test_dashboard_summary_includes_generated_at(self, mocker):
         mocker.patch(
@@ -253,3 +281,37 @@ class TestAccountTypeBalance:
 
         total = AdvancedFinancialAnalytics._calculate_account_type_balance('revenue', tenant_id=1)
         assert total == Decimal('750')
+
+    def test_dated_account_type_balance_expense(self, mocker):
+        line = MagicMock(amount_aed=Decimal('100'))
+        acct = MagicMock()
+        acct.get_balance.return_value = Decimal('0')
+        mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        lines_q = MagicMock()
+        lines_q.join.return_value = lines_q
+        lines_q.filter.return_value = lines_q
+        lines_q.all.return_value = [line]
+        mocker.patch('models.GLJournalLine.query', lines_q)
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+        from datetime import date
+        total = AdvancedFinancialAnalytics._calculate_account_type_balance(
+            'expense', date_from=date(2025, 1, 1), date_to=date(2025, 6, 1), tenant_id=1,
+        )
+        assert total == Decimal('100')
+
+    def test_balance_by_prefix_expense_account(self, mocker):
+        line = MagicMock(amount_aed=Decimal('40'))
+        acct = MagicMock(type='expense')
+        mock_scope = mocker.patch('utils.gl_tenant.scope_gl_accounts')
+        mock_scope.return_value.filter.return_value.all.return_value = [acct]
+        lines_q = MagicMock()
+        lines_q.join.return_value = lines_q
+        lines_q.filter.return_value = lines_q
+        lines_q.all.return_value = [line]
+        mocker.patch('models.GLJournalLine.query', lines_q)
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+        from datetime import date
+        total = AdvancedFinancialAnalytics._calculate_balance_by_prefix(
+            '5', date_from=date(2025, 1, 1), date_to=date(2025, 6, 1), is_pl=True, tenant_id=1,
+        )
+        assert total == Decimal('40')

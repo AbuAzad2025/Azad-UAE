@@ -65,6 +65,27 @@ class TestBroadcasts:
         ws.broadcast_stock_alert({'sku': 'X'})
         mock_io.emit.assert_called_with('stock_alert', {'sku': 'X'})
 
+    def test_broadcast_payment_received(self, mocker):
+        import services.websocket_service as ws
+
+        mock_io = MagicMock()
+        mocker.patch.object(ws, 'socketio', mock_io)
+        ws.broadcast_payment_received({'id': 3})
+        mock_io.emit.assert_called_once_with('payment_received', {'id': 3})
+
+    def test_production_empty_cors_logs_warning(self, app, mocker):
+        original = {k: app.config.get(k) for k in ('DEBUG', 'APP_ENV', 'CORS_ORIGINS')}
+        try:
+            app.config['DEBUG'] = False
+            app.config['APP_ENV'] = 'production'
+            app.config['CORS_ORIGINS'] = []
+            mock_log = mocker.patch('services.websocket_service.logger.warning')
+            from services.websocket_service import _socketio_cors_origins
+            assert _socketio_cors_origins(app) == []
+            mock_log.assert_called_once()
+        finally:
+            app.config.update(original)
+
 
 class TestInitSocketio:
     """init_socketio — registers handlers and returns instance."""
@@ -93,3 +114,32 @@ class TestInitSocketio:
         assert 'connect' in handlers
         assert 'disconnect' in handlers
         assert 'ping' in handlers
+
+    def test_connect_handler_authenticated(self, app, mocker):
+        handlers = {}
+
+        def fake_socketio(*args, **kwargs):
+            inst = MagicMock()
+
+            def on(event):
+                def decorator(fn):
+                    handlers[event] = fn
+                    return fn
+                return decorator
+
+            inst.on = on
+            return inst
+
+        user = MagicMock(is_authenticated=True, id=9)
+        mocker.patch('services.websocket_service.SocketIO', side_effect=fake_socketio)
+        mocker.patch('services.websocket_service.current_user', user)
+        mocker.patch('services.websocket_service.join_room')
+        mocker.patch('services.websocket_service.leave_room')
+        mocker.patch('services.websocket_service.emit')
+        from services import websocket_service as ws
+
+        ws.socketio = None
+        ws.init_socketio(app)
+        handlers['connect']()
+        handlers['ping'](None)
+        handlers['disconnect']()

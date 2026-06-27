@@ -105,3 +105,38 @@ class TestMatchConfirmation:
 
         with app.app_context():
             assert BankImportService.confirm_match(999, 1, 1) is False
+
+    def test_confirm_match_success(self, app, mocker):
+        from models.bank_reconciliation import BankStatementLine
+
+        line = MagicMock(tenant_id=1, status='imported')
+        mocker.patch.object(
+            BankStatementLine, 'query',
+            new_callable=mocker.PropertyMock,
+            return_value=MagicMock(get=MagicMock(return_value=line)),
+        )
+        mock_session = mocker.patch('services.bank_import_service.db.session')
+        from services.bank_import_service import BankImportService
+
+        with app.app_context():
+            assert BankImportService.confirm_match(1, 99, 7, tenant_id=1) is True
+        assert line.status == 'matched'
+        mock_session.commit.assert_called_once()
+
+    def test_confirm_match_cross_tenant_blocked(self, app, mocker):
+        from models.bank_reconciliation import BankStatementLine
+
+        line = MagicMock(tenant_id=2)
+        mocker.patch.object(
+            BankStatementLine, 'query',
+            new_callable=mocker.PropertyMock,
+            return_value=MagicMock(get=MagicMock(return_value=line)),
+        )
+        from services.bank_import_service import BankImportService
+
+        with app.app_context():
+            assert BankImportService.confirm_match(1, 99, 7, tenant_id=1) is False
+
+    def test_suggest_matches_noop(self):
+        from services.bank_import_service import BankImportService
+        assert BankImportService.suggest_matches(1, 2) is None
