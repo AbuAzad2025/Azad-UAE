@@ -8,8 +8,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-pytest_plugins = ['tests.unit.conftest']
-
 import models.cheque as cheque_mod
 from models.cheque import Cheque
 

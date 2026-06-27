@@ -378,6 +378,21 @@ def shop_client(app_factory, bypass_shop_auth):
             sess["shop_lang_demo-store"] = "ar"
         yield client
 
+
+@pytest.fixture
+def mock_db(mocker):
+    mock_session = mocker.MagicMock(name="mock_db_session")
+    mock_session.get.return_value = None
+    mocker.patch("extensions.db.session", mock_session, create=True)
+    yield mock_session
+
+
+@pytest.fixture
+def vault_owner_client(app_factory, bypass_owner_auth):
+    from routes.payment_vault import payment_vault_bp
+    app = app_factory(payment_vault_bp)
+    return app.test_client()
+
 @pytest.fixture
 def bypass_customers_auth(mock_user):
     customer = MagicMock()

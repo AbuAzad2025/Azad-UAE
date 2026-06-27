@@ -6,8 +6,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tests.unit.conftest import app_factory, bypass_owner_auth, mock_db
-
 import routes.payment_vault as pv_mod
 
 
