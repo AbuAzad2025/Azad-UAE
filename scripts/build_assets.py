@@ -56,7 +56,7 @@ def _process_file(src_path):
         with open(min_path, 'w', encoding='utf-8') as f:
             f.write(minified_bytes)
         final_content = minified_bytes.encode('utf-8') if isinstance(minified_bytes, str) else minified_bytes
-    digest = hashlib.md5(final_content).hexdigest()[:12]
+    digest = hashlib.md5(final_content, usedforsecurity=False).hexdigest()[:12]
     hash_name = f"{stem}.{digest}.min{ext}"
     hash_path = os.path.join(dir_name, hash_name)
     if minified_bytes is None:
