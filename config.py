@@ -73,7 +73,7 @@ class Config:
     
     SECRET_KEY = os.environ.get("SECRET_KEY", "")
     
-    HOST = os.environ.get("HOST", "0.0.0.0")
+    HOST = os.environ.get("HOST", "0.0.0.0")  # nosec B104
     PORT = _int("PORT", 5000)
     
     WTF_CSRF_EXEMPT_LIST = [

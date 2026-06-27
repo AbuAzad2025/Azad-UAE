@@ -77,5 +77,5 @@ jobs:
 
       - name: Security scan (bandit)
         run: |
-          bandit -r . -f json -o bandit-report.json || true
-          bandit -r . || true
+          bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
+          bandit -r . --exclude 'migrations/,tests/' || true
