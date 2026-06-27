@@ -252,13 +252,16 @@ class TestAuditAndSecurity:
         with app.test_request_context('/'):
             LoggingCore.log_audit('create', 'sales', 1, {'x': 1})
 
-    def test_log_audit_fallback(self, app, mocker):
-        from extensions import db
-
+    def test_log_audit_fallback(self, mocker):
         fb = mocker.patch.object(LoggingCore, '_fallback_write')
-        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
-        with app.app_context():
-            LoggingCore.log_audit('create', 'sales', 1)
+        mock_db = mocker.MagicMock()
+        mock_db.session.flush.side_effect = RuntimeError('db')
+        mocker.patch('extensions.db', mock_db)
+        mocker.patch(
+            'services.logging_core._get_request_context',
+            return_value={'user_id': 1, 'ip': '127.0.0.1', 'ua': 'test'},
+        )
+        LoggingCore.log_audit('create', 'sales', 1)
         fb.assert_called_once()
 
     def test_get_audit_logs(self, mocker):
