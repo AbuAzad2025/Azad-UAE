@@ -37,8 +37,7 @@ class MonitoringService:
     def log_system_stats_action(visible_tables, restricted_tables):
         new_log = AuditLog(
             action='view_system_stats',
-            details={'visible_tables': visible_tables, 'restricted_tables': restricted_tables},
-            source='owner_panel'
+            changes={'visible_tables': visible_tables, 'restricted_tables': restricted_tables},
         )
         db.session.add(new_log)
         try:

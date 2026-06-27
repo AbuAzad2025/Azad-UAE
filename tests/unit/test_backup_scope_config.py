@@ -320,3 +320,428 @@ def test_read_data_directory_missing_meta_falls_back_to_jsonl_files(tmp_path):
 def test_read_data_directory_empty_dir(tmp_path):
     tables, meta = read_data_directory(str(tmp_path))
     assert tables == {}
+
+
+import json
+import os
+from unittest.mock import MagicMock
+
+from services.backup_scope_config import (
+    build_tenant_uploads_archive,
+    collect_scoped_upload_paths,
+    collect_tenant_upload_paths,
+)
+
+
+def test_path_from_urlish_static_and_uploads(tmp_path):
+    uploads = tmp_path / "static" / "uploads"
+    uploads.mkdir(parents=True)
+    img = uploads / "logo.png"
+    img.write_bytes(b"png")
+    base = str(tmp_path / "static")
+    assert _path_from_urlish("/static/uploads/logo.png", base) == str(img)
+    assert _path_from_urlish("uploads/logo.png", base) == str(img)
+    assert _path_from_urlish("logo.png", base) == str(img)
+
+
+def test_merge_no_refs_needed(mocker, mock_db_connection):
+    conn, tables_out, row_counts, included, unresolved = _merge_setup(
+        mocker, mock_db_connection, existing_customer_ids=[]
+    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
+    assert unresolved == []
+
+
+def test_merge_partner_customer_ref(mocker, mock_db_connection):
+    conn, tables_out, row_counts, included, unresolved = _merge_setup(
+        mocker, mock_db_connection, partner_customer_id=8, existing_customer_ids=[],
+        fetch_result=[(8, "partner", 1)],
+    )
+    _merge_product_customer_dependencies(conn, tables_out, row_counts, included, 1, unresolved)
+    assert tables_out["customers"][0]["id"] == 8
+
+
+def test_merge_exception_records_unresolved(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    conn = mock_db_connection()
+    conn.execute.side_effect = RuntimeError("query failed")
+    tables_out = {"products": [{"merchant_customer_id": 5}]}
+    unresolved = []
+    _merge_product_customer_dependencies(conn, tables_out, {}, [], 1, unresolved)
+    assert any("merge_refs_error" in u for u in unresolved)
+
+
+def test_export_skips_missing_tables(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", side_effect=lambda c, t: t == "tenants")
+    mocker.patch("services.backup_scope_config._fetch_rows", return_value=[{"id": 1}])
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert any("missing" in s for s in skipped)
+
+
+def test_export_branch_and_store_validation(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch("services.backup_scope_config._fetch_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, _, un1 = export_scoped_database(conn, SCOPE_BRANCH, tenant_id=1, branch_id=2)
+    _, _, _, _, un2 = export_scoped_database(conn, SCOPE_STORE, tenant_id=1, store_id=3)
+    assert any("branches" in u for u in un1)
+    assert any("tenant_stores" in u for u in un2)
+
+
+def test_export_includes_roles_for_users(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+
+    def fetch_rows(conn, table, where, params):
+        if table == "users":
+            return [{"id": 1, "role_id": 9, "tenant_id": 1}]
+        if table == "tenants":
+            return [{"id": 1}]
+        return []
+
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=fetch_rows)
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection(rows=[(9, "admin")], keys=["id", "name"])
+    tables, _, _, _, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert "roles" in tables
+
+
+def test_export_fetch_error_and_rollback(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom"))
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert any("error_RuntimeError" in s for s in skipped)
+
+
+def test_write_data_directory_extra_table(tmp_path):
+    tables = {"customers": [{"id": 1}], "extra_table": [{"id": 99}]}
+    meta = write_data_directory(str(tmp_path), tables, scope=SCOPE_TENANT, tenant_id=1)
+    assert "extra_table" in meta["table_order"]
+
+
+def test_read_data_directory_skips_missing_jsonl(tmp_path):
+    meta = {"table_order": ["customers", "missing_table"]}
+    (tmp_path / "schema_meta.json").write_text(json.dumps(meta), encoding="utf-8")
+    (tmp_path / "customers.jsonl").write_text('{"id":1}\n', encoding="utf-8")
+    tables, _ = read_data_directory(str(tmp_path))
+    assert "customers" in tables
+    assert "missing_table" not in tables
+
+
+def test_collect_tenant_upload_paths_wrapper(mocker, mock_db_connection, tmp_path):
+    mocker.patch(
+        "services.backup_scope_config.collect_scoped_upload_paths",
+        return_value=(["/a.png"], ["unresolved"]),
+    )
+    paths, unresolved = collect_tenant_upload_paths(mock_db_connection(), 1, str(tmp_path))
+    assert paths == ["/a.png"]
+
+
+def test_build_archive_skips_missing_file(tmp_path):
+    dest = tmp_path / "out.tar.gz"
+    info = build_tenant_uploads_archive([str(tmp_path / "missing.txt")], str(dest), str(tmp_path))
+    assert info["files_packed"] == 0
+
+
+def test_collect_scoped_upload_paths_resolves_and_unresolved(mocker, mock_db_connection, tmp_path):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    uploads = tmp_path / "static" / "uploads"
+    uploads.mkdir(parents=True)
+    logo = uploads / "logo.png"
+    logo.write_bytes(b"png")
+    base = str(tmp_path / "static")
+
+    def execute_router(stmt, bind=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "column_name" in sql:
+            result.__iter__ = lambda self: iter([("image_url",), ("logo_path",), ("watermark_image_path",)])
+        else:
+            result.__iter__ = lambda self: iter([
+                ("/static/uploads/logo.png",),
+                ("http://bad.example/x.png",),
+            ])
+        return result
+
+    conn = mock_db_connection()
+    conn.execute.side_effect = execute_router
+
+    paths, unresolved = collect_scoped_upload_paths(
+        conn, SCOPE_STORE, 1, base, store_id=3,
+    )
+    assert str(logo) in paths
+    assert unresolved
+
+
+def test_path_from_urlish_backslash_and_traversal(tmp_path):
+    base = str(tmp_path / "static")
+    assert _path_from_urlish("static\\uploads\\x", base) is None
+    assert _path_from_urlish("../../etc/passwd", base) is None
+
+
+def test_export_child_missing_table(mocker, mock_db_connection):
+    mocker.patch(
+        "services.backup_scope_config.table_exists",
+        side_effect=lambda c, t: t != "sale_lines",
+    )
+    mocker.patch(
+        "services.backup_scope_config._fetch_rows",
+        return_value=[{"id": 1, "tenant_id": 1}],
+    )
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert any("sale_lines:missing" in s for s in skipped)
+
+
+def test_export_roles_query_failure(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch(
+        "services.backup_scope_config._fetch_rows",
+        return_value=[{"id": 1, "role_id": 9, "tenant_id": 1}],
+    )
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    conn.execute.side_effect = RuntimeError("roles query failed")
+    export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+
+
+def test_build_archive_packs_existing_file(tmp_path):
+    src = tmp_path / "static" / "uploads" / "keep.txt"
+    src.parent.mkdir(parents=True)
+    src.write_text("data", encoding="utf-8")
+    dest = tmp_path / "out.tar.gz"
+    info = build_tenant_uploads_archive([str(src)], str(dest), str(tmp_path / "static"))
+    assert info["files_packed"] == 1
+
+
+def test_merge_rollback_failure_logged(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    conn = mock_db_connection()
+    conn.execute.side_effect = RuntimeError("query failed")
+    conn.rollback.side_effect = RuntimeError("rb fail")
+    tables_out = {"products": [{"merchant_customer_id": 5}]}
+    unresolved = []
+    _merge_product_customer_dependencies(conn, tables_out, {}, [], 1, unresolved)
+    assert any("merge_refs_error" in u for u in unresolved)
+
+
+def test_path_from_urlish_static_prefix(tmp_path):
+    uploads = tmp_path / "static" / "uploads"
+    uploads.mkdir(parents=True)
+    f = uploads / "a.txt"
+    f.write_text("x", encoding="utf-8")
+    base = str(tmp_path / "static")
+    assert _path_from_urlish("/static/uploads/a.txt", base) == str(f)
+    assert _path_from_urlish("static/uploads/a.txt", base) == str(f)
+
+
+def test_export_child_fetch_error(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+
+    def fetch_rows(conn, table, where, params):
+        if table == "gl_journal_entries":
+            return [{"id": 3}]
+        if table == "branches":
+            return [{"id": 2, "tenant_id": 1}]
+        if table == "tenants":
+            return [{"id": 1}]
+        return []
+
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=fetch_rows)
+    mocker.patch(
+        "services.backup_scope_config._fetch_child_rows",
+        side_effect=RuntimeError("child boom"),
+    )
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(
+        conn, SCOPE_BRANCH, tenant_id=1, branch_id=2,
+    )
+    assert any("error_RuntimeError" in s for s in skipped)
+
+
+def test_export_skips_excluded_roles_table(mocker, mock_db_connection):
+    import services.backup_scope_config as bsc
+    mocker.patch.object(
+        bsc,
+        "TENANT_TABLE_FILTERS",
+        (("roles", "id = 1"), ("tenants", "id = :tid")),
+    )
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch("services.backup_scope_config._fetch_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert any("roles:excluded_policy" in s for s in skipped)
+
+
+def test_export_fetch_rollback_failure_logged(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=RuntimeError("boom"))
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    conn.rollback.side_effect = RuntimeError("rb fail")
+    _, _, _, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert any("error_RuntimeError" in s for s in skipped)
+
+
+def test_export_child_rollback_failure(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+
+    def fetch_rows(conn, table, where, params):
+        if table == "sales":
+            return [{"id": 1}]
+        if table == "tenants":
+            return [{"id": 1}]
+        return []
+
+    mocker.patch("services.backup_scope_config._fetch_rows", side_effect=fetch_rows)
+    mocker.patch(
+        "services.backup_scope_config._fetch_child_rows",
+        side_effect=RuntimeError("child fail"),
+    )
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    conn.rollback.side_effect = RuntimeError("rb fail")
+    _, _, _, skipped, _ = export_scoped_database(
+        conn, SCOPE_BRANCH, tenant_id=1, branch_id=2,
+    )
+    assert any("error_RuntimeError" in s for s in skipped)
+
+
+def test_roles_export_rollback_failure(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch(
+        "services.backup_scope_config._fetch_rows",
+        return_value=[{"id": 1, "role_id": 9, "tenant_id": 1}],
+    )
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    conn.execute.side_effect = RuntimeError("roles fail")
+    conn.rollback.side_effect = RuntimeError("rb fail")
+    export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+
+
+def test_path_from_urlish_bare_filename(tmp_path):
+    uploads = tmp_path / "static" / "uploads"
+    uploads.mkdir(parents=True)
+    f = uploads / "bare.jpg"
+    f.write_bytes(b"j")
+    base = str(tmp_path / "static")
+    assert _path_from_urlish("bare.jpg", base) == str(f)
+
+
+def test_collect_upload_products_table_missing(mocker, mock_db_connection, tmp_path):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=False)
+    paths, unresolved = collect_scoped_upload_paths(conn := mock_db_connection(), SCOPE_TENANT, 1, str(tmp_path))
+    assert paths == []
+
+
+def test_export_child_missing_on_branch_scope(mocker, mock_db_connection):
+    mocker.patch(
+        "services.backup_scope_config.table_exists",
+        side_effect=lambda c, t: t != "sale_lines",
+    )
+    mocker.patch(
+        "services.backup_scope_config._fetch_rows",
+        return_value=[{"id": 1, "tenant_id": 1, "branch_id": 2}],
+    )
+    mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    _, _, _, skipped, _ = export_scoped_database(
+        conn, SCOPE_BRANCH, tenant_id=1, branch_id=2,
+    )
+    assert any("sale_lines:missing" in s for s in skipped)
+
+
+def test_path_from_urlish_slash_uploads_prefix(tmp_path):
+    uploads = tmp_path / "static" / "uploads"
+    uploads.mkdir(parents=True)
+    f = uploads / "doc.pdf"
+    f.write_bytes(b"d")
+    base = str(tmp_path / "static")
+    assert _path_from_urlish("/uploads/doc.pdf", base) == str(f)
+
+
+def test_export_child_excluded_policy_continue(mocker, mock_db_connection):
+    mocker.patch(
+        "services.backup_scope_config.CHILD_VIA_PARENT",
+        (("audit_logs", "sales", "id", "sale_id"),),
+    )
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    mocker.patch(
+        "services.backup_scope_config._fetch_rows",
+        return_value=[{"id": 1, "tenant_id": 1}],
+    )
+    child_mock = mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    conn = mock_db_connection()
+    export_scoped_database(conn, SCOPE_BRANCH, tenant_id=1, branch_id=2)
+    child_mock.assert_not_called()
+
+
+def test_collect_upload_path_error_branch_scope(mocker, mock_db_connection, tmp_path):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+
+    def execute_router(stmt, bind=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "column_name" in sql:
+            result.__iter__ = lambda self: iter([("image_url",)])
+        else:
+            raise RuntimeError("path fail")
+        return result
+
+    conn = mock_db_connection()
+    conn.execute.side_effect = execute_router
+    conn.rollback.side_effect = RuntimeError("rb fail")
+    paths, unresolved = collect_scoped_upload_paths(
+        conn, SCOPE_BRANCH, 1, str(tmp_path), branch_id=2,
+    )
+    assert paths == []
+
+
+def test_export_via_real_fetch_rows(mocker, mock_db_connection):
+    mocker.patch("services.backup_scope_config.table_exists", return_value=True)
+    conn = mock_db_connection()
+
+    def execute_router(stmt, params=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "information_schema" in sql:
+            result.scalar.return_value = 1
+            return result
+        if "tenants" in sql:
+            result.fetchall.return_value = [(1, "T")]
+            result.keys.return_value = ["id", "name"]
+        elif "sales" in sql and "sale_lines" not in sql:
+            result.fetchall.return_value = [(5, 1)]
+            result.keys.return_value = ["id", "tenant_id"]
+        elif "sale_lines" in sql:
+            result.fetchall.return_value = [(50, 5, 100.0)]
+            result.keys.return_value = ["id", "sale_id", "amount"]
+        else:
+            result.fetchall.return_value = []
+            result.keys.return_value = ["id"]
+        return result
+
+    conn.execute.side_effect = execute_router
+    mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
+    tables, _, included, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    assert "tenants" in tables
+    assert tables["tenants"][0]["name"] == "T"
