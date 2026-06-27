@@ -123,6 +123,7 @@ class PaymentService:
             db.session.flush()
 
             if payment_method == 'cheque' and cheque_number:
+                from datetime import datetime, timezone
                 from models import Cheque
                 cheque = Cheque(
                     tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
@@ -535,6 +536,8 @@ class PaymentService:
         """رصيد المورد مقيد بالتينانت والفرع. يحسب من SQL مباشر.
         الدلالة: موجب = مستحق للمورد (نحن ندين له)، سالب = المورد مدين لنا.
         الصيغة: Purchases - Outgoing_Payments + Incoming_Payments (refunds from supplier)"""
+        from models import Payment, Purchase
+
         if tenant_id is None:
             tenant_id = get_active_tenant_id()
 

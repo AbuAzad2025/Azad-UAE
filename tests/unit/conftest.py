@@ -36,6 +36,33 @@ def app_factory():
 
 
 # ---------------------------------------------------------------------------
+# Generic authenticated user (route tests under tests/unit/routes/)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_user():
+    user = MagicMock()
+    user.is_authenticated = True
+    user.is_active = True
+    user.is_owner = False
+    user.tenant_id = 1
+    user.id = 42
+    user.username = "route-test-user"
+    user.email = "route@test.com"
+    user.full_name = "Route Test User"
+    user.branch_id = None
+    user.has_permission.return_value = True
+    user.is_admin.return_value = True
+    user.is_super_admin.return_value = True
+    user.is_seller.return_value = False
+    user.can_see_costs.return_value = True
+    role = MagicMock()
+    role.slug = "super_admin"
+    user.role = role
+    return user
+
+
+# ---------------------------------------------------------------------------
 # Auth bypass fixtures  (/owner/* routes)
 # ---------------------------------------------------------------------------
 
