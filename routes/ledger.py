@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from extensions import db, csrf
 from models import GLAccount, GLJournalEntry, GLJournalLine, Cheque, PaymentVault, Branch
 from services.gl_service import GLService
@@ -104,7 +104,7 @@ def journal_entries():
     query = scope_journal_entries(GLJournalEntry.query)
     if branch_id:
         query = query.filter(GLJournalEntry.branch_id == branch_id)
-    pagination = query.order_by(GLJournalEntry.entry_date.desc()).paginate(
+    pagination = query.order_by(desc(GLJournalEntry.entry_date)).paginate(
         page=page,
         per_page=50,
         error_out=False
