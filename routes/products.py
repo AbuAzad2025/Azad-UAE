@@ -222,6 +222,13 @@ def download_import_template():
         return redirect(url_for('products.import_products'))
 
 
+def _read_import_dataframe(filepath, ext):
+    import pandas as pd
+    if ext == '.csv':
+        return pd.read_csv(filepath)
+    return pd.read_excel(filepath)
+
+
 @products_bp.route('/import', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_products')
@@ -253,9 +260,9 @@ def import_products():
                 file.save(filepath)
                 
                 if filename.endswith('.csv'):
-                    df = pd.read_csv(filepath)
+                    df = _read_import_dataframe(filepath, '.csv')
                 else:
-                    df = pd.read_excel(filepath)
+                    df = _read_import_dataframe(filepath, ext)
                 
                 success_count = 0
                 error_count = 0
@@ -1235,7 +1242,7 @@ def print_label(id):
     product = tenant_get_or_404(Product, id, get_active_tenant_id(current_user))
     branch_id = None
     try:
-        from utils.branching import report_branch_scope_id
+        from utils.decorators import report_branch_scope_id
         branch_id = report_branch_scope_id()
     except Exception:
         pass
@@ -1255,7 +1262,7 @@ def print_labels():
     tenant_id = get_active_tenant_id(current_user)
     branch_id = None
     try:
-        from utils.branching import report_branch_scope_id
+        from utils.decorators import report_branch_scope_id
         branch_id = report_branch_scope_id()
     except Exception:
         pass

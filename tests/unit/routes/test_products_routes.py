@@ -2,6 +2,7 @@ import tempfile
 from contextlib import ExitStack, contextmanager
 from decimal import Decimal
 from io import BytesIO
+from urllib.parse import urlparse
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,6 +10,22 @@ import pytest
 import routes.products as products_mod
 
 from tests.unit.routes.conftest import _chain_query, unauthenticated_client
+
+
+def _import_dataframe(data):
+    import importlib
+    import sys
+
+    for mod in ('pandas', 'numpy'):
+        if isinstance(sys.modules.get(mod), MagicMock):
+            sys.modules.pop(mod, None)
+    pd = importlib.import_module('pandas')
+    return pd.DataFrame(data)
+
+
+def _assert_import_index_redirect(resp):
+    assert resp.status_code == 302
+    assert urlparse(resp.location).path.rstrip("/") == "/products"
 
 
 def _product(pid=1, name="Widget", sku="SKU-1", barcode="BC-1", min_alert=5, current_stock=10):
@@ -72,6 +89,39 @@ def _warehouse_query_mock():
     return warehouse_query
 
 
+def _orm_column():
+    col = MagicMock()
+    col.ilike = MagicMock(return_value=MagicMock())
+    eq_expr = MagicMock()
+    eq_expr.__or__ = MagicMock(return_value=MagicMock())
+    col.__eq__ = MagicMock(return_value=eq_expr)
+    col.__le__ = MagicMock(return_value=MagicMock())
+    return col
+
+
+def _product_class_mock(product_query_mock=None):
+    if product_query_mock is None:
+        product_query_mock = MagicMock()
+    inner = MagicMock()
+    inner.filter.return_value = inner
+    inner.first.return_value = None
+    product_query_mock.filter.return_value = inner
+    cls = MagicMock()
+    cls.query = product_query_mock
+    for attr in ("name", "sku", "barcode", "current_stock", "min_stock_alert", "tenant_id"):
+        setattr(cls, attr, _orm_column())
+
+    def _construct(*_args, **kwargs):
+        product = MagicMock()
+        product.id = 99
+        for key, value in kwargs.items():
+            setattr(product, key, value)
+        return product
+
+    cls.side_effect = _construct
+    return cls, product_query_mock
+
+
 @contextmanager
 def _products_patches(
     products=None,
@@ -120,8 +170,9 @@ def _products_patches(
         stack.enter_context(patch("routes.products.generate_sku", return_value="AUTO-SKU"))
         stack.enter_context(patch("routes.products.generate_barcode", return_value="AUTO-BC"))
         stack.enter_context(patch("routes.products.save_uploaded_file", return_value="products/img.png"))
-        product_query_mock = MagicMock()
-        stack.enter_context(patch.object(products_mod, "Product", MagicMock(query=product_query_mock)))
+        product_cls, product_query_mock = _product_class_mock()
+        stack.enter_context(patch.object(products_mod, "Product", product_cls))
+        stack.enter_context(patch("routes.products.db.or_", return_value=MagicMock(name="sql_or")))
         stack.enter_context(patch("utils.tenant_limits.check_products_limit"))
         yield {
             "visible_query": visible_query,
@@ -147,6 +198,44 @@ def products_client(app_factory, bypass_permission_auth, upload_dir):
 
     app = app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
     return app.test_client()
+
+
+@pytest.fixture
+def products_import_app(app_factory, bypass_product_auth, upload_dir):
+    from routes.products import products_bp
+
+    return app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
+
+
+def _run_import_post(app, df, *, update_existing=False, existing_product=None, warehouse_query=None, os_remove_side_effect=None):
+    from contextlib import ExitStack
+    from routes.products import import_products
+
+    file_mock = MagicMock()
+    file_mock.filename = "products.xlsx"
+    file_mock.save = MagicMock()
+    wh_query = warehouse_query or _warehouse_query_mock()
+
+    with app.test_request_context("/products/import", method="POST"):
+        with ExitStack() as stack:
+            read_mock = stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
+            stack.enter_context(patch("models.Warehouse.query", wh_query))
+            if os_remove_side_effect is not None:
+                stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
+            else:
+                stack.enter_context(patch("os.remove"))
+            stack.enter_context(patch("os.path.exists", return_value=True))
+            with _products_patches() as ctx:
+                inner = MagicMock()
+                inner.filter.return_value = inner
+                inner.first.return_value = existing_product
+                ctx["product_query"].filter.return_value = inner
+                with patch("routes.products.request") as req:
+                    req.method = "POST"
+                    req.files = {"file": file_mock}
+                    req.form = {"update_existing": "1"} if update_existing else {}
+                    req.url = "/products/import"
+                    return import_products()
 
 
 class TestProductsAuth:
@@ -291,12 +380,9 @@ class TestImportProducts:
         assert resp.status_code == 302
 
     def test_import_post_missing_columns(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({"foo": [1]})
+        df = _import_dataframe({"foo": [1]})
         with _products_patches(), patch("models.Warehouse.query", _warehouse_query_mock()):
-            with patch("pandas.read_excel", return_value=df), \
-                 patch("pandas.read_csv", return_value=df):
+            with patch("routes.products._read_import_dataframe", return_value=df):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -304,36 +390,22 @@ class TestImportProducts:
                 )
         assert resp.status_code == 302
 
-    def test_import_post_success_new_product(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({
+    def test_import_post_success_new_product(self, products_import_app):
+        df = _import_dataframe({
             "name": ["New Product"],
             "price": [25.0],
             "stock": [5.0],
         })
-        wh_query = _warehouse_query_mock()
-        with _products_patches() as ctx:
-            ctx["product_query"].filter.return_value.first.return_value = None
-            with patch("models.Warehouse.query", wh_query), \
-                 patch("pandas.read_excel", return_value=df):
-                resp = products_client.post(
-                    "/products/import",
-                    data={"file": (BytesIO(b"x"), "products.xlsx")},
-                    content_type="multipart/form-data",
-                )
-        assert resp.status_code == 302
-        assert resp.location.endswith("/products/")
+        resp = _run_import_post(products_import_app, df)
+        _assert_import_index_redirect(resp)
 
     def test_import_post_duplicate_without_update(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({"name": ["Dup"], "price": [10.0]})
+        df = _import_dataframe({"name": ["Dup"], "price": [10.0]})
         existing = _product(name="Dup")
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = existing
             with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("pandas.read_excel", return_value=df):
+                 patch("routes.products._read_import_dataframe", return_value=df):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -342,15 +414,13 @@ class TestImportProducts:
         assert resp.status_code == 302
 
     def test_import_post_update_existing(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({"name": ["Existing"], "price": [15.0], "stock": [20.0]})
+        df = _import_dataframe({"name": ["Existing"], "price": [15.0], "stock": [20.0]})
         existing = _product(name="Existing")
         existing.current_stock = 10
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = existing
             with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("pandas.read_excel", return_value=df):
+                 patch("routes.products._read_import_dataframe", return_value=df):
                 resp = products_client.post(
                     "/products/import",
                     data={
@@ -377,7 +447,7 @@ class TestImportGrid:
                 },
             )
         assert resp.status_code == 302
-        assert resp.location.endswith("/products/")
+        _assert_import_index_redirect(resp)
         ctx["session"].commit.assert_called()
 
     def test_import_grid_skips_empty_names(self, products_client):
@@ -543,7 +613,7 @@ class TestProductsCreate:
                 },
             )
         assert resp.status_code == 302
-        assert resp.location.endswith("/products/")
+        _assert_import_index_redirect(resp)
         log_audit.assert_called_with("create", "products", 99)
         session.commit.assert_called()
 
@@ -835,7 +905,7 @@ class TestPrintLabels:
         with _products_patches():
             resp = products_client.post("/products/print-labels", data={})
         assert resp.status_code == 302
-        assert resp.location.endswith("/products/")
+        _assert_import_index_redirect(resp)
 
     def test_print_labels_forbidden_without_view_products(self, products_client, mock_user):
         mock_user.has_permission.side_effect = lambda perm: perm != "view_products"
@@ -861,9 +931,7 @@ class TestProductsExtendedCoverage:
         assert len(page_products) == 1
 
     def test_import_csv_file(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({"name": ["Csv Product"], "price": [9.0], "warranty": ["30"], "category": ["Tools"]})
+        df = _import_dataframe({"name": ["Csv Product"], "price": [9.0], "warranty": ["30"], "category": ["Tools"]})
         new_cat = _category(5, name="Tools")
         pc_class = MagicMock()
         pc_class.query.filter_by.return_value.filter.return_value.first.return_value = None
@@ -873,7 +941,7 @@ class TestProductsExtendedCoverage:
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = None
             with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("pandas.read_csv", return_value=df), \
+                 patch("routes.products._read_import_dataframe", return_value=df), \
                  patch("routes.products.ProductCategory", pc_class), \
                  patch("routes.products.Product", return_value=new_product):
                 resp = products_client.post(
@@ -884,13 +952,11 @@ class TestProductsExtendedCoverage:
         assert resp.status_code == 302
 
     def test_import_row_exception_and_cleanup(self, products_client, upload_dir):
-        import pandas as pd
-
-        df = pd.DataFrame({"name": ["Bad Row"], "price": ["not-a-number"]})
+        df = _import_dataframe({"name": ["Bad Row"], "price": ["not-a-number"]})
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = None
             with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("pandas.read_excel", return_value=df):
+                 patch("routes.products._read_import_dataframe", return_value=df):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -1173,7 +1239,7 @@ class TestProductsExtendedCoverage:
         app = app_factory(products_bp)
         client = app.test_client()
         with patch("routes.products.tenant_get_or_404", return_value=product), \
-             patch("utils.branching.report_branch_scope_id", return_value=3, create=True), \
+             patch("utils.decorators.report_branch_scope_id", return_value=3), \
              patch("services.label_print_service.get_single_label_html", return_value="html") as label:
             resp = client.get("/products/1/print-label")
         assert resp.status_code == 200

@@ -763,7 +763,6 @@ def create_voucher_submit():
                 # نحتاج منطق جديد أو استخدام Payment بـ direction='incoming'
                 # حالياً Payment يدعم direction='incoming' حسب الموديل
 
-                from models import Payment
                 from utils.helpers import generate_number
                 from decimal import Decimal
 
@@ -827,7 +826,6 @@ def create_voucher_submit():
 
         # 2. معالجة سند الصرف (Payment) - صادر
         elif direction == 'outgoing':
-            from models import Payment
             from utils.helpers import generate_number
             from decimal import Decimal
 
@@ -1345,24 +1343,6 @@ def delete_receipt(id):
                 description=f'Reverse Receipt {receipt.receipt_number} (Deleted)',
                 tenant_id=receipt.tenant_id,
             )
-
-            # عكس أثر العميل/الفاتورة
-            if receipt.source_type == 'sale' and receipt.source_id:
-                from models import Sale
-                sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
-                if sale:
-                    sale.paid_amount_aed -= receipt.amount_aed
-                    sale.paid_amount -= receipt.amount
-                    if sale.paid_amount < 0: sale.paid_amount = 0
-                    if sale.paid_amount_aed < 0: sale.paid_amount_aed = 0
-                    sale.balance_due = sale.amount_aed - sale.paid_amount_aed
-                    if sale.balance_due <= 0:
-                        sale.payment_status = 'paid'
-                        sale.balance_due = 0
-                    elif sale.paid_amount_aed > 0:
-                        sale.payment_status = 'partial'
-                    else:
-                        sale.payment_status = 'unpaid'
 
             # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
             # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي

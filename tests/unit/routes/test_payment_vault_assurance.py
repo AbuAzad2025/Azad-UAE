@@ -1,8 +1,6 @@
 """Payment vault routes — assurance tests for helper gaps and error paths."""
 from __future__ import annotations
 
-pytest_plugins = ['tests.unit.conftest']
-
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
@@ -496,3 +494,125 @@ class TestActivatePurchaseBranches:
         resp = vault_owner_client.post('/payment-vault/purchase/1/activate', follow_redirects=False)
         assert resp.status_code == 302
         assert purchase.activation_status == 'activated'
+
+
+class TestLockedVaultPageRedirects:
+    def test_donations_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/donations', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_packages_management_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/packages-management', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_create_package_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.post('/payment-vault/package/create', data={
+            'name_ar': 'ب', 'name_en': 'P',
+        }, follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_edit_package_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/package/1/edit', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_reports_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/reports', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_cards_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/cards', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_change_password_locked_redirects(self, vault_owner_client, mock_locked_vault):
+        resp = vault_owner_client.get('/payment-vault/change-password', follow_redirects=False)
+        assert resp.status_code == 302
+
+
+class TestPackageEditHelperPaths:
+    def test_create_package_invalid_price_defaults(
+        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker,
+    ):
+        pkg_q = MagicMock()
+        pkg_q.filter_by.return_value.first.return_value = None
+        mocker.patch.object(pv_mod, 'Package', MagicMock(query=pkg_q))
+        mocker.patch.object(pv_mod, 'LoggingCore')
+        resp = vault_owner_client.post('/payment-vault/package/create', data={
+            'name_ar': 'باقة', 'name_en': 'Pack', 'price': 'not-a-number',
+        }, follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_edit_package_invalid_numeric_fields(
+        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker,
+    ):
+        pkg = MagicMock(price=10, max_users=1, max_branches=1, support_duration_months=3)
+        _patch_package_query(mocker, get_or_404=pkg)
+        mocker.patch.object(pv_mod, 'LoggingCore')
+        resp = vault_owner_client.post('/payment-vault/package/1/edit', data={
+            'name_ar': 'تعديل', 'name_en': 'Edit', 'price': 'bad', 'max_users': '',
+        })
+        assert resp.status_code == 302
+        mock_db.commit.assert_called()
+
+    def test_edit_package_omitted_price_uses_default(
+        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker,
+    ):
+        pkg = MagicMock(price=10, max_users=1, max_branches=1, support_duration_months=3)
+        _patch_package_query(mocker, get_or_404=pkg)
+        mocker.patch.object(pv_mod, 'LoggingCore')
+        resp = vault_owner_client.post('/payment-vault/package/1/edit', data={
+            'name_ar': 'تعديل', 'name_en': 'Edit', 'max_users': '2',
+        })
+        assert resp.status_code == 302
+        mock_db.commit.assert_called()
+
+    def test_edit_package_omitted_price_and_bad_int(
+        self, vault_owner_client, mock_unlocked_vault, mock_db, mocker,
+    ):
+        pkg = MagicMock(price=10, max_users=1, max_branches=1, support_duration_months=3)
+        _patch_package_query(mocker, get_or_404=pkg)
+        mocker.patch.object(pv_mod, 'LoggingCore')
+        resp = vault_owner_client.post('/payment-vault/package/1/edit', data={
+            'name_ar': 'تعديل', 'name_en': 'Edit', 'price': '', 'max_users': 'bad',
+        })
+        assert resp.status_code == 302
+        mock_db.commit.assert_called()
+
+
+class TestDonationApiAndPurchasesFilter:
+    def test_donation_not_json_returns_400(self, vault_owner_client, mocker):
+        mocker.patch('routes.payment_vault._validate_public_api_origin', return_value=None)
+        mocker.patch('routes.payment_vault._validate_api_key', return_value=None)
+        mocker.patch('routes.payment_vault._check_idempotency_key', return_value=None)
+        resp = vault_owner_client.post(
+            '/payment-vault/api/donation',
+            data='plain',
+            content_type='text/plain',
+        )
+        assert resp.status_code == 400
+
+    def test_view_purchases_status_filter(self, vault_owner_client, mock_unlocked_vault, mocker):
+        pag = MagicMock(items=[], total=0, page=1, per_page=20, pages=0)
+        q = MagicMock()
+        q.filter_by.return_value = q
+        q.order_by.return_value.paginate.return_value = pag
+        q.all.return_value = []
+        mocker.patch('routes.payment_vault.PackagePurchase.query', q)
+        resp = vault_owner_client.get('/payment-vault/purchases?status=completed')
+        assert resp.status_code == 200
+        q.filter_by.assert_called_with(payment_status='completed')
+
+
+class TestStripeWebhookStale:
+    STRIPE_PAYLOAD = b'{"id":"evt_stale","type":"payment_intent.succeeded"}'
+
+    def test_stripe_stale_timestamp_rejected(self, vault_owner_client, mock_unlocked_vault, mocker):
+        mocker.patch('routes.payment_vault._is_duplicate_webhook', return_value=False)
+        old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+        payload = f'{{"id":"evt_stale","timestamp":"{old}"}}'.encode()
+        resp = vault_owner_client.post(
+            '/payment-vault/webhook/stripe',
+            data=payload,
+            content_type='application/json',
+            headers={'Stripe-Signature': 'sig'},
+        )
+        assert resp.status_code == 401

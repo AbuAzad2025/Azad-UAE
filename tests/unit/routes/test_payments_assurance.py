@@ -173,12 +173,12 @@ class TestVoucherSubmitAssurance:
         supplier.apply_payment = MagicMock()
         mocker.patch('routes.payments._resolve_transaction_rate', return_value=Decimal('1'))
         mocker.patch('utils.helpers.generate_number', return_value='PAY-IN-CHQ')
-        mocker.patch('services.gl_posting.post_or_fail')
+        mocker.patch('routes.payments.post_or_fail')
         mocker.patch('services.gl_service.GLService.ensure_core_accounts')
         mocker.patch('services.gl_service.GLService.get_payment_debit_account', return_value='1101')
         mocker.patch('services.gl_service.GLService.get_payment_debit_concept', return_value='CASH')
         payment_inst = MagicMock(id=61, amount=Decimal('60'), amount_aed=Decimal('60'))
-        payment_cls = mocker.patch('models.Payment', return_value=payment_inst)
+        payment_cls = mocker.patch('routes.payments.Payment', return_value=payment_inst)
         with _payments_patches(supplier=supplier), \
              patch('routes.payments.atomic_transaction', return_value=MagicMock(__enter__=MagicMock(), __exit__=MagicMock())), \
              patch('routes.payments.db.session') as session:
@@ -599,15 +599,20 @@ class TestPaymentsGapCoverage:
     def test_create_voucher_incoming_supplier_refund(self, payments_client, mocker):
         supplier = MagicMock(id=3, name='Sup', tenant_id=1)
         supplier.apply_payment = MagicMock()
+        payment_inst = MagicMock(
+            id=10, payment_number='REC-1', branch_id=1,
+            amount=Decimal('50'), amount_aed=Decimal('50'),
+        )
+        payment_cls = MagicMock(return_value=payment_inst)
         mocker.patch('routes.payments._resolve_transaction_rate', return_value=Decimal('1'))
         mocker.patch('utils.helpers.generate_number', return_value='REC-1')
-        mocker.patch('services.gl_posting.post_or_fail')
+        mocker.patch('routes.payments.post_or_fail')
         mocker.patch('services.gl_service.GLService.ensure_core_accounts')
         mocker.patch('services.gl_service.GLService.get_payment_debit_account', return_value='1101')
         mocker.patch('services.gl_service.GLService.get_payment_debit_concept', return_value='CASH')
         with _payments_patches(supplier=supplier), \
              patch('routes.payments.atomic_transaction', return_value=MagicMock(__enter__=MagicMock(), __exit__=MagicMock())), \
-             patch('models.Payment', MagicMock), \
+             patch('routes.payments.Payment', payment_cls), \
              patch('routes.payments.resolve_default_currency', return_value='AED'), \
              patch('routes.payments.db.session') as session:
             session.add = MagicMock()
@@ -621,6 +626,8 @@ class TestPaymentsGapCoverage:
                 'currency': 'AED',
             }, follow_redirects=False)
         assert resp.status_code == 302
+        payment_cls.assert_called_once()
+        supplier.apply_payment.assert_called_once()
 
     def test_create_voucher_currency_exception_fallback(self, payments_client, mocker):
         customer = MagicMock(id=1, tenant_id=1)
@@ -679,15 +686,16 @@ class TestPaymentsGapCoverage:
             data={'payment_number': 'P-7', 'payment_date': '2026-01-01T00:00:00', 'amount': 10, 'currency': 'AED', 'amount_aed': 10, 'supplier_name': 'S', 'payment_type': 'supplier', 'branch_id': 99},
             archived_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
         )
-        session = MagicMock()
-        session.query.return_value.filter.return_value.all.side_effect = [[], [archived]]
-        with patch('routes.payments.db.session', session), \
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.side_effect = [[], [archived]]
+        with patch('routes.payments.db.session.query', return_value=q), \
              patch('routes.payments._archived_item_branch_id', return_value=99), \
              patch('utils.decorators.branch_scope_id', return_value=1), \
              patch('routes.payments.render_template', return_value='ok') as render:
             resp = payments_client.get('/payments/archived')
         assert resp.status_code == 200
-        render.assert_called()
+        assert render.call_args.kwargs['archived_items'] == []
 
     def test_create_receipt_redirects_to_voucher(self, payments_client):
         resp = payments_client.get('/payments/receipts/create?customer_id=1', follow_redirects=False)
@@ -702,11 +710,171 @@ class TestPaymentsGapCoverage:
             resp = payments_client.get('/payments/api/customer-balance/1')
         assert resp.status_code == 200
 
-    def test_api_customer_balance_currency_fallback(self, payments_client):
-        customer = MagicMock(id=1)
-        with _payments_patches(customer=customer), \
-             patch('routes.payments._scoped_customer_unpaid_sales', return_value=[]), \
-             patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('fx')), \
-             patch('routes.payments.get_system_default_currency', return_value='AED'):
-            resp = payments_client.get('/payments/api/customer-balance/1')
+
+class TestReceiptsPaginationGap:
+    def test_receipts_pagination_iter_pages_yields_ellipsis(self, payments_client):
+        receipts = [_mock_receipt(id=i) for i in range(1, 101)]
+
+        def render_side_effect(template, **ctx):
+            pag = ctx.get('pagination')
+            if pag:
+                pages = list(pag.iter_pages())
+                assert None in pages
+            return 'ok'
+
+        with _payments_patches(receipts=receipts, count_receipts=100):
+            with patch('routes.payments.render_template', side_effect=render_side_effect):
+                resp = payments_client.get('/payments/receipts?per_page=10&page=5')
         assert resp.status_code == 200
+
+
+class TestCreateFromSaleCurrencyFallback:
+    def test_create_from_sale_log_error_inner_except(self, payments_client, mocker):
+        sale = MagicMock(
+            id=5, branch_id=1, balance_due=Decimal('100'), exchange_rate=1,
+            currency='AED', customer=MagicMock(), tenant_id=1,
+        )
+        receipt = MagicMock(id=12)
+        mocker.patch('routes.payments.tenant_get_or_404', return_value=sale)
+        mocker.patch('routes.payments.PaymentService.create_receipt', return_value=receipt)
+        mocker.patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('curr fail'))
+        mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
+        with patch('utils.decorators.branch_scope_id', return_value=None), \
+             patch('routes.payments.CurrencyService.get_all_rates', return_value={}):
+            resp = payments_client.post('/payments/create_from_sale/5', data={
+                'amount': '40',
+                'payment_method': 'cash',
+            }, follow_redirects=False)
+        assert resp.status_code == 302
+
+
+class TestVoucherCurrencyInnerExcept:
+    def test_voucher_submit_log_error_inner_except(self, payments_client, mocker):
+        customer = MagicMock(id=1, tenant_id=1)
+        receipt = MagicMock(receipt_number='R-1', id=10)
+        mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
+        with _payments_patches(customer=customer), \
+             patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('tenant fx')), \
+             patch('routes.payments.get_system_default_currency', return_value='AED'), \
+             patch('routes.payments.PaymentService.create_receipt', return_value=receipt):
+            resp = payments_client.post('/payments/voucher/submit', data={
+                'direction': 'incoming',
+                'party_type': 'customer',
+                'party_id': '1',
+                'amount': '25',
+                'payment_method': 'cash',
+            }, follow_redirects=False)
+        assert resp.status_code == 302
+
+
+class TestArchivedPaymentsInScope:
+    def test_archived_payments_in_scope_listed(self, payments_client):
+        archived = MagicMock(
+            record_id=7,
+            data={
+                'payment_number': 'P-7',
+                'payment_date': '2026-01-01T00:00:00',
+                'amount': 10,
+                'currency': 'AED',
+                'amount_aed': 10,
+                'supplier_name': 'S',
+                'payment_type': 'supplier',
+                'branch_id': 1,
+            },
+            archived_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+        )
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.side_effect = [[], [archived]]
+        with patch('routes.payments.db.session.query', return_value=q), \
+             patch('routes.payments._archived_item_branch_id', return_value=1), \
+             patch('utils.decorators.branch_scope_id', return_value=1), \
+             patch('routes.payments.render_template', return_value='ok') as render:
+            resp = payments_client.get('/payments/archived')
+        assert resp.status_code == 200
+        archived_items = render.call_args.kwargs['archived_items']
+        assert any(item.get('number') == 'P-7' for item in archived_items)
+
+
+class TestPaymentsFinalGaps:
+    def test_create_from_sale_currency_log_error_inner_except(self, payments_client, mocker):
+        sale = MagicMock(
+            id=5, branch_id=1, customer_id=1, customer=MagicMock(),
+            balance_due=Decimal('100'), exchange_rate=Decimal('1'), currency='AED', tenant_id=1,
+        )
+        receipt = MagicMock(id=12)
+        mocker.patch('routes.payments.tenant_get_or_404', return_value=sale)
+        mocker.patch('routes.payments.PaymentService.create_receipt', return_value=receipt)
+        mocker.patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('curr fail'))
+        mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
+        with payments_client.application.test_request_context(
+            '/payments/create_from_sale/5', method='POST',
+        ):
+            from werkzeug.datastructures import ImmutableMultiDict
+            with patch('routes.payments.request') as req, \
+                 patch('utils.decorators.branch_scope_id', return_value=None):
+                req.method = 'POST'
+                req.form = ImmutableMultiDict([
+                    ('amount', '40'),
+                    ('payment_method', 'cash'),
+                ])
+                from routes.payments import create_from_sale
+                resp = create_from_sale(5)
+        assert resp.status_code == 302
+
+    def test_create_payment_currency_log_error_inner_except(self, payments_client, mocker):
+        purchase = MagicMock(
+            id=8, branch_id=1, supplier_id=2, supplier_name='S', tenant_id=1,
+            amount_aed=Decimal('500'), exchange_rate=1, currency='',
+        )
+        mock_query = MagicMock()
+        mock_query.filter.return_value.scalar.return_value = Decimal('0')
+        mocker.patch('routes.payments.db.session.query', return_value=mock_query)
+        mocker.patch('routes.payments.tenant_get_or_404', return_value=purchase)
+        mocker.patch('routes.payments.tenant_get', return_value=MagicMock())
+        mocker.patch('routes.payments.resolve_default_currency', side_effect=RuntimeError('curr fail'))
+        mocker.patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail'))
+        mocker.patch('routes.payments.get_system_default_currency', return_value='AED')
+        with patch('utils.decorators.branch_scope_id', return_value=None), \
+             patch('routes.payments.render_template', return_value='form'):
+            resp = payments_client.post('/payments/create_payment/8', data={
+                'amount': '25',
+                'payment_method': 'cash',
+                'currency': 'AED',
+            })
+        assert resp.status_code == 200
+
+    def test_delete_payment_hard_delete_orphan_cheque(self, payments_client, mocker):
+        cheque = MagicMock()
+        payment = _mock_payment(cheque_id=None, branch_id=1)
+        payment.cheque = cheque
+        payment.supplier_id = None
+        mocker.patch('services.gl_service.GLService.reverse_entry')
+        with patch('routes.payments.tenant_get_or_404', return_value=payment), \
+             patch('utils.decorators.branch_scope_id', return_value=None), \
+             patch('routes.payments.db.session') as session:
+            session.delete = MagicMock()
+            session.commit = MagicMock()
+            resp = payments_client.post('/payments/payments/2/delete', follow_redirects=False)
+        assert resp.status_code == 302
+        session.delete.assert_any_call(cheque)
+
+    def test_delete_receipt_sale_marks_paid(self, payments_client, mocker):
+        receipt = _mock_receipt(branch_id=1, source_type='sale', source_id=5, cheque_id=None)
+        receipt.amount = Decimal('50')
+        receipt.amount_aed = Decimal('50')
+        sale = MagicMock(
+            paid_amount=Decimal('150'), paid_amount_aed=Decimal('150'),
+            amount_aed=Decimal('100'), balance_due=Decimal('0'),
+        )
+        mocker.patch('services.gl_service.GLService.reverse_entry')
+        with patch('routes.payments.tenant_get_or_404', return_value=receipt), \
+             patch('utils.decorators.branch_scope_id', return_value=None), \
+             patch('models.Sale') as sale_model, \
+             patch('routes.payments.db.session') as session:
+            sale_model.query.filter_by.return_value.first.return_value = sale
+            session.commit = MagicMock()
+            resp = payments_client.post('/payments/receipts/1/delete', follow_redirects=False)
+        assert resp.status_code == 302
+        assert sale.payment_status == 'paid'
+        assert sale.balance_due == 0

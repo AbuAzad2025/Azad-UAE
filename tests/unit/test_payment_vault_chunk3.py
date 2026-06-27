@@ -175,18 +175,22 @@ class TestVaultSecurityHelpers:
 
         assert _reject_stale_webhook_timestamp(None) is None
 
-    def test_reject_stale_webhook_old_timestamp(self):
-        from routes.payment_vault import _reject_stale_webhook_timestamp
+    def test_reject_stale_webhook_old_timestamp(self, app_factory):
+        from routes.payment_vault import payment_vault_bp, _reject_stale_webhook_timestamp
 
         old = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
-        resp, code = _reject_stale_webhook_timestamp({'timestamp': old})
+        app = app_factory(payment_vault_bp)
+        with app.app_context():
+            resp, code = _reject_stale_webhook_timestamp({'timestamp': old})
         assert code == 401
 
-    def test_reject_stale_webhook_future_timestamp(self):
-        from routes.payment_vault import _reject_stale_webhook_timestamp
+    def test_reject_stale_webhook_future_timestamp(self, app_factory):
+        from routes.payment_vault import payment_vault_bp, _reject_stale_webhook_timestamp
 
         future = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
-        resp, code = _reject_stale_webhook_timestamp({'timestamp': future})
+        app = app_factory(payment_vault_bp)
+        with app.app_context():
+            resp, code = _reject_stale_webhook_timestamp({'timestamp': future})
         assert code == 401
 
     def test_reject_stale_webhook_fresh(self):

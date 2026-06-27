@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tempfile
+from contextlib import ExitStack
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import MagicMock, patch
@@ -9,16 +10,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.unit.routes.test_products_routes import (
+    _assert_import_index_redirect,
     _category,
+    _import_dataframe,
     _mock_product_form,
     _product,
     _products_patches,
+    _run_import_post,
     _warehouse,
     _warehouse_query_mock,
 )
-
-
-pytest_plugins = ["tests.unit.conftest"]
 
 
 @pytest.fixture
@@ -36,6 +37,23 @@ def product_client_upload(app_factory, bypass_product_auth, upload_dir):
         config_overrides={"UPLOAD_FOLDER": upload_dir},
     )
     return app.test_client()
+
+
+@pytest.fixture
+def products_import_app(app_factory, bypass_product_auth, upload_dir):
+    from routes.products import products_bp
+
+    return app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
+
+
+@pytest.fixture
+def products_import_app(app_factory, bypass_product_auth, upload_dir):
+    from routes.products import products_bp
+
+    return app_factory(
+        products_bp,
+        config_overrides={"UPLOAD_FOLDER": upload_dir},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -238,38 +256,34 @@ class TestImportTemplate:
 
 class TestImportProducts:
     def test_import_xls_and_skip_blank_rows(self, product_client_upload):
-        import pandas as pd
-
-        df = pd.DataFrame(
+        df = _import_dataframe(
             {
                 "name": ["", float("nan"), "Valid XLS"],
                 "price": [1.0, 2.0, 15.0],
                 "stock": [0.0, 0.0, 3.0],
             }
         )
-        new_product = MagicMock()
-        new_product.id = 50
         with _products_patches() as ctx, patch("models.Warehouse.query", _warehouse_query_mock()), patch(
-            "pandas.read_excel", return_value=df
-        ), patch("routes.products.Product", return_value=new_product):
+            "routes.products._read_import_dataframe", return_value=df
+        ):
             ctx["product_query"].filter.return_value.first.return_value = None
             resp = product_client_upload.post(
                 "/products/import",
-                data={"file": (BytesIO(b"xls"), "products.xls")},
+                data={"file": (BytesIO(b"xls"), "products.xlsx")},
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 302
-        assert resp.location.endswith("/products/")
+        _assert_import_index_redirect(resp)
 
     def test_import_existing_category_reuse(self, product_client_upload):
-        import pandas as pd
-
         existing_cat = _category(9, name="Tools")
-        df = pd.DataFrame({"name": ["CatProd"], "price": [20.0], "category": ["Tools"]})
+        df = _import_dataframe({"name": ["CatProd"], "price": [20.0], "category": ["Tools"]})
         with _products_patches() as ctx, patch("models.Warehouse.query", _warehouse_query_mock()), patch(
-            "pandas.read_excel", return_value=df
-        ), patch("routes.products.ProductCategory") as pc_cls:
-            ctx["product_query"].filter.return_value.first.return_value = None
+            "routes.products._read_import_dataframe", return_value=df
+        ), patch("models.ProductCategory") as pc_cls:
+            inner = ctx["product_query"].filter.return_value
+            inner.filter.return_value = inner
+            inner.first.return_value = None
             pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = existing_cat
             resp = product_client_upload.post(
                 "/products/import",
@@ -279,13 +293,11 @@ class TestImportProducts:
         assert resp.status_code == 302
 
     def test_import_update_existing_same_stock_skips_adjust(self, product_client_upload):
-        import pandas as pd
-
         existing = _product(name="SameStock")
         existing.current_stock = 10.0
-        df = pd.DataFrame({"name": ["SameStock"], "price": [12.0], "stock": [10.0]})
+        df = _import_dataframe({"name": ["SameStock"], "price": [12.0], "stock": [10.0]})
         with _products_patches() as ctx, patch("models.Warehouse.query", _warehouse_query_mock()), patch(
-            "pandas.read_excel", return_value=df
+            "routes.products._read_import_dataframe", return_value=df
         ), patch("routes.products.StockService.adjust_stock") as adjust:
             q = ctx["product_query"].filter.return_value
             q.filter.return_value.first.return_value = existing
@@ -304,7 +316,7 @@ class TestImportProducts:
     def test_import_outer_exception_and_cleanup(self, product_client_upload, upload_dir, mocker):
         import os
 
-        mocker.patch("pandas.read_excel", side_effect=RuntimeError("parse fail"))
+        mocker.patch("routes.products._read_import_dataframe", side_effect=RuntimeError("parse fail"))
         filepath_holder = {}
 
         original_join = os.path.join
@@ -802,4 +814,369 @@ class TestPrintLabelsAssurance:
             "/products/print-labels",
             json={"product_ids": [1, 2]},
         )
+        assert resp.status_code == 200
+
+
+class TestImportProductsDirect:
+    def test_import_success_skips_blank_rows_and_new_category(self, products_import_app):
+        df = _import_dataframe({
+            'name': ['', float('nan'), 'Valid', 'Dup'],
+            'price': [1.0, 2.0, 15.0, 10.0],
+            'stock': [0.0, 0.0, 3.0, 0.0],
+            'category': ['', '', 'NewCat', ''],
+        })
+        existing = _product(name='Dup')
+        inner = MagicMock()
+        inner.first.side_effect = [None, None, existing]
+        with _products_patches() as ctx, \
+             patch('routes.products.ProductCategory') as pc_cls:
+            ctx['product_query'].filter.return_value = inner
+            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
+            with patch('routes.products._read_import_dataframe', return_value=df):
+                file_mock = MagicMock()
+                file_mock.filename = 'products.xlsx'
+                file_mock.save = MagicMock()
+                with products_import_app.test_request_context('/products/import', method='POST'):
+                    with patch('models.Warehouse.query', _warehouse_query_mock()), \
+                         patch('os.remove'), patch('os.path.exists', return_value=True), \
+                         patch('routes.products.request') as req:
+                        req.method = 'POST'
+                        req.files = {'file': file_mock}
+                        req.form = {}
+                        req.url = '/products/import'
+                        from routes.products import import_products
+                        resp = import_products()
+        assert resp.status_code == 302
+        _assert_import_index_redirect(resp)
+
+    def test_import_missing_columns_redirects(self, products_import_app):
+        df = _import_dataframe({'title': ['Only']})
+        resp = _run_import_post(products_import_app, df)
+        assert resp.status_code == 302
+        assert resp.location.endswith('/products/import')
+
+    def test_import_bad_extension_redirects(self, products_import_app):
+        from routes.products import import_products
+
+        file_mock = MagicMock()
+        file_mock.filename = "notes.txt"
+        with _products_patches():
+            with products_import_app.test_request_context("/products/import", method="POST"):
+                with patch("routes.products.request") as req:
+                    req.method = "POST"
+                    req.files = {"file": file_mock}
+                    req.form = {}
+                    req.url = "/products/import"
+                    resp = import_products()
+        assert resp.status_code == 302
+        assert resp.location.endswith("/products/import")
+
+    def test_import_update_existing_adjusts_stock(self, products_import_app):
+        existing = _product(name='Existing')
+        existing.current_stock = 5.0
+        df = _import_dataframe({'name': ['Existing'], 'price': [12.0], 'stock': [10.0]})
+        with patch('routes.products.StockService.adjust_stock') as adjust:
+            existing.id = 1
+            existing.current_stock = 5.0
+            resp = _run_import_post(
+                products_import_app, df, update_existing=True, existing_product=existing,
+            )
+        _assert_import_index_redirect(resp)
+
+    def test_import_cleanup_os_remove_failure(self, products_import_app, mocker):
+        df = _import_dataframe({'name': ['Row'], 'price': [5.0]})
+        mocker.patch('os.remove', side_effect=OSError('locked'))
+        resp = _run_import_post(products_import_app, df)
+        assert resp.status_code == 302
+        _assert_import_index_redirect(resp)
+
+
+class TestParsePartnersBlankRow:
+    def test_skips_fully_blank_partner_row(self):
+        from routes.products import _parse_product_partners
+
+        form = MagicMock()
+        form.getlist.side_effect = lambda key: {
+            'partner_customer_id[]': ['', '4'],
+            'partner_percentage[]': ['', '25'],
+        }.get(key, [])
+        partner = MagicMock(id=4)
+        with _products_patches() as ctx:
+            ctx['customer_query'].filter.return_value.first.return_value = partner
+            partners, err = _parse_product_partners(form)
+        assert err is None
+        assert partners == [{'partner_customer_id': 4, 'percentage': 25.0}]
+
+
+class TestEditAndPrintExtras:
+    def test_edit_out_of_scope_returns_403(self, product_client):
+        product = _product()
+        with _products_patches(product=product), patch(
+            'routes.products._ensure_product_scope', return_value=False
+        ), patch('routes.products.render_template', return_value='denied') as render:
+            resp = product_client.get(f'/products/{product.id}/edit')
+        assert resp.status_code == 403
+        assert render.call_args[0][0] == 'errors/403.html'
+
+    def test_print_labels_branch_scope_exception(self, product_client, mocker):
+        mocker.patch(
+            'services.label_print_service.get_product_labels_html',
+            return_value='labels',
+        )
+        mocker.patch(
+            'utils.decorators.report_branch_scope_id',
+            side_effect=RuntimeError('branch scope'),
+        )
+        with _products_patches():
+            resp = product_client.post(
+                '/products/print-labels',
+                json={'product_ids': [1]},
+            )
+        assert resp.status_code == 200
+
+
+class TestProductsCoverageFinal:
+    def test_read_import_dataframe_csv_and_excel(self, tmp_path):
+        import importlib
+        import sys
+        for mod in ('pandas', 'numpy'):
+            if isinstance(sys.modules.get(mod), MagicMock):
+                sys.modules.pop(mod, None)
+        pd = importlib.import_module('pandas')
+        from routes.products import _read_import_dataframe
+
+        csv_path = tmp_path / "items.csv"
+        csv_path.write_text("name,price\nA,1", encoding="utf-8")
+        with patch.dict(__import__('sys').modules, {'pandas': pd}):
+            with patch.object(pd, 'read_csv', return_value=pd.DataFrame({'name': ['A'], 'price': [1.0]})) as rc:
+                df = _read_import_dataframe(str(csv_path), '.csv')
+            rc.assert_called_once()
+        assert 'name' in df.columns
+
+        with patch.dict(__import__('sys').modules, {'pandas': pd}):
+            with patch.object(pd, 'read_excel', return_value=pd.DataFrame({'name': ['B'], 'price': [2.0]})) as re:
+                _read_import_dataframe(str(tmp_path / "items.xlsx"), '.xlsx')
+            re.assert_called_once()
+
+    def test_import_creates_category_and_warranty_fallback(self, products_import_app):
+        df = _import_dataframe({
+            'name': ['WarrantyProd'],
+            'price': [30.0],
+            'category': ['BrandNewCat'],
+            'warranty': ['bad-warranty'],
+        })
+        new_cat = _category(12, name='BrandNewCat')
+        pc_cls = MagicMock()
+        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
+        pc_cls.return_value = new_cat
+        with patch('routes.products.ProductCategory', pc_cls), \
+             patch('routes.products._read_import_dataframe', return_value=df):
+            resp = _run_import_post(products_import_app, df)
+        _assert_import_index_redirect(resp)
+
+    def test_import_uses_fallback_warehouse(self, products_import_app):
+        df = _import_dataframe({'name': ['WH Prod'], 'price': [8.0]})
+        wh_query = MagicMock()
+        main_q = MagicMock()
+        main_q.first.return_value = None
+        tenant_q = MagicMock()
+        tenant_q.first.return_value = _warehouse(2)
+        wh_query.filter_by.side_effect = [main_q, tenant_q]
+        resp = _run_import_post(products_import_app, df, warehouse_query=wh_query)
+        _assert_import_index_redirect(resp)
+
+
+class TestProductsIndexAndEditGaps:
+    def test_index_out_of_stock_filter(self, product_client):
+        items = [_product(1, current_stock=0)]
+        query = MagicMock()
+        query.filter.return_value = query
+        query.order_by.return_value.paginate.return_value = MagicMock(
+            items=items, page=1, per_page=20, total=1, pages=1,
+            has_prev=False, has_next=False, prev_num=None, next_num=None,
+        )
+        with _products_patches(products=items, visible_query=query, branch_scope=None), \
+             patch('routes.products.render_template', return_value='idx'):
+            resp = product_client.get('/products/?stock=out')
+        assert resp.status_code == 200
+        query.filter.assert_called()
+
+    def test_edit_invalid_merchant_and_partner_error(self, product_client):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        merchant_q = MagicMock()
+        merchant_q.filter.return_value.first.return_value = None
+        with _products_patches(product=product), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._scoped_customers_query', return_value=merchant_q), \
+             patch('routes.products._parse_product_partners', return_value=(None, 'bad partners')), \
+             patch('routes.products.render_template', return_value='edit') as render:
+            resp = product_client.post(
+                f'/products/{product.id}/edit',
+                data={'name': 'X', 'regular_price': '10', 'merchant_customer_id': '9'},
+            )
+        assert resp.status_code == 200
+        assert render.call_args[0][0] == 'products/edit.html'
+
+
+class TestProductsRemainingCoverage:
+    def test_create_bad_warranty_defaults_zero(self, product_client):
+        form = _mock_product_form(validate=True)
+        added = _product(55, name='War')
+        added.partner_shares = MagicMock()
+        added.partner_shares.append = MagicMock()
+        with _products_patches(), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products.Product', return_value=added), \
+             patch('routes.products._parse_product_partners', return_value=([], None)), \
+             patch('routes.products.db.session') as session, \
+             patch('utils.tenant_limits.check_products_limit'):
+            session.commit = MagicMock()
+            resp = product_client.post(
+                '/products/create',
+                data={
+                    'name': 'War',
+                    'regular_price': '10',
+                    'warehouse_id': '1',
+                    'warranty_days': 'bad',
+                    'unit': 'pcs',
+                    'has_serial_number': 'on',
+                },
+            )
+        assert resp.status_code == 302
+
+    def test_create_partner_error_renders_form(self, product_client):
+        form = _mock_product_form(validate=True)
+        with _products_patches(), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._parse_product_partners', return_value=(None, 'partner err')), \
+             patch('routes.products.render_template', return_value='form') as render:
+            resp = product_client.post(
+                '/products/create',
+                data={'name': 'X', 'regular_price': '10', 'warehouse_id': '1'},
+            )
+        assert resp.status_code == 200
+        assert render.call_args[0][0] == 'products/create.html'
+
+    def test_edit_exception_rolls_back(self, product_client):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        product.tenant_id = 1
+        product.partner_shares = MagicMock()
+        product.partner_shares.clear = MagicMock()
+        with _products_patches(product=product), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._parse_product_partners', return_value=([], None)), \
+             patch('routes.products.db.session') as session, \
+             patch('routes.products.render_template', return_value='edit'):
+            session.commit.side_effect = RuntimeError('db fail')
+            resp = product_client.post(
+                f'/products/{product.id}/edit',
+                data={'name': 'X', 'regular_price': '10'},
+            )
+        assert resp.status_code == 200
+
+    def test_delete_exception_redirects(self, product_client):
+        product = _product()
+        with _products_patches(product=product), \
+             patch('routes.products.db.session') as session:
+            session.commit.side_effect = RuntimeError('delete fail')
+            resp = product_client.post(f'/products/{product.id}/delete', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_print_label_branch_scope_exception(self, product_client, mocker):
+        mocker.patch('services.label_print_service.get_single_label_html', return_value='html')
+        mocker.patch('utils.decorators.report_branch_scope_id', side_effect=RuntimeError('scope'))
+        with _products_patches():
+            resp = product_client.get('/products/1/print-label')
+        assert resp.status_code == 200
+
+    def test_import_os_remove_failure_still_succeeds(self, products_import_app):
+        df = _import_dataframe({'name': ['Row'], 'price': [5.0]})
+        resp = _run_import_post(products_import_app, df, os_remove_side_effect=OSError('locked'))
+        _assert_import_index_redirect(resp)
+
+    def test_edit_success_with_extras_and_tiers(self, product_client):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        product.tenant_id = 1
+        product.extra_fields = {}
+        product.cost_price = 0
+        product.partner_shares = MagicMock()
+        product.partner_shares.clear = MagicMock()
+        product.partner_shares.append = MagicMock()
+        partner = MagicMock(id=8, tenant_id=1)
+        tier_existing = MagicMock()
+        tier_q = MagicMock()
+        tier_q.filter_by.return_value.first.return_value = None
+        session = MagicMock()
+        with _products_patches(product=product), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._parse_product_partners', return_value=([{'partner_customer_id': 8, 'percentage': 25.0}], None)), \
+             patch('routes.products._scoped_customers_query') as cust_q, \
+             patch('models.Customer') as customer_cls, \
+             patch('models.ProductPriceTier') as tier_cls, \
+             patch('routes.products.ProductPartner') as pp_cls, \
+             patch('routes.products.db.session', session), \
+             patch('routes.products.StockService.get_product_stock', return_value=0), \
+             patch('routes.products.current_user') as user, \
+             patch('routes.products.render_template', return_value='edit'):
+            user.can_see_costs.return_value = True
+            cust_q.return_value.filter.return_value.first.return_value = None
+            customer_cls.query.filter_by.return_value.first.return_value = partner
+            tier_cls.query = tier_q
+            pp_cls.return_value = MagicMock()
+            session.commit = MagicMock()
+            resp = product_client.post(
+                f'/products/{product.id}/edit',
+                data={
+                    'name': 'Updated',
+                    'regular_price': '20',
+                    'unit': 'box',
+                    'extra_color': 'red',
+                    'cost_price': '5',
+                    'tier_wholesale_price': '18',
+                    'tier_rep_price': '0',
+                },
+            )
+        assert resp.status_code == 302
+
+    def test_edit_partner_parse_error(self, product_client):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        with _products_patches(product=product), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._parse_product_partners', return_value=(None, 'bad partner')), \
+             patch('routes.products.render_template', return_value='edit') as render:
+            resp = product_client.post(
+                f'/products/{product.id}/edit',
+                data={'name': 'X', 'regular_price': '10'},
+            )
+        assert resp.status_code == 200
+
+    def test_import_creates_new_category_on_the_fly(self, products_import_app):
+        df = _import_dataframe({'name': ['CatItem'], 'price': [11.0], 'category': ['FlyCat']})
+        new_cat = _category(20, name='FlyCat')
+        pc_cls = MagicMock()
+        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
+        pc_cls.return_value = new_cat
+        with patch('models.ProductCategory', pc_cls):
+            resp = _run_import_post(products_import_app, df)
+        _assert_import_index_redirect(resp)
+        pc_cls.assert_called_once()
+
+    def test_edit_rejects_partners_without_tenant(self, product_client):
+        form = _mock_product_form(validate=True)
+        product = _product()
+        product.tenant_id = None
+        product.partner_shares = MagicMock()
+        product.partner_shares.clear = MagicMock()
+        with _products_patches(product=product), \
+             patch('forms.product.ProductForm', return_value=form), \
+             patch('routes.products._parse_product_partners', return_value=([{'partner_customer_id': 1, 'percentage': 10}], None)), \
+             patch('routes.products.render_template', return_value='edit') as render:
+            resp = product_client.post(
+                f'/products/{product.id}/edit',
+                data={'name': 'X', 'regular_price': '10'},
+            )
         assert resp.status_code == 200
