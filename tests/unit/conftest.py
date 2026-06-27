@@ -2,7 +2,6 @@
 tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
 Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
-import sys
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
@@ -10,11 +9,6 @@ from itertools import cycle
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
-
-# Stub heavy optional deps before route/model imports under pytest-cov.
-for _mod in ('numpy', 'pandas'):
-    if _mod not in sys.modules:
-        sys.modules[_mod] = MagicMock()
 
 # Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
 try:
