@@ -135,3 +135,69 @@ class TestPreview:
         number = seq.get_next_number(date=new_date)
         assert number.startswith('SALE-2026-')
         assert seq.counter == 2
+
+    def test_monthly_reset_interval(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='inv', name='Inv', prefix='INV',
+            pattern='{prefix}-{year}-{month}-{counter:04d}', counter=5, counter_reset='monthly',
+        )
+        seq.updated_at = datetime(2025, 5, 31, tzinfo=timezone.utc)
+        number = seq.get_next_number(date=datetime(2025, 6, 1, tzinfo=timezone.utc))
+        assert '2025-06' in number
+        assert seq.counter == 2
+
+    def test_daily_reset_interval(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='rcpt', name='Rcpt', prefix='R',
+            pattern='{prefix}-{year}-{month}-{day}-{counter}', counter=3, counter_reset='daily',
+        )
+        seq.updated_at = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        number = seq.get_next_number(date=datetime(2025, 6, 2, tzinfo=timezone.utc))
+        assert '2025-06-02' in number
+        assert seq.counter == 2
+
+    def test_never_reset_keeps_counter(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='x', name='X', prefix='X',
+            pattern='{prefix}-{counter}', counter=10, counter_reset='never',
+        )
+        seq.updated_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        seq.get_next_number(date=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        assert seq.counter == 11
+
+    def test_unpadded_counter_placeholder(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='y', name='Y', prefix='Y',
+            pattern='{prefix}-{counter}', counter=7, counter_reset='never',
+        )
+        assert seq.get_next_number() == 'Y-7'
+        assert seq.counter == 8
+
+    def test_last_reset_without_timestamps(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='z', name='Z', prefix='Z',
+            pattern='{counter}', counter=1, counter_reset='year',
+        )
+        seq.updated_at = None
+        seq.created_at = None
+        assert seq._get_last_reset_date() == ''
+        assert seq._get_period_key(datetime(2025, 1, 1, tzinfo=timezone.utc)) == '2025'
+
+    def test_repr(self):
+        from models.document_sequence import DocumentSequence
+
+        seq = DocumentSequence(
+            tenant_id=1, code='x', name='X', prefix='X',
+            pattern='{counter}', counter=1,
+        )
+        assert 'x' in repr(seq)

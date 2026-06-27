@@ -16,6 +16,23 @@ class TestSerialTracking:
         assert SerialTrackingService.validate_imei('123456789012345') is True
         assert SerialTrackingService.validate_imei('12345') is False
         assert SerialTrackingService.validate_imei('') is False
+        assert SerialTrackingService.validate_imei('12345678901234a') is False
+
+    def test_assign_serial_not_found_returns_none(self, mocker):
+        mocker.patch('models.product_serial.ProductSerial.query').get.return_value = None
+        from services.serial_tracking_service import SerialTrackingService
+
+        assert SerialTrackingService.assign_serial_to_warehouse(99, 1) is None
+
+    def test_get_serial_by_serial_number(self, mocker):
+        found = MagicMock()
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = found
+        mocker.patch('models.product_serial.ProductSerial.query', mock_q)
+        from services.serial_tracking_service import SerialTrackingService
+
+        assert SerialTrackingService.get_serial_by_serial_number('SN-1', 1) is found
+        mock_q.filter_by.assert_called_with(tenant_id=1, serial_number='SN-1')
 
     def test_assign_serial_rejects_double_assignment(self, mocker):
         serial = MagicMock(warehouse_id=1)

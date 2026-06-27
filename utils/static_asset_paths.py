@@ -44,7 +44,7 @@ def tenant_upload_dir(tenant_id: int, category: str) -> str:
     """Runtime upload path relative to static/ (e.g. uploads/tenants/1/products)."""
     if not tenant_id:
         raise ValueError("tenant_id required")
-    safe = category.strip("/").replace("..", "")
+    safe = category.strip("/").replace("..", "").strip("/")
     return f"uploads/tenants/{int(tenant_id)}/{safe}"
 
 
