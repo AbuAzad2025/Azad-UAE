@@ -186,6 +186,9 @@ class TestReceipt:
     def test_get_source_info_none(self):
         assert _receipt_stub(source_type='manual', source_id=None).get_source_info() is None
 
+    def test_receipt_status_confirmed(self):
+        assert _receipt_stub(payment_confirmed=True).status_ar == 'مؤكد'
+
     def test_status_rejected(self):
         r = _receipt_stub(payment_confirmed=False, rejection_reason='bounced')
         assert r.status_ar == 'مرفوض'

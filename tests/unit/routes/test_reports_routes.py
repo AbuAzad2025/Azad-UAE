@@ -778,6 +778,31 @@ def _chain_query_stub(**terminals):
     return q
 
 
+def _supplier_payment_chain(*, direct_all=None, unalloc_all=None, fifo_scalar=Decimal("0")):
+    base = MagicMock(name="payment_base")
+    direct = MagicMock(name="direct_payments")
+    direct.all.return_value = direct_all if direct_all is not None else []
+    unalloc = MagicMock(name="unalloc_payments")
+    unalloc.all.return_value = unalloc_all if unalloc_all is not None else []
+    sum_q = MagicMock(name="sum_q")
+    sum_q.scalar.return_value = fifo_scalar
+    state = {"n": 0}
+
+    def filter_side(*args, **kwargs):
+        state["n"] += 1
+        if state["n"] == 1:
+            return base
+        if state["n"] == 2:
+            return direct
+        if state["n"] == 3:
+            return unalloc
+        return base
+
+    base.filter.side_effect = filter_side
+    base.with_entities.return_value = sum_q
+    return base
+
+
 class TestPartnersCommissionPath:
     def test_partners_has_entries_branch(self, reports_client, mock_user):
         _configure_user(mock_user)
@@ -1498,14 +1523,24 @@ class TestReportsSupplierFragmentDeep:
         payment.payment_date = datetime(2025, 3, 5, tzinfo=timezone.utc)
         payment.payment_method = "bank"
         payment.direction = "outgoing"
+        payment.payment_confirmed = True
+        unalloc = MagicMock()
+        unalloc.amount_aed = Decimal("50")
+        purchase_q = MagicMock()
+        purchase_q.filter.return_value = purchase_q
+        purchase_q.order_by.return_value = purchase_q
+        purchase_q.all.return_value = [purchase]
+        p_line = MagicMock(name="Widget", qty=Decimal("2"), total=Decimal("500"), last_date=purchase.purchase_date)
         with patch("routes.reports.tenant_get_or_404", return_value=self._supplier_entity()), \
              patch("routes.reports.report_branch_scope_id", return_value=None), \
-             patch("routes.reports.db.session.query", side_effect=lambda *a, **k: _chain_query_stub(all=[])), \
+             patch("routes.reports.db.session.query", return_value=_chain_query_stub(all=[p_line])), \
              patch("models.Purchase") as Purchase, \
              patch("models.Payment") as Payment:
-            Purchase.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [purchase]
-            Payment.query.filter.return_value.filter.return_value.all.return_value = [payment]
-            Payment.query.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+            Purchase.query.filter_by.return_value = purchase_q
+            Payment.query.filter.return_value = _supplier_payment_chain(
+                direct_all=[payment],
+                unalloc_all=[unalloc],
+            )
             Payment.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [payment]
             resp = reports_client.get("/reports/entity_report_fragment/supplier/12")
             assert resp.status_code == 200
@@ -1518,16 +1553,20 @@ class TestReportsSupplierFragmentDeep:
         purchase.purchase_date = datetime(2025, 4, 1, tzinfo=timezone.utc)
         purchase.status = "confirmed"
         purchase.amount_aed = Decimal("300")
-        sum_entity = MagicMock()
-        sum_entity.scalar.return_value = Decimal("150")
+        purchase_q = MagicMock()
+        purchase_q.filter.return_value = purchase_q
+        purchase_q.order_by.return_value = purchase_q
+        purchase_q.all.return_value = [purchase]
         with patch("routes.reports.tenant_get_or_404", return_value=self._supplier_entity()), \
              patch("routes.reports.report_branch_scope_id", return_value=None), \
-             patch("routes.reports.db.session.query", side_effect=lambda *a, **k: _chain_query_stub(all=[])), \
+             patch("routes.reports.db.session.query", return_value=_chain_query_stub(all=[])), \
              patch("models.Purchase") as Purchase, \
              patch("models.Payment") as Payment:
-            Purchase.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [purchase]
-            Payment.query.filter.return_value.filter.return_value.all.return_value = []
-            Payment.query.filter.return_value.with_entities.return_value.scalar.return_value = Decimal("150")
+            Purchase.query.filter_by.return_value = purchase_q
+            Payment.query.filter.return_value = _supplier_payment_chain(
+                direct_all=[],
+                fifo_scalar=Decimal("150"),
+            )
             Payment.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = reports_client.get("/reports/entity_report_fragment/supplier/12")
             assert resp.status_code == 200

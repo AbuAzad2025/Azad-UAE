@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from io import BytesIO
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -71,20 +72,37 @@ class TestSetupLogging:
         text = fmt.format(record)
         assert 'ok' in text
 
-    def test_setup_logging_configures_handlers(self, app):
+    def test_format_encoding_stdout_access_error(self, mocker):
+        from utils.logging_setup import ColorFormatter
+        mocker.patch.dict(os.environ, {'FLASK_ENV': 'production'}, clear=False)
+        record = logging.LogRecord('app', logging.INFO, '', 0, 'ok', (), None)
+        record.request_id = '-'
+        fmt = ColorFormatter()
+        mocker.patch.object(fmt, 'formatTime', return_value='ts')
+        bad_stdout = MagicMock()
+        type(bad_stdout).encoding = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError('no enc'))
+        )
+        mocker.patch('utils.logging_setup.sys.stdout', bad_stdout)
+        assert 'ok' in fmt.format(record)
+
+    def test_setup_logging_win32_wraps_streams(self, app, monkeypatch, mocker):
+        import io
+        raw_out = SimpleNamespace(buffer=BytesIO())
+        raw_err = SimpleNamespace(buffer=BytesIO())
+        monkeypatch.setattr('utils.logging_setup.sys.platform', 'win32')
+        monkeypatch.setattr('utils.logging_setup.sys.stdout', raw_out)
+        monkeypatch.setattr('utils.logging_setup.sys.stderr', raw_err)
+        wrapped = io.TextIOWrapper(BytesIO(), encoding='utf-8')
+        wrapper = mocker.patch('io.TextIOWrapper', return_value=wrapped)
+        mocker.patch.object(app.logger, 'info')
+        from utils.logging_setup import setup_logging
+        setup_logging(app)
+        assert wrapper.call_count >= 2
+
+    def test_setup_logging_configures_handlers(self, app, mocker):
+        mocker.patch('utils.logging_setup.sys.platform', 'linux')
         from utils.logging_setup import setup_logging
         setup_logging(app)
         assert app.logger.handlers
         assert logging.getLogger('sqlalchemy.engine').level == logging.WARNING
-
-    def test_setup_logging_wraps_stdout_on_windows(self, app, mocker):
-        mocker.patch('utils.logging_setup.sys.platform', 'win32')
-        buffer = BytesIO(b'hello')
-        fake_stdout = MagicMock()
-        fake_stdout.buffer = buffer
-        del fake_stdout._azad_utf8_wrapped
-        mocker.patch('utils.logging_setup.sys.stdout', fake_stdout)
-        mocker.patch('utils.logging_setup.sys.stderr', fake_stdout)
-        mocker.patch('utils.logging_setup.io.TextIOWrapper', return_value=fake_stdout)
-        from utils.logging_setup import setup_logging
-        setup_logging(app)

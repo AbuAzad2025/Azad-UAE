@@ -54,6 +54,16 @@ class TestReportHelpers:
         supplier_q.filter.assert_called()
 
 
+    def test_get_confirmed_supplier_paid_aed_branch(self, mocker):
+        q = MagicMock()
+        q.filter.return_value = q
+        q.scalar.return_value = Decimal('80')
+        mocker.patch('routes.reports.db.session.query', return_value=q)
+        from routes.reports import get_confirmed_supplier_paid_aed
+        get_confirmed_supplier_paid_aed(3, tenant_id=1, branch_id=4)
+        assert q.filter.call_count >= 2
+
+
 class TestReportsRoutes:
     def test_index_renders(self, reports_client, mocker):
         mocker.patch('routes.reports.render_template', return_value='ok')

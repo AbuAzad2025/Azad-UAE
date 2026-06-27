@@ -90,6 +90,28 @@ class TestTenantBaseCurrency:
         assert resolve_tenant_base_currency(tenant_id=3) == 'OMR'
 
 
+    def test_get_tenant_base_currency_db_error(self, mocker):
+        mocker.patch('utils.currency_utils.db.session.get', side_effect=RuntimeError('db'))
+        mocker.patch('utils.currency_utils.get_system_default_currency', return_value='ILS')
+        from utils.currency_utils import get_tenant_base_currency
+        assert get_tenant_base_currency(1) == 'ILS'
+
+    def test_resolve_tenant_base_currency_default_only(self):
+        tenant = MagicMock(base_currency=None, default_currency=' kwd ')
+        from utils.currency_utils import resolve_tenant_base_currency
+        assert resolve_tenant_base_currency(tenant=tenant) == 'KWD'
+
+    def test_resolve_tenant_base_currency_system_fallback(self, mocker):
+        mocker.patch('utils.currency_utils.get_system_default_currency', return_value='ILS')
+        from utils.currency_utils import resolve_tenant_base_currency
+        assert resolve_tenant_base_currency() == 'ILS'
+
+    def test_get_currency_name_ar_unknown(self, mocker):
+        mocker.patch('utils.constants.CURRENCIES', [])
+        from utils.currency_utils import get_currency_name_ar
+        assert get_currency_name_ar('XYZ') == 'XYZ'
+
+
 class TestCurrencyLabels:
     def test_get_currency_symbol_known(self, mocker):
         mocker.patch('utils.constants.CURRENCIES', [('USD', {'symbol': '$'})])

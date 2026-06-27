@@ -17,6 +17,7 @@ def _chain(**terminals):
     q.group_by.return_value = q
     q.order_by.return_value = q
     q.select_from.return_value = q
+    q.limit.return_value = q
     q.scalar.return_value = terminals.get('scalar', 0)
     q.count.return_value = terminals.get('count', 0)
     q.all.return_value = terminals.get('all', [])
@@ -73,6 +74,18 @@ class TestProductPerformance:
         assert perf[0]['margin_percent'] == pytest.approx(50.0)
 
 
+    def test_product_performance_with_branch(self, mocker):
+        row = MagicMock(
+            name='A', sku='SKU1', cost_price=Decimal('10'),
+            total_sold=Decimal('100'), total_revenue=Decimal('2000'), transactions=5,
+        )
+        session = MagicMock()
+        session.query.return_value = _chain(all=[row])
+        mocker.patch('services.analytics_service._db_session', return_value=session)
+        from services.analytics_service import AnalyticsService
+        assert AnalyticsService.get_product_performance(tenant_id=1, branch_id=2)
+
+
 class TestForecasting:
     def test_forecasting_with_history(self, mocker):
         session = mocker.patch('services.analytics_service._db_session').return_value
@@ -81,6 +94,14 @@ class TestForecasting:
         history, forecast = AnalyticsService.get_forecasting_data(tenant_id=1)
         assert len(history) == 12
         assert forecast['confidence'] in ('عالية', 'متوسطة', 'منخفضة', 'غير متوفرة')
+
+
+    def test_forecasting_with_branch(self, mocker):
+        session = mocker.patch('services.analytics_service._db_session').return_value
+        session.query.return_value.scalar.side_effect = [1000] * 12
+        from services.analytics_service import AnalyticsService
+        history, forecast = AnalyticsService.get_forecasting_data(tenant_id=1, branch_id=1)
+        assert len(history) == 12
 
 
 class TestDonationAnalytics:
@@ -99,12 +120,55 @@ class TestDonationAnalytics:
         assert len(data['labels']) == 2
         assert data['total_revenue'] >= 0
 
+    def test_revenue_by_period_donation_rows(self, mocker):
+        donation = MagicMock(
+            transaction_type='donation',
+            amount_usd=20,
+            created_at=datetime.now(timezone.utc),
+            status='completed',
+        )
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value.filter.return_value.all.return_value = [donation]
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['total_revenue'] >= 0
+
+    def test_revenue_by_period_skips_bad_dates(self, mocker):
+        donation = MagicMock(
+            transaction_type='purchase',
+            amount_usd=50,
+            created_at=None,
+            status='completed',
+        )
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value.filter.return_value.all.return_value = [donation]
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['total_revenue'] == 0
+
+    def test_revenue_by_period_with_tz_aware_dates(self, mocker):
+        donation = MagicMock(
+            transaction_type='donation',
+            amount_usd=15,
+            created_at=datetime.now(timezone.utc),
+            status='completed',
+        )
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value.filter.return_value.all.return_value = [donation]
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['total_revenue'] >= 0
+
+    def test_db_session_helper(self):
+        from services.analytics_service import _db_session
+        assert _db_session() is not None
+
     def test_package_performance(self, mocker):
         package = MagicMock(id=1, name_ar='Gold')
         purchase = MagicMock(payment_status='completed', amount_paid=100)
         pending = MagicMock(payment_status='pending', amount_paid=0)
         session = MagicMock()
-        session.query.return_value.filter_by.return_value.all.side_effect = [[package], [purchase, pending]]
+        session.query.side_effect = [_chain(all=[package]), _chain(all=[purchase, pending])]
         mocker.patch('services.analytics_service._db_session', return_value=session)
         mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
         from services.analytics_service import AnalyticsService
@@ -115,7 +179,7 @@ class TestDonationAnalytics:
     def test_payment_method_stats(self, mocker):
         donation = MagicMock(payment_method='card', amount_usd=25, status='completed')
         session = MagicMock()
-        session.query.return_value.filter_by.return_value.all.return_value = [donation, donation]
+        session.query.return_value = _chain(all=[donation, donation])
         mocker.patch('services.analytics_service._db_session', return_value=session)
         mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
         from services.analytics_service import AnalyticsService
@@ -129,7 +193,9 @@ class TestDonationAnalytics:
             amount_paid=1500,
             package=MagicMock(name_ar='Pro'),
         )
-        mocker.patch('services.analytics_service._db_session').return_value.query.return_value.filter_by.return_value.all.return_value = [purchase, purchase]
+        mocker.patch(
+            'services.analytics_service._db_session',
+        ).return_value.query.return_value = _chain(all=[purchase, purchase])
         mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
         from services.analytics_service import AnalyticsService
         behavior = AnalyticsService.get_customer_behavior(tenant_id=1)
@@ -150,7 +216,7 @@ class TestDonationAnalytics:
         donation = MagicMock(status='completed', amount_usd=10)
         pending = MagicMock(status='pending', amount_usd=0)
         session = MagicMock()
-        session.query.return_value.filter.return_value.all.return_value = [donation, pending]
+        session.query.return_value = _chain(all=[donation, pending])
         mocker.patch('services.analytics_service._db_session', return_value=session)
         mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
         from services.analytics_service import AnalyticsService

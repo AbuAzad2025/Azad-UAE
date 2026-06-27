@@ -212,3 +212,88 @@ class TestTenantStatus:
         status = get_tenant_status(2)
         assert status['ok'] is False
         assert status['reason'] == 'billing'
+
+
+class TestTenantingExtended:
+    def test_apply_tenant_scope_no_tenant_field(self, mocker):
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        query = MagicMock()
+        from utils.tenanting import apply_tenant_scope
+        assert apply_tenant_scope(query, object()) is query
+
+    def test_assert_tenant_record_or_404_false(self, app, mocker):
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from utils.tenanting import assert_tenant_record
+        with app.test_request_context():
+            assert assert_tenant_record(None, or_404=False) is False
+
+    def test_assert_record_no_tenant_not_owner(self, app, mocker):
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        mocker.patch('utils.tenanting.is_platform_owner', return_value=False)
+        from utils.tenanting import assert_tenant_record
+        with app.test_request_context():
+            with pytest.raises(NotFound):
+                assert_tenant_record(MagicMock(tenant_id=None))
+
+    def test_assert_no_active_tenant_owner(self, app, mocker):
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=None)
+        mocker.patch('utils.tenanting.is_platform_owner', return_value=True)
+        from utils.tenanting import assert_tenant_record
+        with app.test_request_context():
+            with pytest.raises(Forbidden):
+                assert_tenant_record(MagicMock(tenant_id=1))
+
+    def test_assert_cross_tenant_or_404_false(self, app, mocker):
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from utils.tenanting import assert_tenant_record
+        with app.test_request_context():
+            assert assert_tenant_record(MagicMock(tenant_id=2), or_404=False) is False
+
+    def test_tenant_get_missing_or_404_false(self, app, mocker):
+        mocker.patch('utils.tenanting.db.session.get', return_value=None)
+        from utils.tenanting import tenant_get
+        with app.test_request_context():
+            assert tenant_get(MagicMock, 1, or_404=False) is None
+
+    def test_assign_tenant_id_already_set(self, app):
+        from utils.tenanting import assign_tenant_id
+        record = MagicMock(tenant_id=9)
+        with app.test_request_context():
+            assert assign_tenant_id(record) is record
+
+    def test_scoped_user_query_owner_no_tenant(self, mocker):
+        user_model = MagicMock()
+        user_model.query = MagicMock()
+        mocker.patch('models.user.User', user_model)
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=None)
+        mocker.patch('utils.tenanting.is_platform_owner', return_value=True)
+        from utils.tenanting import scoped_user_query
+        scoped_user_query(_user(is_owner=True))
+        user_model.query.filter.assert_not_called()
+
+    def test_require_report_tenant_id(self, app, mocker):
+        mocker.patch('utils.tenanting.require_active_tenant_id', return_value=3)
+        from utils.tenanting import require_report_tenant_id
+        with app.test_request_context():
+            assert require_report_tenant_id() == 3
+
+    def test_set_active_tenant_invalid_id(self, app):
+        from utils.tenanting import set_active_tenant
+        with app.test_request_context():
+            with pytest.raises(ValueError, match='Invalid'):
+                set_active_tenant('bad', _user(is_owner=True))
+
+    def test_set_active_tenant_invalid_user_tenant_id(self, app):
+        user = _user(tenant_id='bad')
+        from utils.tenanting import set_active_tenant
+        with app.test_request_context():
+            with pytest.raises(ValueError, match='valid integer'):
+                set_active_tenant(1, user)
+
+    def test_clear_active_tenant_helper(self, app):
+        from utils.tenanting import clear_active_tenant, ACTIVE_TENANT_SESSION_KEY
+        with app.test_request_context():
+            from flask import session
+            session[ACTIVE_TENANT_SESSION_KEY] = 5
+            clear_active_tenant()
+            assert ACTIVE_TENANT_SESSION_KEY not in session

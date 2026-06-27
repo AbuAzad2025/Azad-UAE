@@ -1918,7 +1918,7 @@ def convert_database():
                     if not allowed_columns:
                         continue
 
-                result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
+                    result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
                     rows = result.fetchall()
                     if not rows:
                         continue

@@ -206,6 +206,16 @@ class TestChequeQueries:
         Cheque.get_due_soon_cheques(tenant_id=1, branch_id=9)
         assert q.filter.called
 
+    def test_get_overdue_filters_tenant(self, mocker):
+        mocker.patch('models.cheque.Cheque.update_all_statuses')
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value.all.return_value = []
+        mocker.patch('models.cheque.Cheque.query', q)
+        from models.cheque import Cheque
+        Cheque.get_overdue_cheques(tenant_id=1)
+        assert q.filter.called
+
     def test_get_overdue_filters_branch(self, mocker):
         mocker.patch('models.cheque.Cheque.update_all_statuses')
         q = MagicMock()

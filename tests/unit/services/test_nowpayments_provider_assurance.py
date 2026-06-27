@@ -22,6 +22,7 @@ class TestNowPaymentsProvider:
             assert 'x-api-key' in provider.headers()
 
     def test_defaults_when_unconfigured(self, app):
+        app.config.update(NOWPAYMENTS_API_KEY='', NOWPAYMENTS_IPN_SECRET='')
         from services.payments.nowpayments_provider import NowPaymentsProvider
         with app.app_context():
             provider = NowPaymentsProvider()
