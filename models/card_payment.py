@@ -10,12 +10,25 @@ import base64
 import json
 import hashlib
 
-try:
-    from cryptography.fernet import Fernet
-    HAS_CRYPTO = True
-except ImportError:
-    HAS_CRYPTO = False
-    Fernet = None
+HAS_CRYPTO = None
+Fernet = None
+
+
+def _init_crypto():
+    """Load Fernet once; safe to call repeatedly."""
+    global HAS_CRYPTO, Fernet
+    if HAS_CRYPTO is not None:
+        return
+    try:
+        from cryptography.fernet import Fernet as _Fernet
+        Fernet = _Fernet
+        HAS_CRYPTO = True
+    except ImportError:
+        HAS_CRYPTO = False
+        Fernet = None
+
+
+_init_crypto()
 
 
 class CardPayment(db.Model):
@@ -75,6 +88,7 @@ class CardPayment(db.Model):
     
     @staticmethod
     def _get_cipher():
+        _init_crypto()
         if not HAS_CRYPTO:
             raise RuntimeError('cryptography module not installed')
         key = current_app.config.get('CARD_ENCRYPTION_KEY')

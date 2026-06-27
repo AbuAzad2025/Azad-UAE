@@ -86,17 +86,24 @@ class Budget(db.Model):
         total_variance = Decimal('0')
         
         for line in self.lines:
+            entry_filters = [
+                GLJournalEntry.tenant_id == self.tenant_id,
+                func.date(GLJournalEntry.entry_date).between(self.period_start, self.period_end),
+            ]
+            if self.branch_id is not None:
+                entry_filters.append(GLJournalEntry.branch_id == self.branch_id)
+
             # حساب المبلغ الفعلي
             debit_sum = db.session.query(func.sum(GLJournalLine.debit)).filter(
                 GLJournalLine.account_id == line.account_id
             ).join(GLJournalEntry).filter(
-                func.date(GLJournalEntry.entry_date).between(self.period_start, self.period_end)
+                *entry_filters
             ).scalar() or Decimal('0')
             
             credit_sum = db.session.query(func.sum(GLJournalLine.credit)).filter(
                 GLJournalLine.account_id == line.account_id
             ).join(GLJournalEntry).filter(
-                func.date(GLJournalEntry.entry_date).between(self.period_start, self.period_end)
+                *entry_filters
             ).scalar() or Decimal('0')
             
             # حساب الفعلي حسب نوع الحساب
