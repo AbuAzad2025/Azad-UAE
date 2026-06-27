@@ -50,8 +50,7 @@ class TestEnsureSystemIntegrity:
         owner_role = MagicMock()
         owner_user = MagicMock(id=1, username='owner')
         with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current'
-        ), patch('utils.system_init._ensure_permissions'), patch(
+            'utils.system_init._ensure_permissions'), patch(
             'utils.system_init._ensure_owner_role', return_value=owner_role
         ), patch(
             'utils.system_init._ensure_owner_user', return_value=(owner_user, False)
@@ -69,28 +68,9 @@ class TestEnsureSystemIntegrity:
             system_init_module._ensure_system_integrity_inner(flask_app)
         flask_app.logger.info.assert_called()
 
-    def test_inner_logs_tenant_warning_on_failure(self, flask_app):
-        with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current', side_effect=RuntimeError('tenant fail')
-        ), patch('services.logging_core.LoggingCore.log_error'), patch(
-            'utils.system_init._ensure_permissions'
-        ), patch('utils.system_init._ensure_owner_role', return_value=MagicMock()), patch(
-            'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)
-        ), patch('utils.system_init._record_server_activation'), patch(
-            'utils.system_init._ensure_super_admin_role'
-        ), patch('utils.system_init._ensure_developer_role'), patch(
-            'utils.system_init._ensure_functional_roles'
-        ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
-        ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
-        ), patch.dict('os.environ', {'DISABLE_TELEMETRY': 'true'}, clear=False):
-            system_init_module._ensure_system_integrity_inner(flask_app)
-
     def test_inner_logs_telemetry_disabled_message(self, flask_app):
         with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current'
-        ), patch('utils.system_init._ensure_permissions'), patch(
+            'utils.system_init._ensure_permissions'), patch(
             'utils.system_init._ensure_owner_role', return_value=MagicMock()
         ), patch(
             'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)
@@ -108,28 +88,9 @@ class TestEnsureSystemIntegrity:
             'SystemInit: Telemetry disabled via environment variable.'
         )
 
-    def test_inner_telemetry_logging_core_failure_is_swallowed(self, flask_app):
-        with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current', side_effect=RuntimeError('tenant fail')
-        ), patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')), patch(
-            'utils.system_init._ensure_permissions'
-        ), patch('utils.system_init._ensure_owner_role', return_value=MagicMock()), patch(
-            'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)
-        ), patch('utils.system_init._record_server_activation'), patch(
-            'utils.system_init._ensure_super_admin_role'
-        ), patch('utils.system_init._ensure_developer_role'), patch(
-            'utils.system_init._ensure_functional_roles'
-        ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
-        ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
-        ), patch.dict('os.environ', {'DISABLE_TELEMETRY': 'true'}, clear=False):
-            system_init_module._ensure_system_integrity_inner(flask_app)
-
     def test_inner_starts_telemetry_when_enabled(self, flask_app):
         with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current'
-        ), patch('utils.system_init._ensure_permissions'), patch(
+            'utils.system_init._ensure_permissions'), patch(
             'utils.system_init._ensure_owner_role', return_value=MagicMock()
         ), patch(
             'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)
@@ -150,8 +111,7 @@ class TestEnsureSystemIntegrity:
 
     def test_inner_swallows_telemetry_logging_failure(self, flask_app):
         with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current'
-        ), patch('utils.system_init._ensure_permissions'), patch(
+            'utils.system_init._ensure_permissions'), patch(
             'utils.system_init._ensure_owner_role', return_value=MagicMock()
         ), patch(
             'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)
@@ -171,8 +131,7 @@ class TestEnsureSystemIntegrity:
 
     def test_inner_handles_repair_and_telemetry_failures(self, flask_app):
         with flask_app.app_context(), patch('utils.system_init.db.create_all'), patch(
-            'models.tenant.Tenant.get_current'
-        ), patch('utils.system_init._ensure_permissions'), patch(
+            'utils.system_init._ensure_permissions'), patch(
             'utils.system_init._ensure_owner_role', return_value=MagicMock()
         ), patch(
             'utils.system_init._ensure_owner_user', return_value=(MagicMock(), False)

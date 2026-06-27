@@ -28,25 +28,6 @@ def _ensure_system_integrity_inner(app):
     # 1. Ensure Tables Exist
     # This is critical if the DB file was deleted
     db.create_all()
-    try:
-        from models.tenant import Tenant
-        Tenant.get_current()
-    except Exception as e:
-        import sys
-        import traceback
-        sys.stderr.write(f"[SYSTEM_INIT_WARNING] Tenant.get_current() failed: {e}\n")
-        traceback.print_exc()
-        try:
-            from services.logging_core import LoggingCore
-            LoggingCore.log_error(
-                message=str(e),
-                category="SYSTEM_INIT",
-                source="utils.system_init._ensure_system_integrity_inner.get_tenant",
-                level="WARNING",
-                exception=e
-            )
-        except Exception:
-            pass
 
     # 2. Ensure Permissions
     _ensure_permissions()

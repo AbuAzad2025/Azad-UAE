@@ -148,10 +148,12 @@ class Tenant(db.Model):
             pass
 
         import logging
+        from flask import has_request_context, request
         logger = logging.getLogger("azad.security")
+        ip = request.remote_addr if has_request_context() else 'unknown'
         logger.warning(
             "Tenant.get_current() returned None — unauthenticated or no active tenant resolved (ip=%s)",
-            getattr(getattr(__import__('flask', fromlist=['request']), 'request', None), 'remote_addr', 'unknown')
+            ip,
         )
         return None
 
