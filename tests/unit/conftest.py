@@ -2,7 +2,39 @@
 tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
 Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
-pytest_plugins = ['tests.conftest']
+# Re-export DB fixtures from parent conftest for --confcutdir=tests/unit runs.
+from tests.conftest import (  # noqa: F401
+    _reset_rate_limiter,
+    _restore_session_app_config,
+    app,
+    auth_client,
+    auto_cleanup_isolation,
+    client,
+    db_session,
+    logged_in_client,
+    owner_client,
+    runner,
+    sample_branch,
+    sample_cheque,
+    sample_currency_aed,
+    sample_customer,
+    sample_employee,
+    sample_expense,
+    sample_expense_category,
+    sample_gl_accounts,
+    sample_owner,
+    sample_payroll_transaction,
+    sample_permissions,
+    sample_product,
+    sample_product_with_stock,
+    sample_purchase,
+    sample_role,
+    sample_sale,
+    sample_supplier,
+    sample_tenant,
+    sample_user,
+    sample_warehouse,
+)
 
 from datetime import datetime
 from decimal import Decimal
