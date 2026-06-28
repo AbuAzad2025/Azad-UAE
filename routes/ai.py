@@ -934,23 +934,6 @@ def _process_user_action(message, user):
 
 🤖 اكتب العنوان الآن...""".format(phone=data['phone'])
             
-            elif step == 2:
-                # حفظ الهاتف والانتقال للخطوة التالية
-                data['phone'] = message.strip()
-                ctx['data'] = data
-                ctx['step'] = 3
-                ctx['history'] = ctx.get('history', []) + [{'step': 2, 'data': message.strip()}]
-                return """✅ **تم حفظ رقم الهاتف:** {phone}
-
-📝 **الخطوة 3: العنوان**
-اكتب عنوان العميل
-
-💡 **مثال:** دبي - الخليج التجاري
-
-💬 **اكتب "عودة" للرجوع أو "مساعدة" للمساعدة**
-
-🤖 اكتب العنوان الآن...""".format(phone=data['phone'])
-            
             elif step == 3:
                 # حفظ العنوان وإنشاء العميل
                 data['address'] = message.strip()
@@ -2623,7 +2606,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب اسم المنتج أو رقم القطعة الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['فاتورة', 'بيع', 'مبيعات', 'إنشاء فاتورة']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'فاتورة':
             return """🤖 ممتاز! اخترت البحث عن فاتورة. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب رقم الفاتورة أو اسم العميل**
@@ -2636,7 +2619,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب رقم الفاتورة أو اسم العميل الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['مصروف', 'إضافة مصروف', 'إنشاء مصروف']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'مصروف':
             return """🤖 ممتاز! اخترت البحث عن مصروف. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب وصف المصروف أو فئته**
@@ -2649,7 +2632,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب وصف المصروف أو فئته الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['مورد', 'مورد جديد', 'إضافة مورد', 'إنشاء مورد']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'مورد':
             return """🤖 ممتاز! اخترت البحث عن مورد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب اسم المورد أو رقم هاتفه**
@@ -2662,7 +2645,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب اسم المورد أو رقم هاتفه الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['مشتريات', 'شراء', 'إضافة مشتريات', 'إنشاء مشتريات']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'مشتريات':
             return """🤖 ممتاز! اخترت البحث عن مشتريات. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب رقم المشتريات أو اسم المورد**
@@ -2675,7 +2658,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب رقم المشتريات أو اسم المورد الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['شيك', 'شيكات', 'إضافة شيك', 'إنشاء شيك']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'شيك':
             return """🤖 ممتاز! اخترت البحث عن شيك. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب رقم الشيك أو المبلغ**
@@ -2688,7 +2671,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب رقم الشيك أو المبلغ الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['دفتر', 'دفتر الأستاذ', 'دفتر استاذ', 'قيد']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'دفتر':
             return """🤖 ممتاز! اخترت البحث عن قيد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب وصف القيد أو رقمه**
@@ -2701,7 +2684,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب وصف القيد أو رقمه الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['مستودع', 'مستودعات', 'مخزون', 'إدارة مستودعات']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'مستودع':
             return """🤖 ممتاز! اخترت البحث عن مستودع. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب اسم المستودع أو موقعه**
@@ -2714,7 +2697,7 @@ def _process_user_action(message, user):
 
 🤖 اكتب اسم المستودع أو موقعه الآن..."""
         
-        if msg_lower.strip() == '3' and any(word in msg_lower for word in ['مستخدم', 'مستخدمين', 'إضافة مستخدم', 'إنشاء مستخدم']):
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'مستخدم':
             return """🤖 ممتاز! اخترت البحث عن مستخدم. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب اسم المستخدم أو إيميله**
@@ -2728,7 +2711,7 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المستخدم أو إيميله الآن..."""
         
         # ========== نظام الحوار التفاعلي للرقم 4 (إدارة المخزون) ==========
-        if msg_lower.strip() == '4' and any(word in msg_lower for word in ['مستودع', 'مستودعات', 'مخزون', 'إدارة مستودعات']):
+        if msg_lower.strip() == '4' and ctx.get('last_action') == 'مستودع':
             return """🤖 ممتاز! اخترت إدارة المخزون. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب اسم المستودع**
@@ -2742,7 +2725,7 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المستودع الآن..."""
         
         # ========== نظام الحوار التفاعلي للرقم 4 (تعديل صلاحيات المستخدمين) ==========
-        if msg_lower.strip() == '4' and any(word in msg_lower for word in ['مستخدم', 'مستخدمين', 'إضافة مستخدم', 'إنشاء مستخدم']):
+        if msg_lower.strip() == '4' and ctx.get('last_action') == 'مستخدم':
             return """🤖 ممتاز! اخترت تعديل صلاحيات مستخدم. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اكتب اسم المستخدم**
@@ -3076,7 +3059,7 @@ http://localhost:5000/ai/assistant
 - العميل: {customer.name}
 - الرصيد السابق: {old_balance} درهم
 - الرصيد الجديد: {new_balance} درهم
-- الفرق: {new_balance - old_balance} درهم
+- الفرق: {new_balance - float(old_balance)} درهم
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
@@ -3305,7 +3288,6 @@ def config():
             
             os.environ[key_name] = api_key
             
-            from flask import current_app
             current_app.logger.info(f"✅ {key_name} updated successfully by user {current_user.username}")
             
             return jsonify({

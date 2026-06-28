@@ -9,9 +9,14 @@ import pytest
 from flask import Flask, make_response
 
 # Stub heavy optional deps before route package imports (pytest-cov loads routes early).
+# Prefer the genuinely-installed module so DataFrame-dependent code is exercised for real;
+# only fall back to a MagicMock when the dependency is actually missing.
 for _mod in ('numpy', 'pandas'):
     if _mod not in sys.modules:
-        sys.modules[_mod] = MagicMock()
+        try:
+            __import__(_mod)
+        except Exception:
+            sys.modules[_mod] = MagicMock()
 
 # Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
 try:
