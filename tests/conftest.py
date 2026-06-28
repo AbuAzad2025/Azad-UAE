@@ -166,6 +166,7 @@ _POLLUTED_MODEL_SPECS = (
     ('cheque', 'Cheque'),
     ('donation', 'Donation'),
     ('package', 'Package'),
+    ('audit', 'AuditLog'),
 )
 
 
@@ -273,6 +274,9 @@ def _restore_polluted_service_class_methods():
             'get_forecasting_data', 'get_daily_stats', 'get_revenue_by_period',
             'get_payment_method_stats', 'get_customer_behavior', 'get_package_performance',
             'predict_revenue',
+        )),
+        ('services.logging_core', 'LoggingCore', (
+            'log_audit', '_fallback_write', 'log_error', 'log_security',
         )),
     )
     for mod_name, cls_name, method_names in specs:
