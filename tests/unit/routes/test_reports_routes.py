@@ -1026,19 +1026,28 @@ class TestSalesExportWithRows:
 
 
 class TestReportsModuleHelpers:
-    def test_get_confirmed_sale_paid_aed(self):
+    def test_get_confirmed_sale_paid_aed(self, app):
         from routes.reports import get_confirmed_sale_paid_aed
-        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=Decimal("150"))):
+        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=Decimal("150"))), \
+             patch("utils.cache_decorators.cache.get", return_value=None), \
+             patch("utils.cache_decorators.cache.set"), \
+             app.app_context():
             assert get_confirmed_sale_paid_aed(1, tenant_id=1, branch_id=2) == Decimal("150")
 
-    def test_get_confirmed_sale_paid_no_tenant(self):
+    def test_get_confirmed_sale_paid_no_tenant(self, app):
         from routes.reports import get_confirmed_sale_paid_aed
-        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=None)):
+        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=None)), \
+             patch("utils.cache_decorators.cache.get", return_value=None), \
+             patch("utils.cache_decorators.cache.set"), \
+             app.app_context():
             assert get_confirmed_sale_paid_aed(5) == Decimal("0")
 
-    def test_get_confirmed_supplier_paid_aed(self):
+    def test_get_confirmed_supplier_paid_aed(self, app):
         from routes.reports import get_confirmed_supplier_paid_aed
-        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=Decimal("80"))):
+        with patch("routes.reports.db.session.query", return_value=_chain_query_stub(scalar=Decimal("80"))), \
+             patch("utils.cache_decorators.cache.get", return_value=None), \
+             patch("utils.cache_decorators.cache.set"), \
+             app.app_context():
             assert get_confirmed_supplier_paid_aed(3, purchase_id=10, tenant_id=1) == Decimal("80")
 
     def test_scoped_customer_query_no_branch(self):
