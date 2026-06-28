@@ -3069,6 +3069,7 @@ def exchange_rates():
     from datetime import date
 
     today = date.today().isoformat()
+    tenant_id = getattr(current_user, 'tenant_id', None)
 
     if request.method == 'POST':
         action = request.form.get('action', 'save')
@@ -3109,7 +3110,6 @@ def exchange_rates():
         return redirect(url_for('owner.exchange_rates'))
 
     # GET: show records
-    tenant_id = getattr(current_user, 'tenant_id', None)
     records = (
         ExchangeRateRecord.query
         .filter_by(tenant_id=tenant_id)
