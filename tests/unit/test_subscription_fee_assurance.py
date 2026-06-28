@@ -139,3 +139,44 @@ class TestWaiveFee:
 
         assert result.status == 'cancelled'
         mock_reverse.assert_called_once()
+
+
+class TestSettingsAmount:
+    def test_settings_amount_quantizes(self, app, mocker):
+        settings = MagicMock(subscription_monthly_fee_aed=Decimal('99.9999'))
+        mocker.patch('models.system_settings.SystemSettings.get_current', return_value=settings)
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+        with app.app_context():
+            amount = AzadSubscriptionFeeService._settings_amount('monthly')
+        assert amount == Decimal('100.000')
+
+    def test_settings_amount_unknown_type_returns_none(self, app, mocker):
+        settings = MagicMock()
+        mocker.patch('models.system_settings.SystemSettings.get_current', return_value=settings)
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+        with app.app_context():
+            assert AzadSubscriptionFeeService._settings_amount('weekly') is None
+
+
+class TestRecordPaymentFallbacks:
+    def test_record_payment_uses_cash_when_no_credit_concept(self, app, mocker):
+        fee = MagicMock(id=5, status='accrued', amount_aed=Decimal('250'), fee_type='monthly', tenant_id=1)
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=fee)
+        mocker.patch('services.azad_subscription_fee_service.GLService.ensure_core_accounts')
+        mocker.patch('services.azad_subscription_fee_service.GLService.get_payment_credit_concept', return_value=None)
+        mocker.patch('utils.tax_settings._resolve_main_branch', return_value=1)
+        mocker.patch('services.azad_subscription_fee_service.post_or_fail')
+        mocker.patch('services.azad_subscription_fee_service.current_app').logger = MagicMock()
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+        with app.app_context():
+            result = AzadSubscriptionFeeService.record_payment(5, payment_method='unknown')
+        assert result.status == 'paid'
+
+
+class TestWaiveFeeErrors:
+    def test_waive_fee_not_found(self, app, mocker):
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=None)
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+        with app.app_context():
+            with pytest.raises(ValueError, match='not found'):
+                AzadSubscriptionFeeService.waive_fee(404)

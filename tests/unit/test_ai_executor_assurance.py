@@ -42,6 +42,18 @@ class TestAIExecutorInit:
         ex = AIExecutor(user=user)
         assert ex.user is user
 
+    def test_init_runtime_error_no_explicit_user(self, mocker):
+        class _Broken:
+            @property
+            def is_authenticated(self):
+                raise RuntimeError('no context')
+        mocker.patch('services.ai_executor.flask_user', _Broken())
+        mocker.patch('services.ai_executor.get_active_tenant_id', return_value=1)
+        from services.ai_executor import AIExecutor
+        ex = AIExecutor()
+        assert ex.user is None
+        assert ex.tenant_id == 1
+
     def test_require_tenant_raises_without_tenant(self, mocker):
         mocker.patch('services.ai_executor.get_active_tenant_id', return_value=None)
         from services.ai_executor import AIExecutor, AIExecutorError
@@ -260,3 +272,132 @@ class TestAIExecutorFallbacks:
         ex = get_ai_executor(user=None)
         assert ex.tenant_id == 1
         assert ex.user is None
+
+
+class TestAIExecutorErrorPaths:
+    """Missing validation and fallback branches."""
+
+    def test_create_product_rejects_empty_name(self, executor):
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='اسم المنتج'):
+            executor.create_product(name='', regular_price=10)
+
+    def test_create_sale_customer_not_found(self, executor, mocker):
+        Customer = mocker.patch('models.Customer')
+        Customer.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='غير موجود'):
+            executor.create_sale('Missing', [{'name': 'X'}])
+
+    def test_create_sale_no_active_user(self, executor, mocker):
+        executor.user = None
+        Customer = mocker.patch('models.Customer')
+        Customer.query.filter_by.return_value.first.return_value = MagicMock()
+        User = mocker.patch('models.User')
+        User.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='لا يوجد مستخدم نشط'):
+            executor.create_sale('Acme', [{'name': 'Widget'}])
+
+    def test_create_sale_product_not_found(self, executor, mocker):
+        Customer = mocker.patch('models.Customer')
+        Customer.query.filter_by.return_value.first.return_value = MagicMock()
+        Product = mocker.patch('models.Product')
+        Product.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='المنتج'):
+            executor.create_sale('Acme', [{'name': 'Missing'}])
+
+    def test_create_sale_with_payment_data(self, executor, mocker):
+        customer = MagicMock()
+        product = MagicMock()
+        Customer = mocker.patch('models.Customer')
+        Customer.query.filter_by.return_value.first.return_value = customer
+        Product = mocker.patch('models.Product')
+        Product.query.filter_by.return_value.first.return_value = product
+        sale = MagicMock(id=1, sale_number='S-1', total_amount=Decimal('200'))
+        create_sale = mocker.patch('services.sale_service.SaleService.create_sale', return_value=sale)
+        executor.create_sale('Acme', [{'name': 'Widget'}], paid_amount=50)
+        assert create_sale.call_args.kwargs['payment_data']['amount'] == 50
+
+    def test_receive_payment_customer_not_found(self, executor, mocker):
+        Customer = mocker.patch('models.Customer')
+        Customer.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='غير موجود'):
+            executor.receive_payment('Ghost', 100)
+
+    def test_receive_payment_stops_when_remaining_zero(self, executor, mocker, app):
+        customer = MagicMock(id=1, balance=Decimal('0'))
+        sale1 = MagicMock(balance_due=Decimal('100'), paid_amount=Decimal('0'), payment_status='unpaid')
+        sale2 = MagicMock(balance_due=Decimal('50'), paid_amount=Decimal('0'), payment_status='unpaid')
+        with app.app_context():
+            from models import Customer, Sale
+            cust_q = MagicMock()
+            cust_q.filter_by.return_value.first.return_value = customer
+            mocker.patch.object(Customer, 'query', new_callable=mocker.PropertyMock, return_value=cust_q)
+            sale_q = MagicMock()
+            sale_q.filter.return_value.order_by.return_value.all.return_value = [sale1, sale2]
+            mocker.patch.object(Sale, 'query', new_callable=mocker.PropertyMock, return_value=sale_q)
+            mocker.patch.object(executor, '_generate_number', return_value='PAY-002')
+            mocker.patch('services.ai_executor.db.session')
+            executor.receive_payment('Acme', 100)
+        assert sale1.payment_status == 'paid'
+        assert sale2.payment_status == 'unpaid'
+
+    def test_add_expense_rejects_non_positive_amount(self, executor):
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='المبلغ'):
+            executor.add_expense('Rent', 0)
+
+    def test_add_expense_no_category_raises(self, executor, mocker):
+        ExpenseCategory = mocker.patch('models.ExpenseCategory')
+        ExpenseCategory.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='تصنيف مصروفات'):
+            executor.add_expense('Office', 50)
+
+    def test_create_employee_rejects_empty_name(self, executor):
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='اسم الموظف'):
+            executor.create_employee('')
+
+    def test_create_purchase_supplier_not_found(self, executor, mocker):
+        Supplier = mocker.patch('models.Supplier')
+        Supplier.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='المورد'):
+            executor.create_purchase('Ghost', [{'name': 'Part'}])
+
+    def test_create_purchase_no_warehouse(self, executor, mocker):
+        Supplier = mocker.patch('models.Supplier')
+        Supplier.query.filter_by.return_value.first.return_value = MagicMock()
+        Warehouse = mocker.patch('models.Warehouse')
+        Warehouse.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='مستودع'):
+            executor.create_purchase('Vendor', [{'name': 'Part'}])
+
+    def test_create_purchase_product_not_found(self, executor, mocker):
+        Supplier = mocker.patch('models.Supplier')
+        Supplier.query.filter_by.return_value.first.return_value = MagicMock()
+        Warehouse = mocker.patch('models.Warehouse')
+        Warehouse.query.filter_by.return_value.first.return_value = MagicMock()
+        Product = mocker.patch('models.Product')
+        Product.query.filter_by.return_value.first.return_value = None
+        from services.ai_executor import AIExecutorError
+        with pytest.raises(AIExecutorError, match='المنتج'):
+            executor.create_purchase('Vendor', [{'name': 'Missing'}])
+
+    def test_profit_summary_with_product_cost(self, executor, mocker):
+        mocker.patch('services.ai_executor.db.session')
+        mocker.patch('services.ai_executor.db.session.query').return_value.filter.return_value.scalar.return_value = Decimal('1000')
+        line = MagicMock(product_id=1, quantity=Decimal('2'))
+        SaleLine = mocker.patch('models.SaleLine')
+        SaleLine.query.join.return_value.filter.return_value.all.return_value = [line]
+        product = MagicMock(cost_price=Decimal('100'))
+        Product = mocker.patch('models.Product')
+        Product.query.get.return_value = product
+        result = executor.profit_summary()
+        assert result['cost'] == 200.0
+        assert result['profit'] == 800.0

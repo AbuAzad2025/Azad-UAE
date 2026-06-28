@@ -118,6 +118,19 @@ class TestGetActiveCampaigns:
         results = CampaignService.get_active_campaigns(sample_tenant.id, product_ids=[102])
         assert len(results) == 1
 
+    def test_product_and_category_filter(self, db_session, sample_tenant, active_campaign):
+        active_campaign.applicable_products = [101, 102]
+        active_campaign.applicable_categories = [5, 6]
+        db_session.flush()
+        matched = CampaignService.get_active_campaigns(
+            sample_tenant.id, product_ids=[102], category_ids=[5],
+        )
+        assert len(matched) == 1
+        unmatched = CampaignService.get_active_campaigns(
+            sample_tenant.id, product_ids=[102], category_ids=[99],
+        )
+        assert unmatched == []
+
 
 class TestApplyCampaigns:
     def test_percentage_discount_capped(self, db_session, sample_tenant, active_campaign, sample_customer, sample_user):
@@ -160,6 +173,24 @@ class TestApplyCampaigns:
         db_session.flush()
         total = CampaignService.apply_campaigns(sale, [fixed_campaign])
         assert total == Decimal('0')
+
+    def test_fixed_discount_without_cap(self, db_session, sample_tenant, fixed_campaign, sample_customer, sample_user):
+        from models import Sale
+
+        sale = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number=f'S-{uuid.uuid4().hex[:6]}',
+            customer_id=sample_customer.id,
+            seller_id=sample_user.id,
+            subtotal=Decimal('200'),
+            total_amount=Decimal('200'),
+            amount=Decimal('200'),
+            amount_aed=Decimal('200'),
+        )
+        db_session.add(sale)
+        db_session.flush()
+        total = CampaignService.apply_campaigns(sale, [fixed_campaign])
+        assert total == Decimal('25.000')
 
     def test_bundle_campaign_type(self, db_session, sample_tenant, sample_customer, sample_user):
         from models import Sale

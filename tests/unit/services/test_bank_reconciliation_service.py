@@ -444,3 +444,158 @@ class TestBankReconciliationModel:
         assert item.item_type_ar == 'مصروف بنكي'
         item.item_type = 'custom_type'
         assert item.item_type_ar == 'custom_type'
+
+
+class TestCommitRollbackPaths:
+    def test_create_reconciliation_commit_failure(self, mocker, db_session, bank_gl_account, sample_user):
+        mocker.patch(
+            'services.gl_service.GLService.get_account_statement',
+            return_value={'closing_balance': '4000', 'opening_balance': '1000'},
+        )
+        mocker.patch('services.bank_reconciliation_service.generate_number', return_value='BR-FAIL')
+        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('commit'))
+        with patch('flask_login.utils._get_user', return_value=sample_user):
+            with pytest.raises(RuntimeError, match='commit'):
+                BankReconciliationService.create_reconciliation(
+                    bank_gl_account.id,
+                    date(2026, 1, 1),
+                    date(2026, 1, 31),
+                    Decimal('4000'),
+                    created_by=sample_user.id,
+                )
+
+    def test_add_bank_charge_commit_failure(self, mocker, draft_reconciliation):
+        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('lock'))
+        with pytest.raises(RuntimeError, match='lock'):
+            BankReconciliationService.add_bank_charge(draft_reconciliation.id, Decimal('5'), 'fee')
+
+    def test_add_bank_interest_commit_failure(self, mocker, draft_reconciliation):
+        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('lock'))
+        with pytest.raises(RuntimeError, match='lock'):
+            BankReconciliationService.add_bank_interest(draft_reconciliation.id, Decimal('3'), 'interest')
+
+    def test_complete_reconciliation_commit_failure(self, mocker, db_session, draft_reconciliation):
+        draft_reconciliation.bank_charges = Decimal('0')
+        draft_reconciliation.bank_interest = Decimal('0')
+        draft_reconciliation.calculate_reconciliation()
+        db_session.flush()
+        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('done'))
+        with pytest.raises(RuntimeError, match='done'):
+            BankReconciliationService.complete_reconciliation(draft_reconciliation.id)
+
+    def test_apply_matches_commit_failure(self, mocker, db_session, draft_reconciliation, sample_tenant, bank_gl_account):
+        stmt = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 5, 1),
+            transaction_date=date(2026, 5, 5),
+            reference='STMT-2',
+            description='Wire',
+            amount=Decimal('100'),
+            status='imported',
+        )
+        entry = GLJournalEntry(
+            tenant_id=sample_tenant.id,
+            entry_number=f'JE-{uuid.uuid4().hex[:6]}',
+            entry_date=date(2026, 5, 5),
+            is_posted=True,
+        )
+        db_session.add_all([stmt, entry])
+        db_session.flush()
+        line = GLJournalLine(
+            tenant_id=sample_tenant.id,
+            entry_id=entry.id,
+            account_id=bank_gl_account.id,
+            debit=Decimal('100'),
+            credit=Decimal('0'),
+        )
+        db_session.add(line)
+        db_session.flush()
+        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('apply'))
+        with pytest.raises(RuntimeError, match='apply'):
+            BankReconciliationService.apply_matches(
+                draft_reconciliation.id,
+                [{'statement_line_id': stmt.id, 'journal_line_id': line.id, 'match_type': 'exact'}],
+            )
+
+
+class TestAutoMatchAndOrphans:
+    def test_auto_match_skips_already_matched_gl_line(self, db_session, sample_tenant, bank_gl_account):
+        stmt1 = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 1, 1),
+            transaction_date=date(2026, 1, 10),
+            reference='STMT-A',
+            description='Payment A',
+            amount=Decimal('100'),
+            status='imported',
+        )
+        stmt2 = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 1, 1),
+            transaction_date=date(2026, 1, 10),
+            reference='STMT-B',
+            description='Payment B',
+            amount=Decimal('100'),
+            status='imported',
+        )
+        entry = GLJournalEntry(
+            tenant_id=sample_tenant.id,
+            entry_number=f'JE-{uuid.uuid4().hex[:6]}',
+            entry_date=date(2026, 1, 10),
+            is_posted=True,
+            description='Single GL line',
+        )
+        db_session.add_all([stmt1, stmt2, entry])
+        db_session.flush()
+        line = GLJournalLine(
+            tenant_id=sample_tenant.id,
+            entry_id=entry.id,
+            account_id=bank_gl_account.id,
+            debit=Decimal('100'),
+            credit=Decimal('0'),
+        )
+        db_session.add(line)
+        db_session.flush()
+
+        matches = BankReconciliationService.auto_match_gl_lines(
+            sample_tenant.id,
+            bank_gl_account.id,
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+        )
+        assert len(matches) == 1
+
+    def test_route_orphans_commit_rollback(self, mocker, db_session, sample_tenant, bank_gl_account):
+        suspense = GLAccount(
+            tenant_id=sample_tenant.id,
+            code='2999',
+            name='Suspense',
+            type='liability',
+            is_active=True,
+        )
+        stmt = BankStatementLine(
+            tenant_id=sample_tenant.id,
+            bank_account_id=bank_gl_account.id,
+            statement_date=date(2026, 1, 1),
+            transaction_date=date(2026, 1, 15),
+            reference='ORPH-1',
+            description='Unmatched',
+            amount=Decimal('50'),
+            status='imported',
+        )
+        db_session.add_all([suspense, stmt])
+        db_session.flush()
+        mocker.patch('services.gl_posting.post_or_fail', return_value=MagicMock(id=9))
+        mocker.patch(
+            'services.bank_reconciliation_service.db.session.commit',
+            side_effect=RuntimeError('orphan commit'),
+        )
+        mock_rollback = mocker.patch('services.bank_reconciliation_service.db.session.rollback')
+        with pytest.raises(RuntimeError, match='orphan commit'):
+            BankReconciliationService.route_orphans_to_suspense(
+                sample_tenant.id, bank_gl_account.id, date(2026, 1, 1), date(2026, 1, 31),
+            )
+        mock_rollback.assert_called()

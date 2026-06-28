@@ -315,3 +315,32 @@ class TestAccountTypeBalance:
             '5', date_from=date(2025, 1, 1), date_to=date(2025, 6, 1), is_pl=True, tenant_id=1,
         )
         assert total == Decimal('40')
+
+    def test_dated_revenue_balance_credit_normal_subtracts(self, mocker):
+        line = MagicMock(amount_aed=Decimal('75'))
+        acct = MagicMock()
+        mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        lines_q = MagicMock()
+        lines_q.join.return_value = lines_q
+        lines_q.filter.return_value = lines_q
+        lines_q.all.return_value = [line]
+        mocker.patch('models.GLJournalLine.query', lines_q)
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+        total = AdvancedFinancialAnalytics._calculate_account_type_balance(
+            'revenue', date_from=date(2025, 1, 1), date_to=date(2025, 6, 1), tenant_id=1,
+        )
+        assert total == Decimal('-75')
+
+    def test_expense_breakdown_positive_percentage(self, mocker):
+        acct = MagicMock(code='5100', full_name='Rent', get_balance=lambda: Decimal('300'))
+        mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+        result = AdvancedFinancialAnalytics.get_expense_breakdown(tenant_id=1)
+        assert result['items'][0]['percentage'] == pytest.approx(100.0)
+
+    def test_revenue_breakdown_zero_total_percentage(self, mocker):
+        acct = MagicMock(code='4100', full_name='Sales', get_balance=lambda: Decimal('0'))
+        mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        from services.advanced_analytics import AdvancedFinancialAnalytics
+        result = AdvancedFinancialAnalytics.get_revenue_breakdown(tenant_id=1)
+        assert result['items'][0]['percentage'] == 0

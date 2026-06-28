@@ -405,3 +405,82 @@ class TestCreateLeadMockedRollback:
         with pytest.raises(RuntimeError, match="db fail"):
             CRMLeadService.create_lead({"name": "Fail"}, mock_user)
         mock_db.rollback.assert_called()
+
+
+class TestSearchFilters:
+    def test_search_by_assigned_user(self, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        results = CRMLeadService.search_leads(
+            {"assigned_user_id": crm_lead.assigned_user_id},
+            sample_user,
+        )
+        assert any(r.id == crm_lead.id for r in results)
+
+
+class TestCoverageGaps:
+    def test_create_lead_tenant_from_branch_when_tid_none(self, app, db_session, mocker, sample_user, sample_branch):
+        db_session.flush()
+        sample_user.is_owner = True
+        mocker.patch("services.crm_lead_service.get_active_tenant_id", return_value=None)
+        mocker.patch("services.crm_lead_service.is_global_owner_user", return_value=True)
+        mocker.patch("services.crm_lead_service.is_global_user", return_value=True)
+        mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=None)
+        with app.app_context():
+            lead = CRMLeadService.create_lead(
+                {"name": "From Branch", "branch_id": sample_branch.id},
+                sample_user,
+            )
+        assert lead.tenant_id == sample_branch.tenant_id
+
+    def test_update_lead_customer_and_assignee(self, sample_user, crm_lead, sample_customer):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        updated = CRMLeadService.update_lead(
+            crm_lead.id,
+            {"customer_id": sample_customer.id, "assigned_user_id": sample_user.id},
+            sample_user,
+        )
+        assert updated.customer_id == sample_customer.id
+        assert updated.assigned_user_id == sample_user.id
+
+    def test_update_lead_commit_rollback(self, mocker, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("upd"))
+        mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
+        with pytest.raises(RuntimeError, match="upd"):
+            CRMLeadService.update_lead(crm_lead.id, {"name": "X"}, sample_user)
+        mock_rollback.assert_called_once()
+
+    def test_move_stage_lost(self, sample_user, crm_lead, lost_stage):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        moved = CRMLeadService.move_stage(crm_lead.id, lost_stage.id, sample_user)
+        assert moved.status == "lost"
+
+    def test_move_stage_commit_rollback(self, mocker, sample_user, crm_lead, crm_stage):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("move"))
+        mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
+        with pytest.raises(RuntimeError, match="move"):
+            CRMLeadService.move_stage(crm_lead.id, crm_stage.id, sample_user)
+        mock_rollback.assert_called_once()
+
+    def test_get_lead_not_found(self, sample_user):
+        with pytest.raises(ValueError, match="غير موجود"):
+            CRMLeadService.get_lead(999999, sample_user)
+
+    def test_convert_commit_rollback(self, mocker, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        crm_lead.email = f"rb-{crm_lead.id}@test.com"
+        crm_lead.phone = f"050{crm_lead.id:07d}"
+        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("conv"))
+        mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
+        with pytest.raises(RuntimeError, match="conv"):
+            CRMLeadService.convert_to_customer(crm_lead.id, sample_user)
+        mock_rollback.assert_called_once()
+
+    def test_add_activity_commit_rollback(self, mocker, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("act"))
+        mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
+        with pytest.raises(RuntimeError, match="act"):
+            CRMLeadService.add_activity(crm_lead.id, {"summary": "call"}, sample_user)
+        mock_rollback.assert_called_once()

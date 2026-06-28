@@ -216,3 +216,92 @@ class TestRestoreAndQuery:
         assert count == 2
         assert mock_session.delete.call_count == 2
         mock_session.commit.assert_called_once()
+
+    def test_archive_without_to_dict_uses_columns(self, app, mocker):
+        class Row:
+            id = 7
+            tenant_id = 1
+            name = 'Legacy'
+
+            def __init__(self):
+                col = MagicMock()
+                col.name = 'name'
+                self.__table__ = MagicMock(columns=[col])
+
+        record = Row()
+        mocker.patch('services.archive_service.current_user', MagicMock(is_authenticated=False))
+        mocker.patch('services.archive_service.db.session')
+        mocker.patch('services.archive_service.current_app').logger = MagicMock()
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            archived = ArchiveService.archive_record('sales', record)
+        assert archived.tenant_id == 1
+
+    def test_archive_failure_rolls_back_on_outer_error(self, app, mocker):
+        record = MagicMock(id=1, tenant_id=1)
+        record.to_dict.side_effect = RuntimeError('serialize fail')
+        mocker.patch('services.archive_service.current_user', MagicMock(is_authenticated=False))
+        mock_session = mocker.patch('services.archive_service.db.session')
+        mocker.patch('services.archive_service.current_app').logger = MagicMock()
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            with pytest.raises(RuntimeError):
+                ArchiveService.archive_record('sales', record)
+        mock_session.rollback.assert_called()
+
+    def test_restore_unknown_table_raises(self, app, mocker):
+        archived = MagicMock(table_name='unknown_tbl', tenant_id=1, record_id=1)
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        mocker.patch('services.archive_service.current_user', MagicMock())
+        mocker.patch('services.archive_service.db.session')
+        mocker.patch('services.archive_service.current_app').logger = MagicMock()
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            with pytest.raises(ValueError, match='Model not found'):
+                ArchiveService.restore_record(archived)
+
+    def test_restore_missing_row_raises(self, app, mocker):
+        archived = MagicMock(table_name='sales', tenant_id=1, record_id=404)
+        model = MagicMock()
+        model.query.get.return_value = None
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        mocker.patch('services.archive_service.current_user', MagicMock())
+        mocker.patch('services.archive_service.ArchiveService.ARCHIVE_MODEL_MAP', {'sales': model})
+        mocker.patch('services.archive_service.db.session')
+        mocker.patch('services.archive_service.current_app').logger = MagicMock()
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            with pytest.raises(ValueError, match='Record not found'):
+                ArchiveService.restore_record(archived)
+
+    def test_init_archive_model_map_populates(self, app):
+        from services.archive_service import ArchiveService
+        ArchiveService.ARCHIVE_MODEL_MAP = {k: None for k in ArchiveService.ARCHIVE_MODEL_MAP}
+        with app.app_context():
+            ArchiveService._init_archive_model_map()
+        assert ArchiveService.ARCHIVE_MODEL_MAP['sales'] is not None
+
+    def test_get_archived_records_query(self, app, mocker):
+        from models import ArchivedRecord
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mocker.patch.object(ArchivedRecord, 'query', new_callable=mocker.PropertyMock, return_value=mock_q)
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            ArchiveService.get_archived_records_query(table_name='payments')
+        mock_q.filter_by.assert_called_with(table_name='payments')
+
+    def test_cleanup_old_archives_commit_failure(self, app, mocker):
+        from models import ArchivedRecord
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.return_value = [MagicMock()]
+        mocker.patch.object(ArchivedRecord, 'query', new_callable=mocker.PropertyMock, return_value=mock_q)
+        mock_session = mocker.patch('services.archive_service.db.session')
+        mock_session.commit.side_effect = RuntimeError('lock')
+        mocker.patch('services.archive_service.current_app').logger = MagicMock()
+        from services.archive_service import ArchiveService
+        with app.app_context():
+            with pytest.raises(RuntimeError):
+                ArchiveService.cleanup_old_archives(days=30)
+        mock_session.rollback.assert_called()

@@ -223,3 +223,82 @@ class TestDonationAnalytics:
         stats = AnalyticsService.get_daily_stats(tenant_id=1)
         assert stats['today_transactions'] == 2
         assert stats['pending_today'] == 1
+
+    def test_revenue_by_period_date_compare_exception(self, mocker):
+        class _BadDate:
+            tzinfo = None
+
+            def replace(self, **kwargs):
+                return self
+
+            def __le__(self, other):
+                raise TypeError('bad compare')
+
+            def __lt__(self, other):
+                raise TypeError('bad compare')
+
+        donation = MagicMock(
+            transaction_type='purchase',
+            amount_usd=50,
+            created_at=_BadDate(),
+            status='completed',
+        )
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = [donation]
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value = q
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['total_revenue'] == 0
+
+    def test_revenue_by_period_donation_exception_path(self, mocker):
+        class _BadDate:
+            tzinfo = None
+
+            def replace(self, **kwargs):
+                return self
+
+            def __le__(self, other):
+                raise TypeError('bad compare')
+
+            def __lt__(self, other):
+                raise TypeError('bad compare')
+
+        donation = MagicMock(
+            transaction_type='donation',
+            amount_usd=20,
+            created_at=_BadDate(),
+            status='completed',
+        )
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = [donation]
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value = q
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['donations'] == [0]
+
+    def test_revenue_by_period_counts_in_window(self, mocker):
+        now = datetime.now(timezone.utc)
+        purchase = MagicMock(
+            transaction_type='purchase',
+            amount_usd=40,
+            created_at=now,
+            status='completed',
+        )
+        donation = MagicMock(
+            transaction_type='donation',
+            amount_usd=10,
+            created_at=now,
+            status='completed',
+        )
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = [purchase, donation]
+        mocker.patch('services.analytics_service._db_session').return_value.query.return_value = q
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
+        from services.analytics_service import AnalyticsService
+        data = AnalyticsService.get_revenue_by_period(months=1, tenant_id=1)
+        assert data['total_revenue'] == 50.0

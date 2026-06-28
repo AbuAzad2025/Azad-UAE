@@ -101,8 +101,8 @@ BASE_ROW = {"id": 100, "tenant_id": 1, "name": "test", "branch_id": 5}
 
 @pytest.mark.parametrize("desc,row,id_maps,force_tid,expected", [
     ("no remap", dict(BASE_ROW), {}, None, BASE_ROW),
-    ("remap pk", dict(BASE_ROW), {"tenants": {1: 99}}, None,
-     {**BASE_ROW, "tenant_id": 99}),
+    ("remap pk", dict(BASE_ROW), {"users": {100: 200}}, None,
+     {**BASE_ROW, "id": 200}),
     ("force tenant_id", dict(BASE_ROW), {}, 888,
      {**BASE_ROW, "tenant_id": 888}),
     ("remap pk + force tid", dict(BASE_ROW),
@@ -188,14 +188,21 @@ def test_write_data_bundle_creates_meta_and_jsonl(mocker, tmp_path, mock_db_conn
     assert os.path.isfile(os.path.join(str(tmp_path), "export_meta.json"))
 
 
-def test_write_data_bundle_skips_empty_tables(tmp_path, mock_db_connection):
-    conn = mock_db_connection()
-    export = ExportResult(tables={}, row_counts={}, included=[], skipped=[],
-                          dependency_order=[], scope=SCOPE_TENANT, tenant_id=1)
+def test_write_data_bundle_skips_empty_row_tables(mocker, tmp_path, mock_db_connection):
+    mocker.patch("services.backup_scoped_engine.table_exists", return_value=True)
+    conn = mock_db_connection(rows=[("id",)], keys=["column_name"])
+    export = ExportResult(
+        tables={"customers": [], "tenants": [{"id": 1, "slug": "acme"}]},
+        row_counts={"customers": 0, "tenants": 1},
+        included=["tenants"],
+        skipped=["customers"],
+        dependency_order=["customers", "tenants"],
+        scope=SCOPE_TENANT,
+        tenant_id=1,
+    )
     write_data_bundle(str(tmp_path), export, conn)
-    # export_meta.json is always written; no .jsonl data files
-    jsonl_files = [f for f in os.listdir(str(tmp_path)) if f.endswith(".jsonl")]
-    assert jsonl_files == []
+    assert not os.path.isfile(os.path.join(str(tmp_path), "customers.jsonl"))
+    assert os.path.isfile(os.path.join(str(tmp_path), "tenants.jsonl"))
 
 
 # ===========================================================================

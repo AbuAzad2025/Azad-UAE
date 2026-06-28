@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, call
 
@@ -358,3 +358,31 @@ class TestChequeStateTransitions:
         from services.cheque_service import process_cheque_bounce
         with pytest.raises(ValueError, match='لا يمكن رفض شيك'):
             process_cheque_bounce(cheque, 'nope')
+
+
+class TestChequeEventListeners:
+    def test_overdue_warning_and_status_log(self, mocker):
+        import importlib
+        import services.cheque_service as cs
+        importlib.reload(cs)
+        warn = mocker.patch.object(cs.logger, 'warning')
+        info = mocker.patch.object(cs.logger, 'info', side_effect=[None, RuntimeError('log fail')])
+        err = mocker.patch.object(cs.logger, 'error')
+        cs.register_cheque_event_listeners()
+        from models import Cheque
+        from sqlalchemy import event
+        before = list(event.registry._key_to_collection.get((Cheque, 'before_insert'), []))
+        after = list(event.registry._key_to_collection.get((Cheque, 'after_update'), []))
+        if not before:
+            pytest.skip('cheque listeners not registered')
+        overdue = MagicMock(cheque_number='CH-1', status='pending', due_date=date.today() - timedelta(days=30))
+        for fn in before:
+            fn(None, None, overdue)
+        for fn in after:
+            fn(None, None, MagicMock(cheque_number='CH-2', status='cleared'))
+        broken = MagicMock(cheque_number='CH-3', status='pending', due_date=object())
+        for fn in before:
+            fn(None, None, broken)
+        assert warn.called
+        assert info.called
+        assert err.call_count >= 2

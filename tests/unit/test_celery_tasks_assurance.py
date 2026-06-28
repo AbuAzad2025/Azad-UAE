@@ -231,6 +231,29 @@ class TestAbandonedCartReminders:
         send_abandoned_cart_reminders()
         mock_session.rollback.assert_called()
 
+    def test_second_reminder_skips_store_without_email(self, mocker):
+        cart = MagicMock(tenant_id=1, reminder_count=1)
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.side_effect = [[], [cart]]
+        mocker.patch('models.shop_abandoned_cart.ShopAbandonedCart.query', mock_q)
+        mocker.patch('services.store_service.StoreService.get_tenant_store', return_value=MagicMock(email=None))
+        mocker.patch('extensions.db.session')
+        from services.celery_tasks import send_abandoned_cart_reminders
+        send_abandoned_cart_reminders()
+        assert cart.reminder_count == 1
+
+    def test_second_reminder_commit_failure_rolls_back(self, mocker):
+        cart = MagicMock(tenant_id=1, reminder_count=1)
+        mock_q = MagicMock()
+        mock_q.filter.return_value.all.side_effect = [[], [cart]]
+        mocker.patch('models.shop_abandoned_cart.ShopAbandonedCart.query', mock_q)
+        mocker.patch('services.store_service.StoreService.get_tenant_store', return_value=MagicMock(email='s@t.com'))
+        mock_session = mocker.patch('extensions.db.session')
+        mock_session.commit.side_effect = Exception('second fail')
+        from services.celery_tasks import send_abandoned_cart_reminders
+        send_abandoned_cart_reminders()
+        mock_session.rollback.assert_called()
+
 
 class TestCacheCleanupTask:
     """cleanup_old_cache — success and dead-letter style error capture."""

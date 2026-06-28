@@ -136,3 +136,21 @@ class TestRunPythonModule:
         assert cmd[0] == sys.executable
         assert cmd[1] == '-m'
         assert cmd[2] == 'pytest'
+
+    def test_repo_script_passes_env_and_cwd(self, mocker, tmp_path):
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        script_rel = 'scripts/verify_backup.py'
+        script_abs = os.path.join(root, script_rel.replace('/', os.sep))
+        if not os.path.isfile(script_abs):
+            script_abs = os.path.join(str(tmp_path), 'tmp_script.py')
+            with open(script_abs, 'w', encoding='utf-8') as fh:
+                fh.write('print("ok")\n')
+            rel = os.path.relpath(script_abs, root).replace('\\', '/')
+            script_rel = rel
+        completed = subprocess.CompletedProcess([], 0, stdout='ok', stderr='')
+        mock_run = mocker.patch('services.backup_exec.subprocess.run', return_value=completed)
+        from services.backup_exec import run_repo_python_script
+        result = run_repo_python_script(script_rel, ['--dry-run'], env={'FOO': 'bar'}, cwd=str(tmp_path))
+        assert result.returncode == 0
+        assert mock_run.call_args.kwargs['env'] == {'FOO': 'bar'}
+        assert mock_run.call_args.kwargs['cwd'] == str(tmp_path)

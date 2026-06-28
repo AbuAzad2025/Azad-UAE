@@ -15,14 +15,27 @@ from services.ai_service import AIService
 
 
 class TestAIServiceGetModel:
+    def test_rejects_none_pk(self):
+        assert AIService._get_model(Product, None) is None
+
     def test_rejects_leaked_unittest_mock_instance(self, mocker):
-        mock_product = MagicMock()
-        mocker.patch.object(
-            __import__('extensions', fromlist=['db']).db.session,
-            'get',
-            return_value=mock_product,
-        )
+        from unittest.mock import Mock
+        leaked = Mock(spec=Product)
+        mocker.patch('services.ai_service.db.session.get', return_value=leaked)
         assert AIService._get_model(Product, 1) is None
+
+    def test_rejects_product_whose_class_module_is_mock(self, mocker, db_session, sample_tenant):
+        product = Product(
+            tenant_id=sample_tenant.id,
+            name='Leak',
+            sku='LEAK-1',
+            regular_price=Decimal('10'),
+        )
+        db_session.add(product)
+        db_session.flush()
+        with patch.object(type(product), '__module__', 'unittest.mock'):
+            mocker.patch('services.ai_service.db.session.get', return_value=product)
+            assert AIService._get_model(Product, product.id) is None
 
 
 class TestModelReprQuickWins:
