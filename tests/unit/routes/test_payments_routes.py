@@ -191,6 +191,7 @@ class TestPaymentHelpers:
         mocker.patch('routes.payments.ExchangeRateService.resolve_exchange_rate_for_transaction', return_value={'rate': '3.67'})
         mocker.patch('routes.payments.resolve_tenant_base_currency', return_value='AED')
         mocker.patch('routes.payments.get_active_tenant_id', return_value=1)
+        mocker.patch('routes.payments.current_user', MagicMock())
         rate = _pm()._resolve_transaction_rate('USD', 3.67)
         assert rate == Decimal('3.67')
 
