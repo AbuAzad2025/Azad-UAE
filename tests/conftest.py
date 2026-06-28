@@ -328,8 +328,11 @@ def auto_cleanup_isolation(app):
                 pass
 
     def _scrub_flask_session():
-        with app.test_request_context():
-            session.clear()
+        try:
+            with app.test_request_context():
+                session.clear()
+        except Exception:
+            pass
 
     def _restore_app_logger():
         import logging
