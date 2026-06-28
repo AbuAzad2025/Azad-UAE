@@ -625,7 +625,10 @@ class TestBuildExpenseGlLines:
     def test_cheque_payment_lines(self):
         from routes.expenses import _build_expense_gl_lines
         expense = _mock_expense(payment_method='cheque')
-        lines = _build_expense_gl_lines(expense, tenant_id=1)
+        account = MagicMock(is_header=False)
+        with patch('models.GLAccount') as gl:
+            gl.query.filter_by.return_value.first.return_value = account
+            lines = _build_expense_gl_lines(expense, tenant_id=1)
         assert lines[1]['account'] == '2120'
         assert lines[1]['concept_code'] == 'DEFERRED_CHEQUES_PAYABLE'
 
