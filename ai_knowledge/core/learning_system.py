@@ -588,18 +588,13 @@ class AzadLearningSystem:
     
     def _analyze_improvements(self, local, groq):
         """تحليل التحسينات التي قدمها Groq"""
-        try:
-            local_str = str(local) if local else ""
-            groq_str = str(groq) if groq else ""
-            improvements = {
-                'length_diff': len(groq_str) - len(local_str),
-                'quality_improved': len(groq_str) > len(local_str),
-                'timestamp': datetime.now().isoformat()
-            }
-            return improvements
-        except Exception as e:
-            logging.getLogger(__name__).debug(f"Improvement analysis failed: {e}")
-            return {'timestamp': datetime.now().isoformat()}
+        local_str = str(local) if local else ""
+        groq_str = str(groq) if groq else ""
+        return {
+            'length_diff': len(groq_str) - len(local_str),
+            'quality_improved': len(groq_str) > len(local_str),
+            'timestamp': datetime.now().isoformat()
+        }
 
 
 # إنشاء مثيل عالمي لنظام التعلم

@@ -196,72 +196,52 @@ class ConversationManager:
         conversation = self.active_conversations[user_id]
         style = conversation.get('style', 'professional')
         
-        # استخدام الأنظمة الذكية المتاحة
-        try:
-            if intent == 'pricing_query':
-                # استخدام Neural Network
-                # from services.ai_service import AIService
-                
-                response_text = "دعني أحلل السعر الأمثل باستخدام الشبكات العصبية...\n\n"
-                
-                # يمكن إضافة منطق التسعير هنا
-                response_text += "للحصول على سعر دقيق، أحتاج:\n"
-                response_text += "- معرف المنتج\n"
-                response_text += "- نوع العميل\n"
-                response_text += "- الكمية المطلوبة"
-                
-                confidence = 0.8
-            
-            elif intent == 'prediction_query':
-                response_text = "يمكنني التوقع باستخدام 11 نموذج عصبي مدرب:\n\n"
-                response_text += "📈 توقع المبيعات\n"
-                response_text += "📦 توقع الطلب\n"
-                response_text += "💰 توقع التدفق النقدي\n"
-                response_text += "🚪 توقع خسارة العملاء\n\n"
-                response_text += "ما نوع التوقع الذي تحتاجه؟"
-                
-                confidence = 0.9
-            
-            elif intent == 'maintenance_query':
-                response_text = "كمهندس صيانة، يمكنني مساعدتك في:\n\n"
-                response_text += "🔧 تشخيص الأعطال\n"
-                response_text += "⚙️ توقع موعد الصيانة\n"
-                response_text += "🔩 توصيات قطع الغيار\n"
-                response_text += "📋 جدولة الصيانة الوقائية\n\n"
-                response_text += "ما المشكلة التقنية؟"
-                
-                confidence = 0.85
-            
-            elif intent == 'accounting_query':
-                response_text = "كمحاسب قانوني، أستطيع:\n\n"
-                response_text += "✅ مراجعة القيود المحاسبية\n"
-                response_text += "📊 إعداد القوائم المالية\n"
-                response_text += "🔍 التدقيق والمراجعة\n"
-                response_text += "📈 تحليل النسب المالية\n\n"
-                response_text += "ما الذي تحتاج مراجعته؟"
-                
-                confidence = 0.95
-            
-            else:
-                response_text = "فهمت سؤالك. دعني أفكر في أفضل إجابة...\n\n"
-                response_text += f"السؤال يتعلق بـ: {intent}\n"
-                response_text += "هل يمكنك تقديم تفاصيل أكثر؟"
-                
-                confidence = 0.6
-            
-            return {
-                'text': response_text,
-                'confidence': confidence,
-                'style': style
-            }
-        
-        except Exception as e:
-            logger.error(f"Response generation failed: {e}")
-            return {
-                'text': "عذراً، حدث خطأ. يمكنك إعادة صياغة السؤال؟",
-                'confidence': 0.3,
-                'style': style
-            }
+        if intent == 'pricing_query':
+            response_text = "دعني أحلل السعر الأمثل باستخدام الشبكات العصبية...\n\n"
+            response_text += "للحصول على سعر دقيق، أحتاج:\n"
+            response_text += "- معرف المنتج\n"
+            response_text += "- نوع العميل\n"
+            response_text += "- الكمية المطلوبة"
+            confidence = 0.8
+
+        elif intent == 'prediction_query':
+            response_text = "يمكنني التوقع باستخدام 11 نموذج عصبي مدرب:\n\n"
+            response_text += "📈 توقع المبيعات\n"
+            response_text += "📦 توقع الطلب\n"
+            response_text += "💰 توقع التدفق النقدي\n"
+            response_text += "🚪 توقع خسارة العملاء\n\n"
+            response_text += "ما نوع التوقع الذي تحتاجه؟"
+            confidence = 0.9
+
+        elif intent == 'maintenance_query':
+            response_text = "كمهندس صيانة، يمكنني مساعدتك في:\n\n"
+            response_text += "🔧 تشخيص الأعطال\n"
+            response_text += "⚙️ توقع موعد الصيانة\n"
+            response_text += "🔩 توصيات قطع الغيار\n"
+            response_text += "📋 جدولة الصيانة الوقائية\n\n"
+            response_text += "ما المشكلة التقنية؟"
+            confidence = 0.85
+
+        elif intent == 'accounting_query':
+            response_text = "كمحاسب قانوني، أستطيع:\n\n"
+            response_text += "✅ مراجعة القيود المحاسبية\n"
+            response_text += "📊 إعداد القوائم المالية\n"
+            response_text += "🔍 التدقيق والمراجعة\n"
+            response_text += "📈 تحليل النسب المالية\n\n"
+            response_text += "ما الذي تحتاج مراجعته؟"
+            confidence = 0.95
+
+        else:
+            response_text = "فهمت سؤالك. دعني أفكر في أفضل إجابة...\n\n"
+            response_text += f"السؤال يتعلق بـ: {intent}\n"
+            response_text += "هل يمكنك تقديم تفاصيل أكثر؟"
+            confidence = 0.6
+
+        return {
+            'text': response_text,
+            'confidence': confidence,
+            'style': style
+        }
     
     def _generate_suggestions(self, intent: str, entities: dict) -> List[str]:
         """توليد اقتراحات للمتابعة"""

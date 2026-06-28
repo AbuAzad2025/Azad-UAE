@@ -158,12 +158,7 @@ class VisionProcessor:
         
         ملاحظة: يحتاج pytesseract للعمل الكامل
         """
-        try:
-            # للآن، رسالة توضيحية
-            return "OCR متاح - لكن يحتاج تثبيت pytesseract للعمل الكامل"
-        
-        except Exception as e:
-            return f"Error: {e}"
+        return "OCR متاح - لكن يحتاج تثبيت pytesseract للعمل الكامل"
 
 
 # ============================================================================

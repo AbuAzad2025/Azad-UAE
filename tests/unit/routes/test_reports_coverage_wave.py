@@ -550,6 +550,7 @@ class TestEntityFragmentWave:
         payment.notes = "paid"
         p_line = MagicMock(name="Part", qty=Decimal("5"), total=Decimal("1000"), last_date=purchase.purchase_date)
         purchase_q = MagicMock()
+        purchase_q.filter_by.return_value = purchase_q
         purchase_q.filter.return_value = purchase_q
         purchase_q.order_by.return_value = purchase_q
         purchase_q.all.return_value = [purchase]
@@ -557,7 +558,7 @@ class TestEntityFragmentWave:
 
         def session_query(*args, **kwargs):
             session_calls["n"] += 1
-            if session_calls["n"] == 1:
+            if branch_id is not None and session_calls["n"] == 1:
                 return _chain_query_stub(scalar=True)
             return _chain_query_stub(all=[p_line])
 
@@ -573,6 +574,22 @@ class TestEntityFragmentWave:
             ),
             "branch_id": branch_id,
         }
+
+    def test_supplier_fragment_no_branch_direct_pay(self, reports_client, mock_user):
+        _configure_user(mock_user)
+        entity = _entity_mock("Supplier Direct")
+        ctx = self._supplier_purchase_payment_mocks(branch_id=None)
+        with patch("routes.reports.tenant_get_or_404", return_value=entity), \
+             patch("routes.reports.report_branch_scope_id", return_value=None), \
+             patch("routes.reports.db.session.query", side_effect=ctx["session_query"]), \
+             patch("models.Purchase") as Purchase, \
+             patch("models.Payment") as Payment:
+            Payment.query = MagicMock()
+            Purchase.query.filter_by.return_value = ctx["purchase_q"]
+            Payment.query.filter.return_value = ctx["pay_chain"]
+            Payment.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [ctx["payment"]]
+            resp = reports_client.get("/reports/entity_report_fragment/supplier/12")
+            assert resp.status_code == 200
 
     def test_supplier_fragment_branch_scoped_full(self, reports_client, mock_user):
         _configure_user(mock_user)
@@ -706,6 +723,296 @@ class TestEntityFragmentWave:
             assert resp.status_code == 200
 
 
+class TestEntityFragmentDirectCall:
+    def test_supplier_fifo_allocation_direct(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = _entity_mock("Direct Supplier")
+        ctx = TestEntityFragmentWave._supplier_purchase_payment_mocks(
+            branch_id=None, direct_payments=[], fifo_scalar=Decimal("250")
+        )
+        ctx["payment"].purchase_id = None
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=None), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=ctx["session_query"]), \
+                 patch("models.Purchase.query", ctx["purchase_q"]), \
+                 patch("models.Payment.query") as pay_query:
+                pay_query.filter.return_value = ctx["pay_chain"]
+                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [ctx["payment"]]
+                from routes.reports import entity_report_fragment
+                resp = entity_report_fragment("supplier", 12)
+                assert resp[1] == 200 if isinstance(resp, tuple) else True
+                assert render.called
+                assert render.call_args[1].get("allocation_exact") is False
+
+    def test_supplier_fifo_two_purchases(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = _entity_mock("FIFO Two")
+        purchase_b = MagicMock(
+            id=2, purchase_number="P2", purchase_date=datetime(2025, 2, 1, tzinfo=timezone.utc),
+            status="confirmed", amount_aed=Decimal("500"),
+        )
+        ctx = TestEntityFragmentWave._supplier_purchase_payment_mocks(
+            branch_id=None, direct_payments=[], fifo_scalar=Decimal("400"),
+        )
+        ctx["purchase_q"].all.return_value = [ctx["purchase"], purchase_b]
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=None), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=ctx["session_query"]), \
+                 patch("models.Purchase.query", ctx["purchase_q"]), \
+                 patch("models.Payment.query") as pay_query:
+                pay_query.filter.return_value = ctx["pay_chain"]
+                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("supplier", 12)
+                assert render.call_args[1].get("invoices")
+
+    def test_customer_transactions_direct(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = SimpleNamespace(id=40, name="Buyer", customer_type="regular")
+        sale = MagicMock(
+            sale_number="INV-40",
+            sale_date=datetime(2025, 4, 1, tzinfo=timezone.utc),
+            status="confirmed",
+            amount_aed=Decimal("800"),
+            paid_amount_aed=Decimal("300"),
+        )
+        receipt = MagicMock(
+            receipt_number="R-40",
+            receipt_date=datetime(2025, 4, 2, tzinfo=timezone.utc),
+            amount_aed=Decimal("300"),
+            payment_method="cash",
+        )
+        payment = MagicMock(
+            payment_number="P-40",
+            payment_date=datetime(2025, 4, 3, tzinfo=timezone.utc),
+            amount_aed=Decimal("100"),
+            payment_method="bank",
+            notes="draw",
+        )
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.order_by.return_value = sale_q
+        sale_q.all.return_value = [sale]
+        receipt_q = MagicMock()
+        receipt_q.filter_by.return_value = receipt_q
+        receipt_q.filter.return_value = receipt_q
+        receipt_q.all.return_value = [receipt]
+        payment_q = MagicMock()
+        payment_q.filter_by.return_value = payment_q
+        payment_q.filter.return_value = payment_q
+        payment_q.all.return_value = [payment]
+        scalars = iter([Decimal("800"), Decimal("300"), Decimal("100")])
+
+        def session_query(*args, **kwargs):
+            if session_query.i <= 3:
+                session_query.i += 1
+                return _chain_query_stub(scalar=next(scalars, Decimal("0")))
+            if session_query.i == 4:
+                session_query.i += 1
+                return _chain_query_stub(all=[])
+            session_query.i += 1
+            return _chain_query_stub(all=[])
+
+        session_query.i = 1
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/customer/40"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=None), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=session_query), \
+                 patch("models.Sale.query", sale_q), \
+                 patch("models.Receipt.query", receipt_q), \
+                 patch("models.Payment.query", payment_q):
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("customer", 40)
+                assert render.called
+                ctx = render.call_args[1]
+                assert len(ctx.get("invoices", [])) == 1
+                assert len(ctx.get("transactions", [])) == 2
+
+    def test_merchant_share_products_direct(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = SimpleNamespace(id=51, name="Merchant", customer_type="merchant")
+        mp = SimpleNamespace(
+            name="Owned", merchant_share=35, qty=Decimal("2"),
+            total_sales=Decimal("400"), last_date=datetime(2025, 3, 1, tzinfo=timezone.utc),
+        )
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.order_by.return_value = sale_q
+        sale_q.all.return_value = []
+        session_n = {"n": 0}
+
+        def session_query(*args, **kwargs):
+            session_n["n"] += 1
+            if session_n["n"] <= 3:
+                return _chain_query_stub(scalar=Decimal("50"))
+            if session_n["n"] == 4:
+                return _chain_query_stub(all=[])
+            if session_n["n"] == 5:
+                return _chain_query_stub(all=[mp])
+            return _chain_query_stub(all=[])
+
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/merchant/51"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=None), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=session_query), \
+                 patch("models.Sale.query", sale_q), \
+                 patch("models.Receipt.query") as rq, \
+                 patch("models.Payment.query") as pq:
+                rq.filter_by.return_value.filter.return_value.all.return_value = []
+                pq.filter_by.return_value.filter.return_value.all.return_value = []
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("merchant", 51)
+                assert render.called
+
+    def test_supplier_direct_allocation_branch(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = _entity_mock("Direct Alloc")
+        direct_pay = MagicMock(purchase_id=1, amount_aed=Decimal("200"))
+        unalloc = MagicMock(purchase_id=None, amount_aed=Decimal("75"))
+        ctx = TestEntityFragmentWave._supplier_purchase_payment_mocks(branch_id=3)
+        ctx["pay_chain"] = _payment_query_stub(direct_all=[direct_pay], unalloc_all=[unalloc])
+        scoped = MagicMock()
+        scoped.filter_by.return_value.exists.return_value = MagicMock()
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/supplier/12"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=3), \
+                 patch("routes.reports._scoped_supplier_query", return_value=scoped), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=ctx["session_query"]), \
+                 patch("models.Purchase.query", ctx["purchase_q"]), \
+                 patch("models.Payment.query") as pay_query:
+                pay_query.filter.return_value = ctx["pay_chain"]
+                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [ctx["payment"]]
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("supplier", 12)
+                assert render.call_args[1]["allocation_exact"] is True
+                assert render.call_args[1]["unallocated_supplier_credit"] == Decimal("75")
+
+    def test_customer_branch_scoped_transactions(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = SimpleNamespace(id=55, name="Branch Cust", customer_type="regular")
+        sale = MagicMock(
+            sale_number="S55", sale_date=datetime(2025, 5, 1, tzinfo=timezone.utc),
+            status="confirmed", amount_aed=Decimal("400"), paid_amount_aed=Decimal("100"),
+        )
+        receipt = MagicMock(
+            receipt_number="R55", receipt_date=datetime(2025, 5, 2, tzinfo=timezone.utc),
+            amount_aed=Decimal("100"), payment_method="cash",
+        )
+        payment = MagicMock(
+            payment_number="P55", payment_date=datetime(2025, 5, 3, tzinfo=timezone.utc),
+            amount_aed=Decimal("50"), payment_method="bank", notes="ref",
+        )
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.order_by.return_value = sale_q
+        sale_q.all.return_value = [sale]
+        receipt_q = MagicMock()
+        receipt_q.filter_by.return_value = receipt_q
+        receipt_q.filter.return_value = receipt_q
+        receipt_q.all.return_value = [receipt]
+        payment_q = MagicMock()
+        payment_q.filter_by.return_value = payment_q
+        payment_q.filter.return_value = payment_q
+        payment_q.all.return_value = [payment]
+        scoped = MagicMock()
+        scoped.filter_by.return_value.exists.return_value = MagicMock()
+        scalars = iter([Decimal("400"), Decimal("100"), Decimal("50")])
+        call_n = {"n": 0}
+
+        def session_query(*args, **kwargs):
+            call_n["n"] += 1
+            if call_n["n"] == 1:
+                return _chain_query_stub(scalar=True)
+            if call_n["n"] <= 4:
+                return _chain_query_stub(scalar=next(scalars, Decimal("0")))
+            return _chain_query_stub(all=[])
+
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/customer/55"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=2), \
+                 patch("routes.reports._scoped_customer_query", return_value=scoped), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=session_query), \
+                 patch("models.Sale.query", sale_q), \
+                 patch("models.Receipt.query", receipt_q), \
+                 patch("models.Payment.query", payment_q):
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("customer", 55)
+                assert len(render.call_args[1]["transactions"]) == 2
+
+    def test_partner_shared_products_branch_direct(self, app_factory, mock_user):
+        _configure_user(mock_user)
+        entity = SimpleNamespace(id=60, name="Partner", customer_type="partner")
+        sp = SimpleNamespace(
+            name="Shared", percentage=Decimal("20"), qty=Decimal("1"),
+            total_sales=Decimal("250"), last_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        )
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.order_by.return_value = sale_q
+        sale_q.all.return_value = []
+        scoped = MagicMock()
+        scoped.filter_by.return_value.exists.return_value = MagicMock()
+        call_n = {"n": 0}
+
+        def session_query(*args, **kwargs):
+            call_n["n"] += 1
+            if call_n["n"] == 1:
+                return _chain_query_stub(scalar=True)
+            if call_n["n"] <= 4:
+                return _chain_query_stub(scalar=Decimal("10"))
+            if call_n["n"] == 5:
+                return _chain_query_stub(all=[])
+            return _chain_query_stub(all=[sp])
+
+        app = app_factory(__import__("routes.reports", fromlist=["reports_bp"]).reports_bp)
+        with app.test_request_context("/reports/entity_report_fragment/partner/60"):
+            with patch("flask_login.utils._get_user", return_value=mock_user), \
+                 patch("utils.tenanting.get_active_tenant_id", return_value=1), \
+                 patch("routes.reports.tenant_get_or_404", return_value=entity), \
+                 patch("routes.reports.report_branch_scope_id", return_value=2), \
+                 patch("routes.reports._scoped_customer_query", return_value=scoped), \
+                 patch("routes.reports.render_template", return_value="ok") as render, \
+                 patch("routes.reports.db.session.query", side_effect=session_query), \
+                 patch("models.Sale.query", sale_q), \
+                 patch("models.Receipt.query") as rq, \
+                 patch("models.Payment.query") as pq:
+                rq.filter_by.return_value.filter.return_value.all.return_value = []
+                pq.filter_by.return_value.filter.return_value.all.return_value = []
+                from routes.reports import entity_report_fragment
+                entity_report_fragment("partner", 60)
+                assert any("Share:" in p["name"] for p in render.call_args[1]["products"])
+
+
 class TestTopSellingBranchWave:
     def test_top_selling_branch_scoped(self, reports_client, mock_user):
         _configure_user(mock_user)
@@ -823,9 +1130,11 @@ class TestInventoryStatsWave:
         wh_chain = _chain_query_stub(all=[])
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
-        with patch("routes.reports.tenant_query", return_value=wh_chain), \
+        product_chain = _chain_query_stub(all=[])
+        with patch("routes.reports.tenant_query", side_effect=lambda m: wh_chain if getattr(m, "__name__", "") == "Warehouse" else product_chain), \
              patch("utils.branching.get_accessible_branches", return_value=[]), \
              patch("utils.branching.get_accessible_warehouse_ids", return_value=[]), \
+             patch("utils.branching.user_can_access_branch", return_value=True), \
              patch("models.Warehouse.query", wh_query), \
              patch("routes.reports.db.session.query", side_effect=lambda *a, **k: _chain_query_stub(all=[])):
             resp = reports_client.get("/reports/inventory?warehouse_id=8&branch_id=2")
@@ -1069,23 +1378,18 @@ class TestCustomerFragmentFullWave:
         payment_q.filter.return_value = payment_q
         payment_q.all.return_value = [payment]
         scalars = iter([Decimal("800"), Decimal("300"), Decimal("100")])
-        scoped = MagicMock()
-        scoped.filter_by.return_value.exists.return_value = MagicMock()
         session_n = {"n": 0}
 
         def session_query(*args, **kwargs):
             session_n["n"] += 1
-            if session_n["n"] == 1:
-                return _chain_query_stub(scalar=True)
-            if session_n["n"] <= 4:
+            if session_n["n"] <= 3:
                 return _chain_query_stub(scalar=next(scalars, Decimal("0")))
-            if session_n["n"] == 5:
+            if session_n["n"] == 4:
                 return _chain_query_stub(all=[s_line])
             return _chain_query_stub(all=[])
 
         with patch("routes.reports.tenant_get_or_404", return_value=entity), \
-             patch("routes.reports.report_branch_scope_id", return_value=3), \
-             patch("routes.reports._scoped_customer_query", return_value=scoped), \
+             patch("routes.reports.report_branch_scope_id", return_value=None), \
              patch("routes.reports.db.session.query", side_effect=session_query), \
              patch("models.Sale") as Sale, \
              patch("models.Receipt") as Receipt, \
@@ -1120,21 +1424,16 @@ class TestCustomerFragmentFullWave:
 
         def session_query(*args, **kwargs):
             session_n["n"] += 1
-            if session_n["n"] == 1:
-                return _chain_query_stub(scalar=True)
-            if session_n["n"] <= 4:
+            if session_n["n"] <= 3:
                 return _chain_query_stub(scalar=Decimal("100"))
-            if session_n["n"] == 5:
+            if session_n["n"] == 4:
                 return _chain_query_stub(all=[])
-            if session_n["n"] == 6:
+            if session_n["n"] == 5:
                 return _chain_query_stub(all=[sp])
             return _chain_query_stub(all=[])
 
-        scoped = MagicMock()
-        scoped.filter_by.return_value.exists.return_value = MagicMock()
         with patch("routes.reports.tenant_get_or_404", return_value=entity), \
-             patch("routes.reports.report_branch_scope_id", return_value=2), \
-             patch("routes.reports._scoped_customer_query", return_value=scoped), \
+             patch("routes.reports.report_branch_scope_id", return_value=None), \
              patch("routes.reports.db.session.query", side_effect=session_query), \
              patch("models.Sale") as Sale, \
              patch("models.Receipt") as Receipt, \
