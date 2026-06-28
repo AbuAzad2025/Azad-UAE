@@ -561,3 +561,66 @@ class TestDelete:
         mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
         resp = users_client.post(f'/users/{target.id}/delete', follow_redirects=False)
         assert resp.status_code == 302
+
+
+class TestCoverageWaveAgent3:
+    """Exact missed-branch coverage for routes/users.py (66, 167-168, 269)."""
+
+    def test_ensure_user_in_scope_returns_user_when_unscoped(self, app, mocker):
+        from unittest.mock import MagicMock
+        users_routes = _users_routes()
+        mocker.patch('routes.users.branch_scope_id_for', return_value=None)
+        target = MagicMock(branch_id=5)
+        with app.test_request_context():
+            assert users_routes._ensure_user_in_scope(target) is target
+
+    def test_create_system_wide_username_conflict(self, users_client, db_session, sample_tenant, sample_branch):
+        from models import Role, User
+        role = Role.query.filter_by(slug='seller').first()
+        username = _tenant_username(sample_tenant, f'dup{uuid.uuid4().hex[:6]}')
+        existing = User(
+            username=username,
+            email=f'{username}@example.com',
+            role_id=role.id,
+            tenant_id=sample_tenant.id,
+            branch_id=sample_branch.id,
+            is_active=True,
+        )
+        existing.set_password(STRONG_PASSWORD)
+        db_session.add(existing)
+        db_session.commit()
+        resp = users_client.post('/users/create', data={
+            'role_id': role.id,
+            'branch_id': sample_branch.id,
+            'username': username,
+            'email': f'other_{uuid.uuid4().hex[:6]}@example.com',
+            'password': STRONG_PASSWORD,
+        })
+        assert resp.status_code == 200
+
+    def test_edit_success_sets_new_password(self, users_client, db_session, sample_tenant, sample_branch, mocker):
+        from models import Role, User
+        role = Role.query.filter_by(slug='seller').first()
+        target = User(
+            username=f'pwdok_{uuid.uuid4().hex[:8]}',
+            email=f'pwdok_{uuid.uuid4().hex[:8]}@example.com',
+            role_id=role.id,
+            tenant_id=sample_tenant.id,
+            branch_id=sample_branch.id,
+            is_active=True,
+        )
+        target.set_password('x')
+        db_session.add(target)
+        db_session.commit()
+        target_id = target.id
+        mocker.patch('routes.users.LoggingCore.log_audit')
+        resp = users_client.post(f'/users/{target_id}/edit', data={
+            'email': target.email,
+            'role_id': role.id,
+            'branch_id': sample_branch.id,
+            'new_password': STRONG_PASSWORD,
+            'is_active': '1',
+        }, follow_redirects=False)
+        assert resp.status_code == 302
+        db.session.refresh(target)
+        assert target.check_password(STRONG_PASSWORD)

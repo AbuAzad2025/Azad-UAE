@@ -17,8 +17,6 @@ class ErrorLogService:
                 if not entry:
                     continue
                 lines = entry.splitlines()
-                if not lines:
-                    continue
 
                 header_match = re.match(
                     r'^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]\s+(\w+)\s+in\s+([^:]+):(\d+)$',
