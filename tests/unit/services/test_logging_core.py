@@ -254,15 +254,16 @@ class TestAuditAndSecurity:
 
     def test_log_audit_fallback(self, mocker):
         fb = mocker.patch.object(LoggingCore, '_fallback_write')
-        mock_db = mocker.MagicMock()
-        mock_db.session.flush.side_effect = RuntimeError('db')
-        mocker.patch('extensions.db', mock_db)
+        mock_sess = mocker.MagicMock()
+        mock_sess.add.side_effect = RuntimeError('db')
+        mocker.patch('extensions.db.session', mock_sess)
         mocker.patch(
             'services.logging_core._get_request_context',
             return_value={'user_id': 1, 'ip': '127.0.0.1', 'ua': 'test'},
         )
         LoggingCore.log_audit('create', 'sales', 1)
         fb.assert_called_once()
+        assert 'AUDIT_FALLBACK' in fb.call_args[0][0]
 
     def test_get_audit_logs(self, mocker):
         pag = MagicMock(items=[])
