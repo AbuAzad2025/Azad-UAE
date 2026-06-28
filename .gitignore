@@ -92,10 +92,12 @@ celerybeat.pid
 .pytest_cache/
 .pytest-temp/
 .coverage
+coverage.xml
 htmlcov/
 coverage*.json
 tests/.pytest-*.txt
 tests/.coverage-*.txt
+tests/.*-cov-*.txt
 node_modules/
 
 # Generated artifacts / reports
