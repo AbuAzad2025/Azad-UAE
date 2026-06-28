@@ -831,6 +831,29 @@ class TestInventoryStatsWave:
             resp = reports_client.get("/reports/inventory?warehouse_id=8&branch_id=2")
             assert resp.status_code == 403
 
+    def test_inventory_admin_appends_warehouse_via_lookup(self, reports_client, mock_user):
+        _configure_user(mock_user)
+        warehouse = SimpleNamespace(id=8, name="W", tenant_id=1, branch_id=2, is_active=True)
+        wh_chain = _chain_query_stub(all=[])
+        wh_query = MagicMock()
+        wh_query.filter_by.return_value.first.return_value = warehouse
+        product_chain = _chain_query_stub(all=[])
+        call_model = {"wh": 0}
+
+        def tq(model):
+            if getattr(model, "__name__", "") == "Warehouse":
+                return wh_chain
+            return product_chain
+
+        with patch("routes.reports.tenant_query", side_effect=tq), \
+             patch("utils.branching.get_accessible_branches", return_value=[]), \
+             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]), \
+             patch("utils.branching.user_can_access_branch", return_value=True), \
+             patch("models.Warehouse.query", wh_query), \
+             patch("routes.reports.db.session.query", side_effect=lambda *a, **k: _chain_query_stub(all=[])):
+            resp = reports_client.get("/reports/inventory?warehouse_id=8&branch_id=2")
+            assert resp.status_code == 200
+
     def test_inventory_export_warehouse_tenant_mismatch(self, reports_client, mock_user):
         _configure_user(mock_user)
         warehouse = SimpleNamespace(id=10, name="W", tenant_id=99, branch_id=2, is_active=True)
@@ -877,6 +900,12 @@ class TestInventoryExportBranchForbidden:
         _configure_user(mock_user)
         with patch("routes.reports.report_branch_scope_id", return_value=1):
             resp = reports_client.get("/reports/inventory/export?branch_id=5")
+            assert resp.status_code == 403
+
+    def test_inventory_export_inaccessible_branch(self, reports_client, mock_user):
+        _configure_user(mock_user)
+        with patch("utils.branching.user_can_access_branch", return_value=False):
+            resp = reports_client.get("/reports/inventory/export?branch_id=3")
             assert resp.status_code == 403
 
     def test_inventory_export_non_admin_no_access(self, reports_client, mock_user):
