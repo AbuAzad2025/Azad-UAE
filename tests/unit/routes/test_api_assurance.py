@@ -132,6 +132,26 @@ class TestApiHelpers:
         _scoped_supplier_query()
         supplier_q.filter.assert_called()
 
+    def test_scoped_customer_query_unscoped_branch(self, mocker):
+        mocker.patch('routes.api.branch_scope_id', return_value=None)
+        mocker.patch('routes.api.get_active_tenant_id', return_value=1)
+        customer_q = MagicMock()
+        customer_q.filter.return_value = customer_q
+        mocker.patch('routes.api.Customer.query', customer_q)
+        from routes.api import _scoped_customer_query
+        result = _scoped_customer_query()
+        assert result is customer_q
+
+    def test_scoped_supplier_query_unscoped_branch(self, mocker):
+        mocker.patch('routes.api.branch_scope_id', return_value=None)
+        mocker.patch('routes.api.get_active_tenant_id', return_value=1)
+        supplier_q = MagicMock()
+        supplier_q.filter.return_value = supplier_q
+        mocker.patch('routes.api.Supplier.query', supplier_q)
+        from routes.api import _scoped_supplier_query
+        result = _scoped_supplier_query()
+        assert result is supplier_q
+
     def test_customer_balance_no_customer(self, mocker):
         mocker.patch('routes.api.branch_scope_id', return_value=None)
         mocker.patch('routes.api._scoped_customer_query').return_value.filter.return_value.first.return_value = None
@@ -182,6 +202,15 @@ class TestApiEndpoints:
         resp = api_client.post(
             '/api/log-client-error',
             json={'message': 'err', 'type': 'api', 'lineno': 1, 'status': 500},
+            headers={'Origin': 'http://localhost:5000'},
+        )
+        assert resp.status_code == 204
+
+    def test_log_client_error_unknown_event_type(self, api_client, mocker):
+        mocker.patch('services.logging_core.LoggingCore.log_frontend_error')
+        resp = api_client.post(
+            '/api/log-client-error',
+            json={'message': 'err', 'type': 'not-a-real-type'},
             headers={'Origin': 'http://localhost:5000'},
         )
         assert resp.status_code == 204
@@ -237,6 +266,11 @@ class TestApiEndpoints:
     def test_check_username_short(self, api_client):
         resp = api_client.get('/api/check-username?username=ab')
         assert resp.get_json()['available'] is False
+
+    def test_check_username_invalid_pattern(self, api_client):
+        resp = api_client.get('/api/check-username?username=bad-name!')
+        assert resp.get_json()['available'] is False
+        assert 'error' in resp.get_json()
 
     def test_check_username_taken(self, api_client, mocker):
         mocker.patch('routes.api.User.query').filter_by.return_value.filter.return_value.first.return_value = MagicMock()
@@ -359,6 +393,12 @@ class TestApiEndpoints:
         resp = api_client.get('/api/barcode/validate?code=NEW123')
         assert resp.get_json()['valid'] is True
 
+    def test_barcode_validate_empty(self, api_client):
+        resp = api_client.get('/api/barcode/validate?code=')
+        data = resp.get_json()
+        assert data['valid'] is False
+        assert data['exists'] is False
+
     def test_warehouses(self, api_client, mocker):
         import routes.api as api_module
         wh = SimpleNamespace(id=1, name='Main')
@@ -436,3 +476,61 @@ class TestApiEndpoints:
         mocker.patch('routes.api._is_production_env', return_value=True)
         resp = api_client.put('/api/echo', json={'x': 1})
         assert resp.status_code == 404
+
+    def test_origin_from_referer_exception(self, monkeypatch):
+        from routes.api import _origin_from_referer
+
+        def _boom(_):
+            raise ValueError('parse fail')
+
+        monkeypatch.setattr('routes.api.urlparse', _boom)
+        assert _origin_from_referer('http://example.com') is None
+
+    def test_trusted_origins_dev_fallback(self, app, monkeypatch):
+        from routes.api import _DEV_TRUSTED_ORIGINS, _trusted_telemetry_origins
+        app.config.update(APP_ENV='development', DEBUG=True)
+        for key in (
+            'CLIENT_ERROR_TRUSTED_ORIGINS', 'TRUSTED_ORIGINS',
+            'CORS_ORIGINS', 'PAYMENT_VAULT_TRUSTED_ORIGINS',
+        ):
+            app.config[key] = None
+            monkeypatch.delenv(key, raising=False)
+        with app.app_context():
+            origins = _trusted_telemetry_origins()
+            assert origins == _DEV_TRUSTED_ORIGINS
+
+    def test_validate_telemetry_rejected_referer(self, app, mocker):
+        from routes.api import _validate_public_telemetry_origin
+        mocker.patch('routes.api._is_production_env', return_value=True)
+        mocker.patch('routes.api._trusted_telemetry_origins', return_value=frozenset({'https://trusted.test'}))
+        with app.test_request_context(headers={'Referer': 'https://evil.test/page'}):
+            resp, code = _validate_public_telemetry_origin()
+            assert code == 403
+
+    def test_search_warehouses_endpoint(self, api_client, mocker):
+        import routes.api as api_module
+        wh = SimpleNamespace(id=2, name='Branch WH')
+        mock_q = MagicMock()
+        mock_q.filter.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mock_q.limit.return_value = mock_q
+        mock_q.all.return_value = [wh]
+        mocker.patch.object(api_module, 'get_accessible_warehouses', return_value=mock_q)
+        resp = api_client.get('/api/search_warehouses?q=Branch')
+        assert resp.status_code == 200
+        assert resp.get_json()['results'][0]['id'] == 2
+
+    def test_warehouse_products_endpoint(self, api_client, mocker):
+        product = SimpleNamespace(
+            id=3, name='Stocked', sku='STK', barcode=None,
+            regular_price=Decimal('8'), current_stock=Decimal('12'),
+        )
+        products_q = MagicMock()
+        products_q.filter.return_value = products_q
+        products_q.order_by.return_value = products_q
+        products_q.limit.return_value.all.return_value = [product]
+        mocker.patch('routes.api.StockService.get_visible_products_query', return_value=products_q)
+        mocker.patch('routes.api.get_branch_stock_map', return_value={3: Decimal('12')})
+        resp = api_client.get('/api/warehouses/1/products?q=Stocked')
+        assert resp.status_code == 200
+        assert resp.get_json()['results'][0]['id'] == 3

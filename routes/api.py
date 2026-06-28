@@ -10,7 +10,7 @@ from models import Customer, Supplier, Product, User
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
 from services.stock_service import StockService
-from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
+from utils.branching import get_accessible_warehouse_ids, get_accessible_warehouses, get_branch_stock_map
 from utils.decorators import branch_scope_id, permission_required
 from utils.tenanting import get_active_tenant_id
 

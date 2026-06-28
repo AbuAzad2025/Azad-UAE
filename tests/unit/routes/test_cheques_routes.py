@@ -108,6 +108,13 @@ class TestChequesHelpers:
              patch('routes.cheques.branch_scope_id', return_value=2):
             assert _ensure_cheque_scope(cheque) is False
 
+    def test_get_cheque_or_404(self):
+        cheque = _mock_cheque(id=99)
+        with patch('utils.tenanting.tenant_get_or_404', return_value=cheque) as tg:
+            from routes.cheques import _get_cheque_or_404
+            assert _get_cheque_or_404(99) is cheque
+        tg.assert_called_once()
+
     def test_scoped_customers_with_branch(self):
         from routes.cheques import _scoped_customers_query
         cq = MagicMock()
@@ -127,6 +134,26 @@ class TestChequesHelpers:
              patch('routes.cheques.get_active_tenant_id', return_value=1), \
              patch('routes.cheques.branch_scope_id', return_value=2), \
              patch('sqlalchemy.select', return_value=MagicMock(where=MagicMock(return_value=MagicMock()))):
+            result = _scoped_suppliers_query()
+        assert result is sq
+
+    def test_scoped_customers_no_branch(self):
+        from routes.cheques import _scoped_customers_query
+        cq = MagicMock()
+        cq.filter.return_value = cq
+        with patch('routes.cheques.Customer.query', cq), \
+             patch('routes.cheques.get_active_tenant_id', return_value=1), \
+             patch('routes.cheques.branch_scope_id', return_value=None):
+            result = _scoped_customers_query()
+        assert result is cq
+
+    def test_scoped_suppliers_no_branch(self):
+        from routes.cheques import _scoped_suppliers_query
+        sq = MagicMock()
+        sq.filter.return_value = sq
+        with patch('routes.cheques.Supplier.query', sq), \
+             patch('routes.cheques.get_active_tenant_id', return_value=1), \
+             patch('routes.cheques.branch_scope_id', return_value=None):
             result = _scoped_suppliers_query()
         assert result is sq
 
@@ -165,6 +192,11 @@ class TestChequesListPages:
             resp = cheques_client.get('/cheques/outgoing')
         assert resp.status_code == 200
 
+    def test_outgoing_with_status(self, cheques_client):
+        with _cheque_patches():
+            resp = cheques_client.get('/cheques/outgoing?status=pending')
+        assert resp.status_code == 200
+
     def test_alerts(self, cheques_client):
         bounced_q = MagicMock()
         bounced_q.all.return_value = []
@@ -191,6 +223,11 @@ class TestChequesCreate:
 
     def test_create_missing_type(self, cheques_client):
         with _cheque_patches():
+            resp = cheques_client.post('/cheques/create', data={'amount': '100'})
+        assert resp.status_code == 200
+
+    def test_create_missing_type_currency_fallback(self, cheques_client):
+        with _cheque_patches(), patch('routes.cheques.resolve_default_currency', side_effect=RuntimeError('no tenant')):
             resp = cheques_client.post('/cheques/create', data={'amount': '100'})
         assert resp.status_code == 200
 
@@ -254,6 +291,20 @@ class TestChequesCreate:
             }, follow_redirects=False)
         assert resp.status_code == 302
         log_err.assert_called()
+
+    def test_create_currency_log_error_inner_failure(self, cheques_client):
+        cheque = _mock_cheque(id=23)
+        with _cheque_patches(), \
+             patch('routes.cheques.Cheque', return_value=cheque), \
+             patch('routes.cheques.resolve_default_currency', side_effect=RuntimeError('currency fail')), \
+             patch('routes.cheques.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
+            resp = cheques_client.post('/cheques/create', data={
+                'cheque_type': 'incoming',
+                'amount': '100',
+                'issue_date': '2026-01-01',
+                'due_date': '2026-02-01',
+            }, follow_redirects=False)
+        assert resp.status_code == 302
 
     def test_edit_forbidden_scope(self, cheques_client):
         with _cheque_patches(in_scope=False):
@@ -332,6 +383,22 @@ class TestChequesViewEdit:
             })
         assert resp.status_code == 200
 
+    def test_edit_post_currency_fallback(self, cheques_client):
+        with _cheque_patches(), \
+             patch('routes.cheques.resolve_default_currency', side_effect=RuntimeError('no currency')), \
+             patch('routes.cheques.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
+            resp = cheques_client.post('/cheques/1/edit', data={
+                'amount': '900',
+                'issue_date': '2026-01-01',
+                'due_date': '2026-03-01',
+            }, follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_edit_get_currency_fallback(self, cheques_client):
+        with _cheque_patches(), patch('routes.cheques.resolve_default_currency', side_effect=RuntimeError('no tenant')):
+            resp = cheques_client.get('/cheques/1/edit')
+        assert resp.status_code == 200
+
 
 class TestChequesActions:
     def test_deposit_success(self, cheques_client):
@@ -343,6 +410,11 @@ class TestChequesActions:
         with _cheque_patches(), patch('routes.cheques.process_cheque_deposit', side_effect=ValueError('bad date')):
             resp = cheques_client.post('/cheques/1/deposit', data={'deposit_date': 'bad'}, follow_redirects=False)
         assert resp.status_code == 302
+
+    def test_deposit_forbidden_scope(self, cheques_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_client.post('/cheques/1/deposit', follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_clear_with_gain(self, cheques_client):
         cheque = _mock_cheque(currency_gain_loss=Decimal('10'))
@@ -356,6 +428,21 @@ class TestChequesActions:
             resp = cheques_client.post('/cheques/1/clear', data={}, follow_redirects=False)
         assert resp.status_code == 302
 
+    def test_clear_value_error(self, cheques_client):
+        with _cheque_patches(), patch('routes.cheques.process_cheque_clear', side_effect=ValueError('bad state')):
+            resp = cheques_client.post('/cheques/1/clear', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_clear_generic_error(self, cheques_client):
+        with _cheque_patches(), patch('routes.cheques.process_cheque_clear', side_effect=RuntimeError('db')):
+            resp = cheques_client.post('/cheques/1/clear', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_clear_forbidden_scope(self, cheques_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_client.post('/cheques/1/clear', follow_redirects=False)
+        assert resp.status_code == 403
+
     def test_bounce_with_details(self, cheques_client):
         with _cheque_patches():
             resp = cheques_client.post('/cheques/1/bounce', data={
@@ -363,6 +450,16 @@ class TestChequesActions:
                 'bounce_details': 'Insufficient funds',
             }, follow_redirects=False)
         assert resp.status_code == 302
+
+    def test_bounce_value_error(self, cheques_client):
+        with _cheque_patches(), patch('routes.cheques.process_cheque_bounce', side_effect=ValueError('invalid')):
+            resp = cheques_client.post('/cheques/1/bounce', follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_bounce_forbidden_scope(self, cheques_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_client.post('/cheques/1/bounce', follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_cancel_cleared_blocked(self, cheques_admin_client):
         cheque = _mock_cheque(status='cleared')
@@ -374,6 +471,11 @@ class TestChequesActions:
         with _cheque_patches():
             resp = cheques_admin_client.post('/cheques/1/cancel', data={'cancel_reason': 'mistake'}, follow_redirects=False)
         assert resp.status_code == 302
+
+    def test_cancel_forbidden_scope(self, cheques_admin_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_admin_client.post('/cheques/1/cancel', follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_delete_archive(self, cheques_admin_client):
         cheque = _mock_cheque(status='deposited', receipt_id=5)
@@ -389,6 +491,11 @@ class TestChequesActions:
             resp = cheques_admin_client.post('/cheques/1/delete', follow_redirects=False)
         assert resp.status_code == 302
 
+    def test_delete_forbidden_scope(self, cheques_admin_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_admin_client.post('/cheques/1/delete', follow_redirects=False)
+        assert resp.status_code == 403
+
     def test_delete_error(self, cheques_admin_client):
         cheque = _mock_cheque(status='pending')
         session = MagicMock()
@@ -401,6 +508,11 @@ class TestChequesActions:
         with _cheque_patches():
             resp = cheques_admin_client.post('/cheques/1/restore', follow_redirects=False)
         assert resp.status_code == 302
+
+    def test_restore_forbidden_scope(self, cheques_admin_client):
+        with _cheque_patches(in_scope=False):
+            resp = cheques_admin_client.post('/cheques/1/restore', follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_restore_error(self, cheques_admin_client):
         cheque = _mock_cheque()

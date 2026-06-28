@@ -71,10 +71,13 @@ def _dashboard_query_side_effect(can_profit=False):
 
 
 class TestMainDashboard:
-    def test_dashboard_renders(self, main_client, bypass_permission_auth):
+    def test_dashboard_renders_without_branch(self, main_client, bypass_permission_auth):
         bypass_permission_auth.can_see_costs.return_value = False
-        with _main_patches(), \
+        product_q = MagicMock()
+        product_q.filter_by.return_value.count.return_value = 8
+        with _main_patches(branch_scope=None), \
              patch('routes.main.db.session.query', side_effect=_dashboard_query_side_effect()), \
+             patch('routes.main.Product.query', product_q), \
              patch('routes.main.Sale.query', _scalar_query_result([])):
             resp = main_client.get('/dashboard')
         assert resp.status_code == 200
@@ -82,6 +85,14 @@ class TestMainDashboard:
     def test_dashboard_low_stock_error(self, main_client):
         with _main_patches(), \
              patch('routes.main.StockService.get_low_stock_products', side_effect=RuntimeError('stock fail')), \
+             patch('routes.main.db.session.query', side_effect=_dashboard_query_side_effect()), \
+             patch('routes.main.Sale.query', _scalar_query_result([])):
+            resp = main_client.get('/dashboard')
+        assert resp.status_code == 200
+
+    def test_dashboard_out_of_stock_error(self, main_client):
+        with _main_patches(), \
+             patch('routes.main.StockService.get_out_of_stock_products', side_effect=RuntimeError('oos fail')), \
              patch('routes.main.db.session.query', side_effect=_dashboard_query_side_effect()), \
              patch('routes.main.Sale.query', _scalar_query_result([])):
             resp = main_client.get('/dashboard')
@@ -106,6 +117,57 @@ class TestMainDashboard:
              patch('routes.main.get_gl_account_by_code', return_value=inv_account), \
              patch('utils.gl_tenant.active_tenant_id', return_value=1):
             gaq.filter.return_value.all.return_value = [account]
+            resp = main_client.get('/dashboard')
+        assert resp.status_code == 200
+
+    def test_dashboard_liquidity_exception_swallowed(self, main_client, bypass_permission_auth):
+        bypass_permission_auth.can_see_costs.return_value = True
+        with _main_patches(), \
+             patch('routes.main.db.session.query', side_effect=_dashboard_query_side_effect(can_profit=True)), \
+             patch('routes.main.Sale.query', _scalar_query_result([])), \
+             patch('utils.gl_tenant.active_tenant_id', side_effect=RuntimeError('tenant fail')):
+            resp = main_client.get('/dashboard')
+        assert resp.status_code == 200
+
+    def test_dashboard_branch_scoped(self, main_client, bypass_permission_auth):
+        bypass_permission_auth.can_see_costs.return_value = True
+        account = MagicMock(id=7)
+        inv_account = MagicMock(id=8)
+        recent_sale = MagicMock()
+        sale_q = MagicMock()
+        sale_q.options.return_value = sale_q
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.order_by.return_value.limit.return_value.all.return_value = [recent_sale]
+        customer_count_q = MagicMock()
+        customer_count_q.filter_by.return_value = customer_count_q
+        customer_count_q.join.return_value.filter.return_value.distinct.return_value.count.return_value = 3
+        product_count_q = MagicMock()
+        product_count_q.count.return_value = 12
+
+        def _query_side_effect(*args, **kwargs):
+            q = MagicMock()
+            q.filter.return_value = q
+            joined = MagicMock()
+            joined.filter_by.return_value.scalar.return_value = Decimal('25')
+            q.join.return_value = joined
+            q.filter_by.return_value = q
+            q.select_from.return_value = q
+            q.scalar.return_value = Decimal('25')
+            q.first.return_value = (2, Decimal('500'))
+            q.all.return_value = []
+            return q
+
+        with _main_patches(branch_scope=2), \
+             patch('routes.main.db.session.query', side_effect=_query_side_effect), \
+             patch('utils.tenanting.tenant_query', return_value=customer_count_q), \
+             patch('routes.main.get_visible_products_query', return_value=product_count_q), \
+             patch('routes.main.Sale.query', sale_q), \
+             patch('routes.main.GLAccount.query') as gaq, \
+             patch('routes.main.get_gl_account_by_code', return_value=inv_account), \
+             patch('utils.gl_tenant.active_tenant_id', return_value=1):
+            gaq.filter.return_value = gaq
+            gaq.all.return_value = [account]
             resp = main_client.get('/dashboard')
         assert resp.status_code == 200
 
@@ -138,6 +200,37 @@ class TestMainProfile:
             resp = main_client.post('/my-profile/update', data={'full_name': 'New Name'}, follow_redirects=False)
         assert resp.status_code == 302
         sess.commit.assert_called()
+
+    def test_profile_update_full_name_ar(self, main_client, bypass_permission_auth):
+        with patch('utils.sanitizer.InputSanitizer.sanitize_text', return_value='اسم'), \
+             patch('routes.main.db.session') as sess:
+            resp = main_client.post('/my-profile/update', data={'full_name_ar': 'اسم'}, follow_redirects=False)
+        assert resp.status_code == 302
+        sess.commit.assert_called()
+
+    def test_profile_update_email_success(self, main_client, bypass_permission_auth):
+        with patch('utils.sanitizer.InputSanitizer.sanitize_email', return_value='new@test.com'), \
+             patch('routes.main.User.query') as uq, \
+             patch('routes.main.db.session') as sess:
+            uq.filter.return_value.first.return_value = None
+            resp = main_client.post('/my-profile/update', data={'email': 'new@test.com'}, follow_redirects=False)
+        assert resp.status_code == 302
+        assert bypass_permission_auth.email == 'new@test.com'
+
+    def test_profile_update_phone(self, main_client, bypass_permission_auth):
+        with patch('utils.field_validators.normalize_phone_optional', return_value='+971500000001'), \
+             patch('routes.main.db.session') as sess:
+            resp = main_client.post('/my-profile/update', data={'phone': '0500000001'}, follow_redirects=False)
+        assert resp.status_code == 302
+        assert bypass_permission_auth.phone == '+971500000001'
+        sess.commit.assert_called()
+
+    def test_profile_password_missing_current(self, main_client, bypass_permission_auth):
+        resp = main_client.post('/my-profile/update', data={
+            'new_password': 'Str0ng!Pass',
+            'confirm_password': 'Str0ng!Pass',
+        }, follow_redirects=False)
+        assert resp.status_code == 302
 
     def test_profile_duplicate_email(self, main_client, bypass_permission_auth):
         existing = MagicMock()

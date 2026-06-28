@@ -235,6 +235,19 @@ class TestAuthHelpers:
             from routes.auth import _resolve_effective_tenant
             assert _resolve_effective_tenant(user, branch) == 9
 
+    def test_resolve_effective_tenant_owner_branch_no_tenant(self, auth_app):
+        user = _mock_user(is_owner=True, tenant_id=None)
+        branch = MagicMock(tenant_id=None)
+        with auth_app.app_context():
+            from routes.auth import _resolve_effective_tenant
+            assert _resolve_effective_tenant(user, branch) is None
+
+    def test_resolve_effective_tenant_returns_none(self, auth_app):
+        user = _mock_user(tenant_id=None, is_owner=False)
+        with auth_app.app_context():
+            from routes.auth import _resolve_effective_tenant
+            assert _resolve_effective_tenant(user, None) is None
+
     def test_validate_branch_tenant_consistency(self, auth_app):
         user = _mock_user(tenant_id=1)
         branch = _mock_branch(tenant_id=2)
@@ -281,6 +294,72 @@ class TestAuthHelpers:
                     from routes.auth import _validate_credentials
                     u, master, meta = _validate_credentials("owner", "x")
                     assert master is False
+
+    def test_log_failed_login_writes_history(self, auth_app):
+        user = _mock_user()
+        with auth_app.test_request_context("/auth/login", environ_base={"REMOTE_ADDR": "10.0.0.1"}):
+            with patch("routes.auth.LoggingCore.log_audit") as audit:
+                with patch("routes.auth.db.session") as sess:
+                    from routes.auth import _log_failed_login
+                    _log_failed_login("baduser", user, False, None)
+        audit.assert_called_once()
+        sess.add.assert_called_once()
+        sess.commit.assert_called_once()
+
+    def test_perform_login_global_user_allow_all(self, auth_app):
+        user = _mock_user(role_slug="super_admin", branch_id=None)
+        with auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+            with patch("utils.session_security.rotate_session"), \
+                 patch("routes.auth.login_user"), \
+                 patch("routes.auth.set_active_tenant"), \
+                 patch("routes.auth.set_active_branch") as set_branch, \
+                 patch("routes.auth.is_global_user", return_value=True), \
+                 patch("routes.auth.user_can_access_branch", return_value=False), \
+                 patch("routes.auth.db.session.add"), \
+                 patch("routes.auth.db.session.commit"), \
+                 patch("routes.auth.LoggingCore.log_audit"), \
+                 patch("utils.safe_redirect.is_safe_redirect_url", return_value=False), \
+                 patch("routes.auth.url_for", return_value="/dashboard"), \
+                 patch("models.login_history.LoginHistory"):
+                from routes.auth import _perform_login
+                _perform_login(user, False, 1, None, "users", False, {})
+                set_branch.assert_called_with(None, user=user, allow_all=True)
+
+    def test_perform_login_regular_user_clears_branch(self, auth_app):
+        user = _mock_user(role_slug="seller", branch_id=None)
+        with auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+            with patch("utils.session_security.rotate_session"), \
+                 patch("routes.auth.login_user"), \
+                 patch("routes.auth.set_active_tenant"), \
+                 patch("routes.auth.clear_active_branch") as clear_branch, \
+                 patch("routes.auth.is_global_user", return_value=False), \
+                 patch("routes.auth.db.session.add"), \
+                 patch("routes.auth.db.session.commit"), \
+                 patch("routes.auth.LoggingCore.log_audit"), \
+                 patch("utils.safe_redirect.is_safe_redirect_url", return_value=False), \
+                 patch("routes.auth.url_for", return_value="/dashboard"), \
+                 patch("models.login_history.LoginHistory"):
+                from routes.auth import _perform_login
+                _perform_login(user, False, 1, None, "users", False, {})
+                clear_branch.assert_called_once()
+
+    def test_perform_login_regular_user_with_branch(self, auth_app):
+        user = _mock_user(role_slug="seller", branch_id=4)
+        with auth_app.test_request_context(environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+            with patch("utils.session_security.rotate_session"), \
+                 patch("routes.auth.login_user"), \
+                 patch("routes.auth.set_active_tenant"), \
+                 patch("routes.auth.set_active_branch") as set_branch, \
+                 patch("routes.auth.is_global_user", return_value=False), \
+                 patch("routes.auth.db.session.add"), \
+                 patch("routes.auth.db.session.commit"), \
+                 patch("routes.auth.LoggingCore.log_audit"), \
+                 patch("utils.safe_redirect.is_safe_redirect_url", return_value=False), \
+                 patch("routes.auth.url_for", return_value="/dashboard"), \
+                 patch("models.login_history.LoginHistory"):
+                from routes.auth import _perform_login
+                _perform_login(user, False, 1, 4, "users", False, {})
+                set_branch.assert_called_with(4, user=user, allow_all=False)
 
     def test_post_login_redirect_owner(self, auth_app):
         user = _mock_user()
@@ -353,6 +432,12 @@ class TestNowpaymentsIpWhitelist:
             from routes.auth import _is_nowpayments_ip
             assert _is_nowpayments_ip("not-an-ip") is False
             assert _is_nowpayments_ip("8.8.8.8") is False
+
+    def test_skips_invalid_whitelist_entry(self, auth_app):
+        auth_app.config["NOWPAYMENTS_IP_WHITELIST"] = ["not-valid", "127.0.0.1"]
+        with auth_app.app_context():
+            from routes.auth import _is_nowpayments_ip
+            assert _is_nowpayments_ip("127.0.0.1") is True
 
 
 class TestDuplicateCallback:
@@ -428,6 +513,17 @@ class TestLoginRoute:
                                 resp = auth_client.post("/auth/login", data={"username": "owner", "password": "x"})
         assert resp.status_code == 200
 
+    def test_post_master_disabled(self, auth_client):
+        owner = _mock_user(is_owner=True, password_ok=False)
+        with unauthenticated_client(auth_client):
+            with patch("extensions.limiter.limit", return_value=lambda f: f):
+                with patch("routes.auth.User.query", _chain_query(first=owner)):
+                    with patch("routes.auth._validate_credentials", return_value=(owner, False, {"reason": "disabled"})):
+                        with patch("routes.auth._log_failed_login"):
+                            with patch("routes.auth.render_template", return_value="login"):
+                                resp = auth_client.post("/auth/login", data={"username": "owner", "password": "x"})
+        assert resp.status_code == 200
+
     def test_post_inactive_user(self, auth_client):
         user = _mock_user(is_active=False)
         with unauthenticated_client(auth_client):
@@ -498,6 +594,62 @@ class TestLoginRoute:
                     with patch("routes.auth._perform_login", return_value=__import__("flask").redirect("/dash")):
                         resp = auth_client.post("/auth/login", data={"username": "u", "password": "p", "remember_me": "on"})
                 assert resp.status_code == 302
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+
+    def test_post_invalid_access_mode_defaults_users(self, auth_client):
+        with unauthenticated_client(auth_client):
+            with patch("extensions.limiter.limit", return_value=lambda f: f):
+                with patch("routes.auth.render_template", return_value="login") as render:
+                    auth_client.post(
+                        "/auth/login",
+                        data={"username": "", "password": "", "access_mode": "hacker"},
+                    )
+        assert render.call_args.kwargs["access_mode"] == "users"
+
+    def test_post_branch_lookup_exception(self, auth_client):
+        user = _mock_user(branch_id=1)
+        tenant = _mock_tenant()
+        branch = _mock_branch(id=1)
+
+        def _session_get(model, pk):
+            name = getattr(model, "__name__", str(model))
+            if name == "Branch":
+                raise RuntimeError("db down")
+            if name == "Tenant":
+                return tenant if int(pk) == int(tenant.id) else None
+            return None
+
+        with unauthenticated_client(auth_client):
+            patches = _login_patches(user=user, tenant=tenant, branch=branch)
+            for p in patches:
+                p.start()
+            try:
+                with patch("routes.auth.db.session.get", side_effect=_session_get):
+                    with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
+                        with patch("routes.auth._perform_login", return_value=__import__("flask").redirect("/dash")):
+                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
+                assert resp.status_code == 302
+            finally:
+                for p in reversed(patches):
+                    p.stop()
+
+    def test_post_branch_access_denied_clears_branch(self, auth_client):
+        user = _mock_user(branch_id=3)
+        tenant = _mock_tenant()
+        branch = _mock_branch(id=3)
+        with unauthenticated_client(auth_client):
+            patches = _login_patches(user=user, tenant=tenant, branch=branch)
+            for p in patches:
+                p.start()
+            try:
+                with patch("routes.auth._validate_credentials", return_value=(user, False, {})):
+                    with patch("routes.auth.user_can_access_branch", return_value=False):
+                        with patch("routes.auth._perform_login", return_value=__import__("flask").redirect("/dash")) as perform:
+                            resp = auth_client.post("/auth/login", data={"username": "u", "password": "p"})
+                assert resp.status_code == 302
+                assert perform.call_args[0][3] is None
             finally:
                 for p in reversed(patches):
                     p.stop()
