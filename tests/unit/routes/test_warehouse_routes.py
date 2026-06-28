@@ -565,3 +565,97 @@ class TestWarehouseExtended:
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 500
+
+    def test_upload_save_failed_returns_500(self, warehouse_client, mock_user):
+        mock_user.has_permission.side_effect = lambda code: code == "manage_products"
+        with patch("utils.helpers.save_uploaded_file", return_value=None):
+            resp = warehouse_client.post(
+                "/warehouse/api/upload_product_image",
+                data={"file": (BytesIO(b"x"), "p.jpg")},
+                content_type="multipart/form-data",
+            )
+        assert resp.status_code == 500
+        assert resp.get_json()["ok"] is False
+
+    def test_index_pagination_iter_pages(self, warehouse_client, warehouse_mocks):
+        many = [_product(i) for i in range(1, 21)]
+        warehouse_mocks["visible_query"].all.return_value = many
+        with patch("routes.warehouse.render_template", return_value="index") as render:
+            warehouse_client.get("/warehouse/?page=5&per_page=1")
+        pagination = render.call_args[1]["pagination"]
+        pages = list(pagination.iter_pages())
+        assert None in pages
+
+    def test_view_warehouse_includes_stock(self, warehouse_client):
+        wh = _warehouse(1)
+        product = _product(2, current_stock=Decimal("12"))
+        stock_session_query = MagicMock()
+        stock_session_query.filter_by.return_value.group_by.return_value.all.return_value = [
+            (2, Decimal("12")),
+        ]
+        product_query = MagicMock()
+        product_query.filter_by.return_value.first.return_value = product
+        with patch("routes.warehouse.tenant_get_or_404", return_value=wh), \
+             patch("routes.warehouse.db.session.query", return_value=stock_session_query), \
+             patch("routes.warehouse.Product.query", product_query), \
+             patch("routes.warehouse.render_template", return_value="view") as render:
+            resp = warehouse_client.get("/warehouse/1")
+        assert resp.status_code == 200
+        stock = render.call_args[1]["stock"]
+        assert len(stock) == 1
+        assert stock[0]["quantity"] == 12.0
+
+    def test_create_post_invalid_warehouse_type_defaults(self, warehouse_admin_client, warehouse_mocks):
+        wh_query = warehouse_mocks["warehouse_query"]
+        wh_query.filter_by.return_value.first.return_value = None
+        with patch("routes.warehouse.Warehouse") as wh_cls, \
+             patch("routes.warehouse.Warehouse.WAREHOUSE_TYPES", ("physical", "online")), \
+             patch("routes.warehouse.Warehouse.TYPE_PHYSICAL", "physical"), \
+             patch("routes.warehouse.Warehouse.TYPE_ONLINE", "online"), \
+             patch("routes.warehouse.db.session"):
+            wh_cls.return_value = _warehouse(99)
+            resp = warehouse_admin_client.post("/warehouse/create", data={
+                "name": "Typed WH",
+                "location": "Dubai",
+                "warehouse_type": "invalid-type",
+            })
+        assert resp.status_code in (302, 303)
+
+    def test_create_post_inactive_parent(self, warehouse_admin_client, warehouse_mocks):
+        parent = _warehouse(50)
+        parent.is_active = False
+        wh_query = warehouse_mocks["warehouse_query"]
+        wh_query.filter_by.return_value.first.return_value = parent
+        with patch("routes.warehouse.render_template", return_value="create") as render:
+            resp = warehouse_admin_client.post("/warehouse/create", data={
+                "name": "Child WH",
+                "location": "Dubai",
+                "parent_id": "50",
+            })
+        assert resp.status_code == 200
+        assert render.called
+
+    def test_edit_post_invalid_parent(self, warehouse_admin_client):
+        with patch("routes.warehouse.render_template", return_value="edit"):
+            resp = warehouse_admin_client.post("/warehouse/1/edit", data={
+                "name": "Updated WH",
+                "location": "Abu Dhabi",
+                "parent_id": "999",
+            })
+        assert resp.status_code == 200
+
+    def test_add_stock_branch_scoped_auto_warehouse(self, warehouse_client):
+        movement = MagicMock()
+        movement.product = _product(1)
+        main_wh = _warehouse(3, branch_id=2, is_main=True)
+        wh_query = MagicMock()
+        wh_query.filter_by.return_value.order_by.return_value.first.return_value = main_wh
+        wh_query.filter_by.return_value.first.return_value = main_wh
+        with patch("routes.warehouse.tenant_get_or_404", return_value=_product(1)), \
+             patch("routes.warehouse.branch_scope_id", return_value=2), \
+             patch("routes.warehouse.tenant_query", return_value=wh_query), \
+             patch("routes.warehouse.StockService.adjust_stock", return_value=movement), \
+             patch("routes.warehouse.db.session"):
+            resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "3"})
+        assert resp.status_code == 200
+        assert resp.get_json()["success"] is True

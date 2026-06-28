@@ -3,7 +3,7 @@ Public Routes - Landing Page, Pricing, User Guide, SEO
 """
 from flask import Blueprint, render_template, redirect, url_for, Response, request, session, abort
 from flask_login import current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 public_bp = Blueprint('public', __name__)
 
@@ -147,7 +147,8 @@ def sitemap():
     # الصفحات الثابتة العامة (أولوية عالية)
     static_pages = [
         # الصفحات الرئيسية - أعلى أولوية
-        {'loc': f'{base_url}/', 'priority': '1.0', 'changefreq': 'daily', 
+        {'loc': f'{base_url}/', 'priority': '1.0', 'changefreq': 'daily',
+         'lastmod': datetime.now(timezone.utc).strftime('%Y-%m-%d'),
          'keywords': 'نظام إدارة مستودعات، برنامج محاسبة الإمارات'},
         
         # صفحات تسويقية مهمة

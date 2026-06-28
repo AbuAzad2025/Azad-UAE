@@ -482,3 +482,34 @@ class TestPurchasesExtended:
                 json={"lines": [{"quantity": 1, "unit_cost": 1}]},
             )
         assert resp.status_code == 500
+
+    def test_delete_branch_mismatch_403(self, purchases_client):
+        purchase = _mock_purchase(branch_id=9)
+        with _purchase_patches(purchase=purchase, branch_scope=2) as ctx:
+            resp = purchases_client.post("/purchases/1/delete")
+        assert resp.status_code == 403
+        assert ctx["render"].call_args[0][0] == "errors/403.html"
+
+    def test_return_post_value_error(self, purchases_client):
+        purchase = _mock_purchase()
+        with _purchase_patches(purchase=purchase) as ctx, \
+             patch("routes.purchases.PurchaseReturn") as ret_model, \
+             patch("routes.purchases.PurchaseReturnLine"):
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ctx["purchase_service"].create_purchase_return.side_effect = ValueError("invalid qty")
+            resp = purchases_client.post(
+                "/purchases/1/return",
+                data={"lines": "1", "reason": "damaged"},
+            )
+        assert resp.status_code == 200
+
+    def test_api_calculate_totals_skips_invalid_line(self, purchases_client):
+        payload = {
+            "lines": [{"quantity": "bad", "unit_cost": 10}],
+            "tax_rate": 0,
+        }
+        with _purchase_patches(), \
+             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
+            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        assert resp.status_code == 200
+        assert resp.get_json()["line_count"] == 0

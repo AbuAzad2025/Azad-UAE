@@ -268,6 +268,13 @@ class TestPublicSitemap:
         assert "<urlset" in body
         assert "/pricing" in body
         assert "/features" in body
+        assert "<lastmod>" in body
+
+
+class TestPublicSafeVault:
+    def test_safe_vault_for_public_none(self):
+        from routes.public import _safe_vault_for_public
+        assert _safe_vault_for_public(None) is None
 
 
 class TestPublicRobots:

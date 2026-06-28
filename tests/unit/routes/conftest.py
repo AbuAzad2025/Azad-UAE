@@ -49,6 +49,28 @@ def pytest_configure(config):
         importlib.reload(_dep)
 
 
+@pytest.fixture(autouse=True)
+def _sqlalchemy_app_context():
+    """Minimal Flask+SQLAlchemy context for model .query patches under --confcutdir."""
+    app = Flask(__name__)
+    app.config.update(
+        TESTING=True,
+        SECRET_KEY="test-secret",
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
+    try:
+        from extensions import db
+
+        db.init_app(app)
+    except Exception:
+        with app.app_context():
+            yield
+        return
+    with app.app_context():
+        yield
+
+
 @pytest.fixture
 def app_factory():
     def _create_app(blueprint, config_overrides=None):

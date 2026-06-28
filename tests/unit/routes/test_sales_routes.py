@@ -243,7 +243,20 @@ class TestSalesCreate:
         assert resp.status_code == 302
 
     def test_create_post_currency_fallback(self, sales_client):
-        with _sales_patches(), patch('utils.currency_utils.resolve_default_currency', side_effect=RuntimeError('fail')):
+        with _sales_patches(), patch('routes.sales.resolve_default_currency', side_effect=RuntimeError('fail')):
+            resp = sales_client.post('/sales/create', data={
+                'customer_id': '5',
+                'line_count': '1',
+                'lines[0][product_id]': '10',
+                'lines[0][quantity]': '1',
+                'warehouse_id': '1',
+            }, follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_create_post_currency_fallback_logs_error(self, sales_client):
+        with _sales_patches(), \
+             patch('routes.sales.resolve_default_currency', side_effect=RuntimeError('fail')), \
+             patch('routes.sales.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
             resp = sales_client.post('/sales/create', data={
                 'customer_id': '5',
                 'line_count': '1',
@@ -327,12 +340,29 @@ class TestSalesPrint:
             resp = sales_client.get('/sales/1/print')
         assert resp.status_code == 200
 
+    def test_print_branch_forbidden(self, sales_client):
+        with _sales_patches(branch_scope=9):
+            resp = sales_client.get('/sales/1/print')
+        assert resp.status_code == 403
+
+    def test_print_seller_other_sale(self, sales_client, bypass_permission_auth):
+        bypass_permission_auth.is_seller.return_value = True
+        bypass_permission_auth.id = 99
+        with _sales_patches(sale=_mock_sale(seller_id=1)):
+            resp = sales_client.get('/sales/1/print', follow_redirects=False)
+        assert resp.status_code == 302
+
 
 class TestSalesEdit:
     def test_edit_get(self, sales_client):
         with _sales_patches():
             resp = sales_client.get('/sales/1/edit')
         assert resp.status_code == 200
+
+    def test_edit_branch_forbidden(self, sales_client):
+        with _sales_patches(branch_scope=9):
+            resp = sales_client.get('/sales/1/edit')
+        assert resp.status_code == 403
 
     def test_edit_paid_blocked(self, sales_client):
         with _sales_patches(sale=_mock_sale(payment_status='paid')):
@@ -380,6 +410,11 @@ class TestSalesCancel:
             resp = sales_client.post('/sales/1/cancel')
         assert resp.status_code == 302
 
+    def test_cancel_branch_forbidden(self, sales_client):
+        with _sales_patches(branch_scope=9):
+            resp = sales_client.post('/sales/1/cancel')
+        assert resp.status_code == 403
+
     def test_cancel_error(self, sales_client):
         with _sales_patches(), patch('routes.sales.SaleService.cancel_sale', side_effect=RuntimeError('x')):
             resp = sales_client.post('/sales/1/cancel')
@@ -403,6 +438,11 @@ class TestSalesApiPrice:
         with _sales_patches():
             resp = sales_client.get('/sales/api/get-price?product_id=10&customer_id=5')
         assert resp.get_json()['cost_price'] is None
+
+    def test_api_get_price_not_found_guard(self, sales_client):
+        with _sales_patches(), patch('routes.sales.tenant_get_or_404', return_value=None):
+            resp = sales_client.get('/sales/api/get-price?product_id=10&customer_id=5')
+        assert resp.status_code == 404
 
 
 class TestSalesArchived:
@@ -437,6 +477,11 @@ class TestSalesDeleteArchive:
         with _sales_patches():
             resp = sales_client.post('/sales/1/delete', follow_redirects=False)
         assert resp.status_code == 302
+
+    def test_delete_branch_forbidden(self, sales_owner_client):
+        with _sales_patches(branch_scope=9):
+            resp = sales_owner_client.post('/sales/1/delete', follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_delete_confirmed_blocked(self, sales_owner_client):
         with _sales_patches(sale=_mock_sale(status='confirmed')):
@@ -514,6 +559,18 @@ class TestSalesCalculateTotals:
             })
         assert resp.get_json()['success'] is True
 
+    def test_calculate_totals_vat_inclusive_with_tax(self, sales_client):
+        with _sales_patches(), \
+             patch('utils.tax_settings.normalize_tax_rate', side_effect=lambda x: Decimal(str(x))):
+            resp = sales_client.post('/sales/api/calculate-totals', json={
+                'lines': [{'quantity': 2, 'unit_price': 52.5, 'discount_percent': 0}],
+                'tax_rate': 5,
+                'prices_include_vat': True,
+            })
+        data = resp.get_json()
+        assert data['success'] is True
+        assert data['tax_amount'] > 0
+
     def test_calculate_zero_price_line(self, sales_client):
         with _sales_patches():
             resp = sales_client.post('/sales/api/calculate-totals', json={
@@ -543,6 +600,16 @@ class TestSalesCalculateTotals:
                 content_type='application/json',
             )
         assert resp.status_code in (400, 500)
+
+    def test_calculate_empty_json_body_400(self, sales_client):
+        with _sales_patches():
+            resp = sales_client.post(
+                '/sales/api/calculate-totals',
+                data='null',
+                content_type='application/json',
+            )
+        assert resp.status_code == 400
+        assert resp.get_json()['success'] is False
 
     def test_calculate_server_error(self, sales_client):
         with _sales_patches(), patch('utils.tax_settings.normalize_tax_rate', side_effect=RuntimeError('boom')):

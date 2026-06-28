@@ -128,6 +128,11 @@ class TestPayrollAddEmployee:
             resp = payroll_client.get('/payroll/employees/add')
         assert resp.status_code == 200
 
+    def test_add_get_branch_scoped(self, payroll_client):
+        with _payroll_patches(branch_scope=2):
+            resp = payroll_client.get('/payroll/employees/add')
+        assert resp.status_code == 200
+
     def test_add_post_success(self, payroll_client):
         with _payroll_patches():
             resp = payroll_client.post('/payroll/employees/add', data={
@@ -218,10 +223,22 @@ class TestPayrollProcess:
         assert resp.status_code == 200
 
     def test_process_branch_wrong_scope(self, payroll_client):
-        with _payroll_patches(branch_scope=2):
+        branch = _mock_branch(id=9, tenant_id=1)
+        with _payroll_patches(branch=branch, branch_scope=2):
             resp = payroll_client.post('/payroll/process', data={
                 'generate_branch': '1',
                 'branch_id': '9',
+                'month': '6',
+                'year': '2026',
+            })
+        assert resp.status_code == 200
+
+    def test_process_branch_wrong_tenant(self, payroll_client):
+        branch = _mock_branch(id=2, tenant_id=99)
+        with _payroll_patches(branch=branch):
+            resp = payroll_client.post('/payroll/process', data={
+                'generate_branch': '1',
+                'branch_id': '2',
                 'month': '6',
                 'year': '2026',
             })

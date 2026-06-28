@@ -11,7 +11,7 @@ from utils.branching import ensure_warehouse_access, get_accessible_warehouses, 
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
@@ -415,7 +415,7 @@ def api_calculate_purchase_totals():
                     line_discount = line_subtotal * (discount_percent / Decimal('100'))
                     line_total = line_subtotal - line_discount
                     subtotal += line_total
-            except (ValueError, TypeError, KeyError):
+            except (ValueError, TypeError, KeyError, InvalidOperation):
                 continue
         
         # حساب تكاليف الوصول
@@ -441,6 +441,14 @@ def api_calculate_purchase_totals():
             tax_amount = subtotal * (tax_rate / Decimal('100'))
             total = subtotal + tax_amount + landed_total
 
+        positive_lines = 0
+        for line in lines:
+            try:
+                if Decimal(str(line.get('quantity', 0))) > 0:
+                    positive_lines += 1
+            except (ValueError, TypeError, InvalidOperation):
+                continue
+
         return jsonify({
             'success': True,
             'subtotal': float(subtotal),
@@ -449,7 +457,7 @@ def api_calculate_purchase_totals():
             'landed_cost': float(landed_total),
             'total': float(total),
             'prices_include_vat': prices_include_vat,
-            'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
+            'line_count': positive_lines,
         }), 200
         
     except Exception:
