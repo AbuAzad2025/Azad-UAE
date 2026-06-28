@@ -21,6 +21,22 @@ def _line(qty='2', price='50', discount='0', cost='30'):
 
 
 class TestSaleProperties:
+    def test_amount_base_getters(self):
+        from models.sale import Sale
+
+        sale = Sale()
+        sale.amount_aed = Decimal('200')
+        sale.paid_amount_aed = Decimal('80')
+        assert sale.amount_base == Decimal('200')
+        assert sale.paid_amount_base == Decimal('80')
+        assert sale.base_amount == Decimal('200')
+
+    def test_repr(self):
+        from models.sale import Sale
+
+        sale = Sale(sale_number='S-99')
+        assert 'S-99' in repr(sale)
+
     def test_amount_base_setters(self):
         from models.sale import Sale
 
@@ -135,7 +151,21 @@ class TestSalePaymentStatus:
         assert sale.payment_status == 'paid'
         assert sale.balance_due == Decimal('0')
 
-    def test_recalculate_partial(self):
+    def test_recalculate_overpayment_keeps_negative_balance(self):
+        from models.sale import Sale
+
+        sale = Sale()
+        sale.amount_aed = Decimal('100')
+        sale.currency = 'AED'
+        sale.exchange_rate = Decimal('1')
+        sale.tenant_id = 1
+        sale.payments = [self._payment(150)]
+        sale.returns = []
+        with patch('utils.currency_utils.resolve_tenant_base_currency', return_value='AED'):
+            sale.recalculate_payment_status()
+        assert sale.payment_status == 'paid'
+        assert sale.balance_due < Decimal('0')
+
         from models.sale import Sale
 
         sale = Sale()
@@ -264,6 +294,12 @@ class TestSaleHelpers:
 
 
 class TestSaleLine:
+    def test_repr(self):
+        from models.sale import SaleLine
+
+        line = SaleLine(product_id=7, quantity=Decimal('3'))
+        assert '7' in repr(line)
+
     def test_calculate_line_total(self):
         from models.sale import SaleLine
 

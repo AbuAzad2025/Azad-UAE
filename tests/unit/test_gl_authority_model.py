@@ -6,6 +6,7 @@ non_posting) dispatch correctly and that stale legacy mappings are harmless.
 
 import uuid
 import pytest
+from unittest.mock import MagicMock
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -1015,3 +1016,154 @@ class TestAuthorityModelEdgeCases:
             # After build, liquidity accounts exist so readiness rows should be absent
             assert len(cash_rows) == 0, f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
             assert len(bank_rows) == 0, f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"
+
+
+class TestGLModelUnitCoverage:
+    def test_gl_account_properties_and_repr(self):
+        from models.gl import GLAccount
+
+        acct = GLAccount(code='1100', name='Cash', name_ar='نقد', type='asset', sub_type='bank')
+        assert '1100' in repr(acct)
+        assert acct.full_name == '1100 - نقد'
+        assert acct.type_ar == 'أصول'
+        assert acct.sub_type_ar == 'بنك'
+        acct.sub_type = 'unknown_subtype'
+        assert acct.sub_type_ar == 'unknown_subtype'
+
+    def test_gl_account_get_balance_leaf_asset(self, mocker):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=1, tenant_id=1, type='asset', is_header=False)
+        mock_q = MagicMock()
+        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal('500')
+        mocker.patch('models.gl.db.session.query', return_value=mock_q)
+        assert acct.get_balance() == Decimal('500')
+
+    def test_gl_account_get_balance_liability_negates(self, mocker):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=2, tenant_id=1, type='liability', is_header=False)
+        mock_q = MagicMock()
+        mock_q.join.return_value.filter.return_value.scalar.return_value = Decimal('300')
+        mocker.patch('models.gl.db.session.query', return_value=mock_q)
+        assert acct.get_balance() == Decimal('-300')
+
+    def test_gl_account_header_sums_children(self, mocker):
+        from models.gl import GLAccount
+
+        child = GLAccount(id=3, tenant_id=1, type='asset', is_header=False, is_active=True)
+        mocker.patch.object(child, 'get_balance', return_value=100)
+        parent = GLAccount(id=4, tenant_id=1, type='asset', is_header=True, is_active=True)
+        parent.children = [child]
+        assert parent.get_balance() == 100
+
+    def test_gl_account_circular_reference_raises(self):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=5, tenant_id=1, type='asset', is_header=False)
+        visited = {id(acct)}
+        with pytest.raises(ValueError, match='Circular'):
+            acct.get_balance(_visited=visited)
+
+    def test_gl_account_max_depth_raises(self):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=6, tenant_id=1, type='asset', is_header=False)
+        with pytest.raises(RecursionError):
+            acct.get_balance(_depth=11)
+
+    def test_get_children_recursive(self):
+        from models.gl import GLAccount
+
+        child = GLAccount(id=7, is_active=True)
+        parent = GLAccount(id=8, is_active=True)
+        parent.children = [child]
+        result = parent.get_children_recursive()
+        assert child in result
+
+    def test_get_children_recursive_circular_raises(self):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=9)
+        visited = {id(acct)}
+        with pytest.raises(ValueError, match='Circular'):
+            acct.get_children_recursive(_visited=visited)
+
+    def test_get_children_recursive_max_depth_raises(self):
+        from models.gl import GLAccount
+
+        acct = GLAccount(id=10)
+        with pytest.raises(RecursionError):
+            acct.get_children_recursive(max_depth=0, _depth=1)
+
+    def test_journal_entry_is_balanced(self):
+        from models.gl import GLJournalEntry
+
+        entry = GLJournalEntry(total_debit=Decimal('100'), total_credit=Decimal('100'))
+        assert entry.is_balanced() is True
+
+    def test_journal_entry_repr_and_entry_type_ar(self):
+        from models.gl import GLJournalEntry
+
+        entry = GLJournalEntry(entry_number='JE-1', entry_type='adjustment')
+        assert 'JE-1' in repr(entry)
+        assert entry.entry_type_ar == 'قيد تسوية'
+
+    def test_reverse_entry_already_reversed_raises(self, app):
+        from models.gl import GLJournalEntry
+
+        entry = GLJournalEntry(is_reversed=True)
+        with app.app_context():
+            with pytest.raises(ValueError, match='مسبقاً'):
+                entry.reverse_entry()
+
+    def test_reverse_entry_creates_mirror(self, app, mocker):
+        from models.gl import GLJournalEntry, GLJournalLine
+
+        line = GLJournalLine(account_id=1, debit=Decimal('100'), credit=0, amount_aed=Decimal('100'))
+        entry = GLJournalEntry(
+            tenant_id=1,
+            entry_number='JE-2',
+            description='orig',
+            total_debit=Decimal('100'),
+            total_credit=Decimal('100'),
+            is_reversed=False,
+        )
+        entry.lines = [line]
+        mocker.patch('models.gl.gl_next_entry_number', return_value='JE-R')
+        mock_session = mocker.patch('models.gl.db.session')
+        with app.app_context():
+            reversed_entry = entry.reverse_entry()
+        assert reversed_entry.entry_type == 'reversing'
+        assert entry.is_reversed is True
+        mock_session.add.assert_called()
+        mock_session.flush.assert_called()
+
+    def test_journal_line_base_amount_alias(self):
+        from models.gl import GLJournalLine
+
+        line = GLJournalLine()
+        line.base_amount = Decimal('250')
+        assert line.amount_aed == Decimal('250')
+        assert line.base_amount == Decimal('250')
+        assert 'acc=' in repr(line)
+
+    def test_gl_account_mapping_repr_and_validate(self):
+        from models.gl import GLAccountMapping
+
+        mapping = GLAccountMapping(tenant_id=1, concept_code='AR', gl_account_id=10, branch_id=3)
+        assert 'AR' in repr(mapping)
+        assert 'branch=3' in repr(mapping)
+        with pytest.raises(ValueError, match='Unknown GL concept'):
+            GLAccountMapping.validate_concept_code('NOT_A_REAL_CODE')
+
+    def test_unbalanced_journal_entry_hook_raises(self, app):
+        from models.gl import GLJournalEntry
+        from services.gl_posting import UnbalancedJournalEntryError
+
+        entry = GLJournalEntry(entry_number='BAD', total_debit=Decimal('100'), total_credit=Decimal('0'))
+        with app.app_context():
+            with pytest.raises(UnbalancedJournalEntryError):
+                db = __import__('extensions').db
+                db.session.add(entry)
+                db.session.flush()

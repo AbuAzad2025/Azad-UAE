@@ -248,3 +248,122 @@ class TestPurchaseDonationApiValidation:
             json={"amount": 10, "payment_method": "crypto"},
         )
         assert resp.status_code == 400
+
+
+class TestPaymentVaultModel:
+    def _vault(self):
+        from models.payment_vault import PaymentVault
+
+        vault = PaymentVault()
+        vault.set_vault_password('secret')
+        vault.max_failed_attempts = 3
+        vault.failed_attempts = 0
+        return vault
+
+    def test_get_tenant_vault_none_for_null_tenant(self):
+        from models.payment_vault import PaymentVault
+
+        assert PaymentVault.get_tenant_vault(None) is None
+
+    def test_get_platform_and_tenant_vault_query(self, mocker):
+        from models.payment_vault import PaymentVault
+
+        mock_q = MagicMock()
+        mock_q.filter.return_value.order_by.return_value.first.return_value = MagicMock(id=1)
+        mocker.patch.object(PaymentVault, 'query', mock_q)
+        assert PaymentVault.get_platform_vault().id == 1
+
+        mock_q.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(id=2)
+        assert PaymentVault.get_tenant_vault(5).id == 2
+
+    def test_check_vault_password(self):
+        vault = self._vault()
+        assert vault.check_vault_password('secret') is True
+        assert vault.check_vault_password('wrong') is False
+
+    def test_unlock_vault_success(self, mocker):
+        vault = self._vault()
+        mock_session = mocker.patch('models.payment_vault.db.session')
+        assert vault.unlock_vault('secret') is True
+        assert vault.is_locked is False
+        assert vault.failed_attempts == 0
+        mock_session.commit.assert_called()
+
+    def test_unlock_vault_failure_increments_attempts(self, mocker):
+        vault = self._vault()
+        mock_session = mocker.patch('models.payment_vault.db.session')
+        assert vault.unlock_vault('bad') is False
+        assert vault.failed_attempts == 1
+        mock_session.commit.assert_called()
+
+    def test_lock_and_reset_failed_attempts(self, mocker):
+        vault = self._vault()
+        mock_session = mocker.patch('models.payment_vault.db.session')
+        vault.lock_vault()
+        assert vault.is_locked is True
+        vault.reset_failed_attempts()
+        assert vault.failed_attempts == 0
+        assert mock_session.commit.call_count >= 2
+
+    def test_is_vault_accessible_locked(self):
+        vault = self._vault()
+        vault.is_locked = True
+        assert vault.is_vault_accessible() is False
+
+    def test_is_vault_accessible_auto_lock(self, mocker):
+        from datetime import datetime, timedelta
+
+        vault = self._vault()
+        vault.is_locked = False
+        vault.auto_lock_minutes = 5
+        vault.last_access = datetime.utcnow() - timedelta(minutes=10)
+        mock_session = mocker.patch('models.payment_vault.db.session')
+        assert vault.is_vault_accessible() is False
+        assert vault.is_locked is True
+        mock_session.commit.assert_called()
+
+    def test_is_vault_accessible_when_unlocked_and_fresh(self):
+        from datetime import datetime
+
+        vault = self._vault()
+        vault.is_locked = False
+        vault.auto_lock_minutes = 30
+        vault.last_access = datetime.utcnow()
+        assert vault.is_vault_accessible() is True
+
+    def test_payment_log_action(self, mocker):
+        from models.payment_vault import PaymentLog
+
+        mock_session = mocker.patch('models.payment_vault.db.session')
+        log = PaymentLog.log_action(
+            vault_id=1,
+            action='unlock',
+            description='vault opened',
+            transaction_id='TX-9',
+            amount=10,
+        )
+        mock_session.add.assert_called_once()
+        mock_session.commit.assert_called_once()
+        assert log.action == 'unlock'
+
+        vault = self._vault()
+        vault.failed_attempts = 3
+        assert vault.is_locked_out() is True
+
+    def test_payment_transaction_to_dict(self):
+        from datetime import datetime
+        from decimal import Decimal
+        from models.payment_vault import PaymentTransaction
+
+        tx = PaymentTransaction(
+            transaction_id='TX-1',
+            amount_usd=Decimal('50'),
+            amount_crypto=Decimal('0.001'),
+            crypto_currency='BTC',
+            created_at=datetime(2025, 1, 1),
+        )
+        data = tx.to_dict()
+        assert data['transaction_id'] == 'TX-1'
+        assert data['amount_usd'] == 50.0
+        assert data['amount_crypto'] == 0.001
+

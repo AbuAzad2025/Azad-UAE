@@ -112,7 +112,7 @@ class PaymentVault(db.Model):
             db.session.commit()
             return True
         else:
-            self.failed_attempts += 1
+            self.failed_attempts = (self.failed_attempts or 0) + 1
             db.session.commit()
             return False
     
@@ -142,7 +142,7 @@ class PaymentVault(db.Model):
     
     def is_locked_out(self):
         """التحقق من القفل بسبب المحاولات الفاشلة"""
-        return self.failed_attempts >= self.max_failed_attempts
+        return (self.failed_attempts or 0) >= self.max_failed_attempts
 
 
 class PaymentTransaction(db.Model):

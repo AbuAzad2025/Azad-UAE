@@ -53,6 +53,18 @@ class TestIntegrationsContext:
 class TestIntegrationSettingsModel:
     """IntegrationSettings — init, config parse, credential storage round-trip."""
 
+    def test_repr_shows_enabled_state(self):
+        from models.integration_settings import IntegrationSettings
+
+        row = IntegrationSettings(service_name='whatsapp', enabled=True)
+        assert 'whatsapp' in repr(row)
+
+        from models.integration_settings import IntegrationSettings
+
+        row = IntegrationSettings(service_name='sms')
+        row.config_data = None
+        assert row.get_config() == {}
+
     def test_get_config_corrupted_json_fallback(self):
         from models.integration_settings import IntegrationSettings
 

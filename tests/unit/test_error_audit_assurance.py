@@ -7,7 +7,37 @@ from unittest.mock import MagicMock
 import pytest
 
 
-class TestSanitization:
+class TestErrorAuditLogModel:
+    def test_repr(self):
+        from models.error_audit_log import ErrorAuditLog
+
+        row = ErrorAuditLog(
+            category='API',
+            level='ERROR',
+            message='Timeout while calling upstream service',
+        )
+        assert 'API' in repr(row)
+
+    def test_to_dict(self):
+        from datetime import datetime, timezone
+        from models.error_audit_log import ErrorAuditLog
+
+        row = ErrorAuditLog(
+            fingerprint='abc',
+            message='Database timeout on connect',
+            category='DATABASE',
+            level='ERROR',
+            source='db.pool',
+            first_seen_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            last_seen_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+            created_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        )
+        row.id = 1
+        data = row.to_dict()
+        assert data['fingerprint'] == 'abc'
+        assert data['category'] == 'DATABASE'
+        assert 'timeout' in data['message']
+
     """_sanitize_dict — scrub passwords and API keys."""
 
     def test_redacts_secret_keys(self):
