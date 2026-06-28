@@ -44,6 +44,11 @@ from app import create_app  # noqa: E402
 from extensions import db  # noqa: E402
 from services.logging_core import LoggingCore  # noqa: E402
 
+_LOGGING_CORE_METHODS = ('log_audit', '_fallback_write', 'log_error', 'log_security')
+_LOGGING_CORE_ORIGINALS = {
+    name: LoggingCore.__dict__[name] for name in _LOGGING_CORE_METHODS
+}
+
 
 def make_sync_logger_mock(name="logger"):
     """Synchronous logger MagicMock with __name__ for Python 3.14 introspection."""
@@ -263,8 +268,7 @@ def _resync_service_db_bindings():
 
 
 def _restore_polluted_service_class_methods():
-    """Reload service modules when leaked patches replaced class methods with mocks."""
-    import importlib
+    """Restore service class methods when leaked patches replaced them with mocks."""
     from unittest.mock import MagicMock, Mock, NonCallableMock
 
     polluted_types = (MagicMock, Mock, NonCallableMock)
@@ -275,15 +279,18 @@ def _restore_polluted_service_class_methods():
             'get_payment_method_stats', 'get_customer_behavior', 'get_package_performance',
             'predict_revenue',
         )),
-        ('services.logging_core', 'LoggingCore', (
-            'log_audit', '_fallback_write', 'log_error', 'log_security',
-        )),
     )
     for mod_name, cls_name, method_names in specs:
+        import importlib
         mod = importlib.import_module(mod_name)
         cls = getattr(mod, cls_name)
         if any(isinstance(getattr(cls, name, None), polluted_types) for name in method_names):
             importlib.reload(mod)
+
+    for name, original in _LOGGING_CORE_ORIGINALS.items():
+        current = getattr(LoggingCore, name, None)
+        if isinstance(current, polluted_types):
+            setattr(LoggingCore, name, original)
 
 
 @pytest.fixture(autouse=True)
@@ -294,7 +301,9 @@ def auto_cleanup_isolation(app):
 
     def _restore_real_db_session():
         with app.app_context():
-            ext = app.extensions['sqlalchemy']
+            ext = app.extensions.get('sqlalchemy')
+            if ext is None:
+                return
             if _session_is_polluted(db.session):
                 object.__setattr__(
                     db,

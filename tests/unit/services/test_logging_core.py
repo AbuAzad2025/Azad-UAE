@@ -27,6 +27,7 @@ from services.logging_core import (
     _sanitize_dict,
 )
 
+_REAL_LOG_AUDIT = LoggingCore.__dict__['log_audit']
 _REAL_LOG_ERROR = LoggingCore.log_error
 
 
@@ -253,18 +254,13 @@ class TestAuditAndSecurity:
             LoggingCore.log_audit('create', 'sales', 1, {'x': 1})
 
     def test_log_audit_fallback(self, mocker):
-        import importlib
-        import services.logging_core as lc_mod
-        importlib.reload(lc_mod)
-        LC = lc_mod.LoggingCore
-
-        fb = mocker.patch.object(LC, '_fallback_write')
+        fb = mocker.patch.object(LoggingCore, '_fallback_write')
         mocker.patch(
             'services.logging_core._get_request_context',
             return_value={'user_id': 1, 'ip': '127.0.0.1', 'ua': 'test'},
         )
         mocker.patch('models.audit.AuditLog', side_effect=RuntimeError('db'))
-        LC.log_audit('create', 'sales', 1)
+        _REAL_LOG_AUDIT.__func__(LoggingCore, 'create', 'sales', 1)
         fb.assert_called_once()
         assert 'AUDIT_FALLBACK' in fb.call_args[0][0]
 
