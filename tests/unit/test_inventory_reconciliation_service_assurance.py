@@ -40,6 +40,18 @@ class TestDateBounds:
         assert start.day == 1 and start.hour == 0
         assert end.day == 31 and end.hour == 23
 
+    def test_date_bound_date_object(self):
+        from services.inventory_reconciliation_service import InventoryReconciliationService
+
+        result = InventoryReconciliationService._date_bound(date(2025, 3, 15), end_of_day=True)
+        assert result.hour == 23 and result.day == 15
+
+    def test_date_bound_iso_datetime_string(self):
+        from services.inventory_reconciliation_service import InventoryReconciliationService
+
+        result = InventoryReconciliationService._date_bound('2025-03-15T08:30:00', end_of_day=False)
+        assert result.hour == 8
+
 
 class TestGLInventoryBalance:
     """_gl_inventory_balance — debit minus credit with filters."""
@@ -146,6 +158,24 @@ class TestBuildReport:
         assert row['matched_qty'] is True
         assert row['product_name'] == 'SKU-A'
         assert report['summary']['all_matched'] is True
+
+    def test_branch_id_joins_warehouse(self, mocker):
+        pwc_q = MagicMock()
+        pwc_q.filter_by.return_value = pwc_q
+        pwc_q.join.return_value = pwc_q
+        pwc_q.filter.return_value = pwc_q
+        pwc_q.all.return_value = []
+        mocker.patch.object(
+            __import__('models', fromlist=['ProductWarehouseCost']).ProductWarehouseCost,
+            'query',
+            new_callable=mocker.PropertyMock,
+            return_value=pwc_q,
+        )
+        from services.inventory_reconciliation_service import InventoryReconciliationService
+
+        report = InventoryReconciliationService.build_report(tenant_id=1, branch_id=5)
+        assert report['rows'] == []
+        pwc_q.join.assert_called_once()
 
     def test_variance_outside_tolerance_flags_mismatch(self, mocker):
         pwc = MagicMock(

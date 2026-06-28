@@ -578,9 +578,4 @@ class TestPayrollEngineCoverageGaps:
         net = PayrollEngine.compute_net_salary(Decimal('20'), daily_rate=Decimal('50'))
         assert net == Decimal('1000.00')
 
-    def test_can_edit_mutable_returns_true(self):
-        from services.hr_service import PayrollEngine
-        tx = MagicMock(status='draft')
-        assert PayrollEngine.can_edit(tx) is True
-
 

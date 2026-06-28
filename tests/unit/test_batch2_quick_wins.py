@@ -57,6 +57,32 @@ class TestModelReprQuickWins:
         ('models.product_price_tier', 'ProductPriceTier', {
             'product_id': 4, 'tier_code': 'retail', 'price': Decimal('10'),
         }, 'P#4'),
+        ('models.tenant', 'Tenant', {'name': 'Acme Corp', 'slug': 'acme'}, 'Acme Corp'),
+        ('models.partner', 'Partner', {'name': 'Sami', 'share_percentage': Decimal('25')}, 'Sami'),
+        ('models.hr', 'Department', {'name': 'Sales'}, 'Sales'),
+        ('models.hr', 'JobPosition', {'name': 'Manager'}, 'Manager'),
+        ('models.hr', 'HRContract', {'user_id': 1, 'state': 'active'}, 'U1'),
+        ('models.hr', 'Attendance', {'user_id': 2, 'check_in': '2026-01-01'}, 'U2'),
+        ('models.hr', 'LeaveType', {'name': 'Annual'}, 'Annual'),
+        ('models.hr', 'LeaveRequest', {
+            'user_id': 3, 'date_from': '2026-01-01', 'date_to': '2026-01-05',
+        }, 'U3'),
+        ('models.crm', 'CRMStage', {'name': 'Qualified'}, 'Qualified'),
+        ('models.crm', 'CRMTeam', {'name': 'Inside'}, 'Inside'),
+        ('models.crm', 'CRMLead', {'name': 'Prospect'}, 'Prospect'),
+        ('models.crm', 'CRMActivity', {'activity_type': 'call', 'lead_id': 7}, 'call'),
+        ('models.projects', 'Project', {'name': 'ERP Rollout'}, 'ERP'),
+        ('models.projects', 'TaskStage', {'name': 'Backlog'}, 'Backlog'),
+        ('models.projects', 'Task', {'name': 'Deploy'}, 'Deploy'),
+        ('models.projects', 'Timesheet', {'date': '2026-06-01', 'hours': Decimal('4')}, '4h'),
+        ('models.projects', 'ProjectMember', {'project_id': 1, 'user_id': 2}, 'P1'),
+        ('models.campaign', 'Campaign', {'name': 'Ramadan', 'campaign_type': 'percent'}, 'Ramadan'),
+        ('models.campaign', 'SaleCampaign', {
+            'sale_id': 9, 'campaign_id': 3, 'discount_amount': Decimal('12'),
+        }, 'S#9'),
+        ('models.security_alert', 'SecurityAlert', {
+            'alert_type': 'brute_force', 'severity': 'high', 'title': 'x',
+        }, 'brute_force'),
     ])
     def test_repr_contains_key_token(self, module_path, cls_name, attrs, expected):
         mod = importlib.import_module(module_path)
@@ -91,6 +117,29 @@ class TestBackupGitSha:
             return_value=subprocess.CompletedProcess([], 0, stdout='abcdef1234567890\n'),
         )
         assert BackupService._git_short_sha() == 'abcdef123456'
+
+
+class TestIntegrationSettingsQuick:
+    def test_repr_enabled_flag(self):
+        from models.integration_settings import IntegrationSettings
+        obj = SimpleNamespace(service_name='redis', enabled=True)
+        assert 'redis' in IntegrationSettings.__repr__(obj)
+        assert '✅' in IntegrationSettings.__repr__(obj)
+
+    def test_get_config_invalid_json(self):
+        from models.integration_settings import IntegrationSettings
+        row = IntegrationSettings(service_name='smtp', enabled=False)
+        row.config_data = '{not-json'
+        assert row.get_config() == {}
+
+
+class TestSanitizerQuick:
+    def test_sanitize_html_with_bleach(self, mocker):
+        mocker.patch('utils.sanitizer._BLEACH_AVAILABLE', True)
+        bleach = mocker.patch('utils.sanitizer.bleach')
+        bleach.clean.return_value = 'clean'
+        from utils.sanitizer import InputSanitizer
+        assert InputSanitizer.sanitize_html('<b>x</b>', allow_tags=True) == 'clean'
 
 
 class TestExtensionsCompressImport:

@@ -77,6 +77,10 @@ class TestResolveTenantId:
             'utils.tenanting.get_active_tenant_id',
             side_effect=RuntimeError('session corrupt'),
         )
+        mocker.patch(
+            'services.logging_core.LoggingCore.log_error',
+            side_effect=RuntimeError('log sink down'),
+        )
         _mock_tenant_query(mocker, 1, sample_tenant.id)
         assert resolve_tenant_id() == sample_tenant.id
 
@@ -139,6 +143,16 @@ class TestNextEntryNumber:
     def test_unparseable_entry_number_defaults(self, mocker, sample_tenant):
         latest = MagicMock(entry_number='CORRUPT')
         _mock_journal_query(mocker, latest)
+        num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=timezone.utc))
+        assert num == 'JE-2025-0001'
+
+    def test_unparseable_entry_logging_core_failure(self, mocker, sample_tenant):
+        latest = MagicMock(entry_number='CORRUPT')
+        _mock_journal_query(mocker, latest)
+        mocker.patch(
+            'services.logging_core.LoggingCore.log_error',
+            side_effect=RuntimeError('log sink down'),
+        )
         num = next_entry_number(sample_tenant.id, entry_date=datetime(2025, 7, 1, tzinfo=timezone.utc))
         assert num == 'JE-2025-0001'
 
