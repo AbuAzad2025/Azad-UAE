@@ -772,11 +772,11 @@ class TestPosCustomerDisplay:
         with self._tenant_request(1), patch('routes.pos.db.session') as sess:
             sess.get.return_value = None
             gen, headers = customer_display_stream(999)
-        assert headers['Content-Type'] == 'text/event-stream'
-        msg = next(gen)
-        assert '"closed"' in msg
-        with pytest.raises(StopIteration):
-            next(gen)
+            assert headers['Content-Type'] == 'text/event-stream'
+            msg = next(gen)
+            assert '"closed"' in msg
+            with pytest.raises(StopIteration):
+                next(gen)
 
     def test_customer_display_stream_tenant_mismatch(self):
         from routes.pos import customer_display_stream
@@ -784,8 +784,8 @@ class TestPosCustomerDisplay:
         with self._tenant_request(1), patch('routes.pos.db.session') as sess:
             sess.get.return_value = session
             gen, headers = customer_display_stream(1)
-        assert headers['Content-Type'] == 'text/event-stream'
-        assert '"closed"' in next(gen)
+            assert headers['Content-Type'] == 'text/event-stream'
+            assert '"closed"' in next(gen)
 
     def test_customer_display_stream_waiting(self):
         from routes.pos import customer_display_stream
