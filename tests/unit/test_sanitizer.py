@@ -41,6 +41,30 @@ class TestSanitizeHtml:
             result = InputSanitizer.sanitize_html('<i>x</i>', allow_tags=True)
         assert '&lt;i&gt;' in str(result)
 
+    def test_bleach_import_error_sets_unavailable_flag(self):
+        import importlib
+        import sys
+
+        mod_name = 'utils.sanitizer'
+        saved = sys.modules.pop(mod_name, None)
+        try:
+            import builtins
+            real_import = builtins.__import__
+
+            def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+                if name == 'bleach':
+                    raise ImportError('blocked for test')
+                return real_import(name, globals, locals, fromlist, level)
+
+            with patch.object(builtins, '__import__', side_effect=blocked_import):
+                mod = importlib.import_module(mod_name)
+            assert mod._BLEACH_AVAILABLE is False
+            assert mod.bleach is None
+        finally:
+            if saved is not None:
+                sys.modules[mod_name] = saved
+            importlib.import_module(mod_name)
+
 
 class TestSanitizeText:
     def test_empty_returns_empty_string(self):

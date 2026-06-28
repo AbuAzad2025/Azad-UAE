@@ -33,6 +33,17 @@ class TestTenantModel:
         with app.test_request_context('/'):
             assert Tenant.get_current() is rel
 
+    def test_get_current_inactive_tenant_relationship_returns_none(self, app, mocker):
+        from models.tenant import Tenant
+
+        rel = MagicMock(is_active=False)
+        user = MagicMock(is_authenticated=True, tenant=rel)
+        mocker.patch('flask_login.current_user', user)
+        mocker.patch('utils.tenanting.get_active_tenant_id', return_value=None)
+        mocker.patch('utils.tenanting.is_platform_owner', return_value=False)
+        with app.test_request_context('/'):
+            assert Tenant.get_current() is None
+
     def test_get_current_unauthenticated_logs_and_returns_none(self, app, mocker):
         from models.tenant import Tenant
 

@@ -66,3 +66,11 @@ class TestPartnerProperties:
         assert summary['investment'] == 10000.0
         assert summary['current_balance'] == 500.0
         assert summary['net_investment'] == p.net_investment
+
+    def test_repr(self):
+        from models.partner import Partner
+
+        p = Partner()
+        p.name = 'Ahmed'
+        p.share_percentage = 25
+        assert repr(p) == '<Partner Ahmed (25%)>'

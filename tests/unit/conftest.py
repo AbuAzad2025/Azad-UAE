@@ -2,6 +2,8 @@
 tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
 Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
+pytest_plugins = ['tests.conftest']
+
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle

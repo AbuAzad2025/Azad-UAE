@@ -33,6 +33,10 @@ class TestShopLang:
             session['shop_lang'] = 'fr'
             assert shop_lang() == 'ar'
 
+    def test_explicit_default_used_when_session_empty(self, shop_app):
+        with shop_app.test_request_context():
+            assert shop_lang(default='en') == 'en'
+
 
 class TestTranslate:
     def test_known_key_arabic(self, shop_app):
