@@ -1,0 +1,115 @@
+"""Batch 2 — assurance tests for 95-99% source files (1-15 missed lines)."""
+from __future__ import annotations
+
+import importlib
+import subprocess
+import sys
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
+import pytest
+from decimal import Decimal
+
+from models import Product
+from services.ai_service import AIService
+
+
+class TestAIServiceGetModel:
+    def test_rejects_leaked_unittest_mock_instance(self, mocker):
+        mock_product = MagicMock()
+        mocker.patch.object(
+            __import__('extensions', fromlist=['db']).db.session,
+            'get',
+            return_value=mock_product,
+        )
+        assert AIService._get_model(Product, 1) is None
+
+
+class TestModelReprQuickWins:
+    @pytest.mark.parametrize('module_path,cls_name,attrs,expected', [
+        ('models.branch', 'Branch', {'name': 'HQ', 'code': 'MAIN'}, 'HQ'),
+        ('models.product_serial', 'ProductSerial', {'serial_number': 'SN1', 'status': 'available'}, 'SN1'),
+        ('models.error_audit_log', 'ErrorAuditLog', {
+            'category': 'API', 'level': 'ERROR', 'message': 'timeout on endpoint',
+        }, 'API'),
+        ('models.azad_platform_fee', 'AzadPlatformFee', {
+            'sale_id': 1, 'fee_amount_aed': Decimal('5'),
+        }, 'sale=1'),
+        ('models.azad_subscription_fee', 'AzadSubscriptionFee', {
+            'tenant_id': 1, 'fee_type': 'monthly', 'amount_aed': Decimal('99'),
+        }, 'tenant=1'),
+        ('models.product_cost_history', 'ProductCostHistory', {
+            'product_id': 2, 'movement_type': 'in', 'old_average_cost': 1, 'new_average_cost': 2,
+        }, 'p=2'),
+        ('models.shipment', 'Shipment', {
+            'source_type': 'sale', 'source_id': 9, 'status': 'shipped',
+        }, 'sale#9'),
+        ('models.exchange_rate_record', 'ExchangeRateRecord', {
+            'from_currency': 'USD', 'to_currency': 'AED', 'rate': Decimal('3.67'),
+            'effective_date': '2026-01-01',
+        }, 'USD'),
+        ('models.journal_entry_audit', 'JournalEntryAudit', {
+            'action': 'create', 'journal_entry_id': 7,
+        }, 'create'),
+        ('models.product_image', 'ProductImage', {
+            'product_id': 3, 'image_type': 'main', 'sort_order': 1,
+        }, 'P#3'),
+        ('models.product_price_tier', 'ProductPriceTier', {
+            'product_id': 4, 'tier_code': 'retail', 'price': Decimal('10'),
+        }, 'P#4'),
+    ])
+    def test_repr_contains_key_token(self, module_path, cls_name, attrs, expected):
+        mod = importlib.import_module(module_path)
+        cls = getattr(mod, cls_name)
+        obj = SimpleNamespace(**attrs)
+        assert expected in repr(cls.__repr__(obj))
+
+
+class TestUtilsConstants:
+    def test_normalize_payment_method_code_none_passthrough(self):
+        from utils.constants import normalize_payment_method_code
+        assert normalize_payment_method_code(None) is None
+
+
+class TestLocalizationSaleTotal:
+    def test_ksa_sale_total_defaults_to_zero(self):
+        from utils.localization.ksa import KSAStrategy
+        sale = SimpleNamespace()
+        assert KSAStrategy()._sale_total(sale) == Decimal('0')
+
+    def test_palestine_sale_total_defaults_to_zero(self):
+        from utils.localization.palestine import PalestineStrategy
+        sale = SimpleNamespace()
+        assert PalestineStrategy()._sale_total(sale) == Decimal('0')
+
+
+class TestBackupGitSha:
+    def test_git_short_sha_success(self, mocker):
+        from services.backup_service import BackupService
+        mocker.patch(
+            'services.backup_exec.run_git',
+            return_value=subprocess.CompletedProcess([], 0, stdout='abcdef1234567890\n'),
+        )
+        assert BackupService._git_short_sha() == 'abcdef123456'
+
+
+class TestExtensionsCompressImport:
+    def test_compress_import_error_sets_unavailable(self):
+        mod_name = 'extensions'
+        saved = sys.modules.pop(mod_name, None)
+        try:
+            real_import = __import__
+
+            def blocked(name, globals=None, locals=None, fromlist=(), level=0):
+                if name == 'flask_compress':
+                    raise ImportError('blocked for test')
+                return real_import(name, globals, locals, fromlist, level)
+
+            with patch('builtins.__import__', side_effect=blocked):
+                mod = importlib.import_module(mod_name)
+            assert mod.COMPRESS_AVAILABLE is False
+            assert mod.compress is None
+        finally:
+            if saved is not None:
+                sys.modules[mod_name] = saved
+            importlib.import_module(mod_name)

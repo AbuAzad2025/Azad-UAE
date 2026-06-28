@@ -86,7 +86,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
     )
 
     try:
-        from models.gl_journal_entry import GLJournalEntry
+        from models.gl import GLJournalEntry
 
         gl_by_tenant = dict(
             db.session.query(GLJournalEntry.tenant_id, func.count(GLJournalEntry.id))

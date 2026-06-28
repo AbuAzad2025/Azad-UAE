@@ -73,8 +73,9 @@ class TestBuildPlatformOverview:
         q.scalar.side_effect = [5, 4]
         q.filter.return_value.scalar.return_value = 4
         q.filter.return_value.group_by.return_value.all.side_effect = [
-            [(1, 3)], [(1, 2)], [(1, Decimal('1000'))], [(1, 5)],
+            [(1, 3)], [(1, 2)], [(1, Decimal('1000'))],
         ]
+        q.group_by.return_value.all.return_value = [(1, 5)]
         session.query.return_value = q
 
         user_q = MagicMock()
@@ -97,6 +98,7 @@ class TestBuildPlatformOverview:
         assert overview['tenant_count'] == 5
         assert overview['active_tenant_count'] == 4
         assert overview['suspended_tenant_count'] == 1
+        assert overview['gl_by_tenant'] == {1: 5}
 
     def test_gl_import_failure(self, app, mocker):
         session = mocker.patch('utils.owner_panel.db.session')
@@ -117,7 +119,7 @@ class TestBuildPlatformOverview:
         real_import = __import__
 
         def _raise_import(name, *a, **k):
-            if name == 'models.gl_journal_entry':
+            if name == 'models.gl':
                 raise ImportError('no gl')
             return real_import(name, *a, **k)
 
@@ -294,6 +296,37 @@ class TestBuildCompanyDashboardContext:
         assert ctx['readiness_warnings']
         assert ctx['products_count'] == 50
         assert ctx['customers_count'] == 20
+
+    def test_company_dashboard_warns_when_no_logo(self, app, mocker):
+        tenant = _tenant(1, logo_url='')
+        session = mocker.patch('utils.owner_panel.db.session')
+        session.get.return_value = tenant
+        mocker.patch('utils.owner_panel.resolve_tenant_branding', return_value={})
+        mocker.patch('utils.owner_panel.branding_path_warnings', return_value=[])
+        sales_q = MagicMock()
+        sales_q.filter.return_value = sales_q
+        sales_q.first.return_value = (0, Decimal('0'))
+        session.query.return_value = sales_q
+        prod_q = MagicMock()
+        prod_q.filter_by.return_value.count.return_value = 0
+        mocker.patch('models.Product.query', prod_q)
+        cust_q = MagicMock()
+        cust_q.filter_by.return_value.count.return_value = 0
+        mocker.patch('models.Customer.query', cust_q)
+        user_q = MagicMock()
+        user_q.filter.return_value.count.return_value = 0
+        mocker.patch('utils.owner_panel.User.query', user_q)
+        branch_q = MagicMock()
+        branch_q.filter_by.return_value.count.return_value = 0
+        mocker.patch('utils.owner_panel.Branch.query', branch_q)
+        mocker.patch('services.backup_service.BackupService.list_backups', return_value=[])
+        wh_q = MagicMock()
+        wh_q.filter_by.return_value.order_by.return_value.all.return_value = []
+        mocker.patch('utils.owner_panel.Warehouse.query', wh_q)
+        from utils.owner_panel import build_company_dashboard_context
+        with app.app_context():
+            ctx = build_company_dashboard_context(1)
+        assert any('logo' in w.lower() for w in ctx['readiness_warnings'])
 
     def test_evaluate_skips_rows_without_user_warning(self):
         from utils.owner_panel import evaluate_tenant_user_warnings

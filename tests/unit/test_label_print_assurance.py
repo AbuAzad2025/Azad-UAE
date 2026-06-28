@@ -104,6 +104,28 @@ class TestSingleLabelHtml:
         assert len(products) == 1
         assert products[0]['sku'] == 'SKU-1'
 
+    def test_branch_warehouse_cost_on_single_label(self, app, mocker):
+        product = _product(cost_price=Decimal('40'))
+        pwc = MagicMock(cost_price=Decimal('33.00'))
+        pwc_q = MagicMock()
+        pwc_q.filter_by.return_value.first.return_value = pwc
+        mocker.patch(
+            'models.ProductWarehouseCost.query',
+            new_callable=mocker.PropertyMock,
+            return_value=pwc_q,
+        )
+        mock_render = mocker.patch(
+            'services.label_print_service.render_template',
+            return_value='ok',
+        )
+
+        from services.label_print_service import get_single_label_html
+
+        with app.app_context():
+            get_single_label_html(product, branch_id=3)
+
+        assert mock_render.call_args.kwargs['products'][0]['cost'] == Decimal('33.00')
+
     def test_invalid_branch_id_uses_product_cost(self, app, mocker):
         product = _product(cost_price=Decimal('12.00'))
         pwc_q = MagicMock()

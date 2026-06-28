@@ -67,6 +67,12 @@ class TestTenantStoreBootstrap:
         updated = StoreService.ensure_tenant_store(sample_tenant.id)
         assert updated.warehouse_id == 77
 
+    def test_ensure_tenant_store_missing_tenant_raises(self, mocker):
+        mocker.patch('services.store_service.TenantStore.query').filter_by.return_value.first.return_value = None
+        mocker.patch('services.store_service.db.session.get', return_value=None)
+        with pytest.raises(ValueError, match='الشركة غير موجودة'):
+            StoreService.ensure_tenant_store(999999)
+
     def test_get_store_by_slug(self, tenant_store):
         found = StoreService.get_store_by_slug(tenant_store.store_slug.upper())
         assert found.id == tenant_store.id

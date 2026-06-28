@@ -123,6 +123,27 @@ class TestPreview:
         assert preview == 'INV-2026-0042'
         assert seq.counter == 42
 
+    def test_preview_unpadded_counter_placeholder(self, app, mocker):
+        from models.document_sequence import DocumentSequence
+        seq = DocumentSequence(
+            tenant_id=1,
+            code='tag',
+            name='Tag',
+            prefix='TAG',
+            pattern='{prefix}-{counter}',
+            counter=9,
+            counter_reset='never',
+        )
+        mocker.patch(
+            'services.document_sequence_service.DocumentSequenceService.get_or_create',
+            return_value=seq,
+        )
+        from services.document_sequence_service import DocumentSequenceService
+        with app.app_context():
+            preview = DocumentSequenceService.preview(1, 'tag')
+        assert preview == 'TAG-9'
+        assert seq.counter == 9
+
     def test_yearly_reset_interval_on_model(self):
         from models.document_sequence import DocumentSequence
         seq = DocumentSequence(

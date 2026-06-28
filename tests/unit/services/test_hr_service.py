@@ -390,6 +390,11 @@ class TestHrEdgeCases:
         leaves = HRService.list_leaves({'user_id': hr_user.id}, hr_user)
         assert len(leaves) >= 1
 
+    def test_create_contract_no_active_tenant(self, hr_user, mocker):
+        mocker.patch('services.hr_service.get_active_tenant_id', return_value=None)
+        with pytest.raises(ValueError, match='لا توجد شركة نشطة'):
+            HRService.create_contract({'user_id': hr_user.id}, hr_user)
+
     def test_create_contract_defaults(self, db_session, hr_user, sample_tenant, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
         mocker.patch('services.hr_service.is_global_owner_user', return_value=True)

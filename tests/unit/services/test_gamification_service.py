@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,6 +29,14 @@ class TestAwardPoints:
         mocker.patch.object(db.session, 'get', return_value=None)
         result = GamificationService.award_points(999999, 'sale_created')
         assert result['success'] is False
+
+    def test_user_without_points_attr_initializes_zero(self, mocker):
+        user = SimpleNamespace(id=1)
+        mocker.patch.object(db.session, 'get', return_value=user)
+        mocker.patch.object(db.session, 'commit')
+        result = GamificationService.award_points(1, 'sale_created')
+        assert result['success'] is True
+        assert user.points == 10
 
     def test_sale_created_awards_points(self, db_session, sample_user):
         sample_user.points = 0

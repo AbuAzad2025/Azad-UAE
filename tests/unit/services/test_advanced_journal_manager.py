@@ -170,6 +170,13 @@ class TestDeleteEntry:
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'reason')
 
+    def test_rejects_reversed_entry(self):
+        entry = _mock_entry(is_reversed=True)
+        with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
+            ValueError, match='حذف قيد معكوس'
+        ):
+            AdvancedJournalEntryManager.delete_entry(1, 1, 'reason')
+
     def test_rejects_linked_reversal(self):
         entry = _mock_entry(reversed_entry_id=5)
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
