@@ -15,7 +15,7 @@ class TestChequesCreate:
         from models.sale import Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ1 {tid}', name_ar=f'CHQ1 {tid}',
                         slug=f'chq1-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -102,7 +102,7 @@ class TestChequesCreate:
         from models.purchase import Purchase
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ2 {tid}', name_ar=f'CHQ2 {tid}',
                         slug=f'chq2-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -187,7 +187,7 @@ class TestChequesLifecycle:
         from models.sale import Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ3 {tid}', name_ar=f'CHQ3 {tid}',
                         slug=f'chq3-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -277,7 +277,7 @@ class TestChequesLifecycle:
         from models.sale import Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ4 {tid}', name_ar=f'CHQ4 {tid}',
                         slug=f'chq4-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -373,7 +373,7 @@ class TestChequesLifecycle:
 class TestChequesViewEdit:
     def test_cheque_list_page_renders(self, app, db_session, client):
         from models import Tenant, Branch, User, Role
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ5 {tid}', name_ar=f'CHQ5 {tid}',
                         slug=f'chq5-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -397,7 +397,7 @@ class TestChequesViewEdit:
 
     def test_cheque_create_page_renders(self, app, db_session, client):
         from models import Tenant, Branch, User, Role
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ6 {tid}', name_ar=f'CHQ6 {tid}',
                         slug=f'chq6-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -422,7 +422,7 @@ class TestChequesViewEdit:
         from models import Tenant, Branch, User, Role
         from models.cheque import Cheque
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ7 {tid}', name_ar=f'CHQ7 {tid}',
                         slug=f'chq7-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -459,7 +459,7 @@ class TestChequesViewEdit:
         from models import Tenant, Branch, User, Role
         from models.cheque import Cheque
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ8 {tid}', name_ar=f'CHQ8 {tid}',
                         slug=f'chq8-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -510,7 +510,7 @@ class TestChequesDelete:
         from models.cheque import Cheque
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQ9 {tid}', name_ar=f'CHQ9 {tid}',
                         slug=f'chq9-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
@@ -567,7 +567,7 @@ class TestChequesDelete:
 class TestChequesApi:
     def test_api_stats_returns_json(self, app, db_session, client):
         from models import Tenant, Branch, User, Role
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'CHQA {tid}', name_ar=f'CHQA {tid}',
                         slug=f'chqa-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
