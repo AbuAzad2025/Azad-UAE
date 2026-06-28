@@ -45,14 +45,17 @@ class TestImportBp:
                 with pytest.raises(ImportError):
                     bp_module._import_bp(flask_app, 'routes.nonexistent_xyz', 'fake_bp')
 
-    def test_ai_fallback_catch_all_log_error_fails(self, flask_app):
+    def test_ai_fallback_catch_all_log_error_fails(self, flask_app, monkeypatch):
         ai_bp = bp_module._make_ai_fallback('import failed')
         flask_app.register_blueprint(ai_bp)
-        with flask_app.test_client() as client:
-            with patch('flask.session') as mock_session:
-                mock_session.get.side_effect = RuntimeError('session fail')
-                with patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
-                    resp = client.get('/ai/another-route', follow_redirects=False)
+
+        class _BrokenSession:
+            def get(self, key, default=None):
+                raise RuntimeError('session fail')
+
+        monkeypatch.setattr('flask.session', _BrokenSession())
+        with patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
+            resp = flask_app.test_client().get('/ai/another-route', follow_redirects=False)
         assert resp.status_code == 302
 
     def test_import_bp_log_db_failure(self, flask_app):
@@ -126,14 +129,19 @@ class TestAiFallback:
                 resp = client.get('/ai/unknown-route', follow_redirects=False)
         assert resp.status_code == 302
 
-    def test_ai_fallback_catch_all_session_error(self, flask_app):
+    def test_ai_fallback_catch_all_session_error(self, flask_app, monkeypatch):
         ai_bp = bp_module._make_ai_fallback('import failed')
         flask_app.register_blueprint(ai_bp)
-        with flask_app.test_client() as client:
-            with patch('flask.session', side_effect=RuntimeError('session fail')), \
-                 patch('services.logging_core.LoggingCore.log_error'):
-                resp = client.get('/ai/another-route', follow_redirects=False)
+
+        class _BrokenSession:
+            def get(self, key, default=None):
+                raise RuntimeError('session fail')
+
+        monkeypatch.setattr('flask.session', _BrokenSession())
+        with patch('services.logging_core.LoggingCore.log_error') as log_err:
+            resp = flask_app.test_client().get('/ai/another-route', follow_redirects=False)
         assert resp.status_code == 302
+        log_err.assert_called_once()
 
 
 class TestRegisterBlueprints:

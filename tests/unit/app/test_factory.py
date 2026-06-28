@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import builtins
+import importlib
+import sys
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
+from werkzeug.exceptions import Forbidden
 
 
 @contextmanager
@@ -179,3 +183,58 @@ class TestFactoryRoutes:
                         resp = func()
                         assert resp is not None
                         assert resp[1] == 503
+
+    def test_compress_import_unavailable(self, monkeypatch):
+        mod_name = 'app.factory'
+        saved = sys.modules.pop(mod_name, None)
+        try:
+            real_import = builtins.__import__
+
+            def blocked(name, globals=None, locals=None, fromlist=(), level=0):
+                if name == 'flask_compress':
+                    raise ImportError('blocked for test')
+                return real_import(name, globals, locals, fromlist, level)
+
+            with patch('builtins.__import__', side_effect=blocked):
+                mod = importlib.import_module(mod_name)
+            assert mod.COMPRESS_AVAILABLE is False
+        finally:
+            if saved is not None:
+                sys.modules[mod_name] = saved
+            else:
+                sys.modules.pop(mod_name, None)
+            importlib.import_module(mod_name)
+
+    def test_dev_mode_auto_generates_owner_password(self, monkeypatch):
+        monkeypatch.setenv('SKIP_SYSTEM_INTEGRITY', '1')
+        monkeypatch.delenv('OWNER_PASSWORD', raising=False)
+        with patch('config.load_dotenv'), _minimal_app() as app:
+            pwd = app.config.get('OWNER_PASSWORD')
+            assert pwd
+            assert pwd == __import__('os').environ.get('OWNER_PASSWORD')
+
+    def test_before_request_aborts_without_tenant(self, monkeypatch):
+        monkeypatch.setenv('SKIP_SYSTEM_INTEGRITY', '1')
+        user = MagicMock(is_authenticated=True)
+        extras = [
+            patch('app.factory.LoggingCore.set_trace_id'),
+            patch('utils.i18n.get_current_language', return_value='ar'),
+            patch('utils.i18n.is_rtl', return_value=True),
+            patch('flask_login.current_user', user),
+            patch('utils.tenanting.get_active_tenant_id', return_value=None),
+            patch('utils.auth_helpers.is_global_owner_user', return_value=False),
+        ]
+        with _minimal_app(extras) as app:
+            from flask import Blueprint
+            sales_bp = Blueprint('sales', __name__, url_prefix='/sales')
+
+            @sales_bp.route('/')
+            def sales_index():
+                return 'ok'
+
+            app.register_blueprint(sales_bp)
+            with app.test_request_context('/sales/'):
+                for func in app.before_request_funcs[None]:
+                    if func.__name__ == 'before_request':
+                        with pytest.raises(Forbidden):
+                            func()

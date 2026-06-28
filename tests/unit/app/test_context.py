@@ -131,7 +131,7 @@ class TestContextProcessor:
              patch('utils.tenanting.is_global_tenant_user', return_value=True), \
              patch('utils.tenanting.get_active_tenant_id', return_value=1), \
              patch('models.tenant.Tenant') as TenantModel, \
-             patch('flask_login.current_user', user), \
+             patch('app.context.current_user', user), \
              patch('utils.branching.get_active_branch', return_value=None), \
              patch('utils.branching.get_active_branch_mode', return_value='single'):
             sys = MagicMock()
@@ -221,7 +221,7 @@ class TestContextProcessor:
              patch('models.system_settings.SystemSettings.get_current') as sys_set, \
              patch('utils.tenanting.is_global_tenant_user', return_value=True), \
              patch('utils.tenanting.get_active_tenant_id', side_effect=RuntimeError('tenant fail')), \
-             patch('flask_login.current_user', user), \
+             patch('app.context.current_user', user), \
              patch('app.context.LoggingCore.log_error') as log_err:
             sys = MagicMock()
             sys.get_custom_setting.return_value = ''
@@ -260,7 +260,7 @@ class TestContextProcessor:
              patch('models.system_settings.SystemSettings.get_current') as sys_set, \
              patch('utils.tenanting.is_global_tenant_user', return_value=True), \
              patch('utils.tenanting.get_active_tenant_id', side_effect=RuntimeError('tenant fail')), \
-             patch('flask_login.current_user', user), \
+             patch('app.context.current_user', user), \
              patch('app.context.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
             sys = MagicMock()
             sys.get_custom_setting.return_value = ''
