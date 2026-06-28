@@ -2,6 +2,8 @@
 source = .
 omit =
     migrations/*
+    scripts/build_assets.py
+    scripts/seed_industry_fields.py
     tests/*
     */tests/*
     .venv/*

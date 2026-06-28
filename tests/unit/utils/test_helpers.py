@@ -98,6 +98,14 @@ class TestGenerateNumberAndSave:
 
 
 class TestGetNextNumber:
+    def test_with_branch_code(self, app):
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value.first.return_value = None
+        with patch('utils.helpers.db.session.query', return_value=q):
+            result = h.get_next_number('PO', MagicMock(), number_field='number', branch_code='BR01')
+        assert '-BR01-' in result
+
     def test_no_records(self, app):
         q = MagicMock()
         q.filter.return_value = q
@@ -122,6 +130,22 @@ class TestDiscountAndVat:
 
     def test_calculate_vat(self):
         assert h.calculate_vat(200, 5) == Decimal('10.00')
+
+
+class TestResolveFormatCurrencySettings:
+    def test_system_settings_exception_uses_tenant(self, app):
+        tenant = MagicMock(default_currency='SAR')
+        with patch('models.system_settings.SystemSettings.get_current', side_effect=RuntimeError('no settings')), \
+             patch('models.Tenant.get_current', return_value=tenant):
+            currency, symbol, position, decimals = h._resolve_format_currency_settings()
+        assert currency == 'SAR'
+
+    def test_tenant_lookup_exception(self, app):
+        with patch('models.system_settings.SystemSettings.get_current', return_value=MagicMock(
+            default_currency='AED', currency_symbol='', currency_position='', decimal_places=2,
+        )), patch('models.Tenant.get_current', side_effect=RuntimeError('no tenant')):
+            currency, _, _, _ = h._resolve_format_currency_settings()
+        assert currency == 'AED'
 
 
 class TestFormatCurrency:
@@ -187,6 +211,40 @@ class TestTimeago:
 
 
 class TestCreateAuditLog:
+    def test_flask_login_import_error(self, app, monkeypatch):
+        import builtins
+        real_import = builtins.__import__
+
+        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == 'flask_login':
+                raise ImportError('blocked')
+            return real_import(name, globals, locals, fromlist, level)
+
+        monkeypatch.setattr(builtins, '__import__', blocked_import)
+        with app.test_request_context('/'), \
+             patch('models.AuditLog') as audit_cls, \
+             patch('utils.helpers.db.session.add'), \
+             patch('utils.helpers.db.session.commit'):
+            h.create_audit_log('script', 'sales', 1)
+        audit_cls.assert_called_once()
+
+    def test_logs_failure_via_print_without_app(self, app, monkeypatch, capsys):
+        monkeypatch.setattr(h, 'current_app', None)
+        with app.test_request_context('/'), \
+             patch('models.AuditLog', side_effect=RuntimeError('fail')), \
+             patch('flask_login.current_user', MagicMock(is_authenticated=False)):
+            h.create_audit_log('x')
+        assert 'Failed to create audit log' in capsys.readouterr().out
+
+    def test_logs_failure_when_logger_raises(self, app, mocker):
+        mock_app = MagicMock()
+        mock_app.logger.error.side_effect = RuntimeError('log fail')
+        mocker.patch.object(h, 'current_app', mock_app)
+        with app.test_request_context('/'), \
+             patch('models.AuditLog', side_effect=RuntimeError('fail')), \
+             patch('flask_login.current_user', MagicMock(is_authenticated=False)):
+            h.create_audit_log('x')
+
     def test_creates_log(self, app):
         with app.test_request_context('/'), \
              patch('models.AuditLog') as audit_cls, \
@@ -216,6 +274,16 @@ class TestAllowedFile:
     def test_merged_extension_sets(self, app):
         with app.app_context():
             assert h.allowed_file('doc.pdf', allowed_extensions={'.pdf'}) is True
+
+    def test_merges_config_extension_groups(self, app):
+        with app.app_context():
+            app.config['ALLOWED_UPLOAD_EXTENSIONS'] = {
+                'images': {'.png', '.jpg'},
+                'docs': {'.pdf'},
+            }
+            assert h.allowed_file('scan.pdf') is True
+            assert h.allowed_file('photo.jpg') is True
+            assert h.allowed_file('bad.exe') is False
 
 
 class TestSaveUploadedFile:
@@ -278,6 +346,12 @@ class TestConvertCurrency:
         with patch('models.Tenant.get_current', return_value=tenant), \
              patch('services.currency_service.CurrencyService.get_exchange_rate', return_value=1):
             h.convert_currency(5, 'USD')
+
+    def test_default_to_currency_tenant_lookup_failure(self, app):
+        with patch('models.Tenant.get_current', side_effect=RuntimeError('no tenant')), \
+             patch('services.currency_service.CurrencyService.get_exchange_rate', return_value=1):
+            result = h.convert_currency(5, 'USD')
+        assert result == Decimal('5')
 
 
 class TestSkuBarcode:

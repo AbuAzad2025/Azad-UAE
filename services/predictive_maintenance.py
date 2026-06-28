@@ -24,10 +24,7 @@ class PredictiveMaintenanceService:
             previous_sale = sales_history[i + 1].sale
             interval = (current_sale.sale_date - previous_sale.sale_date).days
             intervals.append(interval)
-        
-        if not intervals:
-            return None
-        
+
         avg_interval = sum(intervals) / len(intervals)
         last_sale_date = sales_history[0].sale.sale_date
         next_maintenance = last_sale_date + timedelta(days=avg_interval)

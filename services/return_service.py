@@ -69,6 +69,10 @@ class ReturnService:
         return extract_serials(line_data)
 
     @staticmethod
+    def _sale_line_sold_qty(sale_line) -> Decimal:
+        return Decimal(str(sale_line.quantity or 0))
+
+    @staticmethod
     def create_return(sale_id, return_lines_data, user=None, user_id=None, notes=None, manual_refund_amount=None):
         try:
             sale = db.session.get(Sale, sale_id)
@@ -190,7 +194,7 @@ class ReturnService:
                     if unexpected_serials:
                         raise ValueError(f'Product {product.name} does not use serial numbers.')
 
-                sold_qty = Decimal(str(sale_line.quantity or 0))
+                sold_qty = ReturnService._sale_line_sold_qty(sale_line)
                 if sold_qty <= 0:
                     raise ValueError('Invalid sale line quantity.')
 

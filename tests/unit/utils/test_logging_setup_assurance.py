@@ -6,7 +6,7 @@ import os
 import sys
 from io import BytesIO
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -106,3 +106,38 @@ class TestSetupLogging:
         setup_logging(app)
         assert app.logger.handlers
         assert logging.getLogger('sqlalchemy.engine').level == logging.WARNING
+
+    def test_colorama_import_fallback(self):
+        import builtins
+        import importlib
+        import sys
+
+        mod_name = 'utils.logging_setup'
+        saved = sys.modules.pop(mod_name, None)
+        real_import = builtins.__import__
+
+        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == 'colorama':
+                raise ImportError('blocked for test')
+            return real_import(name, globals, locals, fromlist, level)
+
+        try:
+            with patch.object(builtins, '__import__', side_effect=blocked_import):
+                mod = importlib.import_module(mod_name)
+            assert mod.Fore.BLUE == ''
+            assert mod.Style.RESET_ALL == ''
+        finally:
+            if saved is not None:
+                sys.modules[mod_name] = saved
+            importlib.import_module(mod_name)
+
+    def test_format_encoding_ascii_fallback(self, mocker):
+        from utils.logging_setup import ColorFormatter
+
+        mocker.patch.dict(os.environ, {'FLASK_ENV': 'production'}, clear=False)
+        mocker.patch('utils.logging_setup.sys.stdout', SimpleNamespace(encoding='invalid-encoding-xyz'))
+        fmt = ColorFormatter()
+        mocker.patch.object(fmt, 'formatTime', return_value='ts')
+        record = logging.LogRecord('app', logging.INFO, '', 0, 'ok', (), None)
+        record.request_id = '-'
+        assert 'ok' in fmt.format(record)

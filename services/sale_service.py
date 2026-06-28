@@ -26,6 +26,17 @@ from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 class SaleService:
 
     @staticmethod
+    def _commission_base_aed(profit_margin, exchange_rate):
+        if profit_margin <= Decimal('0'):
+            return Decimal('0')
+        try:
+            return (profit_margin * exchange_rate).quantize(
+                Decimal('0.001'), rounding=ROUND_HALF_UP
+            )
+        except Exception:
+            return profit_margin
+
+    @staticmethod
     def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None,
                     discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None,
                     source='internal', sale_status=None, checkout_payment_method=None,
@@ -252,15 +263,7 @@ class SaleService:
                 cost_basis = (unit_cost * qty_dec).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
                 profit_margin = (revenue_excl_vat - cost_basis).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
 
-                if profit_margin > Decimal('0'):
-                    try:
-                        base_amount = (profit_margin * exchange_rate).quantize(
-                            Decimal('0.001'), rounding=ROUND_HALF_UP
-                        )
-                    except Exception:
-                        base_amount = profit_margin
-                else:
-                    base_amount = Decimal('0')
+                base_amount = SaleService._commission_base_aed(profit_margin, exchange_rate)
 
                 for ps in getattr(product, 'partner_shares', []) or []:
                     partner_customer_id = getattr(ps, 'partner_customer_id', None)

@@ -5,12 +5,16 @@ XSS Prevention & Input Sanitization
 from markupsafe import escape, Markup
 import re
 
-try:
-    import bleach
-    _BLEACH_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    bleach = None
-    _BLEACH_AVAILABLE = False
+
+def _resolve_bleach():
+    try:
+        import bleach as bleach_module
+    except ImportError:
+        return None, False
+    return bleach_module, True
+
+
+bleach, _BLEACH_AVAILABLE = _resolve_bleach()
 
 
 class InputSanitizer:

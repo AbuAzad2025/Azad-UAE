@@ -275,10 +275,18 @@ class TestBranchingExtended:
 
 
 class TestBranchingExtendedCoverage:
-    def test_resolve_user_exception(self, mocker):
-        mocker.patch('utils.branching.current_user', side_effect=RuntimeError('ctx'))
-        from utils.branching import branch_scope_id_for
-        assert branch_scope_id_for() is None
+    def test_resolve_user_exception(self, app):
+        from unittest.mock import MagicMock, patch
+        import utils.branching as branching
+        proxy = MagicMock()
+        proxy._get_current_object.side_effect = RuntimeError('ctx')
+        with app.test_request_context(), patch.object(branching, 'current_user', proxy):
+            assert branching._resolve_user() is None
+
+    def test_resolve_user_anonymous_returns_none(self, app):
+        from utils.branching import _resolve_user
+        with app.test_request_context():
+            assert _resolve_user() is None
 
     def test_branch_scope_unauthenticated(self):
         from utils.branching import branch_scope_id_for
@@ -290,6 +298,40 @@ class TestBranchingExtendedCoverage:
         mocker.patch('utils.branching.branch_scope_id_for', return_value=None)
         from utils.branching import report_branch_scope_id_for
         assert report_branch_scope_id_for(_user(is_owner=False, branch_id=6)) == 6
+
+    def test_accessible_branches_no_home_branch_filters_empty(self, mocker):
+        branch_model = MagicMock()
+        q = MagicMock()
+        q.filter_by.return_value = q
+        q.filter.return_value = q
+        branch_model.query = q
+        branch_model.is_active = MagicMock()
+        branch_model.tenant_id = MagicMock()
+        branch_model.id = _Col()
+        mocker.patch('models.Branch', branch_model)
+        mocker.patch('utils.branching.get_active_tenant_id', return_value=1)
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        from utils.branching import get_accessible_branches_query
+        result = get_accessible_branches_query(_user(branch_id=None))
+        assert q.filter.called
+        assert result is q.filter.return_value
+
+    def test_accessible_branches_scoped_to_user_branch(self, mocker):
+        branch_model = MagicMock()
+        q = MagicMock()
+        q.filter_by.return_value = q
+        q.filter.return_value = q
+        branch_model.query = q
+        branch_model.is_active = MagicMock()
+        branch_model.tenant_id = MagicMock()
+        branch_model.id = _Col()
+        mocker.patch('models.Branch', branch_model)
+        mocker.patch('utils.branching.get_active_tenant_id', return_value=1)
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        from utils.branching import get_accessible_branches_query
+        result = get_accessible_branches_query(_user(branch_id=5))
+        q.filter.assert_called_with(branch_model.id == 5)
+        assert result is q.filter.return_value
 
     def test_accessible_branches_unauthenticated(self, mocker):
         branch_model = MagicMock()
@@ -366,3 +408,69 @@ class TestBranchingExtendedCoverage:
         from utils.branching import ensure_warehouse_access
         with pytest.raises(ValueError, match='مستودع'):
             ensure_warehouse_access(None, _user())
+
+    def test_is_global_user_returns_false_for_regular(self):
+        from utils.branching import is_global_user
+        assert is_global_user(_user(role_slug='cashier')) is False
+
+    def test_report_branch_scope_returns_selected(self, mocker):
+        mocker.patch('utils.branching.branch_scope_id_for', return_value=9)
+        from utils.branching import report_branch_scope_id_for
+        assert report_branch_scope_id_for(_user()) == 9
+
+    def test_report_branch_scope_returns_none(self, mocker):
+        mocker.patch('utils.branching.branch_scope_id_for', return_value=None)
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        from utils.branching import report_branch_scope_id_for
+        assert report_branch_scope_id_for(_user(branch_id=None)) is None
+
+    def test_get_active_branch_mode_without_request(self, mocker):
+        mocker.patch('utils.branching.has_request_context', return_value=False)
+        from utils.branching import get_active_branch_mode
+        assert get_active_branch_mode() == 'single'
+
+    def test_should_show_all_branch_columns_unauthenticated(self, app):
+        from utils.branching import should_show_all_branch_columns
+        with app.test_request_context():
+            assert should_show_all_branch_columns(_user(is_authenticated=False)) is False
+
+    def test_get_active_branch_id_unauthenticated(self, app):
+        from utils.branching import get_active_branch_id
+        with app.test_request_context():
+            assert get_active_branch_id(_user(is_authenticated=False)) is None
+
+    def test_get_active_branch_id_global_all_mode(self, app, mocker):
+        mocker.patch('utils.branching.is_global_user', return_value=True)
+        mocker.patch('utils.branching.get_active_branch_mode', return_value='all')
+        from utils.branching import get_active_branch_id
+        with app.test_request_context():
+            assert get_active_branch_id(_user()) is None
+
+    def test_get_active_branch_id_regular_user_session_match(self, app, mocker):
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        from utils.branching import get_active_branch_id, ACTIVE_BRANCH_SESSION_KEY
+        with app.test_request_context():
+            from flask import session
+            session[ACTIVE_BRANCH_SESSION_KEY] = 3
+            assert get_active_branch_id(_user(branch_id=3)) == 3
+
+    def test_get_active_branch_id_regular_user_no_session(self, app, mocker):
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        from utils.branching import get_active_branch_id
+        with app.test_request_context():
+            assert get_active_branch_id(_user(branch_id=7)) == 7
+
+    def test_set_active_branch_non_global_uses_user_branch(self, app, mocker):
+        mocker.patch('utils.branching.is_global_user', return_value=False)
+        mocker.patch('utils.branching.user_can_access_branch', return_value=True)
+        from utils.branching import set_active_branch, ACTIVE_BRANCH_SESSION_KEY
+        with app.test_request_context():
+            from flask import session
+            set_active_branch(None, user=_user(branch_id=5))
+            assert session[ACTIVE_BRANCH_SESSION_KEY] == 5
+
+    def test_get_accessible_warehouse_ids(self, mocker):
+        warehouse = MagicMock(id=11)
+        mocker.patch('utils.branching.get_accessible_warehouses', return_value=[warehouse])
+        from utils.branching import get_accessible_warehouse_ids
+        assert get_accessible_warehouse_ids(_user()) == [11]

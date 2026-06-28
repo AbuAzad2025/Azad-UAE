@@ -9,6 +9,23 @@ from utils.sanitizer import InputSanitizer, sanitize_form_data
 
 
 class TestSanitizeHtml:
+    def test_resolve_bleach_success(self):
+        import sys
+        from utils.sanitizer import _resolve_bleach
+
+        stub = MagicMock(name='bleach_module')
+        saved = sys.modules.get('bleach')
+        sys.modules['bleach'] = stub
+        try:
+            mod, available = _resolve_bleach()
+            assert available is True
+            assert mod is stub
+        finally:
+            if saved is None:
+                sys.modules.pop('bleach', None)
+            else:
+                sys.modules['bleach'] = saved
+
     def test_empty_returns_empty_string(self):
         assert InputSanitizer.sanitize_html('') == ''
         assert InputSanitizer.sanitize_html(None) == ''
@@ -42,6 +59,22 @@ class TestSanitizeHtml:
         assert '&lt;i&gt;' in str(result)
 
     def test_bleach_import_error_sets_unavailable_flag(self):
+        from utils.sanitizer import _resolve_bleach
+
+        import builtins
+        real_import = builtins.__import__
+
+        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == 'bleach':
+                raise ImportError('blocked for test')
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch.object(builtins, '__import__', side_effect=blocked_import):
+            mod, available = _resolve_bleach()
+        assert available is False
+        assert mod is None
+
+    def test_bleach_import_error_legacy_reload(self):
         import importlib
         import sys
 

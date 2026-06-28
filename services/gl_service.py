@@ -1175,43 +1175,47 @@ class GLService:
         return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
-    def reconciliation_check(tenant_id=None, branch_id=None):
-        """مقارنة أرصدة GL مع الأرصدة الدفترية — للكشف عن الانحرافات."""
+    def _reconciliation_concept_balance(concept_code, tenant_id=None, branch_id=None):
         from sqlalchemy import func
         from decimal import Decimal
         from services.gl_account_resolver import is_dynamic_gl_mapping_enabled
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
-
-        def _gl_balance(concept_code):
-            legacy_codes = {'AR': '1131', 'AP': '2111'}
-            if is_dynamic_gl_mapping_enabled():
-                line = {'concept_code': concept_code}
-            else:
-                account_code = legacy_codes.get(concept_code)
-                if not account_code:
-                    return Decimal('0')
-                line = {'account': account_code}
-            acc = GLService._resolve_journal_line_account(
-                line, tenant_id, branch_id=branch_id,
-                ensure_core=False, missing_ok=True,
-            )
-            if not acc:
+        legacy_codes = {'AR': '1131', 'AP': '2111'}
+        if is_dynamic_gl_mapping_enabled():
+            line = {'concept_code': concept_code}
+        else:
+            account_code = legacy_codes.get(concept_code)
+            if not account_code:
                 return Decimal('0')
-            q = db.session.query(
-                func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
-            ).join(GLJournalEntry).filter(
-                GLJournalLine.account_id == acc.id,
-                GLJournalEntry.is_posted == True,
-            )
-            if tenant_id is not None:
-                q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
-            if branch_id:
-                q = q.filter(GLJournalEntry.branch_id == branch_id)
-            return Decimal(str(q.scalar() or 0))
+            line = {'account': account_code}
+        acc = GLService._resolve_journal_line_account(
+            line, tenant_id, branch_id=branch_id,
+            ensure_core=False, missing_ok=True,
+        )
+        if not acc:
+            return Decimal('0')
+        q = db.session.query(
+            func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
+        ).join(GLJournalEntry).filter(
+            GLJournalLine.account_id == acc.id,
+            GLJournalEntry.is_posted == True,
+        )
+        if tenant_id is not None:
+            q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+        if branch_id:
+            q = q.filter(GLJournalEntry.branch_id == branch_id)
+        return Decimal(str(q.scalar() or 0))
 
-        gl_ar = abs(_gl_balance('AR'))
-        gl_ap = abs(_gl_balance('AP'))
+    @staticmethod
+    def reconciliation_check(tenant_id=None, branch_id=None):
+        """مقارنة أرصدة GL مع الأرصدة الدفترية — للكشف عن الانحرافات."""
+        from decimal import Decimal
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+
+        gl_ar = abs(GLService._reconciliation_concept_balance('AR', tenant_id=tenant_id, branch_id=branch_id))
+        gl_ap = abs(GLService._reconciliation_concept_balance('AP', tenant_id=tenant_id, branch_id=branch_id))
 
         from models import Customer, Supplier
         customers = Customer.query.filter_by(is_active=True) if not tenant_id else Customer.query.filter_by(tenant_id=int(tenant_id), is_active=True)

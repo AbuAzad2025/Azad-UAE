@@ -20,9 +20,10 @@ def _resolve_user(user=None):
     if user is not None:
         return user
     try:
-        return current_user
+        candidate = current_user._get_current_object()
     except Exception:
         return None
+    return candidate if getattr(candidate, "is_authenticated", False) else None
 
 
 def is_platform_owner(user=None) -> bool:
