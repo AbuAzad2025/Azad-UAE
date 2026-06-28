@@ -142,11 +142,11 @@ class TestRunPythonModule:
         script_rel = 'scripts/verify_backup.py'
         script_abs = os.path.join(root, script_rel.replace('/', os.sep))
         if not os.path.isfile(script_abs):
-            script_abs = os.path.join(str(tmp_path), 'tmp_script.py')
+            script_abs = os.path.join(root, 'tests', '.pytest-temp', 'tmp_script.py')
+            os.makedirs(os.path.dirname(script_abs), exist_ok=True)
             with open(script_abs, 'w', encoding='utf-8') as fh:
                 fh.write('print("ok")\n')
-            rel = os.path.relpath(script_abs, root).replace('\\', '/')
-            script_rel = rel
+            script_rel = os.path.relpath(script_abs, root).replace('\\', '/')
         completed = subprocess.CompletedProcess([], 0, stdout='ok', stderr='')
         mock_run = mocker.patch('services.backup_exec.subprocess.run', return_value=completed)
         from services.backup_exec import run_repo_python_script

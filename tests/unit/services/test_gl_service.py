@@ -281,7 +281,8 @@ class TestBalancesAndStatements:
         balance = GLService.get_account_balance_for_branch(cash.id)
         assert balance is not None
 
-    def test_missing_account_returns_none(self):
+    def test_missing_account_returns_none(self, mocker):
+        mocker.patch('services.gl_service.db.session.get', return_value=None)
         assert GLService.get_account_balance_for_branch(999999) is None
 
     def test_account_statement(self, db_session, sample_tenant, sample_gl_accounts, mocker):

@@ -610,7 +610,12 @@ class TestChequeEdgePaths:
         mocker.patch('sqlalchemy.event.listens_for', side_effect=capture)
         register_cheque_event_listeners()
         err = mocker.patch('services.cheque_service.logger.error')
-        target = MagicMock(status='pending', cheque_number='EV3', due_date=MagicMock())
+
+        class _BadDue:
+            def __sub__(self, other):
+                raise RuntimeError('bad due')
+
+        target = MagicMock(status='pending', cheque_number='EV3', due_date=_BadDue())
         handlers[0](None, None, target)
         err.assert_called()
 
