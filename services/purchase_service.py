@@ -74,6 +74,20 @@ class PurchaseService:
         if not supplier_name:
             raise ValueError('⚠️ يجب إدخال اسم المورد.')
 
+        if not lines_data:
+            raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
+
+        has_valid_line = False
+        for line_data in lines_data:
+            product_id = line_data.get('product_id')
+            quantity = Decimal(str(line_data.get('quantity') or 0))
+            unit_cost = Decimal(str(line_data.get('unit_cost') or 0))
+            if product_id and quantity > 0 and unit_cost >= 0:
+                has_valid_line = True
+                break
+        if not has_valid_line:
+            raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
+
         # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
             get_active_tenant_id(user)
