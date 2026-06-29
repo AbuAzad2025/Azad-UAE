@@ -102,6 +102,8 @@ node_modules/
 
 # Generated artifacts / reports
 tools/reports/
+tools/qa/template_render_audit_last.txt
+tools/qa/template_render_audit_report.json
 
 # Ignore root-level legacy test/verify scripts (organized ones are in tests/ and scripts/)
 /test_*.py
@@ -152,6 +154,8 @@ ai_knowledge/data/training/*.json
 # Dev-only scripts & outputs
 scripts/audit/*.txt
 scripts/backup/*.json
+tools/qa/template_render_audit_last.txt
+tools/qa/template_render_audit_report.json
 
 # Large generated index files
 /PROJECT_AI_INDEX.md

@@ -404,7 +404,17 @@ def balance_sheet():
 @permission_required('view_ledger')
 def accounts_tree():
     """عرض شجرة الحسابات"""
-    tree = GLService.get_accounts_tree()
+    from models.tenant import Tenant
+    from utils.tenanting import get_active_tenant_id, is_platform_owner, require_active_tenant_id
+
+    tenant_id = get_active_tenant_id()
+    if tenant_id is None:
+        if is_platform_owner() and Tenant.query.filter_by(is_active=True).count() == 0:
+            flash('لا يوجد مستأجرون بعد. أنشئ شركة من لوحة المالك أولاً.', 'warning')
+            return render_template('ledger/accounts_tree.html', accounts_tree=[])
+        tenant_id = require_active_tenant_id()
+
+    tree = GLService.get_accounts_tree(tenant_id=tenant_id)
     return render_template('ledger/accounts_tree.html', accounts_tree=tree)
 
 

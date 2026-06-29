@@ -284,60 +284,37 @@ class TestRoleAndPermissionBootstrap:
 
 
 class TestCoreDataBootstrap:
-    def test_ensure_core_data_seeds_defaults(self, flask_app):
-        from models import Branch, Currency, ExpenseCategory, SystemSettings, Warehouse
+    def test_ensure_core_data_seeds_platform_reference_data(self, flask_app):
+        from models import Currency, SystemSettings
 
         settings = MagicMock(system_name='Azad Garage System')
-        branch = MagicMock(id=1, tenant_id=10, is_main=True)
-        warehouse = MagicMock(is_main=True, branch_id=None, tenant_id=None)
-        tenant = MagicMock(id=10, is_active=True)
-
-        branch_query = MagicMock()
-        branch_query.filter_by.return_value.first.return_value = branch
-        warehouse_query = MagicMock()
-        warehouse_query.filter_by.return_value.first.return_value = warehouse
         currency_query = MagicMock()
         currency_query.filter_by.return_value.first.return_value = None
-        category_query = MagicMock()
-        category_query.filter_by.return_value.first.return_value = None
 
         with flask_app.app_context(), patch.object(
             SystemSettings, 'get_current', return_value=settings
-        ), patch.object(Currency, 'query', currency_query), patch.object(
-            Branch, 'query', branch_query
-        ), patch('models.tenant.Tenant.query.filter_by', return_value=_query(tenant)), patch.object(
-            Warehouse, 'query', warehouse_query
-        ), patch.object(ExpenseCategory, 'query', category_query), patch(
+        ), patch.object(Currency, 'query', currency_query), patch(
             'utils.system_init.db.session'
         ) as session, patch(
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults'
-        ), patch('scripts.seed_industry_fields.seed_industry_fields'):
+        ) as store_defaults, patch('scripts.seed_industry_fields.seed_industry_fields') as seed_fields:
             system_init_module._ensure_core_data()
         session.commit.assert_called()
-        assert warehouse.branch_id == branch.id
-        assert warehouse.tenant_id == branch.tenant_id
+        settings.system_name = 'Azad ERP System'
+        store_defaults.assert_called_once()
+        seed_fields.assert_called_once()
 
     def test_ensure_core_data_handles_optional_seed_failures(self, flask_app):
-        from models import Branch, Currency, ExpenseCategory, SystemSettings, Warehouse
+        from models import Currency, SystemSettings
 
         settings = MagicMock(system_name='Azad ERP System')
-        branch = MagicMock(id=2, tenant_id=20, is_main=True)
-        warehouse = MagicMock(is_main=True, branch_id=2, tenant_id=20)
-        branch_query = MagicMock()
-        branch_query.filter_by.return_value.first.return_value = branch
-        warehouse_query = MagicMock()
-        warehouse_query.filter_by.return_value.first.return_value = warehouse
         currency_query = MagicMock()
         currency_query.filter_by.return_value.first.return_value = MagicMock()
-        category_query = MagicMock()
-        category_query.filter_by.return_value.first.return_value = MagicMock()
         with flask_app.app_context(), patch.object(
             SystemSettings, 'get_current', return_value=settings
-        ), patch.object(Currency, 'query', currency_query), patch.object(
-            Branch, 'query', branch_query
-        ), patch.object(Warehouse, 'query', warehouse_query), patch.object(
-            ExpenseCategory, 'query', category_query
-        ), patch('utils.system_init.db.session'), patch(
+        ), patch.object(Currency, 'query', currency_query), patch(
+            'utils.system_init.db.session'
+        ), patch(
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults',
             side_effect=RuntimeError('store'),
         ), patch(
@@ -345,35 +322,22 @@ class TestCoreDataBootstrap:
         ):
             system_init_module._ensure_core_data()
 
-    def test_ensure_core_data_creates_missing_structures(self, flask_app):
-        from models import Branch, Currency, ExpenseCategory, SystemSettings, Warehouse
-        from models.tenant import Tenant
+    def test_ensure_core_data_creates_missing_currencies(self, flask_app):
+        from models import Currency, SystemSettings
 
         settings = MagicMock(system_name='Azad ERP System')
-        branch_query = MagicMock()
-        branch_query.filter_by.return_value.first.return_value = None
-        tenant_query = MagicMock()
-        tenant_query.filter_by.return_value.first.return_value = None
-        warehouse_query = MagicMock()
-        warehouse_query.filter_by.return_value.first.return_value = None
         currency_query = MagicMock()
         currency_query.filter_by.return_value.first.return_value = None
-        category_query = MagicMock()
-        category_query.filter_by.return_value.first.return_value = None
 
         with flask_app.app_context(), patch.object(
             SystemSettings, 'get_current', return_value=settings
-        ), patch.object(Currency, 'query', currency_query), patch.object(
-            Branch, 'query', branch_query
-        ), patch.object(Tenant, 'query', tenant_query), patch.object(
-            Warehouse, 'query', warehouse_query
-        ), patch.object(ExpenseCategory, 'query', category_query), patch(
+        ), patch.object(Currency, 'query', currency_query), patch(
             'utils.system_init.db.session'
         ) as session, patch(
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults'
         ), patch('scripts.seed_industry_fields.seed_industry_fields'):
             system_init_module._ensure_core_data()
-        assert session.add.call_count >= 3
+        assert session.add.call_count >= 1
 
 
 class TestOwnerUserBootstrap:

@@ -5,6 +5,26 @@ from models import User, Role, Permission
 from sqlalchemy import and_
 
 
+def ensure_clean_platform(app):
+    """Bootstrap empty SaaS platform: schema metadata + owner only — no tenants."""
+    with app.app_context():
+        from utils.tenanting import without_tenant_scope
+
+        with without_tenant_scope():
+            db.create_all()
+            _ensure_permissions()
+            owner_role = _ensure_owner_role()
+            owner_user, owner_created = _ensure_owner_user(owner_role)
+            _record_server_activation(owner_user, owner_created)
+            _ensure_super_admin_role()
+            _ensure_developer_role()
+            _ensure_functional_roles()
+            _ensure_platform_reference_data()
+            current_app.logger.info(
+                "SystemInit: Clean platform bootstrap complete (no tenants seeded)."
+            )
+
+
 def ensure_system_integrity(app):
     """
     Ensure the system has the basic requirements to run:
@@ -179,35 +199,23 @@ def _ensure_functional_roles():
         acc_role.permissions = get_perms(*acc_codes)
         db.session.commit()
 
-def _ensure_core_data():
-    """
-    Initialize essential system data that must survive resets.
-    - Currencies (AED, USD, ILS)
-    - Chart of Accounts (Basic Tree)
-    - Main Warehouse
-    - Expense Categories
-    - System Settings
-    """
+def _ensure_platform_reference_data():
+    """Platform-wide reference data only — no tenant, branch, or warehouse."""
     from decimal import Decimal
-    from models import Branch, Currency, Warehouse, ExpenseCategory, SystemSettings, ExchangeRate
-    
-    current_app.logger.info("SystemInit: Ensuring Core Data Integrity...")
-    
-    # 1. System Settings
-    settings = SystemSettings.get_current()
-    if settings.system_name in ('Azad Garage System', 'Garage Management System'): # Migrate old default
-         settings.system_name = 'Azad ERP System'
-         settings.currency_symbol = 'AED'
-         settings.default_currency = 'AED'
-         db.session.commit()
+    from models import Currency, SystemSettings, ExchangeRate
 
-    # 2. Currencies
+    settings = SystemSettings.get_current()
+    if settings.system_name in ('Azad Garage System', 'Garage Management System'):
+        settings.system_name = 'Azad ERP System'
+        settings.currency_symbol = 'AED'
+        settings.default_currency = 'AED'
+        db.session.commit()
+
     currencies = [
         {'code': 'AED', 'name': 'UAE Dirham', 'name_ar': 'درهم إماراتي', 'symbol': 'د.إ', 'rate': 1.0, 'is_base': True},
         {'code': 'USD', 'name': 'US Dollar', 'name_ar': 'دولار أمريكي', 'symbol': '$', 'rate': 0.272, 'is_base': False},
         {'code': 'ILS', 'name': 'Israeli Shekel', 'name_ar': 'شيقل إسرائيلي', 'symbol': '₪', 'rate': 1.02, 'is_base': False},
     ]
-    
     for c_data in currencies:
         curr = Currency.query.filter_by(code=c_data['code']).first()
         if not curr:
@@ -217,100 +225,26 @@ def _ensure_core_data():
                 name_ar=c_data['name_ar'],
                 symbol=c_data['symbol'],
                 is_base=c_data['is_base'],
-                is_active=True
+                is_active=True,
             )
             db.session.add(curr)
             db.session.flush()
-            
             if not c_data['is_base']:
-                # Add initial exchange rate
-                rate = ExchangeRate(
+                db.session.add(ExchangeRate(
                     currency_id=curr.id,
                     from_currency=c_data['code'],
                     to_currency='AED',
                     rate=Decimal(str(c_data['rate'])),
                     source='System Init',
-                    is_manual=True
-                )
-                db.session.add(rate)
-            
-            current_app.logger.info(f"SystemInit: Created Currency {c_data['code']}")
-
-    # 3. Main Branch
-    main_branch = Branch.query.filter_by(is_main=True).first()
-    if not main_branch:
-        # Get or create a default tenant for the main branch
-        from models.tenant import Tenant
-        default_tenant = Tenant.query.filter_by(is_active=True).first()
-        if not default_tenant:
-            default_tenant = Tenant(
-                name='Default Tenant',
-                name_ar='الشركة الافتراضية',
-                slug='default',
-                is_active=True,
-                is_suspended=False,
-            )
-            db.session.add(default_tenant)
-            db.session.flush()
-        
-        main_branch = Branch(
-            tenant_id=default_tenant.id,
-            name='Main Branch',
-            code='MAIN',
-            city='HQ',
-            is_main=True,
-            is_active=True,
-        )
-        db.session.add(main_branch)
-        db.session.flush()
-        current_app.logger.info("SystemInit: Created Main Branch")
-
-    # 4. Main Warehouse
-    main_wh = Warehouse.query.filter_by(is_main=True).first()
-    if not main_wh:
-        main_wh = Warehouse(
-            tenant_id=main_branch.tenant_id,
-            name='Main Warehouse',
-            name_ar='المستودع الرئيسي',
-            code='WH-MAIN',
-            branch_id=main_branch.id,
-            is_main=True,
-            is_active=True
-        )
-        db.session.add(main_wh)
-        current_app.logger.info("SystemInit: Created Main Warehouse")
-    elif getattr(main_wh, 'branch_id', None) is None:
-        main_wh.branch_id = main_branch.id
-    if getattr(main_wh, 'tenant_id', None) is None:
-        main_wh.tenant_id = main_branch.tenant_id
-
-    # 5. Chart of Accounts — now handled by GLTreeBuilder via _ensure_tenant_gl_trees()
-    # Registry-driven provisioning replaces hardcoded accounts.
-    # See: services/gl_tree_builder.py, models/gl_account_registry.py
-
-    # 6. Expense Categories
-    categories = [
-        {'name': 'Rent', 'name_ar': 'إيجار', 'code': '6200'},
-        {'name': 'Salaries', 'name_ar': 'رواتب', 'code': '6300'},
-        {'name': 'Utilities', 'name_ar': 'فواتير', 'code': '6400'},
-        {'name': 'Maintenance', 'name_ar': 'صيانة', 'code': '6100'},
-        {'name': 'Office Supplies', 'name_ar': 'قرطاسية', 'code': '6100'},
-        {'name': 'Marketing', 'name_ar': 'تسويق', 'code': '6100'},
-    ]
-    
-    for cat_data in categories:
-        cat = ExpenseCategory.query.filter_by(name=cat_data['name'], tenant_id=main_branch.tenant_id).first()
-        if not cat:
-            cat = ExpenseCategory(
-                tenant_id=main_branch.tenant_id,
-                name=cat_data['name'],
-                name_ar=cat_data['name_ar'],
-                gl_account_code=cat_data['code']
-            )
-            db.session.add(cat)
-            current_app.logger.info(f"SystemInit: Created Expense Category {cat.name}")
-
+                    is_manual=True,
+                ))
     db.session.commit()
+
+
+def _ensure_core_data():
+    """Platform reference data only. Tenants/branches are created via Owner panel."""
+    current_app.logger.info("SystemInit: Ensuring platform reference data...")
+    _ensure_platform_reference_data()
     current_app.logger.info("SystemInit: Core Data Verification Complete.")
 
     try:

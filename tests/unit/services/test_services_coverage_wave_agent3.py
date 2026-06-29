@@ -469,44 +469,55 @@ class TestGamificationService:
 
 
 # ---------------------------------------------------------------------------
-# gl_auto_service — corrected handler indexes hitting purchase/receipt branches
+# gl_auto_service — validation branches (purchase/receipt negative amounts)
 # ---------------------------------------------------------------------------
 
 class TestGlAutoValidationBranches:
-    def _handlers(self):
+    def _handler_for(self, model_name):
         from services import gl_auto_service
 
-        handlers = []
-        with patch(
-            "sqlalchemy.event.listens_for",
-            side_effect=lambda model, event: lambda fn: handlers.append(fn) or fn,
-        ):
+        handlers = {}
+
+        def listens_for(model, event):
+            def decorator(fn):
+                key = getattr(model, "__name__", str(model))
+                handlers.setdefault(key, []).append(fn)
+                return fn
+            return decorator
+
+        with patch("sqlalchemy.event.listens_for", side_effect=listens_for):
             gl_auto_service.register_validation_event_listeners()
-        return handlers
+        return handlers[model_name][0]
 
-    def test_purchase_negative_amount_logs_error(self, caplog):
-        purchase_handler = self._handlers()[2]
+    def test_purchase_negative_amount_logs_error(self):
+        from services import gl_auto_service
+
         target = MagicMock(purchase_number="P-9", amount_aed=Decimal("-3"))
-        with caplog.at_level("ERROR"):
-            purchase_handler(None, None, target)
-        assert "P-9" in caplog.text
+        with patch.object(gl_auto_service.logger, "error") as mock_error:
+            self._handler_for("Purchase")(None, None, target)
+        mock_error.assert_called_once()
+        assert "P-9" in mock_error.call_args[0][0]
 
-    def test_purchase_validation_exception_logged(self, caplog):
-        purchase_handler = self._handlers()[2]
+    def test_purchase_validation_exception_logged(self):
+        from services import gl_auto_service
+
         target = MagicMock()
         type(target).amount_aed = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("boom"))
         )
-        with caplog.at_level("ERROR"):
-            purchase_handler(None, None, target)
-        assert "Failed to validate purchase" in caplog.text
+        with patch.object(gl_auto_service.logger, "error") as mock_error:
+            self._handler_for("Purchase")(None, None, target)
+        mock_error.assert_called_once()
+        assert "Failed to validate purchase" in mock_error.call_args[0][0]
 
-    def test_receipt_negative_amount_logs_error(self, caplog):
-        receipt_handler = self._handlers()[4]
+    def test_receipt_negative_amount_logs_error(self):
+        from services import gl_auto_service
+
         target = MagicMock(receipt_number="R-9", amount_aed=Decimal("-1"))
-        with caplog.at_level("ERROR"):
-            receipt_handler(None, None, target)
-        assert "R-9" in caplog.text
+        with patch.object(gl_auto_service.logger, "error") as mock_error:
+            self._handler_for("Receipt")(None, None, target)
+        mock_error.assert_called_once()
+        assert "R-9" in mock_error.call_args[0][0]
 
 
 # ---------------------------------------------------------------------------
