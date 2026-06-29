@@ -210,7 +210,7 @@ class TestCreatePurchaseValidations:
                     _user(), {'supplier_name': 'Local'}, [_line_data()], warehouse_id=3,
                 )
 
-    def test_no_lines_rollback(self, app, mocker):
+    def test_no_lines_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -218,9 +218,10 @@ class TestCreatePurchaseValidations:
                 PurchaseService.create_purchase(
                     _user(), {'supplier_name': 'Local'}, [], warehouse_id=3,
                 )
-        session.rollback.assert_called()
+        session.rollback.assert_not_called()
+        session.flush.assert_not_called()
 
-    def test_zero_quantity_rollback(self, app, mocker):
+    def test_zero_quantity_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -229,7 +230,8 @@ class TestCreatePurchaseValidations:
                     _user(), {'supplier_name': 'Local'},
                     [_line_data(quantity=0)], warehouse_id=3,
                 )
-        session.rollback.assert_called()
+        session.rollback.assert_not_called()
+        session.flush.assert_not_called()
 
     def test_product_not_found_rollback(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
@@ -243,7 +245,7 @@ class TestCreatePurchaseValidations:
                 )
         session.rollback.assert_called()
 
-    def test_negative_unit_cost_skipped(self, app, mocker):
+    def test_negative_unit_cost_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -252,7 +254,8 @@ class TestCreatePurchaseValidations:
                     _user(), {'supplier_name': 'Local'},
                     [_line_data(unit_cost=-1)], warehouse_id=3,
                 )
-        session.rollback.assert_called()
+        session.rollback.assert_not_called()
+        session.flush.assert_not_called()
 
 
 class TestCreatePurchaseCurrency:
