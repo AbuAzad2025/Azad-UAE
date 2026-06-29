@@ -89,6 +89,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('2200', 'Non-Current Liabilities', 'خصوم غير متداولة', 'liability', 1, True, '2000'),
     GLAccountTemplate('3000', 'Equity', 'حقوق الملكية', 'equity', 0, True),
     GLAccountTemplate('3100', 'Capital', 'رأس المال', 'equity', 1, False, '3000'),
+    GLAccountTemplate('3130', 'Opening Balance Equity', 'رصيد افتتاحي', 'equity', 1, False, '3000'),
     GLAccountTemplate('3200', 'Retained Earnings', 'أرباح مرحلة', 'equity', 1, False, '3000'),
     GLAccountTemplate('3300', 'Owner Drawings', 'مسحوبات المالك', 'equity', 1, False, '3000'),
     GLAccountTemplate('4000', 'Revenue', 'الإيرادات', 'revenue', 0, True),
@@ -267,6 +268,7 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate('COGS_REVERSAL', '5100', 'core_inventory'),
             GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_GAIN', '5150', 'core_inventory'),
             GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_LOSS', '5150', 'core_inventory'),
+            GLConceptMappingTemplate('OPENING_BALANCE_EQUITY', '3130', 'core_inventory'),
         ],
     ),
     'shop_online': GLModuleDefinition(

@@ -19,6 +19,7 @@ from utils.gl_reference_types import LEGACY_REF_MAP, normalize_ref_type
 _CURRENCY_RE = re.compile(r"^[A-Z]{3}$")
 _PHONE_MAX_LEN = 50
 _PHONE_ALLOWED_RE = re.compile(r"^[\d\s+\-().#/]+$")
+_USER_EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 # sale.status values observed in DB + constants
 # pending is required for deferred online-store checkout flow before fulfillment.
@@ -45,6 +46,23 @@ def validate_currency_code(value: Optional[str], *, field_label: str = "currency
     if not _CURRENCY_RE.match(code):
         raise FieldValidationError(f"{field_label}: يجب أن تكون رمز ISO من 3 أحرف (مثل AED).")
     return code
+
+
+def normalize_user_email_required(value: Optional[str]) -> str:
+    if value is None or not str(value).strip():
+        raise FieldValidationError(
+            "البريد الإلكتروني مطلوب. / Email is required.\n"
+            "مثال: ahmed@example.com"
+        )
+    email = str(value).strip().lower()
+    if len(email) > 254:
+        raise FieldValidationError("البريد الإلكتروني طويل جداً. / Email exceeds maximum length.")
+    if not _USER_EMAIL_RE.match(email):
+        raise FieldValidationError(
+            "البريد الإلكتروني غير صحيح. / Invalid email format.\n"
+            "مثال: ahmed@example.com"
+        )
+    return email
 
 
 def normalize_phone_optional(value: Optional[str], *, field_label: str = "phone") -> Optional[str]:

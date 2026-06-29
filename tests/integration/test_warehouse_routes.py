@@ -198,3 +198,66 @@ class TestWarehouseAddStock:
         total_credit = sum((l.credit or 0) for l in lines)
         assert total_debit == total_credit
         assert total_debit == Decimal('200'), f'Expected 200 (10 * 20), got {total_debit}'
+
+
+class TestWarehouseCreate:
+    def test_create_warehouse_persists_and_lists(self, app, db_session, client):
+        import uuid
+        from models import Tenant, Branch, User, Role, Warehouse
+
+        tid = str(uuid.uuid4())[:8]
+        tenant = Tenant(
+            name=f'WH Create {tid}',
+            name_ar=f'WH Create {tid}',
+            slug=f'wh-create-{tid}',
+            default_currency='AED',
+            base_currency='AED',
+        )
+        db_session.add(tenant)
+        db_session.flush()
+
+        branch = Branch(tenant_id=tenant.id, name=f'Main {tid}', code=f'BR{tid[:4]}', is_main=True)
+        db_session.add(branch)
+        db_session.flush()
+
+        role = Role.query.filter_by(slug='super_admin').first()
+        if role is None:
+            role = Role(name=f'Admin {tid}', slug=f'super-admin-{tid}', is_active=True)
+            db_session.add(role)
+            db_session.flush()
+
+        user = User(
+            username=f'whadmin-{tid}',
+            email=f'whadmin-{tid}@t.com',
+            full_name='WH Admin',
+            role_id=role.id,
+            tenant_id=tenant.id,
+            branch_id=branch.id,
+            is_active=True,
+            is_owner=True,
+        )
+        user.set_password('x')
+        db_session.add(user)
+        db_session.commit()
+
+        with client:
+            resp = client.post('/auth/login', data={
+                'username': user.username,
+                'password': 'x',
+            }, follow_redirects=True)
+            assert resp.status_code == 200
+
+            resp = client.post('/warehouse/create', data={
+                'name': f'Storage {tid}',
+                'location': 'Dubai',
+            }, follow_redirects=False)
+            assert resp.status_code in (302, 303)
+
+            created = Warehouse.query.filter_by(tenant_id=tenant.id, name=f'Storage {tid}').first()
+            assert created is not None
+            assert created.branch_id == branch.id
+            assert created.is_active is True
+
+            resp = client.get('/warehouse/list')
+            assert resp.status_code == 200
+            assert f'Storage {tid}'.encode() in resp.data

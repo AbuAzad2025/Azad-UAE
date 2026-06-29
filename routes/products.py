@@ -1,5 +1,5 @@
 from io import BytesIO
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_file
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_file, abort, abort
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter
@@ -21,6 +21,129 @@ from utils.gl_reference_types import GLRef
 from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id, get_active_tenant_id
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
+
+
+def _tenant_business_type_default():
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        return 'general'
+    from models import Tenant
+    tenant = db.session.get(Tenant, int(tid))
+    if tenant and tenant.business_type:
+        return (tenant.business_type or 'general').strip().lower()
+    return 'general'
+
+
+def _tenant_category_or_404(category_id):
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        abort(404)
+    category = ProductCategory.query.filter_by(
+        id=int(category_id),
+        tenant_id=int(tid),
+        is_active=True,
+    ).first()
+    if not category:
+        abort(404)
+    return category
+
+
+def _category_payload(data):
+    if not data:
+        return None, None, None, 'بيانات غير صحيحة'
+    name = (data.get('name') or '').strip()
+    name_ar = (data.get('name_ar') or '').strip() or None
+    description = (data.get('description') or '').strip() or None
+    if not name:
+        return None, None, None, '⚠️ يجب إدخال اسم الفئة.'
+    return name, name_ar, description, None
+
+
+def _category_name_taken(tenant_id, name, exclude_id=None):
+    q = ProductCategory.query.filter(
+        ProductCategory.tenant_id == tenant_id,
+        db.func.lower(ProductCategory.name) == name.lower(),
+    )
+    if exclude_id:
+        q = q.filter(ProductCategory.id != int(exclude_id))
+    return q.first() is not None
+
+
+def _category_json(category):
+    product_count = Product.query.filter_by(
+        tenant_id=category.tenant_id,
+        category_id=category.id,
+    ).count()
+    return {
+        'id': category.id,
+        'name': category.name,
+        'name_ar': category.name_ar,
+        'description': category.description,
+        'product_count': product_count,
+    }
+
+
+def _tenant_category_or_404(category_id):
+    """Load an active product category scoped to the active tenant."""
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        abort(404)
+    category = ProductCategory.query.filter_by(
+        id=int(category_id),
+        tenant_id=int(tid),
+        is_active=True,
+    ).first()
+    if not category:
+        abort(404)
+    return category
+
+
+def _category_name_conflict(tenant_id, name, exclude_id=None):
+    q = ProductCategory.query.filter(
+        ProductCategory.tenant_id == tenant_id,
+        db.func.lower(ProductCategory.name) == name.lower(),
+    )
+    if exclude_id:
+        q = q.filter(ProductCategory.id != int(exclude_id))
+    return q.first()
+
+
+def _category_to_json(category):
+    return {
+        'id': category.id,
+        'name': category.name,
+        'name_ar': category.name_ar,
+        'description': category.description,
+    }
+
+
+def _parse_category_payload(data):
+    if not data:
+        return None, None, None, 'بيانات غير صحيحة'
+    name = (data.get('name') or '').strip()
+    name_ar = (data.get('name_ar') or '').strip() or None
+    description = (data.get('description') or '').strip() or None
+    if not name:
+        return None, None, None, '⚠️ يجب إدخال اسم الفئة.'
+    return name, name_ar, description, None
+
+
+def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_price):
+    """Server-side rules aligned with the create form legend."""
+    errors = []
+    if not (request.form.get('name') or '').strip():
+        errors.append('اسم المنتج (إنجليزي) مطلوب')
+    if form.regular_price.data is None:
+        errors.append('سعر البيع مطلوب')
+    elif form.regular_price.data < 0:
+        errors.append('سعر البيع لا يمكن أن يكون سالباً')
+    if not warehouse_id:
+        errors.append('يجب اختيار المستودع')
+    if initial_stock < 0:
+        errors.append('المخزون الافتتاحي لا يمكن أن يكون سالباً')
+    if initial_stock > 0 and cost_price <= 0:
+        errors.append('عند إدخال مخزون افتتاحي يجب تحديد سعر تكلفة أكبر من صفر (لتسجيل القيد المحاسبي)')
+    return errors
 
 
 def _scoped_customers_query(customer_type=None):
@@ -583,32 +706,47 @@ def create():
     categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     form.category_id.choices = [(0, 'بلا')] + [(c.id, c.name) for c in categories]
     preselected_warehouse_id = request.args.get('warehouse_id', type=int)
+    default_industry = _tenant_business_type_default()
     merchants = _scoped_customers_query('merchant').order_by(Customer.name).all()
     partners = _scoped_customers_query('partner').order_by(Customer.name).all()
     
     if request.method == 'POST':
         if form.validate_on_submit():
             try:
-                sku = request.form.get('sku')
-                if not sku:
-                    sku = generate_sku()
+                sku = (request.form.get('sku') or '').strip() or generate_sku()
                 
                 warehouse_id = request.form.get('warehouse_id', type=int)
                 current_stock = safe_float(request.form.get('current_stock'))
                 initial_stock = current_stock
-                
-                # التحقق من المستودع
-                if not warehouse_id:
-                    flash('⚠️ يجب اختيار المستودع', 'warning')
+                cost_price = safe_float(request.form.get('cost_price'))
+
+                payload_errors = _validate_product_create_payload(
+                    form,
+                    warehouse_id=warehouse_id,
+                    initial_stock=initial_stock,
+                    cost_price=cost_price,
+                )
+                if payload_errors:
+                    for msg in payload_errors:
+                        flash(f'⚠️ {msg}', 'warning')
                     warehouses = get_accessible_warehouses(current_user)
-                    return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                    return render_template(
+                        'products/create.html',
+                        form=form,
+                        categories=categories,
+                        warehouses=warehouses,
+                        merchants=merchants,
+                        partners=partners,
+                        preselected_warehouse_id=preselected_warehouse_id,
+                        default_industry=default_industry,
+                    )
                 
                 try:
                     warehouse = ensure_warehouse_access(warehouse_id, user=current_user)
-                except ValueError as exc:
+                except ValueError:
                     flash('⚠️ المستودع المحدد غير صالح', 'warning')
                     warehouses = get_accessible_warehouses(current_user)
-                    return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                    return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners, preselected_warehouse_id=preselected_warehouse_id, default_industry=default_industry)
                 
                 merchant_customer_id = request.form.get('merchant_customer_id', type=int)
                 if merchant_customer_id:
@@ -616,13 +754,13 @@ def create():
                     if not merchant_customer:
                         flash('⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.', 'warning')
                         warehouses = get_accessible_warehouses(current_user)
-                        return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                        return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners, preselected_warehouse_id=preselected_warehouse_id, default_industry=default_industry)
                 
                 partner_rows, partner_error = _parse_product_partners(request.form)
                 if partner_error:
                     flash(partner_error, 'warning')
                     warehouses = get_accessible_warehouses(current_user)
-                    return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                    return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners, preselected_warehouse_id=preselected_warehouse_id, default_industry=default_industry)
                 
                 unit_value = request.form.get('unit') or None
                 has_serial_number = request.form.get('has_serial_number') in ('on', 'true', '1', True)
@@ -661,7 +799,7 @@ def create():
                     merchant_customer_id=merchant_customer_id or None,
                     has_serial_number=has_serial_number,
                     warranty_days=warranty_days,
-                    industry=request.form.get('industry', 'general') or 'general',
+                    industry=request.form.get('industry', default_industry) or default_industry,
                 )
                 extra_fields = {}
                 for key in request.form:
@@ -693,11 +831,14 @@ def create():
                     price_val = safe_float(request.form.get(field_name))
                     if price_val and price_val > 0:
                         from models import ProductPriceTier
+                        from utils.currency_utils import resolve_tenant_base_currency
+                        tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
                         tier = ProductPriceTier(
                             tenant_id=product.tenant_id,
                             product_id=product.id,
                             tier_code=tier_code,
                             price=price_val,
+                            currency=tier_currency,
                         )
                         db.session.add(tier)
                 if partner_rows:
@@ -746,7 +887,9 @@ def create():
                            warehouses=warehouses,
                            merchants=merchants,
                            partners=partners,
-                           preselected_warehouse_id=preselected_warehouse_id)
+                           preselected_warehouse_id=preselected_warehouse_id,
+                           default_industry=default_industry,
+                           categories_count=len(categories))
 
 
 @products_bp.route('/<int:id>')
@@ -1058,24 +1201,16 @@ def create_category():
         if request.is_json and data is None:
             return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
 
-        name = (data.get('name') or '').strip()
-        name_ar = (data.get('name_ar') or '').strip() or None
-        description = (data.get('description') or '').strip() or None
-
-        if not name:
-            message = '⚠️ يجب إدخال اسم الفئة.'
+        name, name_ar, description, err = _category_payload(data)
+        if err:
+            message = err
             if request.is_json:
                 return jsonify({'success': False, 'error': message}), 400
             flash(message, 'warning')
             return redirect(url_for('products.categories'))
 
-        # منع التكرار (نفس الاسم بغض النظر عن حالة الأحرف)
         tid = get_active_tenant_id(current_user)
-        existing = ProductCategory.query.filter(
-            ProductCategory.tenant_id == tid,
-            db.func.lower(ProductCategory.name) == name.lower()
-        ).first()
-        if existing:
+        if _category_name_taken(tid, name):
             message = '⚠️ هذه الفئة موجودة مسبقاً.'
             if request.is_json:
                 return jsonify({'success': False, 'error': message}), 400
@@ -1097,12 +1232,7 @@ def create_category():
             return jsonify({
                 'success': True,
                 'message': 'تم إضافة الفئة بنجاح',
-                'category': {
-                    'id': category.id,
-                    'name': category.name,
-                    'name_ar': category.name_ar,
-                    'description': category.description
-                }
+                'category': _category_json(category),
             })
 
         flash('✅ تم إضافة التصنيف بنجاح!', 'success')
@@ -1117,6 +1247,95 @@ def create_category():
                 'error': str(e)
             }), 400
 
+        flash(f'❌ حدث خطأ: {str(e)}', 'danger')
+        return redirect(url_for('products.categories'))
+
+
+@products_bp.route('/categories/<int:id>', methods=['GET'])
+@login_required
+@permission_required('manage_products')
+def get_category(id):
+    category = _tenant_category_or_404(id)
+    return jsonify({'success': True, 'category': _category_json(category)})
+
+
+@products_bp.route('/categories/<int:id>/update', methods=['POST', 'PUT'])
+@login_required
+@permission_required('manage_products')
+def update_category(id):
+    try:
+        category = _tenant_category_or_404(id)
+        data = request.get_json(silent=True) if request.is_json else request.form
+        if request.is_json and data is None:
+            return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
+
+        name, name_ar, description, err = _category_payload(data)
+        if err:
+            if request.is_json:
+                return jsonify({'success': False, 'error': err}), 400
+            flash(err, 'warning')
+            return redirect(url_for('products.categories'))
+
+        tid = get_active_tenant_id(current_user)
+        if _category_name_taken(tid, name, exclude_id=category.id):
+            message = '⚠️ هذه الفئة موجودة مسبقاً.'
+            if request.is_json:
+                return jsonify({'success': False, 'error': message}), 400
+            flash(message, 'warning')
+            return redirect(url_for('products.categories'))
+
+        category.name = name
+        category.name_ar = name_ar
+        category.description = description
+        db.session.commit()
+        LoggingCore.log_audit('update', 'product_categories', category.id)
+
+        if request.is_json:
+            return jsonify({
+                'success': True,
+                'message': 'تم تحديث الفئة بنجاح',
+                'category': _category_json(category),
+            })
+        flash('✅ تم تحديث الفئة بنجاح!', 'success')
+        return redirect(url_for('products.categories'))
+    except Exception as e:
+        db.session.rollback()
+        if request.is_json:
+            return jsonify({'success': False, 'error': str(e)}), 400
+        flash(f'❌ حدث خطأ: {str(e)}', 'danger')
+        return redirect(url_for('products.categories'))
+
+
+@products_bp.route('/categories/<int:id>/delete', methods=['POST', 'DELETE'])
+@login_required
+@permission_required('manage_products')
+def delete_category(id):
+    try:
+        category = _tenant_category_or_404(id)
+        tid = get_active_tenant_id(current_user)
+        product_count = Product.query.filter_by(
+            tenant_id=tid,
+            category_id=category.id,
+        ).count()
+        if product_count > 0:
+            message = f'⚠️ لا يمكن حذف الفئة لأنها مرتبطة بـ {product_count} منتج. انقل المنتجات لفئة أخرى أولاً.'
+            if request.is_json:
+                return jsonify({'success': False, 'error': message, 'product_count': product_count}), 400
+            flash(message, 'warning')
+            return redirect(url_for('products.categories'))
+
+        category.is_active = False
+        db.session.commit()
+        LoggingCore.log_audit('delete', 'product_categories', category.id)
+
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'تم حذف الفئة بنجاح'})
+        flash('✅ تم حذف الفئة بنجاح!', 'success')
+        return redirect(url_for('products.categories'))
+    except Exception as e:
+        db.session.rollback()
+        if request.is_json:
+            return jsonify({'success': False, 'error': str(e)}), 400
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
         return redirect(url_for('products.categories'))
 

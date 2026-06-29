@@ -12,14 +12,11 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="float-right">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
+                        <button type="button" class="btn btn-primary js-category-add" data-toggle="modal" data-target="#categoryModal">
                             <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}
                         </button>
                         <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Products_3') }}
-                        </a>
-                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
                         </a>
                     </div>
                 </div>
@@ -29,53 +26,46 @@
 
     <section class="content">
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ t('فئات') }} {{ t('Products') }}</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>{{ t('Name') }}</th>
-                                            <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
-                                            <th>{{ t('Description') }}</th>
-                                            <th>{{ t('Count') }} {{ t('Products') }}</th>
-                                            <th>{{ t('Status') }}</th>
-                                            <th>{{ t('الإجراءات') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for category in categories %}
-                                        <tr>
-                                            <td>{{ category.name }}</td>
-                                            <td>{{ category.name_ar or '' }}</td>
-                                            <td>{{ category.description or '' }}</td>
-                                            <td>{{ category.products.count() if category.products else 0 }}</td>
-                                            <td>
-                                                {% if category.is_active %}
-                                                    <span class="badge badge-success">{{ t('Active') }}</span>
-                                                {% else %}
-                                                    <span class="badge badge-danger">{{ t('Inactive') }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-primary">
-                                                    <i class="fas fa-edit"></i> {{ t('Edit') }}
-                                                </button>
-                                                <button type="button" class="btn btn-danger">
-                                                    <i class="fas fa-trash"></i> {{ t('Delete') }}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('Name') }}</th>
+                                    <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
+                                    <th>{{ t('Description') }}</th>
+                                    <th>{{ t('Count') }} {{ t('Products') }}</th>
+                                    <th>{{ t('الإجراءات') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.name_ar or '' }}</td>
+                                    <td>{{ category.description or '' }}</td>
+                                    <td>{{ category.products.filter_by(tenant_id=category.tenant_id).count() if category.tenant_id else category.products.count() }}</td>
+                                    <td class="text-nowrap">
+                                        <button type="button" class="btn btn-sm btn-primary js-category-row-edit"
+                                          data-id="{{ category.id }}"
+                                          data-name="{{ category.name|e }}"
+                                          data-name-ar="{{ (category.name_ar or '')|e }}"
+                                          data-description="{{ (category.description or '')|e }}">
+                                            <i class="fas fa-edit"></i> {{ t('Edit') }}
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger js-category-row-delete"
+                                          data-id="{{ category.id }}"
+                                          data-label="{{ (category.name_ar or category.name)|e }}">
+                                            <i class="fas fa-trash"></i> {{ t('Delete') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">لا توجد فئات — أضف فئة جديدة</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -83,38 +73,24 @@
     </section>
 </div>
 
+{% include 'products/_category_modal.html' %}
+{% endblock %}
 
-<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ t('Add') }} {{ t('فئة') }} {{ t('Product_2') }} {{ t('New_3') }}</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form class="needs-validation" method="POST" action="{{ url_for('products.create_category') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="name">{{ t('Name') }}:</label>
-                        <input type="text" class="form-control" id="name" name="name" required aria-label="name" minlength="2" maxlength="100">
-                    </div>
-                    <div class="form-group">
-                        <label for="name_ar">{{ t('Name') }} {{ t('In Arabic') }}:</label>
-                        <input type="text" class="form-control" id="name_ar" name="name_ar" aria-label="name ar" minlength="2" maxlength="100">
-                    </div>
-                    <div class="form-group">
-                        <label for="description">{{ t('Description') }}:</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" aria-label="description" maxlength="500"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
-                    <button type="submit" class="btn btn-primary">{{ t('Add') }}</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
+<script>
+$(function() {
+  $('.js-category-add').on('click', function() {
+    $('#categoryModal').removeData('edit-id');
+    $('#categoryModal .js-category-modal-title').text('إضافة فئة منتجات');
+    $('#categoryModal .js-category-save-label').text('حفظ الفئة');
+    $('#category_name, #category_name_ar, #category_description').val('');
+  });
+  initCategoryListControls({
+    createUrl: "{{ url_for('products.create_category') }}",
+    updateUrl: function(id) { return "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'); },
+    deleteUrl: function(id) { return "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/'); }
+  });
+});
+</script>
 {% endblock %}

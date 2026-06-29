@@ -299,6 +299,8 @@ class GLService:
 
             # Mapping-owned (default) — resolve only through GLAccountMapping
             if concept_code:
+                if ensure_core:
+                    GLService.ensure_gl_mappings(tenant_id=tenant_id)
                 account = resolve_gl_account(
                     tenant_id=tenant_id,
                     concept_code=concept_code,
@@ -502,7 +504,40 @@ class GLService:
             from flask import current_app
             current_app.logger.info(f"GLTreeBuilder: Tenant {tenant_id} report: {audit_report}")
 
+        if is_dynamic_gl_mapping_enabled():
+            mapping_report = GLService.ensure_gl_mappings(tenant_id=tenant_id)
+            audit_report['gl_mappings'] = mapping_report
+
         return audit_report
+
+    @staticmethod
+    def ensure_gl_mappings(tenant_id=None):
+        """Provision GLAccountMapping rows required when dynamic GL mapping is enabled."""
+        from models import Tenant
+        from services.gl_provisioning_service import GLProvisioningService, ProvisionResult
+
+        if not is_dynamic_gl_mapping_enabled():
+            return {'created_mappings': 0, 'skipped_mappings': 0}
+
+        if tenant_id is None:
+            tenant_id = gl_helpers.resolve_tenant_id()
+
+        tenant = db.session.get(Tenant, tenant_id)
+        if not tenant:
+            return {'created_mappings': 0, 'skipped_mappings': 0, 'errors': ['tenant not found']}
+
+        result = ProvisionResult(tenant_id=tenant_id)
+        GLProvisioningService._provision_module_mappings(tenant, result)
+        if result.errors:
+            from flask import current_app
+            for err in result.errors:
+                current_app.logger.warning('GL mapping provision: %s', err)
+        db.session.flush()
+        return {
+            'created_mappings': result.created_mappings,
+            'skipped_mappings': result.skipped_mappings,
+            'errors': result.errors,
+        }
 
     @staticmethod
     def validate_account_tree(tenant_id=None):

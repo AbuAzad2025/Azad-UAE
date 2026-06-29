@@ -87,18 +87,24 @@
               <i class="fas fa-folder text-warning"></i> {{ t('الفئة') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('تركها') }} {{ t('None') }} {{ t('لتصنيف') }} {{ t('Product') }} {{ t('لاحقاً') }} ({{ t('Optional') }})"></i>
             </label>
-            <div class="input-group">
+            <div class="input-group js-category-actions">
               <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('الفئة') }}..." aria-label="category id">
                 <option value="0" {% if not product.category_id %}selected{% endif %}>{{ t('None') }}</option>
                 {% for category in categories %}
-                <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                <option value="{{ category.id }}"
+                  data-name="{{ category.name|e }}"
+                  data-name-ar="{{ (category.name_ar or '')|e }}"
+                  data-description="{{ (category.description or '')|e }}"
+                  {% if product.category_id == category.id %}selected{% endif %}>{{ category.name_ar or category.name }}</option>
                 {% endfor %}
               </select>
+              {% if current_user.has_permission('manage_products') %}
               <div class="input-group-append">
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addCategoryModal" title="{{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}">
-                  <i class="fas fa-plus"></i>
-                </button>
+                <button type="button" class="btn btn-outline-primary js-category-edit" disabled title="{{ t('Edit') }}"><i class="fas fa-pen"></i></button>
+                <button type="button" class="btn btn-outline-danger js-category-delete" disabled title="{{ t('Delete') }}"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-outline-success js-category-add" title="{{ t('Add') }}"><i class="fas fa-plus"></i></button>
               </div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -348,50 +354,12 @@
 </div>
 
 
-<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="fas fa-folder-plus mr-2"></i>{{ t('Add') }} {{ t('فئة') }} {{ t('Products_2') }} {{ t('New_3') }}
-        </h5>
-        <button type="button" class="close text-white" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="addCategoryForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-font text-primary"></i> {{ t('Name_2') }} {{ t('الفئة') }}
-              <span class="text-danger">*</span>
-            </label>
-            <input type="text" id="category_name" class="form-control" placeholder="{{ t('مثال') }}: {{ t('زيوت،') }} {{ t('فلاتر،') }} {{ t('إطارات') }}..." required>
-          </div>
-          <div class="form-group">
-            <label>
-              <i class="fas fa-align-right text-info"></i> {{ t('Description') }}
-            </label>
-            <textarea id="category_description" class="form-control" rows="3" placeholder="{{ t('Description_2') }} {{ t('الفئة') }} ({{ t('Optional') }})"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
-        </button>
-        <button type="button" class="btn btn-success" id="saveCategoryBtn">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الفئة') }}
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'products/_category_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
+<script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
 $(function () {
   // {{ t('تفعيل') }} Tooltips
@@ -458,56 +426,10 @@ $(function () {
     {% endfor %}
   {% endif %}
   
-  // {{ t('Save') }} {{ t('الفئة') }} {{ t('New_4') }}
-  $('#saveCategoryBtn').click(function() {
-    const name = $('#category_name').val().trim();
-    const description = $('#category_description').val().trim();
-    
-    if (!name) {
-      alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('الفئة') }}');
-      return;
-    }
-    
-    // {{ t('الحصول') }} على CSRF token
-  const csrfToken = $('input[name="csrf_token"]').val();
-  
-  $.ajax({
-    url: "{{ url_for('products.create_category') }}",
-    method: 'POST',
-      contentType: 'application/json',
-      headers: {
-        'X-CSRFToken': csrfToken
-      },
-      data: JSON.stringify({
-        name: name,
-        description: description
-      }),
-      success: function(response) {
-        if (response.success) {
-          // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للList') }}
-          const newOption = new Option(response.category.name, response.category.id, true, true);
-          $('#product_category').append(newOption).trigger('change');
-          
-          // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('الحقول') }}
-          $('#addCategoryModal').modal('hide');
-          $('#category_name').val('');
-          $('#category_description').val('');
-          
-          // {{ t('رسالة') }} {{ t('نجاح') }}
-          if (typeof UI !== 'undefined') {
-            UI.success('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
-          } else {
-            alert('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
-          }
-        } else {
-          alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
-        }
-      },
-      error: function(xhr) {
-        const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
-        alert('{{ t('Error') }}: ' + error);
-      }
-    });
+  initProductCategoryControls({
+    createUrl: "{{ url_for('products.create_category') }}",
+    updateUrl: function(id) { return "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'); },
+    deleteUrl: function(id) { return "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/'); }
   });
 
   // Toggle merchant share field

@@ -27,21 +27,23 @@
               {% for category, message in messages %}
                 {% set _cat = 'danger' if category == 'error' else category %}
                 {% set _erp_class = 'erp-flash-success' if _cat == 'success' else ('erp-flash-danger' if _cat in ['danger'] else ('erp-flash-warning' if _cat == 'warning' else 'erp-flash-info')) %}
-                <div class="alert alert-{{ _cat }} alert-dismissible fade show flash-message erp-flash {{ _erp_class }}">
-                  <div class="erp-flash-icon">
-                    {% if _cat == 'success' %}
-                      <i class="fas fa-check-circle"></i>
-                    {% elif _cat == 'danger' %}
-                      <i class="fas fa-exclamation-circle"></i>
-                    {% elif _cat == 'warning' %}
-                      <i class="fas fa-exclamation-triangle"></i>
-                    {% else %}
-                      <i class="fas fa-info-circle"></i>
-                    {% endif %}
+                <div class="alert alert-dismissible fade show flash-message erp-flash {{ _erp_class }}" role="alert">
+                  <div class="erp-flash-main">
+                    <div class="erp-flash-icon" aria-hidden="true">
+                      {% if _cat == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                      {% elif _cat == 'danger' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                      {% elif _cat == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                      {% else %}
+                        <i class="fas fa-info-circle"></i>
+                      {% endif %}
+                    </div>
+                    <div class="erp-flash-body">{{ message }}</div>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="{{ t('Close') }}">&times;</button>
                   </div>
-                  <div class="erp-flash-body">{{ message }}</div>
-                  <button type="button" class="close" data-dismiss="alert">&times;</button>
-                  <div class="progress mt-2 w-100">
+                  <div class="erp-flash-progress progress">
                     <div class="progress-bar flash-timer" role="progressbar" aria-label="{{ t('Temporary') }} {{ t('Alert') }}"></div>
                   </div>
                 </div>

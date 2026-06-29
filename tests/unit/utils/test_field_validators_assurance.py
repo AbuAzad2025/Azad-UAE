@@ -9,6 +9,7 @@ from utils.field_validators import (
     FieldValidationError,
     canonical_payment_type,
     normalize_phone_optional,
+    normalize_user_email_required,
     validate_currency_code,
     validate_gl_line_sides,
     validate_payment_method,
@@ -37,6 +38,19 @@ class TestCurrencyAndPhone:
 
     def test_normalize_phone_optional_ok(self):
         assert normalize_phone_optional('+971 50 123-4567') == '+971 50 123-4567'
+
+    def test_normalize_user_email_required_ok(self):
+        assert normalize_user_email_required('  User@Example.COM  ') == 'user@example.com'
+
+    def test_normalize_user_email_required_missing(self):
+        with pytest.raises(FieldValidationError, match='Email is required'):
+            normalize_user_email_required('')
+        with pytest.raises(FieldValidationError, match='Email is required'):
+            normalize_user_email_required(None)
+
+    def test_normalize_user_email_required_invalid(self):
+        with pytest.raises(FieldValidationError, match='Invalid email'):
+            normalize_user_email_required('not-an-email')
 
     def test_normalize_phone_too_long(self):
         with pytest.raises(FieldValidationError, match='الطول'):

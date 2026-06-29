@@ -13,7 +13,7 @@ from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import ErrorMessages
-from utils.field_validators import normalize_phone_optional
+from utils.field_validators import FieldValidationError, normalize_phone_optional, normalize_user_email_required
 from utils.password_validator import PasswordValidator
 from utils.structured_logging import log_mutation
 from utils.tenant_limits import TenantLimitError, check_users_limit
@@ -167,9 +167,15 @@ def create():
                 flash('اسم المستخدم مستخدم مسبقاً على مستوى النظام.', 'danger')
                 return _create_form_context(roles, branches, form_values)
 
+            try:
+                email = normalize_user_email_required(request.form.get('email'))
+            except FieldValidationError as exc:
+                flash(str(exc), 'danger')
+                return _create_form_context(roles, branches, form_values)
+
             user = User(
                 username=username,
-                email=request.form.get('email'),
+                email=email,
                 full_name=request.form.get('full_name'),
                 full_name_ar=request.form.get('full_name_ar'),
                 phone=normalize_phone_optional(request.form.get('phone')),
@@ -244,7 +250,11 @@ def edit(id):
 
     if request.method == 'POST':
         try:
-            user.email = request.form.get('email')
+            try:
+                user.email = normalize_user_email_required(request.form.get('email'))
+            except FieldValidationError as exc:
+                flash(str(exc), 'danger')
+                return render_template('users/edit.html', user=user, roles=roles, branches=branches)
             user.full_name = request.form.get('full_name')
             user.full_name_ar = request.form.get('full_name_ar')
             user.phone = normalize_phone_optional(request.form.get('phone'))

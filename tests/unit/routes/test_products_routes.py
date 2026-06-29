@@ -106,6 +106,7 @@ def _product_class_mock(product_query_mock=None):
     inner.filter.return_value = inner
     inner.first.return_value = None
     product_query_mock.filter.return_value = inner
+    product_query_mock.filter_by.return_value.count.return_value = 0
     cls = MagicMock()
     cls.query = product_query_mock
     for attr in ("name", "sku", "barcode", "current_stock", "min_stock_alert", "tenant_id"):
@@ -808,6 +809,42 @@ class TestCategories:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
+
+
+    def test_update_category_json_success(self, products_client):
+        cat = _category(5, name="Old")
+        cat.tenant_id = 1
+        with _products_patches(categories=[cat]), \
+             patch("routes.products._tenant_category_or_404", return_value=cat), \
+             patch("routes.products._category_name_taken", return_value=False):
+            resp = products_client.post(
+                "/products/categories/5/update",
+                json={"name": "New Name", "name_ar": "جديد"},
+            )
+        assert resp.status_code == 200
+        assert resp.get_json()["success"] is True
+
+    def test_delete_category_blocked_with_products(self, products_client):
+        cat = _category(6, name="Used")
+        cat.tenant_id = 1
+        with _products_patches(categories=[cat]) as ctx, \
+             patch("routes.products._tenant_category_or_404", return_value=cat):
+            ctx["product_query"].filter_by.return_value.count.return_value = 3
+            resp = products_client.post("/products/categories/6/delete", json={})
+        assert resp.status_code == 400
+        body = resp.get_json()
+        assert body["success"] is False
+        assert body.get("product_count") == 3
+
+    def test_delete_category_json_success(self, products_client):
+        cat = _category(7, name="Empty")
+        cat.tenant_id = 1
+        with _products_patches(categories=[cat]) as ctx, \
+             patch("routes.products._tenant_category_or_404", return_value=cat):
+            ctx["product_query"].filter_by.return_value.count.return_value = 0
+            resp = products_client.post("/products/categories/7/delete", json={})
+        assert resp.status_code == 200
+        assert resp.get_json()["success"] is True
 
 
 class TestAdjustStock:

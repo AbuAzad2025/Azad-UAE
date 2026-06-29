@@ -124,6 +124,15 @@ class Tenant(db.Model):
 
     created_by_user = db.relationship('User', foreign_keys=[created_by])
 
+    def business_type_label(self, lang='ar'):
+        from services.industry_service import BUSINESS_TYPE_LABELS
+        code = self.business_type or 'general'
+        labels = BUSINESS_TYPE_LABELS.get(code)
+        if not labels:
+            return code
+        ar, en = labels
+        return f'{ar} / {en}' if lang == 'both' else ar
+
     def __repr__(self):
         return f'<Tenant {self.name}>'
 

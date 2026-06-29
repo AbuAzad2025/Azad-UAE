@@ -656,8 +656,14 @@ def create_user():
         try:
             from utils.sanitizer import InputSanitizer
 
-            username = InputSanitizer.sanitize_text(request.form.get('username', ''), max_length=20)
-            email = InputSanitizer.sanitize_email(request.form.get('email', ''))
+            from utils.field_validators import FieldValidationError, normalize_user_email_required
+
+            username = str(InputSanitizer.sanitize_text(request.form.get('username', ''), max_length=20)).strip()
+            try:
+                email = normalize_user_email_required(request.form.get('email'))
+            except FieldValidationError as exc:
+                flash(str(exc), 'error')
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             password = request.form.get('password', '').strip()  # لا نعدل password
             full_name = InputSanitizer.sanitize_text(request.form.get('full_name', ''), max_length=100)
             role_id = request.form.get('role_id', type=int)
@@ -785,8 +791,15 @@ def edit_user(user_id):
                 flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
 
-            user.username = request.form.get('username', '').strip()
-            user.email = request.form.get('email', '').strip()
+            from utils.sanitizer import InputSanitizer
+            from utils.field_validators import FieldValidationError, normalize_user_email_required
+
+            user.username = str(InputSanitizer.sanitize_text(request.form.get('username', ''), max_length=20)).strip()
+            try:
+                user.email = normalize_user_email_required(request.form.get('email'))
+            except FieldValidationError as exc:
+                flash(str(exc), 'error')
+                return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
             user.full_name = request.form.get('full_name', '').strip()
             user.role_id = role_id
             user.branch_id = branch_id
@@ -2059,8 +2072,10 @@ def company_info():
             tenant.name_en = request.form.get('name_en', '').strip()
             tenant.name = tenant.name_en or tenant.name_ar
             tenant.slug = request.form.get('slug', '').strip()
-            tenant.business_type = request.form.get('business_type', 'general')
-            tenant.industry = request.form.get('industry', 'automotive')
+            from services.industry_service import IndustryService
+            business_type = request.form.get('business_type', 'general').strip()
+            tenant.business_type = business_type if IndustryService.validate_industry_code(business_type) else 'general'
+            tenant.industry = tenant.business_type
 
             # Contact Info
             tenant.address_ar = request.form.get('address_ar', '').strip()

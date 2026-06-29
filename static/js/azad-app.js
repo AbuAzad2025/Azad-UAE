@@ -220,11 +220,17 @@ function showAlert(message, type = 'info') {
     const $container = $('#flash-messages-container');
     if ($container.length) {
         const cls = normalized === 'success' ? 'success' : normalized === 'error' ? 'danger' : normalized;
+        const erpClass = cls === 'success' ? 'erp-flash-success'
+            : cls === 'danger' ? 'erp-flash-danger'
+            : cls === 'warning' ? 'erp-flash-warning'
+            : 'erp-flash-info';
         const html = `
-            <div class="alert alert-${cls} alert-dismissible fade show flash-message erp-flash" role="alert">
-                <div class="erp-flash-body">${message}</div>
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                <div class="progress mt-2 w-100">
+            <div class="alert alert-dismissible fade show flash-message erp-flash ${erpClass}" role="alert">
+                <div class="erp-flash-main">
+                    <div class="erp-flash-body">${message}</div>
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+                <div class="erp-flash-progress progress">
                     <div class="progress-bar flash-timer" role="progressbar"></div>
                 </div>
             </div>

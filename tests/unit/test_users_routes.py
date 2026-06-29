@@ -184,6 +184,33 @@ class TestCreate:
         })
         assert resp.status_code == 200
 
+    def test_create_missing_email(self, users_client, sample_tenant, sample_branch):
+        from models import Role, User
+        role = Role.query.filter_by(slug='seller').first()
+        username = _tenant_username(sample_tenant, f'noemail{uuid.uuid4().hex[:6]}')
+        resp = users_client.post('/users/create', data={
+            'role_id': role.id,
+            'branch_id': sample_branch.id,
+            'username': username,
+            'password': STRONG_PASSWORD,
+        })
+        assert resp.status_code == 200
+        assert User.query.filter_by(username=username).first() is None
+
+    def test_create_invalid_email(self, users_client, sample_tenant, sample_branch):
+        from models import Role, User
+        role = Role.query.filter_by(slug='seller').first()
+        username = _tenant_username(sample_tenant, f'bademail{uuid.uuid4().hex[:6]}')
+        resp = users_client.post('/users/create', data={
+            'role_id': role.id,
+            'branch_id': sample_branch.id,
+            'username': username,
+            'email': 'not-an-email',
+            'password': STRONG_PASSWORD,
+        })
+        assert resp.status_code == 200
+        assert User.query.filter_by(username=username).first() is None
+
     def test_create_reserved_username(self, users_client, sample_tenant, sample_branch):
         from models import Role
         role = Role.query.filter_by(slug='seller').first()
@@ -389,6 +416,31 @@ class TestEdit:
             'is_active': '1',
         })
         assert resp.status_code == 200
+
+    def test_edit_missing_email(self, users_client, db_session, sample_tenant, sample_branch):
+        from models import Role, User
+        role = Role.query.filter_by(slug='seller').first()
+        target = User(
+            username=f'noem_{uuid.uuid4().hex[:8]}',
+            email=f'noem_{uuid.uuid4().hex[:8]}@example.com',
+            role_id=role.id,
+            tenant_id=sample_tenant.id,
+            branch_id=sample_branch.id,
+            is_active=True,
+        )
+        target.set_password('x')
+        db_session.add(target)
+        db_session.commit()
+        original_email = target.email
+        resp = users_client.post(f'/users/{target.id}/edit', data={
+            'email': '',
+            'role_id': role.id,
+            'branch_id': sample_branch.id,
+            'is_active': '1',
+        })
+        assert resp.status_code == 200
+        db.session.refresh(target)
+        assert target.email == original_email
 
     def test_edit_higher_role_rejected(self, users_client, db_session, sample_tenant, sample_branch):
         from models import Role, User

@@ -152,6 +152,9 @@ def get_active_branch_id(user=None):
             return None
         if session_branch_id and user_can_access_branch(session_branch_id, user):
             return int(session_branch_id)
+        if session_branch_id and has_request_context():
+            session.pop(ACTIVE_BRANCH_SESSION_KEY, None)
+            session[ACTIVE_BRANCH_MODE_SESSION_KEY] = "single"
         return None
 
     user_branch_id = getattr(user, "branch_id", None)

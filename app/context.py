@@ -50,7 +50,7 @@ def register_context_processors(app):
                 tenant_logo_url = (tenant.logo_url or '').strip()
                 tenant_logo_dark_url = (tenant.logo_dark_url or '').strip()
                 tenant_favicon_url = (tenant.favicon_url or '').strip()
-                tenant_default_currency = (tenant.default_currency or '').strip()
+                tenant_default_currency = tenant.get_base_currency if tenant else ''
                 tenant_enable_tax = bool(getattr(tenant, "enable_tax", True))
                 tenant_default_tax_rate = getattr(tenant, "default_tax_rate", None)
                 tenant_enable_pos = bool(getattr(tenant, "enable_pos", True))

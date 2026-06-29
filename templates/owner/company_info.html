@@ -18,14 +18,14 @@
           <h2 class="profile-card__name">{{ tenant.name_ar or 'اسم الشركة' }}</h2>
           <p class="profile-card__industry">
             <i class="fas fa-industry"></i>
-            {{ tenant.get_industry_display() if tenant.get_industry_display else 'مجال العمل' }}
+            {{ tenant.business_type_label() }}
           </p>
         </div>
       </div>
       <div class="profile-card__body">
         <div class="profile-card__stat">
           <span class="label">نوع النشاط</span>
-          <span class="value">{{ tenant.get_business_type_display() if tenant.get_business_type_display else 'غير محدد' }}</span>
+          <span class="value">{{ tenant.business_type_label() }}</span>
         </div>
         <div class="profile-card__stat">
           <span class="label">{{ t('الدولة') }}</span>
@@ -127,22 +127,10 @@
           <div class="row gy-3">
             <div class="col-lg-8 col-md-7">
               <div class="form-group">
-                <label>نوع النشاط</label>
-                <select name="business_type" class="form-control compact-control select-center" aria-label="business type">
-                  <option value="garage" {{ 'selected' if tenant.business_type == 'garage' }}>{{ t('كراج') }}</option>
-                  <option value="workshop" {{ 'selected' if tenant.business_type == 'workshop' }}>ورشة</option>
-                  <option value="parts_shop" {{ 'selected' if tenant.business_type == 'parts_shop' }}>محل قطع</option>
-                  <option value="equipment" {{ 'selected' if tenant.business_type == 'equipment' }}>معدات ثقيلة</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-lg-8 col-md-7">
-              <div class="form-group">
-                <label>الصناعة</label>
-                <select name="industry" class="form-control compact-control select-center" aria-label="industry">
-                  <option value="automotive" {{ 'selected' if tenant.industry == 'automotive' }}>{{ t('سيارات') }}</option>
-                  <option value="heavy_equipment" {{ 'selected' if tenant.industry == 'heavy_equipment' }}>معدات ثقيلة</option>
-                  <option value="mixed" {{ 'selected' if tenant.industry == 'mixed' }}>مختلط</option>
+                <label for="input_business_type">نوع النشاط</label>
+                <select name="business_type" id="input_business_type" class="form-control compact-control select-center" aria-label="business type">
+                  {% from 'macros/industry_choices.html' import industry_options %}
+                  {{ industry_options(tenant.business_type or 'general') }}
                 </select>
               </div>
             </div>

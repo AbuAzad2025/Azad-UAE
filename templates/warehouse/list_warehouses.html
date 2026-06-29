@@ -77,19 +77,19 @@
 <section class="content">
   <div class="container-fluid">
     <div class="row mb-3">
-      <div class="col-12 d-flex flex-wrap align-items-center erp-gap-1"
+      <div class="col-12 d-flex flex-wrap align-items-center erp-gap-1">
         <a href="{{ url_for('warehouse.create_warehouse') }}" class="btn btn-primary mb-2">
           <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Warehouse_2') }} {{ t('New') }}
         </a>
         {% if current_user.has_permission('manage_products') %}
         <a href="{{ url_for('products.create') }}" class="btn btn-success mb-2">
-        {% endif %}
           <i class="fas fa-plus-circle"></i> {{ t('Add') }} {{ t('Product_2') }}
         </a>
+        {% endif %}
       </div>
     </div>
 
-    <div class="warehouses-summary mb-3 d-flex flex-wrap erp-gap-1"
+    <div class="warehouses-summary mb-3 d-flex flex-wrap erp-gap-1">
       <span class="badge badge-primary">
         <i class="fas fa-warehouse"></i> {{ t('Total_3') }}: {{ warehouses|length }}
       </span>
@@ -196,9 +196,9 @@
                     </a>
                     {% if current_user.has_permission('manage_products') %}
                     <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="{{ t('Add') }} {{ t('Product_2') }}">
-                    {% endif %}
                       <i class="fas fa-plus-circle"></i>
                     </a>
+                    {% endif %}
                     <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="{{ t('Movements') }}">
                       <i class="fas fa-exchange-alt"></i>
                     </a>

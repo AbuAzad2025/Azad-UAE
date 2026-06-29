@@ -142,6 +142,20 @@ class TestTenantModel:
         t.subscription_plan = 'pro'
         assert t.to_dict()['slug'] == 'co'
 
+    def test_business_type_label_known_code(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.business_type = 'batteries'
+        assert 'بطاريات' in t.business_type_label()
+
+    def test_business_type_label_unknown_code(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.business_type = 'legacy_garage'
+        assert t.business_type_label() == 'legacy_garage'
+
     def test_repr(self):
         from models.tenant import Tenant
 

@@ -87,6 +87,8 @@ def warehouse_mocks():
         patch("routes.warehouse.Warehouse.query", warehouse_query),
         patch("routes.warehouse.render_template", return_value="ok"),
         patch("routes.warehouse.should_show_all_branch_columns", return_value=True),
+        patch("routes.warehouse.get_active_tenant_id", return_value=1),
+        patch("utils.branching.get_main_branch", return_value=_branch()),
         patch("routes.warehouse.atomic_transaction", atomic_mock),
         patch("utils.tenant_limits.check_warehouses_limit"),
     ]
@@ -235,7 +237,24 @@ class TestWarehouseCreate:
     def test_create_post_success_redirects(self, warehouse_admin_client, warehouse_mocks):
         wh_query = warehouse_mocks["warehouse_query"]
         wh_query.filter_by.return_value.first.return_value = None
-        with patch("routes.warehouse.db.session"):
+        atomic_cm = MagicMock()
+        atomic_cm.__enter__ = MagicMock(return_value=None)
+        atomic_cm.__exit__ = MagicMock(return_value=False)
+        with patch("routes.warehouse.db.session") as mock_session, \
+             patch("routes.warehouse.atomic_transaction", return_value=atomic_cm) as atomic_mock:
+            resp = warehouse_admin_client.post("/warehouse/create", data={
+                "name": "New WH",
+                "location": "Dubai",
+            })
+        assert resp.status_code in (302, 303)
+        atomic_mock.assert_called_once_with("warehouse_creation")
+        mock_session.add.assert_called_once()
+        mock_session.flush.assert_called_once()
+
+    def test_create_post_without_tenant_redirects(self, warehouse_admin_client):
+        with patch("routes.warehouse.get_active_tenant_id", return_value=None), \
+             patch("routes.warehouse.is_platform_owner", return_value=True), \
+             patch("routes.warehouse.url_for", return_value="/owner/tenants"):
             resp = warehouse_admin_client.post("/warehouse/create", data={
                 "name": "New WH",
                 "location": "Dubai",
@@ -311,11 +330,26 @@ class TestWarehouseList:
         assert resp.status_code == 200
         assert render.call_args[0][0] == "warehouse/list_warehouses.html"
 
-    def test_list_with_branch_scope(self, warehouse_client):
-        with patch("routes.warehouse.branch_scope_id", return_value=2), \
-             patch("routes.warehouse.render_template", return_value="list"):
+    def test_list_shows_all_tenant_warehouses_regardless_of_branch_scope(self, warehouse_client):
+        wh_a = _warehouse(1, branch_id=1)
+        wh_a.name = "WH-A"
+        wh_b = _warehouse(2, branch_id=2)
+        wh_b.name = "WH-B"
+        query = MagicMock()
+        query.filter_by.return_value.order_by.return_value.all.return_value = [wh_a, wh_b]
+        with patch("routes.warehouse.tenant_query", return_value=query), \
+             patch("routes.warehouse.branch_scope_id", return_value=99), \
+             patch("routes.warehouse.render_template", return_value="list") as render:
             resp = warehouse_client.get("/warehouse/list")
         assert resp.status_code == 200
+        assert render.call_args[1]["warehouses"] == [wh_a, wh_b]
+
+    def test_list_without_active_tenant_redirects(self, warehouse_client):
+        with patch("routes.warehouse.get_active_tenant_id", return_value=None), \
+             patch("routes.warehouse.is_platform_owner", return_value=True), \
+             patch("routes.warehouse.url_for", return_value="/owner/tenants"):
+            resp = warehouse_client.get("/warehouse/list")
+        assert resp.status_code in (302, 303)
 
 
 class TestWarehouseDelete:

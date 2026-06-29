@@ -1,0 +1,28 @@
+<div class="modal fade" id="categoryModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title js-category-modal-title"><i class="fas fa-folder ml-2"></i> إضافة فئة منتجات</h5>
+        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="category_name"><span class="text-danger">*</span> اسم الفئة (إنجليزي)</label>
+          <input type="text" id="category_name" class="form-control" required minlength="2" maxlength="100" placeholder="Car Batteries">
+        </div>
+        <div class="form-group">
+          <label for="category_name_ar">الاسم (عربي)</label>
+          <input type="text" id="category_name_ar" class="form-control" maxlength="100" placeholder="بطاريات سيارات">
+        </div>
+        <div class="form-group mb-0">
+          <label for="category_description">الوصف</label>
+          <textarea id="category_description" class="form-control" rows="2" maxlength="500"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-success js-category-save"><i class="fas fa-check"></i> <span class="js-category-save-label">حفظ الفئة</span></button>
+      </div>
+    </div>
+  </div>
+</div>

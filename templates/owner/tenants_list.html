@@ -40,51 +40,51 @@
             </tr>
           </thead>
           <tbody>
-            {% for t in tenants %}
-            <tr class="{% if t.is_suspended %}table-warning{% elif not t.is_active %}table-secondary{% endif %}">
-              <td>{{ t.id }}</td>
+            {% for tenant in tenants %}
+            <tr class="{% if tenant.is_suspended %}table-warning{% elif not tenant.is_active %}table-secondary{% endif %}">
+              <td>{{ tenant.id }}</td>
               <td>
-                <div class="fw-semibold">{{ t.name_ar or t.name }}</div>
-                <small class="text-muted">{{ t.name_en or '' }}</small>
+                <div class="fw-semibold">{{ tenant.name_ar or tenant.name }}</div>
+                <small class="text-muted">{{ tenant.name_en or '' }}</small>
               </td>
-              <td><code>{{ t.slug }}</code></td>
-              <td>{{ t.default_currency or 'AED' }}</td>
-              <td>{{ user_counts.get(t.id, 0) }}</td>
-              <td>{{ branch_counts.get(t.id, 0) }}</td>
-              <td>{{ store_counts.get(t.id, 0) }}</td>
-              <td class="text-center">{% if t.enable_pos %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
-              <td class="text-center">{% if t.enable_store %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
-              <td class="text-center">{% if t.enable_payroll %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
-              <td class="text-center">{% if t.enable_cheques %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
-              <td class="text-center">{% if t.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
+              <td><code>{{ tenant.slug }}</code></td>
+              <td>{{ tenant.default_currency or 'AED' }}</td>
+              <td>{{ user_counts.get(tenant.id, 0) }}</td>
+              <td>{{ branch_counts.get(tenant.id, 0) }}</td>
+              <td>{{ store_counts.get(tenant.id, 0) }}</td>
+              <td class="text-center">{% if tenant.enable_pos %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_store %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_payroll %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_cheques %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
+              <td class="text-center">{% if tenant.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
               <td>
-                {% if t.is_suspended %}
+                {% if tenant.is_suspended %}
                   <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>{{ t('Pending') }}</span>
-                {% elif not t.is_active %}
+                {% elif not tenant.is_active %}
                   <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ t('معطل') }}</span>
                 {% else %}
                   <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ t('Active') }}</span>
                 {% endif %}
               </td>
               <td>
-                {% if t.suspension_reason %}
-                  <span class="text-muted small erp-max-w-200 d-inline-block">{{ t.suspension_reason }}</span>
+                {% if tenant.suspension_reason %}
+                  <span class="text-muted small erp-max-w-200 d-inline-block">{{ tenant.suspension_reason }}</span>
                 {% else %}
                   <span class="text-muted small">—</span>
                 {% endif %}
               </td>
               <td class="text-end">
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('owner.tenant_edit', tenant_id=t.id) }}" class="btn btn-outline-primary">
+                  <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-outline-primary">
                     <i class="bi bi-pencil"></i> تعديل
                   </a>
 
-                  {% if t.is_active and not t.is_suspended %}
-                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ t.id }}">
+                  {% if tenant.is_active and not tenant.is_suspended %}
+                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ tenant.id }}">
                     <i class="bi bi-pause-circle"></i> تعليق
                   </button>
                   {% else %}
-                  <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=t.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
+                  <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-success">
                       <i class="bi bi-play-circle"></i> تفعيل
@@ -92,7 +92,7 @@
                   </form>
                   {% endif %}
 
-                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ t.id }}">
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ tenant.id }}">
                     <i class="bi bi-trash"></i> حذف
                   </button>
                 </div>
@@ -106,19 +106,19 @@
   </div>
 </div>
 
-{% for t in tenants %}
-{% if t.is_active and not t.is_suspended %}
-<div class="modal fade" id="suspendModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+{% for tenant in tenants %}
+{% if tenant.is_active and not tenant.is_suspended %}
+<div class="modal fade" id="suspendModal{{ tenant.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=t.id) }}">
+      <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning text-dark">
           <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>تعليق تينانت</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>هل أنت متأكد من تعليق تينانت <strong>{{ t.name_ar or t.name }}</strong>؟</p>
+          <p>هل أنت متأكد من تعليق تينانت <strong>{{ tenant.name_ar or tenant.name }}</strong>؟</p>
           <p class="text-muted small">سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.</p>
           <div class="mb-3">
             <label class="form-label fw-semibold">سبب التعليق (سيظهر للمستخدمين):</label>
@@ -136,17 +136,17 @@
 </div>
 {% endif %}
 
-<div class="modal fade" id="deleteModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="deleteModal{{ tenant.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=t.id) }}">
+      <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=tenant.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-danger text-white">
           <h5 class="modal-title"><i class="bi bi-trash me-2"></i>حذف تينانت</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>هل أنت متأكد من حذف <strong>{{ t.name_ar or t.name }}</strong>؟</p>
+          <p>هل أنت متأكد من حذف <strong>{{ tenant.name_ar or tenant.name }}</strong>؟</p>
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-1"></i>
             سيتم تعطيل التينانت. لن يتم حذف البيانات فعلياً، لكنها ستصبح غير متاحة.

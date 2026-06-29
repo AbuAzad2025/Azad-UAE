@@ -16,11 +16,35 @@ from utils.branching import (
     should_show_all_branch_columns,
 )
 from utils.tenanting import tenant_get_or_404, tenant_query
-from utils.tenanting import scoped_user_query, get_active_tenant_id
+from utils.tenanting import scoped_user_query, get_active_tenant_id, is_platform_owner
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
 
 warehouse_bp = Blueprint('warehouse', __name__, url_prefix='/warehouse')
+
+
+def _warehouse_tenant_redirect():
+    flash('يجب اختيار شركة نشطة قبل إدارة المستودعات.', 'warning')
+    if is_platform_owner(current_user):
+        return redirect(url_for('owner.tenants_list'))
+    return redirect(url_for('main.dashboard'))
+
+
+def _resolve_warehouse_tenant_id():
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is None:
+        return None
+    return int(tenant_id)
+
+
+def _default_warehouse_branch_id(tenant_id, branch_id):
+    if branch_id:
+        return branch_id
+    from utils.branching import get_main_branch
+    main_branch = get_main_branch()
+    if main_branch and int(main_branch.tenant_id) == int(tenant_id):
+        return main_branch.id
+    return None
 
 
 def _annotate_visible_stock(products):
@@ -232,10 +256,12 @@ def view_warehouse(id):
 def create_warehouse():
     from models import User
 
-    tid = get_active_tenant_id(current_user)
+    tenant_id = _resolve_warehouse_tenant_id()
+    if tenant_id is None:
+        return _warehouse_tenant_redirect()
+
     parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
-    if tid is not None:
-        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
+    parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tenant_id)
     parent_warehouses = parent_warehouses.all()
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
@@ -249,12 +275,16 @@ def create_warehouse():
             parent_id = request.form.get('parent_id', type=int) or None
             manager_id = request.form.get('manager_id', type=int) or None
             branch_id = request.form.get('branch_id', type=int) or None
+            branch_id = _default_warehouse_branch_id(tenant_id, branch_id)
             is_main = request.form.get('is_main') == 'on'
             warehouse_type = request.form.get('warehouse_type') or Warehouse.TYPE_PHYSICAL
             if warehouse_type not in Warehouse.WAREHOUSE_TYPES:
                 warehouse_type = Warehouse.TYPE_PHYSICAL
 
-            tenant_id = get_active_tenant_id(current_user)
+            tenant_id = _resolve_warehouse_tenant_id()
+            if tenant_id is None:
+                return _warehouse_tenant_redirect()
+
             if warehouse_type == Warehouse.TYPE_ONLINE:
                 is_main = False
                 parent_id = None
@@ -318,29 +348,47 @@ def create_warehouse():
             with atomic_transaction('warehouse_creation'):
                 warehouse = Warehouse(
                     tenant_id=tenant_id,
-                name=name,
-                name_ar=name_ar,
-                code=code,
-                branch_id=branch_id,
-                location=location,
-                parent_id=parent_id,
-                is_main=is_main,
-                manager_id=manager_id,
-                warehouse_type=warehouse_type,
-                allow_negative_inventory=request.form.get('allow_negative_inventory') == 'on',
-                is_active=True
+                    name=name,
+                    name_ar=name_ar,
+                    code=code,
+                    branch_id=branch_id,
+                    location=location,
+                    parent_id=parent_id,
+                    is_main=is_main,
+                    manager_id=manager_id,
+                    warehouse_type=warehouse_type,
+                    allow_negative_inventory=request.form.get('allow_negative_inventory') == 'on',
+                    is_active=True,
+                )
+                db.session.add(warehouse)
+                db.session.flush()
+
+                if warehouse_type == Warehouse.TYPE_ONLINE:
+                    from services.store_service import StoreService
+                    store = StoreService.get_tenant_store(tenant_id, create=True)
+                    if store and store.warehouse_id != warehouse.id:
+                        store.warehouse_id = warehouse.id
+
+                warehouse_id = warehouse.id
+
+            saved = (
+                db.session.query(Warehouse)
+                .execution_options(skip_tenant_scope=True)
+                .filter_by(id=warehouse_id, tenant_id=tenant_id)
+                .first()
             )
+            if not saved:
+                raise RuntimeError('فشل حفظ المستودع في قاعدة البيانات')
 
-            db.session.add(warehouse)
-            db.session.flush()
-
-            if warehouse_type == Warehouse.TYPE_ONLINE and tenant_id:
-                from services.store_service import StoreService
-                store = StoreService.get_tenant_store(tenant_id, create=True)
-                if store and store.warehouse_id != warehouse.id:
-                    store.warehouse_id = warehouse.id
-
-            # (atomic_transaction ستقوم بالـ commit عند الخروج)
+            try:
+                log_mutation(
+                    'warehouse_created',
+                    entity_type='warehouse',
+                    entity_id=warehouse_id,
+                    details={'name': name, 'branch_id': branch_id, 'tenant_id': tenant_id},
+                )
+            except Exception as log_err:
+                current_app.logger.warning('warehouse create audit log failed: %s', log_err)
 
             type_label = 'أونلاين' if warehouse_type == Warehouse.TYPE_ONLINE else ('فرعي' if parent_id else 'مستقل')
             flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', 'success')
@@ -437,11 +485,16 @@ def edit_warehouse(id):
 @login_required
 @permission_required('manage_warehouse')
 def list_warehouses():
-    query = tenant_query(Warehouse).filter_by(is_active=True)
-    branch_id = branch_scope_id()
-    if branch_id is not None:
-        query = query.filter_by(branch_id=branch_id)
-    warehouses = query.order_by(Warehouse.name).all()
+    tenant_id = _resolve_warehouse_tenant_id()
+    if tenant_id is None:
+        return _warehouse_tenant_redirect()
+
+    warehouses = (
+        tenant_query(Warehouse)
+        .filter_by(is_active=True)
+        .order_by(Warehouse.is_main.desc(), Warehouse.name)
+        .all()
+    )
     return render_template(
         'warehouse/list_warehouses.html',
         warehouses=warehouses,
