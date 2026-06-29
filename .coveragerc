@@ -1,16 +1,20 @@
 [run]
 source = .
-    omit =
-    migrations/*
+omit =
+    migrations/**
     utils/build_assets.py
     utils/seed_industry_fields.py
-    tests/*
-    */tests/*
-    .venv/*
-    venv/*
-    */site-packages/*
+    tests/**
+    tools/**
+    .venv/**
+    venv/**
+    */site-packages/**
 
 [report]
+omit =
+    migrations/**
+    tests/**
+    tools/**
 exclude_lines =
     pragma: no cover
     if TYPE_CHECKING:
