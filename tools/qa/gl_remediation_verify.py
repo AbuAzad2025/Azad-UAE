@@ -7,13 +7,13 @@ does not embed or print credentials.
 Exit 0 = all critical checks pass (warnings may remain).
 Exit 1 = one or more critical checks failed.
 
-Run: python scripts/verify/gl_remediation_verify.py [--profile local|production-readiness]
+Run: python tools/qa/gl_remediation_verify.py [--profile local|production-readiness]
 
 In production-readiness mode, test leftovers are treated as CRITICAL.
 """
+import argparse
 import os
 import sys
-import argparse
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -21,7 +21,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Set DATABASE_URL if not set (for local development)
 if not os.environ.get("DATABASE_URL"):
     os.environ["DATABASE_URL"] = "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"
 
@@ -92,7 +91,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", default="local", help="Check profile (local or production-readiness)")
     args = parser.parse_args()
-    
+
     engine = create_engine(os.environ["DATABASE_URL"])
     critical = {}
     warnings = {}
@@ -102,7 +101,6 @@ def main():
         for name, sql in WARN_CHECKS.items():
             warnings[name] = conn.execute(text(sql)).scalar()
 
-    # In production-readiness mode, test leftovers are CRITICAL
     if args.profile == "production-readiness":
         if (warnings.get("test_store_leftovers") or 0) > 0:
             critical["test_store_leftovers"] = warnings["test_store_leftovers"]

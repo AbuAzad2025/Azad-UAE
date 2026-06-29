@@ -254,7 +254,7 @@ def _ensure_core_data():
         current_app.logger.warning(f"SystemInit: store payment methods seed skipped: {e}")
 
     try:
-        from scripts.seed_industry_fields import seed_industry_fields
+        from utils.seed_industry_fields import seed_industry_fields
         seed_industry_fields()
         current_app.logger.info("SystemInit: Industry fields seeded.")
     except Exception as e:

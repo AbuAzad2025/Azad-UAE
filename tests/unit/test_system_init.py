@@ -297,7 +297,7 @@ class TestCoreDataBootstrap:
             'utils.system_init.db.session'
         ) as session, patch(
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults'
-        ) as store_defaults, patch('scripts.seed_industry_fields.seed_industry_fields') as seed_fields:
+        ) as store_defaults, patch('utils.seed_industry_fields.seed_industry_fields') as seed_fields:
             system_init_module._ensure_core_data()
         session.commit.assert_called()
         settings.system_name = 'Azad ERP System'
@@ -318,7 +318,7 @@ class TestCoreDataBootstrap:
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults',
             side_effect=RuntimeError('store'),
         ), patch(
-            'scripts.seed_industry_fields.seed_industry_fields', side_effect=RuntimeError('seed')
+            'utils.seed_industry_fields.seed_industry_fields', side_effect=RuntimeError('seed')
         ):
             system_init_module._ensure_core_data()
 
@@ -335,7 +335,7 @@ class TestCoreDataBootstrap:
             'utils.system_init.db.session'
         ) as session, patch(
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults'
-        ), patch('scripts.seed_industry_fields.seed_industry_fields'):
+        ), patch('utils.seed_industry_fields.seed_industry_fields'):
             system_init_module._ensure_core_data()
         assert session.add.call_count >= 1
 

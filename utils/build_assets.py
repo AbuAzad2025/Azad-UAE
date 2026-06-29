@@ -5,12 +5,14 @@ import shutil
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def _minify_js(text):
     try:
         import jsmin
         return jsmin.jsmin(text)
     except ImportError:
         return None
+
 
 def _minify_css(text):
     try:
@@ -23,10 +25,12 @@ def _minify_css(text):
         except ImportError:
             return None
 
+
 def _minify(text, ext):
     if ext == '.js':
         return _minify_js(text)
     return _minify_css(text)
+
 
 def _gzip_file(src_path):
     gz_path = src_path + '.gz'
@@ -34,6 +38,7 @@ def _gzip_file(src_path):
         with gzip.open(gz_path, 'wb', compresslevel=9) as f_out:
             shutil.copyfileobj(f_in, f_out)
     return gz_path
+
 
 def _process_file(src_path):
     ext = os.path.splitext(src_path)[1].lower()
@@ -73,6 +78,7 @@ def _process_file(src_path):
         'hash': digest,
     }
 
+
 def _collect_files(base_dir, sub_dir, extensions):
     target = os.path.join(base_dir, sub_dir)
     if not os.path.isdir(target):
@@ -84,6 +90,7 @@ def _collect_files(base_dir, sub_dir, extensions):
                 continue
             result.append(os.path.join(target, entry))
     return sorted(result)
+
 
 def build_all(base_dir=None):
     if base_dir is None:

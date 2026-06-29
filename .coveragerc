@@ -1,9 +1,9 @@
 [run]
 source = .
-omit =
+    omit =
     migrations/*
-    scripts/build_assets.py
-    scripts/seed_industry_fields.py
+    utils/build_assets.py
+    utils/seed_industry_fields.py
     tests/*
     */tests/*
     .venv/*

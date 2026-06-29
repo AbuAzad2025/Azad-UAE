@@ -144,11 +144,3 @@ def seed_industry_fields():
             order += 1
 
     db.session.commit()
-    print('Industry field definitions seeded.')
-
-
-if __name__ == '__main__':
-    from app import create_app
-    app = create_app()
-    with app.app_context():
-        seed_industry_fields()

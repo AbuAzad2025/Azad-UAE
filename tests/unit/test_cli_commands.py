@@ -23,7 +23,7 @@ def cli_app():
 
 class TestBuildAssetsCommand:
     def test_build_assets_invokes_script(self, cli_app):
-        with patch('scripts.build_assets.build_all') as build_all:
+        with patch('utils.build_assets.build_all') as build_all:
             runner = cli_app.test_cli_runner()
             result = runner.invoke(args=['build-assets'])
         assert result.exit_code == 0

@@ -3497,6 +3497,8 @@ def tenant_create():
             )
             db.session.add(tenant)
             db.session.commit()
+            from services.gl_service import GLService
+            GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
             _invalidate_owner_changes()
             _audit_owner_db_action('tenant_create', {'tenant_id': tenant.id, 'slug': slug})
             flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', 'success')
