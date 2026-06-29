@@ -303,16 +303,23 @@ class TestPurchaseServiceTenantIsolation:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {'rate': 1.0}
                 with patch('services.purchase_service.validate_currency_code', return_value='AED'):
                     with patch('services.purchase_service.generate_number', return_value='P-001'):
-                        with patch('services.purchase_service.Product') as mock_product_class:
-                            patch('services.purchase_service.db.session.get', return_value=product).start()
-                            with pytest.raises(ValueError, match='يتطلب'):
-                                PurchaseService.create_purchase(
-                                    user,
-                                    {'supplier_name': 'Test'},
-                                    lines,
-                                    warehouse_id=1,
-                                    currency='AED'
-                                )
+                        with patch('services.purchase_service.db.session') as mock_db:
+                            mock_db.add = MagicMock()
+                            mock_db.flush = MagicMock()
+                            with patch('services.purchase_service.PurchaseLine') as mock_line:
+                                line_instance = MagicMock()
+                                line_instance.line_total = Decimal('100')
+                                line_instance.id = 1
+                                mock_line.return_value = line_instance
+                                with patch('services.purchase_service.db.session.get', return_value=product):
+                                    with pytest.raises(ValueError, match='يتطلب'):
+                                        PurchaseService.create_purchase(
+                                            user,
+                                            {'supplier_name': 'Test'},
+                                            lines,
+                                            warehouse_id=1,
+                                            currency='AED'
+                                        )
 
     def test_create_purchase_with_currency_conversion(self, app):
         from services.purchase_service import PurchaseService
