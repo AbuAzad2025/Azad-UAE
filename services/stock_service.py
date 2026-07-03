@@ -251,8 +251,10 @@ class StockService:
                 )
                 db.session.add(pws)
 
-            # Update global current_stock (legacy)
-            product.current_stock += qty
+            # Sync Product.current_stock from PWS aggregate to eliminate drift.
+            # This ensures current_stock always reflects the true sum of all
+            # per-warehouse quantities, preventing desync.
+            StockService._sync_current_stock(product)
 
             if product.current_stock < 0 and not warehouse.allow_negative_inventory:
                 raise ValueError(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')
@@ -330,6 +332,22 @@ class StockService:
             warehouse_id=to_wh.id,
         )
         return out_movement, in_movement
+
+    @staticmethod
+    def _sync_current_stock(product):
+        """
+        Reconcile Product.current_stock against the PWS aggregate sum.
+        Called after every stock mutation to eliminate data drift between
+        per-warehouse tracking and the global stock column.
+        """
+        from sqlalchemy import func
+        total = db.session.query(
+            func.coalesce(func.sum(ProductWarehouseStock.quantity), 0)
+        ).filter(
+            ProductWarehouseStock.product_id == product.id,
+            ProductWarehouseStock.tenant_id == product.tenant_id,
+        ).scalar()
+        product.current_stock = Decimal(str(total))
 
     @staticmethod
     def process_sale_lines(sale, warehouse_id=None):

@@ -3513,7 +3513,14 @@ def tenant_create():
             db.session.add(tenant)
             db.session.commit()
             from services.gl_service import GLService
-            GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
+            from utils.db_safety import atomic_transaction
+            with atomic_transaction('tenant_gl_setup'):
+                GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
+                # Explicitly ensure GL concept -> account mappings exist.
+                # This guarantees that OPENING_BALANCE_EQUITY->3130 (and all
+                # other required mappings) are persisted immediately, preventing
+                # failures when products are later created with opening balances.
+                GLService.ensure_gl_mappings(tenant_id=tenant.id)
             _invalidate_owner_changes()
             _audit_owner_db_action('tenant_create', {'tenant_id': tenant.id, 'slug': slug})
             flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', 'success')

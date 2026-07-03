@@ -36,10 +36,6 @@ from tests.conftest import (  # noqa: F401
     sample_warehouse,
 )
 
-from datetime import datetime
-from decimal import Decimal
-from itertools import cycle
-
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
@@ -87,16 +83,12 @@ def pytest_configure(config):
 @pytest.fixture
 def app_factory():
     def _create_app(blueprint, config_overrides=None):
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+        from tests.conftest import TestConfig
         app = Flask(__name__)
-        app.config.update(
-            TESTING=True,
-            SECRET_KEY="test-secret",
-            WTF_CSRF_ENABLED=False,
-            DEBUG=True,
-            JSON_AS_ASCII=False,
-            JSON_SORT_KEYS=False,
-            SERVER_NAME="test.local",
-        )
+        app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
         app.register_blueprint(blueprint)
@@ -237,127 +229,6 @@ def product_client(app_factory, bypass_product_auth):
 
 
 # ---------------------------------------------------------------------------
-# Reusable mock helpers for route tests
-# ---------------------------------------------------------------------------
-
-# Safe defaults for model column attributes used in filter comparisons.
-_SAFE_COLUMNS = {
-    "amount_aed": Decimal("0"),
-    "paid_amount_aed": Decimal("0"),
-    "balance": Decimal("0"),
-    "current_stock": Decimal("0"),
-    "min_stock_alert": Decimal("0"),
-    "regular_price": Decimal("0"),
-    "cost_price": Decimal("0"),
-    "unit_price": Decimal("0"),
-    "discount_percent": Decimal("0"),
-    "quantity": Decimal("0"),
-    "line_total": Decimal("0"),
-    "sale_date": datetime(2020, 1, 1),
-    "purchase_date": datetime(2020, 1, 1),
-    "sale_id": 0,
-    "product_id": 0,
-    "warehouse_id": 0,
-    "customer_id": 0,
-    "status": "confirmed",
-    "is_active": True,
-    "is_owner": False,
-    "is_reversed": False,
-    "tenant_id": None,
-}
-
-
-@pytest.fixture
-def mock_db_query(mocker):
-    """
-    Self-chaining mock for ``db.session.query``.
-
-    Chain methods (``.filter``, ``.filter_by``, ``.order_by``, ``.join``,
-    ``.options``, etc.) all return the same mock, so arbitrary SQLAlchemy
-    chains never crash.  Use ``.return_value`` to configure call results:
-
-    >>> q = mock_db_query
-    >>> q.filter.return_value.first.return_value = (0, 0.0, 0.0)
-    >>> q.filter.return_value.scalar.return_value = Decimal("0")
-    >>> q.filter.return_value.all.return_value = []
-    """
-    q = MagicMock(name="db_session_query")
-    q.return_value = q  # db.session.query(X) calls q(X) → returns q
-
-    for method in ("filter", "filter_by", "order_by", "join", "options",
-                   "group_by", "limit", "offset", "select_from"):
-        getattr(q, method).return_value = q
-
-    q.filter.return_value.first.side_effect = cycle([(0, 0.0, 0.0)])
-    q.filter.return_value.scalar.side_effect = cycle([Decimal("0")])
-    q.filter.return_value.all.return_value = []
-    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    return q
-
-
-@pytest.fixture
-def model_patch(mocker):
-    """
-    Factory fixture for patching a model class reference in a target module.
-
-    Usage in a test::
-
-        User = model_patch("routes.owner.User", count=5)
-        User.query.filter_by.return_value.count.return_value  # → 5
-
-    The patched model class has safe defaults on column attributes
-    (``Decimal("0")``, ``datetime(...)``, etc.) to prevent crashes
-    from filter-expression comparisons.  Override via ``cols=``.
-
-    ``.query`` supports:
-      * ``.filter_by(..).count()``
-      * ``.filter_by(..).join(..).distinct().count()``
-      * ``.filter_by(..).order_by(..).limit(N).all()``
-      * ``.filter(..).count()``
-      * ``.filter(..).order_by(..).limit(N).all()``
-    """
-    def _patch(target_path, *, count=0, cols=None):
-        q = MagicMock(name=f"query_{target_path}")
-
-        fbm = MagicMock(name="filter_by_mock")
-        fbm.count.return_value = count
-        fbm.join.return_value.distinct.return_value.count.return_value = count
-        fbm.order_by.return_value.limit.return_value.all.return_value = []
-        fbm.all.return_value = []
-        q.filter_by.return_value = fbm
-
-        fm = MagicMock(name="filter_mock")
-        fm.count.return_value = count
-        fm.order_by.return_value.limit.return_value.all.return_value = []
-        fm.all.return_value = []
-        q.filter.return_value = fm
-
-        mc = MagicMock(name=f"model_{target_path}")
-        mc.query = q
-
-        attrs = dict(_SAFE_COLUMNS)
-        if cols:
-            attrs.update(cols)
-        for attr, val in attrs.items():
-            setattr(mc, attr, val)
-
-        mocker.patch(target_path, mc)
-        return mc
-
-    return _patch
-
-
-@pytest.fixture
-def mock_db(mocker):
-    """Patch ``extensions.db.session`` so add/commit/rollback are no-ops."""
-    mock_session = mocker.MagicMock(name="mock_db_session")
-    mock_session.get.return_value = None
-    mocker.patch("extensions.db.session", mock_session, create=True)
-    yield mock_session
-    mock_session.get.reset_mock(side_effect=True, return_value=True)
-
-
-# ---------------------------------------------------------------------------
 # AI route fixtures  (/ai/* routes)
 # ---------------------------------------------------------------------------
 
@@ -440,44 +311,3 @@ def ai_client(app_factory, bypass_ai_access):
     from routes.ai import ai_bp
     app = app_factory(ai_bp)
     return app.test_client()
-
-
-# ---------------------------------------------------------------------------
-# Backup / raw DB connection fixture  (pure-logic backup tests)
-# ---------------------------------------------------------------------------
-
-@pytest.fixture
-def mock_db_connection(mocker):
-    """
-    Factory fixture that returns a mock SQLAlchemy ``Connection``.
-
-    Usage::
-
-        conn = mock_db_connection(rows=[(1, "alice")], keys=["id", "name"])
-        conn.execute(sa_text("...")).fetchall()   # → [(1, "alice")]
-        conn.execute(sa_text("...")).keys()        # → ["id", "name"]
-        conn.execute(sa_text("...")).scalar()      # → None
-
-    The returned ``Result`` mock also supports iteration and indexing on rows.
-    For multiple sequential calls with different results, use
-    ``side_effect`` directly on ``conn.execute.side_effect``.
-    """
-    def _make(*, rows=None, keys=None, scalar=None):
-        rows = rows or []
-        keys = keys or []
-        conn = mocker.MagicMock(name="mock_conn")
-        result = mocker.MagicMock(name="mock_result")
-        result.fetchall.return_value = rows
-        result.scalar.return_value = scalar
-        result.__iter__.return_value = iter(rows)
-        result.__getitem__.side_effect = lambda idx: rows[idx] if rows else None
-
-        def keys_side():
-            return keys
-        result.keys.side_effect = keys_side
-
-        conn.execute.return_value = result
-        conn.begin.return_value = mocker.MagicMock()
-        return conn
-
-    return _make

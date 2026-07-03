@@ -3,11 +3,13 @@
 المساعد الذكي الخارق - Superhuman AI Assistant
 """
 import os
-from flask import Blueprint, request, jsonify, render_template, current_app, abort, flash, redirect, url_for, g
+import re
+from flask import Blueprint, request, jsonify, render_template, current_app, abort, flash, redirect, url_for, g, Response, stream_with_context
 from flask_login import login_required, current_user
 from extensions import csrf, db, limiter
 from services.ai_service import AIService
 from werkzeug.utils import secure_filename
+from utils.sanitizer import InputSanitizer
 import pandas as pd
 from ai_knowledge.core.learning_system import learning_system
 from ai_knowledge.core.system_integration import system_integrator
@@ -416,16 +418,185 @@ def find_compatible(product_id):
     })
 
 
+
+# ── AI Prompt Guard ──────────────────────────────────────────────────
+# Prompt injection / malformed input detection for the chat endpoint.
+
+_PROMPT_INJECTION_PATTERNS = [
+    r'ignore\s+all\s+(previous|above|prior)\s+instructions',
+    r'forget\s+(all\s+)?(your|previous)\s+instructions',
+    r'system\s+prompt',
+    r'you\s+are\s+(now|a|an)\s+(free|unbounded|unrestricted)',
+    r'reveal\s+(your|the)\s+(system|prompt|instructions)',
+    r'bypass\s+(all\s+)?(restrictions|rules|constraints)',
+    r'override\s+(your|all)\s+(instructions|prompts|rules)',
+    r'sudo\s+(command|mode|access)',
+    r'DAN\s*:?|do\s+anything\s+now',
+    r'jailbreak|jail.?break',
+    r'act\s+as\s+(if\s+)?you\s+are',
+]
+
+_INJECTION_PATTERN_RE = None
+
+
+def _compile_injection_patterns():
+    global _INJECTION_PATTERN_RE
+    if _INJECTION_PATTERN_RE is None:
+        _INJECTION_PATTERN_RE = re.compile(
+            '|'.join(_PROMPT_INJECTION_PATTERNS),
+            re.IGNORECASE | re.UNICODE,
+        )
+    return _INJECTION_PATTERN_RE
+
+
+def _sanitize_ai_prompt(message, context):
+    """
+    Validate and sanitize an incoming AI prompt.
+    Returns (sanitized_message, error_response_tuple_or_None).
+    """
+    if not message or not message.strip():
+        return None, (jsonify({'error': 'Message required', 'code': 'EMPTY'}), 400)
+
+    # 1. Length guard - prevent token exhaustion attacks
+    if len(message) > 8000:
+        return None, (jsonify({
+            'error': 'الرسالة طويلة جداً. الحد الأقصى هو 8000 حرف.',
+            'code': 'TOO_LONG',
+        }), 413)
+
+    # 2. Prompt injection detection
+    pattern = _compile_injection_patterns()
+    if pattern.search(message):
+        from services.logging_core import LoggingCore
+        LoggingCore.log_audit(
+            action='prompt_injection_blocked',
+            table_name='ai',
+            record_id=0,
+            changes={'message_preview': message[:200], 'user_id': getattr(current_user, 'id', None)},
+        )
+        return None, (jsonify({
+            'error': 'تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك.',
+            'code': 'INJECTION_DETECTED',
+        }), 422)
+
+    # 3. HTML/XSS sanitization via existing InputSanitizer
+    safe = InputSanitizer.sanitize_text(message, max_length=8000)
+
+    # Also sanitize context values (strings only)
+    if isinstance(context, dict):
+        clean_ctx = {}
+        for k, v in context.items():
+            if isinstance(v, str):
+                clean_ctx[k] = InputSanitizer.sanitize_text(v, max_length=2000)
+            else:
+                clean_ctx[k] = v
+        context.clear()
+        context.update(clean_ctx)
+
+    return safe, None
+
+
+def _stream_ai_response(message, context, ai_mode):
+    """
+    Generator that yields heartbeat comments while processing, then yields
+    the final JSON result via SSE. This keeps the Gunicorn connection alive and
+    prevents 60-second worker timeouts for long-running AI queries.
+    """
+    import time
+    import json as json_module
+    from threading import Thread, Event
+
+    t0 = time.time()
+    heartbeat_interval = 10  # seconds
+    last_heartbeat = time.time()
+
+    result_container = {}
+    done_event = Event()
+
+    def _run_ai():
+        try:
+            result_container['response'] = AIService.chat_response(message, context)
+        except Exception as e:
+            result_container['error'] = str(e)
+        finally:
+            done_event.set()
+
+    thread = Thread(target=_run_ai, daemon=True)
+    thread.start()
+
+    while not done_event.is_set():
+        if time.time() - last_heartbeat >= heartbeat_interval:
+            yield ': heartbeat\n\n'
+            last_heartbeat = time.time()
+        done_event.wait(1)
+
+    elapsed_ms = int((time.time() - t0) * 1000)
+
+    if 'error' in result_container:
+        payload = json_module.dumps({
+            'response': None,
+            'error': result_container['error'],
+            'ai_enabled': True,
+            'elapsed_ms': elapsed_ms,
+        })
+        yield f'data: {payload}\n\n'
+        return
+
+    response = result_container['response']
+    state = get_ai_access_state(current_user)
+    payload = json_module.dumps({
+        'response': response,
+        'ai_enabled': bool(
+            state.get('allowed')
+            and state.get('global_enabled')
+            and state.get('tenant_enabled') is not False
+        ),
+        'ai_mode': ai_mode,
+        'user_role': 'owner' if current_user.is_owner else 'user',
+        'elapsed_ms': elapsed_ms,
+    })
+    yield f'data: {payload}\n\n'
+
+    # Log interaction
+    try:
+        from models.ai import AiInteraction
+        log = AiInteraction(
+            tenant_id=getattr(current_user, 'tenant_id', None),
+            user_id=current_user.id,
+            query=message[:2000],
+            response=str(response)[:4000],
+            intent=context.get('intent'),
+            was_successful=True,
+            response_time_ms=elapsed_ms,
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception:
+        pass
+
+    try:
+        from ai_knowledge.trainer import trainer
+        trainer.learn_from_interaction(
+            message, str(response)[:500], current_user.id, success=True,
+            tenant_id=getattr(current_user, 'tenant_id', None),
+        )
+    except Exception:
+        pass
+
+
 @ai_bp.route('/chat', methods=['POST'])
 @login_required
 @permission_required('view_reports')
 @limiter.limit("30 per minute")
 def chat():
     """API: الدردشة مع المساعد الذكي"""
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON'}), 400
+
     message = data.get('message', '').strip()
     ai_mode = data.get('ai_mode', 'groq')
-    context = data.get('context', {})
+    context = data.get('context', {}) or {}
     
     if 'dialect' not in context:
         context['dialect'] = 'palestinian'
@@ -436,9 +607,29 @@ def chat():
     context['is_owner'] = current_user.is_owner if current_user else False
     context['force_local'] = (ai_mode == 'local')
     
-    if not message:
-        return jsonify({'error': 'Message required'}), 400
-    
+    # Apply input validation / sanitization
+    safe_message, error_response = _sanitize_ai_prompt(message, context)
+    if error_response:
+        return error_response
+    message = safe_message
+
+    # Check if client prefers SSE streaming (to prevent Gunicorn timeouts)
+    prefer_stream = (
+        request.headers.get('Accept') == 'text/event-stream'
+        or data.get('stream', False)
+    )
+
+    if prefer_stream:
+        return Response(
+            stream_with_context(_stream_ai_response(message, context, ai_mode)),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no',
+                'Connection': 'keep-alive',
+            },
+        )
+
     action_result = None
     ai_state = getattr(g, 'ai_access_state', None) or get_ai_access_state(current_user)
     can_execute_mutations = ai_state.get('is_platform_user') or ai_level_allows(ai_state.get('ai_level'), 'execute')

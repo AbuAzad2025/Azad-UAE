@@ -57,11 +57,13 @@ def pytest_configure(config):
 @pytest.fixture(autouse=True)
 def _sqlalchemy_app_context():
     """Minimal Flask+SQLAlchemy context for model .query patches under --confcutdir."""
+    import os
+    db_uri = os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
     app = Flask(__name__)
     app.config.update(
         TESTING=True,
         SECRET_KEY="test-secret",
-        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+        SQLALCHEMY_DATABASE_URI=db_uri,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
     try:
@@ -79,57 +81,17 @@ def _sqlalchemy_app_context():
 @pytest.fixture
 def app_factory():
     def _create_app(blueprint, config_overrides=None):
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        from tests.conftest import TestConfig
         app = Flask(__name__)
-        app.config.update(
-            TESTING=True,
-            SECRET_KEY="test-secret",
-            WTF_CSRF_ENABLED=False,
-            DEBUG=True,
-            JSON_AS_ASCII=False,
-            JSON_SORT_KEYS=False,
-            SERVER_NAME="test.local",
-            ANALYTICS_GA_ID="",
-            MAX_CONTENT_LENGTH=16 * 1024 * 1024,
-        )
+        app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
         app.register_blueprint(blueprint)
         return app
     return _create_app
-
-
-def _chain_query(**terminals):
-    q = MagicMock(name="query_chain")
-    q.return_value = q
-    for method in (
-        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
-        "limit", "offset", "options", "select_from", "distinct", "having",
-    ):
-        getattr(q, method).return_value = q
-    inner = q.filter.return_value
-    inner.first.return_value = terminals.get("first")
-    inner.scalar.return_value = terminals.get("scalar", 0)
-    inner.all.return_value = terminals.get("all", [])
-    inner.count.return_value = terminals.get("count", 0)
-    inner.exists.return_value.scalar.return_value = terminals.get("exists", False)
-    q.scalar.return_value = terminals.get("scalar", 0)
-    q.all.return_value = terminals.get("all", [])
-    gb = q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value
-    gb.all.return_value = terminals.get("all", [])
-    pag = MagicMock(name="pagination")
-    pag.items = terminals.get("all", [])
-    pag.page = terminals.get("page", 1)
-    pag.per_page = terminals.get("per_page", 20)
-    pag.total = terminals.get("count", len(pag.items))
-    pag.pages = max(1, (pag.total + pag.per_page - 1) // pag.per_page) if pag.per_page else 1
-    pag.has_prev = pag.page > 1
-    pag.has_next = pag.page < pag.pages
-    pag.prev_num = pag.page - 1
-    pag.next_num = pag.page + 1
-    q.order_by.return_value.paginate.return_value = pag
-    q.paginate.return_value = pag
-    return q
-
 
 def _anon_user():
     user = MagicMock()
@@ -315,11 +277,6 @@ def bypass_reports_auth(mock_user):
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("utils.tenanting.require_report_tenant_id"),
         patch("utils.decorators.report_branch_scope_id", return_value=None),
-        patch("routes.reports.render_template", return_value="ok"),
-        patch("routes.reports.tenant_query", side_effect=lambda model: _chain_query(all=[])),
-        patch("routes.reports.db.session.query", side_effect=lambda *a, **k: _chain_query(scalar=0, exists=False)),
-        patch("routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("0")),
-        patch("routes.reports.get_confirmed_supplier_paid_aed", return_value=Decimal("0")),
     ]
     for p in patches:
         p.start()
@@ -359,8 +316,6 @@ def bypass_shop_auth(mock_store):
     tenant.brand_color_secondary = "#CE1126"
     tenant.is_active = True
     tenant.is_suspended = False
-    mock_db_session = MagicMock()
-    mock_db_session.get.return_value = tenant
     patches = [
         patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store),
         patch("routes.shop.StoreService.stores_globally_enabled", return_value=True),
@@ -379,12 +334,7 @@ def bypass_shop_auth(mock_store):
         patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None),
         patch("routes.shop.ShopCustomerAuthService.login"),
         patch("routes.shop.ShopCustomerAuthService.logout"),
-        patch("routes.shop.db.session", mock_db_session),
         patch("routes.shop.render_template", return_value="ok"),
-        patch("routes.shop.Product.query", new_callable=MagicMock),
-        patch("routes.shop.ProductCategory.query", new_callable=MagicMock),
-        patch("routes.shop.ShopReview.query", new_callable=MagicMock),
-        patch("routes.shop.Sale.query", new_callable=MagicMock),
         patch("extensions.limiter.limit", return_value=lambda f: f),
         patch("routes.shop.shop_lang", return_value="ar"),
         patch("routes.shop.t", side_effect=lambda k, lang=None: k),
@@ -406,13 +356,6 @@ def shop_client(app_factory, bypass_shop_auth):
         yield client
 
 
-@pytest.fixture
-def mock_db(mocker):
-    mock_session = mocker.MagicMock(name="mock_db_session")
-    mock_session.get.return_value = None
-    mocker.patch("extensions.db.session", mock_session, create=True)
-    yield mock_session
-
 
 @pytest.fixture
 def vault_owner_client(app_factory, bypass_owner_auth):
@@ -422,20 +365,6 @@ def vault_owner_client(app_factory, bypass_owner_auth):
 
 @pytest.fixture
 def bypass_customers_auth(mock_user):
-    customer = MagicMock()
-    customer.id = 1
-    customer.name = "Test Customer"
-    customer.phone = "0500000000"
-    customer.email = "c@test.com"
-    customer.customer_type = "regular"
-    customer.customer_classification = "regular"
-    customer.is_active = True
-    customer.tenant_id = 1
-    customer.balance = Decimal("0")
-    customer.created_at = MagicMock(strftime=lambda fmt: "2025-01-01")
-    customer.name_ar = ""
-    customer.preferred_currency = "AED"
-    customer.to_dict.return_value = {"id": 1, "name": "Test Customer"}
     patches = [
         patch("flask_login.utils._get_user", return_value=mock_user),
         patch("utils.auth_helpers.is_global_owner_user", return_value=True),
@@ -445,26 +374,11 @@ def bypass_customers_auth(mock_user):
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("utils.decorators.branch_scope_id", return_value=None),
         patch("utils.decorators.report_branch_scope_id", return_value=None),
-        patch("routes.customers.render_template", return_value="ok"),
-        patch("routes.customers.tenant_query", side_effect=lambda model: _chain_query(all=[customer])),
-        patch("routes.customers.tenant_get_or_404", return_value=customer),
-        patch("routes.customers.assert_tenant_record"),
-        patch("routes.customers.PaymentService.get_customer_balance_aed", return_value=Decimal("0")),
-        patch("routes.customers.PaymentService.get_customer_balance_scoped", return_value=Decimal("0")),
-        patch("routes.customers.should_show_all_branch_columns", return_value=False),
         patch("routes.customers.LoggingCore.log_audit"),
-        patch("routes.customers._customer_in_scope", return_value=True),
-        patch("routes.customers._get_unpaid_sales", return_value=[]),
-        patch("routes.customers.Sale"),
-        patch("routes.customers.db"),
     ]
     for p in patches:
         p.start()
-    from routes.customers import Sale as SaleMod, db as cust_db
-    SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    cust_db.session.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
-    cust_db.session.query.return_value.filter.return_value.all.return_value = []
-    yield mock_user, customer
+    yield mock_user
     for p in reversed(patches):
         p.stop()
 

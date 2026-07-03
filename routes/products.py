@@ -132,17 +132,17 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
     """Server-side rules aligned with the create form legend."""
     errors = []
     if not (request.form.get('name') or '').strip():
-        errors.append('اسم المنتج (إنجليزي) مطلوب')
+        errors.append('يرجى إدخال اسم المنتج باللغة الإنجليزية.')
     if form.regular_price.data is None:
-        errors.append('سعر البيع مطلوب')
+        errors.append('يرجى تحديد سعر البيع للمنتج.')
     elif form.regular_price.data < 0:
-        errors.append('سعر البيع لا يمكن أن يكون سالباً')
+        errors.append('سعر البيع يجب أن يكون صفراً أو أكثر.')
     if not warehouse_id:
-        errors.append('يجب اختيار المستودع')
+        errors.append('يرجى اختيار المستودع الذي سيتم تخزين المنتج فيه.')
     if initial_stock < 0:
-        errors.append('المخزون الافتتاحي لا يمكن أن يكون سالباً')
+        errors.append('المخزون الافتتاحي لا يمكن أن يكون سالباً.')
     if initial_stock > 0 and cost_price <= 0:
-        errors.append('عند إدخال مخزون افتتاحي يجب تحديد سعر تكلفة أكبر من صفر (لتسجيل القيد المحاسبي)')
+        errors.append('عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي.')
     return errors
 
 
@@ -362,12 +362,12 @@ def import_products():
     
     if request.method == 'POST':
         if 'file' not in request.files:
-            flash('⚠️ لم يتم اختيار ملف', 'danger')
+            flash('لم يتم اختيار ملف، يرجى اختيار ملف الإكسل أو CSV أولاً.', 'warning')
             return redirect(request.url)
         
         file = request.files['file']
         if file.filename == '':
-            flash('⚠️ لم يتم اختيار ملف', 'danger')
+            flash('لم يتم اختيار ملف صالح، يرجى اختيار ملف الإكسل أو CSV أولاً.', 'warning')
             return redirect(request.url)
         
         if file:
@@ -376,7 +376,7 @@ def import_products():
                 import uuid
                 ext = os.path.splitext(secure_filename(file.filename))[1].lower()
                 if ext not in ('.csv', '.xlsx', '.xls'):
-                    flash('⚠️ نوع الملف غير مدعوم', 'danger')
+                    flash('نوع الملف غير مدعوم. ندعم فقط ملفات Excel و CSV.', 'warning')
                     return redirect(request.url)
                 filename = f"import_{uuid.uuid4().hex}{ext}"
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
@@ -414,7 +414,7 @@ def import_products():
                 
                 # Validate minimal columns
                 if not set(['name', 'price']).issubset(df.columns):
-                    flash('⚠️ الملف يفتقد للأعمدة المطلوبة: اسم المنتج، السعر', 'danger')
+                    flash('الملف يفتقد للأعمدة المطلوبة: اسم المنتج وسعر البيع. تأكد من أن الملف يحتوي على هذه الأعمدة.', 'warning')
                     return redirect(request.url)
                 
                 from models import Warehouse, ProductCategory
@@ -524,16 +524,16 @@ def import_products():
                 db.session.commit()
                 
                 if success_count > 0:
-                    flash(f'✅ تم استيراد {success_count} منتج بنجاح.', 'success')
+                    flash(f'تم استيراد {success_count} منتج بنجاح.', 'success')
                 
                 if error_count > 0:
-                    flash(f'⚠️ فشل استيراد {error_count} منتج. راجع السجلات.', 'warning')
+                    flash(f'لم يتم استيراد {error_count} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى.', 'warning')
                     # Could log errors to file/session to show user
                 
                 return redirect(url_for('products.index'))
                 
             except Exception as e:
-                flash(f'❌ حدث خطأ أثناء معالجة الملف: {str(e)}', 'danger')
+                flash(f'حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة.', 'danger')
                 current_app.logger.error(f"Import Failed: {e}")
             finally:
                 if filepath and os.path.exists(filepath):
@@ -608,9 +608,9 @@ def import_grid():
     db.session.commit()
     
     if count > 0:
-        flash(f'✅ تم إضافة {count} منتج بنجاح.', 'success')
+        flash(f'تم إضافة {count} منتج بنجاح.', 'success')
     if errors > 0:
-        flash(f'⚠️ حدث خطأ في {errors} صف.', 'warning')
+        flash(f'حدث خطأ في {errors} صف أثناء الإضافة. يرجى مراجعة البيانات.', 'warning')
         
     return redirect(url_for('products.index'))
 
@@ -744,7 +744,7 @@ def create():
                 try:
                     warehouse = ensure_warehouse_access(warehouse_id, user=current_user)
                 except ValueError:
-                    flash('⚠️ المستودع المحدد غير صالح', 'warning')
+                    flash('المستودع المحدد غير صالح أو غير متاح لك. يرجى اختيار مستودع من القائمة.', 'warning')
                     warehouses = get_accessible_warehouses(current_user)
                     return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners, preselected_warehouse_id=preselected_warehouse_id, default_industry=default_industry)
                 

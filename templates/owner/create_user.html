@@ -1,4 +1,4 @@
-﻿﻿{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}شركة أزاد للأنظمة الذكية - إضافة مستخدم جديد وإدارة الصلاحيات{% endblock %}
 
@@ -128,9 +128,9 @@
                 <label for="tenant_select">الشركة (Tenant) *</label>
                 <select name="tenant_id" id="tenant_select" class="form-control" required aria-label="tenant id">
                   <option value="">-- اختر الشركة --</option>
-                  {% for t in tenants %}
-                  <option value="{{ t.id }}" {% if form_data.get('tenant_id')|string == t.id|string %}selected{% endif %}>
-                    {{ t.name_ar or t.name }} ({{ t.slug }})
+                  {% for tenant in tenants %}
+                  <option value="{{ tenant.id }}" {% if form_data.get('tenant_id')|string == tenant.id|string %}selected{% endif %}>
+                    {{ tenant.name_ar or tenant.name }} ({{ tenant.slug }})
                   </option>
                   {% endfor %}
                 </select>

@@ -201,8 +201,8 @@
               </select>
               {% if is_platform_owner and tenants %}
               <select name="tenant_id" class="form-control mb-2" required aria-label="tenant id">
-                {% for t in tenants %}
-                <option value="{{ t.id }}">{{ t.name }} ({{ t.slug }})</option>
+                {% for tenant in tenants %}
+                <option value="{{ tenant.id }}">{{ tenant.name }} ({{ tenant.slug }})</option>
                 {% endfor %}
               </select>
               {% endif %}

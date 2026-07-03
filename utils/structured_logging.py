@@ -39,9 +39,25 @@ def _get_user_context():
     return {}
 
 
+def _resolve_id(value):
+    """Safely extract a numeric ID from a value that might be a model object."""
+    if value is None:
+        return None
+    if isinstance(value, (int, str)):
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return str(value)
+    # Check if it looks like a SQLAlchemy model instance (has .id)
+    obj_id = getattr(value, 'id', None)
+    if obj_id is not None:
+        return obj_id
+    return str(value)
+
+
 def log_mutation(
     action: str,
-    entity_type: str,
+    entity_type: str = None,
     entity_id: int = None,
     details: dict = None,
     level: str = "info"
@@ -52,16 +68,19 @@ def log_mutation(
     Args:
         action: e.g., 'create', 'update', 'delete', 'approve', 'reject'
         entity_type: e.g., 'Sale', 'Purchase', 'Payment', 'User'
-        entity_id: Primary key of affected entity
+        entity_id: Primary key of affected entity (int, str, or model object with .id)
         details: Additional context (exclude sensitive data like passwords)
         level: logging level
     """
+    # Defensively resolve entity_id in case a model object was passed
+    resolved_id = _resolve_id(entity_id)
+
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_type": "mutation",
         "action": action,
-        "entity_type": entity_type,
-        "entity_id": entity_id,
+        "entity_type": entity_type or '',
+        "entity_id": resolved_id,
         "details": details or {},
         "user": _get_user_context(),
         "request": _get_request_context(),

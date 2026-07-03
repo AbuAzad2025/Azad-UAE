@@ -78,6 +78,7 @@ def _mock_product_form(validate=True, category_id=1):
     form = MagicMock()
     form.validate_on_submit.return_value = validate
     form.category_id.data = category_id
+    form.regular_price.data = 10.0
     form.errors = {"name": ["required"]} if not validate else {}
     return form
 
@@ -610,6 +611,7 @@ class TestProductsCreate:
                     "regular_price": "100",
                     "warehouse_id": "1",
                     "current_stock": "5",
+                    "cost_price": "50",
                     "sku": "NEW-SKU",
                 },
             )
@@ -1040,6 +1042,7 @@ class TestProductsExtendedCoverage:
                     "regular_price": "100",
                     "warehouse_id": "1",
                     "current_stock": "2",
+                    "cost_price": "20",
                     "merchant_customer_id": "7",
                     "partner_customer_id[]": ["8"],
                     "partner_percentage[]": ["25"],

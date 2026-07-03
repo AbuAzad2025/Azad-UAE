@@ -6,7 +6,8 @@ import shutil
 import sys
 
 import pytest
-from sqlalchemy import text as sa_text
+from sqlalchemy import create_engine, text as sa_text
+from urllib.parse import urlparse, urlunparse
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
@@ -16,12 +17,117 @@ os.environ.setdefault("FLASK_ENV", "testing")
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("WTF_CSRF_ENABLED", "false")
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
 os.environ.setdefault("CACHE_TYPE", "null")
 os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
+
+_DEV_DB_NAME = "azad_uae"
+_TEST_DB_NAME = os.environ.get("PYTEST_DB_NAME", "azad_uae_test")
+
+
+def _parse_database_url(url: str):
+    parsed = urlparse(url)
+    db_name = (parsed.path or f"/{_DEV_DB_NAME}").lstrip("/").split("/")[0]
+    return parsed, db_name
+
+
+def _build_database_url(base_url: str, db_name: str) -> str:
+    parsed, _ = _parse_database_url(base_url)
+    return urlunparse(parsed._replace(path=f"/{db_name}"))
+
+
+def _admin_database_url(url: str) -> str:
+    return _build_database_url(url, "postgres")
+
+
+def _resolve_test_database_url() -> str:
+    """Never run pytest against the local dev database (azad_uae)."""
+    explicit = (os.environ.get("TEST_DATABASE_URL") or "").strip()
+    if explicit:
+        _, name = _parse_database_url(explicit)
+        if name == _DEV_DB_NAME:
+            raise RuntimeError(
+                "TEST_DATABASE_URL must not point at the dev database 'azad_uae'. "
+                f"Use '{_TEST_DB_NAME}' or another *_test database."
+            )
+        return explicit
+
+    base = (os.environ.get("DATABASE_URL") or "").strip()
+    if not base:
+        base = f"postgresql+psycopg2://postgres:123@localhost:5432/{_DEV_DB_NAME}"
+
+    _, current_name = _parse_database_url(base)
+    if current_name.endswith("_test"):
+        return base
+
+    return _build_database_url(base, _TEST_DB_NAME)
+
+
+def _ensure_postgres_database(url: str) -> None:
+    parsed, db_name = _parse_database_url(url)
+    if not db_name:
+        raise RuntimeError(f"Invalid database URL (no database name): {url}")
+
+    admin_engine = create_engine(
+        _admin_database_url(url),
+        isolation_level="AUTOCOMMIT",
+        pool_pre_ping=True,
+    )
+    try:
+        with admin_engine.connect() as conn:
+            exists = conn.execute(
+                sa_text("SELECT 1 FROM pg_database WHERE datname = :name"),
+                {"name": db_name},
+            ).scalar()
+            if not exists:
+                conn.execute(sa_text(f'CREATE DATABASE "{db_name}"'))
+    finally:
+        admin_engine.dispose()
+
+
+def _terminate_database_connections(url: str) -> None:
+    _, db_name = _parse_database_url(url)
+    admin_engine = create_engine(
+        _admin_database_url(url),
+        isolation_level="AUTOCOMMIT",
+        pool_pre_ping=True,
+    )
+    try:
+        with admin_engine.connect() as conn:
+            conn.execute(
+                sa_text(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE datname = :name AND pid <> pg_backend_pid()"
+                ),
+                {"name": db_name},
+            )
+    finally:
+        admin_engine.dispose()
+
+
+def _drop_postgres_database(url: str) -> None:
+    parsed, db_name = _parse_database_url(url)
+    if db_name in ("postgres", "template0", "template1", _DEV_DB_NAME):
+        raise RuntimeError(f"Refusing to drop protected database: {db_name}")
+
+    _terminate_database_connections(url)
+    admin_engine = create_engine(
+        _admin_database_url(url),
+        isolation_level="AUTOCOMMIT",
+        pool_pre_ping=True,
+    )
+    try:
+        with admin_engine.connect() as conn:
+            conn.execute(sa_text(f'DROP DATABASE IF EXISTS "{db_name}"'))
+    finally:
+        admin_engine.dispose()
+
+
+_TEST_DATABASE_URL = _resolve_test_database_url()
+os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
+os.environ["TEST_DATABASE_URL"] = _TEST_DATABASE_URL
 
 from unittest.mock import MagicMock, AsyncMock, NonCallableMock
 
@@ -72,7 +178,7 @@ def make_sync_current_app_mock(name="current_app"):
 class TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret-key"
-    SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
+    SQLALCHEMY_DATABASE_URI = _TEST_DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_size": 3,
@@ -142,7 +248,9 @@ def pytest_configure(config):
 
 @pytest.fixture(scope="session")
 def app():
-    """Create and configure the Flask app for testing against real PostgreSQL."""
+    """Create Flask app against an isolated PostgreSQL test database."""
+    _ensure_postgres_database(_TEST_DATABASE_URL)
+
     original_log_error = LoggingCore.log_error
     original_log_frontend = LoggingCore.log_frontend_error
     LoggingCore.log_error = lambda *args, **kwargs: None
@@ -151,12 +259,30 @@ def app():
     _app = create_app(config_class=TestConfig)
 
     with _app.app_context():
-        db.create_all()
+        try:
+            from flask_migrate import upgrade
+            upgrade()
+        except Exception:
+            db.create_all()
         yield _app
-        db.session.remove()
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+        try:
+            db.engine.dispose()
+        except Exception:
+            pass
 
     LoggingCore.log_error = original_log_error
     LoggingCore.log_frontend_error = original_log_frontend
+
+    keep_db = os.environ.get("PYTEST_KEEP_TEST_DB", "").lower() in ("1", "true", "yes")
+    if not keep_db:
+        try:
+            _drop_postgres_database(_TEST_DATABASE_URL)
+        except Exception:
+            pass
 
 
 _POLLUTED_MODEL_SPECS = (
