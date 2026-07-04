@@ -277,6 +277,21 @@ def bypass_ai_access(mocker):
 
 
 @pytest.fixture
+def model_patch(mocker):
+    """
+    Fixture factory that patches a model path and returns the MagicMock.
+
+    Usage::
+
+        Partner = model_patch("models.Partner", count=len(partners))
+        Partner.query.filter_by.return_value.all.return_value = partners
+    """
+    def _patch(model_path: str, count: int = 0):
+        return mocker.patch(model_path)
+    return _patch
+
+
+@pytest.fixture
 def mock_ai_service(mocker):
     """
     Patch ``routes.ai.AIService`` static methods so tests never hit a real
