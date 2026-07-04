@@ -196,7 +196,7 @@ class TestConversationManagerCovWave:
 
 class TestConversationStoreCovWave:
 
-    def test_get_context_naive_datetime(self, db_session):
+    def test_get_context_naive_datetime(self, db_session, sample_tenant):
         """Line 28: updated.tzinfo is None branch."""
         from ai_knowledge.core.conversation_store import get_context
         from models.ai import AiMemory
@@ -206,14 +206,14 @@ class TestConversationStoreCovWave:
             key='conversation_context:123',
             value=json.dumps({'test': True}),
             category='conversation',
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             is_active=True,
             last_accessed=naive_time,
             created_at=naive_time,
         )
         db_session.add(mem)
         db_session.flush()
-        result = get_context(123, tenant_id=1)
+        result = get_context(123, tenant_id=sample_tenant.id)
         assert result is None
 
 
@@ -680,7 +680,7 @@ class TestExternalLearningCovWave:
 
 class TestQuickLearnerCovWave:
 
-    def test_get_answer_fuzzy(self, db_session):
+    def test_get_answer_fuzzy(self, db_session, sample_tenant):
         """Line 46: fuzzy match via get_close_matches."""
         from ai_knowledge.learning.quick_learner import QuickLearner
         from models.ai import AiMemory
@@ -688,13 +688,13 @@ class TestQuickLearnerCovWave:
             key='what is vat rate',
             value='5%',
             category='general',
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             is_active=True,
         )
         db_session.add(mem)
         db_session.flush()
         ql = QuickLearner()
-        ql.get_answer('what is the vat rate?', tenant_id=1)
+        ql.get_answer('what is the vat rate?', tenant_id=sample_tenant.id)
 
     def test_knowledge_base_property(self):
         """Line 76: knowledge_base property."""
