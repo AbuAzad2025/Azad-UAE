@@ -292,6 +292,33 @@ def model_patch(mocker):
 
 
 @pytest.fixture
+def mock_db_connection(mocker):
+    """
+    Fixture factory that creates a mocked database connection.
+
+    Usage::
+
+        conn = mock_db_connection(scalar=42)
+        conn.execute.side_effect = [...]
+
+    Supports ``scalar``, ``rows``, and ``keys`` keyword arguments
+    to pre-configure ``conn.execute().scalar()`` or iterator results.
+    """
+    def _make(scalar=None, rows=None, keys=None):
+        conn = mocker.MagicMock()
+        if scalar is not None:
+            conn.execute.return_value.scalar.return_value = scalar
+        if rows is not None:
+            result = mocker.MagicMock()
+            result.__iter__.return_value = iter(rows)
+            if keys is not None:
+                result.keys.return_value = keys
+            conn.execute.return_value = result
+        return conn
+    return _make
+
+
+@pytest.fixture
 def mock_ai_service(mocker):
     """
     Patch ``routes.ai.AIService`` static methods so tests never hit a real
