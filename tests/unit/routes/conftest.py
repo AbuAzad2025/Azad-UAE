@@ -451,6 +451,7 @@ def bypass_customers_auth(mock_user):
         patch("routes.customers._customer_in_scope", return_value=True),
         patch("routes.customers._get_customer_balance", return_value=Decimal("0")),
         patch("routes.customers._scoped_customer_query"),
+        patch("utils.tenanting.tenant_get_or_404"),
     ]
     for p in patches:
         p.start()
