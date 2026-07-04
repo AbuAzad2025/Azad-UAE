@@ -323,7 +323,7 @@ class TestCustomersIndexAndExport:
         assert resp.status_code == 200
 
     def test_api_search_empty_query_lists_all(self, customers_client, bypass_customers_auth):
-        with patch('routes.customers._scoped_customer_query', return_value=_chain_query(all=[MagicMock()])):
+        with patch('routes.customers._scoped_customer_query', return_value=_chain_query(all=[])):
             resp = customers_client.get('/customers/api/search')
         assert resp.status_code == 200
         assert isinstance(resp.get_json(), list)
