@@ -1068,7 +1068,7 @@ class TestUploadExcel:
         data = {"file": (io.BytesIO(b"x"), "items.xlsx")}
         with patch("models.Warehouse") as Warehouse:
             Warehouse.query.filter_by.return_value.first.return_value = warehouse
-            with patch("routes.ai_routes._process_excel_intelligently", return_value={"success": True}) as proc:
+            with patch("routes.ai_routes.assistant._process_excel_intelligently", return_value={"success": True}) as proc:
                 resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 200
         proc.assert_called_once()
