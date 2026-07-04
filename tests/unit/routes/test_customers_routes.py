@@ -46,7 +46,6 @@ class TestCustomersIndex:
 
 class TestCustomersExport:
     def test_export_csv(self, customers_client, bypass_customers_auth):
-        _, customer = bypass_customers_auth
         with patch('routes.customers.send_file', return_value=make_response(b'data', 200)):
             resp = customers_client.get('/customers/export?format=csv')
         assert resp.status_code == 200
@@ -143,7 +142,6 @@ class TestCustomersScopedHelpers:
 
 class TestCustomersStatement:
     def test_statement_returns_200(self, customers_client, bypass_customers_auth):
-        _, customer = bypass_customers_auth
         line = MagicMock()
         line.quantity = 1
         line.unit_price = 100
@@ -263,7 +261,6 @@ class TestCustomersStatement:
         chain.filter.assert_called_once()
 
     def test_delete_exception_soft_delete_fallback(self, customers_client, bypass_customers_auth):
-        _, customer = bypass_customers_auth
         refetched = MagicMock(name='Refetched', is_active=True)
         with patch('routes.customers.db') as mock_db, \
              patch('routes.customers._customer_in_scope', return_value=True), \
@@ -311,7 +308,7 @@ class TestCustomersIndexAndExport:
         attach.assert_called_once()
 
     def test_export_scoped_branch_balances(self, customers_client, bypass_customers_auth):
-        _, customer = bypass_customers_auth
+        customer = MagicMock()
         with patch('routes.customers.branch_scope_id', return_value=2), \
              patch('routes.customers._scoped_customer_query', return_value=_chain_query(all=[customer])), \
              patch('routes.customers.db') as mock_db, \
@@ -325,7 +322,7 @@ class TestCustomersIndexAndExport:
         assert resp.status_code == 200
 
     def test_api_search_empty_query_lists_all(self, customers_client, bypass_customers_auth):
-        with patch('routes.customers._scoped_customer_query', return_value=_chain_query(all=[bypass_customers_auth[1]])):
+        with patch('routes.customers._scoped_customer_query', return_value=_chain_query(all=[MagicMock()])):
             resp = customers_client.get('/customers/api/search')
         assert resp.status_code == 200
         assert isinstance(resp.get_json(), list)
@@ -533,7 +530,6 @@ class TestCustomersCoverageGaps:
             assert _customer_in_scope(1) is True
 
     def test_statement_full_flow(self, customers_client, bypass_customers_auth):
-        _, customer = bypass_customers_auth
         line = MagicMock()
         line.quantity = 2
         line.unit_price = 50
