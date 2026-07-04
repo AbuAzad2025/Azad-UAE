@@ -4,8 +4,11 @@ import json
 import logging
 from flask import render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from extensions import csrf,  limiter
+from extensions import csrf, limiter
 from utils.decorators import permission_required
+from services.ai_service import AIService
+from ai_knowledge.knowledge_base import get_automotive_ecu_knowledge
+from ai_knowledge.learning.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
 from routes.ai_routes import ai_bp
 
 logger = logging.getLogger(__name__)

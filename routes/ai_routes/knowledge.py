@@ -8,9 +8,11 @@ from flask_login import login_required, current_user
 from utils.decorators import admin_required,  permission_required
 from extensions import db
 from services.logging_core import LoggingCore
+from services.ai_service import AIService
 from ai_knowledge.core.learning_system import learning_system
 from ai_knowledge.core.system_integration import system_integrator
 from ai_knowledge.expansion.global_knowledge import global_connector, expertise_updater
+from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.improvement.self_improvement import self_improvement
 from ai_knowledge.generation.document_generator import document_generator
 from routes.ai_routes import ai_bp

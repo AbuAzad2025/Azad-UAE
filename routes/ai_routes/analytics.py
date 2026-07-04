@@ -9,6 +9,7 @@ from utils.decorators import permission_required
 from sqlalchemy import func
 from extensions import db
 from models import Sale, SaleLine, Product, Customer, Expense, Purchase
+from services.ai_service import AIService
 from services.logging_core import LoggingCore
 from routes.ai_routes import ai_bp
 
