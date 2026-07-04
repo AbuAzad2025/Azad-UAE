@@ -98,6 +98,9 @@ def app_factory():
         app.jinja_env.globals['t'] = t
         # Register csrf_token as a no-op (WTF_CSRF_ENABLED=False in test config)
         app.jinja_env.globals['csrf_token'] = lambda: ''
+        # Register current_user for templates (Flask-Login registers this via LoginManager.init_app)
+        from flask_login import current_user
+        app.jinja_env.globals['current_user'] = current_user
 
         app.register_blueprint(blueprint)
         return app
