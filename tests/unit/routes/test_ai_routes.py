@@ -1775,7 +1775,7 @@ class TestProductWizardFlow:
         ctx = {"last_action": "منتج", "option": "1", "step": 1, "data": {}}
         product = _obj(id=12)
         with patch("models.product.Product", product_cls := MagicMock()) as Product, \
-             patch("routes.ai_routes.StockService.add_opening_stock"):
+             patch("routes.ai_routes.actions.StockService.add_opening_stock"):
             product_cls.return_value = product
             _run_action("Oil Filter", mock_user, ctx)
             assert ctx["step"] == 2
@@ -1881,7 +1881,7 @@ class TestColonSyntaxCommands:
         ctx = {}
         product = _obj(id=8)
         with patch("models.Product", prod_cls := MagicMock()) as Product, \
-             patch("routes.ai_routes.StockService.add_opening_stock"):
+             patch("routes.ai_routes.actions.StockService.add_opening_stock"):
             prod_cls.return_value = product
             result = _run_action("منتج: Filter, PN99, 120, 5", mock_user, ctx)
         assert "تم إنشاء المنتج" in result
@@ -1911,7 +1911,7 @@ class TestColonSyntaxCommands:
              patch("models.Sale", sale_cls := MagicMock()) as Sale, \
              patch("models.SaleLine", line_cls := MagicMock()) as SaleLine, \
              patch("models.Warehouse") as Warehouse, \
-             patch("routes.ai_routes.StockService.remove_stock"):
+             patch("routes.ai_routes.actions.StockService.remove_stock"):
             Customer.query.filter_by.return_value = cust_chain
             Product.query.filter_by.return_value = prod_chain
             Warehouse.query.filter_by.return_value = wh_chain
@@ -2121,7 +2121,7 @@ class TestInvoiceWizardExtended:
              patch("models.sale.SaleLine", line_cls := MagicMock()) as SaleLine, \
              patch("utils.helpers.generate_number", return_value="S-001"), \
              patch("models.Warehouse") as Warehouse, \
-             patch("routes.ai_routes.StockService.remove_stock"), \
+             patch("routes.ai_routes.actions.StockService.remove_stock"), \
              patch("routes.ai_routes.create_final_options", return_value="next"):
             sale_cls.return_value = sale
             line_cls.return_value = _obj(id=1)
@@ -2235,7 +2235,7 @@ class TestPurchaseWizardExtended:
              patch("models.purchase.PurchaseLine", line_cls := MagicMock()) as PurchaseLine, \
              patch("models.product.Product") as Product, \
              patch("utils.helpers.generate_number", return_value="PO-1"), \
-             patch("routes.ai_routes.StockService.add_stock"), \
+             patch("routes.ai_routes.actions.StockService.add_stock"), \
              patch("routes.ai_routes.create_final_options", return_value="opts"):
             pur_cls.return_value = purchase
             line_cls.return_value = _obj(id=1)
