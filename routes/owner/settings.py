@@ -1,20 +1,15 @@
 """Settings, configuration, and communication routes for the owner blueprint."""
 
 from decimal import Decimal
-from flask import render_template, request, jsonify, flash, redirect, url_for, current_app, abort
-from flask_login import login_required, current_user
-from sqlalchemy import func, text
-from extensions import db, limiter
-from models import (
+from routes.owner import (
+    render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
+    login_required, current_user, func, text, db, limiter,
     Tenant, SystemSettings, IntegrationSettings, InvoiceSettings,
-    StorePaymentMethod, CardVault, User, Role, Warehouse,
+    StorePaymentMethod, CardVault, User, Role, Warehouse, TenantStore,
+    owner_required, owner_or_company_admin, company_admin_required,
+    is_global_owner_user, get_active_tenant_id, get_system_default_currency,
+    get_tenant_ai_level, set_tenant_ai_level,
 )
-from models.tenant_store import TenantStore
-from utils.decorators import owner_required, owner_or_company_admin, company_admin_required
-from utils.auth_helpers import is_global_owner_user
-from utils.tenanting import get_active_tenant_id
-from utils.currency_utils import get_system_default_currency
-from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
 from services.logging_core import LoggingCore
 from services.store_service import StoreService
 from routes.owner import owner_bp

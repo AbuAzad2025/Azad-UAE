@@ -1,17 +1,14 @@
 """User management and roles/permissions routes for the owner blueprint."""
 
-from flask import render_template, request, jsonify, flash, redirect, url_for, current_app, abort
-from flask_login import login_required, current_user
-from sqlalchemy import func, desc
-from extensions import db, limiter
-from models import User, Branch, Tenant, Role, Sale, Payment, AuditLog
-from utils.decorators import owner_required
-from utils.auth_helpers import (
+from routes.owner import (
+    render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
+    login_required, current_user, func, desc, db, limiter,
+    User, Branch, Tenant, Role, Sale, Payment, AuditLog,
+    owner_required,
     role_level_for, role_level_for_user, is_global_owner_user,
     user_may_have_null_tenant, enforce_company_user_tenant,
+    get_active_tenant_id, InputSanitizer,
 )
-from utils.tenanting import get_active_tenant_id
-from utils.sanitizer import InputSanitizer
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes

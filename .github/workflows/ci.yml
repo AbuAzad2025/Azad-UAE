@@ -7,12 +7,50 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  # ── Frontend tests (no Postgres needed, runs in parallel with Python setup) ──
+  frontend:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Run frontend unit tests
+        run: npm run test:frontend
+
+  # ── Python tests split by directory ──
+  test:
+    needs: []
+    name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Routes — tested across all 3 PG versions (separate Codecov flags for visibility)
+          - { postgres-version: 15, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg15 }
+          - { postgres-version: 16, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg16 }
+          - { postgres-version: 17, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg17 }
+          # Services
+          - { postgres-version: 15, test-group: services, test-path: "tests/unit/services/",          cov-flag: unit-services }
+          # Models
+          - { postgres-version: 15, test-group: models,   test-path: "tests/unit/models/",            cov-flag: unit-models }
+          # AI Knowledge
+          - { postgres-version: 15, test-group: ai_knowledge, test-path: "tests/unit/ai_knowledge/",  cov-flag: unit-ai-knowledge }
+          # Utils + App + Runtime Core
+          - { postgres-version: 15, test-group: utils,    test-path: "tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", cov-flag: unit-utils }
+          # Standalone unit tests (top-level tests/unit/ excluding subdirectories)
+          - { postgres-version: 15, test-group: core,     test-path: "tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", cov-flag: unit-core }
+          # Integration
+          - { postgres-version: 15, test-group: integration, test-path: "tests/integration/",         cov-flag: integration }
+          # E2E
+          - { postgres-version: 15, test-group: e2e,      test-path: "tests/e2e/",                   cov-flag: e2e }
+      fail-fast: false
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:${{ matrix.postgres-version }}
         env:
           POSTGRES_USER: azad_test
           POSTGRES_PASSWORD: azad_test
@@ -39,33 +77,57 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Run frontend unit tests
-        run: |
-          npm install
-          npm run test:frontend
-
-      - name: Run tests with coverage
+      - name: Run tests
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key-not-for-production
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
           DEBUG: "true"
+          PYTEST_ADDOPTS: ""
         run: |
-          # Initialize database schema before running tests
+          # Warm up: ensure DB schema exists
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
-          pytest tests/ -v --tb=short --cov --cov-config=.coveragerc --cov-report=term --cov-report=xml
+          # Run the assigned test group — fail-fast per job
+          pytest ${{ matrix.test-path }} -x -v --tb=short \
+            --cov --cov-config=.coveragerc --cov-report=term \
+            --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
+
       - name: Upload coverage to Codecov (optional)
         uses: codecov/codecov-action@v7
         with:
-          files: ./coverage.xml
+          files: ./coverage-${{ matrix.cov-flag }}.xml
+          flags: ${{ matrix.cov-flag }}
           fail_ci_if_error: false
 
+  # ── App boot verification (quick smoke test) ──
+  verify-boot:
+    needs: []
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Verify app boots
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -75,6 +137,20 @@ jobs:
         run: |
           python -c "from app import create_app; app = create_app()"
 
+  # ── Security scan (no DB needed) ──
+  security-scan:
+    needs: []
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Security scan (bandit)
         run: |
           bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true

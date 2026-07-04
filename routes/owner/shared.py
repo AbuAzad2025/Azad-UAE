@@ -2,30 +2,19 @@
 
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, abort
-from flask_login import login_required, current_user
-from sqlalchemy import func, desc
-from extensions import db, limiter
-from models import (
+from routes.owner import (
+    render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
+    login_required, current_user, func, desc, db, limiter,
     User, Customer, Product, Sale, SaleLine, Purchase, Payment, Receipt,
     StockMovement, AuditLog, ArchivedRecord, ProductReturn, CardVault, InvoiceSettings,
-    Tenant, SystemSettings, IntegrationSettings, Expense, Branch, Warehouse
+    Tenant, SystemSettings, IntegrationSettings, Expense, Branch, Warehouse,
+    LoginHistory, SecurityAlert, APIKey,
+    owner_required, permission_required, company_admin_required, owner_or_company_admin,
+    safe_redirect_target, role_requires_branch, get_visible_products_query,
+    role_level_for, role_level_for_user,
+    get_tenant_ai_level, set_tenant_ai_level, get_active_tenant_id,
+    get_system_default_currency, resolve_default_currency,
 )
-from models.login_history import LoginHistory
-from models.security_alert import SecurityAlert
-from models.api_key import APIKey
-from utils.decorators import (
-    owner_required,
-    permission_required,
-    company_admin_required,
-    owner_or_company_admin,
-)
-from utils.safe_redirect import safe_redirect_target
-from utils.branching import role_requires_branch, get_visible_products_query
-from utils.auth_helpers import role_level_for, role_level_for_user
-from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
-from utils.tenanting import get_active_tenant_id
-from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from services.logging_core import LoggingCore
 from sqlalchemy import text, inspect
 import json
@@ -33,11 +22,6 @@ import logging
 import os
 import re
 import shutil
-from datetime import datetime as dt
-
-logger = logging.getLogger(__name__)
-
-owner_bp = Blueprint('owner', __name__, url_prefix='/owner')
 
 logger = logging.getLogger(__name__)
 
