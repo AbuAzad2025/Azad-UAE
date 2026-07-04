@@ -45,6 +45,7 @@ def _process_user_action(message, user):
         from extensions import db
         from datetime import datetime, timezone
         from decimal import Decimal
+        from utils.gl_reference_types import GLRef
         import re
         
         msg_lower = message.lower()
