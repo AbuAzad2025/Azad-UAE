@@ -1039,7 +1039,7 @@ class TestUploadExcel:
 
     def test_success_path(self, ai_client):
         data = {"file": (io.BytesIO(b"excel"), "products.xlsx"), "warehouse_id": "1"}
-        with patch("routes.ai_routes._process_excel_intelligently", return_value={"success": True, "message": "ok"}):
+        with patch("routes.ai_routes.assistant._process_excel_intelligently", return_value={"success": True, "message": "ok"}):
             resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
