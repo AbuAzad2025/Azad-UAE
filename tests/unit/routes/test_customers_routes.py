@@ -70,7 +70,8 @@ class TestCustomersCrud:
         assert resp.status_code in (200, 302)
 
     def test_view_customer(self, customers_client):
-        resp = customers_client.get('/customers/1')
+        with patch('routes.customers.Sale'):
+            resp = customers_client.get('/customers/1')
         assert resp.status_code == 200
 
     def test_edit_get(self, customers_client):
@@ -103,7 +104,7 @@ class TestCustomersApi:
         assert resp.status_code == 200
 
     def test_customer_sales(self, customers_client):
-        with patch('routes.customers._get_unpaid_sales', return_value=[]):
+        with patch('routes.customers.Sale'):
             resp = customers_client.get('/customers/1/sales')
         assert resp.status_code == 200
 
