@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, render_template
 import logging
 
 logger = logging.getLogger(__name__)
