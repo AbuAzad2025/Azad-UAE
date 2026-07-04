@@ -14,6 +14,8 @@ from models import (
 )
 from services.ai_service import AIService
 from services.logging_core import LoggingCore
+from ai_knowledge.core.system_integration import system_integrator
+from ai_knowledge.analytics.data_analyzer import data_analyzer
 from routes.ai_routes import ai_bp
 
 logger = logging.getLogger(__name__)

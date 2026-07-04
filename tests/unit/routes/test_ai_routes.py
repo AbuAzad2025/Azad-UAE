@@ -1187,28 +1187,28 @@ def _admin_patch():
 
 class TestLearningRoutes:
     def test_learning_status_ok(self, ai_client):
-        with patch("routes.ai_routes.learning_system") as ls:
+        with patch("routes.ai_routes.knowledge.learning_system") as ls:
             ls.get_learning_insights.return_value = {"count": 1}
             resp = ai_client.get("/ai/learning/status")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
 
     def test_learning_status_error(self, ai_client):
-        with patch("routes.ai_routes.learning_system") as ls:
+        with patch("routes.ai_routes.knowledge.learning_system") as ls:
             ls.get_learning_insights.side_effect = RuntimeError("x")
             resp = ai_client.get("/ai/learning/status")
         assert resp.status_code == 500
 
     def test_evolve_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.learning_system") as ls:
+            with patch("routes.ai_routes.knowledge.learning_system") as ls:
                 ls.evolve_knowledge.return_value = {"evolved": True}
                 resp = ai_client.post("/ai/learning/evolve")
         assert resp.status_code == 200
 
     def test_evolve_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.learning_system") as ls:
+            with patch("routes.ai_routes.knowledge.learning_system") as ls:
                 ls.evolve_knowledge.side_effect = RuntimeError("x")
                 resp = ai_client.post("/ai/learning/evolve")
         assert resp.status_code == 500
@@ -1223,46 +1223,46 @@ class TestLearningRoutes:
 
 class TestImprovementRoutes:
     def test_status_ok(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.get_improvement_status.return_value = {"score": 90}
             resp = ai_client.get("/ai/improvement/status")
         assert resp.get_json()["success"] is True
 
     def test_status_error(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.get_improvement_status.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/improvement/status")
         assert resp.status_code == 500
 
     def test_auto_improve_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.self_improvement") as si:
+            with patch("routes.ai_routes.knowledge.self_improvement") as si:
                 si.auto_improve.return_value = ["fix1"]
                 resp = ai_client.post("/ai/improvement/auto-improve")
         assert resp.status_code == 200
 
     def test_auto_improve_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.self_improvement") as si:
+            with patch("routes.ai_routes.knowledge.self_improvement") as si:
                 si.auto_improve.side_effect = RuntimeError("e")
                 resp = ai_client.post("/ai/improvement/auto-improve")
         assert resp.status_code == 500
 
     def test_progress_ok(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.track_progress.return_value = {"pct": 50}
             resp = ai_client.get("/ai/improvement/progress")
         assert resp.get_json()["progress"]["pct"] == 50
 
     def test_progress_error(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.track_progress.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/improvement/progress")
         assert resp.status_code == 500
 
     def test_set_goal_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.self_improvement") as si:
+            with patch("routes.ai_routes.knowledge.self_improvement") as si:
                 si.set_improvement_goal.return_value = {"ok": True}
                 resp = ai_client.post("/ai/improvement/set-goal", json={"area": "speed", "target_score": 95})
         assert resp.status_code == 200
@@ -1274,7 +1274,7 @@ class TestImprovementRoutes:
 
     def test_set_goal_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.self_improvement") as si:
+            with patch("routes.ai_routes.knowledge.self_improvement") as si:
                 si.set_improvement_goal.side_effect = RuntimeError("e")
                 resp = ai_client.post("/ai/improvement/set-goal", json={"area": "a", "target_score": 1})
         assert resp.status_code == 500
@@ -1282,27 +1282,27 @@ class TestImprovementRoutes:
 
 class TestGlobalRoutes:
     def test_global_insights_ok(self, ai_client):
-        with patch("routes.ai_routes.global_connector") as gc:
+        with patch("routes.ai_routes.knowledge.global_connector") as gc:
             gc.get_global_insights.return_value = {"items": []}
             resp = ai_client.get("/ai/global/insights")
         assert resp.status_code == 200
 
     def test_global_insights_error(self, ai_client):
-        with patch("routes.ai_routes.global_connector") as gc:
+        with patch("routes.ai_routes.knowledge.global_connector") as gc:
             gc.get_global_insights.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/global/insights")
         assert resp.status_code == 500
 
     def test_expertise_update_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.expertise_updater") as eu:
+            with patch("routes.ai_routes.knowledge.expertise_updater") as eu:
                 eu.update_expertise.return_value = {"updated": 1}
                 resp = ai_client.get("/ai/global/expertise-update")
         assert resp.status_code == 200
 
     def test_expertise_update_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.expertise_updater") as eu:
+            with patch("routes.ai_routes.knowledge.expertise_updater") as eu:
                 eu.update_expertise.side_effect = RuntimeError("e")
                 resp = ai_client.get("/ai/global/expertise-update")
         assert resp.status_code == 500
@@ -1310,9 +1310,9 @@ class TestGlobalRoutes:
 
 class TestPerformanceAnalysis:
     def test_ok(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
-            with patch("routes.ai_routes.learning_system") as ls:
-                with patch("routes.ai_routes.global_connector") as gc:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
+            with patch("routes.ai_routes.knowledge.learning_system") as ls:
+                with patch("routes.ai_routes.knowledge.global_connector") as gc:
                     si.analyze_performance.return_value = {"p": 1}
                     ls.get_learning_insights.return_value = {"l": 2}
                     si.evolve_capabilities.return_value = {"e": 3}
@@ -1323,7 +1323,7 @@ class TestPerformanceAnalysis:
         assert "performance" in body
 
     def test_error(self, ai_client):
-        with patch("routes.ai_routes.self_improvement") as si:
+        with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.analyze_performance.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/performance/analysis")
         assert resp.status_code == 500
@@ -1331,43 +1331,43 @@ class TestPerformanceAnalysis:
 
 class TestSystemRoutes:
     def test_customer_balance(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_customer_balance.return_value = {"balance": 100}
             resp = ai_client.get("/ai/system/customer-balance/Ali")
         assert resp.status_code == 200
 
     def test_customer_balance_error(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_customer_balance.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/system/customer-balance/X")
         assert resp.status_code == 500
 
     def test_customer_debt(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_customer_debt.return_value = {"debt": 50}
             resp = ai_client.get("/ai/system/customer-debt/3")
         assert resp.status_code == 200
 
     def test_customer_debt_error(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_customer_debt.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/system/customer-debt/3")
         assert resp.status_code == 500
 
     def test_product_stock(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_product_stock.return_value = {"stock": 10}
             resp = ai_client.get("/ai/system/product-stock/Filter")
         assert resp.status_code == 200
 
     def test_product_stock_error(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_product_stock.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/system/product-stock/X")
         assert resp.status_code == 500
 
     def test_summary(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_system_summary.return_value = {"summary": {"users": 1}}
             si.get_financial_summary.return_value = {"financial": {"sales": 2}}
             resp = ai_client.get("/ai/system/summary")
@@ -1376,31 +1376,31 @@ class TestSystemRoutes:
         assert body["summary"]["users"] == 1
 
     def test_summary_error(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.get_system_summary.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/system/summary")
         assert resp.status_code == 500
 
     def test_search(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.search_data.return_value = {"hits": []}
             resp = ai_client.get("/ai/system/search/invoice")
         assert resp.status_code == 200
 
     def test_search_error(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.search_data.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/system/search/x")
         assert resp.status_code == 500
 
     def test_add_customer(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.add_customer.return_value = {"success": True}
             resp = ai_client.post("/ai/system/add-customer", json={"name": "New"})
         assert resp.status_code == 200
 
     def test_add_customer_error(self, ai_client):
-        with patch("routes.ai_routes.system_integrator") as si:
+        with patch("routes.ai_routes.system.system_integrator") as si:
             si.add_customer.side_effect = RuntimeError("e")
             resp = ai_client.post("/ai/system/add-customer", json={"name": "X"})
         assert resp.status_code == 500
@@ -1408,38 +1408,38 @@ class TestSystemRoutes:
 
 class TestDataRoutes:
     def test_analyze_sales(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_sales_performance.return_value = {"total": 1}
             resp = ai_client.get("/ai/data/analyze-sales?period=7")
         assert resp.status_code == 200
         da.analyze_sales_performance.assert_called_once_with(7)
 
     def test_analyze_sales_error(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_sales_performance.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/data/analyze-sales")
         assert resp.status_code == 500
 
     def test_analyze_products(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_product_performance.return_value = {"id": 1}
             resp = ai_client.get("/ai/data/analyze-products?product_id=5")
         da.analyze_product_performance.assert_called_once_with(5)
 
     def test_analyze_products_error(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_product_performance.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/data/analyze-products")
         assert resp.status_code == 500
 
     def test_financial_ratios(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.get_financial_ratios.return_value = {"ratio": 1.2}
             resp = ai_client.get("/ai/data/financial-ratios")
         assert resp.status_code == 200
 
     def test_financial_ratios_error(self, ai_client):
-        with patch("routes.ai_routes.data_analyzer") as da:
+        with patch("routes.ai_routes.system.data_analyzer") as da:
             da.get_financial_ratios.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/data/financial-ratios")
         assert resp.status_code == 500
@@ -1448,7 +1448,7 @@ class TestDataRoutes:
 class TestKnowledgeRoutes:
     def test_add_website_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.knowledge_expander") as ke:
+            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_website.return_value = {"success": True}
                 resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
         assert resp.status_code == 200
@@ -1460,14 +1460,14 @@ class TestKnowledgeRoutes:
 
     def test_add_website_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.knowledge_expander") as ke:
+            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_website.side_effect = RuntimeError("e")
                 resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://x.com"})
         assert resp.status_code == 500
 
     def test_add_document_ok(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.knowledge_expander") as ke:
+            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_document.return_value = {"success": True}
                 resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 200
@@ -1479,13 +1479,13 @@ class TestKnowledgeRoutes:
 
     def test_add_document_error(self, ai_client):
         with _admin_patch():
-            with patch("routes.ai_routes.knowledge_expander") as ke:
+            with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
                 ke.add_document.side_effect = RuntimeError("e")
                 resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 500
 
     def test_search_ok(self, ai_client):
-        with patch("routes.ai_routes.knowledge_expander") as ke:
+        with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
             ke.search_knowledge.return_value = {"results": []}
             resp = ai_client.get("/ai/knowledge/search?q=engine")
         assert resp.status_code == 200
@@ -1495,19 +1495,19 @@ class TestKnowledgeRoutes:
         assert resp.status_code == 400
 
     def test_search_error(self, ai_client):
-        with patch("routes.ai_routes.knowledge_expander") as ke:
+        with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
             ke.search_knowledge.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/knowledge/search?q=x")
         assert resp.status_code == 500
 
     def test_summary_ok(self, ai_client):
-        with patch("routes.ai_routes.knowledge_expander") as ke:
+        with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
             ke.get_knowledge_summary.return_value = {"count": 3}
             resp = ai_client.get("/ai/knowledge/summary")
         assert resp.status_code == 200
 
     def test_summary_error(self, ai_client):
-        with patch("routes.ai_routes.knowledge_expander") as ke:
+        with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
             ke.get_knowledge_summary.side_effect = RuntimeError("e")
             resp = ai_client.get("/ai/knowledge/summary")
         assert resp.status_code == 500
