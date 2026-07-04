@@ -7,7 +7,7 @@ from sqlalchemy import func, text
 from extensions import db, limiter
 from models import (
     Tenant, SystemSettings, IntegrationSettings, InvoiceSettings,
-    StorePaymentMethod, CardVault, User, Role,
+    StorePaymentMethod, CardVault, User, Role, Warehouse,
 )
 from models.tenant_store import TenantStore
 from utils.decorators import owner_required, owner_or_company_admin, company_admin_required
