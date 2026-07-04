@@ -175,7 +175,8 @@ class TestCustomersStatement:
         with patch('routes.customers.Sale') as SaleMod, \
              patch('models.Payment') as PayMod, \
              patch('models.Receipt') as RcvMod, \
-             patch('routes.customers.branch_scope_id', return_value=1):
+             patch('routes.customers.branch_scope_id', return_value=1), \
+             patch('routes.customers._get_unpaid_sales', return_value=[]):
             SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [sale]
             PayMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [payment]
             RcvMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [receipt]
