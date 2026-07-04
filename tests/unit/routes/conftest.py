@@ -96,6 +96,8 @@ def app_factory():
         # Register t() translation function for templates
         from utils.i18n import t
         app.jinja_env.globals['t'] = t
+        # Register csrf_token as a no-op (WTF_CSRF_ENABLED=False in test config)
+        app.jinja_env.globals['csrf_token'] = lambda: ''
 
         app.register_blueprint(blueprint)
         return app
