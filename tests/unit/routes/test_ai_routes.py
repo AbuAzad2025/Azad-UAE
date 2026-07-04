@@ -1534,39 +1534,39 @@ class TestAutomotiveRoutes:
     def test_ecu_code_ok(self, ai_client):
         expert = MagicMock()
         expert.diagnose_code.return_value = {"code": "P0300"}
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", return_value=expert):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", return_value=expert):
             resp = ai_client.get("/ai/automotive-ecu/p0300")
         assert resp.get_json()["diagnosis"]["code"] == "P0300"
         expert.diagnose_code.assert_called_once_with("P0300")
 
     def test_ecu_code_error(self, ai_client):
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", side_effect=RuntimeError("e")):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", side_effect=RuntimeError("e")):
             resp = ai_client.get("/ai/automotive-ecu/P0300")
         assert resp.get_json()["success"] is False
 
     def test_ecu_uppercases_code(self, ai_client):
         expert = MagicMock()
         expert.diagnose_code.return_value = {}
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", return_value=expert):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", return_value=expert):
             ai_client.get("/ai/automotive-ecu/abc")
         expert.diagnose_code.assert_called_once_with("ABC")
 
     def test_sensor_ok(self, ai_client):
         expert = MagicMock()
         expert.get_sensor_info.return_value = {"name": "MAP"}
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", return_value=expert):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", return_value=expert):
             resp = ai_client.get("/ai/automotive-sensor/map")
         assert resp.get_json()["sensor_info"]["name"] == "MAP"
 
     def test_sensor_error(self, ai_client):
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", side_effect=RuntimeError("e")):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", side_effect=RuntimeError("e")):
             resp = ai_client.get("/ai/automotive-sensor/o2")
         assert resp.get_json()["success"] is False
 
     def test_sensor_passes_name(self, ai_client):
         expert = MagicMock()
         expert.get_sensor_info.return_value = {}
-        with patch("routes.ai_routes.get_automotive_ecu_knowledge", return_value=expert):
+        with patch("routes.ai_routes.specialized.get_automotive_ecu_knowledge", return_value=expert):
             ai_client.get("/ai/automotive-sensor/crank")
         expert.get_sensor_info.assert_called_once_with("crank")
 
@@ -1576,14 +1576,14 @@ class TestExternalSources:
         learning = MagicMock()
         learning.get_knowledge_sources_list.return_value = [{"id": 1}]
         learning.get_statistics.return_value = {"total": 1}
-        with patch("routes.ai_routes.get_external_learning", return_value=learning):
+        with patch("routes.ai_routes.specialized.get_external_learning", return_value=learning):
             resp = ai_client.get("/ai/external-sources")
         body = resp.get_json()
         assert body["success"] is True
         assert "catalog" in body
 
     def test_error(self, ai_client):
-        with patch("routes.ai_routes.get_external_learning", side_effect=RuntimeError("e")):
+        with patch("routes.ai_routes.specialized.get_external_learning", side_effect=RuntimeError("e")):
             resp = ai_client.get("/ai/external-sources")
         assert resp.get_json()["success"] is False
 
@@ -1591,7 +1591,7 @@ class TestExternalSources:
         learning = MagicMock()
         learning.get_knowledge_sources_list.return_value = []
         learning.get_statistics.return_value = {"count": 5}
-        with patch("routes.ai_routes.get_external_learning", return_value=learning):
+        with patch("routes.ai_routes.specialized.get_external_learning", return_value=learning):
             resp = ai_client.get("/ai/external-sources")
         assert resp.get_json()["statistics"]["count"] == 5
 
