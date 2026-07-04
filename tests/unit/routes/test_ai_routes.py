@@ -1076,7 +1076,7 @@ class TestUploadExcel:
 
 class TestAssistant:
     def test_renders_template(self, ai_client):
-        with patch("routes.ai_routes.render_template", return_value="assistant") as rt:
+        with patch("routes.ai_routes.assistant.render_template", return_value="assistant") as rt:
             with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                 resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 200
@@ -1084,21 +1084,21 @@ class TestAssistant:
         rt.assert_called_once()
 
     def test_passes_ai_state(self, ai_client):
-        with patch("routes.ai_routes.render_template", return_value="ok") as rt:
+        with patch("routes.ai_routes.assistant.render_template", return_value="ok") as rt:
             with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                 ai_client.get("/ai/assistant")
         assert "ai_access_state" in rt.call_args[1]
 
     def test_exception_renders_500(self, ai_client):
         with patch("utils.branching.get_accessible_warehouses", side_effect=RuntimeError("fail")):
-            with patch("routes.ai_routes.render_template", return_value="err") as rt:
+            with patch("routes.ai_routes.assistant.render_template", return_value="err") as rt:
                 resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 500
         rt.assert_called_with("errors/500.html")
 
     def test_allowed_when_denied_still_renders(self, ai_client):
         with patch("routes.ai_routes.get_ai_access_state", return_value=_denied_access()):
-            with patch("routes.ai_routes.render_template", return_value="page"):
+            with patch("routes.ai_routes.assistant.render_template", return_value="page"):
                 with patch("utils.branching.get_accessible_warehouses", return_value=[]):
                     resp = ai_client.get("/ai/assistant")
         assert resp.status_code == 200
