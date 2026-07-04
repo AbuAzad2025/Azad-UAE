@@ -11,6 +11,11 @@ import pytest
 from models.budget import Budget, BudgetLine
 
 
+@pytest.fixture
+def mock_db(mocker):
+    return mocker.patch('models.budget.db.session')
+
+
 class _Col:
     def __eq__(self, other):
         return self
