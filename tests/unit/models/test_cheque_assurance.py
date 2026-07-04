@@ -28,9 +28,7 @@ _COL_IS_ACTIVE = Cheque.is_active
 _COL_STATUS = Cheque.status
 
 
-@pytest.fixture(autouse=True)
-def _autouse_mock_db(mock_db):
-    pass
+
 
 
 def _cheque_stub(**kwargs):
@@ -170,7 +168,7 @@ class TestChequeQueries:
             amount_aed=_COL_AMOUNT_AED,
         )
 
-    def test_get_incoming_cheques_scoped(self, mocker, mock_db):
+    def test_get_incoming_cheques_scoped(self, mocker):
         row = SimpleNamespace(due_date=date.today())
         q = MagicMock()
         q.filter_by.return_value = q
@@ -182,7 +180,7 @@ class TestChequeQueries:
         assert result == [row]
         q.filter_by.assert_any_call(cheque_type='incoming', is_active=True)
 
-    def test_get_outgoing_cheques(self, mocker, mock_db):
+    def test_get_outgoing_cheques(self, mocker):
         q = MagicMock()
         q.filter_by.return_value = q
         q.filter.return_value = q
@@ -192,7 +190,7 @@ class TestChequeQueries:
         _GET_OUTGOING(tenant_id=3, supplier_id=4, status='pending')
         q.filter_by.assert_any_call(supplier_id=4)
 
-    def test_update_all_statuses(self, mocker, mock_db):
+    def test_update_all_statuses(self, mocker):
         pending = _cheque_stub(status='pending', due_date=date.today() + timedelta(days=1))
         q = MagicMock()
         q.filter_by.return_value = q
@@ -203,7 +201,7 @@ class TestChequeQueries:
         _UPDATE_ALL(tenant_id=1, branch_id=2)
         assert pending.days_until_due is not None
 
-    def test_get_statistics(self, mocker, mock_db):
+    def test_get_statistics(self, mocker):
         base_q = MagicMock()
         base_q.filter_by.return_value = base_q
         base_q.filter.return_value = base_q
@@ -223,7 +221,7 @@ class TestChequeQueries:
         assert stats['incoming_amount'] == 1500.0
         assert stats['bounced'] == 0
 
-    def test_get_due_soon_filters_branch(self, mocker, mock_db):
+    def test_get_due_soon_filters_branch(self, mocker):
         q = MagicMock()
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = []
@@ -234,7 +232,7 @@ class TestChequeQueries:
         assert q.filter.called
         fake.update_all_statuses.assert_called_once_with(tenant_id=1, branch_id=9)
 
-    def test_get_overdue_filters_tenant(self, mocker, mock_db):
+    def test_get_overdue_filters_tenant(self, mocker):
         q = MagicMock()
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = []
@@ -244,7 +242,7 @@ class TestChequeQueries:
         _GET_OVERDUE(tenant_id=1)
         assert q.filter.called
 
-    def test_get_overdue_filters_branch(self, mocker, mock_db):
+    def test_get_overdue_filters_branch(self, mocker):
         q = MagicMock()
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = []
