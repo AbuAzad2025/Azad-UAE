@@ -446,6 +446,11 @@ def bypass_customers_auth(mock_user):
         patch("routes.customers.LoggingCore.log_audit"),
         # Short-circuit real template rendering (base.html uses many globals)
         patch("routes.customers.render_template", return_value="ok"),
+        # Batch-patch internal functions to avoid MagicMock SQLAlchemy issues
+        patch("routes.customers._get_unpaid_sales", return_value=[]),
+        patch("routes.customers._customer_in_scope", return_value=True),
+        patch("routes.customers._get_customer_balance", return_value=Decimal("0")),
+        patch("routes.customers._scoped_customer_query"),
     ]
     for p in patches:
         p.start()
