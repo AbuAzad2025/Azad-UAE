@@ -444,6 +444,8 @@ def bypass_customers_auth(mock_user):
         patch("utils.decorators.branch_scope_id", return_value=None),
         patch("utils.decorators.report_branch_scope_id", return_value=None),
         patch("routes.customers.LoggingCore.log_audit"),
+        # Short-circuit real template rendering (base.html uses many globals)
+        patch("routes.customers.render_template", return_value="ok"),
     ]
     for p in patches:
         p.start()
