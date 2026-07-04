@@ -29,7 +29,7 @@ def _first_non_null(*values):
 
 
 def ensure_branch_isolation_schema_and_data():
-    from models import Branch, Cheque, Expense, GLJournalEntry, Payment, Receipt, Purchase, Sale, User, Warehouse
+    from models import Branch, Cheque, Expense, GLJournalEntry, Payment, Receipt, Purchase, Sale, User, Warehouse, Tenant
     from utils.branching import GLOBAL_ROLE_SLUGS
 
     schema_changes = 0
@@ -40,7 +40,31 @@ def ensure_branch_isolation_schema_and_data():
 
     main_branch = Branch.query.filter_by(is_active=True, is_main=True).order_by(Branch.id.asc()).first()
     if not main_branch:
-        main_branch = Branch(name="Main Branch", code="MAIN", is_main=True, is_active=True)
+        # Resolve first active tenant to set tenant_id (required by PostgreSQL NOT NULL)
+        first_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+        tenant_id = first_tenant.id if first_tenant else None
+        # If no tenant exists, there is nothing to backfill — skip branch creation
+        if tenant_id is None:
+            current_app.logger.info(
+                "BranchRepair: No active tenant found — skipping Main Branch creation."
+            )
+            return {
+                "schema_changes": schema_changes,
+                "main_branch_id": None,
+                "users": 0,
+                "sales": 0,
+                "purchases": 0,
+                "expenses": 0,
+                "payments": 0,
+                "receipts": 0,
+                "cheques": 0,
+                "gl_entries": 0,
+                "skipped_no_tenant": True,
+            }
+        main_branch = Branch(
+            name="Main Branch", code="MAIN", is_main=True, is_active=True,
+            tenant_id=tenant_id,
+        )
         db.session.add(main_branch)
         db.session.flush()
 

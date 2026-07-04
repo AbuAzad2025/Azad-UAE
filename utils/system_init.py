@@ -85,6 +85,7 @@ def _ensure_system_integrity_inner(app):
             source="utils.system_init.ensure_system_integrity.branch_repair",
             exception=e,
         )
+        db.session.rollback()
 
     # 7.2 Ensure tenant GL trees and branch liquidity accounts
     try:
@@ -99,6 +100,7 @@ def _ensure_system_integrity_inner(app):
             source="utils.system_init.ensure_system_integrity.gl_tree",
             exception=e,
         )
+        db.session.rollback()
 
     # 7.3 Ensure accounting data consistency for legacy/imported data
     try:
@@ -114,6 +116,7 @@ def _ensure_system_integrity_inner(app):
             source="utils.system_init.ensure_system_integrity.accounting_repair",
             exception=e,
         )
+        db.session.rollback()
 
     # 8. Start Silent Telemetry (Security Reporting)
     if not os.environ.get('DISABLE_TELEMETRY'):

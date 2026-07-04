@@ -179,6 +179,9 @@ class TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = _TEST_DATABASE_URL
+    SQLALCHEMY_BINDS = {
+        "reporting": _TEST_DATABASE_URL,
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_size": 3,

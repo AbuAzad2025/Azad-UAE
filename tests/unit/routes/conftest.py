@@ -93,6 +93,30 @@ def app_factory():
         return app
     return _create_app
 
+def _chain_query(**terminals):
+    q = MagicMock(name='query_chain')
+    q.return_value = q
+    for method in ('filter', 'filter_by', 'order_by', 'join', 'outerjoin', 'group_by', 'limit', 'offset'):
+        getattr(q, method).return_value = q
+    inner = q.filter.return_value
+    inner.first.return_value = terminals.get('first')
+    inner.scalar.return_value = terminals.get('scalar', 0)
+    inner.all.return_value = terminals.get('all', [])
+    inner.count.return_value = terminals.get('count', 0)
+    inner.exists.return_value.scalar.return_value = terminals.get('exists', True)
+    q.scalar.return_value = terminals.get('scalar', 0)
+    q.all.return_value = terminals.get('all', [])
+    pag = MagicMock(name='pagination')
+    pag.items = terminals.get('all', [])
+    pag.page = 1
+    pag.per_page = 20
+    pag.total = len(pag.items)
+    pag.pages = 1
+    q.order_by.return_value.paginate.return_value = pag
+    q.paginate.return_value = pag
+    return q
+
+
 def _anon_user():
     user = MagicMock()
     user.is_authenticated = False
@@ -206,7 +230,35 @@ def bypass_owner_auth(mock_user):
 def bypass_ai_access(mock_user):
     patches = [
         patch("flask_login.utils._get_user", return_value=mock_user),
-        patch("routes.ai.get_ai_access_state", return_value={
+        patch("routes.ai_routes.get_ai_access_state", return_value={
+            "allowed": True,
+            "global_enabled": True,
+            "tenant_enabled": True,
+            "tenant_id": 1,
+            "reason": None,
+            "is_platform_user": True,
+            "ai_level": "execute",
+        }),
+        # Also patch sub-module local imports that reference ai_routes namespace
+        patch("routes.ai_routes.chat.get_ai_access_state", return_value={
+            "allowed": True,
+            "global_enabled": True,
+            "tenant_enabled": True,
+            "tenant_id": 1,
+            "reason": None,
+            "is_platform_user": True,
+            "ai_level": "execute",
+        }),
+        patch("routes.ai_routes.shared.get_ai_access_state", return_value={
+            "allowed": True,
+            "global_enabled": True,
+            "tenant_enabled": True,
+            "tenant_id": 1,
+            "reason": None,
+            "is_platform_user": True,
+            "ai_level": "execute",
+        }),
+        patch("routes.ai_routes.assistant.get_ai_access_state", return_value={
             "allowed": True,
             "global_enabled": True,
             "tenant_enabled": True,
@@ -221,9 +273,13 @@ def bypass_ai_access(mock_user):
         patch("extensions.limiter.limit", return_value=lambda f: f),
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("services.logging_core.LoggingCore.log_audit"),
-        patch("routes.ai._get_conversation_context", return_value={}),
-        patch("routes.ai._set_conversation_context"),
-        patch("routes.ai._clear_conversation_context"),
+        patch("routes.ai_routes._get_conversation_context", return_value={}),
+        patch("routes.ai_routes._set_conversation_context"),
+        patch("routes.ai_routes._clear_conversation_context"),
+        # Sub-module level context patches (for shared.py local imports)
+        patch("routes.ai_routes.shared._get_conversation_context", return_value={}),
+        patch("routes.ai_routes.shared._set_conversation_context"),
+        patch("routes.ai_routes.shared._clear_conversation_context"),
     ]
     for p in patches:
         p.start()
@@ -235,26 +291,26 @@ def bypass_ai_access(mock_user):
 @pytest.fixture
 def mock_ai_service():
     patch_specs = [
-        ("recommend_price", patch("routes.ai.AIService.recommend_price")),
-        ("check_stock_alert", patch("routes.ai.AIService.check_stock_alert")),
-        ("analyze_customer_behavior", patch("routes.ai.AIService.analyze_customer_behavior")),
-        ("chat_response", patch("routes.ai.AIService.chat_response", return_value="mocked chat")),
-        ("get_exchange_rate_suggestion", patch("routes.ai.AIService.get_exchange_rate_suggestion", return_value={"rate": 3.67})),
-        ("predict_sales_trend", patch("routes.ai.AIService.predict_sales_trend", return_value={"forecast": []})),
-        ("analyze_profit_margins", patch("routes.ai.AIService.analyze_profit_margins", return_value={"margins": []})),
-        ("detect_sales_patterns", patch("routes.ai.AIService.detect_sales_patterns", return_value={"patterns": []})),
-        ("analyze_inventory_health", patch("routes.ai.AIService.analyze_inventory_health", return_value={"health": "ok"})),
-        ("deep_business_analysis", patch("routes.ai.AIService.deep_business_analysis", return_value={"analysis": "ok"})),
-        ("predict_cash_flow", patch("routes.ai.AIService.predict_cash_flow", return_value={"flow": []})),
-        ("predict_customer_churn", patch("routes.ai.AIService.predict_customer_churn", return_value={"churn": []})),
-        ("optimize_inventory_levels", patch("routes.ai.AIService.optimize_inventory_levels", return_value={"tips": []})),
-        ("generate_business_insights", patch("routes.ai.AIService.generate_business_insights", return_value=[])),
-        ("contextual_help", patch("routes.ai.AIService.contextual_help", return_value={"help": "text"})),
-        ("smart_pricing_engine", patch("routes.ai.AIService.smart_pricing_engine", return_value={"price": 99})),
-        ("ask_genius", patch("routes.ai.AIService.ask_genius", return_value={"answer": "genius"})),
-        ("quick_calculate", patch("routes.ai.AIService.quick_calculate", return_value={"success": True, "result": 42})),
-        ("understand_with_transformers", patch("routes.ai.AIService.understand_with_transformers", return_value={"intent": "test"})),
-        ("get_neural_status", patch("routes.ai.AIService.get_neural_status", return_value={"active": True})),
+        ("recommend_price", patch("routes.ai_routes.AIService.recommend_price")),
+        ("check_stock_alert", patch("routes.ai_routes.AIService.check_stock_alert")),
+        ("analyze_customer_behavior", patch("routes.ai_routes.AIService.analyze_customer_behavior")),
+        ("chat_response", patch("routes.ai_routes.AIService.chat_response", return_value="mocked chat")),
+        ("get_exchange_rate_suggestion", patch("routes.ai_routes.AIService.get_exchange_rate_suggestion", return_value={"rate": 3.67})),
+        ("predict_sales_trend", patch("routes.ai_routes.AIService.predict_sales_trend", return_value={"forecast": []})),
+        ("analyze_profit_margins", patch("routes.ai_routes.AIService.analyze_profit_margins", return_value={"margins": []})),
+        ("detect_sales_patterns", patch("routes.ai_routes.AIService.detect_sales_patterns", return_value={"patterns": []})),
+        ("analyze_inventory_health", patch("routes.ai_routes.AIService.analyze_inventory_health", return_value={"health": "ok"})),
+        ("deep_business_analysis", patch("routes.ai_routes.AIService.deep_business_analysis", return_value={"analysis": "ok"})),
+        ("predict_cash_flow", patch("routes.ai_routes.AIService.predict_cash_flow", return_value={"flow": []})),
+        ("predict_customer_churn", patch("routes.ai_routes.AIService.predict_customer_churn", return_value={"churn": []})),
+        ("optimize_inventory_levels", patch("routes.ai_routes.AIService.optimize_inventory_levels", return_value={"tips": []})),
+        ("generate_business_insights", patch("routes.ai_routes.AIService.generate_business_insights", return_value=[])),
+        ("contextual_help", patch("routes.ai_routes.AIService.contextual_help", return_value={"help": "text"})),
+        ("smart_pricing_engine", patch("routes.ai_routes.AIService.smart_pricing_engine", return_value={"price": 99})),
+        ("ask_genius", patch("routes.ai_routes.AIService.ask_genius", return_value={"answer": "genius"})),
+        ("quick_calculate", patch("routes.ai_routes.AIService.quick_calculate", return_value={"success": True, "result": 42})),
+        ("understand_with_transformers", patch("routes.ai_routes.AIService.understand_with_transformers", return_value={"intent": "test"})),
+        ("get_neural_status", patch("routes.ai_routes.AIService.get_neural_status", return_value={"active": True})),
     ]
     with ExitStack() as stack:
         mocks = {name: stack.enter_context(p) for name, p in patch_specs}
@@ -263,7 +319,7 @@ def mock_ai_service():
 
 @pytest.fixture
 def ai_client(app_factory, bypass_ai_access):
-    from routes.ai import ai_bp
+    from routes.ai_routes import ai_bp
     app = app_factory(ai_bp)
     return app.test_client()
 
