@@ -128,7 +128,7 @@ def register_blueprints(app):
         ai_bp = _make_ai_fallback("AI disabled by server configuration")
     else:
         try:
-            from routes.ai import ai_bp
+            from routes.ai_routes import ai_bp
         except Exception as e:
             ai_import_error = str(e)
             import traceback
