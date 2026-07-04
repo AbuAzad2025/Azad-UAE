@@ -92,6 +92,11 @@ def app_factory():
         if config_overrides:
             app.config.update(config_overrides)
         db.init_app(app)
+
+        # Register t() translation function for templates
+        from utils.i18n import t
+        app.jinja_env.globals['t'] = t
+
         app.register_blueprint(blueprint)
         return app
     return _create_app
