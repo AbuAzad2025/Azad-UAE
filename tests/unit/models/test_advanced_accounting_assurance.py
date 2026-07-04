@@ -140,7 +140,7 @@ class TestAdvancedExpenseCalculations:
 
 
 class TestAdvancedExpenseReverse:
-    def test_reverse_expense_creates_gl_entry(self, mocker, mock_db):
+    def test_reverse_expense_creates_gl_entry(self, mocker):
         exp = _expense(branch_id=3)
         user = MagicMock(id=9)
         mocker.patch(
@@ -158,7 +158,7 @@ class TestAdvancedExpenseReverse:
         assert kwargs['branch_id'] == 3
         assert kwargs['created_by'] == 9
 
-    def test_reverse_expense_already_reversed(self, mock_db):
+    def test_reverse_expense_already_reversed(self):
         exp = _expense(is_reversed=True)
         with pytest.raises(ValueError, match='معكوس مسبقاً'):
             exp.reverse_expense('reason', MagicMock(id=1))
