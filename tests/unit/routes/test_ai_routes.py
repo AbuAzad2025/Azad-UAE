@@ -1046,7 +1046,7 @@ class TestUploadExcel:
 
     def test_processing_exception_500(self, ai_client):
         data = {"file": (io.BytesIO(b"x"), "p.xlsx")}
-        with patch("routes.ai_routes._process_excel_intelligently", side_effect=RuntimeError("boom")):
+        with patch("routes.ai_routes.assistant._process_excel_intelligently", side_effect=RuntimeError("boom")):
             resp = ai_client.post("/ai/upload-excel", data=data, content_type="multipart/form-data")
         assert resp.status_code == 500
 
