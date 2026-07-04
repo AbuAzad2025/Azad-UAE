@@ -1669,7 +1669,7 @@ class TestProductTenantIsolation:
         chain = MagicMock()
         chain.first_or_404.return_value = product
         with patch("models.Product") as Product:
-            with patch("routes.ai_routes.actions.get_active_tenant_id", return_value=99):
+            with patch("routes.ai_routes.chat.get_active_tenant_id", return_value=99):
                 Product.query.filter_by.return_value = chain
                 ai_client.get("/ai/search-market-price/1")
                 Product.query.filter_by.assert_called_with(id=1, tenant_id=99)
@@ -1678,7 +1678,7 @@ class TestProductTenantIsolation:
         chain = MagicMock()
         chain.first_or_404.side_effect = NotFound()
         with patch("models.Product") as Product:
-            with patch("routes.ai_routes.actions.get_active_tenant_id", return_value=2):
+            with patch("routes.ai_routes.chat.get_active_tenant_id", return_value=2):
                 Product.query.filter_by.return_value = chain
                 resp = ai_client.get("/ai/find-compatible/50")
         assert resp.status_code == 404
