@@ -211,7 +211,6 @@ def performance_analysis():
         }), 500
 
 
-@ai_bp.route('/system/customer-balance/<customer_name>')
 @ai_bp.route('/knowledge/add-website', methods=['POST'])
 @login_required
 @admin_required
