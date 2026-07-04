@@ -101,6 +101,11 @@ class TestPartnerProfitAndLossDistribution:
     def _run_dist(self, app, mocker, model_patch, partners, pnl):
         self._patch_partner_query(model_patch, partners)
         mocker.patch('services.partner_service.PartnerService.calculate_scope_profit', return_value=pnl)
+        # Patch db session operations so create_distributions doesn't try to
+        # flush/commit MagicMock model instances into the real DB.
+        mocker.patch('services.partner_service.db.session.add')
+        mocker.patch('services.partner_service.db.session.flush')
+        mocker.patch('services.partner_service.db.session.commit')
         from services.partner_service import PartnerService
         return PartnerService.create_distributions(
             tenant_id=1, period_start=date(2026, 1, 1), period_end=date(2026, 1, 31),
