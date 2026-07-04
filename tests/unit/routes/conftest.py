@@ -85,10 +85,12 @@ def app_factory():
         import os
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         from tests.conftest import TestConfig
+        from extensions import db
         app = Flask(__name__)
         app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
+        db.init_app(app)
         app.register_blueprint(blueprint)
         return app
     return _create_app
