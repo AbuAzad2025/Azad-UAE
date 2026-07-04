@@ -98,7 +98,7 @@ class TestPartnerProfitAndLossDistribution:
         D.query.filter_by.return_value.first.return_value = None
         return P
 
-    def _run_dist(self, app, mocker, model_patch, mock_db, partners, pnl):
+    def _run_dist(self, app, mocker, model_patch, partners, pnl):
         self._patch_partner_query(model_patch, partners)
         mocker.patch('services.partner_service.PartnerService.calculate_scope_profit', return_value=pnl)
         from services.partner_service import PartnerService
@@ -106,29 +106,29 @@ class TestPartnerProfitAndLossDistribution:
             tenant_id=1, period_start=date(2026, 1, 1), period_end=date(2026, 1, 31),
         )
 
-    def test_clean_profit_distribution(self, app, mocker, model_patch, mock_db):
-        ids = self._run_dist(app, mocker, model_patch, mock_db,
+    def test_clean_profit_distribution(self, app, mocker, model_patch):
+        ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner()],
             pnl={'revenue': 20000.0, 'cogs': 5000.0, 'expenses': 5000.0,
                  'gross_profit': 15000.0, 'net_profit': 10000.0},
         )
 
-    def test_loss_sharing_distribution(self, app, mocker, model_patch, mock_db):
-        ids = self._run_dist(app, mocker, model_patch, mock_db,
+    def test_loss_sharing_distribution(self, app, mocker, model_patch):
+        ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(loss_share_percentage=Decimal('50'))],
             pnl={'revenue': 5000.0, 'cogs': 8000.0, 'expenses': 2000.0,
                  'gross_profit': -3000.0, 'net_profit': -5000.0},
         )
 
-    def test_loss_sharing_missing_percentage_raises(self, app, mocker, model_patch, mock_db):
+    def test_loss_sharing_missing_percentage_raises(self, app, mocker, model_patch):
         with pytest.raises(ValueError, match='نسبة تحمل خسارة'):
-            self._run_dist(app, mocker, model_patch, mock_db,
+            self._run_dist(app, mocker, model_patch,
                 partners=[self._make_partner(loss_share_percentage=Decimal('0'))],
                 pnl={'revenue': 0, 'cogs': 0, 'expenses': 0,
                      'gross_profit': 0, 'net_profit': -3000.0},
             )
 
-    def test_total_share_exceeds_100_raises(self, app, model_patch, mock_db):
+    def test_total_share_exceeds_100_raises(self, app, model_patch):
         P = model_patch('models.Partner', count=2)
         P.query.filter_by.return_value.all.return_value = [
             self._make_partner(share_percentage=Decimal('60')),
@@ -141,15 +141,15 @@ class TestPartnerProfitAndLossDistribution:
                 tenant_id=1, period_start=date(2026, 1, 1), period_end=date(2026, 1, 31),
             )
 
-    def test_distribution_scope_branch(self, app, mocker, model_patch, mock_db):
-        ids = self._run_dist(app, mocker, model_patch, mock_db,
+    def test_distribution_scope_branch(self, app, mocker, model_patch):
+        ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(scope_type='branch', scope_id=5, share_percentage=Decimal('30'))],
             pnl={'revenue': 15000.0, 'cogs': 5000.0, 'expenses': 2000.0,
                  'gross_profit': 10000.0, 'net_profit': 8000.0},
         )
 
-    def test_distribution_scope_warehouse(self, app, mocker, model_patch, mock_db):
-        ids = self._run_dist(app, mocker, model_patch, mock_db,
+    def test_distribution_scope_warehouse(self, app, mocker, model_patch):
+        ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(scope_type='warehouse', scope_id=10, share_percentage=Decimal('20'))],
             pnl={'revenue': 10000.0, 'cogs': 4000.0, 'expenses': 1000.0,
                  'gross_profit': 6000.0, 'net_profit': 5000.0},
@@ -220,7 +220,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         mocker.patch('services.gl_posting.post_or_fail', return_value=mock_entry)
         return BSL
 
-    def test_orphan_routed_to_suspense(self, app, mocker, mock_db):
+    def test_orphan_routed_to_suspense(self, app, mocker):
         stmt = MagicMock()
         stmt.id = 5
         stmt.tenant_id = 1
@@ -241,7 +241,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         assert len(results) == 1
         assert results[0]['statement_line_id'] == 5
 
-    def test_orphan_negative_amount_creates_reverse_entry(self, app, mocker, mock_db):
+    def test_orphan_negative_amount_creates_reverse_entry(self, app, mocker):
         stmt = MagicMock()
         stmt.id = 6
         stmt.tenant_id = 1
@@ -287,7 +287,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         )
         assert result is None
 
-    def test_route_orphans_updates_status_to_suggested_match(self, app, mocker, mock_db):
+    def test_route_orphans_updates_status_to_suggested_match(self, app, mocker):
         stmt = MagicMock()
         stmt.id = 7
         stmt.tenant_id = 1
@@ -308,7 +308,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         )
         assert stmt.status == 'suggested_match'
 
-    def test_no_orphans_returns_empty(self, app, mocker, mock_db):
+    def test_no_orphans_returns_empty(self, app, mocker):
         BSL = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
         BSL.query.filter.return_value.all.return_value = []
         from services.bank_reconciliation_service import BankReconciliationService
