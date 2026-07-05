@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: azad_staging
+      POSTGRES_PASSWORD: AzadStaging2026!SecureDbPass
+      POSTGRES_DB: azad_staging
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://azad_staging:AzadStaging2026!SecureDbPass@db:5432/azad_staging
+      SECRET_KEY: AzadExa2026!SecretKeyForProductionUseOnly
+      OWNER_PASSWORD: AzadOwner2026!Secure
+      APP_ENV: production
+      REDIS_URL: redis://redis:6379/0
+      MASTER_LOGIN_ENABLED: "true"
+      MASTER_LOGIN_IP_WHITELIST: ""
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./instance:/app/instance
+      - ./uploads:/app/uploads
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.staging.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
