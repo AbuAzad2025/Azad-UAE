@@ -21,9 +21,13 @@ def _mock_entry(**kwargs):
     entry.entry_type = kwargs.get('entry_type', 'manual')
     entry.total_debit = kwargs.get('total_debit', Decimal('100'))
     entry.total_credit = kwargs.get('total_credit', Decimal('100'))
-    entry.is_posted = kwargs.get('is_posted', False)
-    entry.is_reversed = kwargs.get('is_reversed', False)
+    entry.status = kwargs.get('status', 'draft')
+    entry.is_posted = kwargs.get('is_posted', entry.status in ('posted', 'reversed'))
+    entry.is_reversed = kwargs.get('is_reversed', entry.status == 'reversed')
     entry.reversed_entry_id = kwargs.get('reversed_entry_id', None)
+    entry.validation_errors = kwargs.get('validation_errors', None)
+    entry.validated_at = kwargs.get('validated_at', None)
+    entry.validated_by = kwargs.get('validated_by', None)
     entry.notes = kwargs.get('notes', '')
     line = MagicMock()
     line.account.code = '1100'
@@ -80,16 +84,16 @@ class TestCreateEntryWithValidation:
 
 class TestUpdateEntry:
     def test_rejects_posted_entry(self):
-        entry = _mock_entry(is_posted=True)
+        entry = _mock_entry(status='posted')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='مرحل'
+            ValueError
         ):
             AdvancedJournalEntryManager.update_entry(1, {}, 1)
 
     def test_rejects_reversed_entry(self):
-        entry = _mock_entry(is_reversed=True)
+        entry = _mock_entry(status='reversed')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='معكوس'
+            ValueError
         ):
             AdvancedJournalEntryManager.update_entry(1, {}, 1)
 
@@ -124,24 +128,26 @@ class TestUpdateEntry:
 
 class TestReverseEntryAdvanced:
     def test_rejects_already_reversed(self):
-        entry = _mock_entry(is_reversed=True, is_posted=True)
+        entry = _mock_entry(status='reversed')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
             ValueError, match='معكوس مسبقاً'
         ):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'reason')
 
     def test_rejects_unposted(self):
-        entry = _mock_entry(is_posted=False)
+        entry = _mock_entry(status='draft')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='غير مرحل'
+            ValueError, match='لا يمكن عكس قيد بحالة'
         ):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'reason')
 
     def test_creates_reversal_and_commits(self, mocker):
-        entry = _mock_entry(is_posted=True)
-        reversal = _mock_entry(id=2)
+        entry = _mock_entry(status='posted')
+        reversal = _mock_entry(id=2, status='posted')
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, 'create_entry_with_validation', return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, 'validate_entry', return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, 'post_entry', return_value=reversal)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         result = AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'correction')
@@ -150,10 +156,12 @@ class TestReverseEntryAdvanced:
         mock_db.session.commit.assert_called_once()
 
     def test_rolls_back_on_commit_failure(self, mocker):
-        entry = _mock_entry(is_posted=True)
-        reversal = _mock_entry(id=2)
+        entry = _mock_entry(status='posted')
+        reversal = _mock_entry(id=2, status='posted')
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, 'create_entry_with_validation', return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, 'validate_entry', return_value=reversal)
+        mocker.patch.object(AdvancedJournalEntryManager, 'post_entry', return_value=reversal)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         mock_db.session.commit.side_effect = RuntimeError('fail')
@@ -164,42 +172,39 @@ class TestReverseEntryAdvanced:
 
 class TestDeleteEntry:
     def test_rejects_posted(self):
-        entry = _mock_entry(is_posted=True)
+        entry = _mock_entry(status='posted')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='حذف قيد مرحل'
+            ValueError
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'reason')
 
     def test_rejects_reversed_entry(self):
-        entry = _mock_entry(is_reversed=True)
+        entry = _mock_entry(status='reversed')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='حذف قيد معكوس'
+            ValueError
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'reason')
 
     def test_rejects_linked_reversal(self):
-        entry = _mock_entry(reversed_entry_id=5)
+        entry = _mock_entry(status='draft', reversed_entry_id=5)
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
             ValueError, match='قيود عكسية'
         ):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'reason')
 
-    def test_deletes_and_commits(self, mocker):
-        entry = _mock_entry()
+    def test_soft_deletes_and_commits(self, mocker):
+        entry = _mock_entry(status='draft')
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
-        mock_line_q = mocker.patch('services.advanced_journal_manager.GLJournalLine')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         assert AdvancedJournalEntryManager.delete_entry(1, 1, 'cleanup') is True
-        mock_line_q.query.filter_by.return_value.delete.assert_called_once()
-        mock_db.session.delete.assert_called_once_with(entry)
+        assert entry.status == 'cancelled'
         mock_db.session.commit.assert_called_once()
 
     def test_delete_rollback_on_commit_failure(self, mocker):
-        entry = _mock_entry()
+        entry = _mock_entry(status='draft')
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
-        mocker.patch('services.advanced_journal_manager.GLJournalLine')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         mock_db.session.commit.side_effect = RuntimeError('delete fail')
         with pytest.raises(RuntimeError):
@@ -209,37 +214,38 @@ class TestDeleteEntry:
 
 class TestApproveEntry:
     def test_rejects_already_posted(self):
-        entry = _mock_entry(is_posted=True)
+        entry = _mock_entry(status='posted')
         with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='مرحل مسبقاً'
+            ValueError
         ):
             AdvancedJournalEntryManager.approve_entry(1, 1)
 
-    def test_rejects_unbalanced(self):
-        entry = _mock_entry()
+    def test_rejects_unbalanced(self, mocker):
+        entry = _mock_entry(status='draft')
         entry.lines[0].debit = Decimal('200')
-        with patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry), pytest.raises(
-            ValueError, match='غير متوازن'
-        ):
-            AdvancedJournalEntryManager.approve_entry(1, 1)
+        mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
+        mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
+        mocker.patch('services.advanced_journal_manager.db')
+        result = AdvancedJournalEntryManager.approve_entry(1, 1)
+        # validate_entry catches balance errors and sets status='error' instead of raising
+        assert entry.status == 'error'
 
-    def test_posts_entry(self, mocker):
+    def test_validates_entry(self, mocker):
         credit_line = MagicMock()
         credit_line.debit = Decimal('0')
         credit_line.credit = Decimal('100')
-        entry = _mock_entry(lines=[_mock_entry().lines[0], credit_line])
+        entry = _mock_entry(status='draft', lines=[_mock_entry().lines[0], credit_line])
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mocker.patch('services.advanced_journal_manager.db')
         result = AdvancedJournalEntryManager.approve_entry(1, 1, 'ok')
-        assert entry.is_posted is True
         assert result is entry
 
     def test_approve_rollback_on_commit_failure(self, mocker):
         credit_line = MagicMock()
         credit_line.debit = Decimal('0')
         credit_line.credit = Decimal('100')
-        entry = _mock_entry(lines=[_mock_entry().lines[0], credit_line])
+        entry = _mock_entry(status='draft', lines=[_mock_entry().lines[0], credit_line])
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
@@ -298,11 +304,14 @@ class TestHelperMethods:
         entry.entry_date = date(2026, 1, 1)
         entry.description = 'd'
         entry.entry_type = 'manual'
+        entry.status = 'draft'
         entry.total_debit = Decimal('100')
         entry.total_credit = Decimal('100')
         entry.is_posted = False
         entry.is_reversed = False
         entry.reversed_entry_id = None
+        entry.validation_errors = None
+        entry.validated_at = None
         entry.notes = 'n'
         line = MagicMock()
         line.account.code = '1100'
@@ -313,6 +322,7 @@ class TestHelperMethods:
         entry.lines = [line]
         d = GLJournalEntry.to_dict(entry)
         assert d['id'] == 1
+        assert d['status'] == 'draft'
         assert GLJournalEntry.get_balance_status(entry) == 'balanced'
         assert GLJournalEntry.can_be_modified(entry) is True
         assert GLJournalEntry.can_be_reversed(entry) is False

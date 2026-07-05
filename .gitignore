@@ -92,18 +92,10 @@ celerybeat.pid
 .pytest_cache/
 .pytest-temp/
 .coverage
-coverage.xml
 htmlcov/
-coverage*.json
-tests/.pytest-*.txt
-tests/.coverage-*.txt
-tests/.*-cov-*.txt
-node_modules/
 
 # Generated artifacts / reports
 tools/reports/
-tools/qa/template_render_audit_last.txt
-tools/qa/template_render_audit_report.json
 
 # Ignore root-level legacy test/verify scripts (organized ones are in tests/ and scripts/)
 /test_*.py
@@ -151,7 +143,9 @@ ai_knowledge/data/training/*.json
 !ai_knowledge/data/training/improvement_goals.json
 
 
-# Dev-only QA outputs
+# Dev-only scripts & outputs
+scripts/audit/*.txt
+scripts/backup/*.json
 
 # Large generated index files
 /PROJECT_AI_INDEX.md
@@ -163,7 +157,6 @@ security-reports/
 *-status.txt
 
 # Temporary maintenance outputs
+scripts/maintenance/screenshots/
+scripts/maintenance/*.txt
 backup/
-
-.github/AGENTS.md
-

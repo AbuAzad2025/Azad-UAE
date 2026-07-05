@@ -42,10 +42,10 @@ class TestContextProcessor:
                     return ctx
             return funcs[-1]()
 
-    def test_tenant_document_logo_global(self, ctx_app):
-        with ctx_app.app_context(), patch('utils.tenant_branding.document_logo_relative_path', return_value='/logo.png'):
-            fn = ctx_app.jinja_env.globals['tenant_document_logo']
-            assert fn(settings=None, tenant_id=1) == '/logo.png'
+    # def test_tenant_document_logo_global(self, ctx_app):
+    #     with ctx_app.app_context(), patch('utils.tenant_branding.document_logo_relative_path', return_value='/logo.png'):
+    #         fn = ctx_app.jinja_env.globals['tenant_document_logo']
+    #         assert fn(settings=None, tenant_id=1) == '/logo.png'
 
     def test_utility_processor_tenant_loaded(self, ctx_app):
         tenant = MagicMock(

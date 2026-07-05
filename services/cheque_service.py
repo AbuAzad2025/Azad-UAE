@@ -416,6 +416,13 @@ def _create_bounce_journal_entry(cheque):
 
 
 def process_cheque_bounce(cheque, reason, bounce_fee=None):
+    # Enforce proper lifecycle: bounce should only happen after deposit
+    # (incoming) or from pending/outgoing. Prevent direct pending→bounce for incoming.
+    if cheque.cheque_type == 'incoming' and cheque.status == 'pending':
+        raise ValueError(
+            'لا يمكن رفض شيك وارد بحالة معلق — يجب إيداعه أولاً. '
+            'Use process_cheque_deposit() before bouncing an incoming cheque.'
+        )
     if cheque.status not in ['deposited', 'pending']:
         raise ValueError(f'لا يمكن رفض شيك بحالة: {cheque.status_ar}')
     try:

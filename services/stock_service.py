@@ -2,11 +2,49 @@ from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from flask import current_app
 from flask_login import current_user
+from sqlalchemy.exc import OperationalError
 from extensions import db
 from models import Product, StockMovement, Warehouse, ProductWarehouseCost, ProductCostHistory
 from models.warehouse import ProductWarehouseStock
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
+
+
+_MAX_LOCK_RETRIES = 3
+
+
+def _safe_for_update(query, label='row'):
+    """Execute SELECT … FOR UPDATE with savepoint-based retry.
+
+    Uses savepoints so that a failed lock attempt does NOT roll back the
+    caller's entire transaction.  On final failure, aborts — never silently
+    drops the lock.
+
+    Rationale: The previous try/except pattern silently fell back to an unlocked
+    read when the lock could not be acquired, opening the door to MWAC race
+    conditions where two concurrent transactions read the same old cost and
+    both update it incorrectly ("floating costs").
+    """
+    for attempt in range(1, _MAX_LOCK_RETRIES + 1):
+        savepoint = db.session.begin_nested()
+        try:
+            result = query.with_for_update().first()
+            savepoint.commit()
+            return result
+        except OperationalError:
+            savepoint.rollback()
+            if attempt == _MAX_LOCK_RETRIES:
+                current_app.logger.critical(
+                    'Row-level lock acquisition failed after %d attempts for %s — aborting to prevent MWAC race condition.',
+                    _MAX_LOCK_RETRIES, label,
+                )
+                raise
+            current_app.logger.warning(
+                'Lock contention on %s (attempt %d/%d) — retrying.',
+                label, attempt, _MAX_LOCK_RETRIES,
+            )
+    raise RuntimeError(f'Failed to acquire row lock for {label}')
+
 
 
 class _MWACHelper:
@@ -222,10 +260,7 @@ class StockService:
                 product_id=product_id,
                 warehouse_id=warehouse.id,
             )
-            try:
-                pws = q_pws.with_for_update().first()
-            except Exception:
-                pws = q_pws.first()
+            pws = _safe_for_update(q_pws, label=f'PWS p={product_id} w={warehouse.id}')
             if pws:
                 new_qty_pws = pws.quantity + qty
                 if new_qty_pws < 0 and not warehouse.allow_negative_inventory:
@@ -430,24 +465,61 @@ class StockService:
         for line in sale.lines:
             qty = Decimal(str(line.quantity))
 
+            pwc = None
             if mwac_enabled and tenant_id and warehouse_id:
                 query = ProductWarehouseCost.query.filter_by(
                     tenant_id=tenant_id,
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
                 )
-                try:
-                    pwc = query.with_for_update().first()
-                except Exception:
-                    pwc = query.first()
+                pwc = _safe_for_update(query, label=f'PWC p={line.product_id} w={warehouse_id}')
 
-                if pwc and pwc.total_quantity > 0:
-                    # Normal positive-stock case
-                    avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
-                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            if pwc and pwc.total_quantity > 0:
+                # Normal positive-stock case
+                avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
+                cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
+                old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal('0')
+                old_avg = avg_cost
+                new_qty, new_value, new_avg = StockService._mwac_calc(
+                    old_qty, old_value, -qty,
+                    avg_cost.quantize(Decimal('0.0001'))
+                )
+                pwc.total_quantity = new_qty
+                pwc.total_value = new_value
+                pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
+                pwc.last_updated = datetime.now(timezone.utc)
+                pch = ProductCostHistory(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                    movement_type='sale',
+                    reference_type=GLRef.SALE,
+                    reference_id=sale.id,
+                    old_average_cost=old_avg.quantize(Decimal('0.0001')),
+                    new_average_cost=pwc.average_cost,
+                    quantity_change=-qty,
+                    old_total_quantity=old_qty,
+                    new_total_quantity=new_qty,
+                    old_total_value=old_value,
+                    new_total_value=new_value,
+                    movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
+                )
+                db.session.add(pch)
+            elif allow_negative:
+                avg_cost, source = StockService._resolve_cogs_unit_cost(
+                    line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                )
+                cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                current_app.logger.warning(
+                    'Negative inventory sale (%s) for product %s sale %s: unit_cost=%s, qty=%s',
+                    source, line.product_id, sale.sale_number, avg_cost, qty
+                )
+
+                if pwc:
                     old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
                     old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal('0')
-                    old_avg = avg_cost
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, -qty,
                         avg_cost.quantize(Decimal('0.0001'))
@@ -456,95 +528,51 @@ class StockService:
                     pwc.total_value = new_value
                     pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
                     pwc.last_updated = datetime.now(timezone.utc)
-                    pch = ProductCostHistory(
-                        tenant_id=tenant_id,
-                        product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        movement_type='sale',
-                        reference_type=GLRef.SALE,
-                        reference_id=sale.id,
-                        old_average_cost=old_avg.quantize(Decimal('0.0001')),
-                        new_average_cost=pwc.average_cost,
-                        quantity_change=-qty,
-                        old_total_quantity=old_qty,
-                        new_total_quantity=new_qty,
-                        old_total_value=old_value,
-                        new_total_value=new_value,
-                        movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
-                    )
-                    db.session.add(pch)
-                elif allow_negative:
-                    avg_cost, source = StockService._resolve_cogs_unit_cost(
-                        line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
-                    )
-                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-                    current_app.logger.warning(
-                        'Negative inventory sale (%s) for product %s sale %s: unit_cost=%s, qty=%s',
-                        source, line.product_id, sale.sale_number, avg_cost, qty
-                    )
-
-                    if pwc:
-                        old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
-                        old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal('0')
-                        old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
-                        new_qty, new_value, new_avg = StockService._mwac_calc(
-                            old_qty, old_value, -qty,
-                            avg_cost.quantize(Decimal('0.0001'))
-                        )
-                        pwc.total_quantity = new_qty
-                        pwc.total_value = new_value
-                        pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
-                        pwc.last_updated = datetime.now(timezone.utc)
-                    else:
-                        # Create PWC with negative quantity (first negative sale for this product+warehouse)
-                        old_qty = Decimal('0')
-                        old_value = Decimal('0')
-                        old_avg = None
-                        new_qty = -qty
-                        new_value = -(qty * avg_cost)
-                        new_avg = avg_cost
-
-                        pwc = ProductWarehouseCost(
-                            tenant_id=tenant_id,
-                            product_id=line.product_id,
-                            warehouse_id=warehouse_id,
-                            total_quantity=new_qty,
-                            total_value=new_value,
-                            average_cost=new_avg.quantize(Decimal('0.0001')),
-                        )
-                        db.session.add(pwc)
-
-                    pch = ProductCostHistory(
-                        tenant_id=tenant_id,
-                        product_id=line.product_id,
-                        warehouse_id=warehouse_id,
-                        movement_type='sale',
-                        reference_type=GLRef.SALE,
-                        reference_id=sale.id,
-                        old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg is not None else None,
-                        new_average_cost=pwc.average_cost,
-                        quantity_change=-qty,
-                        old_total_quantity=old_qty,
-                        new_total_quantity=new_qty,
-                        old_total_value=old_value,
-                        new_total_value=new_value,
-                        movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
-                    )
-                    db.session.add(pch)
                 else:
-                    avg_cost, source = StockService._resolve_cogs_unit_cost(
-                        line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                    # Create PWC with negative quantity (first negative sale for this product+warehouse)
+                    old_qty = Decimal('0')
+                    old_value = Decimal('0')
+                    old_avg = None
+                    new_qty = -qty
+                    new_value = -(qty * avg_cost)
+                    new_avg = avg_cost
+
+                    pwc = ProductWarehouseCost(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        total_quantity=new_qty,
+                        total_value=new_value,
+                        average_cost=new_avg.quantize(Decimal('0.0001')),
                     )
-                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-                    current_app.logger.warning(
-                        'COGS resolved via fallback (%s) for product %s sale %s: unit_cost=%s',
-                        source, line.product_id, sale.sale_number, avg_cost
-                    )
+                    db.session.add(pwc)
+
+                pch = ProductCostHistory(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                    movement_type='sale',
+                    reference_type=GLRef.SALE,
+                    reference_id=sale.id,
+                    old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg is not None else None,
+                    new_average_cost=pwc.average_cost,
+                    quantity_change=-qty,
+                    old_total_quantity=old_qty,
+                    new_total_quantity=new_qty,
+                    old_total_value=old_value,
+                    new_total_value=new_value,
+                    movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
+                )
+                db.session.add(pch)
             else:
                 avg_cost, source = StockService._resolve_cogs_unit_cost(
                     line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
                 )
                 cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                current_app.logger.warning(
+                    'COGS resolved via fallback (%s) for product %s sale %s: unit_cost=%s',
+                    source, line.product_id, sale.sale_number, avg_cost
+                )
 
             total_cogs += cogs
 
@@ -696,10 +724,7 @@ class StockService:
             product_id=product_id,
             warehouse_id=warehouse_id,
         )
-        try:
-            pwc = query.with_for_update().first()
-        except Exception:
-            pwc = query.first()
+        pwc = _safe_for_update(query, label=f'PWC(receipt) p={product_id} w={warehouse_id}')
 
         if pwc:
             old_qty = pwc.total_quantity
@@ -788,10 +813,7 @@ class StockService:
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
                 )
-                try:
-                    pwc = q_rev.with_for_update().first()
-                except Exception:
-                    pwc = q_rev.first()
+                pwc = _safe_for_update(q_rev, label=f'PWC(reverse_sale) p={line.product_id} w={warehouse_id}')
 
                 if pwc:
                     # البحث عن سجل التكلفة الأصلي للبيع لاستخدام قيمة COGS الأصلية
@@ -867,10 +889,7 @@ class StockService:
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
                 )
-                try:
-                    pwc = q_rev_pur.with_for_update().first()
-                except Exception:
-                    pwc = q_rev_pur.first()
+                pwc = _safe_for_update(q_rev_pur, label=f'PWC(reverse_purchase) p={line.product_id} w={warehouse_id}')
 
                 if pwc:
                     cost_history = ProductCostHistory.query.filter_by(

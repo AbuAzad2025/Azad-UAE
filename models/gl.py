@@ -104,7 +104,7 @@ class GLAccount(db.Model):
         
         balance_sum = db.session.query(func.sum(GLJournalLine.amount_aed))\
             .join(GLJournalLine.entry)\
-            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.is_posted == True, GLJournalEntry.tenant_id == self.tenant_id)\
+            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.status == 'posted', GLJournalEntry.tenant_id == self.tenant_id)\
             .scalar() or 0
         
         if self.type in ['asset', 'expense']:
@@ -145,13 +145,28 @@ class GLJournalEntry(db.Model):
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     total_debit = db.Column(db.Numeric(18, 3), default=0)
     total_credit = db.Column(db.Numeric(18, 3), default=0)
-    is_posted = db.Column(db.Boolean, default=True)  # هل تم ترحيل القيد
+    is_posted = db.Column(db.Boolean, default=True)  # DEPRECATED: use status column
     is_reversed = db.Column(db.Boolean, default=False)  # هل تم عكس القيد
+    # ── State Machine ──────────────────────────────────────────────────────
+    # Draft → Validated → Posted   (happy path)
+    # Draft → Error                (validation failure)
+    # Any   → Reversed             (reversal creates a new reversing entry)
+    # Any   → Cancelled            (soft-delete, never physical delete)
+    status = db.Column(db.String(20), default='draft', nullable=False, index=True)
+    # 'draft': editable, not yet validated (default for new entries)
+    # 'validated': balanced & CoA valid, ready for posting
+    # 'error': validation failed — see validation_errors
+    # 'posted': posted to GL (requires validation first)
+    # 'reversed': original entry that was reversed
+    # 'cancelled': soft-deleted entry (audit trail preserved)
+    validation_errors = db.Column(db.Text)  # JSON list of validation failures
+    validated_at = db.Column(db.DateTime)
+    validated_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     reversed_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), index=True)  # القيد المعكوس
     notes = db.Column(db.Text)  # ملاحظات إضافية
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 
     lines = db.relationship('GLJournalLine', back_populates='entry', lazy='dynamic')
@@ -390,7 +405,8 @@ class GLAccountMapping(db.Model):
 
 @sa.event.listens_for(GLJournalEntry, 'before_insert')
 @sa.event.listens_for(GLJournalEntry, 'before_update')
-def _validate_journal_entry_balance(mapper, connection, target):
+def _validate_journal_entry(mapper, connection, target):
+    # 1. Balance check
     diff = abs((target.total_debit or Decimal('0')) - (target.total_credit or Decimal('0')))
     if diff > Decimal('0.001'):
         from services.gl_posting import UnbalancedJournalEntryError
@@ -398,3 +414,10 @@ def _validate_journal_entry_balance(mapper, connection, target):
             f'Journal entry {target.entry_number or "(new)"} is not balanced: '
             f'debit={target.total_debit} credit={target.total_credit}'
         )
+    # 2. Keep is_posted in sync with status (deprecated field used by reports)
+    if target.status in ('posted', 'reversed'):
+        target.is_posted = True
+    elif target.status in ('draft', 'validated', 'error', 'cancelled'):
+        target.is_posted = False
+    if target.status == 'reversed':
+        target.is_reversed = True

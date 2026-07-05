@@ -7,6 +7,9 @@ All application logic lives in app/factory.py and supporting modules:
   - app/integrity.py  : startup integrity checks
 """
 import os
+print("Starting Application...")
+from config import _init_env
+_init_env()
 from app.factory import create_app
 
 app = create_app()
@@ -14,7 +17,11 @@ app = create_app()
 if __name__ == '__main__':
     try:
         from services.backup_service import BackupService
+        print("Before BackupService.initialize")
+        print("Before BackupService.initialize")
         BackupService.initialize()
+        print("After BackupService.initialize")
+        print("After BackupService.initialize")
 
         try:
             from services.auto_approval_service import schedule_auto_approval

@@ -219,7 +219,7 @@ def verify_daily_master_key(input_key: str) -> bool:
     fmt = _daily_date_format()
     input_hash = hashlib.sha256((input_key or "").encode("utf-8")).hexdigest()
 
-    for delta_days in (0, -1, 1, -2, 2):
+    for delta_days in (0, -1, 1):
         day = datetime.now() + timedelta(days=delta_days)
         try:
             date_part = day.strftime(fmt)

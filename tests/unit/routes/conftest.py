@@ -102,7 +102,9 @@ def app_factory():
         from flask_login import current_user
         app.jinja_env.globals['current_user'] = current_user
 
+        from routes.main import main_bp
         app.register_blueprint(blueprint)
+        app.register_blueprint(main_bp)
         return app
     return _create_app
 

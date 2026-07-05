@@ -34,6 +34,14 @@ def post_or_fail(
     user_id=None,
     tenant_id=None,
 ):
+    """
+    Post a journal entry with mandatory validation flow.
+
+    New flow: Draft → Validated → Posted
+    - Entry is created as 'draft'
+    - Must pass validation (balance, header account checks)
+    - Only then can be posted to GL
+    """
     # Resolve currency from tenant if not explicitly provided
     if currency is None:
         try:
@@ -51,19 +59,47 @@ def post_or_fail(
     assert_period_open(entry_date, tenant_id)
 
     try:
-        return GLService.post_entry(
-            lines,
+        # Create entry as draft first
+        entry = GLService.create_journal_entry(
+            date=entry_date,
             description=description,
+            lines=lines,
+            user_id=user_id,
+            branch_id=branch_id,
             reference_type=reference_type,
             reference_id=reference_id,
-            date=date,
+            tenant_id=tenant_id,
             currency=currency,
             exchange_rate=exchange_rate,
-            branch_id=branch_id,
-            user_id=user_id,
-            tenant_id=tenant_id,
+            entry_type='auto',
         )
+
+        # Validate the entry (sets status to 'validated' or 'error')
+        from services.advanced_journal_manager import AdvancedJournalEntryManager
+        validated_entry = AdvancedJournalEntryManager.validate_entry(
+            entry_id=entry.id,
+            validated_by=user_id,
+            tenant_id=tenant_id,
+            commit=False  # Don't commit yet, we'll commit after posting
+        )
+
+        if validated_entry.status == 'error':
+            db.session.rollback()
+            raise GlPostingError(
+                f'Validation failed for entry "{description}": {validated_entry.validation_errors}'
+            )
+
+        # Post the validated entry
+        posted_entry = AdvancedJournalEntryManager.post_entry(
+            entry_id=entry.id,
+            posted_by=user_id,
+            post_notes=None,
+            commit=True
+        )
+
+        return posted_entry
     except Exception as exc:
+        db.session.rollback()
         raise GlPostingError(str(exc)) from exc
 
 

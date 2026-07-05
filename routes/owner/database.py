@@ -3,7 +3,8 @@
 from routes.owner import (
     render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
     login_required, current_user, func, desc, text, inspect, db, limiter,
-    AuditLog, owner_required, safe_redirect_target,
+    AuditLog, ArchivedRecord, CardVault,
+    owner_required, safe_redirect_target,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp

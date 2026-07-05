@@ -714,7 +714,7 @@ def admin_dashboard():
     total_accounts = _accounts().count()
     active_accounts = _accounts().filter_by(is_active=True).count()
     total_entries = _entries().count()
-    posted_entries = _entries().filter_by(is_posted=True).count()
+    posted_entries = _entries().filter_by(status='posted').count()
     
     # إحصائيات مالية
     cash_accounts = _accounts().filter(GLAccount.code.like('11%')).all()

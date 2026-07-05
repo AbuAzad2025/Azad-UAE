@@ -311,7 +311,7 @@ def delete_journal_entry(entry_id):
             reason=reason
         )
         
-        flash('✅ تم حذف القيد بنجاح', 'success')
+        flash('✅ تم إلغاء القيد بنجاح', 'success')
         
     except Exception as e:
         db.session.rollback()

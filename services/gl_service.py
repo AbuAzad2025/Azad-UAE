@@ -432,7 +432,8 @@ class GLService:
             created_by=user_id,
             branch_id=branch_id,
             entry_type=entry_type,
-            is_posted=True,
+            is_posted=False,  # New entries start as draft, require validation
+            status='draft',  # Default to draft - must be validated before posting
             currency=currency,
             exchange_rate=exchange_rate,
             reference_type=validate_reference_type_write(reference_type),
@@ -648,7 +649,7 @@ class GLService:
                 GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
             ).filter(
                 GLJournalLine.account_id == account.id,
-                GLJournalEntry.is_posted == True
+                GLJournalEntry.status == 'posted'
             )
             if tenant_id is not None:
                 q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
@@ -833,7 +834,7 @@ class GLService:
             return None
         q = db.session.query(func.sum(GLJournalLine.amount_aed)).filter(
             GLJournalLine.account_id == account_id
-        ).join(GLJournalEntry).filter(GLJournalEntry.is_posted == True)
+        ).join(GLJournalEntry).filter(GLJournalEntry.status == 'posted')
         if branch_id:
             q = q.filter(GLJournalEntry.branch_id == branch_id)
         total = q.scalar() or Decimal('0')
@@ -848,7 +849,7 @@ class GLService:
 
         account = GLAccount.query.get_or_404(account_id)
 
-        query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry).filter(GLJournalEntry.is_posted == True)
+        query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry).filter(GLJournalEntry.status == 'posted')
 
         if branch_id:
             query = query.filter(GLJournalEntry.branch_id == branch_id)
@@ -931,11 +932,11 @@ class GLService:
         for account in accounts:
             lines_query = GLJournalLine.query.filter_by(account_id=account.id).join(
                 GLJournalEntry
-            ).filter(GLJournalEntry.is_posted == True)
+            ).filter(GLJournalEntry.status == 'posted')
 
             opening_query = GLJournalLine.query.filter_by(account_id=account.id).join(
                 GLJournalEntry
-            ).filter(GLJournalEntry.is_posted == True)
+            ).filter(GLJournalEntry.status == 'posted')
 
             if branch_id:
                 lines_query = lines_query.filter(GLJournalEntry.branch_id == branch_id)
@@ -1001,7 +1002,7 @@ class GLService:
 
         query = GLJournalLine.query.join(GLJournalEntry).filter(
             GLJournalLine.partner_id == partner_id,
-            GLJournalEntry.is_posted == True,
+            GLJournalEntry.status == 'posted',
         )
         if tenant_id is not None:
             query = query.filter(GLJournalEntry.tenant_id == int(tenant_id))
@@ -1016,7 +1017,7 @@ class GLService:
 
         opening_query = GLJournalLine.query.join(GLJournalEntry).filter(
             GLJournalLine.partner_id == partner_id,
-            GLJournalEntry.is_posted == True,
+            GLJournalEntry.status == 'posted',
         )
         if tenant_id is not None:
             opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
@@ -1098,7 +1099,7 @@ class GLService:
         ).join(
             GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
         ).filter(
-            GLJournalEntry.is_posted == True
+            GLJournalEntry.status == 'posted'
         )
         if tenant_id is not None:
             agg_query = agg_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
@@ -1234,7 +1235,7 @@ class GLService:
             func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
         ).join(GLJournalEntry).filter(
             GLJournalLine.account_id == acc.id,
-            GLJournalEntry.is_posted == True,
+            GLJournalEntry.status == 'posted',
         )
         if tenant_id is not None:
             q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))

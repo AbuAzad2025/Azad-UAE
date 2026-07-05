@@ -17,6 +17,10 @@ class ProductReturn(db.Model):
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
+    # ── Credit Note linkage ──────────────────────────────────────────────
+    # When a return is created as a formal reversal of an invoice,
+    # this FK links back to the original invoice for audit traceability.
+    reverses_invoice_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=True, index=True)
     
     return_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
@@ -44,7 +48,7 @@ class ProductReturn(db.Model):
     processed_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
-    sale = db.relationship('Sale', backref='returns')
+    sale = db.relationship('Sale', backref='returns', foreign_keys=[sale_id])
     customer = db.relationship('Customer', backref='returns')
     branch = db.relationship('Branch', backref='returns', foreign_keys=[branch_id])
     user = db.relationship('User', foreign_keys=[processed_by])

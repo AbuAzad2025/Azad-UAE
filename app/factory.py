@@ -87,7 +87,9 @@ def create_app(config_class=Config):
     LoggingCore.schedule_cleanup(app, interval_hours=24)
 
     # System integrity check
+    print("Running system integrity check...")
     run_system_integrity_check(app)
+    print("System integrity check passed")
 
     # Proxy Fix for Nginx/Cloudflare
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)

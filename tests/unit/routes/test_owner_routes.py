@@ -353,6 +353,8 @@ def _owner_route_patches(**overrides):
 
     patches = [
         ("routes.owner.render_template", patch("routes.owner.render_template", return_value="ok")),
+        ("flask.url_for", patch("flask.url_for", side_effect=lambda endpoint, **kwargs: "/")),
+        ("flask.url_for", patch("flask.url_for", return_value="/")),
         ("routes.owner.db", patch("routes.owner.db", mock_db)),
         ("extensions.db", patch("extensions.db", mock_db)),
         ("routes.owner.inspect", patch("routes.owner.inspect", return_value=_inspector())),
@@ -454,15 +456,34 @@ def _owner_route_patches(**overrides):
         for model_name in ("Sale", "Payment", "Receipt", "User", "Customer", "Product", "Donation", "SaleLine", "Branch", "Tenant"):
             stack.enter_context(patch(f"models.{model_name}", _model_class() if model_name != "Tenant" else tenant_cls))
         stack.enter_context(patch("models.ProductWarehouseCost", _model_class()))
+        # ── Propagate ALL patched routes.owner attributes to sub-modules ──
+        # Sub-modules do `from routes.owner import X` at module load time,
+        # creating local references. Patching routes.owner.X doesn't affect
+        # those local references. Explicitly overwrite them.
+        import routes.owner as _own_mod
+        _owner_names = {
+            name_str.split(".", 2)[2]
+            for name_str, _ in patches
+            if name_str.startswith("routes.owner.") and name_str.count(".") == 2
+        }
+        for _sn in ("core", "tenants", "users", "backups", "database", "settings", "monitoring", "shared"):
+            _sm = getattr(_own_mod, _sn, None)
+            if _sm is None:
+                continue
+            _sd = vars(_sm)
+            for _an in _owner_names:
+                if _an in _sd:
+                    setattr(_sm, _an, getattr(_own_mod, _an))
+        # ── End propagation ───────────────────────────────────────────────
         yield
 
 
 @pytest.fixture
 def owner_client(app_factory, bypass_owner_auth):
-    from routes.owner import owner_bp
-
-    app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
     with _owner_route_patches():
+        from routes.owner import owner_bp
+
+        app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
         yield app.test_client()
 
 
@@ -987,7 +1008,7 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 400
 
     def test_execute_query_db_error(self, owner_client):
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("db error")
             mock_db.session.rollback = MagicMock()
             resp = owner_client.post(
@@ -1377,7 +1398,7 @@ class TestOwnerExtendedCoverage:
 
     def test_api_supervisor_override_success(self, owner_client):
         supervisor = _mock_user_entity(id=5, is_manager=True, is_admin=True, password_ok=True)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.return_value = supervisor
             resp = owner_client.post(
                 "/owner/api/supervisor-override",
@@ -1387,7 +1408,7 @@ class TestOwnerExtendedCoverage:
 
     def test_api_supervisor_override_bad_password(self, owner_client):
         supervisor = _mock_user_entity(id=5, password_ok=False)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.return_value = supervisor
             resp = owner_client.post(
                 "/owner/api/supervisor-override",

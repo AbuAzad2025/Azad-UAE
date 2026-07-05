@@ -305,10 +305,8 @@ class ReturnService:
                                 product_id=sale_line.product_id,
                                 warehouse_id=sale.warehouse_id,
                             )
-                            try:
-                                pwc = query.with_for_update().first()
-                            except Exception:
-                                pwc = query.first()
+                            from services.stock_service import _safe_for_update
+                            pwc = _safe_for_update(query, label=f'PWC(return) p={sale_line.product_id} w={sale.warehouse_id}')
                             if pwc:
                                 qty_decimal = Decimal(str(quantity))
                                 old_qty = pwc.total_quantity
@@ -337,7 +335,11 @@ class ReturnService:
                                     movement_unit_cost=cost_unit,
                                 )
                                 db.session.add(pch)
-                        except Exception:
+                        except Exception as exc:
+                            # Re-raise OperationalError (lock failure) — never silently drop the lock.
+                            from sqlalchemy.exc import OperationalError
+                            if isinstance(exc, OperationalError):
+                                raise
                             current_app.logger.exception(
                                 'MWAC update failed during return %s for product %s',
                                 getattr(product_return, 'id', None), sale_line.product_id

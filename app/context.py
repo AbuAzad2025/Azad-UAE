@@ -19,6 +19,10 @@ def register_context_processors(app):
     app.jinja_env.globals.setdefault('t', __import__('utils.i18n', fromlist=['t']).t)
 
     @app.context_processor
+    def inject_has_endpoint():
+        return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)
+
+    @app.context_processor
     def utility_processor():
         from utils.helpers import format_currency, timeago
         from utils.number_to_arabic import number_to_arabic_words

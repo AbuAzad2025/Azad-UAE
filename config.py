@@ -92,6 +92,7 @@ class Config:
     
     SQLALCHEMY_DATABASE_URI = _db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ISOLATION_LEVEL = "REPEATABLE READ"
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 1800,
@@ -286,7 +287,7 @@ class Config:
     
     NOWPAYMENTS_API_KEY = os.environ.get("NOWPAYMENTS_API_KEY", "")
     NOWPAYMENTS_IPN_SECRET = os.environ.get("NOWPAYMENTS_IPN_SECRET", "")
-    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
+    BASE_URL = os.environ.get("BASE_URL", "https://localhost:5000")
     PREFERRED_URL_SCHEME = os.environ.get("PREFERRED_URL_SCHEME", "https")
 
     _vault_origins_raw = (

@@ -59,41 +59,41 @@
           <i class="fas fa-tools"></i>
           <span class="d-none d-lg-inline">{{ t('Tools') }}</span>
         </button>
-        <div class="dropdown-menu dropdown-menu-left">
+        <div class="dropdown-menu dropdown-menu-right">
           <span class="dropdown-item dropdown-header">{{ t('Tools') }} {{ t('System') }}</span>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#fxModal">
-            <i class="fas fa-coins text-warning mr-2"></i>{{ t('أسعار') }} {{ t('Exchange') }}
+            <i class="fas fa-coins text-warning me-2"></i>{{ t('أسعار') }} {{ t('Exchange') }}
           </a>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#navbarCalculatorModal">
-            <i class="fas fa-calculator text-info mr-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}
+            <i class="fas fa-calculator text-info me-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}
           </a>
           <a class="dropdown-item" href="#" onclick="toggleSidebarDirection(); return false;">
-            <i class="fas fa-exchange-alt text-success mr-2"></i>{{ t('موقع') }} {{ t('Menu') }}
+            <i class="fas fa-exchange-alt text-success me-2"></i>{{ t('موقع') }} {{ t('Menu') }}
           </a>
           {% if current_user.is_authenticated and ai_nav_visible and current_user.has_permission('view_reports') %}
           <a class="dropdown-item" href="{{ url_for('ai.assistant_page') }}">
-            <i class="fas fa-robot text-primary mr-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
+            <i class="fas fa-robot text-primary me-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
           </a>
           {% endif %}
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-ui-action="toggle-viewmode">
-            <i class="fas fa-desktop text-secondary mr-2"></i><span data-ui-role="viewmode-label">{{ t('تلقائي') }}</span>
+            <i class="fas fa-desktop text-secondary me-2"></i><span data-ui-role="viewmode-label">{{ t('تلقائي') }}</span>
           </a>
           {% if is_global_scope_user %}
           <div class="dropdown-divider"></div>
           <span class="dropdown-item dropdown-header">{{ t('Company') }} / {{ t('Branch') }}</span>
           {% if active_branch %}
           <span class="dropdown-item text-muted small">
-            <i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}: {{ active_branch.name }}
+            <i class="fas fa-code-branch me-2"></i>{{ t('Branch') }}: {{ active_branch.name }}
           </span>
           {% else %}
           <span class="dropdown-item text-muted small">
-            <i class="fas fa-sitemap mr-2"></i>كل {{ t('Branches') }}
+            <i class="fas fa-sitemap me-2"></i>كل {{ t('Branches') }}
           </span>
           {% endif %}
           <a class="dropdown-item" href="{{ url_for('tenants.switch', tenant_id=0) }}">
-            <i class="fas fa-building mr-2"></i>{{ t('تبديل') }} {{ t('Company') }}
+            <i class="fas fa-building me-2"></i>{{ t('تبديل') }} {{ t('Company') }}
           </a>
           {% endif %}
         </div>
@@ -103,12 +103,12 @@
           <i class="fas fa-globe"></i>
           <span class="d-none d-lg-inline">{{ session.get('language', 'ar')|upper }}</span>
         </button>
-        <div class="dropdown-menu dropdown-menu-sm dropdown-menu-left">
+        <div class="dropdown-menu dropdown-menu-sm dropdown-menu-right">
           <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
-            <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>{{ t('Arabic_2') }}
+            <i class="fas fa-check me-2 {% if session.get('language', 'ar') != 'ar' %}opacity-0{% endif %}"></i>{{ t('Arabic_2') }}
           </a>
           <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
-            <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>English
+            <i class="fas fa-check me-2 {% if session.get('language') != 'en' %}opacity-0{% endif %}"></i>English
           </a>
         </div>
       </div>
@@ -132,11 +132,11 @@
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('main.my_profile') }}" class="dropdown-item">
-            <i class="fas fa-user-circle mr-2"></i>{{ t('Profile') }}
+            <i class="fas fa-user-circle me-2"></i>{{ t('Profile') }}
           </a>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
-            <i class="fas fa-sign-out-alt mr-2"></i>{{ t('تسجيل') }} {{ t('خروج') }}
+            <i class="fas fa-sign-out-alt me-2"></i>{{ t('تسجيل') }} {{ t('خروج') }}
           </a>
         </div>
       </div>

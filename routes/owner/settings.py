@@ -13,7 +13,7 @@ from routes.owner import (
 from services.logging_core import LoggingCore
 from services.store_service import StoreService
 from routes.owner import owner_bp
-from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action, _mask_api_key, _get_developer_from_settings
+from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action, _owner_branch_scope, _mask_api_key, _get_developer_from_settings
 
 import logging
 import os

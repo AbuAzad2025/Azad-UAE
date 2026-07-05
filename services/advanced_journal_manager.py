@@ -1,12 +1,26 @@
 from datetime import datetime, timezone
+import json
 from extensions import db
 from decimal import Decimal
 from sqlalchemy import event
 from models.gl import GLJournalEntry, GLJournalLine
 from models.journal_entry_audit import JournalEntryAudit
 
+# ── Allowed state transitions ───────────────────────────────────────────
+_VALID_TRANSITIONS = {
+    'draft':     {'validated', 'error', 'cancelled'},
+    'validated': {'posted', 'error', 'cancelled'},
+    'error':     {'draft', 'cancelled'},  # retry after fixing
+    'posted':    {'reversed', 'cancelled'},
+    'reversed':  set(),  # terminal
+    'cancelled': set(),  # terminal (soft-delete)
+}
+
+
 class AdvancedJournalEntryManager:
-    """مدير القيود المحاسبية المتقدم"""
+    """مدير القيود المحاسبية المتقدم — state-machine aware."""
+
+    # ── Helpers ──────────────────────────────────────────────────────────
 
     @staticmethod
     def _entry_or_404(entry_id, tenant_id=None):
@@ -17,117 +31,213 @@ class AdvancedJournalEntryManager:
         if not entry:
             abort(404)
         return entry
-    
+
+    @staticmethod
+    def _transition(entry, new_status, *, user_id=None, reason=None):
+        """Enforce state machine. Raises ValueError on illegal transitions."""
+        current = entry.status
+        if new_status not in _VALID_TRANSITIONS.get(current, set()):
+            raise ValueError(
+                f'Illegal journal status transition: {current} → {new_status}. '
+                f'Allowed: {sorted(_VALID_TRANSITIONS.get(current, set())) or "(none)"}'
+            )
+        entry.status = new_status
+        if new_status == 'reversed':
+            entry.is_reversed = True
+        if new_status == 'posted':
+            entry.is_posted = True
+            entry.validated_at = entry.validated_at or datetime.now(timezone.utc)
+        entry.updated_at = datetime.now(timezone.utc)
+
+    # ── Validate ─────────────────────────────────────────────────────────
+
+    @staticmethod
+    def validate_entry(entry_id, validated_by, tenant_id=None, commit=True):
+        """Mandatory validation step before posting.
+
+        Checks:
+        1. SUM(debit) == SUM(credit) (currency-aware tolerance)
+        2. No header accounts used directly
+
+        Sets status='validated' on success, 'error' on failure.
+
+        Args:
+            commit: If False, changes stay in the session without committing.
+                    Caller is responsible for committing. Used by
+                    reverse_entry_advanced to group validate+post atomically.
+        """
+        from services.gl_posting import assert_balanced_lines
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id, tenant_id)
+        if entry.status not in ('draft', 'error'):
+            raise ValueError(f'Cannot validate entry in status: {entry.status}')
+
+        errors = []
+        # 1. Balance check
+        try:
+            lines_data = [
+                {'debit': float(l.debit or 0), 'credit': float(l.credit or 0)}
+                for l in entry.lines
+            ]
+            assert_balanced_lines(lines_data, currency=entry.currency)
+        except Exception as exc:
+            errors.append(f'Balance: {exc}')
+
+        # 2. Header account check
+        for line in entry.lines:
+            if line.account and line.account.is_header:
+                errors.append(f'Header account used: {line.account.full_name}')
+
+        entry.validated_by = validated_by
+        entry.validated_at = datetime.now(timezone.utc)
+
+        if errors:
+            entry.status = 'error'
+            entry.validation_errors = json.dumps(errors, ensure_ascii=False)
+            entry.is_posted = False
+        else:
+            entry.status = 'validated'
+            entry.validation_errors = None
+
+        AdvancedJournalEntryManager._log_audit(
+            entry.id, 'validate', None, entry.to_dict(),
+            f'Validation {"failed" if errors else "passed"}: {json.dumps(errors)}' if errors else 'Validation passed',
+            validated_by,
+        )
+        if commit:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+        return entry
+
+    # ── Create ───────────────────────────────────────────────────────────
+
     @staticmethod
     def create_entry_with_validation(description, lines, entry_date=None, notes=None, created_by=None, **kwargs):
-        """إنشاء قيد مع التحقق المتقدم"""
+        """إنشاء قيد — defaults to 'draft' so it must be validated before posting."""
         from services.gl_service import GLService
-        
-        # التحقق من التوازن
+        from services.gl_posting import assert_balanced_lines
+
+        # Inline balance check (fast-fail before DB round-trip)
         total_debit = sum(line.get('debit', 0) for line in lines)
         total_credit = sum(line.get('credit', 0) for line in lines)
-        
         if abs(total_debit - total_credit) > 0.01:
             raise ValueError(f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}")
-        
-        # التحقق من الحسابات الرئيسية
+
+        # Header account check
         for line in lines:
             account_code = line.get('account_code')
             if account_code:
-                from models.gl import GLAccount
                 from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
                 account = get_gl_account_by_code(account_code, tenant_id=kwargs.get('tenant_id') or active_tenant_id())
                 if account and account.is_header:
                     raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {account.full_name}")
-        
-        # إنشاء القيد
+
         entry = GLService.create_manual_entry(
             description=description,
             lines=lines,
             entry_date=entry_date,
             notes=notes,
             created_by=created_by,
-            branch_id=kwargs.get('branch_id'), # Pass branch_id
+            branch_id=kwargs.get('branch_id'),
             **kwargs
         )
-        
-        # تسجيل التدقيق
+
+        # Set initial status to 'draft' (new entries must be validated)
+        entry.status = 'draft'
+        entry.is_posted = False
+
         AdvancedJournalEntryManager._log_audit(
-            entry.id, 'create', None, entry.to_dict(), 
+            entry.id, 'create', None, entry.to_dict(),
             f"إنشاء قيد جديد: {description}", created_by
         )
-        
         return entry
-    
+
+    # ── Update (draft only) ──────────────────────────────────────────────
+
     @staticmethod
     def update_entry(entry_id, updates, updated_by, reason=None):
-        """تحديث قيد محاسبي"""
+        """تحديث قيد محاسبي — only draft entries."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
-        
-        if entry.is_posted:
-            raise ValueError("لا يمكن تعديل قيد مرحل")
-        
-        if entry.is_reversed:
-            raise ValueError("لا يمكن تعديل قيد معكوس")
-        
-        # حفظ القيم القديمة
+        if entry.status not in ('draft', 'error'):
+            raise ValueError(f"لا يمكن تعديل قيد بحالة: {entry.status}")
+
         old_values = entry.to_dict()
-        
-        # تطبيق التحديثات
         for field, value in updates.items():
             if hasattr(entry, field):
                 setattr(entry, field, value)
-        
-        # التحقق من التوازن إذا تم تحديث السطور
+
         if 'lines' in updates:
             total_debit = sum(line.get('debit', 0) for line in updates['lines'])
             total_credit = sum(line.get('credit', 0) for line in updates['lines'])
-            
             if abs(total_debit - total_credit) > 0.01:
                 raise ValueError(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}")
-        
+
         entry.updated_at = datetime.now(timezone.utc)
-        
-        # تسجيل التدقيق
         AdvancedJournalEntryManager._log_audit(
             entry_id, 'update', old_values, entry.to_dict(),
             reason or "تحديث القيد", updated_by
         )
-        
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
             raise
-
         return entry
-    
+
+    # ── Post (requires validated status) ─────────────────────────────────
+
+    @staticmethod
+    def post_entry(entry_id, posted_by, post_notes=None, commit=True):
+        """Post a validated entry to the GL.
+
+        Args:
+            commit: If False, changes stay in the session without committing.
+                    Caller is responsible for committing. Used by
+                    reverse_entry_advanced to group validate+post atomically.
+        """
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
+        if entry.status != 'validated':
+            raise ValueError(
+                f'Entry must be validated before posting (current status: {entry.status}). '
+                'Run validate_entry() first.'
+            )
+        AdvancedJournalEntryManager._transition(entry, 'posted', user_id=posted_by)
+        AdvancedJournalEntryManager._log_audit(
+            entry_id, 'post', entry.to_dict(), entry.to_dict(),
+            f'Posting: {post_notes or ""}', posted_by
+        )
+        if commit:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+        return entry
+
+    # ── Reverse (posted only) ────────────────────────────────────────────
+
     @staticmethod
     def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True):
-        """عكس قيد محاسبي متقدم"""
+        """عكس قيد محاسبي — creates a reversing entry."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
-        
-        if entry.is_reversed:
+        if entry.status == 'reversed':
             raise ValueError("القيد معكوس مسبقاً")
-        
-        if not entry.is_posted:
-            raise ValueError("لا يمكن عكس قيد غير مرحل")
-        
-        # حفظ القيم القديمة
+        if entry.status != 'posted':
+            raise ValueError(f"لا يمكن عكس قيد بحالة: {entry.status}")
+
         old_values = entry.to_dict()
-        
-        # إنشاء قيد عكسي إذا طُلب
         reversal_entry = None
         if create_reversal_entry:
             reversal_lines = []
             for line in entry.lines:
                 reversal_lines.append({
                     'account_code': line.account.code,
-                    'debit': line.credit,  # عكس الاتجاه
-                    'credit': line.debit,  # عكس الاتجاه
+                    'debit': line.credit,
+                    'credit': line.debit,
                     'description': f"عكس: {line.description or ''}"
                 })
-            
             reversal_entry = AdvancedJournalEntryManager.create_entry_with_validation(
                 description=f"عكس القيد {entry.entry_number}",
                 lines=reversal_lines,
@@ -136,103 +246,71 @@ class AdvancedJournalEntryManager:
                 created_by=reversed_by,
                 entry_type='reversing'
             )
-            
-            # ربط القيود
-            entry.is_reversed = True
+            # Auto-validate and post the reversal atomically (no intermediate commits)
+            AdvancedJournalEntryManager.validate_entry(
+                reversal_entry.id, validated_by=reversed_by, commit=False)
+            AdvancedJournalEntryManager.post_entry(
+                reversal_entry.id, posted_by=reversed_by, commit=False)
+
+            AdvancedJournalEntryManager._transition(entry, 'reversed', user_id=reversed_by)
             entry.reversed_entry_id = reversal_entry.id
             reversal_entry.reversed_entry_id = entry.id
-        
-        # تسجيل التدقيق
+
         AdvancedJournalEntryManager._log_audit(
             entry_id, 'reverse', old_values, entry.to_dict(),
             f"عكس القيد - السبب: {reason}", reversed_by
         )
-        
         if reversal_entry:
             AdvancedJournalEntryManager._log_audit(
                 reversal_entry.id, 'create', None, reversal_entry.to_dict(),
                 f"إنشاء قيد عكسي للقيد {entry.entry_number}", reversed_by
             )
-        
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
             raise
-
         return reversal_entry
-    
+
+    # ── Soft-delete (cancel) — NEVER physical delete ─────────────────────
+
     @staticmethod
     def delete_entry(entry_id, deleted_by, reason):
-        """حذف قيد محاسبي"""
+        """Soft-delete: sets status='cancelled'. Preserves audit trail.
+
+        Financial documents are immutable. Physical deletes are forbidden
+        for any entry that has been posted or reversed.
+        """
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
-        
-        if entry.is_posted:
-            raise ValueError("لا يمكن حذف قيد مرحل - استخدم العكس بدلاً من ذلك")
-        
-        if entry.is_reversed:
-            raise ValueError("لا يمكن حذف قيد معكوس")
-        
-        # التحقق من وجود قيود مرتبطة
+        if entry.status in ('posted', 'reversed'):
+            raise ValueError(
+                f'Cannot delete entry in status "{entry.status}". '
+                'Use reverse_entry_advanced() for posted entries.'
+            )
         if entry.reversed_entry_id:
             raise ValueError("لا يمكن حذف قيد له قيود عكسية مرتبطة")
-        
-        # حفظ القيم القديمة
+
         old_values = entry.to_dict()
-        
-        # حذف السطور أولاً
-        GLJournalLine.query.filter_by(entry_id=entry_id).delete()
-        
-        # حذف القيد
-        db.session.delete(entry)
-        
-        # تسجيل التدقيق
+        AdvancedJournalEntryManager._transition(entry, 'cancelled', user_id=deleted_by, reason=reason)
         AdvancedJournalEntryManager._log_audit(
-            entry_id, 'delete', old_values, None,
-            f"حذف القيد - السبب: {reason}", deleted_by
+            entry_id, 'cancel', old_values, entry.to_dict(),
+            f"إلغاء القيد - السبب: {reason}", deleted_by
         )
-        
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
             raise
-
         return True
-    
+
+    # ── Approve (legacy alias → validate) ────────────────────────────────
+
     @staticmethod
     def approve_entry(entry_id, approved_by, approval_notes=None):
-        """الموافقة على قيد محاسبي"""
-        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
-        
-        if entry.is_posted:
-            raise ValueError("القيد مرحل مسبقاً")
-        
-        # التحقق من التوازن مرة أخرى
-        total_debit = sum(line.debit for line in entry.lines)
-        total_credit = sum(line.credit for line in entry.lines)
-        
-        if abs(total_debit - total_credit) > 0.01:
-            raise ValueError(f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}")
-        
-        # الموافقة
-        entry.is_posted = True
-        entry.updated_at = datetime.now(timezone.utc)
-        
-        # تسجيل التدقيق
-        AdvancedJournalEntryManager._log_audit(
-            entry_id, 'approve', entry.to_dict(), entry.to_dict(),
-            f"الموافقة على القيد - ملاحظات: {approval_notes or 'لا توجد'}",
-            approved_by
+        """الموافقة على قيد — routes through validate_entry for state-machine compliance."""
+        return AdvancedJournalEntryManager.validate_entry(
+            entry_id, validated_by=approved_by,
         )
-        
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-
-        return entry
     
     @staticmethod
     def get_entry_history(entry_id, tenant_id=None):
@@ -276,10 +354,13 @@ def add_helper_methods():
             'entry_date': self.entry_date.isoformat() if self.entry_date else None,
             'description': self.description,
             'entry_type': self.entry_type,
+            'status': getattr(self, 'status', 'posted'),
             'total_debit': float(self.total_debit),
             'total_credit': float(self.total_credit),
             'is_posted': self.is_posted,
             'is_reversed': self.is_reversed,
+            'validation_errors': getattr(self, 'validation_errors', None),
+            'validated_at': self.validated_at.isoformat() if getattr(self, 'validated_at', None) else None,
             'notes': self.notes,
             'lines': [
                 {
@@ -304,16 +385,16 @@ def add_helper_methods():
             return 'major_imbalance'
     
     def can_be_modified(self):
-        """فحص إمكانية التعديل"""
-        return not self.is_posted and not self.is_reversed
+        """فحص إمكانية التعديل — state-machine aware."""
+        return getattr(self, 'status', 'posted') in ('draft', 'error')
     
     def can_be_reversed(self):
         """فحص إمكانية العكس"""
-        return self.is_posted and not self.is_reversed
+        return getattr(self, 'status', 'posted') == 'posted' and not self.is_reversed
     
     def can_be_deleted(self):
-        """فحص إمكانية الحذف"""
-        return not self.is_posted and not self.is_reversed and not self.reversed_entry_id
+        """فحص إمكانية الحذف — soft-delete only for draft/error entries."""
+        return getattr(self, 'status', 'posted') in ('draft', 'error') and not self.reversed_entry_id
     
     # إضافة الدوال للكلاس
     GLJournalEntry.to_dict = to_dict

@@ -4,8 +4,46 @@ Odoo-style ir.sequence for Azadexa
 """
 
 from datetime import datetime, timezone
+from flask import current_app
+from sqlalchemy.exc import OperationalError
 from extensions import db
 from models import DocumentSequence
+
+
+_MAX_LOCK_RETRIES = 3
+
+
+def _safe_for_update(query, label='row'):
+    """Execute SELECT … FOR UPDATE with savepoint-based retry.
+
+    Uses savepoints so that a failed lock attempt does NOT roll back the
+    caller's entire transaction.  On final failure, aborts — never silently
+    drops the lock.
+
+    Rationale: The previous try/except pattern silently fell back to an unlocked
+    read when the lock could not be acquired, opening the door to race
+    conditions where two concurrent transactions read the same value and
+    both update it incorrectly.
+    """
+    for attempt in range(1, _MAX_LOCK_RETRIES + 1):
+        savepoint = db.session.begin_nested()
+        try:
+            result = query.with_for_update().first()
+            savepoint.commit()
+            return result
+        except OperationalError:
+            savepoint.rollback()
+            if attempt == _MAX_LOCK_RETRIES:
+                current_app.logger.critical(
+                    'Row-level lock acquisition failed after %d attempts for %s — aborting to prevent race condition.',
+                    _MAX_LOCK_RETRIES, label,
+                )
+                raise
+            current_app.logger.warning(
+                'Lock contention on %s (attempt %d/%d) — retrying.',
+                label, attempt, _MAX_LOCK_RETRIES,
+            )
+    raise RuntimeError(f'Failed to acquire row lock for {label}')
 
 
 class DocumentSequenceService:
@@ -49,7 +87,7 @@ class DocumentSequenceService:
     def next_number(tenant_id, code, branch_code=None, date=None):
         """
         Generate the next document number atomically.
-        Uses SELECT FOR UPDATE to prevent race conditions.
+        Uses SELECT FOR UPDATE with retry logic to prevent race conditions.
         """
         seq = DocumentSequenceService.get_or_create(tenant_id, code)
         if not seq.is_active:
@@ -57,10 +95,11 @@ class DocumentSequenceService:
 
         date = date or datetime.now(timezone.utc)
 
-        # Lock the sequence row
-        locked = db.session.query(DocumentSequence).filter_by(
-            id=seq.id
-        ).with_for_update().first()
+        # Lock the sequence row with retry logic
+        locked = _safe_for_update(
+            db.session.query(DocumentSequence).filter_by(id=seq.id),
+            label=f'DocumentSequence({code})'
+        )
 
         if not locked:
             raise ValueError(f'Sequence {code} not found after lock.')
