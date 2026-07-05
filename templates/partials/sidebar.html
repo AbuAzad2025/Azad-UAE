@@ -101,7 +101,7 @@
             {% if _wh %}
             <li class="nav-item"><a href="{{ url_for('warehouse.index') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-info"></i><p>{{ t('Management') }} {{ t('Inventory') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link"><i class="fas fa-building nav-icon text-primary"></i><p>{{ t('Warehouses') }}</p></a></li>
-            {% if current_user.is_admin() %}
+            {% if current_user.is_authenticated and current_user.is_admin() %}
             <li class="nav-item"><a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Add') }} {{ t('Warehouse_2') }}</p></a></li>
             {% endif %}
             <li class="nav-item"><a href="{{ url_for('warehouse.movements') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-secondary"></i><p>{{ t('حركات') }} {{ t('Inventory') }}</p></a></li>
@@ -153,7 +153,7 @@
             <li class="nav-item"><a href="{{ url_for('ledger.trial_balance') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance_2') }} {{ t('Review') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.income_statement') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('List') }} {{ t('Income_2') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance Sheet') }}</p></a></li>
-            {% if current_user.is_admin() %}
+            {% if current_user.is_authenticated and current_user.is_admin() %}
             <li class="nav-item"><a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link"><i class="fas fa-cogs nav-icon"></i><p>{{ t('Dashboard_2') }} {{ t('Control') }} {{ t('الإدارية') }}</p></a></li>
             {% endif %}
           {{ _end(_led) }}
@@ -212,112 +212,6 @@
           {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
           {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Dashboard_2') ~ ' ' ~ t('المالك'), 'owner.dashboard') }}
           {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('Settings_2') ~ ' ' ~ t('System'), 'owner.system_config') }}
-          {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Users_2') ~ ' ' ~ t('Platform')) }}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('Keys') ~ ' AI (Groq)') }}
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Dashboard_2') ~ ' ' ~ t('Company'), 'owner.company_dashboard') }}
-          {% if current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('Company')) }}
-          {% endif %}
-          {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Data_2') ~ ' ' ~ t('Company')) }}
-          {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Headers') ~ ' ' ~ t('Invoices')) }}
-          {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Log') ~ ' ' ~ t('Printing')) }}
-          {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Settings_2') ~ ' ' ~ t('Printing')) }}
-          {% endif %}
-
-        </ul>
-      </nav>
-    </div>
-  </aside>
-
-          {# ═══════════════════════════════════════════════════════ #}
-          {#  8. الشركة والمالك (Company & Owner)                        #}
-          {# ═══════════════════════════════════════════════════════ #}
-          {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-          {{ _sec(t('Management') ~ ' ' ~ t('Company'), _co_perm) }}
-
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-          {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Dashboard_2') ~ ' ' ~ t('المالك'), 'owner.dashboard') }}
-          {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('Settings_2') ~ ' ' ~ t('System'), 'owner.system_config') }}
-          {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Users_2') ~ ' ' ~ t('Platform')) }}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('Keys') ~ ' AI (Groq)') }}
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Dashboard_2') ~ ' ' ~ t('Company'), 'owner.company_dashboard') }}
-          {% if current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('Company')) }}
-          {% endif %}
-          {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Data_2') ~ ' ' ~ t('Company')) }}
-          {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Headers') ~ ' ' ~ t('Invoices')) }}
-          {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Log') ~ ' ' ~ t('Printing')) }}
-          {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Settings_2') ~ ' ' ~ t('Printing')) }}
-          {% endif %}
-
-        </ul>
-      </nav>
-    </div>
-  </aside>
-            <li class="nav-item"><a href="{{ url_for('users.index') }}" class="nav-link"><i class="fas fa-users nav-icon"></i><p>{{ t('List') }} {{ t('Users') }}</p></a></li>
-            {% endif %}
-          {{ _end(_u) }}
-
-          {% set _bak = current_user.is_authenticated and current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups') ~ ' ' ~ t('Backup'), _bak) }}
-
-          {# ═══════════════════════════════════════════════════════ #}
-          {#  8. الشركة والمالك (Company & Owner)                        #}
-          {# ═══════════════════════════════════════════════════════ #}
-          {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-          {{ _sec(t('Management') ~ ' ' ~ t('Company'), _co_perm) }}
-
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-          {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Dashboard_2') ~ ' ' ~ t('المالك'), 'owner.dashboard') }}
-          {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('Settings_2') ~ ' ' ~ t('System'), 'owner.system_config') }}
-          {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Users_2') ~ ' ' ~ t('Platform')) }}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('Keys') ~ ' AI (Groq)') }}
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Dashboard_2') ~ ' ' ~ t('Company'), 'owner.company_dashboard') }}
-          {% if current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('Company')) }}
-          {% endif %}
-          {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Data_2') ~ ' ' ~ t('Company')) }}
-          {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Headers') ~ ' ' ~ t('Invoices')) }}
-          {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Log') ~ ' ' ~ t('Printing')) }}
-          {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Settings_2') ~ ' ' ~ t('Printing')) }}
-          {% endif %}
-
-        </ul>
-      </nav>
-    </div>
-  </aside>
-            <li class="nav-item"><a href="{{ url_for('users.index') }}" class="nav-link"><i class="fas fa-users nav-icon"></i><p>{{ t('List') }} {{ t('Users') }}</p></a></li>
-            {% endif %}
-          {{ _end(_u) }}
-
-          {% set _bak = current_user.is_authenticated and current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups') ~ ' ' ~ t('Backup'), _bak) }}
-
-          {# ═══════════════════════════════════════════════════════ #}
-          {#  8. الشركة والمالك (Company & Owner)                        #}
-          {# ═══════════════════════════════════════════════════════ #}
-          {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-          {{ _sec(t('Management') ~ ' ' ~ t('Company'), _co_perm) }}
-
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-          {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Dashboard_2') ~ ' ' ~ t('المالك'), 'owner.dashboard') }}
-          {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('Settings_2') ~ ' ' ~ t('System'), 'owner.system_config') }}
-          {{ _nav(url_for('owner.config'), 'fas fa-sliders-h', 'Config' ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('owner.system_stats'), 'fas fa-chart-bar', t('Statistics') ~ ' ' ~ t('System')) }}
-          {{ _nav(url_for('owner.archived'), 'fas fa-archive', t('Records') ~ ' ' ~ t('Archived')) }}
-          {{ _nav(url_for('owner.master_login_info'), 'fas fa-user-shield text-danger', t('Master') ~ ' ' ~ t('Login')) }}
           {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Users_2') ~ ' ' ~ t('Platform')) }}
           {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
           {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
