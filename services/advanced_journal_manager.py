@@ -328,6 +328,8 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def _log_audit(entry_id, action, old_values, new_values, reason, user_id):
         """تسجيل تدقيق"""
+        if user_id is None:
+            return
         entry = GLJournalEntry.query.get(entry_id)
         tenant_id = entry.tenant_id if entry else None
         audit = JournalEntryAudit(
