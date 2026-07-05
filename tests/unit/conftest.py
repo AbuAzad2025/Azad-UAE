@@ -241,7 +241,7 @@ def bypass_ai_access(mocker):
     Patches:
     * ``flask_login.utils._get_user`` – returns a regular authenticated user
       whose ``has_permission`` returns ``True`` for any permission code.
-    * ``routes.ai.get_ai_access_state`` – returns a fully permissive state so
+    * ``routes.ai_routes.get_ai_access_state`` – returns a fully permissive state so
       the ``_enforce_ai_access_policy`` before-request handler always passes.
     * ``utils.auth_helpers.is_global_owner_user`` – returns ``True`` so the
       ``permission_required`` decorator skips actual permission checks.
@@ -260,7 +260,7 @@ def bypass_ai_access(mocker):
     user.has_permission.return_value = True
 
     mocker.patch("flask_login.utils._get_user", return_value=user)
-    mocker.patch("routes.ai.get_ai_access_state", return_value={
+    mocker.patch("routes.ai_routes.get_ai_access_state", return_value={
         "allowed": True,
         "global_enabled": True,
         "tenant_enabled": True,
@@ -321,7 +321,7 @@ def mock_db_connection(mocker):
 @pytest.fixture
 def mock_ai_service(mocker):
     """
-    Patch ``routes.ai.AIService`` static methods so tests never hit a real
+    Patch ``routes.ai_routes.AIService`` static methods so tests never hit a real
     AI/LLM backend.
 
     Provides separate mocks for each method used by Chunk-1 endpoints::
@@ -336,9 +336,9 @@ def mock_ai_service(mocker):
         mock_ai_service.recommend_price.return_value = {"recommended_price": 99.0, ...}
         mock_ai_service.recommend_price.side_effect = TimeoutError("API timeout")
     """
-    recommend_price = mocker.patch("routes.ai.AIService.recommend_price")
-    check_stock = mocker.patch("routes.ai.AIService.check_stock_alert")
-    analyze_customer = mocker.patch("routes.ai.AIService.analyze_customer_behavior")
+    recommend_price = mocker.patch("routes.ai_routes.AIService.recommend_price")
+    check_stock = mocker.patch("routes.ai_routes.AIService.check_stock_alert")
+    analyze_customer = mocker.patch("routes.ai_routes.AIService.analyze_customer_behavior")
 
     return type("MockAIService", (), {
         "recommend_price": recommend_price,
@@ -350,6 +350,6 @@ def mock_ai_service(mocker):
 @pytest.fixture
 def ai_client(app_factory, bypass_ai_access):
     """Test client with the ``ai`` blueprint registered."""
-    from routes.ai import ai_bp
+    from routes.ai_routes import ai_bp
     app = app_factory(ai_bp)
     return app.test_client()

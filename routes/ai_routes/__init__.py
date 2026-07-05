@@ -1,12 +1,15 @@
 """AI Routes Package — Modular sub-blueprint structure."""
 
 import re
+import pandas as pd
 from flask import Blueprint, render_template, request, jsonify, g, flash, redirect, url_for
 from flask_login import current_user
 from extensions import db, limiter
 from services.logging_core import LoggingCore
 from services.ai_service import AIService
+from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state, ai_level_allows
+from utils.tenanting import get_active_tenant_id, assign_tenant_id
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
 
@@ -105,6 +108,8 @@ def _audit_ai_requests(response):
 from ai_knowledge.core.conversation_store import get_context as _get_conversation_context
 from ai_knowledge.core.conversation_store import set_context as _set_conversation_context
 from ai_knowledge.core.conversation_store import clear_context as _clear_conversation_context
+_conversation_set = _set_conversation_context
+_conversation_clear = _clear_conversation_context
 
 class _AutoSaveCtx(dict):
     """Dict that auto-persists changes to DB."""

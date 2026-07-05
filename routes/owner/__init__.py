@@ -42,7 +42,7 @@ from utils.safe_redirect import safe_redirect_target
 from utils.sanitizer import InputSanitizer
 
 # Re-export shared helpers that tests patch via "routes.owner.*"
-from .shared import _known_tables_map  # noqa: E402 — used by test_owner_routes patches
+from .shared import _known_tables_map, _validate_postgresql_uri  # noqa: E402 — used by test_owner_routes patches
 
 import logging
 import os

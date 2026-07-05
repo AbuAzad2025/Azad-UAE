@@ -1,7 +1,7 @@
 """
 tests/unit/test_ai_routes_chunk1.py — Chunk 1 AI route unit tests.
 
-Covers the first 3 JSON API endpoints in ``routes/ai.py``:
+Covers the first 3 JSON API endpoints in ``routes/ai_routes/``:
   1. POST /recommend-price
   2. POST /check-stock
   3. GET  /analyze-customer/<id>

@@ -156,7 +156,7 @@ class TestRegisterBlueprints:
         real_import = builtins.__import__
 
         def selective_import(name, *args, **kwargs):
-            if name == 'routes.ai':
+            if name == 'routes.ai_routes':
                 raise ImportError('ai broken')
             return real_import(name, *args, **kwargs)
 
@@ -169,6 +169,6 @@ class TestRegisterBlueprints:
         monkeypatch.delenv('DISABLE_AI', raising=False)
         fake_bp = MagicMock()
         with patch.object(bp_module, '_import_bp', return_value=fake_bp), \
-             patch('routes.ai.ai_bp', fake_bp):
+             patch('routes.ai_routes.ai_bp', fake_bp):
             result = bp_module.register_blueprints(flask_app)
         assert result is flask_app

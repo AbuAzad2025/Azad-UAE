@@ -112,11 +112,11 @@ def _state(**overrides):
 
 @contextmanager
 def _ai_state_client(app_factory, mock_user, state):
-    from routes.ai import ai_bp
+    from routes.ai_routes import ai_bp
     app = app_factory(ai_bp)
     patches = [
         patch('flask_login.utils._get_user', return_value=mock_user),
-        patch('routes.ai.get_ai_access_state', return_value=state),
+        patch('routes.ai_routes.get_ai_access_state', return_value=state),
         patch('utils.auth_helpers.is_global_owner_user', return_value=True),
         patch('utils.decorators.is_global_owner_user', return_value=True),
         patch('utils.decorators.is_admin_surface_user', return_value=True),
@@ -147,7 +147,7 @@ class TestAiAccessPolicy:
 
     def test_after_request_non_ai_endpoint(self, app_factory):
         """endpoint not starting with 'ai.' -> after_request passthrough (99)."""
-        from routes.ai import ai_bp, _audit_ai_requests
+        from routes.ai_routes import ai_bp, _audit_ai_requests
         app = app_factory(ai_bp)
         with app.test_request_context('/'):
             resp = MagicMock(status_code=200)
@@ -155,8 +155,8 @@ class TestAiAccessPolicy:
 
     def test_after_request_audit_failure_swallowed(self, ai_client):
         """log_audit raising in after_request is swallowed (119-120)."""
-        with patch('routes.ai.LoggingCore.log_audit', side_effect=RuntimeError('audit')), \
-             patch('routes.ai.AIService.get_neural_status', return_value={'ok': True}):
+        with patch('routes.ai_routes.LoggingCore.log_audit', side_effect=RuntimeError('audit')), \
+             patch('routes.ai_routes.AIService.get_neural_status', return_value={'ok': True}):
             resp = ai_client.get('/ai/neural-status')
         assert resp.status_code == 200
 
@@ -170,8 +170,8 @@ class TestChatOwnerExecuteElif:
         mock_user.is_owner = True
         state = _state(is_platform_user=False, ai_level='advanced')
         with _ai_state_client(app_factory, mock_user, state) as client:
-            with patch('routes.ai._process_user_action', return_value='wizard-reply') as proc, \
-                 patch('routes.ai.AIService.chat_response', return_value='fallback'):
+            with patch('routes.ai_routes._process_user_action', return_value='wizard-reply') as proc, \
+                 patch('routes.ai_routes.AIService.chat_response', return_value='fallback'):
                 resp = client.post('/ai/chat', json={'message': 'افعل شيئا'})
         assert resp.status_code == 200
         body = resp.get_json()
@@ -184,22 +184,22 @@ class TestChatOwnerExecuteElif:
 # ===========================================================================
 class TestConversationHelpers:
     def test_autosave_pop(self):
-        from routes.ai import _conversation_ctx
-        with patch('routes.ai._get_conversation_context', return_value={'x': 1}), \
-             patch('routes.ai._set_conversation_context') as setter:
+        from routes.ai_routes import _conversation_ctx
+        with patch('routes.ai_routes._get_conversation_context', return_value={'x': 1}), \
+             patch('routes.ai_routes._set_conversation_context') as setter:
             ctx = _conversation_ctx(1, 1)
             assert ctx.pop('x') == 1
         setter.assert_called()
 
     def test_conversation_set(self):
-        from routes.ai import _conversation_set
-        with patch('routes.ai._set_conversation_context') as s:
+        from routes.ai_routes import _conversation_set
+        with patch('routes.ai_routes._set_conversation_context') as s:
             _conversation_set(7, {'a': 1}, 2)
         s.assert_called_once_with(7, {'a': 1}, 2)
 
     def test_conversation_clear(self):
-        from routes.ai import _conversation_clear
-        with patch('routes.ai._clear_conversation_context') as c:
+        from routes.ai_routes import _conversation_clear
+        with patch('routes.ai_routes._clear_conversation_context') as c:
             _conversation_clear(7, 2)
         c.assert_called_once_with(7, 2)
 
@@ -209,16 +209,16 @@ class TestConversationHelpers:
 # ===========================================================================
 @contextmanager
 def _wizard_env(ctx):
-    with patch('routes.ai._conversation_ctx', return_value=ctx), \
-         patch('routes.ai.get_active_tenant_id', return_value=1), \
-         patch('routes.ai.train_local_ai'), \
-         patch('routes.ai.assign_tenant_id'), \
+    with patch('routes.ai_routes._conversation_ctx', return_value=ctx), \
+         patch('routes.ai_routes.get_active_tenant_id', return_value=1), \
+         patch('routes.ai_routes.train_local_ai'), \
+         patch('routes.ai_routes.assign_tenant_id'), \
          patch('extensions.db.session'):
         yield
 
 
 def _run(message, user, ctx):
-    from routes.ai import _process_user_action
+    from routes.ai_routes import _process_user_action
     with _wizard_env(ctx):
         return _process_user_action(message, user)
 
@@ -808,10 +808,10 @@ class TestProcessUserActionMisc:
         assert _run('zzz random text here', mock_user, {}) is None
 
     def test_logging_failure_swallowed(self, mock_user):
-        from routes.ai import _process_user_action
-        with patch('routes.ai._conversation_ctx', side_effect=RuntimeError('boom')), \
-             patch('routes.ai.get_active_tenant_id', return_value=1), \
-             patch('routes.ai.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
+        from routes.ai_routes import _process_user_action
+        with patch('routes.ai_routes._conversation_ctx', side_effect=RuntimeError('boom')), \
+             patch('routes.ai_routes.get_active_tenant_id', return_value=1), \
+             patch('routes.ai_routes.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
             result = _process_user_action('x', mock_user)
         assert 'خطأ في التنفيذ' in result
 
@@ -825,7 +825,7 @@ class TestConfigUploadWave:
         env_dir.mkdir()
         fake_ai = env_dir / 'ai.py'
         fake_ai.write_text('#', encoding='utf-8')
-        with patch('routes.ai.__file__', str(fake_ai)):
+        with patch('routes.ai_routes.__file__', str(fake_ai)):
             resp = ai_client.post('/ai/config', data={'api_key': 'k', 'provider': 'groq'})
         assert resp.get_json()['success'] is True
         assert (tmp_path / '.env').exists()
@@ -835,7 +835,7 @@ class TestConfigUploadWave:
         env_dir.mkdir()
         fake_ai = env_dir / 'ai.py'
         fake_ai.write_text('#', encoding='utf-8')
-        with patch('routes.ai.__file__', str(fake_ai)), \
+        with patch('routes.ai_routes.__file__', str(fake_ai)), \
              patch('builtins.open', side_effect=OSError('io error')):
             resp = ai_client.post('/ai/config', data={'api_key': 'k', 'provider': 'groq'})
         assert resp.get_json()['success'] is False
@@ -845,7 +845,7 @@ class TestConfigUploadWave:
         data = {'file': (io.BytesIO(b'x'), 'items.xlsx')}
         with patch('models.Warehouse') as Warehouse:
             Warehouse.query.filter_by.return_value.first.side_effect = [None, warehouse]
-            with patch('routes.ai._process_excel_intelligently', return_value={'success': True}) as proc:
+            with patch('routes.ai_routes._process_excel_intelligently', return_value={'success': True}) as proc:
                 resp = ai_client.post('/ai/upload-excel', data=data, content_type='multipart/form-data')
         assert resp.status_code == 200
         proc.assert_called_once()
@@ -862,7 +862,7 @@ class TestConfigUploadWave:
         fake_req.endpoint = 'ai.upload_excel'
         fake_req.path = '/ai/upload-excel'
         fake_req.method = 'POST'
-        with patch('routes.ai.request', fake_req):
+        with patch('routes.ai_routes.request', fake_req):
             resp = ai_client.post('/ai/upload-excel', data={'file': (io.BytesIO(b'x'), 'big.xlsx')},
                                   content_type='multipart/form-data')
         assert resp.status_code == 413
@@ -872,14 +872,14 @@ class TestExcelHelpersWave:
     def _excel_env(self, df, mapping, warehouse, existing=None, new_product=None,
                    wh_import=None):
         stack = ExitStack()
-        stack.enter_context(patch('routes.ai.pd.read_excel', return_value=df))
-        stack.enter_context(patch('routes.ai._intelligent_column_detector', return_value=mapping))
+        stack.enter_context(patch('routes.ai_routes.pd.read_excel', return_value=df))
+        stack.enter_context(patch('routes.ai_routes._intelligent_column_detector', return_value=mapping))
         WH = stack.enter_context(patch('models.Warehouse'))
         P = stack.enter_context(patch('models.Product'))
-        stack.enter_context(patch('routes.ai.db'))
-        stack.enter_context(patch('routes.ai.assign_tenant_id'))
-        SS = stack.enter_context(patch('routes.ai.StockService'))
-        stack.enter_context(patch('routes.ai._train_ai_from_excel'))
+        stack.enter_context(patch('routes.ai_routes.db'))
+        stack.enter_context(patch('routes.ai_routes.assign_tenant_id'))
+        SS = stack.enter_context(patch('routes.ai_routes.StockService'))
+        stack.enter_context(patch('routes.ai_routes._train_ai_from_excel'))
         WH.query.filter_by.return_value.first.return_value = warehouse if wh_import is None else None
         if wh_import is not None:
             WH.query.filter_by.return_value.first.side_effect = [warehouse, wh_import]
@@ -889,7 +889,7 @@ class TestExcelHelpersWave:
         return stack, SS
 
     def test_create_with_quantity(self, mock_user):
-        from routes.ai import _process_excel_intelligently
+        from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [5]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
         stack, SS = self._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
@@ -899,7 +899,7 @@ class TestExcelHelpersWave:
         SS.add_opening_stock.assert_called()
 
     def test_update_with_quantity(self, mock_user):
-        from routes.ai import _process_excel_intelligently
+        from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [5]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
         stack, SS = self._excel_env(df, mapping, _obj(name='W'),
@@ -910,7 +910,7 @@ class TestExcelHelpersWave:
         SS.add_stock.assert_called()
 
     def test_quantity_nan(self, mock_user):
-        from routes.ai import _process_excel_intelligently
+        from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [np.nan]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
         stack, SS = self._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
@@ -919,7 +919,7 @@ class TestExcelHelpersWave:
         assert result['success'] is True
 
     def test_skip_nan_name(self, mock_user):
-        from routes.ai import _process_excel_intelligently
+        from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': [np.nan], 'part': ['P'], 'price': [10]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price'}
         stack, SS = self._excel_env(df, mapping, _obj(name='W'))
@@ -928,7 +928,7 @@ class TestExcelHelpersWave:
         assert result['details']['created'] == 0
 
     def test_row_error_collected(self, mock_user):
-        from routes.ai import _process_excel_intelligently
+        from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': ['not-a-number']})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price'}
         stack, SS = self._excel_env(df, mapping, _obj(name='W'))
@@ -938,16 +938,16 @@ class TestExcelHelpersWave:
         assert 'تفاصيل الأخطاء' in result['message']
 
     def test_detector_quantity_position_fallback(self):
-        from routes.ai import _intelligent_column_detector
+        from routes.ai_routes import _intelligent_column_detector
         df = pd.DataFrame({'col0': ['a'], 'col1': ['b'], 'col2': [1], 'col3': [2]})
         mapping = _intelligent_column_detector(df)
         assert mapping['quantity'] == 'col3'
 
     def test_train_ai_from_excel_success(self):
-        from routes.ai import _train_ai_from_excel
+        from routes.ai_routes import _train_ai_from_excel
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10]})
         _train_ai_from_excel(df, 1, 0, 42)
 
     def test_train_ai_from_excel_handles_error(self):
-        from routes.ai import _train_ai_from_excel
+        from routes.ai_routes import _train_ai_from_excel
         _train_ai_from_excel(None, 1, 0, 42)

@@ -52,9 +52,18 @@ class TestPostOrFail:
 
     def test_currency_from_tenant(self, db_session, sample_tenant, mocker):
         mocker.patch('services.gl_posting.assert_period_open')
+        mock_entry = MagicMock(id=1)
         mocker.patch(
-            'services.gl_posting.GLService.post_entry',
-            return_value=MagicMock(id=1),
+            'services.gl_posting.GLService.create_journal_entry',
+            return_value=mock_entry,
+        )
+        mocker.patch(
+            'services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry',
+            return_value=MagicMock(status='validated'),
+        )
+        mocker.patch(
+            'services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry',
+            return_value=mock_entry,
         )
         lines = [
             {'account_code': '1000', 'debit': Decimal('10'), 'credit': Decimal('0')},
@@ -70,21 +79,30 @@ class TestPostOrFail:
         mocker.patch('services.gl_posting.db.session.get', side_effect=AttributeError('no tenant'))
         mocker.patch('services.gl_posting.get_system_default_currency', return_value='AED')
         mocker.patch('services.gl_posting.assert_period_open')
-        post_entry = mocker.patch(
-            'services.gl_posting.GLService.post_entry',
-            return_value=MagicMock(id=2),
+        mock_entry = MagicMock(id=2)
+        create = mocker.patch(
+            'services.gl_posting.GLService.create_journal_entry',
+            return_value=mock_entry,
+        )
+        mocker.patch(
+            'services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry',
+            return_value=MagicMock(status='validated'),
+        )
+        mocker.patch(
+            'services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry',
+            return_value=mock_entry,
         )
         lines = [
             {'account_code': '1000', 'debit': Decimal('5'), 'credit': Decimal('0')},
             {'account_code': '4000', 'debit': Decimal('0'), 'credit': Decimal('5')},
         ]
         post_or_fail(lines, description='Fallback currency', tenant_id=1)
-        assert post_entry.call_args.kwargs['currency'] == 'AED'
+        assert create.call_args.kwargs['currency'] == 'AED'
 
     def test_wraps_gl_service_errors(self, mocker):
         mocker.patch('services.gl_posting.assert_period_open')
         mocker.patch(
-            'services.gl_posting.GLService.post_entry',
+            'services.gl_posting.GLService.create_journal_entry',
             side_effect=ValueError('period closed'),
         )
         lines = [

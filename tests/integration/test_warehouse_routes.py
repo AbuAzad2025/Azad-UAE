@@ -250,6 +250,7 @@ class TestWarehouseCreate:
             resp = client.post('/warehouse/create', data={
                 'name': f'Storage {tid}',
                 'location': 'Dubai',
+                'branch_id': branch.id,
             }, follow_redirects=False)
             assert resp.status_code in (302, 303)
 
