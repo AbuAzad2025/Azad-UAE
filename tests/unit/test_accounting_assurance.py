@@ -61,9 +61,9 @@ class TestGLDoubleEntryBalance:
         from services.gl_posting import post_or_fail
         mock_entry = MagicMock(id=42)
         mocker.patch('services.gl_posting.GLService.create_journal_entry', return_value=MagicMock(id=1))
-        mocker.patch('services.gl_posting.AdvancedJournalEntryManager.validate_entry',
+        mocker.patch('services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry',
                       return_value=MagicMock(status='validated'))
-        mocker.patch('services.gl_posting.AdvancedJournalEntryManager.post_entry',
+        mocker.patch('services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry',
                       return_value=mock_entry)
         balanced = [
             {'debit': Decimal('250'), 'credit': Decimal('0')},

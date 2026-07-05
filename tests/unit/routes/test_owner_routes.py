@@ -1478,7 +1478,7 @@ class TestOwnerExtendedCoverage:
         backup_file = tmp_path / "backup.sql.gz"
         backup_file.write_bytes(b"data")
         with patch("services.backup_service.BackupService.BACKUP_DIR", str(tmp_path)), \
-             patch("routes.owner.os.path.exists", return_value=True), \
+             patch("os.path.exists", return_value=True), \
              patch("flask.send_file", return_value=make_response("file", 200)):
             resp = owner_client.get("/owner/backups/download/backup.sql.gz")
         assert resp.status_code == 200
@@ -1487,8 +1487,8 @@ class TestOwnerExtendedCoverage:
         with patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=MagicMock(returncode=0, stderr="", stdout="")), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
             resp = owner_client.post(
                 "/owner/export-database",
                 data={"format": "sql"},
@@ -2117,10 +2117,10 @@ class TestOwnerGapClosure:
         with patch("services.backup_service.BackupService.user_may_access_backup", return_value=False):
             resp = owner_client.get("/owner/backups/download/x.sql.gz", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.os.path.exists", return_value=False):
+        with patch("os.path.exists", return_value=False):
             resp2 = owner_client.get("/owner/backups/download/backup.sql.gz", follow_redirects=False)
         assert resp2.status_code in (302, 303)
-        with patch("routes.owner.os.path.exists", return_value=True), \
+        with patch("os.path.exists", return_value=True), \
              patch("flask.send_file", side_effect=RuntimeError("send fail")):
             resp3 = owner_client.get("/owner/backups/download/backup.sql.gz", follow_redirects=False)
         assert resp3.status_code in (302, 303)
@@ -2182,8 +2182,8 @@ class TestOwnerGapClosure:
     def test_export_database_json_and_failure(self, owner_client, tmp_path):
         exec_result = _execute_result(rows=[(1, "a")], columns=["id", "name"])
         with patch("routes.owner.db") as mock_db, \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
              patch("builtins.open", create=True) as mock_open:
             mock_db.session.execute.return_value = exec_result
             mock_open.return_value.__enter__.return_value = MagicMock()
@@ -2270,8 +2270,8 @@ class TestOwnerGapClosure:
         }
         with patch("routes.owner.InvoiceSettings", settings_cls), \
              patch("models.invoice_settings.InvoiceSettings", settings_cls), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
             resp = owner_client.post(
                 "/owner/invoice-settings",
                 data=data,
@@ -2623,8 +2623,8 @@ class TestOwnerGapClosure:
         with patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
             resp = owner_client.post(
                 "/owner/export-database",
                 data={"format": "sql"},
@@ -2880,8 +2880,8 @@ class TestOwnerDirectCalls:
         with _owner_route_patches(), \
              patch("routes.owner.InvoiceSettings", inv_cls), \
              patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
             with app.test_request_context(
                 "/owner/invoice-settings",
                 method="POST",
@@ -3002,8 +3002,8 @@ class TestOwnerFinalGaps:
         exec_result = _execute_result(rows=[(1, "n")], columns=["id", "name"])
         with _owner_route_patches(), \
              patch("routes.owner.db") as mock_db, \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
              patch("builtins.open", create=True) as mock_open:
             mock_db.session.execute.return_value = exec_result
             mock_open.return_value.__enter__.return_value = MagicMock()
@@ -3178,8 +3178,8 @@ class TestOwnerFinalGaps:
         with _owner_route_patches(), \
              patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
              patch("routes.owner.db") as mock_db, \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", return_value=export_file):
+             patch("os.makedirs"), \
+             patch("os.path.join", return_value=export_file):
             mock_db.session.execute.return_value = exec_result
             with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
                 export_database()
@@ -3231,8 +3231,8 @@ class TestOwnerLastMile:
              patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", return_value=export_file):
+             patch("os.makedirs"), \
+             patch("os.path.join", return_value=export_file):
             with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
                 export_database()
 
@@ -3401,8 +3401,8 @@ class TestOwnerLastMile:
         with _owner_route_patches(), \
              patch("routes.owner.InvoiceSettings", inv_cls), \
              patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+             patch("os.makedirs"), \
+             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
             with app.test_request_context(
                 "/owner/invoice-settings",
                 method="POST",
@@ -3428,13 +3428,13 @@ class TestOwnerLastMile:
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=proc), \
              patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner.os.makedirs"), \
+             patch("os.makedirs"), \
              patch("routes.owner.db") as mock_db:
             mock_db.session.execute.return_value = exec_result
-            with patch("routes.owner.os.path.join", return_value=export_sql):
+            with patch("os.path.join", return_value=export_sql):
                 with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
                     export_database()
-            with patch("routes.owner.os.path.join", return_value=export_json):
+            with patch("os.path.join", return_value=export_json):
                 with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
                     export_database()
 
@@ -3545,8 +3545,8 @@ class TestOwnerHundredPercent:
              patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", return_value=export_file):
+             patch("os.makedirs"), \
+             patch("os.path.join", return_value=export_file):
             with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
                 export_database()
 
@@ -3560,8 +3560,8 @@ class TestOwnerHundredPercent:
              patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "secret", "dbname": "d"}), \
              patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
              patch("services.backup_exec.run_pg_tool", return_value=proc) as run_tool, \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", return_value=export_file):
+             patch("os.makedirs"), \
+             patch("os.path.join", return_value=export_file):
             with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
                 export_database()
         assert run_tool.called
@@ -3576,8 +3576,8 @@ class TestOwnerHundredPercent:
         with _owner_route_patches(), \
              patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
              patch("routes.owner.db") as mock_db, \
-             patch("routes.owner.os.makedirs"), \
-             patch("routes.owner.os.path.join", return_value=export_file):
+             patch("os.makedirs"), \
+             patch("os.path.join", return_value=export_file):
             mock_db.session.execute.return_value = exec_result
             with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
                 export_database()

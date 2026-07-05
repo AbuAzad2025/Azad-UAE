@@ -45,6 +45,7 @@ from utils.sanitizer import InputSanitizer
 from .shared import _known_tables_map  # noqa: E402 — used by test_owner_routes patches
 
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 

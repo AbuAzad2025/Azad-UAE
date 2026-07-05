@@ -401,10 +401,12 @@ class TestCreateLeadMockedRollback:
         mocker.patch("services.crm_lead_service.is_global_owner_user", return_value=False)
         mocker.patch("services.crm_lead_service.is_global_user", return_value=True)
         mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=None)
-        mock_db.commit.side_effect = RuntimeError("db fail")
+        mock_db.session = MagicMock()
+        mock_db.session.commit.side_effect = RuntimeError("db fail")
+        mocker.patch("services.crm_lead_service.db", mock_db)
         with pytest.raises(RuntimeError, match="db fail"):
             CRMLeadService.create_lead({"name": "Fail"}, mock_user)
-        mock_db.rollback.assert_called()
+        mock_db.session.rollback.assert_called()
 
 
 class TestSearchFilters:
