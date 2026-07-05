@@ -104,7 +104,7 @@ def app_factory():
 
         from routes.main import main_bp
         app.register_blueprint(blueprint)
-        if blueprint is not main_bp:
+        if 'main' not in app.blueprints:
             app.register_blueprint(main_bp)
         return app
     return _create_app
