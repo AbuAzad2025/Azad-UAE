@@ -4,6 +4,8 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from extensions import db
