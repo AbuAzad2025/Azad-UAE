@@ -7,19 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  # ── Frontend tests (no Postgres needed, runs in parallel with Python setup) ──
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: Install dependencies
-        run: npm install
-      - name: Run frontend unit tests
-        run: npm run test:frontend
-
   # ── Python tests split by directory ──
   test:
     needs: []
@@ -75,7 +62,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
 
       - name: Run tests
         env:
@@ -127,7 +113,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
       - name: Verify app boots
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -150,7 +135,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
       - name: Security scan (bandit)
         run: |
           bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true

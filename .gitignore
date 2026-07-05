@@ -107,7 +107,7 @@ package.json
 /check_*.py
 /*.txt
 
-# Organized test/script directories are tracked (see tests/README.md and scripts/README.md)
+
 
 # Neural models (can be large)
 ai_knowledge/models/*.pkl
@@ -148,7 +148,6 @@ ai_knowledge/data/training/*.json
 
 
 # Dev-only scripts & outputs
-scripts/audit/*.txt
 scripts/backup/*.json
 
 # Large generated index files
@@ -160,7 +159,4 @@ security-reports/
 *.patch
 *-status.txt
 
-# Temporary maintenance outputs
-scripts/maintenance/screenshots/
-scripts/maintenance/*.txt
 backup/
