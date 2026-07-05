@@ -57,15 +57,19 @@ class TestGLDoubleEntryBalance:
         with pytest.raises(UnbalancedJournalEntryError, match='غير متوازن'):
             post_or_fail(unbalanced, description='Test', tenant_id=1)
 
-    def test_post_or_fail_passes_balanced_with_app_context(self, app, mocker):
+    def test_post_or_fail_passes_balanced_with_app_context(self, app, mocker, sample_tenant):
         from services.gl_posting import post_or_fail
         mock_entry = MagicMock(id=42)
-        mocker.patch('services.gl_posting.GLService.post_entry', return_value=mock_entry)
+        mocker.patch('services.gl_posting.GLService.create_journal_entry', return_value=MagicMock(id=1))
+        mocker.patch('services.gl_posting.AdvancedJournalEntryManager.validate_entry',
+                      return_value=MagicMock(status='validated'))
+        mocker.patch('services.gl_posting.AdvancedJournalEntryManager.post_entry',
+                      return_value=mock_entry)
         balanced = [
             {'debit': Decimal('250'), 'credit': Decimal('0')},
             {'debit': Decimal('0'), 'credit': Decimal('250')},
         ]
-        result = post_or_fail(balanced, description='Test balanced', tenant_id=1)
+        result = post_or_fail(balanced, description='Test balanced', tenant_id=sample_tenant.id)
         assert result.id == 42
 
 
