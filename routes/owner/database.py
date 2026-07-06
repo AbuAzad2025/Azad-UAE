@@ -6,7 +6,7 @@ from routes.owner import (
     render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
     login_required, current_user, func, desc, text, inspect, db, limiter,
     AuditLog, ArchivedRecord, CardVault,
-    owner_required, safe_redirect_target,
+    owner_required, safe_redirect_target, get_active_tenant_id,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
@@ -16,6 +16,7 @@ from routes.owner.shared import (
     _resolve_browsable_table, _resolve_truncatable_table,
     _resolve_known_table, _known_tables_map, _is_sensitive_stats_table,
     _inspector_column_names, _validate_postgresql_uri,
+    _owner_branch_scope,
 )
 
 import logging
