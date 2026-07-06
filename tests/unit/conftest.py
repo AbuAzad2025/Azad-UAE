@@ -310,6 +310,7 @@ def mock_db_connection(mocker):
         if rows is not None:
             result = mocker.MagicMock()
             result.__iter__.return_value = iter(rows)
+            result.fetchall.return_value = rows
             if keys is not None:
                 result.keys.return_value = keys
             conn.execute.return_value = result
