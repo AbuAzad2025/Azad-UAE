@@ -84,10 +84,9 @@ class TestShopLangAndOffline:
             resp = shop_client.get(f"{BASE}/lang/ar", headers={"Referer": f"{BASE}/"})
         assert resp.status_code in (302, 303)
 
-    def test_offline_page_renders(self, shop_client):
-        with patch("routes.shop.StoreService.get_store_by_slug") as get_store:
-            get_store.return_value.is_enabled = True
-            resp = shop_client.get(f"{BASE}/offline")
+    def test_offline_page_renders(self, shop_client, mock_store):
+        mock_store.is_enabled = True
+        resp = shop_client.get(f"{BASE}/offline")
         assert resp.status_code == 200
 
 

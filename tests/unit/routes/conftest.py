@@ -451,6 +451,9 @@ def bypass_shop_auth(mock_store):
         patch("extensions.limiter.limit", return_value=lambda f: f),
         patch("routes.shop.shop_lang", return_value="ar"),
         patch("routes.shop.t", side_effect=lambda k, lang=None: k),
+        patch("routes.shop.db.session.get", return_value=tenant),
+        patch("routes.shop.db.session.add"),
+        patch("routes.shop.db.session.commit"),
     ]
     for p in patches:
         p.start()
