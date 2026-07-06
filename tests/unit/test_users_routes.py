@@ -63,7 +63,18 @@ def users_manager(db_session, sample_tenant, sample_branch, manage_users_permiss
 
 
 @pytest.fixture
-def users_client(client, users_manager, sample_tenant):
+def sample_seller_role(db_session):
+    from models import Role
+    role = Role.query.filter_by(slug='seller').first()
+    if not role:
+        role = Role(name='Seller', slug='seller', is_active=True)
+        db_session.add(role)
+        db_session.flush()
+    return role
+
+
+@pytest.fixture
+def users_client(client, users_manager, sample_tenant, sample_seller_role):
     """Authenticated client without slow HTTP login (saves ~3s per test)."""
     with client.session_transaction() as sess:
         sess['_user_id'] = str(users_manager.id)

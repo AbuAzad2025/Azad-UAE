@@ -298,8 +298,8 @@ class TestTenantIsolationHardening:
         dev_role = Role.query.filter_by(slug="developer").first()
         if not dev_role:
             dev_role = Role(
-                name="Developer Test",
-                slug="developer-test",
+                name="Developer",
+                slug="developer",
                 is_active=True,
             )
             db_session.add(dev_role)
