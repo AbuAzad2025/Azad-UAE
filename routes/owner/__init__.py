@@ -47,7 +47,8 @@ from .shared import (
     _mask_api_key, _mask_db_uri, _resolve_known_table,
     _resolve_truncatable_table, _resolve_browsable_table,
     _validate_select_only_sql, _is_sensitive_stats_table,
-    _inspector_column_names,
+    _inspector_column_names, _owner_branch_scope,
+    _invalidate_owner_changes, _audit_owner_db_action,
 )  # noqa: E402 — used by test_owner_routes patches
 
 import logging

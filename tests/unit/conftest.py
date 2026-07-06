@@ -85,13 +85,22 @@ def app_factory():
     def _create_app(blueprint, config_overrides=None):
         import sys
         import os
-        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
-        app = Flask(__name__)
+        app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
         app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
+        from flask_login import current_user
+        app.jinja_env.globals['current_user'] = current_user
+        from utils.i18n import t
+        app.jinja_env.globals['t'] = t
+        app.jinja_env.globals['csrf_token'] = lambda: ''
         app.register_blueprint(blueprint)
+        from routes.main import main_bp
+        if 'main' not in app.blueprints:
+            app.register_blueprint(main_bp)
         return app
     return _create_app
 
@@ -289,6 +298,11 @@ def model_patch(mocker):
     def _patch(model_path: str, count: int = 0):
         return mocker.patch(model_path)
     return _patch
+
+
+@pytest.fixture
+def mock_db_query():
+    return MagicMock()
 
 
 @pytest.fixture

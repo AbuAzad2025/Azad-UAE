@@ -947,6 +947,7 @@ class TestAdditionalStockCoverage:
             tenant_id=sample_tenant.id,
             warehouse_id=sample_warehouse.id,
             sale_number='S-LOCK',
+            id=999,
             lines=[line],
         )
         with enable_mwac.app_context():
