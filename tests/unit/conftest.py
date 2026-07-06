@@ -318,6 +318,18 @@ def mock_db_connection(mocker):
     return _make
 
 
+@pytest.fixture(autouse=True)
+def mock_db(mocker, request):
+    """Mock db.session.add/flush/delete/commit/rollback for tests with `mock_db` param."""
+    if 'mock_db' not in request.fixturenames:
+        return
+    mocker.patch('services.crm_lead_service.db.session.add')
+    mocker.patch('services.crm_lead_service.db.session.flush')
+    mocker.patch('services.crm_lead_service.db.session.delete')
+    mocker.patch('services.crm_lead_service.db.session.commit')
+    mocker.patch('services.crm_lead_service.db.session.rollback')
+
+
 @pytest.fixture
 def mock_ai_service(mocker):
     """

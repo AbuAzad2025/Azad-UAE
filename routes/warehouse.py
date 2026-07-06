@@ -225,6 +225,68 @@ def view_warehouse(id):
                          stock=warehouse_stock)
 
 
+@warehouse_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_warehouse(id):
+    warehouse = tenant_get_or_404(Warehouse, id)
+    tid = get_active_tenant_id(current_user)
+    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
+    if tid is not None:
+        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
+    parent_warehouses = parent_warehouses.all()
+    from models import User
+    users = scoped_user_query(active_only=True, exclude_owners=True).all()
+    branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
+
+    if request.method == 'POST':
+        try:
+            warehouse.name = request.form.get('name', '').strip()
+            warehouse.name_ar = request.form.get('name_ar', '').strip()
+            warehouse.code = request.form.get('code', '').strip()
+            warehouse.location = request.form.get('location', '').strip()
+            warehouse.parent_id = request.form.get('parent_id', type=int) or None
+            warehouse.manager_id = request.form.get('manager_id', type=int) or None
+            warehouse.branch_id = request.form.get('branch_id', type=int) or None
+            warehouse.is_main = request.form.get('is_main') == 'on'
+            warehouse.allow_negative_inventory = request.form.get('allow_negative_inventory') == 'on'
+
+            if not warehouse.name:
+                flash('اسم المستودع مطلوب', 'warning')
+                return render_template('warehouse/edit_warehouse.html',
+                                       warehouse=warehouse,
+                                       parent_warehouses=parent_warehouses,
+                                       users=users,
+                                       branches=branches)
+            if not warehouse.location:
+                flash('الموقع مطلوب', 'warning')
+                return render_template('warehouse/edit_warehouse.html',
+                                       warehouse=warehouse,
+                                       parent_warehouses=parent_warehouses,
+                                       users=users,
+                                       branches=branches)
+
+            db.session.flush()
+            log_mutation('Warehouse', warehouse.id, action='update')
+            flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', 'success')
+            return redirect(url_for('warehouse.list_warehouses'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error editing warehouse {id}: {e}")
+            flash(ErrorMessages.update_failed('warehouse'), 'error')
+            return render_template('warehouse/edit_warehouse.html',
+                                   warehouse=warehouse,
+                                   parent_warehouses=parent_warehouses,
+                                   users=users,
+                                   branches=branches)
+
+    return render_template('warehouse/edit_warehouse.html',
+                           warehouse=warehouse,
+                           parent_warehouses=parent_warehouses,
+                           users=users,
+                           branches=branches)
+
+
 @warehouse_bp.route('/create', methods=['GET', 'POST'])
 @warehouse_bp.route('/create-warehouse', methods=['GET', 'POST'])
 @login_required

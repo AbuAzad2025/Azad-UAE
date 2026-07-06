@@ -20,6 +20,14 @@ def _balanced_lines(amount=Decimal('100')):
     ]
 
 
+def _post_entry(entry_id, *, user_id=1):
+    """Validate and post a draft journal entry so read methods can find it."""
+    from services.advanced_journal_manager import AdvancedJournalEntryManager
+    AdvancedJournalEntryManager.validate_entry(entry_id=entry_id, validated_by=user_id, commit=False)
+    AdvancedJournalEntryManager.post_entry(entry_id=entry_id, posted_by=user_id, commit=False)
+    db.session.flush()
+
+
 class TestPostingHelpers:
     def test_posting_line_with_key(self):
         line = GLService.posting_line('cash', debit=50, description='test')
@@ -180,7 +188,7 @@ class TestVatReport:
     def test_vat_report_with_postings(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
         mocker.patch('utils.tax_settings.is_tax_enabled', return_value=True)
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             'VAT out',
             [
@@ -189,6 +197,7 @@ class TestVatReport:
             ],
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         result = GLService.get_vat_report(tenant_id=sample_tenant.id)
         assert result['vat_output'] >= 0.0
 
@@ -273,12 +282,13 @@ class TestBalancesAndStatements:
     def test_account_balance_for_branch(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
         cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code='1111').first()
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             'Balance test',
             _balanced_lines(Decimal('200')),
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         balance = GLService.get_account_balance_for_branch(cash.id)
         assert balance is not None
 
@@ -289,12 +299,13 @@ class TestBalancesAndStatements:
     def test_account_statement(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
         cash = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code='1111').first()
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 10, tzinfo=timezone.utc),
             'Statement',
             _balanced_lines(Decimal('150')),
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         stmt = GLService.get_account_statement(
             cash.id,
             date_from=date(2026, 6, 1),
@@ -305,12 +316,13 @@ class TestBalancesAndStatements:
 
     def test_general_ledger(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 5, tzinfo=timezone.utc),
             'GL',
             _balanced_lines(),
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         ledger = GLService.get_general_ledger(
             date_from=date(2026, 6, 1),
             date_to=date(2026, 6, 30),
@@ -330,12 +342,13 @@ class TestBalancesAndStatements:
             {'account': '1131', 'debit': Decimal('50'), 'credit': Decimal('0'), 'partner_id': partner.id},
             {'account': '4101', 'debit': Decimal('0'), 'credit': Decimal('50')},
         ]
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 8, tzinfo=timezone.utc),
             'Partner',
             lines,
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         result = GLService.get_partner_ledger(partner.id, tenant_id=sample_tenant.id)
         assert result['partner_id'] == partner.id
         assert len(result['transactions']) >= 1
@@ -344,12 +357,13 @@ class TestBalancesAndStatements:
 class TestTrialBalanceAndTree:
     def test_trial_balance(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             'TB',
             _balanced_lines(Decimal('300')),
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         tb = GLService.get_trial_balance(tenant_id=sample_tenant.id)
         assert tb['total_debit'] == tb['total_credit']
 
@@ -450,7 +464,7 @@ class TestVatAndTrialFilters:
     def test_vat_report_with_branch_filter(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
         mocker.patch('utils.tax_settings.is_tax_enabled', return_value=True)
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 2, tzinfo=timezone.utc),
             'Branch VAT',
             [
@@ -460,17 +474,19 @@ class TestVatAndTrialFilters:
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         result = GLService.get_vat_report(tenant_id=sample_tenant.id, branch_id=sample_branch.id)
         assert 'vat_output' in result
 
     def test_trial_balance_with_date_range(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch('services.gl_helpers.assert_period_open')
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 5, 1, tzinfo=timezone.utc),
             'Dated TB',
             _balanced_lines(Decimal('40')),
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         tb = GLService.get_trial_balance(
             date_from=date(2026, 5, 1),
             date_to=date(2026, 5, 31),
@@ -847,7 +863,7 @@ class TestGlServiceCoverageGaps:
     ):
         mocker.patch('services.gl_helpers.assert_period_open')
         mocker.patch('utils.tax_settings.is_tax_enabled', return_value=True)
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 3, tzinfo=timezone.utc),
             'VAT dated',
             [
@@ -856,6 +872,7 @@ class TestGlServiceCoverageGaps:
             ],
             tenant_id=sample_tenant.id,
         )
+        _post_entry(entry.id)
         result = GLService.get_vat_report(
             tenant_id=sample_tenant.id,
             date_from=date(2026, 6, 1),
@@ -935,7 +952,7 @@ class TestGlServiceCoverageGaps:
     ):
         mocker.patch('services.gl_helpers.assert_period_open')
         payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code='2111').first()
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 4, tzinfo=timezone.utc),
             'Payable',
             [
@@ -945,6 +962,7 @@ class TestGlServiceCoverageGaps:
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         balance = GLService.get_account_balance_for_branch(payable.id, branch_id=sample_branch.id)
         assert balance is not None
         assert balance != 0
@@ -954,7 +972,7 @@ class TestGlServiceCoverageGaps:
     ):
         mocker.patch('services.gl_helpers.assert_period_open')
         payable = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code='2111').first()
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 6, tzinfo=timezone.utc),
             'Stmt payable',
             [
@@ -964,6 +982,7 @@ class TestGlServiceCoverageGaps:
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         stmt = GLService.get_account_statement(
             payable.id,
             date_from=date(2026, 6, 1),
@@ -977,13 +996,14 @@ class TestGlServiceCoverageGaps:
         self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker,
     ):
         mocker.patch('services.gl_helpers.assert_period_open')
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 7, tzinfo=timezone.utc),
             'GL branch',
             _balanced_lines(Decimal('45')),
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         ledger = GLService.get_general_ledger(
             branch_id=sample_branch.id,
             tenant_id=sample_tenant.id,
@@ -999,7 +1019,7 @@ class TestGlServiceCoverageGaps:
         partner = Partner(tenant_id=sample_tenant.id, name='Filter Partner', code='FP1')
         db_session.add(partner)
         db_session.flush()
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 9, tzinfo=timezone.utc),
             'Partner filt',
             [
@@ -1009,6 +1029,7 @@ class TestGlServiceCoverageGaps:
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         result = GLService.get_partner_ledger(
             partner.id,
             date_from=date(2026, 6, 1),
@@ -1022,13 +1043,14 @@ class TestGlServiceCoverageGaps:
         self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker,
     ):
         mocker.patch('services.gl_helpers.assert_period_open')
-        GLService.create_journal_entry(
+        entry = GLService.create_journal_entry(
             datetime(2026, 6, 11, tzinfo=timezone.utc),
             'TB branch',
             _balanced_lines(Decimal('55')),
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
         )
+        _post_entry(entry.id)
         tb = GLService.get_trial_balance(branch_id=sample_branch.id, tenant_id=sample_tenant.id)
         assert tb['total_debit'] >= 0
 
