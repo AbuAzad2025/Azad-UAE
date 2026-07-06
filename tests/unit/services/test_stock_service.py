@@ -74,7 +74,7 @@ class TestCreateMovement:
         assert movement.quantity == Decimal('5')
         db_session.flush()
         db_session.refresh(sample_product)
-        assert sample_product.current_stock == Decimal('105')
+        assert sample_product.current_stock == Decimal('5')
 
     def test_remove_stock_decreases_quantity(self, db_session, sample_product, sample_warehouse):
         StockService.add_stock(sample_product.id, Decimal('10'), warehouse_id=sample_warehouse.id)
@@ -941,10 +941,7 @@ class TestAdditionalStockCoverage:
         )
         db_session.add(pwc)
         db_session.flush()
-        query = MagicMock()
-        query.with_for_update.side_effect = RuntimeError('no lock')
-        query.first.return_value = pwc
-        mocker.patch.object(ProductWarehouseCost.query, 'filter_by', return_value=query)
+        mocker.patch('services.stock_service._safe_for_update', return_value=pwc)
         line = SimpleNamespace(product_id=sample_product.id, quantity=Decimal('1'), cost_price=Decimal('50'))
         sale = SimpleNamespace(
             tenant_id=sample_tenant.id,

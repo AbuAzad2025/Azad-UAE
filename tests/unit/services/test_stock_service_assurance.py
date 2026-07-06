@@ -114,15 +114,12 @@ def _patch_session(mocker, *, get_map=None):
     session.rollback = MagicMock()
     session.flush = MagicMock()
     session.add = MagicMock()
+    session.query.return_value.filter.return_value.scalar.return_value = 0
 
-    def _get(model, pk):
-        if get_map is None:
-            return None
-        return get_map.get((getattr(model, '__name__', str(model)), pk))
-
-    session.get.side_effect = lambda model, pk: _get(model, pk) if get_map else get_map
     if get_map is not None:
-        session.get.side_effect = lambda model, pk: get_map.get(pk)
+        def _get(model, pk):
+            return get_map.get(pk)
+        session.get.side_effect = _get
     return session
 
 
@@ -382,7 +379,7 @@ class TestCreateMovement:
     def test_auto_creates_warehouse_when_missing(self, mocker, app):
         product = _product(tenant_id=1)
         new_wh = _warehouse(id=88)
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         wh_q = MagicMock()
         wh_q.filter_by.return_value.first.side_effect = [None, None]
@@ -405,7 +402,7 @@ class TestCreateMovement:
         product = _product(current_stock=Decimal('100'))
         warehouse = _warehouse()
         pws = _pws(quantity=Decimal('50'))
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=pws)
@@ -422,7 +419,7 @@ class TestCreateMovement:
     def test_creates_pws_when_missing(self, mocker, app):
         product = _product(current_stock=Decimal('0'))
         warehouse = _warehouse()
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         pws_q = _patch_pws_query(mocker, pws=None)
@@ -442,7 +439,7 @@ class TestCreateMovement:
         product = _product(current_stock=Decimal('5'))
         warehouse = _warehouse(allow_negative_inventory=False)
         pws = _pws(quantity=Decimal('2'))
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=pws)
@@ -456,7 +453,7 @@ class TestCreateMovement:
     def test_insufficient_new_pws_raises(self, mocker, app):
         product = _product(current_stock=Decimal('0'))
         warehouse = _warehouse()
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=None)
@@ -471,8 +468,9 @@ class TestCreateMovement:
         product = _product(current_stock=Decimal('1'))
         warehouse = _warehouse()
         pws = _pws(quantity=Decimal('10'))
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
+        session.query.return_value.filter.return_value.scalar.return_value = -1
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=pws)
         mocker.patch('services.stock_service.StockMovement', return_value=MagicMock())
@@ -487,7 +485,7 @@ class TestCreateMovement:
         warehouse = _warehouse()
         broken_user = MagicMock(is_authenticated=True)
         type(broken_user).id = PropertyMock(side_effect=RuntimeError('no user'))
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=_pws())
@@ -505,7 +503,7 @@ class TestCreateMovement:
     def test_logging_exception_swallowed(self, mocker, app):
         product = _product()
         warehouse = _warehouse()
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=_pws())
@@ -522,7 +520,7 @@ class TestCreateMovement:
         product = _product()
         warehouse = _warehouse()
         pws = _pws()
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=pws, lock_error=True)
@@ -531,12 +529,13 @@ class TestCreateMovement:
         from services.stock_service import StockService
 
         with app.app_context():
-            StockService.create_movement(1, Decimal('1'), 'purchase', warehouse_id=5)
+            with pytest.raises(RuntimeError, match='no lock'):
+                StockService.create_movement(1, Decimal('1'), 'purchase', warehouse_id=5)
 
     def test_warehouse_tenant_backfill(self, mocker, app):
         product = _product(tenant_id=1)
         warehouse = _warehouse(tenant_id=None)
-        session = mocker.patch('services.stock_service.db.session')
+        session = _patch_session(mocker)
         session.get.return_value = product
         _patch_warehouse_query(mocker, warehouse=warehouse)
         _patch_pws_query(mocker, pws=_pws())
@@ -820,10 +819,7 @@ class TestCalculateSaleCogs:
 
     def test_lock_fallback(self, mocker, app):
         pwc = _pwc(total_quantity=Decimal('50'), total_value=Decimal('2500'), average_cost=Decimal('50'))
-        pwc_q = MagicMock()
-        pwc_q.filter_by.return_value.with_for_update.side_effect = RuntimeError('lock')
-        pwc_q.filter_by.return_value.first.return_value = pwc
-        mocker.patch('services.stock_service.ProductWarehouseCost.query', pwc_q)
+        mocker.patch('services.stock_service._safe_for_update', return_value=pwc)
         mocker.patch('services.stock_service.ProductCostHistory')
         mocker.patch('services.stock_service.db.session').get.return_value = _warehouse()
         from services.stock_service import StockService
@@ -996,11 +992,12 @@ class TestUpdateWacOnReceipt:
         mocker.patch('services.stock_service.db.session')
         from services.stock_service import StockService
 
-        StockService._update_wac_on_receipt(
-            tenant_id=1, product_id=1, warehouse_id=5,
-            received_qty=Decimal('1'), unit_cost_aed=Decimal('10'),
-            reference_type=GLRef.PURCHASE, reference_id=1,
-        )
+        with pytest.raises(RuntimeError, match='lock'):
+            StockService._update_wac_on_receipt(
+                tenant_id=1, product_id=1, warehouse_id=5,
+                received_qty=Decimal('1'), unit_cost_aed=Decimal('10'),
+                reference_type=GLRef.PURCHASE, reference_id=1,
+            )
 
 
 class TestPostRetrospectiveCostAdjustment:
@@ -1149,7 +1146,8 @@ class TestReverseSale:
 
         with app.app_context():
             app.config['ENABLE_MWAC'] = True
-            StockService.reverse_sale(_sale())
+            with pytest.raises(RuntimeError, match='lock'):
+                StockService.reverse_sale(_sale())
 
 
 class TestReversePurchase:
@@ -1217,7 +1215,8 @@ class TestReversePurchase:
 
         with app.app_context():
             app.config['ENABLE_MWAC'] = True
-            StockService.reverse_purchase(_purchase())
+            with pytest.raises(RuntimeError, match='lock'):
+                StockService.reverse_purchase(_purchase())
 
     def test_without_cost_history_uses_pwc_avg(self, mocker, app):
         mocker.patch('services.stock_service.StockService.remove_stock')

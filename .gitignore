@@ -160,3 +160,6 @@ security-reports/
 *-status.txt
 
 backup/
+
+# Cluster
+.cluster/
