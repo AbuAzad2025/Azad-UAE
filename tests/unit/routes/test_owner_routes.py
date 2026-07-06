@@ -3633,9 +3633,9 @@ class TestOwnerHundredPercent:
         tenant = _mock_tenant(id=3)
         app = app_factory(owner_bp)
         with _owner_route_patches(), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner.set_tenant_ai_level", return_value="advanced") as set_level, \
-             patch("routes.owner.LoggingCore.log_audit") as log_audit:
+             patch("routes.owner.tenants.db") as mock_db, \
+             patch("routes.owner.tenants.set_tenant_ai_level", return_value="advanced") as set_level, \
+             patch("routes.owner.tenants.LoggingCore.log_audit") as log_audit:
             mock_db.session.get.return_value = tenant
             with app.test_request_context(
                 "/owner/tenant-ai/3/toggle",
