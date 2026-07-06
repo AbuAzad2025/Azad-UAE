@@ -317,6 +317,8 @@ class TestSafeFloatRouteIntegration:
         PC.return_value.name = "Test Cat"
         PC.return_value.name_ar = "قطة"
         PC.return_value.description = None
+        P = mocker.patch("routes.products.Product")
+        P.query.filter_by.return_value.count.return_value = 0
 
         resp = product_client.post(
             "/products/categories/create",
