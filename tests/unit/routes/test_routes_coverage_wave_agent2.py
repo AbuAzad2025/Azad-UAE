@@ -209,10 +209,10 @@ class TestConversationHelpers:
 # ===========================================================================
 @contextmanager
 def _wizard_env(ctx):
-    with patch('routes.ai_routes._conversation_ctx', return_value=ctx), \
-         patch('routes.ai_routes.get_active_tenant_id', return_value=1), \
-         patch('routes.ai_routes.train_local_ai'), \
-         patch('routes.ai_routes.assign_tenant_id'), \
+    with patch('routes.ai_routes.actions._conversation_ctx', return_value=ctx), \
+         patch('routes.ai_routes.actions.get_active_tenant_id', return_value=1), \
+         patch('routes.ai_routes.actions.train_local_ai'), \
+         patch('routes.ai_routes.actions.assign_tenant_id'), \
          patch('extensions.db.session'):
         yield
 
@@ -809,9 +809,9 @@ class TestProcessUserActionMisc:
 
     def test_logging_failure_swallowed(self, mock_user):
         from routes.ai_routes import _process_user_action
-        with patch('routes.ai_routes._conversation_ctx', side_effect=RuntimeError('boom')), \
-             patch('routes.ai_routes.get_active_tenant_id', return_value=1), \
-             patch('routes.ai_routes.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
+        with patch('routes.ai_routes.actions._conversation_ctx', side_effect=RuntimeError('boom')), \
+             patch('routes.ai_routes.actions.get_active_tenant_id', return_value=1), \
+             patch('routes.ai_routes.actions.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
             result = _process_user_action('x', mock_user)
         assert 'خطأ في التنفيذ' in result
 
@@ -825,7 +825,7 @@ class TestConfigUploadWave:
         env_dir.mkdir()
         fake_ai = env_dir / 'ai.py'
         fake_ai.write_text('#', encoding='utf-8')
-        with patch('routes.ai_routes.__file__', str(fake_ai)):
+        with patch('routes.ai_routes.assistant.__file__', str(fake_ai)):
             resp = ai_client.post('/ai/config', data={'api_key': 'k', 'provider': 'groq'})
         assert resp.get_json()['success'] is True
         assert (tmp_path / '.env').exists()
@@ -835,7 +835,7 @@ class TestConfigUploadWave:
         env_dir.mkdir()
         fake_ai = env_dir / 'ai.py'
         fake_ai.write_text('#', encoding='utf-8')
-        with patch('routes.ai_routes.__file__', str(fake_ai)), \
+        with patch('routes.ai_routes.assistant.__file__', str(fake_ai)), \
              patch('builtins.open', side_effect=OSError('io error')):
             resp = ai_client.post('/ai/config', data={'api_key': 'k', 'provider': 'groq'})
         assert resp.get_json()['success'] is False
@@ -845,7 +845,7 @@ class TestConfigUploadWave:
         data = {'file': (io.BytesIO(b'x'), 'items.xlsx')}
         with patch('models.Warehouse') as Warehouse:
             Warehouse.query.filter_by.return_value.first.side_effect = [None, warehouse]
-            with patch('routes.ai_routes._process_excel_intelligently', return_value={'success': True}) as proc:
+            with patch('routes.ai_routes.assistant._process_excel_intelligently', return_value={'success': True}) as proc:
                 resp = ai_client.post('/ai/upload-excel', data=data, content_type='multipart/form-data')
         assert resp.status_code == 200
         proc.assert_called_once()
@@ -862,7 +862,7 @@ class TestConfigUploadWave:
         fake_req.endpoint = 'ai.upload_excel'
         fake_req.path = '/ai/upload-excel'
         fake_req.method = 'POST'
-        with patch('routes.ai_routes.request', fake_req):
+        with patch('routes.ai_routes.assistant.request', fake_req):
             resp = ai_client.post('/ai/upload-excel', data={'file': (io.BytesIO(b'x'), 'big.xlsx')},
                                   content_type='multipart/form-data')
         assert resp.status_code == 413
@@ -872,14 +872,14 @@ class TestExcelHelpersWave:
     def _excel_env(self, df, mapping, warehouse, existing=None, new_product=None,
                    wh_import=None):
         stack = ExitStack()
-        stack.enter_context(patch('routes.ai_routes.pd.read_excel', return_value=df))
-        stack.enter_context(patch('routes.ai_routes._intelligent_column_detector', return_value=mapping))
+        stack.enter_context(patch('routes.ai_routes.assistant.pd.read_excel', return_value=df))
+        stack.enter_context(patch('routes.ai_routes.assistant._intelligent_column_detector', return_value=mapping))
         WH = stack.enter_context(patch('models.Warehouse'))
         P = stack.enter_context(patch('models.Product'))
-        stack.enter_context(patch('routes.ai_routes.db'))
-        stack.enter_context(patch('routes.ai_routes.assign_tenant_id'))
-        SS = stack.enter_context(patch('routes.ai_routes.StockService'))
-        stack.enter_context(patch('routes.ai_routes._train_ai_from_excel'))
+        stack.enter_context(patch('routes.ai_routes.assistant.db'))
+        stack.enter_context(patch('routes.ai_routes.assistant.assign_tenant_id'))
+        SS = stack.enter_context(patch('routes.ai_routes.assistant.StockService'))
+        stack.enter_context(patch('routes.ai_routes.assistant._train_ai_from_excel'))
         WH.query.filter_by.return_value.first.return_value = warehouse if wh_import is None else None
         if wh_import is not None:
             WH.query.filter_by.return_value.first.side_effect = [warehouse, wh_import]
