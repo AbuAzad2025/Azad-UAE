@@ -42,7 +42,13 @@ from utils.safe_redirect import safe_redirect_target
 from utils.sanitizer import InputSanitizer
 
 # Re-export shared helpers that tests patch via "routes.owner.*"
-from .shared import _known_tables_map, _validate_postgresql_uri  # noqa: E402 — used by test_owner_routes patches
+from .shared import (
+    _known_tables_map, _validate_postgresql_uri,
+    _mask_api_key, _mask_db_uri, _resolve_known_table,
+    _resolve_truncatable_table, _resolve_browsable_table,
+    _validate_select_only_sql, _is_sensitive_stats_table,
+    _inspector_column_names,
+)  # noqa: E402 — used by test_owner_routes patches
 
 import logging
 import os
@@ -68,3 +74,16 @@ from . import backups         # noqa: E402
 from . import database        # noqa: E402
 from . import settings        # noqa: E402 — configurations, tax, currency, invoices, comms
 from . import monitoring      # noqa: E402 — health, security, analytics, error audit
+
+# Re-export route handler names so `from routes.owner import X` works
+# (matching the flat-module API from pre-refactoring routes/owner.py).
+from .backups import create_scoped_backup, restore_backup_target  # noqa: E402
+from .database import database_tools, edit_table_data, sql_console, export_database, convert_database  # noqa: E402
+from .settings import (  # noqa: E402
+    system_config, store_payment_method_create, store_payment_method_edit,
+    store_payment_method_toggle, store_payment_method_delete,
+    invoice_settings, preview_receipt, api_update_tenant_settings,
+    api_toggle_warehouse_negative, api_supervisor_override,
+)
+from .tenants import tenant_ai_toggle, tenant_store_platform_toggle, api_tenant_toggle_status, api_tenant_update_package  # noqa: E402
+from .users import create_user  # noqa: E402

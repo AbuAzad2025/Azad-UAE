@@ -306,8 +306,7 @@ def mock_db_connection(mocker):
     """
     def _make(scalar=None, rows=None, keys=None):
         conn = mocker.MagicMock()
-        if scalar is not None:
-            conn.execute.return_value.scalar.return_value = scalar
+        conn.execute.return_value.scalar.return_value = scalar
         if rows is not None:
             result = mocker.MagicMock()
             result.__iter__.return_value = iter(rows)

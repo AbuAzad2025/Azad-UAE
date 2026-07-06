@@ -108,7 +108,8 @@ class TestCreateJournalEntry:
             user_id=1,
         )
         assert entry.total_debit == entry.total_credit
-        assert entry.is_posted is True
+        assert entry.is_posted is False
+        assert entry.status == 'draft'
         lines = GLJournalLine.query.filter_by(entry_id=entry.id).all()
         assert len(lines) == 2
 
