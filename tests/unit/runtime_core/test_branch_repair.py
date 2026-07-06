@@ -28,7 +28,7 @@ def _empty_query_model():
 
 @pytest.fixture
 def restore_models():
-    names = ['Branch', 'Warehouse', 'User', 'Sale', 'Purchase', 'Expense', 'Payment', 'Receipt', 'Cheque', 'GLJournalEntry']
+    names = ['Branch', 'Warehouse', 'User', 'Sale', 'Purchase', 'Expense', 'Payment', 'Receipt', 'Cheque', 'GLJournalEntry', 'Tenant']
     saved = {n: getattr(models, n) for n in names}
     yield
     for n, v in saved.items():
@@ -145,6 +145,9 @@ class TestEnsureBranchIsolation:
         models.Branch = Branch
         for name in ('Warehouse', 'User', 'Sale', 'Purchase', 'Expense', 'Payment', 'Receipt', 'Cheque', 'GLJournalEntry'):
             setattr(models, name, _empty_query_model())
+        Tenant = MagicMock()
+        Tenant.query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(id=1)
+        models.Tenant = Tenant
 
         result = ensure_branch_isolation_schema_and_data()
         assert result['main_branch_id'] == 1
