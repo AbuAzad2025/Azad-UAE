@@ -174,10 +174,13 @@ def partners():
             })
             partner_share_totals[r.partner_id] = partner_share_totals.get(r.partner_id, Decimal('0')) + partner_amount
     else:
-        partner_products = tenant_query(Product).join(ProductPartner).filter(Product.is_active == True)
+        partner_products = tenant_query(Product).filter(
+            Product.is_active == True,
+            Product.partner_shares.any(),
+        )
         if tenant_id is not None:
             partner_products = partner_products.filter(Product.tenant_id == tenant_id)
-        partner_products = partner_products.distinct().all()
+        partner_products = partner_products.all()
 
         for product in partner_products:
             sales_query = tenant_query(SaleLine).join(Sale).filter(
