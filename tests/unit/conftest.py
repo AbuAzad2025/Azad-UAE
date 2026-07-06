@@ -334,12 +334,16 @@ def mock_db_connection(mocker):
 
 @pytest.fixture
 def mock_db(mocker):
-    """Mock db.session.add/flush/delete/commit/rollback for CRM lead tests."""
+    """Mock db.session for CRM lead, payment vault, and other unit tests."""
     mocker.patch('services.crm_lead_service.db.session.add')
     mocker.patch('services.crm_lead_service.db.session.flush')
     mocker.patch('services.crm_lead_service.db.session.delete')
     mocker.patch('services.crm_lead_service.db.session.commit')
     mocker.patch('services.crm_lead_service.db.session.rollback')
+    # payment vault
+    mocker.patch('routes.payment_vault.db.session.add')
+    mocker.patch('routes.payment_vault.db.session.commit')
+    mocker.patch('routes.payment_vault.db.session.rollback')
 
 
 @pytest.fixture
