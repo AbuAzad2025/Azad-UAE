@@ -357,12 +357,33 @@ def bypass_reports_auth(mock_user):
         p.stop()
 
 
+def _stub_query(**terminals):
+    from unittest.mock import MagicMock
+    q = MagicMock(name="query_chain")
+    q.return_value = q
+    for method in (
+        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
+        "limit", "offset", "options", "select_from", "distinct", "having",
+    ):
+        getattr(q, method).return_value = q
+    inner = q.filter.return_value
+    inner.first.return_value = terminals.get("first")
+    inner.scalar.return_value = terminals.get("scalar", 0)
+    inner.all.return_value = terminals.get("all", [])
+    inner.count.return_value = terminals.get("count", 0)
+    inner.exists.return_value.scalar.return_value = terminals.get("exists", False)
+    q.scalar.return_value = terminals.get("scalar", 0)
+    q.all.return_value = terminals.get("all", [])
+    return q
+
+
 @pytest.fixture
 def reports_client(app_factory, bypass_reports_auth):
     from routes.reports import reports_bp
     app = app_factory(reports_bp)
-    from unittest.mock import patch
-    with patch("routes.reports.render_template", return_value="ok"):
+    with patch("routes.reports.render_template", return_value="ok"), \
+         patch("routes.reports.db.session.query", return_value=_stub_query()), \
+         patch("routes.reports.tenant_query", return_value=_stub_query()):
         yield app.test_client()
 
 
