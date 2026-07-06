@@ -267,7 +267,7 @@ def edit_warehouse(id):
                                        branches=branches)
 
             db.session.flush()
-            log_mutation('Warehouse', warehouse.id, action='update')
+            log_mutation('update', 'Warehouse', warehouse.id)
             flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', 'success')
             return redirect(url_for('warehouse.list_warehouses'))
         except Exception as e:

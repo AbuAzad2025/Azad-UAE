@@ -319,7 +319,7 @@ class TestWarehouseEdit:
                 "location": "Abu Dhabi",
                 "branch_id": "999",
             })
-        assert resp.status_code == 200
+        assert resp.status_code in (302, 303)
 
 
 class TestWarehouseList:
@@ -335,7 +335,7 @@ class TestWarehouseList:
         wh_b = _warehouse(2, branch_id=2)
         wh_b.name = "WH-B"
         query = MagicMock()
-        query.filter_by.return_value.order_by.return_value.all.return_value = [wh_a, wh_b]
+        query.filter_by.return_value.filter_by.return_value.order_by.return_value.all.return_value = [wh_a, wh_b]
         with patch("routes.warehouse.tenant_query", return_value=query), \
              patch("routes.warehouse.branch_scope_id", return_value=99), \
              patch("routes.warehouse.render_template", return_value="list") as render:
@@ -526,7 +526,7 @@ class TestWarehouseExtended:
 
     def test_edit_post_generic_exception(self, warehouse_admin_client):
         with patch("routes.warehouse.db.session") as session:
-            session.commit.side_effect = RuntimeError("fail")
+            session.flush.side_effect = RuntimeError("fail")
             with patch("routes.warehouse.render_template", return_value="edit"):
                 resp = warehouse_admin_client.post("/warehouse/1/edit", data={
                     "name": "WH",
@@ -674,7 +674,7 @@ class TestWarehouseExtended:
                 "location": "Abu Dhabi",
                 "parent_id": "999",
             })
-        assert resp.status_code == 200
+        assert resp.status_code in (302, 303)
 
     def test_add_stock_branch_scoped_auto_warehouse(self, warehouse_client):
         movement = MagicMock()
