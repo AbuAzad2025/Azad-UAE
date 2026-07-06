@@ -117,6 +117,7 @@ def _ai_state_client(app_factory, mock_user, state):
     patches = [
         patch('flask_login.utils._get_user', return_value=mock_user),
         patch('routes.ai_routes.get_ai_access_state', return_value=state),
+        patch('routes.ai_routes.chat.get_ai_access_state', return_value=state),
         patch('utils.auth_helpers.is_global_owner_user', return_value=True),
         patch('utils.decorators.is_global_owner_user', return_value=True),
         patch('utils.decorators.is_admin_surface_user', return_value=True),
@@ -169,10 +170,10 @@ class TestChatOwnerExecuteElif:
         """can_execute_mutations False but owner -> _process_user_action (465)."""
         mock_user.is_owner = True
         state = _state(is_platform_user=False, ai_level='advanced')
-        with _ai_state_client(app_factory, mock_user, state) as client:
-            with patch('routes.ai_routes._process_user_action', return_value='wizard-reply') as proc, \
-                 patch('routes.ai_routes.AIService.chat_response', return_value='fallback'):
-                resp = client.post('/ai/chat', json={'message': 'افعل شيئا'})
+        with _ai_state_client(app_factory, mock_user, state) as client, \
+             patch('routes.ai_routes.chat._process_user_action', return_value='wizard-reply') as proc, \
+             patch('routes.ai_routes.chat.AIService.chat_response', return_value='fallback'):
+            resp = client.post('/ai/chat', json={'message': 'افعل شيئا'})
         assert resp.status_code == 200
         body = resp.get_json()
         assert body['action_executed'] is True
