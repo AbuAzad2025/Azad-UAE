@@ -2865,7 +2865,7 @@ class TestOwnerDirectCalls:
         from routes.owner import owner_bp, edit_table_data
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db:
+        with _owner_route_patches(), patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("edit fail")
             with app.test_request_context("/owner/edit-table-data/customers"):
                 result = edit_table_data("customers")
