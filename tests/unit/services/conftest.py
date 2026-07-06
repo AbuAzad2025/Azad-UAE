@@ -81,15 +81,6 @@ def online_warehouse(db_session, sample_tenant, sample_branch):
 
 
 @pytest.fixture
-def mock_db():
-    """Mock db session with commit/rollback for tests that test failure paths."""
-    m = MagicMock()
-    m.commit = MagicMock()
-    m.rollback = MagicMock()
-    return m
-
-
-@pytest.fixture
 def tenant_store(db_session, sample_tenant, online_warehouse):
     slug = f'store-{uuid.uuid4().hex[:8]}'
     store = TenantStore(

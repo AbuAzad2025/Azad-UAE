@@ -334,15 +334,60 @@ def mock_db_connection(mocker):
 
 @pytest.fixture
 def mock_db(mocker):
-    """Mock db.session for CRM lead, payment vault, and other unit tests."""
-    mocker.patch('services.crm_lead_service.db.session.add')
-    mocker.patch('services.crm_lead_service.db.session.flush')
-    mocker.patch('services.crm_lead_service.db.session.delete')
-    mocker.patch('services.crm_lead_service.db.session.commit')
-    mocker.patch('services.crm_lead_service.db.session.rollback')
-    # payment vault — mock the entire session to bypass scoped_session proxying
-    session_mock = mocker.MagicMock(name='payment_vault_db_session')
-    mocker.patch('routes.payment_vault.db.session', session_mock)
+    """Central mock that replaces ``db.session`` globally with a ``MagicMock``.
+
+    Every module that does ``from extensions import db; db.session.X`` will
+    transparently receive this mock, preventing real database access across
+    all service, route, and model unit tests.
+
+    The returned object is a self-referencing ``MagicMock`` — its ``.session``
+    attribute points to itself — so both ``mock_db.commit()`` and
+    ``mock_db.session.commit()`` resolve to the same mock, and tests written
+    for either pattern work without changes.
+
+    Usage
+    -----
+    Tests that need to configure the session mock accept ``mock_db`` as a
+    fixture parameter::
+
+        def test_something(self, mock_db):
+            mock_db.commit.side_effect = RuntimeError("db fail")
+            mock_db.query.side_effect = lambda *a: [...]
+
+    Tests that only need the side-effect (preventing real DB calls) can
+    either accept the fixture or use a file-level ``pytestmark``::
+
+        pytestmark = pytest.mark.usefixtures("mock_db")
+    """
+    mock = mocker.MagicMock(name='global_mock_db')
+    # Session-level methods (configured explicitly so property resolution
+    # doesn't fall through to ``__getattr__`` which would break patching).
+    mock.add = mocker.MagicMock()
+    mock.flush = mocker.MagicMock()
+    mock.delete = mocker.MagicMock()
+    mock.commit = mocker.MagicMock()
+    mock.rollback = mocker.MagicMock()
+    # Query / execute helpers
+    mock.query = mocker.MagicMock()
+    mock.execute = mocker.MagicMock()
+    mock.get = mocker.MagicMock()
+    mock.scalar = mocker.MagicMock()
+    # DB-level attributes
+    mock.engine = mocker.MagicMock()
+    # Self-referencing .session so ``mock_db.session.commit`` and ``mock_db.commit``
+    # both reach the same mock.
+    mock.session = mock
+
+    # ── Global patching ──────────────────────────────────────────────────
+    # Patch ``extensions.db.session`` (the root reference) so every import
+    # of ``db`` from ``extensions`` picks up the mocked session.
+    mocker.patch('extensions.db.session', mock)
+    # Explicit per-module patches for modules that were imported before the
+    # fixture ran and thus hold a local ``db`` reference in their namespace.
+    mocker.patch('services.crm_lead_service.db.session', mock)
+    mocker.patch('routes.payment_vault.db.session', mock)
+
+    return mock
 
 
 @pytest.fixture

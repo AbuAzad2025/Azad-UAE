@@ -296,7 +296,7 @@ def _service_contexts():
 
 
 @contextmanager
-def _owner_route_patches(**overrides):
+def _owner_route_patches(mock_db=None, **overrides):
     tenant = overrides.get("tenant") or _mock_tenant()
     user_entity = overrides.get("user_entity") or _mock_user_entity()
     card = overrides.get("card") or _mock_card()
@@ -315,7 +315,8 @@ def _owner_route_patches(**overrides):
     ctx = _service_contexts()
     execute_result = _execute_result()
     backup_payload = {"filename": "backup.sql.gz", "size_mb": 1.2, "valid": True, "format": "sql"}
-    mock_db = MagicMock()
+    if mock_db is None:
+        mock_db = MagicMock()
 
     def _session_get(model, pk):
         model_name = getattr(model, "__name__", str(model))

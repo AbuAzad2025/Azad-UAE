@@ -1,10 +1,11 @@
 """Database tools, SQL console, and maintenance routes for the owner blueprint."""
 
+from models import Customer, Product, Sale, Expense
+
 from routes.owner import (
     render_template, request, jsonify, flash, redirect, url_for, current_app, abort,
     login_required, current_user, func, desc, text, inspect, db, limiter,
     AuditLog, ArchivedRecord, CardVault,
-    Customer, Product, Sale, Expense,
     owner_required, safe_redirect_target,
 )
 from services.logging_core import LoggingCore
