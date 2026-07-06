@@ -178,7 +178,7 @@ def _ensure_gl_accounts(conn, tenant_id: int) -> None:
     import os
 
     os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
-    from sqlalchemy.orm import scoped_session, sessionmaker
+    from sqlalchemy.orm import Session
 
     from app import create_app
     from extensions import db
@@ -186,10 +186,14 @@ def _ensure_gl_accounts(conn, tenant_id: int) -> None:
 
     app = create_app()
     with app.app_context():
-        Session = scoped_session(sessionmaker(bind=conn))
-        db.session = Session
-        GLService.ensure_core_accounts(tenant_id=tenant_id)
-        Session.flush()
+        _orig_db_session = db.session
+        try:
+            sess = Session(bind=conn)
+            db.session = sess
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            sess.flush()
+        finally:
+            db.session = _orig_db_session
 
 
 def upgrade():

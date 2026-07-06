@@ -337,7 +337,25 @@ def mock_ai_service():
 def ai_client(app_factory, bypass_ai_access):
     from routes.ai_routes import ai_bp
     app = app_factory(ai_bp)
-    return app.test_client()
+    from unittest.mock import MagicMock
+    stub = MagicMock(name="query_chain")
+    stub.return_value = stub
+    for method in (
+        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
+        "limit", "offset", "options", "select_from", "distinct", "having",
+    ):
+        getattr(stub, method).return_value = stub
+    stub.filter.return_value.scalar.return_value = 0
+    stub.filter.return_value.all.return_value = []
+    stub.filter.return_value.exists.return_value.scalar.return_value = False
+    stub.all.return_value = []
+    with patch("routes.ai_routes.db.session.query", return_value=stub), \
+         patch("routes.ai_routes.db.session.get", return_value=None), \
+         patch("routes.ai_routes.chat.db.session.query", return_value=stub), \
+         patch("routes.ai_routes.chat.db.session.get", return_value=None), \
+         patch("routes.ai_routes.chat.db.session.add"), \
+         patch("routes.ai_routes.chat.db.session.commit"):
+        yield app.test_client()
 
 
 @pytest.fixture

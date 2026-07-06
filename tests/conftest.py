@@ -9,6 +9,8 @@ import pytest
 from sqlalchemy import create_engine, text as sa_text
 from urllib.parse import urlparse, urlunparse
 
+
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -184,10 +186,11 @@ class TestConfig:
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_size": 3,
-        "max_overflow": 2,
+        "pool_size": 5,
+        "max_overflow": 10,
         "pool_pre_ping": True,
-        "pool_timeout": 10,
+        "pool_timeout": 5,
+        "pool_recycle": 30,
     }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"
@@ -261,12 +264,18 @@ def app():
 
     _app = create_app(config_class=TestConfig)
 
+    # Save the original db.session before migration (which overwrites it)
+    _orig_db_session = db.session
+
     with _app.app_context():
         try:
             from flask_migrate import upgrade
             upgrade()
         except Exception:
             db.create_all()
+        # Restore db.session in case migration overwrote it with a session
+        # bound to a now-closed migration Connection
+        db.session = _orig_db_session
         yield _app
         try:
             db.session.remove()
