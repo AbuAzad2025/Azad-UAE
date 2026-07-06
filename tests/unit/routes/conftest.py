@@ -361,7 +361,9 @@ def bypass_reports_auth(mock_user):
 def reports_client(app_factory, bypass_reports_auth):
     from routes.reports import reports_bp
     app = app_factory(reports_bp)
-    return app.test_client()
+    from unittest.mock import patch
+    with patch("routes.reports.render_template", return_value="ok"):
+        yield app.test_client()
 
 
 @pytest.fixture
