@@ -2143,7 +2143,7 @@ class TestOwnerGapClosure:
         assert resp2.status_code in (302, 303)
 
     def test_truncate_and_browse_exceptions(self, owner_client):
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("truncate fail")
             mock_db.session.rollback = MagicMock()
             resp = owner_client.post(
@@ -2152,7 +2152,7 @@ class TestOwnerGapClosure:
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("browse fail")
             resp2 = owner_client.get("/owner/browse-table/customers", follow_redirects=False)
         assert resp2.status_code in (302, 303)
@@ -2160,29 +2160,29 @@ class TestOwnerGapClosure:
     def test_update_row_edge_cases(self, owner_client):
         inspector = _inspector()
         inspector.get_pk_constraint.return_value = {"constrained_columns": []}
-        with patch("routes.owner.inspect", return_value=inspector):
+        with patch("routes.owner.database.inspect", return_value=inspector):
             resp = owner_client.post("/owner/update-row/customers/1", json={"name": "x"})
         assert resp.status_code == 400
         inspector.get_pk_constraint.return_value = {"constrained_columns": ["id"]}
-        with patch("routes.owner.inspect", return_value=inspector):
+        with patch("routes.owner.database.inspect", return_value=inspector):
             resp2 = owner_client.post("/owner/update-row/customers/1", json={"id": "hack"})
         assert resp2.status_code == 400
-        with patch("routes.owner.inspect", return_value=inspector), \
-             patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.database.inspect", return_value=inspector), \
+             patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("update fail")
             mock_db.session.rollback = MagicMock()
             resp3 = owner_client.post("/owner/update-row/customers/1", json={"name": "x"})
         assert resp3.status_code == 500
 
     def test_edit_table_data_exception(self, owner_client):
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("edit fail")
             resp = owner_client.get("/owner/edit-table-data/customers", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_export_database_json_and_failure(self, owner_client, tmp_path):
         exec_result = _execute_result(rows=[(1, "a")], columns=["id", "name"])
-        with patch("routes.owner.db") as mock_db, \
+        with patch("routes.owner.database.db") as mock_db, \
              patch("os.makedirs"), \
              patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
              patch("builtins.open", create=True) as mock_open:
@@ -2382,7 +2382,7 @@ class TestOwnerGapClosure:
     def test_export_excel_paths(self, owner_client):
         item = MagicMock()
         item.to_dict.return_value = {"id": 1}
-        with patch("routes.owner.Customer", _model_class(all=[item])), \
+        with patch("routes.owner.database.Customer", _model_class(all=[item])), \
              patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
             resp = owner_client.get("/owner/export-excel/customers")
         assert resp.status_code == 200
@@ -2390,15 +2390,15 @@ class TestOwnerGapClosure:
         col = MagicMock(name="id")
         plain.__table__ = MagicMock(columns=[col])
         del plain.to_dict
-        with patch("routes.owner.Product", _model_class(all=[plain])), \
+        with patch("routes.owner.database.Product", _model_class(all=[plain])), \
              patch("utils.decorators.branch_scope_id", return_value=1), \
              patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
             resp2 = owner_client.get("/owner/export-excel/products")
         assert resp2.status_code in (200, 302)
-        with patch("routes.owner.Customer", _model_class(all=[])):
+        with patch("routes.owner.database.Customer", _model_class(all=[])):
             resp3 = owner_client.get("/owner/export-excel/customers", follow_redirects=False)
         assert resp3.status_code in (302, 303)
-        with patch("routes.owner.Customer", _model_class(all=[item])), \
+        with patch("routes.owner.database.Customer", _model_class(all=[item])), \
              patch("pandas.DataFrame", side_effect=RuntimeError("xlsx fail")):
             resp4 = owner_client.get("/owner/export-excel/customers", follow_redirects=False)
         assert resp4.status_code in (302, 303)
@@ -2412,7 +2412,7 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
         tenant_cls = _tenant_class(_mock_tenant())
         tenant_cls.query.filter_by.return_value.first.return_value = _mock_tenant()
-        with patch("routes.owner.Tenant", tenant_cls):
+        with patch("routes.owner.tenants.Tenant", tenant_cls):
             resp2 = owner_client.post(
                 "/owner/tenants/create",
                 data={"name_ar": "شركة", "slug": "dup", "default_currency": "AED"},
@@ -2420,8 +2420,8 @@ class TestOwnerGapClosure:
             )
         assert resp2.status_code in (302, 303)
         tenant_cls.query.filter_by.return_value.first.return_value = None
-        with patch("routes.owner.Tenant", tenant_cls), \
-             patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.Tenant", tenant_cls), \
+             patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.commit.side_effect = RuntimeError("create fail")
             mock_db.session.rollback = MagicMock()
             resp3 = owner_client.post(
@@ -2466,8 +2466,8 @@ class TestOwnerGapClosure:
         with _owner_route_patches(), \
              patch("utils.decorators.is_global_owner_user", return_value=False), \
              patch("utils.tenanting.get_active_tenant_id", return_value=1), \
-             patch("routes.owner.Warehouse", wh_cls), \
-             patch("routes.owner.db") as mock_db:
+             patch("routes.owner.settings.Warehouse", wh_cls), \
+             patch("routes.owner.settings.db") as mock_db:
             mock_db.session.commit.side_effect = RuntimeError("wh fail")
             mock_db.session.rollback = MagicMock()
             resp2 = app.test_client().post(
@@ -2480,7 +2480,7 @@ class TestOwnerGapClosure:
         resp = owner_client.post("/owner/api/supervisor-override", data={})
         assert resp.status_code in (400, 404)
         inactive = _mock_user_entity(id=5, is_active=False)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.return_value = inactive
             resp2 = owner_client.post(
                 "/owner/api/supervisor-override",
@@ -2488,14 +2488,14 @@ class TestOwnerGapClosure:
             )
         assert resp2.status_code == 404
         not_mgr = _mock_user_entity(id=5, is_manager=False, is_admin=False)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.return_value = not_mgr
             resp3 = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "x"},
             )
         assert resp3.status_code == 403
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.side_effect = RuntimeError("lookup fail")
             resp4 = owner_client.post(
                 "/owner/api/supervisor-override",
@@ -2504,16 +2504,16 @@ class TestOwnerGapClosure:
         assert resp4.status_code == 500
 
     def test_api_tenant_toggle_and_package_edges(self, owner_client):
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.get.return_value = None
             resp = owner_client.post("/owner/api/tenant/99/toggle-status", json={})
         assert resp.status_code == 404
         default_tenant = _mock_tenant(id=1)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.get.return_value = default_tenant
             resp2 = owner_client.post("/owner/api/tenant/1/toggle-status", json={})
         assert resp2.status_code == 400
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.get.side_effect = RuntimeError("toggle fail")
             mock_db.session.rollback = MagicMock()
             resp3 = owner_client.post("/owner/api/tenant/2/toggle-status", json={})
@@ -2700,14 +2700,14 @@ class TestOwnerGapClosure:
 
     def test_api_package_invalid_value_and_exception(self, owner_client):
         tenant = _mock_tenant(id=2)
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.get.return_value = tenant
             resp = owner_client.post(
                 "/owner/api/tenant/2/update-package",
                 json={"field": "max_users", "value": "not-int"},
             )
         assert resp.status_code == 400
-        with patch("routes.owner.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db:
             mock_db.session.get.return_value = tenant
             mock_db.session.commit.side_effect = RuntimeError("pkg fail")
             mock_db.session.rollback = MagicMock()
