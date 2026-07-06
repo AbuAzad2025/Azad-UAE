@@ -124,6 +124,8 @@ class TestCreateCategory:
         PC.return_value.name = "Test Category"
         PC.return_value.name_ar = "تصنيف اختبار"
         PC.return_value.description = "A test"
+        P = mocker.patch("routes.products.Product")
+        P.query.filter_by.return_value.count.return_value = 0
         return PC
 
     def test_json_happy_path(self, product_client, mock_db):
