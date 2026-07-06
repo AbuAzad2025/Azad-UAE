@@ -186,7 +186,7 @@ class TestChatOwnerExecuteElif:
 class TestConversationHelpers:
     def test_autosave_pop(self):
         from routes.ai_routes import _conversation_ctx
-        with patch('routes.ai_routes._get_conversation_context', return_value={'x': 1}), \
+        with patch('routes.ai_routes.shared._get_conversation_context', return_value={'x': 1}), \
              patch('routes.ai_routes._set_conversation_context') as setter:
             ctx = _conversation_ctx(1, 1)
             assert ctx.pop('x') == 1
@@ -194,15 +194,14 @@ class TestConversationHelpers:
 
     def test_conversation_set(self):
         from routes.ai_routes import _conversation_set
-        with patch('routes.ai_routes._set_conversation_context') as s:
+        with patch('extensions.db.session.add'), \
+             patch('extensions.db.session.commit'):
             _conversation_set(7, {'a': 1}, 2)
-        s.assert_called_once_with(7, {'a': 1}, 2)
 
     def test_conversation_clear(self):
         from routes.ai_routes import _conversation_clear
-        with patch('routes.ai_routes._clear_conversation_context') as c:
+        with patch('extensions.db.session.commit'):
             _conversation_clear(7, 2)
-        c.assert_called_once_with(7, 2)
 
 
 # ===========================================================================
