@@ -340,10 +340,9 @@ def mock_db(mocker):
     mocker.patch('services.crm_lead_service.db.session.delete')
     mocker.patch('services.crm_lead_service.db.session.commit')
     mocker.patch('services.crm_lead_service.db.session.rollback')
-    # payment vault
-    mocker.patch('routes.payment_vault.db.session.add')
-    mocker.patch('routes.payment_vault.db.session.commit')
-    mocker.patch('routes.payment_vault.db.session.rollback')
+    # payment vault — mock the entire session to bypass scoped_session proxying
+    session_mock = mocker.MagicMock(name='payment_vault_db_session')
+    mocker.patch('routes.payment_vault.db.session', session_mock)
 
 
 @pytest.fixture
