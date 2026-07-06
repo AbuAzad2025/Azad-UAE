@@ -423,7 +423,7 @@ class TestChequeServiceProcessGaps:
 
     def test_bounce_customer_balance_adjust_failure_logged(self, mocker):
         cheque = MagicMock(
-            id=2, tenant_id=1, cheque_type='incoming', status='pending', status_ar='معلق',
+            id=2, tenant_id=1, cheque_type='incoming', status='deposited', status_ar='مودع',
             customer_id=5, amount_aed=Decimal('100'), supplier_id=None, expense_id=None,
             cheque_bank_number='B1',
         )
@@ -435,7 +435,7 @@ class TestChequeServiceProcessGaps:
         process_cheque_bounce(cheque, 'NSF')
 
     def test_bounce_fatal_error_reraises(self, mocker):
-        cheque = MagicMock(id=3, status='pending', status_ar='معلق', cheque_type='incoming')
+        cheque = MagicMock(id=3, status='deposited', status_ar='مودع', cheque_type='incoming')
         mocker.patch('services.cheque_service._create_bounce_journal_entry', side_effect=RuntimeError('gl'))
         from services.cheque_service import process_cheque_bounce
         with pytest.raises(RuntimeError):

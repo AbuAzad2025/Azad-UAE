@@ -9,6 +9,7 @@ from routes.owner import (
     owner_required, owner_or_company_admin, company_admin_required,
     is_global_owner_user, get_active_tenant_id, get_system_default_currency,
     get_tenant_ai_level, set_tenant_ai_level,
+    get_visible_products_query,
 )
 from services.logging_core import LoggingCore
 from services.store_service import StoreService
