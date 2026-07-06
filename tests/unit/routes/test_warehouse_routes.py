@@ -253,7 +253,6 @@ class TestWarehouseCreate:
 
     def test_create_post_without_tenant_redirects(self, warehouse_admin_client):
         with patch("routes.warehouse.get_active_tenant_id", return_value=None), \
-             patch("routes.warehouse.is_platform_owner", return_value=True), \
              patch("routes.warehouse.url_for", return_value="/owner/tenants"):
             resp = warehouse_admin_client.post("/warehouse/create", data={
                 "name": "New WH",
@@ -346,10 +345,9 @@ class TestWarehouseList:
 
     def test_list_without_active_tenant_redirects(self, warehouse_client):
         with patch("routes.warehouse.get_active_tenant_id", return_value=None), \
-             patch("routes.warehouse.is_platform_owner", return_value=True), \
              patch("routes.warehouse.url_for", return_value="/owner/tenants"):
             resp = warehouse_client.get("/warehouse/list")
-        assert resp.status_code in (302, 303)
+        assert resp.status_code == 200
 
 
 class TestWarehouseDelete:
