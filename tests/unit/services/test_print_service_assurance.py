@@ -105,7 +105,7 @@ class TestAuditPrint:
         with app.app_context():
             PrintService.audit_print(1, 'invoice', 99, user_id=3)
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_audit_failure_non_blocking(self, app, mocker):
         mocker.patch('models.print_history.PrintHistory', side_effect=RuntimeError('db'))
