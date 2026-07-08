@@ -108,6 +108,7 @@ PERMISSION_CODES = [
     'hr.view', 'hr.manage',
     'marketing.manage',
     'printing.print', 'printing.settings',
+    'view_kds',
 ]
 
 # --- Unified Enums (canonical values only) ---
@@ -171,5 +172,6 @@ PERMISSIONS = {
     'marketing.manage': {'ar': 'إدارة التسويق', 'en': 'Manage Marketing'},
     'printing.print': {'ar': 'طباعة المستندات', 'en': 'Print Documents'},
     'printing.settings': {'ar': 'إعدادات الطباعة', 'en': 'Print Settings'},
+    'view_kds': {'ar': 'عرض شاشة المطبخ (KDS)', 'en': 'View Kitchen Display'},
 }
 

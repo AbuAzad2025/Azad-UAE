@@ -388,6 +388,7 @@
             shipping_cost: toNum(qs('#shippingCost').value) || 0,
             discount_amount: toNum(qs('#discountAmount').value) || 0,
             payment_method: qs('#paymentMethod').value || '',
+            order_type: qs('#orderType') ? qs('#orderType').value : 'takeaway',
             paid_amount: toNum(qs('#paidAmount').value) || 0,
             payment_currency: qs('#currency').value,
             payment_exchange_rate: toNum(qs('#exchangeRate').value) || 1,

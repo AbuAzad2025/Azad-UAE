@@ -360,7 +360,7 @@ def api_checkout():
     db.session.commit()
     log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
 
-    order_type = (payload.get('order_type') or '').strip()
+    order_type = (payload.get('order_type') or 'takeaway').strip()
     if order_type in ('dine_in', 'takeaway', 'delivery'):
         from models import PosKdsOrder
         kds_order = PosKdsOrder(
@@ -570,7 +570,7 @@ def _notify_kds(data, tenant_id: int | None = None):
 
 @pos_bp.route("/api/kds/stream")
 @login_required
-@permission_required("manage_sales")
+@permission_required("view_kds")
 def kds_stream():
     subscriber_tid = get_active_tenant_id(current_user)
 
@@ -589,7 +589,7 @@ def kds_stream():
 
 @pos_bp.route("/api/kds/orders")
 @login_required
-@permission_required("manage_sales")
+@permission_required("view_kds")
 def kds_orders():
     from models import PosKdsOrder
     tid = get_active_tenant_id(current_user)
@@ -605,7 +605,7 @@ def kds_orders():
 
 @pos_bp.route("/api/kds/orders/<int:order_id>/status", methods=["POST"])
 @login_required
-@permission_required("manage_sales")
+@permission_required("view_kds")
 def kds_update_status(order_id):
     from models import PosKdsOrder
     from datetime import datetime, timezone
@@ -631,7 +631,7 @@ def kds_update_status(order_id):
 
 @pos_bp.route("/kds")
 @login_required
-@permission_required("manage_sales")
+@permission_required("view_kds")
 def kds_dashboard():
     return render_template("pos/kds.html")
 

@@ -158,6 +158,7 @@ def _ensure_functional_roles():
         {'name': 'Seller', 'name_ar': 'بائع', 'slug': 'seller', 'description': 'Sales and customer-facing operations'},
         {'name': 'Branch Manager', 'name_ar': 'مدير الفرع', 'slug': 'branch_manager', 'description': 'Manages a specific branch operations and staff'},
         {'name': 'General Accountant', 'name_ar': 'محاسب', 'slug': 'accountant', 'description': 'Financial records, GL, and reports'},
+        {'name': 'Kitchen Staff', 'name_ar': 'طاقم المطبخ', 'slug': 'kitchen', 'description': 'Kitchen display (KDS) viewer - sees live kitchen orders only'},
     ]
     for r_data in roles:
         role = Role.query.filter((Role.slug == r_data['slug']) | (Role.name == r_data['name'])).first()
@@ -179,20 +180,20 @@ def _ensure_functional_roles():
     manager_role = Role.query.filter_by(slug='manager').first()
     if manager_role:
         manager_codes = ['manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
-                         'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll']
+                         'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll', 'view_kds']
         manager_role.permissions = get_perms(*manager_codes)
         db.session.commit()
 
     seller_role = Role.query.filter_by(slug='seller').first()
     if seller_role:
-        seller_codes = ['manage_sales', 'manage_customers', 'view_reports', 'view_ledger']
+        seller_codes = ['manage_sales', 'manage_customers', 'view_reports', 'view_ledger', 'view_kds']
         seller_role.permissions = get_perms(*seller_codes)
         db.session.commit()
 
     branch_mgr_role = Role.query.filter_by(slug='branch_manager').first()
     if branch_mgr_role:
         branch_mgr_codes = ['manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
-                            'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll']
+                            'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll', 'view_kds']
         branch_mgr_role.permissions = get_perms(*branch_mgr_codes)
         db.session.commit()
 
@@ -200,6 +201,12 @@ def _ensure_functional_roles():
     if acc_role:
         acc_codes = ['manage_payments', 'manage_expenses', 'view_reports', 'view_ledger', 'manage_ledger', 'manage_payroll']
         acc_role.permissions = get_perms(*acc_codes)
+        db.session.commit()
+
+    kitchen_role = Role.query.filter_by(slug='kitchen').first()
+    if kitchen_role:
+        kitchen_codes = ['view_kds']
+        kitchen_role.permissions = get_perms(*kitchen_codes)
         db.session.commit()
 
 def _ensure_platform_reference_data():
