@@ -71,13 +71,14 @@ def print_document(doc_type, id):
     if _check_branch_scope(doc):
         return render_template('errors/403.html'), 403
 
-    PrintService.create_snapshot(tid, doc_type, id, reason='print', document=doc)
-    PrintService.audit_print(tid, doc_type, id, action='print')
+    eff_tid = tid or getattr(doc, 'tenant_id', None)
+    PrintService.create_snapshot(eff_tid, doc_type, id, reason='print', document=doc)
+    PrintService.audit_print(eff_tid, doc_type, id, action='print')
 
     return PrintService.render_print(
         entry['template'],
         {entry['context_key']: doc},
-        tenant_id=tid,
+        tenant_id=eff_tid,
     )
 
 
@@ -109,15 +110,16 @@ def print_document_pdf(doc_type, id):
     if _check_branch_scope(doc):
         return render_template('errors/403.html'), 403
 
+    eff_tid = tid or getattr(doc, 'tenant_id', None)
     filename = _get_filename(entry, doc, doc_type, id)
     pdf = PrintService.render_pdf(
         entry['template'],
         {entry['context_key']: doc},
-        tenant_id=tid,
+        tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(tid, doc_type, id, reason='pdf_download', document=doc)
-    PrintService.audit_print(tid, doc_type, id, action='pdf_download')
+    PrintService.create_snapshot(eff_tid, doc_type, id, reason='pdf_download', document=doc)
+    PrintService.audit_print(eff_tid, doc_type, id, action='pdf_download')
 
     return send_file(
         BytesIO(pdf),
@@ -141,13 +143,14 @@ def _handle_packing_slip(sale_id, tid):
     delivery = _resolve_delivery(sale, tid)
     lines = sale.lines if hasattr(sale, 'lines') else []
 
-    PrintService.create_snapshot(tid, 'packing_slip', sale_id, reason='print', document=sale)
-    PrintService.audit_print(tid, 'packing_slip', sale_id, action='print')
+    eff_tid = tid or getattr(sale, 'tenant_id', None)
+    PrintService.create_snapshot(eff_tid, 'packing_slip', sale_id, reason='print', document=sale)
+    PrintService.audit_print(eff_tid, 'packing_slip', sale_id, action='print')
 
     return PrintService.render_print(
         'printing/packing_slip.html',
         {'sale': sale, 'delivery': delivery, 'lines': lines, 'notes': None},
-        tenant_id=tid,
+        tenant_id=eff_tid,
     )
 
 
@@ -165,15 +168,16 @@ def _handle_packing_slip_pdf(sale_id, tid):
     delivery = _resolve_delivery(sale, tid)
     lines = sale.lines if hasattr(sale, 'lines') else []
     filename = f'packing_slip_{sale.sale_number}.pdf'
+    eff_tid = tid or getattr(sale, 'tenant_id', None)
 
     pdf = PrintService.render_pdf(
         'printing/packing_slip.html',
         {'sale': sale, 'delivery': delivery, 'lines': lines, 'notes': None},
-        tenant_id=tid,
+        tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(tid, 'packing_slip', sale_id, reason='pdf_download', document=sale)
-    PrintService.audit_print(tid, 'packing_slip', sale_id, action='pdf_download')
+    PrintService.create_snapshot(eff_tid, 'packing_slip', sale_id, reason='pdf_download', document=sale)
+    PrintService.audit_print(eff_tid, 'packing_slip', sale_id, action='pdf_download')
 
     return send_file(
         BytesIO(pdf),
@@ -232,9 +236,10 @@ def bulk_print():
     for doc_id in doc_ids:
         doc = model_cls.query.filter_by(id=doc_id, tenant_id=tid).first()
         if doc:
+            eff_tid = tid or getattr(doc, 'tenant_id', None)
             documents.append({'type': doc_type, 'context': {entry['context_key']: doc}})
-            PrintService.create_snapshot(tid, doc_type, doc_id, reason='bulk_print', document=doc)
-            PrintService.audit_print(tid, f'{doc_type}_bulk', doc_id, action='bulk_print')
+            PrintService.create_snapshot(eff_tid, doc_type, doc_id, reason='bulk_print', document=doc)
+            PrintService.audit_print(eff_tid, f'{doc_type}_bulk', doc_id, action='bulk_print')
 
     html = PrintService.bulk_print_documents(documents, {doc_type: entry['template']}, tid)
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}

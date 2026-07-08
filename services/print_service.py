@@ -152,11 +152,18 @@ class PrintService:
 
             if document is None:
                 model_cls = PrintService._get_model(entry['model'])
-                document = model_cls.query.filter_by(id=document_id, tenant_id=tenant_id).first()
+                query = model_cls.query.filter_by(id=document_id)
+                if tenant_id is not None:
+                    query = query.filter_by(tenant_id=tenant_id)
+                document = query.first()
 
             if document is None:
                 logger.warning("Document %s#%d not found for snapshot", document_type, document_id)
                 return
+
+            effective_tenant_id = tenant_id
+            if effective_tenant_id is None:
+                effective_tenant_id = getattr(document, 'tenant_id', None)
 
             try:
                 snapshot_data = document.to_dict() if hasattr(document, 'to_dict') else {}
@@ -167,10 +174,10 @@ class PrintService:
                 logger.warning("Could not serialize document for snapshot: %s", e)
                 snapshot_data = {}
 
-            branding = resolve_tenant_branding(tenant_id)
+            branding = resolve_tenant_branding(effective_tenant_id)
 
             snap = DocumentSnapshot(
-                tenant_id=tenant_id,
+                tenant_id=effective_tenant_id,
                 document_type=document_type,
                 document_id=document_id,
                 snapshot_data=snapshot_data,
@@ -181,6 +188,7 @@ class PrintService:
             db.session.add(snap)
             logger.info("Snapshot created: %s #%d (%s)", document_type, document_id, reason)
         except Exception as e:
+            db.session.rollback()
             logger.warning("Snapshot creation failed (non-blocking): %s", e)
 
     @staticmethod
@@ -203,6 +211,7 @@ class PrintService:
             db.session.flush()
             logger.info("Print audit recorded: %s #%d by user %s", document_type, document_id, user_id)
         except Exception as e:
+            db.session.rollback()
             logger.warning("Print audit failed (non-blocking): %s", e)
 
     @staticmethod
