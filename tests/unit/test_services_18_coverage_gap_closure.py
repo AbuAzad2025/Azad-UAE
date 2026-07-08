@@ -34,15 +34,17 @@ class TestAdvancedAnalyticsGaps:
         assert total == Decimal('-75')
 
     def test_expense_breakdown_nonzero_percentage(self, mocker):
-        acct = MagicMock(code='5100', full_name='Rent', get_balance=lambda: Decimal('250'))
+        acct = MagicMock(code='5100', full_name='Rent')
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={acct.id: Decimal('250')})
         from services.advanced_analytics import AdvancedFinancialAnalytics
         result = AdvancedFinancialAnalytics.get_expense_breakdown(tenant_id=1)
         assert result['items'][0]['percentage'] == pytest.approx(100.0)
 
     def test_revenue_breakdown_zero_total_percentage(self, mocker):
-        acct = MagicMock(code='4100', full_name='Zero', get_balance=lambda: Decimal('0'))
+        acct = MagicMock(code='4100', full_name='Zero')
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={})
         from services.advanced_analytics import AdvancedFinancialAnalytics
         result = AdvancedFinancialAnalytics.get_revenue_breakdown(tenant_id=1)
         assert result['items'][0]['percentage'] == 0

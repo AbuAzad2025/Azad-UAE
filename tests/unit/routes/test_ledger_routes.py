@@ -131,6 +131,7 @@ def _ledger_patches(**kwargs):
         stack.enter_context(patch('routes.ledger.GLService.get_trial_balance', return_value=trial))
         stack.enter_context(patch('routes.ledger.GLService.get_vat_report', return_value=vat))
         stack.enter_context(patch('routes.ledger.GLService.get_accounts_tree', return_value=[]))
+        stack.enter_context(patch('routes.ledger.GLService.get_all_account_balances', return_value={}))
         stack.enter_context(patch('routes.ledger.GLService.create_manual_entry', return_value=_entry_mock()))
         stack.enter_context(patch('routes.ledger.LoggingCore.log_audit'))
         stack.enter_context(patch('routes.ledger.db.session'))

@@ -143,6 +143,7 @@ def _ledger_patches(
          patch("routes.admin_ledger.db.session") as session, \
          patch("routes.admin_ledger.LoggingCore.log_audit") as log_audit, \
          patch("routes.admin_ledger.GLService.get_account_statement", return_value=statement or []), \
+         patch("routes.admin_ledger.GLService.get_all_account_balances", return_value={}), \
          patch("routes.admin_ledger._vaults", return_value=vaults_query):
         yield {
             "render": render,
@@ -373,7 +374,8 @@ class TestAdminLedgerReports:
 
         q = MagicMock()
         q.filter_by.side_effect = filter_by
-        with _ledger_patches(accounts_query=q) as mocks:
+        with _ledger_patches(accounts_query=q) as mocks, \
+             patch("routes.admin_ledger.GLService.get_all_account_balances", return_value={1: Decimal("1000")}):
             resp = ledger_client.get("/admin/ledger/reports/balance-sheet")
         assert resp.status_code == 200
         kwargs = mocks["render"].call_args[1]
