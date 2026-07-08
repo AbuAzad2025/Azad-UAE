@@ -389,9 +389,9 @@ class SaleService:
             SaleService.fulfill_sale(sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed)
 
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
-                current_app.logger.exception('Sale commit failed for %s', sale.sale_number)
+                current_app.logger.exception('Sale flush failed for %s', sale.sale_number)
                 db.session.rollback()
                 raise
 
@@ -938,9 +938,9 @@ class SaleService:
         sale.recalculate_payment_status()
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
-            current_app.logger.exception('Cancel sale commit failed for %s', sale.sale_number)
+            current_app.logger.exception('Cancel sale flush failed for %s', sale.sale_number)
             db.session.rollback()
             raise
 
@@ -956,9 +956,9 @@ class SaleService:
         """
         sale.recalculate_payment_status()
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
-            current_app.logger.exception('Payment status update commit failed for %s', sale.sale_number)
+            current_app.logger.exception('Payment status update flush failed for %s', sale.sale_number)
             db.session.rollback()
             raise
 

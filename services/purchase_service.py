@@ -311,7 +311,7 @@ class PurchaseService:
             except Exception as e:
                 current_app.logger.warning(f'Supplier stats update failed: {e}')
 
-        db.session.commit()
+        db.session.flush()
         LoggingCore.log_audit('create', 'purchases', purchase.id)
 
         return purchase
@@ -360,9 +360,9 @@ class PurchaseService:
         purchase.status = 'cancelled'
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
-            current_app.logger.exception('Purchase cancel commit failed for %s', purchase.purchase_number)
+            current_app.logger.exception('Purchase cancel flush failed for %s', purchase.purchase_number)
             db.session.rollback()
             raise
 
@@ -574,9 +574,9 @@ class PurchaseService:
             )
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
-            current_app.logger.exception('Purchase return commit failed for %s', getattr(purchase_return, 'return_number', None))
+            current_app.logger.exception('Purchase return flush failed for %s', getattr(purchase_return, 'return_number', None))
             db.session.rollback()
             raise
 

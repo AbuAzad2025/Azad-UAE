@@ -14,6 +14,63 @@ logger = logging.getLogger(__name__)
 class PrintService:
     """Professional print service with PDF generation, bulk print, and audit logging."""
 
+    PRINTABLE_DOCUMENTS = {
+        'purchase': {
+            'template': 'purchases/print.html',
+            'model': 'Purchase',
+            'context_key': 'purchase',
+            'permission': 'manage_purchases',
+            'filename_attr': 'purchase_number',
+            'filename_prefix': 'purchase',
+        },
+        'expense': {
+            'template': 'expenses/print.html',
+            'model': 'Expense',
+            'context_key': 'expense',
+            'permission': 'manage_expenses',
+            'filename_attr': 'expense_number',
+            'filename_prefix': 'expense',
+        },
+        'payroll_slip': {
+            'template': 'payroll/slip.html',
+            'model': 'PayrollTransaction',
+            'context_key': 'slip',
+            'permission': 'manage_payroll',
+            'filename_attr': None,
+            'filename_prefix': 'salary_slip',
+        },
+        'cheque': {
+            'template': 'printing/cheque.html',
+            'model': 'Cheque',
+            'context_key': 'cheque',
+            'permission': 'manage_payments',
+            'filename_attr': None,
+            'filename_prefix': 'cheque',
+        },
+        'packing_slip': {
+            'template': 'printing/packing_slip.html',
+            'model': 'Sale',
+            'context_key': 'sale',
+            'permission': 'manage_sales',
+            'filename_attr': 'sale_number',
+            'filename_prefix': 'packing_slip',
+        },
+        'sale': {
+            'template': 'invoices/modern.html',
+            'model': 'Sale',
+            'context_key': 'sale',
+            'permission': 'manage_sales',
+            'filename_attr': 'sale_number',
+            'filename_prefix': 'invoice',
+        },
+    }
+
+    @staticmethod
+    def _get_model(model_name):
+        """Import and return a model class by name (lazy import to avoid circular deps)."""
+        import models
+        return getattr(models, model_name)
+
     @staticmethod
     def _get_tenant_context(tenant_id):
         """Build unified print context for any tenant-scoped document."""
@@ -81,8 +138,54 @@ class PrintService:
             return html.encode('utf-8')
 
     @staticmethod
+    def create_snapshot(tenant_id, document_type, document_id, reason='print', document=None):
+        """Capture an immutable snapshot of a document at print/finalize/amend time."""
+        from utils.tenant_branding import resolve_tenant_branding
+        from models.document_snapshot import DocumentSnapshot
+        from extensions import db
+
+        try:
+            entry = PrintService.PRINTABLE_DOCUMENTS.get(document_type)
+            if not entry:
+                logger.warning("No registry entry for %s, skipping snapshot", document_type)
+                return
+
+            if document is None:
+                model_cls = PrintService._get_model(entry['model'])
+                document = model_cls.query.filter_by(id=document_id, tenant_id=tenant_id).first()
+
+            if document is None:
+                logger.warning("Document %s#%d not found for snapshot", document_type, document_id)
+                return
+
+            try:
+                snapshot_data = document.to_dict() if hasattr(document, 'to_dict') else {}
+                if not snapshot_data:
+                    snapshot_data = {c.name: getattr(document, c.name, None)
+                                     for c in document.__table__.columns}
+            except Exception as e:
+                logger.warning("Could not serialize document for snapshot: %s", e)
+                snapshot_data = {}
+
+            branding = resolve_tenant_branding(tenant_id)
+
+            snap = DocumentSnapshot(
+                tenant_id=tenant_id,
+                document_type=document_type,
+                document_id=document_id,
+                snapshot_data=snapshot_data,
+                branding_snapshot=branding,
+                snapshot_reason=reason,
+                created_by=PrintService._user_context().get('print_user_id'),
+            )
+            db.session.add(snap)
+            logger.info("Snapshot created: %s #%d (%s)", document_type, document_id, reason)
+        except Exception as e:
+            logger.warning("Snapshot creation failed (non-blocking): %s", e)
+
+    @staticmethod
     def audit_print(tenant_id, document_type, document_id, user_id=None, action='print', metadata=None):
-        """Record print action in audit log."""
+        """Record print action in audit log (flush-based for transaction safety)."""
         try:
             from models.print_history import PrintHistory
             from extensions import db
@@ -97,7 +200,7 @@ class PrintService:
                 ip_address=None,
             )
             db.session.add(record)
-            db.session.commit()
+            db.session.flush()
             logger.info("Print audit recorded: %s #%d by user %s", document_type, document_id, user_id)
         except Exception as e:
             logger.warning("Print audit failed (non-blocking): %s", e)

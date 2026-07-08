@@ -48,7 +48,7 @@ def _constraint_exists(table_name, constraint_name):
     bind = op.get_bind()
     result = bind.execute(sa.text(
         "SELECT conname FROM pg_constraint "
-        "WHERE conname = :cdef AND conrelid = :tbl::regclass"
+        "WHERE conname = :cdef AND conrelid = CAST(:tbl AS regclass)"
     ), {'cdef': constraint_name, 'tbl': table_name})
     return result.fetchone() is not None
 
@@ -63,9 +63,10 @@ def upgrade():
             sa.ForeignKey('tenants.id', ondelete='CASCADE'),
             nullable=True,  # nullable first for safe backfill
         ))
-        op.execute(sa.text(
-            "UPDATE integration_settings SET tenant_id = :tid WHERE tenant_id IS NULL"
-        )).bindparams(tid=DEFAULT_TENANT_ID)
+        op.execute(
+            sa.text("UPDATE integration_settings SET tenant_id = :tid WHERE tenant_id IS NULL")
+            .bindparams(tid=DEFAULT_TENANT_ID)
+        )
 
     # Drop old service_name unique, add composite (tenant_id, service_name)
     if _constraint_exists('integration_settings', 'integration_settings_service_name_key'):
@@ -99,9 +100,10 @@ def upgrade():
             sa.ForeignKey('tenants.id', ondelete='CASCADE'),
             nullable=True,
         ))
-        op.execute(sa.text(
-            "UPDATE card_payments SET tenant_id = :tid WHERE tenant_id IS NULL"
-        )).bindparams(tid=DEFAULT_TENANT_ID)
+        op.execute(
+            sa.text("UPDATE card_payments SET tenant_id = :tid WHERE tenant_id IS NULL")
+            .bindparams(tid=DEFAULT_TENANT_ID)
+        )
 
     if not _index_exists('card_payments', 'ix_card_payments_tenant_id'):
         op.create_index(
@@ -135,9 +137,10 @@ def upgrade():
             WHERE ctm.team_id = ct.id AND ctm.tenant_id IS NULL
         """))
         # Fallback for any orphaned rows
-        op.execute(sa.text(
-            "UPDATE crm_team_members SET tenant_id = :tid WHERE tenant_id IS NULL"
-        )).bindparams(tid=DEFAULT_TENANT_ID)
+        op.execute(
+            sa.text("UPDATE crm_team_members SET tenant_id = :tid WHERE tenant_id IS NULL")
+            .bindparams(tid=DEFAULT_TENANT_ID)
+        )
 
     # Update unique constraint to include tenant_id
     if _constraint_exists('crm_team_members', 'uq_crm_team_member'):
@@ -173,9 +176,10 @@ def upgrade():
             FROM payment_vault pv
             WHERE pt.vault_id = pv.id AND pt.tenant_id IS NULL
         """))
-        op.execute(sa.text(
-            "UPDATE payment_transactions SET tenant_id = :tid WHERE tenant_id IS NULL"
-        )).bindparams(tid=DEFAULT_TENANT_ID)
+        op.execute(
+            sa.text("UPDATE payment_transactions SET tenant_id = :tid WHERE tenant_id IS NULL")
+            .bindparams(tid=DEFAULT_TENANT_ID)
+        )
 
     if not _index_exists('payment_transactions', 'ix_payment_transactions_tenant_id'):
         op.create_index(
@@ -208,9 +212,10 @@ def upgrade():
             FROM payment_vault pv
             WHERE pl.vault_id = pv.id AND pl.tenant_id IS NULL
         """))
-        op.execute(sa.text(
-            "UPDATE payment_logs SET tenant_id = :tid WHERE tenant_id IS NULL"
-        )).bindparams(tid=DEFAULT_TENANT_ID)
+        op.execute(
+            sa.text("UPDATE payment_logs SET tenant_id = :tid WHERE tenant_id IS NULL")
+            .bindparams(tid=DEFAULT_TENANT_ID)
+        )
 
     if not _index_exists('payment_logs', 'ix_payment_logs_tenant_id'):
         op.create_index(

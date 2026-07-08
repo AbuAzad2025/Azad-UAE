@@ -622,9 +622,9 @@ def create_from_sale(sale_id):
                 'branch_id': sale.branch_id,
             }
 
-            receipt = PaymentService.create_receipt(receipt_data)
-
-            LoggingCore.log_audit('create', 'receipts', receipt.id)
+            with atomic_transaction('receipt_creation_from_sale'):
+                receipt = PaymentService.create_receipt(receipt_data)
+                LoggingCore.log_audit('create', 'receipts', receipt.id)
 
             flash('تم إنشاء سند القبض بنجاح', 'success')
             return redirect(url_for('payments.view_receipt', id=receipt.id))
@@ -752,7 +752,8 @@ def create_voucher_submit():
                     'bank_name': bank_name if payment_method == 'cheque' else None,
                     'branch_id': branch_id,
                 }
-                receipt = PaymentService.create_receipt(receipt_data)
+                with atomic_transaction('receipt_creation_from_voucher'):
+                    receipt = PaymentService.create_receipt(receipt_data)
                 flash(f'تم إنشاء سند القبض رقم {receipt.receipt_number} بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
 

@@ -33,6 +33,7 @@ def post_or_fail(
     branch_id=None,
     user_id=None,
     tenant_id=None,
+    commit=False,
 ):
     """
     Post a journal entry with mandatory validation flow.
@@ -41,6 +42,11 @@ def post_or_fail(
     - Entry is created as 'draft'
     - Must pass validation (balance, header account checks)
     - Only then can be posted to GL
+
+    Args:
+        commit: If False (default), the caller owns the transaction boundary.
+                Use True for standalone calls (e.g. admin UI journal entry)
+                that are not wrapped in an outer atomic_transaction.
     """
     # Resolve currency from tenant if not explicitly provided
     if currency is None:
@@ -94,7 +100,7 @@ def post_or_fail(
             entry_id=entry.id,
             posted_by=user_id,
             post_notes=None,
-            commit=True
+            commit=commit,
         )
 
         return posted_entry

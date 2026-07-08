@@ -329,7 +329,8 @@ def edit(id):
             supplier.tags = request.form.get('tags')
             supplier.is_verified = request.form.get('is_verified') == 'on'
 
-            db.session.commit()
+            with atomic_transaction('supplier_edit'):
+                db.session.flush()
 
             LoggingCore.log_audit('update', 'suppliers', supplier.id)
 
@@ -337,7 +338,6 @@ def edit(id):
             return redirect(url_for('suppliers.view', id=supplier.id))
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error updating supplier {id}: {e}")
             flash(ErrorMessages.update_failed('supplier'), 'danger')
 
@@ -366,21 +366,23 @@ def delete(id):
 
         if purchases_count > 0 or payments_count > 0:
             supplier.is_active = False
-            db.session.commit()
+            with atomic_transaction('supplier_soft_delete'):
+                db.session.flush()
             flash(f'⚠️ تم إلغاء تفعيل المورد "{supplier.name}" بدلاً من حذفه لوجود ({purchases_count} فاتورة شراء، {payments_count} دفعة) مرتبطة به.', 'warning')
         else:
             db.session.delete(supplier)
-            db.session.commit()
+            with atomic_transaction('supplier_hard_delete'):
+                db.session.flush()
             flash(f'✅ تم حذف المورد "{supplier.name}" نهائياً!', 'success')
 
         LoggingCore.log_audit('delete', 'suppliers', supplier.id)
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting supplier {id}: {e}")
         try:
             supplier.is_active = False
-            db.session.commit()
+            with atomic_transaction('supplier_delete_fallback'):
+                db.session.flush()
             flash(f'⚠️ تعذر الحذف النهائي للمورد "{supplier.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.', 'warning')
         except Exception as inner_e:
             current_app.logger.error(f"Error falling back to soft delete for supplier {id}: {inner_e}")

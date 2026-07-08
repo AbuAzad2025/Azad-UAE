@@ -1458,14 +1458,15 @@ def adjust_stock(id):
 @permission_required('view_products')
 def print_label(id):
     from services.label_print_service import get_single_label_html
-    product = tenant_get_or_404(Product, id, get_active_tenant_id(current_user))
+    tenant_id = get_active_tenant_id(current_user)
+    product = tenant_get_or_404(Product, id, tenant_id)
     branch_id = None
     try:
         from utils.decorators import report_branch_scope_id
         branch_id = report_branch_scope_id()
     except Exception:
         pass
-    return get_single_label_html(product, branch_id=branch_id)
+    return get_single_label_html(product, branch_id=branch_id, tenant_id=tenant_id)
 
 
 @products_bp.route('/print-labels', methods=['POST'])

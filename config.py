@@ -146,7 +146,8 @@ class Config:
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
     CORS_SUPPORTS_CREDENTIALS = True
     
-    RATELIMIT_DEFAULT = "10000 per day;1000 per hour"
+    RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"), False)
+    RATELIMIT_DEFAULT = "100000 per hour"
     RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_LOGIN = "1000 per hour;100 per minute"
     RATELIMIT_API = "600 per hour;10 per second"

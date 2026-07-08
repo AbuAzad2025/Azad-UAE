@@ -8,6 +8,7 @@ from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from services.cheque_service import process_cheque_issue
 from utils.decorators import permission_required, branch_scope_id
+from utils.db_safety import atomic_transaction
 from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
@@ -241,7 +242,8 @@ def create():
                                      categories=tenant_query(ExpenseCategory).filter_by(is_active=True).all(),
                                      exchange_rates=CurrencyService.get_all_rates(_dc))
             
-            db.session.commit()
+            with atomic_transaction('expense_create'):
+                db.session.flush()
             
             LoggingCore.log_audit('create', 'expenses', expense.id)
             
@@ -381,14 +383,14 @@ def edit(id):
                     branch_id=expense.branch_id,
                 )
             
-            db.session.commit()
+            with atomic_transaction('expense_edit'):
+                db.session.flush()
             
             LoggingCore.log_audit('update', 'expenses', id)
             flash('✅ تم تحديث المصروف بنجاح!', 'success')
             return redirect(url_for('expenses.view', id=id))
         
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
     return render_template('expenses/edit.html', expense=expense, categories=categories)
@@ -423,7 +425,8 @@ def delete(id):
                  archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف', commit=False)
             
             LoggingCore.log_audit('archive', 'expenses', id)
-            db.session.commit()
+            with atomic_transaction('expense_archive'):
+                db.session.flush()
             flash(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)', 'warning')
             
         else:
@@ -445,13 +448,13 @@ def delete(id):
             # 3. حذف المصروف
             db.session.delete(expense)
             LoggingCore.log_audit('delete', 'expenses', id)
-            db.session.commit()
+            with atomic_transaction('expense_delete'):
+                db.session.flush()
             flash(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً', 'success')
             
         return redirect(url_for('expenses.index'))
     
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة.', 'danger')
         return redirect(url_for('expenses.view', id=id))
 
@@ -487,11 +490,11 @@ def cancel(id):
 
         expense.is_reversed = True
 
-        db.session.commit()
+        with atomic_transaction('expense_cancel'):
+            db.session.flush()
         LoggingCore.log_audit('cancel', 'expenses', id)
         flash(f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في الإلغاء: {str(e)}', 'danger')
 
     return redirect(url_for('expenses.view', id=id))
@@ -557,9 +560,9 @@ def create_category():
             name_ar=data.get('name_ar'),
             gl_account_code=gl_account_code,
         )
-        
         db.session.add(category)
-        db.session.commit()
+        with atomic_transaction('expense_category_create'):
+            db.session.flush()
         
         # إرجاع JSON إذا كان الطلب JSON
         if request.is_json:
@@ -573,12 +576,11 @@ def create_category():
                 }
             })
         
+
         flash('✅ تم إضافة فئة المصروف بنجاح!', 'success')
         return redirect(url_for('expenses.categories'))
     
     except Exception as e:
-        db.session.rollback()
-        
         if request.is_json:
             return jsonify({
                 'success': False,
@@ -667,12 +669,9 @@ def restore(id):
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
     
-    try:
+    with atomic_transaction('expense_restore'):
         db.session.delete(archived)
-        db.session.commit()
-        LoggingCore.log_audit('restore', 'expenses', id)
-    except Exception as e:
-        db.session.rollback()
-    
+        db.session.flush()
+    LoggingCore.log_audit('restore', 'expenses', id)
     return redirect(url_for('expenses.archived'))
 

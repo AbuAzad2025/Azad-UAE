@@ -211,14 +211,14 @@ def edit(id):
             # تعديل الملاحظات فقط
             purchase.notes = request.form.get('notes', '')
             
-            db.session.commit()
+            with atomic_transaction('purchase_edit'):
+                db.session.flush()
             LoggingCore.log_audit('update', 'purchases', id)
             
             flash('✅ تم تحديث فاتورة الشراء بنجاح!', 'success')
             return redirect(url_for('purchases.view', id=id))
         
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات.', 'danger')
     
     return render_template('purchases/edit.html', purchase=purchase)
@@ -268,7 +268,8 @@ def delete(id):
             archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات', commit=False)
             
             LoggingCore.log_audit('archive', 'purchases', id)
-            db.session.commit()
+            with atomic_transaction('purchase_archive'):
+                db.session.flush()
             flash(f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)', 'warning')
         elif has_stock:
             # منع الحذف النهائي لفواتير الشراء التي أثرت على المخزون
@@ -276,7 +277,8 @@ def delete(id):
             archive_service = ArchiveService()
             archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود حركة مخزون', commit=False)
             LoggingCore.log_audit('archive', 'purchases', id)
-            db.session.commit()
+            with atomic_transaction('purchase_archive_fallback'):
+                db.session.flush()
         else:
             # عكس القيود المحاسبية بدلاً من الحذف
             from services.gl_service import GLService
@@ -299,13 +301,13 @@ def delete(id):
             PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
             db.session.delete(purchase)
             LoggingCore.log_audit('delete', 'purchases', id)
-            db.session.commit()
+            with atomic_transaction('purchase_delete'):
+                db.session.flush()
             flash(f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً', 'success')
             
         return redirect(url_for('purchases.index'))
     
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
         return redirect(url_for('purchases.view', id=id))
 
@@ -322,13 +324,13 @@ def cancel(id):
         return render_template('errors/403.html'), 403
 
     try:
-        PurchaseService.cancel_purchase(purchase)
+        with atomic_transaction('purchase_cancel'):
+            PurchaseService.cancel_purchase(purchase)
         LoggingCore.log_audit('cancel', 'purchases', purchase.id)
         flash('✅ تم إلغاء فاتورة الشراء بنجاح!', 'success')
     except ValueError as e:
         flash(f'❌ {str(e)}', 'danger')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
 
     return redirect(url_for('purchases.view', id=id))
@@ -359,9 +361,10 @@ def purchase_return(id):
             return redirect(url_for('purchases.purchase_return', id=id))
 
         try:
-            result = PurchaseService.create_purchase_return(
-                purchase, current_user, lines_data, reason=reason, notes=notes,
-            )
+            with atomic_transaction('purchase_return'):
+                result = PurchaseService.create_purchase_return(
+                    purchase, current_user, lines_data, reason=reason, notes=notes,
+                )
             flash(f'✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!', 'success')
             return redirect(url_for('purchases.view', id=id))
         except ValueError as e:

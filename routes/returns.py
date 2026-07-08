@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify, render_template, current_app, abort
 from flask_login import login_required, current_user
 
-from extensions import limiter
+from extensions import db, limiter
 from services.return_service import ReturnService
 from models import Sale, ProductReturn
 from utils.decorators import permission_required, branch_scope_id
+from utils.db_safety import atomic_transaction
 from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.tenanting import get_active_tenant_id, is_platform_owner
@@ -76,13 +77,14 @@ def api_create_return():
         from utils.tenanting import tenant_get_or_404
         tenant_get_or_404(Sale, sale_id)
 
-        result = ReturnService.create_return(
-            sale_id=sale_id,
-            return_lines_data=lines,
-            user=current_user,
-            notes=notes,
-            manual_refund_amount=manual_refund_amount
-        )
+        with atomic_transaction('sale_return'):
+            result = ReturnService.create_return(
+                sale_id=sale_id,
+                return_lines_data=lines,
+                user=current_user,
+                notes=notes,
+                manual_refund_amount=manual_refund_amount
+            )
 
         LoggingCore.log_audit(
             'create',

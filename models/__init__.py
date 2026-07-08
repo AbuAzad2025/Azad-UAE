@@ -78,6 +78,7 @@ from .projects import Project, TaskStage, Task, Timesheet, ProjectMember
 from .hr import Department, JobPosition, HRContract, Attendance, LeaveType, LeaveRequest
 from .email_marketing import EmailList, EmailSubscriber, EmailTemplate, EmailCampaign, CampaignLog
 from .print_history import PrintHistory
+from .document_snapshot import DocumentSnapshot
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -155,4 +156,5 @@ __all__ = [
     'Department', 'JobPosition', 'HRContract', 'Attendance', 'LeaveType', 'LeaveRequest',
     'EmailList', 'EmailSubscriber', 'EmailTemplate', 'EmailCampaign', 'CampaignLog',
     'PrintHistory',
+    'DocumentSnapshot',
 ]

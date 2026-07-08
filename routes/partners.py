@@ -14,6 +14,8 @@ Endpoints:
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
 
+from extensions import db
+from utils.db_safety import atomic_transaction
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
     request, jsonify, abort,
@@ -97,12 +99,11 @@ def create():
                 notes=request.form.get('notes', '').strip() or None,
                 is_active=True,
             )
-            db.session.add(partner)
-            db.session.commit()
+            with atomic_transaction('partner_create'):
+                db.session.add(partner)
             flash('✅ تم إضافة الشريك بنجاح.', 'success')
             return redirect(url_for('partners.index'))
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ خطأ: {e}', 'danger')
 
     return render_template('partners/create.html',
@@ -178,11 +179,11 @@ def edit(id):
             partner.notes = request.form.get('notes', '').strip() or None
             partner.updated_at = datetime.now(timezone.utc)
 
-            db.session.commit()
+            with atomic_transaction('partner_edit'):
+                db.session.flush()
             flash('✅ تم تحديث بيانات الشريك.', 'success')
             return redirect(url_for('partners.view', id=id))
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ خطأ: {e}', 'danger')
 
     return render_template('partners/edit.html',
@@ -238,12 +239,13 @@ def distribute():
         try:
             period_start = _parse_date(request.form.get('period_start'))
             period_end = _parse_date(request.form.get('period_end'))
-            dist_ids = PartnerService.create_distributions(
-                tenant_id=tid,
-                period_start=period_start,
-                period_end=period_end,
-                created_by=current_user.id,
-            )
+            with atomic_transaction('partner_distribute'):
+                dist_ids = PartnerService.create_distributions(
+                    tenant_id=tid,
+                    period_start=period_start,
+                    period_end=period_end,
+                    created_by=current_user.id,
+                )
             flash(f'✅ تم إنشاء {len(dist_ids)} توزيع مسودة.', 'success')
             return redirect(url_for('partners.distributions'))
         except Exception as e:
@@ -261,11 +263,15 @@ def distribute():
 @login_required
 @permission_required('manage_users')
 def approve_distribution(dist_id):
-    ok = PartnerService.approve_distribution(dist_id, current_user.id, tenant_id=_tenant_id())
-    if ok:
-        flash('✅ تم اعتماد التوزيع.', 'success')
-    else:
-        flash('❌ لم يتم اعتماد التوزيع.', 'danger')
+    try:
+        with atomic_transaction('partner_approve_distribution'):
+            ok = PartnerService.approve_distribution(dist_id, current_user.id, tenant_id=_tenant_id())
+        if ok:
+            flash('✅ تم اعتماد التوزيع.', 'success')
+        else:
+            flash('❌ لم يتم اعتماد التوزيع.', 'danger')
+    except Exception as e:
+        flash(f'❌ خطأ: {e}', 'danger')
     return redirect(url_for('partners.distributions'))
 
 
@@ -273,11 +279,15 @@ def approve_distribution(dist_id):
 @login_required
 @permission_required('manage_payments')
 def pay_distribution(dist_id):
-    ok = PartnerService.pay_distribution(dist_id, tenant_id=_tenant_id())
-    if ok:
-        flash('✅ تم تسجيل الدفع.', 'success')
-    else:
-        flash('❌ لم يتم تسجيل الدفع.', 'danger')
+    try:
+        with atomic_transaction('partner_pay_distribution'):
+            ok = PartnerService.pay_distribution(dist_id, tenant_id=_tenant_id())
+        if ok:
+            flash('✅ تم تسجيل الدفع.', 'success')
+        else:
+            flash('❌ لم يتم تسجيل الدفع.', 'danger')
+    except Exception as e:
+        flash(f'❌ خطأ: {e}', 'danger')
     return redirect(url_for('partners.distributions'))
 
 
@@ -296,14 +306,15 @@ def add_transaction(id):
         if tx_type == 'withdrawal':
             amount = -abs(amount)
 
-        tx_id = PartnerService.add_transaction(
-            partner_id=id,
-            transaction_type=tx_type,
-            amount=amount,
-            notes=notes,
-            created_by=current_user.id,
-            tenant_id=_tenant_id(),
-        )
+        with atomic_transaction('partner_add_transaction'):
+            tx_id = PartnerService.add_transaction(
+                partner_id=id,
+                transaction_type=tx_type,
+                amount=amount,
+                notes=notes,
+                created_by=current_user.id,
+                tenant_id=_tenant_id(),
+            )
         if tx_id is None:
             flash('❌ الشريك غير موجود أو خارج نطاق المستأجر.', 'danger')
             return redirect(url_for('partners.index'))

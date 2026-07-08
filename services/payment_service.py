@@ -184,9 +184,9 @@ class PaymentService:
                 raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {_e}') from _e
 
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
-                current_app.logger.exception('Payment commit failed for supplier payment')
+                current_app.logger.exception('Payment flush failed for supplier payment')
                 db.session.rollback()
                 raise
 
@@ -473,9 +473,9 @@ class PaymentService:
                     remaining_amount_aed -= allocated_amount_aed
 
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
-                current_app.logger.exception('Receipt commit failed for %s', receipt.receipt_number)
+                current_app.logger.exception('Receipt flush failed for %s', receipt.receipt_number)
                 db.session.rollback()
                 raise
 
@@ -639,9 +639,9 @@ class PaymentService:
                 remaining_amount_aed -= allocated_aed
 
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
-                current_app.logger.exception('Receipt allocation commit failed for %s', receipt.receipt_number)
+                current_app.logger.exception('Receipt allocation flush failed for %s', receipt.receipt_number)
                 db.session.rollback()
                 raise
             current_app.logger.info(f'Receipt {receipt.receipt_number} allocated to sales')

@@ -157,7 +157,7 @@ class AdvancedJournalEntryManager:
     # ── Update (draft only) ──────────────────────────────────────────────
 
     @staticmethod
-    def update_entry(entry_id, updates, updated_by, reason=None):
+    def update_entry(entry_id, updates, updated_by, reason=None, commit=True):
         """تحديث قيد محاسبي — only draft entries."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status not in ('draft', 'error'):
@@ -180,7 +180,10 @@ class AdvancedJournalEntryManager:
             reason or "تحديث القيد", updated_by
         )
         try:
-            db.session.commit()
+            if commit:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -193,9 +196,12 @@ class AdvancedJournalEntryManager:
         """Post a validated entry to the GL.
 
         Args:
-            commit: If False, changes stay in the session without committing.
-                    Caller is responsible for committing. Used by
-                    reverse_entry_advanced to group validate+post atomically.
+            commit: If True (default), performs db.session.commit().
+                    If False, performs db.session.flush() instead, letting
+                    the caller own the transaction boundary. Used by
+                    reverse_entry_advanced and post_or_fail(commit=False)
+                    to group validate+post atomically in an outer
+                    atomic_transaction.
         """
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status != 'validated':
@@ -208,18 +214,20 @@ class AdvancedJournalEntryManager:
             entry_id, 'post', entry.to_dict(), entry.to_dict(),
             f'Posting: {post_notes or ""}', posted_by
         )
-        if commit:
-            try:
+        try:
+            if commit:
                 db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            else:
+                db.session.flush()
+        except Exception:
+            db.session.rollback()
+            raise
         return entry
 
     # ── Reverse (posted only) ────────────────────────────────────────────
 
     @staticmethod
-    def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True):
+    def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True, commit=True):
         """عكس قيد محاسبي — creates a reversing entry."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status == 'reversed':
@@ -266,7 +274,10 @@ class AdvancedJournalEntryManager:
                 f"إنشاء قيد عكسي للقيد {entry.entry_number}", reversed_by
             )
         try:
-            db.session.commit()
+            if commit:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -275,7 +286,7 @@ class AdvancedJournalEntryManager:
     # ── Soft-delete (cancel) — NEVER physical delete ─────────────────────
 
     @staticmethod
-    def delete_entry(entry_id, deleted_by, reason):
+    def delete_entry(entry_id, deleted_by, reason, commit=True):
         """Soft-delete: sets status='cancelled'. Preserves audit trail.
 
         Financial documents are immutable. Physical deletes are forbidden
@@ -297,7 +308,10 @@ class AdvancedJournalEntryManager:
             f"إلغاء القيد - السبب: {reason}", deleted_by
         )
         try:
-            db.session.commit()
+            if commit:
+                db.session.commit()
+            else:
+                db.session.flush()
         except Exception:
             db.session.rollback()
             raise

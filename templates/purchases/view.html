@@ -210,7 +210,7 @@
 
           </a>
 
-          <a href="{{ url_for('printing.purchase_pdf', id=purchase.id) }}" class="btn btn-danger mb-2" target="_blank" rel="noopener noreferrer">
+          <a href="{{ url_for('printing.print_document_pdf', doc_type='purchase', id=purchase.id) }}" class="btn btn-danger mb-2" target="_blank" rel="noopener noreferrer">
 
             <i class="fas fa-file-pdf mr-2"></i>PDF
 

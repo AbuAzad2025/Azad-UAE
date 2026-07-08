@@ -364,30 +364,22 @@ def edit(id):
     
     if request.method == 'POST':
         try:
-            if has_gl:
-                # للفواتير المنفذة مخزنياً: السماح فقط بتعديل الملاحظات (لا تغيير في المبالغ المالية)
-                sale.notes = request.form.get('notes', sale.notes)
-                db.session.commit()
-                LoggingCore.log_audit('update', 'sales', id)
-                flash('✅ تم تحديث الملاحظات بنجاح!', 'success')
-                return redirect(url_for('sales.view', id=id))
-            
-            # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
-            sale.notes = request.form.get('notes', '')
-            discount_amount = max(0, request.form.get('discount_amount', type=float, default=0) or 0)
-            sale.discount_amount = discount_amount
-            
-            # إعادة حساب الإجماليات
-            sale.calculate_totals()
-            
-            db.session.commit()
-            LoggingCore.log_audit('update', 'sales', id)
-            
+            with atomic_transaction('sale_update'):
+                if has_gl:
+                    # للفواتير المنفذة مخزنياً: السماح فقط بتعديل الملاحظات (لا تغيير في المبالغ المالية)
+                    sale.notes = request.form.get('notes', sale.notes)
+                    LoggingCore.log_audit('update', 'sales', id)
+                else:
+                    # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
+                    sale.notes = request.form.get('notes', '')
+                    discount_amount = max(0, request.form.get('discount_amount', type=float, default=0) or 0)
+                    sale.discount_amount = discount_amount
+                    sale.calculate_totals()
+                    LoggingCore.log_audit('update', 'sales', id)
             flash('✅ تم تحديث الفاتورة بنجاح!', 'success')
             return redirect(url_for('sales.view', id=id))
         
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة.', 'danger')
     
     return render_template('sales/edit.html', sale=sale)
@@ -409,9 +401,9 @@ def cancel(id):
         return render_template('errors/403.html'), 403
     
     try:
-        SaleService.cancel_sale(sale)
-        
-        LoggingCore.log_audit('cancel', 'sales', sale.id)
+        with atomic_transaction('sale_cancellation'):
+            SaleService.cancel_sale(sale)
+            LoggingCore.log_audit('cancel', 'sales', sale.id)
         
         flash('✅ تم إلغاء الفاتورة بنجاح!', 'success')
     
@@ -528,34 +520,31 @@ def delete(id):
         has_links = True
 
     try:
-        # عكس القيود المحاسبية قبل الأرشفة للحفاظ على أثر التدقيق
-        try:
-            from services.gl_service import GLService
-            GLService.reverse_entry(
-                reference_type=GLRef.SALE,
-                reference_id=sale.id,
-                description=f'Reverse Sale {sale.sale_number} (Archived)',
-                tenant_id=getattr(sale, 'tenant_id', None),
-            )
-            GLService.reverse_entry(
-                reference_type=GLRef.SALE_COGS,
-                reference_id=sale.id,
-                description=f'Reverse COGS {sale.sale_number} (Archived)',
-                tenant_id=getattr(sale, 'tenant_id', None),
-            )
-        except Exception as rev_err:
-            current_app.logger.warning('GL reversal skipped for draft sale %s: %s', sale.sale_number, rev_err)
-        archive_service = ArchiveService()
-        archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
-        archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
-        LoggingCore.log_audit('archive', 'sales', id)
-        db.session.commit()
+        with atomic_transaction('sale_delete'):
+            try:
+                from services.gl_service import GLService
+                GLService.reverse_entry(
+                    reference_type=GLRef.SALE,
+                    reference_id=sale.id,
+                    description=f'Reverse Sale {sale.sale_number} (Archived)',
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
+                GLService.reverse_entry(
+                    reference_type=GLRef.SALE_COGS,
+                    reference_id=sale.id,
+                    description=f'Reverse COGS {sale.sale_number} (Archived)',
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
+            except Exception as rev_err:
+                current_app.logger.warning('GL reversal skipped for draft sale %s: %s', sale.sale_number, rev_err)
+            archive_service = ArchiveService()
+            archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
+            archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
+            LoggingCore.log_audit('archive', 'sales', id)
         flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"', 'warning')
-            
         return redirect(url_for('sales.index'))
         
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في الحذف: {str(e)}', 'danger')
         return redirect(url_for('sales.index'))
 
@@ -575,15 +564,13 @@ def archive(id):
         return render_template('errors/403.html'), 403
     
     try:
-        if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
-            SaleService.cancel_sale(sale)
-        
-        archive_service = ArchiveService()
-        archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
-        LoggingCore.log_audit('archive', 'sales', sale.id)
-        db.session.commit()
+        with atomic_transaction('sale_archive'):
+            if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
+                SaleService.cancel_sale(sale)
+            archive_service = ArchiveService()
+            archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
+            LoggingCore.log_audit('archive', 'sales', sale.id)
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في الأرشفة: {str(e)}', 'danger')
     
     return redirect(url_for('sales.index'))
@@ -606,11 +593,11 @@ def restore(id):
     archived = archived_query.first_or_404()
     
     try:
-        db.session.delete(archived)
-        db.session.commit()
-        LoggingCore.log_audit('restore', 'sales', id)
+        with atomic_transaction('sale_restore'):
+            db.session.delete(archived)
+            LoggingCore.log_audit('restore', 'sales', id)
     except Exception as e:
-        db.session.rollback()
+        flash(f'❌ حدث خطأ في استعادة الفاتورة: {str(e)}', 'danger')
     
     return redirect(url_for('sales.archived'))
 

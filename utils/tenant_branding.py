@@ -13,6 +13,7 @@ import re
 from typing import Any
 
 from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON, tenant_asset_rel
+from utils.cache_decorators import cached_query
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
 _POWERED_BY = "Powered by Azad Smart Systems"
@@ -52,6 +53,7 @@ def _first_existing(*candidates: str | None) -> str:
     return ""
 
 
+@cached_query(timeout=300, key_prefix='tenant_branding')
 def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     from extensions import db
     from models.invoice_settings import InvoiceSettings

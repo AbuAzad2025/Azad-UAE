@@ -227,7 +227,7 @@ class PartnerService:
             distribution_ids.append(dist.id)
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -275,7 +275,7 @@ class PartnerService:
                 tx.balance_after = new_bal
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -315,7 +315,7 @@ class PartnerService:
             ]
             post_or_fail(lines, description=f'دفع توزيع شريك #{dist.id}', reference_type=GLRef.PARTNER_DISTRIBUTION, reference_id=dist.id, tenant_id=dist.tenant_id, branch_id=branch_id)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -398,7 +398,7 @@ class PartnerService:
                 ]
             post_or_fail(lines, description=f'حركة شريك - {transaction_type} #{tx.id}', reference_type=GLRef.PARTNER_TRANSACTION, reference_id=tx.id, tenant_id=partner.tenant_id, branch_id=branch_id)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

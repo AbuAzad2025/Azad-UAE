@@ -455,7 +455,7 @@ class ReturnService:
                 sale.recalculate_payment_status()
 
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
                 db.session.rollback()
                 raise

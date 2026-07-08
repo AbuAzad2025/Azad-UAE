@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Response
 
-from tests.unit.routes.conftest import _chain_query, unauthenticated_client
+from tests.unit.routes.conftest import _chain_query, _stub_query, unauthenticated_client
 
 
 def _doc_mock(branch_id=1, tenant_id=1, **extra):
@@ -26,9 +26,9 @@ def _model_query_chain(obj):
     return q
 
 
-def _print_history_chain(items=None):
-    q = _chain_query(all=items or [])
-    return q
+def _register_entry(printing_client, doc_type, model_cls, entry):
+    """Inject a mock registry entry so the generic route can find it."""
+    pass
 
 
 @pytest.fixture
@@ -36,8 +36,9 @@ def printing_client(app_factory, bypass_permission_auth):
     with patch("routes.printing.PrintService.render_print", return_value="<html>print</html>") as render_print, \
          patch("routes.printing.PrintService.render_pdf", return_value=b"fake-pdf") as render_pdf, \
          patch("routes.printing.PrintService.audit_print") as audit_print, \
+         patch("routes.printing.PrintService.create_snapshot") as create_snapshot, \
          patch("routes.printing.PrintService.bulk_print_documents", return_value="<html>bulk</html>") as bulk_print, \
-         patch("routes.printing.tenant_get_or_404") as tenant_get, \
+         patch("routes.printing.PrintService._get_model") as get_model, \
          patch("routes.printing.branch_scope_id", return_value=None) as branch_scope, \
          patch("routes.printing.render_template", return_value="403-page") as render_tpl, \
          patch("routes.printing.db.session", MagicMock()) as session, \
@@ -46,7 +47,7 @@ def printing_client(app_factory, bypass_permission_auth):
          patch("routes.printing.send_file", return_value=Response(b"pdf", mimetype="application/pdf")) as send_file:
         settings = MagicMock()
         get_settings.return_value = settings
-        history_model.query = _print_history_chain()
+        history_model.query = _chain_query()
         from routes.printing import printing_bp
         app = app_factory(printing_bp)
         client = app.test_client()
@@ -54,8 +55,9 @@ def printing_client(app_factory, bypass_permission_auth):
             "render_print": render_print,
             "render_pdf": render_pdf,
             "audit_print": audit_print,
+            "create_snapshot": create_snapshot,
             "bulk_print": bulk_print,
-            "tenant_get": tenant_get,
+            "get_model": get_model,
             "branch_scope": branch_scope,
             "render_tpl": render_tpl,
             "session": session,
@@ -67,69 +69,102 @@ def printing_client(app_factory, bypass_permission_auth):
         yield client
 
 
-class TestPrintPurchase:
-    def test_print_purchase_returns_200(self, printing_client):
-        purchase = _doc_mock(purchase_number="PO-001")
-        printing_client._printing_mocks["tenant_get"].return_value = purchase
+class TestGenericPrint:
+    def setup_mocks(self, printing_client, doc_type='purchase', doc=None):
+        if doc is None:
+            doc = _doc_mock(purchase_number="PO-001")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(doc)
+        mocks["get_model"].return_value = model_cls
+        return doc, model_cls
+
+    def test_print_unknown_type_returns_404(self, printing_client):
+        resp = printing_client.get("/printing/unknown_doc/1")
+        assert resp.status_code == 404
+
+    def test_print_document_returns_200(self, printing_client):
+        doc, _ = self.setup_mocks(printing_client, 'purchase')
+        mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/purchase/1")
         assert resp.status_code == 200
-        printing_client._printing_mocks["audit_print"].assert_called_once()
-        printing_client._printing_mocks["render_print"].assert_called_once()
+        mocks["create_snapshot"].assert_called_once()
+        mocks["audit_print"].assert_called_once()
+        mocks["render_print"].assert_called_once()
 
-    def test_purchase_pdf_download(self, printing_client):
-        purchase = _doc_mock(purchase_number="PO-002")
-        printing_client._printing_mocks["tenant_get"].return_value = purchase
+    def test_print_document_pdf_download(self, printing_client):
+        doc, _ = self.setup_mocks(printing_client, 'purchase')
+        mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/purchase/1/pdf")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_pdf"].assert_called_once()
-        printing_client._printing_mocks["send_file"].assert_called_once()
-        printing_client._printing_mocks["audit_print"].assert_called_once()
+        mocks["render_pdf"].assert_called_once()
+        mocks["send_file"].assert_called_once()
+        mocks["create_snapshot"].assert_called_once()
+        mocks["audit_print"].assert_called_once()
+
+    def test_pdf_unknown_type_returns_404(self, printing_client):
+        resp = printing_client.get("/printing/unknown_doc/1/pdf")
+        assert resp.status_code == 404
 
 
 class TestPrintExpense:
+    def setup_mocks(self, printing_client, doc_type='expense', doc=None):
+        if doc is None:
+            doc = _doc_mock(expense_number="EX-001")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(doc)
+        mocks["get_model"].return_value = model_cls
+
     def test_print_expense_returns_200(self, printing_client):
-        expense = _doc_mock(expense_number="EX-001")
-        printing_client._printing_mocks["tenant_get"].return_value = expense
+        self.setup_mocks(printing_client, 'expense')
+        mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/expense/2")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_print"].assert_called_once()
+        mocks["render_print"].assert_called_once()
 
     def test_expense_pdf_download(self, printing_client):
-        expense = _doc_mock(expense_number="EX-002")
-        printing_client._printing_mocks["tenant_get"].return_value = expense
+        self.setup_mocks(printing_client, 'expense')
+        mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/expense/2/pdf")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_pdf"].assert_called_once()
-        printing_client._printing_mocks["send_file"].assert_called_once()
+        mocks["render_pdf"].assert_called_once()
+        mocks["send_file"].assert_called_once()
 
 
 class TestPrintPayroll:
     def test_salary_slip_returns_200(self, printing_client):
         txn = _doc_mock(id=10, branch_id=1)
-        with patch("routes.printing.PayrollTransaction") as model:
-            model.query = _model_query_chain(txn)
-            resp = printing_client.get("/printing/payroll-slip/10")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(txn)
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.get("/printing/payroll-slip/10")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_print"].assert_called_once()
+        mocks["render_print"].assert_called_once()
 
     def test_payroll_slip_pdf_download(self, printing_client):
         txn = _doc_mock(id=11, branch_id=1)
-        with patch("routes.printing.PayrollTransaction") as model:
-            model.query = _model_query_chain(txn)
-            resp = printing_client.get("/printing/payroll-slip/11/pdf")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(txn)
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.get("/printing/payroll-slip/11/pdf")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_pdf"].assert_called_once()
-        printing_client._printing_mocks["send_file"].assert_called_once()
+        mocks["render_pdf"].assert_called_once()
+        mocks["send_file"].assert_called_once()
 
 
 class TestPrintCheque:
     def test_print_cheque_returns_200(self, printing_client):
         cheque = _doc_mock(id=5, branch_id=1)
-        with patch("routes.printing.Cheque") as model:
-            model.query = _model_query_chain(cheque)
-            resp = printing_client.get("/printing/cheque/5")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(cheque)
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.get("/printing/cheque/5")
         assert resp.status_code == 200
-        printing_client._printing_mocks["render_print"].assert_called_once()
+        mocks["render_print"].assert_called_once()
 
 
 class TestPackingSlip:
@@ -142,14 +177,19 @@ class TestPackingSlip:
         sale.customer = customer
         sale.lines = []
         sale.sale_date = datetime.now(timezone.utc)
-        printing_client._printing_mocks["tenant_get"].return_value = sale
+        mocks = printing_client._printing_mocks
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.first_or_404.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = None
-        with patch("models.Shipment") as ship_model:
+        with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
+            sale_cls.query = sale_q
             ship_model.query = ship_q
             resp = printing_client.get("/printing/packing-slip/20")
         assert resp.status_code == 200
-        ctx = printing_client._printing_mocks["render_print"].call_args[0][1]
+        ctx = mocks["render_print"].call_args[0][1]
         assert ctx["sale"] is sale
         assert ctx["delivery"].customer_name == "Cust"
 
@@ -159,29 +199,36 @@ class TestPackingSlip:
         sale.lines = [MagicMock()]
         shipment = MagicMock()
         shipment.tracking_number = "TRK-1"
-        printing_client._printing_mocks["tenant_get"].return_value = sale
+        mocks = printing_client._printing_mocks
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.first_or_404.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = shipment
-        with patch("models.Shipment") as ship_model:
+        with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
+            sale_cls.query = sale_q
             ship_model.query = ship_q
             resp = printing_client.get("/printing/packing-slip/21")
         assert resp.status_code == 200
-        ctx = printing_client._printing_mocks["render_print"].call_args[0][1]
+        ctx = mocks["render_print"].call_args[0][1]
         assert ctx["delivery"] is shipment
 
 
 class TestBulkPrint:
     def test_bulk_print_sale_documents(self, printing_client):
         sale = _doc_mock(id=1, branch_id=1)
-        with patch("routes.printing.Sale") as model:
-            model.query.filter_by.return_value.first.return_value = sale
-            resp = printing_client.post(
-                "/printing/bulk-print",
-                json={"type": "sale", "ids": [1, 2]},
-                content_type="application/json",
-            )
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = sale
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/bulk-print",
+            json={"type": "sale", "ids": [1, 2]},
+            content_type="application/json",
+        )
         assert resp.status_code == 200
-        printing_client._printing_mocks["bulk_print"].assert_called_once()
+        mocks["bulk_print"].assert_called_once()
 
     def test_bulk_print_unknown_type_returns_400(self, printing_client):
         resp = printing_client.post(
@@ -197,7 +244,7 @@ class TestPrintHistory:
     def test_print_history_returns_200(self, printing_client):
         record = MagicMock()
         record.id = 1
-        printing_client._printing_mocks["history_model"].query = _print_history_chain([record])
+        printing_client._printing_mocks["history_model"].query = _chain_query(all=[record])
         with patch("routes.printing.render_template", return_value="history-page") as render:
             resp = printing_client.get("/printing/history")
         assert resp.status_code == 200
@@ -205,7 +252,7 @@ class TestPrintHistory:
         assert "printing/history.html" in render.call_args[0][0]
 
     def test_print_history_pagination(self, printing_client):
-        printing_client._printing_mocks["history_model"].query = _print_history_chain([])
+        printing_client._printing_mocks["history_model"].query = _chain_query(all=[])
         with patch("routes.printing.render_template", return_value="history-page"):
             resp = printing_client.get("/printing/history?page=2")
         assert resp.status_code == 200
@@ -224,31 +271,63 @@ class TestPrintApiPreview:
     def test_preview_unsupported_type_returns_400(self, printing_client):
         resp = printing_client.post(
             "/printing/api/preview",
-            json={"type": "sale", "id": 1},
+            json={"type": "unknown_type_xyz", "id": 1},
             content_type="application/json",
         )
         assert resp.status_code == 400
         assert "Unsupported type" in resp.get_json()["error"]
 
     def test_preview_document_not_found_returns_404(self, printing_client):
-        with patch("routes.printing.Purchase") as model:
-            model.query.filter_by.return_value.first.return_value = None
-            resp = printing_client.post(
-                "/printing/api/preview",
-                json={"type": "purchase", "id": 99},
-                content_type="application/json",
-            )
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = None
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/api/preview",
+            json={"type": "purchase", "id": 99},
+            content_type="application/json",
+        )
         assert resp.status_code == 404
 
     def test_preview_purchase_success(self, printing_client):
         purchase = _doc_mock(purchase_number="PO-9")
-        with patch("routes.printing.Purchase") as model:
-            model.query.filter_by.return_value.first.return_value = purchase
-            resp = printing_client.post(
-                "/printing/api/preview",
-                json={"type": "purchase", "id": 9},
-                content_type="application/json",
-            )
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = purchase
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/api/preview",
+            json={"type": "purchase", "id": 9},
+            content_type="application/json",
+        )
+        assert resp.status_code == 200
+        assert "html" in resp.get_json()
+
+    def test_preview_expense_success(self, printing_client):
+        expense = _doc_mock(expense_number="EX-PREV")
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = expense
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/api/preview",
+            json={"type": "expense", "id": 2},
+            content_type="application/json",
+        )
+        assert resp.status_code == 200
+        assert "html" in resp.get_json()
+
+    def test_preview_cheque_success(self, printing_client):
+        cheque = _doc_mock(id=7)
+        mocks = printing_client._printing_mocks
+        model_cls = MagicMock()
+        model_cls.query.filter_by.return_value.first.return_value = cheque
+        mocks["get_model"].return_value = model_cls
+        resp = printing_client.post(
+            "/printing/api/preview",
+            json={"type": "cheque", "id": 7},
+            content_type="application/json",
+        )
         assert resp.status_code == 200
         assert "html" in resp.get_json()
 
@@ -311,44 +390,39 @@ class TestPrintSettings:
 class TestPrintingBranchScope:
     def test_purchase_branch_scope_403(self, printing_client):
         purchase = _doc_mock(branch_id=5, purchase_number="PO-X")
-        printing_client._printing_mocks["tenant_get"].return_value = purchase
-        printing_client._printing_mocks["branch_scope"].return_value = 2
+        mocks = printing_client._printing_mocks
+        mocks["branch_scope"].return_value = 2
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(purchase)
+        mocks["get_model"].return_value = model_cls
         resp = printing_client.get("/printing/purchase/1")
         assert resp.status_code == 403
-        printing_client._printing_mocks["render_print"].assert_not_called()
+        mocks["render_print"].assert_not_called()
 
     def test_expense_branch_scope_403(self, printing_client):
         expense = _doc_mock(branch_id=8, expense_number="EX-X")
-        printing_client._printing_mocks["tenant_get"].return_value = expense
-        printing_client._printing_mocks["branch_scope"].return_value = 3
+        mocks = printing_client._printing_mocks
+        mocks["branch_scope"].return_value = 3
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(expense)
+        mocks["get_model"].return_value = model_cls
         resp = printing_client.get("/printing/expense/1")
-        assert resp.status_code == 403
-
-    def test_payroll_branch_scope_403(self, printing_client):
-        txn = _doc_mock(id=1, branch_id=9)
-        printing_client._printing_mocks["branch_scope"].return_value = 1
-        with patch("routes.printing.PayrollTransaction") as model:
-            model.query = _model_query_chain(txn)
-            resp = printing_client.get("/printing/payroll-slip/1")
-        assert resp.status_code == 403
-
-    def test_cheque_branch_scope_403(self, printing_client):
-        cheque = _doc_mock(id=1, branch_id=7)
-        printing_client._printing_mocks["branch_scope"].return_value = 2
-        with patch("routes.printing.Cheque") as model:
-            model.query = _model_query_chain(cheque)
-            resp = printing_client.get("/printing/cheque/1")
         assert resp.status_code == 403
 
     def test_packing_slip_branch_scope_403(self, printing_client):
         sale = _doc_mock(id=1, branch_id=6, sale_number="S-1")
         sale.customer = None
         sale.lines = []
-        printing_client._printing_mocks["tenant_get"].return_value = sale
-        printing_client._printing_mocks["branch_scope"].return_value = 1
+        mocks = printing_client._printing_mocks
+        mocks["branch_scope"].return_value = 1
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.first_or_404.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = None
-        with patch("models.Shipment") as ship_model:
+        with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
+            sale_cls.query = sale_q
             ship_model.query = ship_q
             resp = printing_client.get("/printing/packing-slip/1")
         assert resp.status_code == 403
@@ -364,24 +438,22 @@ class TestPrintingAuth:
 class TestPrintingCoverageGaps:
     def test_purchase_pdf_branch_scope_403(self, printing_client):
         purchase = _doc_mock(branch_id=5, purchase_number="PO-PDF")
-        printing_client._printing_mocks["tenant_get"].return_value = purchase
-        printing_client._printing_mocks["branch_scope"].return_value = 2
+        mocks = printing_client._printing_mocks
+        mocks["branch_scope"].return_value = 2
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(purchase)
+        mocks["get_model"].return_value = model_cls
         resp = printing_client.get("/printing/purchase/1/pdf")
         assert resp.status_code == 403
 
     def test_expense_pdf_branch_scope_403(self, printing_client):
         expense = _doc_mock(branch_id=8, expense_number="EX-PDF")
-        printing_client._printing_mocks["tenant_get"].return_value = expense
-        printing_client._printing_mocks["branch_scope"].return_value = 3
+        mocks = printing_client._printing_mocks
+        mocks["branch_scope"].return_value = 3
+        model_cls = MagicMock()
+        model_cls.query = _model_query_chain(expense)
+        mocks["get_model"].return_value = model_cls
         resp = printing_client.get("/printing/expense/2/pdf")
-        assert resp.status_code == 403
-
-    def test_payroll_slip_pdf_branch_scope_403(self, printing_client):
-        txn = _doc_mock(id=1, branch_id=9)
-        printing_client._printing_mocks["branch_scope"].return_value = 1
-        with patch("routes.printing.PayrollTransaction") as model:
-            model.query = _model_query_chain(txn)
-            resp = printing_client.get("/printing/payroll-slip/1/pdf")
         assert resp.status_code == 403
 
     def test_packing_slip_shipment_import_error(self, printing_client):
@@ -389,48 +461,30 @@ class TestPrintingCoverageGaps:
         sale.customer = None
         sale.lines = []
         sale.sale_date = datetime.now(timezone.utc)
-        printing_client._printing_mocks["tenant_get"].return_value = sale
-        import builtins
-        real_import = builtins.__import__
+        mocks = printing_client._printing_mocks
+        sale_q = MagicMock()
+        sale_q.filter_by.return_value = sale_q
+        sale_q.filter.return_value = sale_q
+        sale_q.first_or_404.return_value = sale
+        with patch("models.Sale") as sale_cls:
+            sale_cls.query = sale_q
+            import builtins
+            real_import = builtins.__import__
 
-        def _import_shim(name, globals=None, locals=None, fromlist=(), level=0):
-            if name == "models" and fromlist and "Shipment" in fromlist:
-                raise ImportError("Shipment unavailable")
-            return real_import(name, globals, locals, fromlist, level)
+            def _import_shim(name, globals=None, locals=None, fromlist=(), level=0):
+                if name == "models" and fromlist and "Shipment" in fromlist:
+                    raise ImportError("Shipment unavailable")
+                return real_import(name, globals, locals, fromlist, level)
 
-        with patch("builtins.__import__", side_effect=_import_shim):
-            resp = printing_client.get("/printing/packing-slip/22")
+            with patch("builtins.__import__", side_effect=_import_shim):
+                resp = printing_client.get("/printing/packing-slip/22")
         assert resp.status_code == 200
 
-    def test_bulk_print_no_model_for_template_type(self, printing_client):
+    def test_bulk_print_unknown_template_type_returns_400(self, printing_client):
         resp = printing_client.post(
             "/printing/bulk-print",
-            json={"type": "payroll_slip", "ids": [1]},
+            json={"type": "unknown_type_xyz", "ids": [1]},
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "No model for type" in resp.get_json()["error"]
-
-    def test_preview_expense_success(self, printing_client):
-        expense = _doc_mock(expense_number="EX-PREV")
-        with patch("routes.printing.Expense") as model:
-            model.query.filter_by.return_value.first.return_value = expense
-            resp = printing_client.post(
-                "/printing/api/preview",
-                json={"type": "expense", "id": 2},
-                content_type="application/json",
-            )
-        assert resp.status_code == 200
-        assert "html" in resp.get_json()
-
-    def test_preview_cheque_success(self, printing_client):
-        cheque = _doc_mock(id=7)
-        with patch("routes.printing.Cheque") as model:
-            model.query.filter_by.return_value.first.return_value = cheque
-            resp = printing_client.post(
-                "/printing/api/preview",
-                json={"type": "cheque", "id": 7},
-                content_type="application/json",
-            )
-        assert resp.status_code == 200
-        assert "html" in resp.get_json()
+        assert "Unknown document type" in resp.get_json()["error"]

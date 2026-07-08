@@ -163,3 +163,10 @@ backup/
 
 # Cluster
 .cluster/
+
+# Load testing / benchmarking artifacts (dev-only, generated during performance testing)
+load_tests/
+
+# Agent / tooling workspace state (not part of the application)
+.openclaw/
+
