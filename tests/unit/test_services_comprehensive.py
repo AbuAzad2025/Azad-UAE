@@ -55,7 +55,7 @@ class TestPrintService:
                  patch('models.print_history.PrintHistory', return_value=record_instance):
                 PrintService.audit_print(tenant_id=1, document_type='sale', document_id=100, user_id=5)
                 assert mock_db.session.add.called
-                assert mock_db.session.commit.called
+                assert mock_db.session.flush.called
 
     @patch('services.print_service.PrintService.render_print', return_value='<html>page-1</html>')
     def test_bulk_print_documents_single(self, mock_render):
