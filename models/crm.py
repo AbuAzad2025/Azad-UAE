@@ -60,15 +60,17 @@ class CRMTeamMember(db.Model):
     __tablename__ = 'crm_team_members'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey('crm_teams.id', ondelete='CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     team = db.relationship('CRMTeam', back_populates='members')
     user = db.relationship('User', foreign_keys=[user_id])
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
 
     __table_args__ = (
-        db.UniqueConstraint('team_id', 'user_id', name='uq_crm_team_member'),
+        db.UniqueConstraint('tenant_id', 'team_id', 'user_id', name='uq_crm_team_member_tenant'),
     )
 
 

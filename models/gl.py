@@ -87,9 +87,11 @@ class GLAccount(db.Model):
         }
         return sub_types.get(self.sub_type, self.sub_type or '')
     
-    def get_balance(self, _depth=0, _visited=None):
+    def get_balance(self, start_date=None, end_date=None, as_of_date=None,
+                    _depth=0, _visited=None):
         from sqlalchemy import func
         from models import GLJournalLine
+        from decimal import Decimal
 
         if _depth > 10:
             raise RecursionError("Max depth 10 exceeded")
@@ -100,17 +102,38 @@ class GLAccount(db.Model):
         _visited.add(id(self))
 
         if self.is_header:
-            return sum((child.get_balance(_depth=_depth+1, _visited=_visited) for child in self.children if child.is_active), 0)
-        
-        balance_sum = db.session.query(func.sum(GLJournalLine.amount_aed))\
-            .join(GLJournalLine.entry)\
-            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.status == 'posted', GLJournalEntry.tenant_id == self.tenant_id)\
-            .scalar() or 0
-        
-        if self.type in ['asset', 'expense']:
-            return balance_sum
-        else:  # liability, equity, revenue
-            return -balance_sum
+            return sum(
+                (child.get_balance(start_date=start_date, end_date=end_date,
+                                   as_of_date=as_of_date,
+                                   _depth=_depth + 1, _visited=_visited)
+                 for child in self.children if child.is_active),
+                Decimal('0'),
+            )
+
+        # --- Leaf account: single optimized SQL query ---
+        end = end_date or as_of_date
+
+        q = db.session.query(
+            func.coalesce(func.sum(GLJournalLine.debit - GLJournalLine.credit), Decimal('0'))
+        ).join(
+            GLJournalLine.entry
+        ).filter(
+            GLJournalLine.account_id == self.id,
+            GLJournalEntry.status == 'posted',
+            GLJournalEntry.tenant_id == self.tenant_id,
+        )
+
+        if start_date is not None:
+            q = q.filter(GLJournalEntry.entry_date >= start_date)
+        if end is not None:
+            q = q.filter(GLJournalEntry.entry_date <= end)
+
+        balance = q.scalar()
+
+        if self.type in ('liability', 'equity', 'revenue'):
+            balance = -balance
+
+        return balance
     
     def get_children_recursive(self, max_depth=10, _depth=0, _visited=None):
         if _depth > max_depth:

@@ -38,7 +38,8 @@ class CardPayment(db.Model):
     __tablename__ = 'card_payments'
     
     id = db.Column(db.Integer, primary_key=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+
     # معلومات العميل
     customer_name = db.Column(db.String(200), nullable=False)
     customer_email = db.Column(db.String(200))
@@ -78,6 +79,8 @@ class CardPayment(db.Model):
     # ملاحظات
     notes = db.Column(db.Text)
     admin_notes = db.Column(db.Text)
+
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<CardPayment {self.card_type} ****{self.card_last_4} - ${self.amount}>'

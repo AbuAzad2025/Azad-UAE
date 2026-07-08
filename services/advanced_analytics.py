@@ -256,21 +256,24 @@ class AdvancedFinancialAnalytics:
     
     @staticmethod
     def get_expense_breakdown(tenant_id=None):
-        """تحليل تفصيلي للمصروفات"""
+        """تحليل تفصيلي للمصروفات — batch query"""
         from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        from services.gl_service import GLService
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         expense_accounts = scope_gl_accounts(
             GLAccount.query.filter_by(type='expense', is_active=True, is_header=False),
             tenant_id=tenant_id,
         ).all()
-        
+
+        _all_balances = GLService.get_all_account_balances(tenant_id=tenant_id)
+
         breakdown = []
         total_expenses = Decimal(0)
-        
+
         for account in expense_accounts:
-            balance = abs(account.get_balance())
+            balance = abs(_all_balances.get(account.id, Decimal('0')))
             total_expenses += balance
-            
+
             breakdown.append({
                 'account_code': account.code,
                 'account_name': account.full_name,
@@ -294,21 +297,24 @@ class AdvancedFinancialAnalytics:
     
     @staticmethod
     def get_revenue_breakdown(tenant_id=None):
-        """تحليل تفصيلي للإيرادات"""
+        """تحليل تفصيلي للإيرادات — batch query"""
         from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        from services.gl_service import GLService
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         revenue_accounts = scope_gl_accounts(
             GLAccount.query.filter_by(type='revenue', is_active=True, is_header=False),
             tenant_id=tenant_id,
         ).all()
-        
+
+        _all_balances = GLService.get_all_account_balances(tenant_id=tenant_id)
+
         breakdown = []
         total_revenue = Decimal(0)
-        
+
         for account in revenue_accounts:
-            balance = abs(account.get_balance())
+            balance = abs(_all_balances.get(account.id, Decimal('0')))
             total_revenue += balance
-            
+
             breakdown.append({
                 'account_code': account.code,
                 'account_name': account.full_name,

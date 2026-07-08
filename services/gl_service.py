@@ -1167,6 +1167,96 @@ class GLService:
         }
 
     @staticmethod
+    def get_all_account_balances(start_date=None, end_date=None, as_of_date=None,
+                                 branch_id=None, tenant_id=None):
+        """Batch-compute balances for ALL accounts in a single aggregate query.
+
+        Returns dict {account_id: Decimal balance}.
+        Header accounts are computed by summing their (transitive) leaf children
+        in Python — no extra SQL per header.
+        """
+        from sqlalchemy import func
+        from collections import defaultdict
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        end = end_date or as_of_date
+
+        # ── 1. Single aggregate query for ALL leaf balances ────────────────
+        q = db.session.query(
+            GLJournalLine.account_id,
+            func.sum(GLJournalLine.debit).label('total_debit'),
+            func.sum(GLJournalLine.credit).label('total_credit'),
+        ).join(
+            GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
+        ).filter(
+            GLJournalEntry.status == 'posted',
+        )
+        if tenant_id is not None:
+            q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+        if branch_id:
+            q = q.filter(GLJournalEntry.branch_id == branch_id)
+        if start_date is not None:
+            q = q.filter(GLJournalEntry.entry_date >= start_date)
+        if end is not None:
+            q = q.filter(GLJournalEntry.entry_date <= end)
+
+        debit_credit = {}
+        for row in q.group_by(GLJournalLine.account_id).all():
+            debit_credit[row.account_id] = (
+                Decimal(str(row.total_debit or 0)),
+                Decimal(str(row.total_credit or 0)),
+            )
+
+        # ── 2. Compute sign-adjusted balance for leaf accounts ─────────────
+        raw_balance = {}
+        for acct_id, (d, c) in debit_credit.items():
+            raw_balance[acct_id] = d - c
+
+        # ── 3. Fetch all accounts, build parent→children map ───────────────
+        accounts_q = GLAccount.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            accounts_q = accounts_q.filter_by(tenant_id=int(tenant_id))
+        all_accounts = accounts_q.all()
+
+        children_map = defaultdict(list)
+        acct_map = {}
+        for a in all_accounts:
+            acct_map[a.id] = a
+            if a.parent_id is not None:
+                children_map[a.parent_id].append(a.id)
+
+        # ── 4. Compute header balances (bottom-up) ─────────────────────────
+        balance_map = dict(raw_balance)
+        computed = set()
+
+        def _header_balance(acct_id):
+            if acct_id in computed:
+                return balance_map.get(acct_id, Decimal('0'))
+            computed.add(acct_id)
+            acct = acct_map.get(acct_id)
+            if acct is None:
+                return Decimal('0')
+            if not acct.is_header:
+                return balance_map.get(acct_id, Decimal('0'))
+            total = Decimal('0')
+            for child_id in children_map.get(acct_id, []):
+                total += _header_balance(child_id)
+            balance_map[acct_id] = total
+            return total
+
+        for a in all_accounts:
+            if a.is_header:
+                _header_balance(a.id)
+
+        # Apply sign convention for non-asset/expense accounts
+        for a in all_accounts:
+            if a.id in balance_map and not a.is_header:
+                if a.type in ('liability', 'equity', 'revenue'):
+                    balance_map[a.id] = -balance_map[a.id]
+
+        return balance_map
+
+    @staticmethod
     def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None, fallback_key=None):
         """Resolve GL account code for a concept.
         Tries dynamic mapping first, then falls back to GL_ACCOUNTS dict.

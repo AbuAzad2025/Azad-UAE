@@ -190,8 +190,9 @@ class TestComparativeAndBreakdown:
         acct = MagicMock()
         acct.code = '5100'
         acct.full_name = 'Rent'
-        acct.get_balance.return_value = Decimal('0')
+        acct.id = 1
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={1: Decimal('0')})
 
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
@@ -200,9 +201,10 @@ class TestComparativeAndBreakdown:
         assert result['items'][0]['percentage'] == 0
 
     def test_revenue_breakdown_sorted_desc(self, mocker):
-        low = MagicMock(code='4100', full_name='Low', get_balance=lambda: Decimal('100'))
-        high = MagicMock(code='4200', full_name='High', get_balance=lambda: Decimal('900'))
+        low = MagicMock(code='4100', full_name='Low', id=1)
+        high = MagicMock(code='4200', full_name='High', id=2)
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [low, high]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={1: Decimal('100'), 2: Decimal('900')})
 
         from services.advanced_analytics import AdvancedFinancialAnalytics
 
@@ -332,15 +334,17 @@ class TestAccountTypeBalance:
         assert total == Decimal('-75')
 
     def test_expense_breakdown_positive_percentage(self, mocker):
-        acct = MagicMock(code='5100', full_name='Rent', get_balance=lambda: Decimal('300'))
+        acct = MagicMock(code='5100', full_name='Rent', id=1)
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={1: Decimal('300')})
         from services.advanced_analytics import AdvancedFinancialAnalytics
         result = AdvancedFinancialAnalytics.get_expense_breakdown(tenant_id=1)
         assert result['items'][0]['percentage'] == pytest.approx(100.0)
 
     def test_revenue_breakdown_zero_total_percentage(self, mocker):
-        acct = MagicMock(code='4100', full_name='Sales', get_balance=lambda: Decimal('0'))
+        acct = MagicMock(code='4100', full_name='Sales', id=1)
         mocker.patch('utils.gl_tenant.scope_gl_accounts').return_value.all.return_value = [acct]
+        mocker.patch('services.gl_service.GLService.get_all_account_balances', return_value={1: Decimal('0')})
         from services.advanced_analytics import AdvancedFinancialAnalytics
         result = AdvancedFinancialAnalytics.get_revenue_breakdown(tenant_id=1)
         assert result['items'][0]['percentage'] == 0

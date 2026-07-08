@@ -150,9 +150,10 @@ class PaymentTransaction(db.Model):
     معاملات الدفع - محمية داخل الخزينة
     """
     __tablename__ = 'payment_transactions'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+
     transaction_id = db.Column(db.String(100), unique=True, nullable=False)  # معرف المعاملة
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
@@ -179,7 +180,8 @@ class PaymentTransaction(db.Model):
     
     vault_id = db.Column(db.Integer, db.ForeignKey('payment_vault.id'), nullable=False, index=True)
     vault = db.relationship('PaymentVault', backref='transactions')
-    
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
+
     def to_dict(self):
         """تحويل إلى قاموس"""
         return {
@@ -204,9 +206,10 @@ class PaymentLog(db.Model):
     سجل الدفع - محمي داخل الخزينة
     """
     __tablename__ = 'payment_logs'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+
     # Log Info - معلومات السجل
     action = db.Column(db.String(100), nullable=False)  # العملية
     description = db.Column(db.Text)  # الوصف
@@ -224,12 +227,14 @@ class PaymentLog(db.Model):
     
     vault_id = db.Column(db.Integer, db.ForeignKey('payment_vault.id'), nullable=False, index=True)
     vault = db.relationship('PaymentVault', backref='logs')
-    
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
+
     @staticmethod
-    def log_action(vault_id, action, description, level='info', transaction_id=None, amount=None, ip_address=None, user_agent=None):
+    def log_action(vault_id, action, description, level='info', transaction_id=None, amount=None, ip_address=None, user_agent=None, tenant_id=None):
         """تسجيل عمل"""
         log = PaymentLog(
             vault_id=vault_id,
+            tenant_id=tenant_id,
             action=action,
             description=description,
             level=level,

@@ -716,17 +716,20 @@ def admin_dashboard():
     total_entries = _entries().count()
     posted_entries = _entries().filter_by(status='posted').count()
     
-    # إحصائيات مالية
+    # إحصائيات مالية — batch query (single SQL for all accounts)
+    from services.gl_service import GLService
+    _all_balances = GLService.get_all_account_balances()
+
     cash_accounts = _accounts().filter(GLAccount.code.like('11%')).all()
-    total_cash = sum(account.get_balance() for account in cash_accounts)
-    
+    total_cash = sum(_all_balances.get(a.id, 0) for a in cash_accounts)
+
     # آخر القيود
     recent_entries = _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
-    
+
     # الحسابات ذات الأرصدة العالية
     high_balance_accounts = []
     for account in _accounts().filter_by(is_active=True, is_header=False).all():
-        balance = account.get_balance()
+        balance = _all_balances.get(account.id, 0)
         if abs(balance) > 1000:  # أرصدة أعلى من 1000
             high_balance_accounts.append({
                 'account': account,
@@ -885,15 +888,17 @@ def admin_trial_balance():
         current_app.logger.warning('Invalid date format in trial balance, falling back to today')
         date_from = date_to = date.today()
     
-    # حساب أرصدة الحسابات
+    # حساب أرصدة الحسابات — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
+    from services.gl_service import GLService
     accounts = gl_account_query().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
+    _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
     trial_balance_data = []
-    
+
     total_debit = total_credit = 0
-    
+
     for account in accounts:
-        balance = account.get_balance(date_from, date_to)
+        balance = _all_balances.get(account.id, 0)
         if balance != 0:
             trial_balance_data.append({
                 'account': account,
@@ -902,7 +907,7 @@ def admin_trial_balance():
             })
             total_debit += balance if balance > 0 else 0
             total_credit += abs(balance) if balance < 0 else 0
-    
+
     return render_template('admin/ledger/trial_balance.html',
                          trial_balance_data=trial_balance_data,
                          total_debit=total_debit,
@@ -923,18 +928,21 @@ def admin_balance_sheet():
         current_app.logger.warning('Invalid date format in balance sheet, falling back to today')
         as_of_date = date.today()
     
-    # الأصول
+    # الأصول — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
+    from services.gl_service import GLService
+    _all_balances = GLService.get_all_account_balances(as_of_date=as_of_date)
+
     assets = gl_account_query().filter_by(type='asset', is_active=True, is_header=False).order_by(GLAccount.code).all()
-    assets_total = sum(account.get_balance(as_of_date=as_of_date) for account in assets)
-    
+    assets_total = sum(_all_balances.get(a.id, 0) for a in assets)
+
     # الخصوم
     liabilities = gl_account_query().filter_by(type='liability', is_active=True, is_header=False).order_by(GLAccount.code).all()
-    liabilities_total = sum(abs(account.get_balance(as_of_date=as_of_date)) for account in liabilities)
-    
+    liabilities_total = sum(abs(_all_balances.get(a.id, 0)) for a in liabilities)
+
     # حقوق الملكية
     equity = gl_account_query().filter_by(type='equity', is_active=True, is_header=False).order_by(GLAccount.code).all()
-    equity_total = sum(abs(account.get_balance(as_of_date=as_of_date)) for account in equity)
+    equity_total = sum(abs(_all_balances.get(a.id, 0)) for a in equity)
     
     return render_template('admin/ledger/balance_sheet.html',
                          assets=assets,
@@ -1012,14 +1020,17 @@ def admin_income_statement():
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
     
-    # الإيرادات
+    # الإيرادات — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
+    from services.gl_service import GLService
+    _all_balances = GLService.get_all_account_balances(start_date=date_from, end_date=date_to)
+
     revenues = gl_account_query().filter_by(type='revenue', is_active=True, is_header=False).order_by(GLAccount.code).all()
-    revenues_total = sum(abs(account.get_balance(date_from, date_to)) for account in revenues)
-    
+    revenues_total = sum(abs(_all_balances.get(a.id, 0)) for a in revenues)
+
     # المصروفات
     expenses = gl_account_query().filter_by(type='expense', is_active=True, is_header=False).order_by(GLAccount.code).all()
-    expenses_total = sum(account.get_balance(date_from, date_to) for account in expenses)
+    expenses_total = sum(_all_balances.get(a.id, 0) for a in expenses)
     
     net_income = revenues_total - expenses_total
     

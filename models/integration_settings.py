@@ -14,10 +14,14 @@ class IntegrationSettings(db.Model):
     كل تكامل (service) له سجل منفصل
     """
     __tablename__ = 'integration_settings'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'service_name', name='uq_integration_settings_tenant_service'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
-    
-    service_name = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    service_name = db.Column(db.String(50), nullable=False, index=True)
     
     # Enable/Disable - تفعيل/تعطيل
     enabled = db.Column(db.Boolean, default=False)
@@ -35,20 +39,25 @@ class IntegrationSettings(db.Model):
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     
     user = db.relationship('User', foreign_keys=[updated_by])
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<IntegrationSettings {self.service_name} {"✅" if self.enabled else "❌"}>'
     
     @staticmethod
-    def get_service_config(service_name):
+    def get_service_config(service_name, tenant_id=None):
         """
         الحصول على إعدادات خدمة معينة
         """
-        integration = IntegrationSettings.query.filter_by(service_name=service_name).first()
+        q = IntegrationSettings.query.filter_by(service_name=service_name)
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        integration = q.first()
         if not integration:
             # إنشاء سجل جديد بإعدادات افتراضية
             integration = IntegrationSettings(
                 service_name=service_name,
+                tenant_id=tenant_id,
                 enabled=False,
                 config_data=json.dumps({}, ensure_ascii=False)
             )
