@@ -669,9 +669,13 @@ def restore(id):
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
     
-    with atomic_transaction('expense_restore'):
-        db.session.delete(archived)
-        db.session.flush()
-    LoggingCore.log_audit('restore', 'expenses', id)
+    try:
+        with atomic_transaction('expense_restore'):
+            db.session.delete(archived)
+            db.session.flush()
+        LoggingCore.log_audit('restore', 'expenses', id)
+    except Exception as e:
+        flash(f'تعذر الاستعادة: {str(e)}', 'danger')
+        return redirect(url_for('expenses.archived'))
     return redirect(url_for('expenses.archived'))
 
