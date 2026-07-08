@@ -357,9 +357,9 @@ class TestAdminLedgerReports:
         assert kwargs["date_to"] == date.today()
 
     def test_balance_sheet(self, ledger_client):
-        assets = [_mock_account(code="1000", type="asset", balance=Decimal("1000"))]
-        liabilities = [_mock_account(code="2000", type="liability", balance=Decimal("-500"))]
-        equity = [_mock_account(code="3000", type="equity", balance=Decimal("-500"))]
+        assets = [_mock_account(code="1000", type="asset", id=10, balance=Decimal("1000"))]
+        liabilities = [_mock_account(code="2000", type="liability", id=20, balance=Decimal("-500"))]
+        equity = [_mock_account(code="3000", type="equity", id=30, balance=Decimal("-500"))]
 
         def filter_by(**kwargs):
             inner = MagicMock()
@@ -375,15 +375,18 @@ class TestAdminLedgerReports:
         q = MagicMock()
         q.filter_by.side_effect = filter_by
         with _ledger_patches(accounts_query=q) as mocks, \
-             patch("routes.admin_ledger.GLService.get_all_account_balances", return_value={1: Decimal("1000")}):
+             patch("routes.admin_ledger.GLService.get_all_account_balances",
+                   return_value={10: Decimal("1000"), 20: Decimal("-500"), 30: Decimal("-500")}):
             resp = ledger_client.get("/admin/ledger/reports/balance-sheet")
         assert resp.status_code == 200
         kwargs = mocks["render"].call_args[1]
         assert kwargs["assets_total"] == Decimal("1000")
 
     def test_income_statement(self, ledger_client):
-        revenues = [_mock_account(code="4100", type="revenue", balance=Decimal("-800"))]
-        expenses = [_mock_account(code="5100", type="expense", balance=Decimal("300"))]
+        rev_acct = _mock_account(code="4100", type="revenue", id=10, balance=Decimal("-800"))
+        exp_acct = _mock_account(code="5100", type="expense", id=20, balance=Decimal("300"))
+        revenues = [rev_acct]
+        expenses = [exp_acct]
 
         def filter_by(**kwargs):
             inner = MagicMock()
@@ -395,7 +398,9 @@ class TestAdminLedgerReports:
 
         q = MagicMock()
         q.filter_by.side_effect = filter_by
-        with _ledger_patches(accounts_query=q) as mocks:
+        with _ledger_patches(accounts_query=q) as mocks, \
+             patch("routes.admin_ledger.GLService.get_all_account_balances",
+                   return_value={10: Decimal("-800"), 20: Decimal("300")}):
             resp = ledger_client.get("/admin/ledger/reports/income-statement")
         assert resp.status_code == 200
         assert mocks["render"].call_args[1]["net_income"] == Decimal("500")
