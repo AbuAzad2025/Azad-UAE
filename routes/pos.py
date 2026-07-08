@@ -11,6 +11,7 @@ from models.tenant import Tenant
 from services.sale_service import SaleService
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, get_active_branch_id
 from utils.decorators import permission_required
+from utils.db_safety import atomic_transaction
 from utils.pos_helpers import (
     POS_QA_MARKER,
     create_pos_session,
@@ -617,11 +618,11 @@ def kds_update_status(order_id):
     new_status = payload.get('status', '')
     if new_status not in ('pending', 'preparing', 'ready', 'served', 'cancelled'):
         return jsonify({'error': 'حالة غير صالحة'}), 400
-    order.status = new_status
-    if new_status in ('served', 'cancelled'):
-        order.completed_at = datetime.now(timezone.utc)
-    order.updated_at = datetime.now(timezone.utc)
-    db.session.commit()
+    with atomic_transaction('pos_kds_status'):
+        order.status = new_status
+        if new_status in ('served', 'cancelled'):
+            order.completed_at = datetime.now(timezone.utc)
+        order.updated_at = datetime.now(timezone.utc)
     _notify_kds(
         {'type': 'status_update', 'order_id': order.id, 'status': new_status, 'tenant_id': tid},
         tenant_id=tid,
@@ -772,8 +773,8 @@ def api_floor_create():
         return jsonify({'error': 'اسم الطابق مطلوب'}), 400
     tid = get_active_tenant_id(current_user)
     floor = PosFloor(tenant_id=tid, name=name, name_ar=name_ar or None)
-    db.session.add(floor)
-    db.session.commit()
+    with atomic_transaction('pos_floor_create'):
+        db.session.add(floor)
     return jsonify({'success': True, 'floor_id': floor.id})
 
 
@@ -821,8 +822,8 @@ def api_table_create():
         pos_y=payload.get('pos_y', 0),
         shape=payload.get('shape', 'rectangle'),
     )
-    db.session.add(table)
-    db.session.commit()
+    with atomic_transaction('pos_table_create'):
+        db.session.add(table)
     return jsonify({'success': True, 'table_id': table.id})
 
 
@@ -839,8 +840,8 @@ def api_table_update_status(table_id):
     new_status = payload.get('status', '')
     if new_status not in ('free', 'occupied', 'reserved'):
         return jsonify({'error': 'حالة غير صالحة'}), 400
-    table.status = new_status
-    db.session.commit()
+    with atomic_transaction('pos_table_status'):
+        table.status = new_status
     return jsonify({'success': True})
 
 
@@ -864,7 +865,8 @@ def api_table_assign(table_id):
         sale_id=sale_id,
         guest_count=payload.get('guest_count', 1),
     )
-    db.session.add(torder)
-    db.session.commit()
+    with atomic_transaction('pos_table_assign'):
+        table.status = 'occupied'
+        db.session.add(torder)
     return jsonify({'success': True})
 
