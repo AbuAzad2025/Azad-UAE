@@ -20,6 +20,19 @@ def _product(pid=1, **kwargs):
     return p
 
 
+def _products_from_render(mock_render):
+    """Extract the rendered product list from a PrintService.render_print call.
+
+    get_product_labels_html / get_single_label_html pass extra_context as the
+    second positional argument, so check both args and kwargs.
+    """
+    cargs = mock_render.call_args
+    extra = cargs.kwargs.get('extra_context')
+    if extra is None and len(cargs.args) >= 2:
+        extra = cargs.args[1]
+    return (extra or {})['products']
+
+
 class TestProductLabelsHtml:
     """get_product_labels_html — multi-product barcode label stream."""
 
@@ -27,7 +40,7 @@ class TestProductLabelsHtml:
         product = _product()
         mocker.patch('services.label_print_service.tenant_get_or_404', return_value=product)
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='<html>labels</html>',
         )
 
@@ -37,9 +50,9 @@ class TestProductLabelsHtml:
             html = get_product_labels_html([1], tenant_id=5)
 
         assert html == '<html>labels</html>'
-        ctx = mock_render.call_args.kwargs
-        assert ctx['products'][0]['barcode'] == '1234567890'
-        assert ctx['products'][0]['price'] == Decimal('99.00')
+        products = _products_from_render(mock_render)
+        assert products[0]['barcode'] == '1234567890'
+        assert products[0]['price'] == Decimal('99.00')
 
     def test_branch_warehouse_cost_overrides_product_cost(self, app, mocker):
         product = _product(cost_price=Decimal('40'))
@@ -54,7 +67,7 @@ class TestProductLabelsHtml:
             return_value=pwc_q,
         )
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='ok',
         )
 
@@ -63,14 +76,14 @@ class TestProductLabelsHtml:
         with app.app_context():
             get_product_labels_html([1], tenant_id=1, branch_id=7)
 
-        assert mock_render.call_args.kwargs['products'][0]['cost'] == Decimal('35.50')
+        assert _products_from_render(mock_render)[0]['cost'] == Decimal('35.50')
 
     def test_missing_category_and_barcode_fallbacks(self, app, mocker):
         product = _product(barcode=None)
         product.category = None
         mocker.patch('services.label_print_service.tenant_get_or_404', return_value=product)
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='ok',
         )
 
@@ -79,7 +92,7 @@ class TestProductLabelsHtml:
         with app.app_context():
             get_product_labels_html([1], tenant_id=1)
 
-        row = mock_render.call_args.kwargs['products'][0]
+        row = _products_from_render(mock_render)[0]
         assert row['barcode'] == ''
         assert row['category'] == ''
 
@@ -90,7 +103,7 @@ class TestSingleLabelHtml:
     def test_single_label_wraps_product_ctx(self, app, mocker):
         product = _product()
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='<label/>',
         )
 
@@ -100,7 +113,7 @@ class TestSingleLabelHtml:
             html = get_single_label_html(product)
 
         assert html == '<label/>'
-        products = mock_render.call_args.kwargs['products']
+        products = _products_from_render(mock_render)
         assert len(products) == 1
         assert products[0]['sku'] == 'SKU-1'
 
@@ -115,7 +128,7 @@ class TestSingleLabelHtml:
             return_value=pwc_q,
         )
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='ok',
         )
 
@@ -124,7 +137,7 @@ class TestSingleLabelHtml:
         with app.app_context():
             get_single_label_html(product, branch_id=3)
 
-        assert mock_render.call_args.kwargs['products'][0]['cost'] == Decimal('33.00')
+        assert _products_from_render(mock_render)[0]['cost'] == Decimal('33.00')
 
     def test_invalid_branch_id_uses_product_cost(self, app, mocker):
         product = _product(cost_price=Decimal('12.00'))
@@ -136,7 +149,7 @@ class TestSingleLabelHtml:
             return_value=pwc_q,
         )
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='ok',
         )
 
@@ -145,12 +158,12 @@ class TestSingleLabelHtml:
         with app.app_context():
             get_single_label_html(product, branch_id=999)
 
-        assert mock_render.call_args.kwargs['products'][0]['cost'] == Decimal('12.00')
+        assert _products_from_render(mock_render)[0]['cost'] == Decimal('12.00')
 
     def test_zero_sale_price_fallback(self, app, mocker):
         product = _product(sale_price=None, cost_price=None)
         mock_render = mocker.patch(
-            'services.label_print_service.render_template',
+            'services.print_service.PrintService.render_print',
             return_value='ok',
         )
 
@@ -159,6 +172,6 @@ class TestSingleLabelHtml:
         with app.app_context():
             get_single_label_html(product)
 
-        row = mock_render.call_args.kwargs['products'][0]
+        row = _products_from_render(mock_render)[0]
         assert row['price'] == Decimal('0')
         assert row['cost'] == Decimal('0')
