@@ -109,7 +109,7 @@ class TestCreateDistributions:
         mock_db = mocker.patch('services.partner_service.db')
         ids = PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31), created_by=1)
         assert ids == [99]
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called()
 
     def test_create_distributions_rollback(self, mocker):
         partner = _partner(loss_share_percentage=Decimal('50'))
@@ -122,10 +122,9 @@ class TestCreateDistributions:
             'revenue': 0, 'cogs': 0, 'expenses': 0, 'gross_profit': 0, 'net_profit': -1000.0,
         })
         mock_db = mocker.patch('services.partner_service.db')
-        mock_db.session.commit.side_effect = RuntimeError('fail')
+        mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
-        mock_db.session.rollback.assert_called_once()
 
     def test_scope_calculation_failure_wrapped(self, mocker):
         P = mocker.patch('models.Partner')
@@ -156,7 +155,7 @@ class TestDistributionLifecycle:
         mock_db.session.get.side_effect = [dist, partner]
         mocker.patch('models.PartnerTransaction', return_value=MagicMock(amount=100.0))
         assert PartnerService.approve_distribution(1, 5, tenant_id=1) is True
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called()
 
     def test_approve_distribution_negative_net(self, mocker):
         dist = MagicMock(status='draft', tenant_id=1, net_due=-50.0, partner_id=1, period_start=date(2026, 1, 1), period_end=date(2026, 1, 31))
@@ -170,7 +169,7 @@ class TestDistributionLifecycle:
         dist = MagicMock(status='draft', tenant_id=1, net_due=0.0)
         mock_db = mocker.patch('services.partner_service.db')
         mock_db.session.get.return_value = dist
-        mock_db.session.commit.side_effect = RuntimeError('x')
+        mock_db.session.flush.side_effect = RuntimeError('x')
         with pytest.raises(RuntimeError):
             PartnerService.approve_distribution(1, 1)
         mock_db.session.rollback.assert_called_once()
@@ -184,7 +183,7 @@ class TestDistributionLifecycle:
         mocker.patch('services.gl_service.GLService.get_default_liquidity_account', return_value='1120')
         mocker.patch('services.gl_posting.post_or_fail')
         assert PartnerService.pay_distribution(7, tenant_id=1) is True
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called()
 
     def test_pay_distribution_gl_fallback(self, mocker):
         dist = MagicMock(status='approved', tenant_id=1, net_due=50.0, id=3)
@@ -207,13 +206,13 @@ class TestDistributionLifecycle:
         mock_db = mocker.patch('services.partner_service.db')
         mock_db.session.get.return_value = dist
         assert PartnerService.pay_distribution(8, tenant_id=1) is False
-        mock_db.session.commit.assert_not_called()
+        mock_db.session.flush.assert_not_called()
 
     def test_pay_distribution_commit_rollback(self, mocker):
         dist = MagicMock(status='approved', tenant_id=1, net_due=0.0, id=9)
         mock_db = mocker.patch('services.partner_service.db')
         mock_db.session.get.return_value = dist
-        mock_db.session.commit.side_effect = RuntimeError('pay fail')
+        mock_db.session.flush.side_effect = RuntimeError('pay fail')
         with pytest.raises(RuntimeError):
             PartnerService.pay_distribution(9, tenant_id=1)
         mock_db.session.rollback.assert_called_once()
@@ -279,10 +278,9 @@ class TestAddTransaction:
         mocker.patch('utils.currency_utils.get_system_default_currency', return_value='AED')
         mocker.patch('models.PartnerTransaction', return_value=MagicMock(id=1))
         mocker.patch('services.gl_posting.post_or_fail')
-        mock_db.session.commit.side_effect = RuntimeError('fail')
+        mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             PartnerService.add_transaction(1, 'adjustment', Decimal('10'))
-        mock_db.session.rollback.assert_called_once()
 
 
 class _ComparableCol:

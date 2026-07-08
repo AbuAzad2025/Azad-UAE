@@ -198,7 +198,7 @@ class TestPaymentServiceCreateReceipt:
              patch('services.payment_service.current_user', MagicMock(is_authenticated=True, id=1)):
             PaymentService.allocate_receipt_to_oldest_sales(receipt, customer)
             customer.apply_receipt.assert_called_once()
-            mock_db.session.commit.assert_called()
+            mock_db.session.flush.assert_called()
 
 
 class TestPaymentServiceResolveBranch:
@@ -442,7 +442,7 @@ class TestPaymentServiceReceiptCommitFailure:
              patch('services.payment_service.Receipt', return_value=receipt), \
              patch('services.payment_service.current_app') as capp:
             mock_db.session.get.return_value = customer
-            mock_db.session.commit.side_effect = RuntimeError('commit fail')
+            mock_db.session.flush.side_effect = RuntimeError('commit fail')
             gl.get_payment_debit_account.return_value = '1100'
             gl.get_payment_debit_concept.return_value = 'CASH'
             gl.get_customer_credit_account.return_value = '1200'
@@ -489,7 +489,7 @@ class TestPaymentServicePaymentCommitFailure:
              patch('models.Payment', return_value=payment), \
              patch('services.payment_service.current_app') as capp:
             mock_db.session.get.return_value = supplier
-            mock_db.session.commit.side_effect = RuntimeError('commit fail')
+            mock_db.session.flush.side_effect = RuntimeError('commit fail')
             gl.get_payment_credit_account.return_value = '1120'
             gl.get_payment_credit_concept.return_value = 'CASH'
             gl.ensure_core_accounts.return_value = None
@@ -591,7 +591,7 @@ class TestPaymentServiceChequeAndFxLoss:
              patch('services.payment_service.db') as mock_db, \
              patch('services.payment_service.current_user', MagicMock(is_authenticated=True, id=1)), \
              patch('services.payment_service.current_app') as capp:
-            mock_db.session.commit.side_effect = RuntimeError('alloc commit fail')
+            mock_db.session.flush.side_effect = RuntimeError('alloc commit fail')
             capp.logger = MagicMock()
             with pytest.raises(RuntimeError, match='alloc commit fail'):
                 PaymentService.allocate_receipt_to_oldest_sales(receipt, customer)

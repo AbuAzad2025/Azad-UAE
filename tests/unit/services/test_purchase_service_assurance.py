@@ -309,7 +309,7 @@ class TestCreatePurchaseHappyPath:
             )
         assert result.purchase_number == 'P-001'
         supplier.apply_purchase.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_supplier_apply_purchase_failure_logged(self, app, mocker):
         wh = _warehouse()
@@ -326,7 +326,7 @@ class TestCreatePurchaseHappyPath:
                 _user(), {'supplier_id': 7}, [_line_data()], warehouse_id=3,
             )
         mock_logger.warning.assert_called()
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
 
 class TestCreatePurchaseSerials:
@@ -466,7 +466,7 @@ class TestCancelPurchase:
             PurchaseService.cancel_purchase(purchase)
         assert supplier.total_purchases_aed == Decimal('300')
         assert purchase.status == 'cancelled'
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_stock_reverse_and_gl(self, app, mocker):
         session = _patch_cancel_query(mocker, has_stock=True)
@@ -478,11 +478,11 @@ class TestCancelPurchase:
             PurchaseService.cancel_purchase(purchase)
         reverse_stock.assert_called_once_with(purchase)
         reverse_gl.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_commit_failure_rolls_back(self, app, mocker):
         session = _patch_cancel_query(mocker)
-        session.commit.side_effect = RuntimeError('commit fail')
+        session.flush.side_effect = RuntimeError('commit fail')
         mock_logger = mocker.patch('services.purchase_service.current_app.logger')
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -577,7 +577,7 @@ class TestCreatePurchaseReturn:
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 2, 'unit_cost': 10}],
             )
         assert result.return_number == 'PR-001'
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_prices_include_vat_inventory_credit(self, app, mocker):
         purchase = _purchase(prices_include_vat=True, tax_rate=Decimal('5'), tax_amount=Decimal('5'))
@@ -653,7 +653,7 @@ class TestCreatePurchaseReturn:
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 1, 'unit_cost': 50}],
             )
         assert supplier.total_purchases_aed <= Decimal('300')
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_serials_marked_returned(self, app, mocker):
         purchase = _purchase(tax_amount=None)
@@ -696,7 +696,7 @@ class TestCreatePurchaseReturn:
                 purchase, _user(),
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 1, 'unit_cost': 45}],
             )
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_mwac_no_pwc_skips_reversal(self, app, mocker, monkeypatch):
         purchase = _purchase(tax_amount=None)
@@ -712,7 +712,7 @@ class TestCreatePurchaseReturn:
                 purchase, _user(),
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 1, 'unit_cost': 45}],
             )
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_mwac_zero_quantity_pwc_skips(self, app, mocker, monkeypatch):
         purchase = _purchase(tax_amount=None)
@@ -729,7 +729,7 @@ class TestCreatePurchaseReturn:
                 purchase, _user(),
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 1, 'unit_cost': 45}],
             )
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_mwac_negative_qty_clamped(self, app, mocker, monkeypatch):
         purchase = _purchase(tax_amount=None)
@@ -757,12 +757,12 @@ class TestCreatePurchaseReturn:
                 [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 2, 'unit_cost': 50}],
             )
         assert pwc.total_quantity == Decimal('0')
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_commit_failure_rolls_back(self, app, mocker):
         purchase = _purchase(tax_amount=None)
         session, _post = _patch_return_common(mocker, purchase)
-        session.commit.side_effect = RuntimeError('return commit fail')
+        session.flush.side_effect = RuntimeError('return commit fail')
         mock_logger = mocker.patch('services.purchase_service.current_app.logger')
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -771,5 +771,3 @@ class TestCreatePurchaseReturn:
                     purchase, _user(),
                     [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 1, 'unit_cost': 10}],
                 )
-        session.rollback.assert_called()
-        mock_logger.exception.assert_called()

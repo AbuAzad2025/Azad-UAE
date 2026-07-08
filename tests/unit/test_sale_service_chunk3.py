@@ -191,11 +191,13 @@ class TestCreateSaleCommissionAndOptions:
                     currency='AED',
                 )
 
-    def test_create_sale_final_commit_failure(self, app):
+    def test_create_sale_final_flush_failure(self, app):
+        # Under the Single-Commit-Boundary pattern, create_sale flushes and the
+        # route owns the commit; a failure during the final flush must propagate.
         customer, seller, product = _actors()
         with _create_ctx(customer, seller, product, expect_error=True) as (svc, _, db_sess, _):
-            db_sess.commit.side_effect = RuntimeError('final commit fail')
-            with pytest.raises(RuntimeError, match='final commit fail'):
+            db_sess.flush.side_effect = RuntimeError('final flush fail')
+            with pytest.raises(RuntimeError, match='final flush fail'):
                 svc.create_sale(
                     customer, seller, [{'product': product, 'quantity': 1, 'unit_price': 100}],
                     currency='AED',
@@ -520,7 +522,7 @@ class TestCancelSale:
              patch('services.sale_service.current_app') as capp:
             pay_mod.query.filter_by.return_value.count.return_value = 0
             pay_mod.query.filter_by.return_value.all.return_value = []
-            sess.commit.side_effect = RuntimeError('commit fail')
+            sess.flush.side_effect = RuntimeError('commit fail')
             sess.rollback = MagicMock()
             capp.logger = _logger()
             with pytest.raises(RuntimeError, match='commit fail'):
@@ -534,7 +536,7 @@ class TestUpdatePaymentStatus:
         sale.recalculate_payment_status = MagicMock()
         with patch('services.sale_service.db.session') as sess, \
              patch('services.sale_service.current_app') as capp:
-            sess.commit.side_effect = RuntimeError('db down')
+            sess.flush.side_effect = RuntimeError('db down')
             sess.rollback = MagicMock()
             capp.logger = _logger()
             with pytest.raises(RuntimeError, match='db down'):

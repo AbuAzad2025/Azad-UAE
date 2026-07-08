@@ -198,7 +198,7 @@ class TestCreateReturn:
                 user=_user(),
             )
         assert result.return_number == 'R-001'
-        session.commit.assert_called_once()
+        session.flush.assert_called()
 
     def test_no_lines_raises(self, app, mocker):
         sale = _sale()
@@ -351,7 +351,7 @@ class TestCreateReturn:
         product = _product()
         line.product = product
         session = self._patch_common(mocker, sale, line, product)
-        session.commit.side_effect = RuntimeError('db fail')
+        session.flush.side_effect = RuntimeError('db fail')
         from services.return_service import ReturnService
         with app.app_context():
             with pytest.raises(RuntimeError, match='db fail'):
