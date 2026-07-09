@@ -1779,7 +1779,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 base_dir=cls._BASEDIR,
                 dry_run=dry_run,
             )
-            if outcome.get("ok"):
+            if outcome.get("ok") and not dry_run:
                 from services.backup_scoped_engine import verify_scoped_isolation
                 from services.backup_scoped_restore import verify_scoped_restore
 

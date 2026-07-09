@@ -14,6 +14,7 @@ from services.backup_scope_config import (
     SCOPE_STORE,
     SCOPE_TENANT,
     TABLE_EXPORT_ORDER,
+    normalize_row_to_target,
     read_data_directory,
 )
 
@@ -265,6 +266,7 @@ def _run_import(
                 new_branch_id=new_branch_id,
                 new_store_id=new_store_id,
             )
+            mapped = normalize_row_to_target(conn, table, mapped)
             cols = list(mapped.keys())
             col_list = ", ".join(f'"{c}"' for c in cols)
             val_list = ", ".join(f":{c}" for c in cols)

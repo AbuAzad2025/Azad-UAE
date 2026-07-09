@@ -29,6 +29,7 @@ from services.backup_scope_config import (
     export_scoped_database,
     read_data_directory,
     table_exists,
+    normalize_row_to_target,
     write_data_directory,
 )
 
@@ -624,6 +625,7 @@ def _restore_scoped_table(
     """Insert one table's rows (within the caller's transaction)."""
     from sqlalchemy import text
 
+    outcome.setdefault("inserted", {})
     try:
         conn.execute(text("SET session_replication_role = replica"))
     except Exception as exc:
@@ -666,9 +668,12 @@ def _restore_scoped_table(
                 {"bid": bid},
             )
 
+    inserted = 0
+    table_errors = 0
     for row in rows:
         old_pk = row.get("id")
         new_row = _remap_row(row, table, id_maps, force_tenant_id=force_tid)
+        new_row = normalize_row_to_target(conn, table, new_row)
         if remap and old_pk is not None:
             if table not in id_maps:
                 id_maps[table] = {}
@@ -683,15 +688,21 @@ def _restore_scoped_table(
                 new_row["id"] = id_maps[table][int(old_pk)]
 
         cols = list(new_row.keys())
-        placeholders = ", ".join(f":{c}" for c in cols)
-        col_sql = ", ".join(f'"{c}"' for c in cols)
+        col_list = ", ".join(f'"{c}"' for c in cols)
+        val_list = ", ".join(f":{c}" for c in cols)
         try:
-            conn.execute(
-                text(f'INSERT INTO "{table}" ({col_sql}) VALUES ({placeholders})'),
-                new_row,
-            )
+            with conn.begin_nested():
+                sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'
+                if table == "roles":
+                    sql += " ON CONFLICT (id) DO NOTHING"
+                conn.execute(text(sql), new_row)
+            inserted += 1
         except Exception as exc:
-            outcome["warnings"].append(f"{table} insert: {type(exc).__name__}")
+            table_errors += 1
+            if table_errors <= 2:
+                outcome["warnings"].append(f"{table} insert: {type(exc).__name__}")
+            logger.debug("insert %s failed: %s", table, exc)
+    outcome["inserted"][table] = inserted
     try:
         conn.execute(text("SET session_replication_role = DEFAULT"))
     except Exception as exc:

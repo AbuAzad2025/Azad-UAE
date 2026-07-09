@@ -168,6 +168,70 @@ def table_exists(conn, table: str) -> bool:
     )
 
 
+def column_metadata(conn, table: str) -> List[Dict[str, Any]]:
+    """Return [{name, data_type, is_nullable, default}] for a target table."""
+    from sqlalchemy import text
+
+    if not table_exists(conn, table):
+        return []
+    rows = conn.execute(
+        text(
+            "SELECT column_name, data_type, is_nullable, column_default "
+            "FROM information_schema.columns "
+            "WHERE table_schema='public' AND table_name=:t "
+            "ORDER BY ordinal_position"
+        ),
+        {"t": table},
+    ).fetchall()
+    return [
+        {"name": r[0], "data_type": r[1], "is_nullable": r[2], "default": r[3]}
+        for r in rows
+    ]
+
+
+def _default_for_type(data_type: Optional[str]) -> Any:
+    """Typed fallback for a NOT NULL column that has no DB default."""
+    dt = (data_type or "").lower()
+    if "boolean" in dt:
+        return False
+    if any(k in dt for k in ("int", "numeric", "decimal", "money", "real", "double", "float")):
+        return 0
+    if "json" in dt:
+        return {}
+    if any(k in dt for k in ("timestamp", "date", "time")):
+        from datetime import datetime, timezone
+
+        return datetime.now(timezone.utc)
+    if "uuid" in dt:
+        import uuid
+
+        return str(uuid.uuid4())
+    return ""
+
+
+def normalize_row_to_target(conn, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
+    """Make a backup row safe to INSERT into the *current* target schema.
+
+    Handles schema drift in both directions:
+      * drops keys that no longer exist in the target table (avoids
+        ProgrammingError on unknown columns), and
+      * fills NOT NULL target columns that have no DB default and are absent
+        from the row with a typed default (avoids NotNullViolation).
+    Columns already present in the row are passed through untouched.
+    """
+    cols = column_metadata(conn, table)
+    if not cols:
+        return row
+    names = {c["name"] for c in cols}
+    out = {k: v for k, v in row.items() if k in names}
+    for c in cols:
+        if c["name"] in out:
+            continue
+        if c["is_nullable"] == "NO" and (c["default"] is None or str(c["default"]).upper() == "NULL"):
+            out[c["name"]] = _default_for_type(c["data_type"])
+    return out
+
+
 def _serialize_row(item: Dict[str, Any]) -> Dict[str, Any]:
     for key, val in list(item.items()):
         if hasattr(val, "isoformat"):

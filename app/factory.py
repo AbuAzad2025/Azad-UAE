@@ -91,6 +91,20 @@ def create_app(config_class=Config):
     run_system_integrity_check(app)
     print("System integrity check passed")
 
+    # Default tenant maintenance check at startup
+    try:
+        from scripts.fix_default_tenant import run_default_tenant_maintenance
+        with app.app_context():
+            result = run_default_tenant_maintenance(dry_run=False)
+            if result:
+                app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
+            else:
+                app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
+    except ImportError:
+        app.logger.info("Default tenant maintenance script not available - skipping")
+    except Exception as e:
+        app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
+
     # Proxy Fix for Nginx/Cloudflare
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
@@ -199,6 +213,19 @@ def create_app(config_class=Config):
             register_all_listeners()
     except ImportError:
         app.logger.warning("Event listeners not available")
+
+    # Run default tenant maintenance check at startup
+    try:
+        from scripts.fix_default_tenant import run_default_tenant_maintenance
+        result = run_default_tenant_maintenance(dry_run=False)
+        if result.get('action_needed'):
+            app.logger.info(f'[OK] Default tenant maintenance completed: {result.get("patched", [])}')
+        else:
+            app.logger.info('[OK] Default tenant maintenance check passed - no action needed')
+    except ImportError:
+        app.logger.info('Default tenant maintenance script not available - skipping')
+    except Exception as e:
+        app.logger.warning(f'Default tenant maintenance check failed: {e}')
 
     # Register CLI Commands
     try:
