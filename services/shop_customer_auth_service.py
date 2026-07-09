@@ -103,7 +103,6 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return account
@@ -119,7 +118,6 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return account
@@ -141,7 +139,6 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return account
@@ -171,7 +168,6 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return account

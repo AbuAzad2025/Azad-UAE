@@ -1,6 +1,7 @@
 from celery import Celery
 from flask import current_app
 import os
+from utils.db_safety import atomic_transaction
 
 
 celery = Celery(
@@ -191,19 +192,28 @@ def send_payment_reminders():
     
     app = create_app()
     with app.app_context():
+        from flask import g
+        from utils.tenanting import get_active_tenant_id
+
         customers = Customer.query.filter_by(is_active=True).all()
+        # group by tenant to keep tenant context isolated
+        by_tenant = {}
+        for c in customers:
+            by_tenant.setdefault(c.tenant_id, []).append(c)
         sent = 0
-        
-        for customer in customers:
-            balance = customer.get_balance_aed()
-            if balance > Decimal('1000') and customer.phone:
-                result = WhatsAppService.send_payment_reminder(
-                    customer.phone,
-                    customer.name,
-                    float(balance)
-                )
-                if result.get('success'):
-                    sent += 1
+
+        for tid, tenant_customers in by_tenant.items():
+            g.active_tenant_id = tid
+            for customer in tenant_customers:
+                balance = customer.get_balance_aed()
+                if balance > Decimal('1000') and customer.phone:
+                    result = WhatsAppService.send_payment_reminder(
+                        customer.phone,
+                        customer.name,
+                        float(balance)
+                    )
+                    if result.get('success'):
+                        sent += 1
         
         return {'sent': sent, 'total_checked': len(customers)}
 
@@ -233,7 +243,8 @@ def send_abandoned_cart_reminders():
                 ac.reminder_count = (ac.reminder_count or 0) + 1
                 db.session.flush()
         except Exception:
-            db.session.rollback()
+            current_app.logger.exception('Abandoned cart first reminder failed')
+            raise
 
     second_reminder = ShopAbandonedCart.query.filter(
         ShopAbandonedCart.reminder_sent_at.isnot(None),
@@ -252,7 +263,8 @@ def send_abandoned_cart_reminders():
                 ac.reminder_count = (ac.reminder_count or 0) + 1
                 db.session.flush()
         except Exception:
-            db.session.rollback()
+            current_app.logger.exception('Abandoned cart second reminder failed')
+            raise
 
 
 @celery.task

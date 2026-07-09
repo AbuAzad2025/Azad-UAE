@@ -91,7 +91,6 @@ class StorePaymentMethodService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
     @staticmethod
@@ -135,7 +134,6 @@ class StorePaymentMethodService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return method
@@ -173,7 +171,6 @@ class StorePaymentMethodService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return method
@@ -219,7 +216,6 @@ class StorePaymentMethodService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return method
@@ -235,7 +231,6 @@ class StorePaymentMethodService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
     @staticmethod

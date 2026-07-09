@@ -1745,6 +1745,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         target_tenant_id: Optional[int] = None,
         restore_uploads: bool = False,
         uploads_dest_root: Optional[str] = None,
+        dry_run: bool = False,
     ) -> Dict[str, Any]:
         import shutil
         import tempfile
@@ -1776,6 +1777,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 target_tenant_id=target_tenant_id,
                 restore_uploads_dir=uploads_dest_root if restore_uploads else None,
                 base_dir=cls._BASEDIR,
+                dry_run=dry_run,
             )
             if outcome.get("ok"):
                 from services.backup_scoped_engine import verify_scoped_isolation

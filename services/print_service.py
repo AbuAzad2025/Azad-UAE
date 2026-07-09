@@ -188,7 +188,6 @@ class PrintService:
             db.session.add(snap)
             logger.info("Snapshot created: %s #%d (%s)", document_type, document_id, reason)
         except Exception as e:
-            db.session.rollback()
             logger.warning("Snapshot creation failed (non-blocking): %s", e)
 
     @staticmethod
@@ -211,7 +210,6 @@ class PrintService:
             db.session.flush()
             logger.info("Print audit recorded: %s #%d by user %s", document_type, document_id, user_id)
         except Exception as e:
-            db.session.rollback()
             logger.warning("Print audit failed (non-blocking): %s", e)
 
     @staticmethod

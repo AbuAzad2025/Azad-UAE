@@ -38,7 +38,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         default_stages = [
             ('To Do', 'للتنفيذ', 0, '#6b7280'),
@@ -59,7 +58,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return project
 
@@ -87,7 +85,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return project
 
@@ -129,7 +126,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return task
 
@@ -147,7 +143,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return task
 
@@ -173,7 +168,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ts
 
@@ -220,6 +214,5 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return member

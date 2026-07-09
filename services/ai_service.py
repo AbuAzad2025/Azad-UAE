@@ -27,6 +27,7 @@ from ai_knowledge.specialized import (
 )
 from ai_knowledge.specialized_knowledge import AdvancedLaws
 from ai_knowledge.analytics import get_market_insights
+from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -553,17 +554,22 @@ class AIService:
     def get_exchange_rate_suggestion(currency, target_date=None):
         """اقتراح سعر الصرف الذكي"""
         from models import Sale
-        
+
+        tid = get_active_tenant_id()
+
         if not target_date:
             target_date = datetime.now()
-        
+
         last_7_days = target_date - timedelta(days=7)
-        
+
         recent_sales = db.session.query(Sale).filter(
             Sale.currency == currency,
             Sale.created_at >= last_7_days,
             Sale.exchange_rate > 0
-        ).order_by(Sale.created_at.desc()).limit(10).all()
+        )
+        if tid is not None:
+            recent_sales = recent_sales.filter(Sale.tenant_id == tid)
+        recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(10).all()
         
         if recent_sales:
             avg_rate = sum((s.exchange_rate for s in recent_sales)) / len(recent_sales)
@@ -595,12 +601,17 @@ class AIService:
     def predict_sales_trend(days_ahead=7):
         """🔮 التنبؤ باتجاه المبيعات - Predictive Analytics"""
         from models import Sale
-        
+
+        tid = get_active_tenant_id()
+
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
         sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_30_days,
             Sale.status == 'confirmed'
-        ).all()
+        )
+        if tid is not None:
+            sales = sales.filter(Sale.tenant_id == tid)
+        sales = sales.all()
         
         if not sales:
             return {'prediction': None, 'confidence': 0, 'message': 'لا توجد بيانات كافية'}
@@ -655,12 +666,17 @@ class AIService:
     def analyze_profit_margins():
         """💰 تحليل هوامش الربح - Margin Analysis"""
         from models import Sale
-        
+
+        tid = get_active_tenant_id()
+
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
         sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_30_days,
             Sale.status == 'confirmed'
-        ).all()
+        )
+        if tid is not None:
+            sales = sales.filter(Sale.tenant_id == tid)
+        sales = sales.all()
         
         if not sales:
             return {'success': False, 'message': 'لا توجد مبيعات'}
@@ -721,12 +737,17 @@ class AIService:
     def detect_sales_patterns():
         """🔍 كشف الأنماط - Pattern Detection"""
         from models import Sale
-        
+
+        tid = get_active_tenant_id()
+
         last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
         sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_90_days,
             Sale.status == 'confirmed'
-        ).all()
+        )
+        if tid is not None:
+            sales = sales.filter(Sale.tenant_id == tid)
+        sales = sales.all()
         
         if len(sales) < 10:
             return {'success': False, 'message': 'بيانات غير كافية'}
@@ -1174,14 +1195,19 @@ class AIService:
             from models import Sale, Customer, Product
             from extensions import db
             from datetime import datetime, timedelta
-            
+
+            tid = get_active_tenant_id()
+
             insights = []
-            
+
             # رؤية 1: المخزون المنخفض
-            low_stock_count = db.session.query(Product).filter(
+            low_stock_q = db.session.query(Product).filter(
                 Product.is_active == True,
                 Product.current_stock <= Product.min_stock_alert
-            ).count()
+            )
+            if tid is not None:
+                low_stock_q = low_stock_q.filter(Product.tenant_id == tid)
+            low_stock_count = low_stock_q.count()
             
             if low_stock_count > 0:
                 insights.append({
@@ -1193,9 +1219,12 @@ class AIService:
                 })
             
             # رؤية 2: العملاء المتأخرين
-            high_balance_customers = db.session.query(Customer).filter(
+            hbc_q = db.session.query(Customer).filter(
                 Customer.is_active == True
-            ).all()
+            )
+            if tid is not None:
+                hbc_q = hbc_q.filter(Customer.tenant_id == tid)
+            high_balance_customers = hbc_q.all()
             
             overdue_count = sum(1 for c in high_balance_customers if c.get_balance_aed() > 1000)
             
@@ -1210,9 +1239,12 @@ class AIService:
             
             # رؤية 3: أداء المبيعات
             today = datetime.now().date()
-            today_sales = db.session.query(Sale).filter(
+            today_sales_q = db.session.query(Sale).filter(
                 db.func.date(Sale.sale_date) == today
-            ).count()
+            )
+            if tid is not None:
+                today_sales_q = today_sales_q.filter(Sale.tenant_id == tid)
+            today_sales = today_sales_q.count()
             
             if today_sales == 0:
                 insights.append({
@@ -1345,11 +1377,19 @@ class AIService:
             from datetime import datetime, timedelta
             from extensions import db
 
+            tid = get_active_tenant_id()
+
             three_months_ago = datetime.now() - timedelta(days=90)
             at_risk = []
-            active_customers = db.session.query(Customer).filter_by(is_active=True).all()
+            active_customers_q = db.session.query(Customer).filter_by(is_active=True)
+            if tid is not None:
+                active_customers_q = active_customers_q.filter(Customer.tenant_id == tid)
+            active_customers = active_customers_q.all()
             for customer in active_customers:
-                last_sale = db.session.query(Sale).filter_by(customer_id=customer.id)\
+                last_sale_q = db.session.query(Sale).filter_by(customer_id=customer.id)
+                if tid is not None:
+                    last_sale_q = last_sale_q.filter(Sale.tenant_id == tid)
+                last_sale = last_sale_q\
                     .order_by(Sale.sale_date.desc()).first()
                 if last_sale and last_sale.sale_date < three_months_ago:
                     at_risk.append({
@@ -1440,8 +1480,13 @@ class AIService:
             from ai_knowledge.analytics.data_analyzer import DataAnalyzer
             from models import Sale
 
+            tid = get_active_tenant_id()
+
             last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
-            sales = db.session.query(Sale).filter(Sale.sale_date >= last_90_days).all()
+            sales_q = db.session.query(Sale).filter(Sale.sale_date >= last_90_days)
+            if tid is not None:
+                sales_q = sales_q.filter(Sale.tenant_id == tid)
+            sales = sales_q.all()
             historical = [float(s.amount_aed or 0) for s in sales]
             predictions = SalesAnalytics.predict_next_month_sales(historical)
             pattern = SalesAnalytics.analyze_sales_pattern(sales)

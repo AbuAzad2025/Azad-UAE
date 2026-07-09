@@ -125,7 +125,6 @@ class StoreOrderService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         StoreOrderService._award_loyalty_points(sale)
@@ -211,11 +210,10 @@ class StoreOrderService:
             if coupon_code:
                 from services.store_coupon_service import StoreCouponService
                 StoreCouponService.release_use(coupon_code, sale.tenant_id)
-                try:
-                    db.session.flush()
-                except Exception:
-                    db.session.rollback()
-                    raise
+        try:
+            db.session.flush()
+        except Exception:
+            raise
 
             return sale
 
@@ -226,7 +224,6 @@ class StoreOrderService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         current_app.logger.info('Store order cancelled (unfulfilled): %s', sale.sale_number)

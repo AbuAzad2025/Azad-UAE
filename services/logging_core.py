@@ -1505,16 +1505,20 @@ class LoggingCore:
 
 
     @classmethod
-    def get_security_events(cls, user_id: int | None = None, days: int = 30) -> list:
+    def get_security_events(cls, user_id: int | None = None, days: int = 30, tenant_id=None) -> list:
         """Return recent security-related audit events.
 
         Replaces utils/advanced_audit.py → get_security_events()
         """
         from models import AuditLog
         from datetime import timedelta
+        from utils.tenanting import get_active_tenant_id
 
+        tid = tenant_id if tenant_id is not None else get_active_tenant_id()
         since = datetime.now(timezone.utc) - timedelta(days=days)
         query = AuditLog.query.filter(AuditLog.created_at >= since)
+        if tid is not None:
+            query = query.filter(AuditLog.tenant_id == tid)
         if user_id:
             query = query.filter_by(user_id=user_id)
         query = query.filter(

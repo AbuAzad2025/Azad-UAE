@@ -61,7 +61,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ticket
 
@@ -76,7 +75,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ticket
 
@@ -92,7 +90,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ticket
 
@@ -108,7 +105,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ticket
 
@@ -125,7 +121,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return ticket
 
@@ -150,7 +145,6 @@ class TicketService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return comment
 

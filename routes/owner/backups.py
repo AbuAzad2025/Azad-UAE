@@ -244,6 +244,7 @@ def restore_backup_target(filename):
     confirmation = (request.form.get('restore_confirm') or '').strip()
     remap = request.form.get('remap') == '1'
     target_tenant_id = request.form.get('target_tenant_id', type=int)
+    dry_run = request.form.get('dry_run') == '1'
     if scope in ('tenant', 'branch', 'store'):
         result = BackupService.restore_scoped_backup_to_target_db(
             safe,
@@ -252,6 +253,7 @@ def restore_backup_target(filename):
             remap=remap,
             target_tenant_id=target_tenant_id,
             restore_uploads=request.form.get('restore_uploads') == '1',
+            dry_run=dry_run,
         )
     else:
         result = BackupService.restore_backup_to_target_db(

@@ -4,7 +4,7 @@ from extensions import db
 from models import Project, TaskStage, Task, Timesheet, ProjectMember, Customer, User
 from services.project_service import ProjectService
 from utils.decorators import permission_required, branch_scope_id
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, tenant_query
 from utils.branching import should_show_all_branch_columns
 
 projects_bp = Blueprint('projects', __name__, url_prefix='/projects')
@@ -29,7 +29,7 @@ def create_project():
             return redirect(url_for('projects.list_projects'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
-    customers = Customer.query.filter_by(is_active=True).order_by(Customer.name).all()
+    customers = tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
     return render_template('projects/task_form.html', customers=customers)
 
 
@@ -73,7 +73,7 @@ def edit_project(project_id):
             return redirect(url_for('projects.project_detail', project_id=project_id))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
-    customers = Customer.query.filter_by(is_active=True).all()
+    customers = tenant_query(Customer).filter_by(is_active=True).all()
     return render_template('projects/task_form.html', project=project, customers=customers)
 
 

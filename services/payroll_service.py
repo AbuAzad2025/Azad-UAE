@@ -75,7 +75,6 @@ class PayrollService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
 
@@ -164,7 +163,6 @@ class PayrollService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
 
@@ -354,7 +352,6 @@ class PayrollService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
 

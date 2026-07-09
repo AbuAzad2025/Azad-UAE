@@ -414,6 +414,7 @@ def restore_scoped_to_target(
     target_store_id: Optional[int] = None,
     restore_uploads_dir: Optional[str] = None,
     base_dir: Optional[str] = None,
+    dry_run: bool = False,
 ) -> Dict[str, Any]:
     """Restore tenant/branch/store JSONL bundle into target DB (must differ from live URL)."""
     outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": [], "id_maps": {}}
@@ -521,93 +522,66 @@ def restore_scoped_to_target(
                     sr["store_slug"] = f"{base_slug}_r{new_sid}"[:100]
                     tables_data["tenant_stores"] = [sr]
 
-            prep.commit()
+            if dry_run:
+                prep.rollback()
+            else:
+                prep.commit()
         except Exception as exc:
             prep.rollback()
             outcome["errors"].append(str(exc)[:500])
             return outcome
+
+    if dry_run:
+        # Simulate the full restore, rolling back each table's transaction so
+        # nothing is persisted. Mirrors the live per-table isolation exactly
+        # (FK checks are disabled via session_replication_role = replica inside
+        # _restore_scoped_table), but discards every write.
+        for table in dependency_order:
+            rows = tables_data.get(table) or []
+            if not rows:
+                continue
+            with engine.connect() as conn:
+                trans = conn.begin()
+                _restore_scoped_table(
+                    conn,
+                    table=table,
+                    rows=rows,
+                    scope=scope,
+                    remap=remap,
+                    src_tid=src_tid,
+                    id_maps=id_maps,
+                    force_tid=force_tid,
+                    manifest=manifest,
+                    outcome=outcome,
+                )
+                trans.rollback()
+        outcome["dry_run"] = True
+        outcome["ok"] = True
+        outcome["note"] = (
+            "dry-run: restore simulated and rolled back — no changes persisted "
+            "to the target database"
+        )
+        outcome["id_maps"] = {k: len(v) for k, v in id_maps.items()}
+        outcome["target_tenant_id"] = force_tid
+        return outcome
 
     for table in dependency_order:
         rows = tables_data.get(table) or []
         if not rows:
             continue
         with engine.begin() as conn:
-            try:
-                conn.execute(text("SET session_replication_role = replica"))
-            except Exception as exc:
-                logger.debug("session_replication_role replica: %s", exc)
-            if not table_exists(conn, table):
-                outcome["warnings"].append(f"skip missing table {table}")
-                continue
-
-            if not remap and scope == SCOPE_TENANT and table != "tenants":
-                table_cols = {
-                    r[0]
-                    for r in conn.execute(
-                        text(
-                            "SELECT column_name FROM information_schema.columns "
-                            "WHERE table_schema='public' AND table_name=:t"
-                        ),
-                        {"t": table},
-                    )
-                }
-                if "tenant_id" in table_cols:
-                    conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),
-                        {"tid": src_tid},
-                    )
-            elif not remap and scope == SCOPE_BRANCH and table not in ("tenants", "branches"):
-                bid = int(manifest.get("branch_id") or manifest.get("source_branch_id") or 0)
-                branch_cols = {
-                    r[0]
-                    for r in conn.execute(
-                        text(
-                            "SELECT column_name FROM information_schema.columns "
-                            "WHERE table_schema='public' AND table_name=:t"
-                        ),
-                        {"t": table},
-                    )
-                }
-                if "branch_id" in branch_cols:
-                    conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),
-                        {"bid": bid},
-                    )
-
-            for row in rows:
-                old_pk = row.get("id")
-                new_row = _remap_row(row, table, id_maps, force_tenant_id=force_tid)
-                if remap and old_pk is not None:
-                    if table not in id_maps:
-                        id_maps[table] = {}
-                    if int(old_pk) not in id_maps.get(table, {}):
-                        if table == "tenants" and new_row.get("id"):
-                            id_maps.setdefault(table, {})[int(old_pk)] = int(new_row["id"])
-                        else:
-                            nid = _new_id(conn, table)
-                            id_maps.setdefault(table, {})[int(old_pk)] = nid
-                            new_row["id"] = nid
-                    else:
-                        new_row["id"] = id_maps[table][int(old_pk)]
-
-                cols = list(new_row.keys())
-                placeholders = ", ".join(f":{c}" for c in cols)
-                col_sql = ", ".join(f'"{c}"' for c in cols)
-                try:
-                    conn.execute(
-                        text(
-                            f'INSERT INTO "{table}" ({col_sql}) VALUES ({placeholders})'
-                        ),
-                        new_row,
-                    )
-                except Exception as exc:
-                    outcome["warnings"].append(
-                        f"{table} insert: {type(exc).__name__}"
-                    )
-            try:
-                conn.execute(text("SET session_replication_role = DEFAULT"))
-            except Exception as exc:
-                logger.debug("session_replication_role default: %s", exc)
+            _restore_scoped_table(
+                conn,
+                table=table,
+                rows=rows,
+                scope=scope,
+                remap=remap,
+                src_tid=src_tid,
+                id_maps=id_maps,
+                force_tid=force_tid,
+                manifest=manifest,
+                outcome=outcome,
+            )
 
     outcome["id_maps"] = {k: len(v) for k, v in id_maps.items()}
     outcome["ok"] = True
@@ -632,6 +606,96 @@ def restore_scoped_to_target(
 
     outcome["target_tenant_id"] = force_tid
     return outcome
+
+
+def _restore_scoped_table(
+    conn,
+    *,
+    table: str,
+    rows: List[Dict[str, Any]],
+    scope: str,
+    remap: bool,
+    src_tid: int,
+    id_maps: Dict[str, Dict[int, int]],
+    force_tid: Optional[int],
+    manifest: Dict[str, Any],
+    outcome: Dict[str, Any],
+) -> None:
+    """Insert one table's rows (within the caller's transaction)."""
+    from sqlalchemy import text
+
+    try:
+        conn.execute(text("SET session_replication_role = replica"))
+    except Exception as exc:
+        logger.debug("session_replication_role replica: %s", exc)
+    if not table_exists(conn, table):
+        outcome["warnings"].append(f"skip missing table {table}")
+        return
+
+    if not remap and scope == SCOPE_TENANT and table != "tenants":
+        table_cols = {
+            r[0]
+            for r in conn.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema='public' AND table_name=:t"
+                ),
+                {"t": table},
+            )
+        }
+        if "tenant_id" in table_cols:
+            conn.execute(
+                text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),
+                {"tid": src_tid},
+            )
+    elif not remap and scope == SCOPE_BRANCH and table not in ("tenants", "branches"):
+        bid = int(manifest.get("branch_id") or manifest.get("source_branch_id") or 0)
+        branch_cols = {
+            r[0]
+            for r in conn.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema='public' AND table_name=:t"
+                ),
+                {"t": table},
+            )
+        }
+        if "branch_id" in branch_cols:
+            conn.execute(
+                text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),
+                {"bid": bid},
+            )
+
+    for row in rows:
+        old_pk = row.get("id")
+        new_row = _remap_row(row, table, id_maps, force_tenant_id=force_tid)
+        if remap and old_pk is not None:
+            if table not in id_maps:
+                id_maps[table] = {}
+            if int(old_pk) not in id_maps.get(table, {}):
+                if table == "tenants" and new_row.get("id"):
+                    id_maps.setdefault(table, {})[int(old_pk)] = int(new_row["id"])
+                else:
+                    nid = _new_id(conn, table)
+                    id_maps.setdefault(table, {})[int(old_pk)] = nid
+                    new_row["id"] = nid
+            else:
+                new_row["id"] = id_maps[table][int(old_pk)]
+
+        cols = list(new_row.keys())
+        placeholders = ", ".join(f":{c}" for c in cols)
+        col_sql = ", ".join(f'"{c}"' for c in cols)
+        try:
+            conn.execute(
+                text(f'INSERT INTO "{table}" ({col_sql}) VALUES ({placeholders})'),
+                new_row,
+            )
+        except Exception as exc:
+            outcome["warnings"].append(f"{table} insert: {type(exc).__name__}")
+    try:
+        conn.execute(text("SET session_replication_role = DEFAULT"))
+    except Exception as exc:
+        logger.debug("session_replication_role default: %s", exc)
 
 
 def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[str, Any]:

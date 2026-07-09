@@ -217,6 +217,72 @@ def _delete_tenant_scoped_data(conn, tenant_id: int, branch_id: Optional[int] = 
             logger.debug("delete scoped %s: %s", table, exc)
 
 
+def _run_import(
+    conn,
+    tables: Dict[str, List[Dict[str, Any]]],
+    *,
+    scope: str,
+    source_tenant_id: int,
+    target_tenant_id: Optional[int],
+    id_maps: Dict[str, Dict[Any, Any]],
+    remap: bool,
+    new_branch_id: Optional[int],
+    new_store_id: Optional[int],
+    source_branch_id: Optional[int],
+    result: Dict[str, Any],
+) -> None:
+    """Execute the scoped delete + insert loop against ``conn`` (no commit)."""
+    from sqlalchemy import text
+
+    tgt_tid = target_tenant_id if target_tenant_id is not None else source_tenant_id
+    order = [t for t in TABLE_EXPORT_ORDER if t in tables]
+    for t in tables:
+        if t not in order:
+            order.append(t)
+
+    if not remap:
+        _delete_tenant_scoped_data(
+            conn,
+            tgt_tid,
+            branch_id=source_branch_id if scope == SCOPE_BRANCH else None,
+        )
+
+    for table in order:
+        rows = tables.get(table) or []
+        if not rows:
+            continue
+        inserted = 0
+        table_errors = 0
+        for row in rows:
+            mapped = _apply_row_remap(
+                row,
+                table,
+                id_maps,
+                new_tenant_id=tgt_tid,
+                old_tenant_id=source_tenant_id,
+                scope=scope,
+                remap=remap,
+                new_branch_id=new_branch_id,
+                new_store_id=new_store_id,
+            )
+            cols = list(mapped.keys())
+            col_list = ", ".join(f'"{c}"' for c in cols)
+            val_list = ", ".join(f":{c}" for c in cols)
+            try:
+                with conn.begin_nested():
+                    sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'
+                    if table == "roles":
+                        sql += " ON CONFLICT (id) DO NOTHING"
+                    conn.execute(text(sql), mapped)
+                inserted += 1
+            except Exception as e:
+                table_errors += 1
+                if table_errors <= 2:
+                    result["errors"].append(f"{table}: {type(e).__name__}")
+                logger.debug("insert %s failed: %s", table, e)
+        result["inserted"][table] = inserted
+
+
 def import_scoped_tables(
     target_url: str,
     tables: Dict[str, List[Dict[str, Any]]],
@@ -228,6 +294,7 @@ def import_scoped_tables(
     new_branch_id: Optional[int] = None,
     new_store_id: Optional[int] = None,
     source_branch_id: Optional[int] = None,
+    dry_run: bool = False,
 ) -> Dict[str, Any]:
     from sqlalchemy import create_engine, text
 
@@ -246,54 +313,52 @@ def import_scoped_tables(
             (tables.get("tenants") or [{}])[0].get("id", source_tenant_id)
         ] = tgt_tid
 
-    order = [t for t in TABLE_EXPORT_ORDER if t in tables]
-    for t in tables:
-        if t not in order:
-            order.append(t)
-
     engine = create_engine(target_url)
-    with engine.begin() as conn:
-        if not remap:
-            _delete_tenant_scoped_data(
+    if dry_run:
+        # Simulate the full restore inside a transaction, then roll back so
+        # nothing is persisted. Returns the affected-row summary instead.
+        with engine.connect() as conn:
+            trans = conn.begin()
+            _run_import(
                 conn,
-                tgt_tid,
-                branch_id=source_branch_id if scope == SCOPE_BRANCH else None,
+                tables,
+                scope=scope,
+                source_tenant_id=source_tenant_id,
+                target_tenant_id=target_tenant_id,
+                id_maps=id_maps,
+                remap=remap,
+                new_branch_id=new_branch_id,
+                new_store_id=new_store_id,
+                source_branch_id=source_branch_id,
+                result=result,
             )
+            trans.rollback()
+        result["dry_run"] = True
+        expected_products = len(tables.get("products") or [])
+        result["products_expected"] = expected_products
+        result["products_inserted"] = result["inserted"].get("products", 0)
+        result["rows_skipped"] = max(0, expected_products - result["products_inserted"])
+        if any(
+            result["inserted"].get(t, 0) == 0 and tables.get(t)
+            for t in ("tenants", "roles", "branches")
+        ):
+            result["ok"] = False
+        return result
 
-        for table in order:
-            rows = tables.get(table) or []
-            if not rows:
-                continue
-            inserted = 0
-            table_errors = 0
-            for row in rows:
-                mapped = _apply_row_remap(
-                    row,
-                    table,
-                    id_maps,
-                    new_tenant_id=tgt_tid,
-                    old_tenant_id=source_tenant_id,
-                    scope=scope,
-                    remap=remap,
-                    new_branch_id=new_branch_id,
-                    new_store_id=new_store_id,
-                )
-                cols = list(mapped.keys())
-                col_list = ", ".join(f'"{c}"' for c in cols)
-                val_list = ", ".join(f":{c}" for c in cols)
-                try:
-                    with conn.begin_nested():
-                        sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'
-                        if table == "roles":
-                            sql += " ON CONFLICT (id) DO NOTHING"
-                        conn.execute(text(sql), mapped)
-                    inserted += 1
-                except Exception as e:
-                    table_errors += 1
-                    if table_errors <= 2:
-                        result["errors"].append(f"{table}: {type(e).__name__}")
-                    logger.debug("insert %s failed: %s", table, e)
-            result["inserted"][table] = inserted
+    with engine.begin() as conn:
+        _run_import(
+            conn,
+            tables,
+            scope=scope,
+            source_tenant_id=source_tenant_id,
+            target_tenant_id=target_tenant_id,
+            id_maps=id_maps,
+            remap=remap,
+            new_branch_id=new_branch_id,
+            new_store_id=new_store_id,
+            source_branch_id=source_branch_id,
+            result=result,
+        )
 
     expected_products = len(tables.get("products") or [])
     inserted_products = result["inserted"].get("products", 0)
@@ -438,6 +503,7 @@ def restore_scoped_backup(
     new_store_id: Optional[int] = None,
     restore_uploads: bool = False,
     uploads_dest_root: Optional[str] = None,
+    dry_run: bool = False,
 ) -> Dict[str, Any]:
     """Restore scoped backup to target DB (never current DATABASE_URL)."""
     outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
@@ -503,13 +569,27 @@ def restore_scoped_backup(
             new_branch_id=new_branch_id,
             new_store_id=new_store_id,
             source_branch_id=int(src_bid) if src_bid is not None else None,
+            dry_run=dry_run,
         )
         outcome["import"] = import_result
         outcome["products_expected"] = import_result.get("products_expected")
         outcome["products_inserted"] = import_result.get("products_inserted")
         outcome["rows_skipped"] = import_result.get("rows_skipped")
+        outcome["affected_rows"] = import_result.get("inserted")
         if not import_result.get("ok"):
             outcome["errors"].extend(import_result.get("errors") or ["import failed"])
+            return outcome
+
+        if dry_run:
+            # No changes were persisted (transaction was rolled back).
+            outcome["dry_run"] = True
+            outcome["ok"] = not outcome["errors"]
+            outcome["target_tenant_id"] = tgt_tid
+            outcome["scope"] = scope
+            outcome["note"] = (
+                "dry-run: restoration simulated and rolled back — no changes "
+                "persisted to the target database"
+            )
             return outcome
 
         scoped_verify = verify_scoped_restore(

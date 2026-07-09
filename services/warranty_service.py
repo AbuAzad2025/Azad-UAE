@@ -37,12 +37,15 @@ class WarrantyService:
         ).order_by(WarrantyClaim.warranty_end_date.asc()).all()
 
     @staticmethod
-    def get_expiring_warranties(days=30):
+    def get_expiring_warranties(days=30, tenant_id=None):
         from models.warranty_claim import WarrantyClaim
+        from utils.tenanting import get_active_tenant_id
 
         now = datetime.now(timezone.utc)
         end = now + timedelta(days=days)
+        tid = tenant_id if tenant_id is not None else get_active_tenant_id()
         return WarrantyClaim.query.filter(
+            WarrantyClaim.tenant_id == tid,
             WarrantyClaim.warranty_end_date >= now,
             WarrantyClaim.warranty_end_date <= end,
             WarrantyClaim.status != 'resolved',

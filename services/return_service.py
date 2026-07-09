@@ -457,12 +457,10 @@ class ReturnService:
             try:
                 db.session.flush()
             except Exception:
-                db.session.rollback()
                 raise
 
             return product_return
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f'Failed to create return: {e}')
             raise

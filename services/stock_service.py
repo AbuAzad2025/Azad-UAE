@@ -158,7 +158,6 @@ class StockService:
             StockService._post_adjustment_gl(movement)
             return movement
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Failed stock adjustment: {e}")
             raise
 
@@ -304,7 +303,6 @@ class StockService:
             return movement
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f'Stock movement failed: {e}')
             raise
 
@@ -1135,7 +1133,6 @@ class StockService:
             try:
                 db.session.flush()
             except Exception:
-                db.session.rollback()
                 errors += 1
         else:
             db.session.flush()

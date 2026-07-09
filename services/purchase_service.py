@@ -217,7 +217,6 @@ class PurchaseService:
 
         if lines_added == 0:
             current_app.logger.warning('Purchase creation rolled back: no lines added for purchase %s', purchase.purchase_number)
-            db.session.rollback()
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
 
         purchase.subtotal = subtotal
@@ -363,7 +362,6 @@ class PurchaseService:
             db.session.flush()
         except Exception:
             current_app.logger.exception('Purchase cancel flush failed for %s', purchase.purchase_number)
-            db.session.rollback()
             raise
 
         LoggingCore.log_audit('cancel', 'purchases', purchase.id)
@@ -496,7 +494,6 @@ class PurchaseService:
 
         if subtotal <= 0:
             current_app.logger.warning('Purchase return rolled back: no lines for return %s', getattr(purchase_return, 'return_number', None))
-            db.session.rollback()
             raise ValueError('يجب إرجاع منتج واحد على الأقل')
 
         # حساب الضريبة التناسبية
@@ -577,7 +574,6 @@ class PurchaseService:
             db.session.flush()
         except Exception:
             current_app.logger.exception('Purchase return flush failed for %s', getattr(purchase_return, 'return_number', None))
-            db.session.rollback()
             raise
 
         LoggingCore.log_audit('create', 'purchase_returns', purchase_return.id)

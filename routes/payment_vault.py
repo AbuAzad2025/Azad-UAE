@@ -12,6 +12,7 @@ from services.nowpayments_service import NOWPaymentsService
 from services.logging_core import LoggingCore
 from utils.decorators import owner_only
 from utils.db_safety import atomic_transaction
+from utils.tenanting import tenant_query, tenant_get_or_404
 import secrets
 import string
 import logging
@@ -822,7 +823,7 @@ def cards():
         return redirect(url_for('payment_vault.unlock_vault'))
     
     # جلب البطاقات
-    cards = CardPayment.query.order_by(CardPayment.created_at.desc()).all()
+    cards = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
     
     # إحصائيات
     total_cards = len(cards)
@@ -846,7 +847,7 @@ def decrypt_card(card_id):
     if not vault or vault.is_locked:
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
     
-    card = CardPayment.query.get_or_404(card_id)
+    card = tenant_get_or_404(CardPayment, card_id)
     # لا نعيد أرقام البطاقة كاملة عبر API — فقط آخر 4 أرقام
     PaymentLog.log_action(
         vault_id=vault.id,
@@ -1602,7 +1603,7 @@ def export_cards():
     from services.export_service import ExportService
     from flask import send_file
     
-    cards = CardPayment.query.order_by(CardPayment.created_at.desc()).all()
+    cards = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
     csv_file = ExportService.export_cards_to_csv(cards)
     
     return send_file(

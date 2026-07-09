@@ -380,7 +380,6 @@ class SaleService:
                     db.session.flush()
                 except Exception:
                     current_app.logger.exception('Deferred sale flush failed for %s', sale.sale_number)
-                    db.session.rollback()
                     raise
 
                 current_app.logger.info(f'Sale created (deferred): {sale.sale_number}')
@@ -392,7 +391,6 @@ class SaleService:
                 db.session.flush()
             except Exception:
                 current_app.logger.exception('Sale flush failed for %s', sale.sale_number)
-                db.session.rollback()
                 raise
 
 
@@ -402,7 +400,6 @@ class SaleService:
 
         except Exception:
             current_app.logger.exception('Sale creation failed for customer %s', getattr(customer, 'id', None))
-            db.session.rollback()
             raise
 
     @staticmethod
@@ -931,7 +928,6 @@ class SaleService:
                 )
             except Exception as _e:
                 current_app.logger.exception('GL reversal failed for cancelled sale %s', sale.sale_number)
-                db.session.rollback()
                 raise ValueError(f'فشل عكس القيد المحاسبي: {_e}') from _e
 
         # إعادة حساب حالة الدفع بعد الإلغاء
@@ -941,7 +937,6 @@ class SaleService:
             db.session.flush()
         except Exception:
             current_app.logger.exception('Cancel sale flush failed for %s', sale.sale_number)
-            db.session.rollback()
             raise
 
 
@@ -959,7 +954,6 @@ class SaleService:
             db.session.flush()
         except Exception:
             current_app.logger.exception('Payment status update flush failed for %s', sale.sale_number)
-            db.session.rollback()
             raise
 
 

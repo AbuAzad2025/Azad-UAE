@@ -180,21 +180,18 @@ class PaymentService:
                 )
             except Exception as _e:
                 current_app.logger.exception('GL posting failed for payment: %s', _e)
-                db.session.rollback()
                 raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {_e}') from _e
 
             try:
                 db.session.flush()
             except Exception:
                 current_app.logger.exception('Payment flush failed for supplier payment')
-                db.session.rollback()
                 raise
 
             return payment
 
         except Exception:
             current_app.logger.exception('Payment creation failed')
-            db.session.rollback()
             raise
 
     @staticmethod
@@ -397,7 +394,6 @@ class PaymentService:
                                     current_app.logger.warning('FX auto-posting skipped for receipt %s: %s', receipt.receipt_number, fx_err)
                 except Exception as _e:
                     current_app.logger.exception('GL posting failed for receipt: %s', _e)
-                    db.session.rollback()
                     raise ValueError(f'فشل الترحيل المحاسبي لسند القبض: {_e}') from _e
 
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
@@ -476,7 +472,6 @@ class PaymentService:
                 db.session.flush()
             except Exception:
                 current_app.logger.exception('Receipt flush failed for %s', receipt.receipt_number)
-                db.session.rollback()
                 raise
 
 
@@ -486,7 +481,6 @@ class PaymentService:
 
         except Exception:
             current_app.logger.exception('Receipt creation failed')
-            db.session.rollback()
             raise
 
     @staticmethod
@@ -642,11 +636,9 @@ class PaymentService:
                 db.session.flush()
             except Exception:
                 current_app.logger.exception('Receipt allocation flush failed for %s', receipt.receipt_number)
-                db.session.rollback()
                 raise
             current_app.logger.info(f'Receipt {receipt.receipt_number} allocated to sales')
         except Exception:
             current_app.logger.exception('Receipt allocation failed')
-            db.session.rollback()
             raise
 
