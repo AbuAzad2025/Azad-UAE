@@ -124,14 +124,12 @@ def create():
             return redirect(url_for('purchases.view', id=purchase.id))
         
         except ValueError as e:
-            db.session.rollback()
             flash(f'⚠️ {str(e)}', 'warning')
         except Exception as e:
             current_app.logger.error(f"Error in purchase creation: {str(e)}")
             current_app.logger.error(f"Error type: {type(e)}")
             import traceback
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
     try:
@@ -370,7 +368,6 @@ def purchase_return(id):
         except ValueError as e:
             flash(f'❌ {str(e)}', 'danger')
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}', 'danger')
             current_app.logger.exception('Purchase return error')
 

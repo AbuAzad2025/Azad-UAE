@@ -67,7 +67,6 @@ class CRMLeadService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return lead
 
@@ -106,7 +105,6 @@ class CRMLeadService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return lead
 
@@ -133,7 +131,6 @@ class CRMLeadService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return lead
 
@@ -254,7 +251,6 @@ class CRMLeadService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return customer
 
@@ -324,6 +320,5 @@ class CRMLeadService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return activity

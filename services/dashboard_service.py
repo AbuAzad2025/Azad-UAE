@@ -54,6 +54,5 @@ class DashboardService:
         try:
             db.session.flush()
         except IntegrityError:
-            db.session.rollback()
             raise
         return layout

@@ -38,7 +38,6 @@ class ChequeAccountingIntegration:
             db.session.flush()
             return entry
         except Exception as e:
-            db.session.rollback()
             raise Exception(f"فشل في تسجيل استلام الشيك: {str(e)}")
     
     @staticmethod
@@ -57,7 +56,6 @@ class ChequeAccountingIntegration:
             ).order_by(GLJournalEntry.id.desc()).first()
             return entry
         except Exception as e:
-            db.session.rollback()
             raise Exception(f"فشل في تسجيل إصدار الشيك: {str(e)}")
     
     @staticmethod
@@ -77,7 +75,6 @@ class ChequeAccountingIntegration:
             try:
                 db.session.flush()
             except Exception:
-                db.session.rollback()
                 raise
 
             # إرجاع القيد الأخير المرتبط (Cheque لا يُرجع القيد)
@@ -91,7 +88,6 @@ class ChequeAccountingIntegration:
                 return _DummyEntry()
             return entry
         except Exception as e:
-            db.session.rollback()
             raise Exception(f"فشل في تسجيل صرف الشيك: {str(e)}")
     
     @staticmethod
@@ -109,7 +105,6 @@ class ChequeAccountingIntegration:
             ).order_by(GLJournalEntry.id.desc()).first()
             return entry
         except Exception as e:
-            db.session.rollback()
             raise Exception(f"فشل في تسجيل ارتداد الشيك: {str(e)}")
     
     @staticmethod

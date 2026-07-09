@@ -234,7 +234,6 @@ def create():
         except ValueError as e:
             flash(f'❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة.', 'danger')
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
     try:

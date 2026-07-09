@@ -248,12 +248,12 @@ def wishlist_add(slug, product_id):
     if not account:
         return jsonify({'success': False, 'message': 'Login required'}), 401
     if request.content_type and 'application/json' in request.content_type:
-        existing = ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).first()
+        existing = ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).first()
         if not existing:
             with atomic_transaction('wishlist_add'):
                 wl = ShopWishlist(tenant_id=store.tenant_id, account_id=account.id, product_id=product_id)
                 db.session.add(wl)
-        count = ShopWishlist.query.filter_by(account_id=account.id).count()
+        count = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).count()
         return jsonify({'success': True, 'wishlisted': True, 'count': count})
     return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
 
@@ -265,7 +265,7 @@ def wishlist_remove(slug, product_id):
     if not account:
         return jsonify({'success': False}), 401
     with atomic_transaction('wishlist_remove'):
-        ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).delete()
+        ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).delete()
     if request.content_type and 'application/json' in request.content_type:
         return jsonify({'success': True, 'wishlisted': False})
     return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
@@ -282,7 +282,7 @@ def wishlist_view(slug):
     if not account:
         flash(t('login_required', ctx['lang']), 'warning')
         return redirect(url_for('shop.account_login', slug=store.store_slug))
-    items = ShopWishlist.query.filter_by(account_id=account.id).order_by(ShopWishlist.created_at.desc()).all()
+    items = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).order_by(ShopWishlist.created_at.desc()).all()
     return render_template('shop/wishlist.html', wishlist_items=items, noindex=True, **ctx)
 
 
@@ -1300,7 +1300,7 @@ def saved_payments(slug):
     if not account:
         return redirect(url_for('shop.account_login', slug=store.store_slug))
     from models.shop_saved_payment import ShopSavedPayment
-    payments = ShopSavedPayment.query.filter_by(account_id=account.id).all()
+    payments = ShopSavedPayment.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).all()
     return render_template('shop/saved_payments.html', payments=payments, noindex=True, **ctx)
 
 
@@ -1334,7 +1334,7 @@ def delete_saved_payment(slug, payment_id):
     if not account:
         return jsonify({'success': False}), 401
     from models.shop_saved_payment import ShopSavedPayment
-    pm = ShopSavedPayment.query.filter_by(id=payment_id, account_id=account.id).first_or_404()
+    pm = ShopSavedPayment.query.filter_by(id=payment_id, account_id=account.id, tenant_id=store.tenant_id).first_or_404()
     with atomic_transaction('delete_payment'):
         db.session.delete(pm)
     flash(t('payment_deleted', shop_lang()), 'success')
@@ -1354,7 +1354,7 @@ def reorder(slug, sale_id):
     sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source='online_store').first_or_404()
     if sale.customer_id != account.customer_id:
         abort(404)
-    lines = SaleLine.query.filter_by(sale_id=sale.id).all()
+    lines = SaleLine.query.filter_by(sale_id=sale.id, tenant_id=store.tenant_id).all()
     if not lines:
         flash('No items to reorder', 'warning')
         return redirect(url_for('shop.account_orders', slug=store.store_slug))

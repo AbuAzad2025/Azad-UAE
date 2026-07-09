@@ -125,7 +125,7 @@ def improvement_progress():
 def set_improvement_goal():
     """تعيين هدف تحسين"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         area = data.get('area')
         target_score = data.get('target_score')
         timeframe = data.get('timeframe', '30_days')
@@ -217,7 +217,7 @@ def performance_analysis():
 def add_knowledge_website():
     """إضافة موقع ويب للمعرفة"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         url = data.get('url')
         category = data.get('category', 'general')
         description = data.get('description', '')
@@ -243,7 +243,7 @@ def add_knowledge_website():
 def add_knowledge_document():
     """إضافة مستند للمعرفة"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         content = data.get('content')
         title = data.get('title')
         category = data.get('category', 'general')

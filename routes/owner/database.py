@@ -125,7 +125,6 @@ def execute_query():
         })
 
     except Exception:
-        db.session.rollback()
         current_app.logger.exception('Owner database query failed')
         return jsonify({'error': 'تعذر تنفيذ الاستعلام حالياً'}), 400
 
@@ -347,7 +346,6 @@ def sql_console():
 
             except Exception as e:
                 error = str(e)
-                db.session.rollback()
 
     return render_template('owner/sql_console.html',
                          result=result_data,
@@ -426,7 +424,6 @@ def export_database():
             )
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error('export_database failed user_id=%s: %s', current_user.id, e)
         flash(f'❌ خطأ في التصدير: {str(e)}', 'danger')
 
@@ -508,7 +505,6 @@ def convert_database():
             )
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(
                 'convert_database failed user_id=%s target=%s: %s',
                 current_user.id,
@@ -673,7 +669,6 @@ def export_excel(table_name):
             download_name=f'{normalized}_{today_str}.xlsx'
         )
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error('export_excel failed user_id=%s entity=%r: %s', current_user.id, table_name, e)
         flash(f'خطأ في التصدير: {str(e)}', 'danger')
         return redirect(url_for('owner.import_export_tools'))

@@ -57,7 +57,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return att
 
@@ -83,7 +82,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return att
 
@@ -148,7 +146,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return leave
 
@@ -165,7 +162,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return leave
 
@@ -183,7 +179,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return leave
 
@@ -220,7 +215,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return dept
 
@@ -256,7 +250,6 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return contract
 

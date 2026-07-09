@@ -113,7 +113,6 @@ def tenant_store_platform_toggle(store_id):
             'success',
         )
     except Exception as exc:
-        db.session.rollback()
         flash(f'تعذر تحديث حالة المتجر: {exc}', 'danger')
     return redirect(url_for('owner.tenant_stores'))
 

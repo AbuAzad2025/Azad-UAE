@@ -1103,7 +1103,7 @@ class LoggingCore:
             with atomic_transaction('log_security'):
                 db.session.flush()
         except Exception:
-            db.session.rollback()
+            pass
 
     # ──────────────────────────────────────────────────────────────
     #  HEALTH CHECKS

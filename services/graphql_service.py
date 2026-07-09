@@ -164,7 +164,6 @@ class CreateSale(graphene.Mutation):
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         

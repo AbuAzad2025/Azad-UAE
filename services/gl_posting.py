@@ -90,7 +90,6 @@ def post_or_fail(
         )
 
         if validated_entry.status == 'error':
-            db.session.rollback()
             raise GlPostingError(
                 f'Validation failed for entry "{description}": {validated_entry.validation_errors}'
             )
@@ -105,7 +104,6 @@ def post_or_fail(
 
         return posted_entry
     except Exception as exc:
-        db.session.rollback()
         raise GlPostingError(str(exc)) from exc
 
 

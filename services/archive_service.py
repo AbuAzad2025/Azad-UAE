@@ -58,7 +58,6 @@ class ArchiveService:
             current_app.logger.warning(f'Hard deleted: {table_name} #{record.id}')
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f'Hard delete failed: {e}')
             raise
 
@@ -100,7 +99,6 @@ class ArchiveService:
             raise ValueError('Cannot restore: Record not found in database')
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f'Restore failed: {e}')
             raise
 

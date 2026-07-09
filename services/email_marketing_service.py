@@ -37,7 +37,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return lst
 
@@ -69,7 +68,6 @@ class EmailMarketingService:
                 try:
                     db.session.flush()
                 except Exception:
-                    db.session.rollback()
                     raise
             return existing
         sub = EmailSubscriber(
@@ -84,7 +82,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return sub
 
@@ -106,7 +103,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return len(subs)
 
@@ -128,7 +124,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return tpl
 
@@ -161,7 +156,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return campaign
 
@@ -225,7 +219,6 @@ class EmailMarketingService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return campaign
 

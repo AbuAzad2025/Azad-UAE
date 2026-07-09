@@ -136,7 +136,7 @@ def edit_lead(lead_id):
 @login_required
 @permission_required('crm.manage')
 def api_move_stage():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     try:
         CRMLeadService.move_stage(data['lead_id'], data['stage_id'], current_user)
         return jsonify({'success': True})
@@ -156,7 +156,7 @@ def api_stats():
 @login_required
 @permission_required('crm.manage')
 def api_add_activity():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     try:
         CRMLeadService.add_activity(data['lead_id'], data, current_user)
         return jsonify({'success': True})

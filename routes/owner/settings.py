@@ -369,7 +369,6 @@ def store_payment_method_create():
         except ValueError as exc:
             flash(str(exc), 'warning')
         except Exception as exc:
-            db.session.rollback()
             flash(f'خطأ: {exc}', 'danger')
     return render_template('owner/store_payment_method_form.html', method=None)
 
@@ -405,7 +404,6 @@ def store_payment_method_edit(method_id):
         except ValueError as exc:
             flash(str(exc), 'warning')
         except Exception as exc:
-            db.session.rollback()
             flash(f'خطأ: {exc}', 'danger')
     return render_template('owner/store_payment_method_form.html', method=method)
 
@@ -433,7 +431,6 @@ def store_payment_method_delete(method_id):
     except ValueError as exc:
         flash(str(exc), 'warning')
     except Exception as exc:
-        db.session.rollback()
         flash(f'خطأ: {exc}', 'danger')
     return redirect(url_for('owner.store_payment_methods'))
 

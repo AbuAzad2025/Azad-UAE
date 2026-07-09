@@ -198,7 +198,6 @@ class SystemIntegrator:
             }
             
         except Exception as e:
-            db.session.rollback()
             return {
                 'success': False,
                 'error': f'خطأ في إضافة العميل: {str(e)}'

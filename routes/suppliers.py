@@ -245,7 +245,6 @@ def create():
             return redirect(url_for('suppliers.view', id=supplier.id))
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in supplier operation: {e}")
             flash(ErrorMessages.create_failed('supplier'), 'danger')
 

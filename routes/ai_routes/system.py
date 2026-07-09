@@ -107,7 +107,7 @@ def search_system_data(search_term):
 def add_customer():
     """إضافة عميل جديد"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         result = system_integrator.add_customer(data)
         return jsonify(result)
     except Exception as e:

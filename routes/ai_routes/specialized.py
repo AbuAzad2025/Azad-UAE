@@ -101,7 +101,7 @@ def external_sources():
 def ask_genius():
     """🌟 API: اسأل العبقري - الواجهة الموحدة (JSON callers must send X-CSRFToken)."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         question = data.get('question', '')
         context = data.get('context', {})
         
@@ -135,7 +135,7 @@ def ask_genius():
 def quick_calc():
     """⚡ API: حسابات سريعة — whitelist formulas only; no DB, files, or external calls."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         formula = data.get('formula', '')
         params = data.get('params', {})
         
@@ -165,7 +165,7 @@ def quick_calc():
 def transformers_understand():
     """🤖 API: فهم بالـ Transformers — local in-memory only; no DB, files, or ERP actions."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         text = data.get('text', '')
         
         if not text:

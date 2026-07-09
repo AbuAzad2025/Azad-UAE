@@ -578,7 +578,7 @@ class ExchangeRateService:
             db.session.add(record)
             db.session.flush()
         except Exception:
-            db.session.rollback()
+            pass
 
     @staticmethod
     def save_manual_rate(

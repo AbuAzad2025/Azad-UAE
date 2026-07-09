@@ -76,7 +76,7 @@ def cash_flow_prediction():
 @permission_required('view_products')
 def smart_price():
     """💎 API: محرك التسعير الذكي الخارق"""
-    data = request.get_json()
+    data = request.get_json(silent=True)
     product_id = data.get('product_id')
     customer_id = data.get('customer_id')
     quantity = data.get('quantity', 1)

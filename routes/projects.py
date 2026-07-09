@@ -93,7 +93,7 @@ def add_task(project_id):
 @login_required
 @permission_required('project.manage')
 def api_move_task():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     try:
         ProjectService.move_task(data['task_id'], data['stage_id'], current_user)
         return jsonify({'success': True})
@@ -105,7 +105,7 @@ def api_move_task():
 @login_required
 @permission_required('project.manage')
 def api_log_timesheet():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     try:
         ts = ProjectService.log_timesheet(data['task_id'], data, current_user)
         return jsonify({'success': True, 'id': ts.id, 'hours': float(ts.hours)})

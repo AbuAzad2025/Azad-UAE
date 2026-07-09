@@ -109,7 +109,6 @@ def _log_ai_error(error_type: str, message: str, endpoint: str = "ai_chat",
         db.session.add(log)
         db.session.flush()
     except Exception as exc:
-        db.session.rollback()
         logger.warning('AI error log failed (%s): %s', error_type, exc)
 
 
@@ -181,7 +180,6 @@ class ActionDispatcher:
                                     {"id": customer.id, "name": name},
                                     "customer_create", "manage_customers")
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("customer_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء العميل: {str(e)[:100]}")
 
@@ -253,7 +251,6 @@ class ActionDispatcher:
                                     {"id": product.id, "name": name},
                                     "product_create", "manage_products")
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("product_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء المنتج: {str(e)[:100]}")
 
@@ -398,7 +395,6 @@ class ActionDispatcher:
                     f"تم تسجيل المصروف {description} بقيمة {float(amount):,.2f} درهم",
                     {"expense_id": expense.id}, "expense_add", "manage_expenses")
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("expense_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -426,7 +422,6 @@ class ActionDispatcher:
                                     {"id": supplier.id, "name": name},
                                     "supplier_create", "manage_suppliers")
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("supplier_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
@@ -556,7 +551,6 @@ class ActionDispatcher:
                                     {"id": user.id, "username": username},
                                     "user_create", "manage_users")
             except Exception as e:
-                db.session.rollback()
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # Register all actions

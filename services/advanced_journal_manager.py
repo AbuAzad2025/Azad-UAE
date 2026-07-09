@@ -108,7 +108,6 @@ class AdvancedJournalEntryManager:
             try:
                 db.session.flush()
             except Exception:
-                db.session.rollback()
                 raise
         return entry
 
@@ -186,7 +185,6 @@ class AdvancedJournalEntryManager:
             else:
                 db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return entry
 
@@ -221,7 +219,6 @@ class AdvancedJournalEntryManager:
             else:
                 db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return entry
 
@@ -280,7 +277,6 @@ class AdvancedJournalEntryManager:
             else:
                 db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return reversal_entry
 
@@ -314,7 +310,6 @@ class AdvancedJournalEntryManager:
             else:
                 db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return True
 

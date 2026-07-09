@@ -110,7 +110,6 @@ def generate_number_and_save(
         try:
             return save_func(number)
         except IntegrityError:
-            db.session.rollback()
             continue
     raise RuntimeError(f'Could not generate unique number after {max_attempts} attempts')
 

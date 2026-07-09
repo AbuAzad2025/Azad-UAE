@@ -63,15 +63,14 @@ class BankReconciliationService:
         
         # حساب المطابقة
         reconciliation.calculate_reconciliation()
-        
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return reconciliation
     
+
     @staticmethod
     def _auto_populate_items(reconciliation):
         """
@@ -152,7 +151,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return item
@@ -183,7 +181,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return item
@@ -260,7 +257,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return reconciliation
@@ -539,7 +535,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return results
@@ -581,7 +576,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
         return reconciliation
 

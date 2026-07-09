@@ -229,7 +229,6 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return distribution_ids
@@ -277,7 +276,6 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return True
@@ -317,7 +315,6 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return True
@@ -400,7 +397,6 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
-            db.session.rollback()
             raise
 
         return tx.id

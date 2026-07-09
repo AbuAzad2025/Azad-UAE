@@ -857,7 +857,6 @@ def create():
                 return redirect(url_for('products.index'))
             
             except Exception as e:
-                db.session.rollback()
                 current_app.logger.error(f"Error creating product: {str(e)}")
                 flash(f'❌ فشل إضافة المنتج: {str(e)}\n💡 تأكد من:\n   • اسم المنتج فريد\n   • الأسعار صحيحة\n   • SKU غير مكرر', 'danger')
         else:
@@ -1064,7 +1063,6 @@ def edit(id):
             return redirect(url_for('products.view', id=product.id))
         
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ فشل تحديث المنتج: {str(e)}', 'danger')
     
     categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
@@ -1122,7 +1120,6 @@ def delete(id):
         return redirect(url_for('products.index'))
     
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting product {id}: {e}")
         if _wants_json():
             return jsonify({'success': False, 'error': 'فشل حذف المنتج. حدث خطأ غير متوقع.'}), 500
@@ -1227,8 +1224,6 @@ def create_category():
         return redirect(url_for('products.categories'))
 
     except Exception as e:
-        db.session.rollback()
-
         if request.is_json:
             return jsonify({
                 'success': False,
@@ -1287,7 +1282,6 @@ def update_category(id):
         flash('✅ تم تحديث الفئة بنجاح!', 'success')
         return redirect(url_for('products.categories'))
     except Exception as e:
-        db.session.rollback()
         if request.is_json:
             return jsonify({'success': False, 'error': str(e)}), 400
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
@@ -1321,7 +1315,6 @@ def delete_category(id):
         flash('✅ تم حذف الفئة بنجاح!', 'success')
         return redirect(url_for('products.categories'))
     except Exception as e:
-        db.session.rollback()
         if request.is_json:
             return jsonify({'success': False, 'error': str(e)}), 400
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
@@ -1436,7 +1429,6 @@ def adjust_stock(id):
         })
         
     except Exception:
-        db.session.rollback()
         current_app.logger.exception('Product stock update failed')
         return jsonify({'success': False, 'message': 'تعذر تحديث المخزون حالياً'}), 500
 

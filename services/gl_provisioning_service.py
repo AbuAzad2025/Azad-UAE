@@ -47,7 +47,6 @@ class GLProvisioningService:
             with atomic_transaction('provision_tenant'):
                 db.session.flush()
         except Exception as e:
-            db.session.rollback()
             result.errors.append(str(e))
         return result
     @staticmethod
