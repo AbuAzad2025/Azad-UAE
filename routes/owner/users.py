@@ -12,6 +12,7 @@ from routes.owner import (
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes
+from utils.db_safety import atomic_transaction
 
 import logging
 
@@ -142,14 +143,13 @@ def create_user():
             )
             enforce_company_user_tenant(user, role=role, is_owner=is_owner)
 
-            db.session.add(user)
-            db.session.commit()
+            with atomic_transaction('create_user'):
+                db.session.add(user)
             _invalidate_owner_changes()
             flash(f'تم إضافة المستخدم {username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
 
         except Exception as e:
-            db.session.rollback()
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.user_update_failed(str(e)), 'error')
             return render_template(
@@ -228,13 +228,13 @@ def edit_user(user_id):
 
             user.updated_by = current_user.id
 
-            db.session.commit()
+            with atomic_transaction('edit_user'):
+                pass
             _invalidate_owner_changes()
             flash(f'تم تحديث المستخدم {user.username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في تحديث المستخدم: {str(e)}', 'error')
 
     return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
@@ -292,14 +292,12 @@ def delete_user(user_id):
         return redirect(url_for('owner.users_list'))
 
     try:
-        # Soft delete - تعطيل بدلاً من الحذف
-        user.is_active = False
-        user.updated_by = current_user.id
-        db.session.commit()
+        with atomic_transaction('delete_user'):
+            user.is_active = False
+            user.updated_by = current_user.id
         _invalidate_owner_changes()
         flash(f'تم تعطيل المستخدم {user.username}', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'خطأ في حذف المستخدم: {str(e)}', 'error')
 
     return redirect(url_for('owner.users_list'))

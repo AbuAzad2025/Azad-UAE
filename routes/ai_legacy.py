@@ -22,6 +22,7 @@ from ai_knowledge.specialized.advanced_laws import advanced_laws
 from ai_knowledge.knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
 from ai_knowledge.learning.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
 from utils.decorators import permission_required, owner_required, admin_required
+from utils.db_safety import atomic_transaction
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from services.logging_core import LoggingCore
@@ -570,7 +571,6 @@ def _stream_ai_response(message, context, ai_mode):
             response_time_ms=elapsed_ms,
         )
         db.session.add(log)
-        db.session.commit()
     except Exception:
         pass
 
@@ -680,7 +680,6 @@ def chat():
             response_time_ms=elapsed_ms,
         )
         db.session.add(log)
-        db.session.commit()
     except Exception:
         pass
 
@@ -837,7 +836,8 @@ def _process_user_action(message, user):
                     from models.customer import Customer
                     customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.set_balance(new_balance)
-                    db.session.commit()
+                    with atomic_transaction('ai_balance_update'):
+                        pass
                     
                     train_local_ai('update_balance', data, {'success': True, 'new_balance': new_balance})
                     
@@ -1139,8 +1139,8 @@ def _process_user_action(message, user):
                         balance=0
                     )
                     assign_tenant_id(customer)
-                    db.session.add(customer)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_customer'):
+                        db.session.add(customer)
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_customer', data, {'success': True, 'customer_id': customer.id})
@@ -1298,7 +1298,8 @@ def _process_user_action(message, user):
                             product_id=product.id,
                             quantity=data['quantity'],
                         )
-                    db.session.commit()
+                    with atomic_transaction('ai_create_product'):
+                        pass
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_product', data, {'success': True, 'product_id': product.id})
@@ -1511,7 +1512,8 @@ def _process_user_action(message, user):
                         warehouse_id=wh.id if wh else None,
                     )
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_create_sale'):
+                        pass
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_sale', data, {'success': True, 'sale_id': sale.id})
@@ -1654,7 +1656,8 @@ def _process_user_action(message, user):
                     customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.apply_receipt(data['amount'])
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_receive_payment'):
+                        pass
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('receive_payment', data, {'success': True, 'payment_id': payment.id})
@@ -1796,7 +1799,8 @@ def _process_user_action(message, user):
                     customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.adjust_balance(data['amount'])
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_give_payment'):
+                        pass
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('give_payment', data, {'success': True, 'payment_id': payment.id})
@@ -1917,8 +1921,8 @@ def _process_user_action(message, user):
                         user_id=user.id
                     )
                     assign_tenant_id(expense)
-                    db.session.add(expense)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_expense'):
+                        db.session.add(expense)
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_expense', data, {'success': True, 'expense_id': expense.id})
@@ -2067,8 +2071,8 @@ def _process_user_action(message, user):
                         total_paid_aed=0
                     )
                     assign_tenant_id(supplier)
-                    db.session.add(supplier)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_supplier'):
+                        db.session.add(supplier)
                     
                     train_local_ai('create_supplier', data, {'success': True, 'supplier_id': supplier.id})
                     
@@ -2240,7 +2244,8 @@ def _process_user_action(message, user):
                         warehouse_id=wh.id if wh else None,
                     )
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_create_purchase'):
+                        pass
                     
                     train_local_ai('create_purchase', data, {'success': True, 'purchase_id': purchase.id})
                     
@@ -2368,8 +2373,8 @@ def _process_user_action(message, user):
                         status='pending',
                         user_id=user.id
                     )
-                    db.session.add(cheque)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_cheque'):
+                        db.session.add(cheque)
                     
                     train_local_ai('create_cheque', data, {'success': True, 'cheque_id': cheque.id})
                     
@@ -2550,8 +2555,8 @@ def _process_user_action(message, user):
                         role=data['role'],
                         email=data['email']
                     )
-                    db.session.add(new_user)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_user'):
+                        db.session.add(new_user)
                     
                     train_local_ai('create_user', data, {'success': True, 'user_id': new_user.id})
                     
@@ -2965,8 +2970,8 @@ http://localhost:5000/ai/assistant
                         is_active=True
                     )
                     assign_tenant_id(customer, user)
-                    db.session.add(customer)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_customer_v2'):
+                        db.session.add(customer)
                     
                     return f"""✅ تم إنشاء العميل بنجاح!
 
@@ -3003,12 +3008,12 @@ http://localhost:5000/ai/assistant
                     assign_tenant_id(product, user)
                     db.session.add(product)
                     db.session.flush()
-                    if quantity > 0:
-                        StockService.add_opening_stock(
-                            product_id=product.id,
-                            quantity=quantity,
-                        )
-                    db.session.commit()
+                    with atomic_transaction('ai_create_product_v2'):
+                        if quantity > 0:
+                            StockService.add_opening_stock(
+                                product_id=product.id,
+                                quantity=quantity,
+                            )
                     
                     return f"""✅ تم إنشاء المنتج بنجاح!
 
@@ -3044,8 +3049,8 @@ http://localhost:5000/ai/assistant
                         is_active=True
                     )
                     assign_tenant_id(supplier)
-                    db.session.add(supplier)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_supplier_v2'):
+                        db.session.add(supplier)
                     
                     return f"""✅ تم إنشاء المورد بنجاح!
 
@@ -3118,7 +3123,8 @@ http://localhost:5000/ai/assistant
                         warehouse_id=wh_l3.id if wh_l3 else None,
                     )
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_create_sale_v2'):
+                        pass
                     
                     return f"""✅ تم إنشاء الفاتورة بنجاح!
 
@@ -3160,8 +3166,8 @@ http://localhost:5000/ai/assistant
                         user_id=user.id
                     )
                     assign_tenant_id(expense)
-                    db.session.add(expense)
-                    db.session.commit()
+                    with atomic_transaction('ai_create_expense_v2'):
+                        db.session.add(expense)
                     
                     return f"""✅ تم إضافة المصروف بنجاح!
 
@@ -3210,7 +3216,8 @@ http://localhost:5000/ai/assistant
                     
                     customer.apply_receipt(amount)
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_create_payment_v2'):
+                        pass
                     
                     return f"""✅ تم تسجيل الدفعة بنجاح!
 
@@ -3242,7 +3249,8 @@ http://localhost:5000/ai/assistant
                     old_balance = customer.balance
                     customer.set_balance(new_balance)
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_set_balance'):
+                        pass
                     
                     return f"""✅ تم تعديل رصيد العميل بنجاح!
 
@@ -3291,7 +3299,8 @@ http://localhost:5000/ai/assistant
                     
                     customer.apply_receipt(amount)
                     
-                    db.session.commit()
+                    with atomic_transaction('ai_receive_payment_v2'):
+                        pass
                     
                     return f"""✅ تم استلام الدفعة بنجاح!
 
@@ -3373,9 +3382,8 @@ http://localhost:5000/ai/assistant
                         payment_type='refund'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    db.session.commit()
+                    with atomic_transaction('ai_refund_payment'):
+                        db.session.add(payment)
                     
                     return f"""✅ تم إعطاء الدفعة للعميل بنجاح!
 
@@ -3626,7 +3634,8 @@ def _process_excel_intelligently(file, warehouse_id, user):
             except Exception as e:
                 errors.append(f'السطر {index + 2}: {str(e)}')
         
-        db.session.commit()
+        with atomic_transaction('ai_excel_import'):
+            pass
         
         _train_ai_from_excel(df, products_created, products_updated, user.id)
         
@@ -3778,7 +3787,7 @@ def cash_flow_prediction():
 @permission_required('view_products')
 def smart_price():
     """💎 API: محرك التسعير الذكي الخارق"""
-    data = request.get_json()
+    data = request.get_json(silent=True)
     product_id = data.get('product_id')
     customer_id = data.get('customer_id')
     quantity = data.get('quantity', 1)
@@ -3940,7 +3949,7 @@ def improvement_progress():
 def set_improvement_goal():
     """تعيين هدف تحسين"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         area = data.get('area')
         target_score = data.get('target_score')
         timeframe = data.get('timeframe', '30_days')
@@ -4113,7 +4122,7 @@ def search_system_data(search_term):
 def add_customer():
     """إضافة عميل جديد"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         result = system_integrator.add_customer(data)
         return jsonify(result)
     except Exception as e:
@@ -4176,7 +4185,7 @@ def get_financial_ratios():
 def add_knowledge_website():
     """إضافة موقع ويب للمعرفة"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         url = data.get('url')
         category = data.get('category', 'general')
         description = data.get('description', '')
@@ -4202,7 +4211,7 @@ def add_knowledge_website():
 def add_knowledge_document():
     """إضافة مستند للمعرفة"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         content = data.get('content')
         title = data.get('title')
         category = data.get('category', 'general')
@@ -4350,7 +4359,7 @@ def external_sources():
 def ask_genius():
     """🌟 API: اسأل العبقري - الواجهة الموحدة (JSON callers must send X-CSRFToken)."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         question = data.get('question', '')
         context = data.get('context', {})
         
@@ -4384,7 +4393,7 @@ def ask_genius():
 def quick_calc():
     """⚡ API: حسابات سريعة — whitelist formulas only; no DB, files, or external calls."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         formula = data.get('formula', '')
         params = data.get('params', {})
         
@@ -4414,7 +4423,7 @@ def quick_calc():
 def transformers_understand():
     """🤖 API: فهم بالـ Transformers — local in-memory only; no DB, files, or ERP actions."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         text = data.get('text', '')
         
         if not text:

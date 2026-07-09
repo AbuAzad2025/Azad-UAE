@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import (
     CampaignLog,
     EmailCampaign,
@@ -34,7 +35,7 @@ class EmailMarketingService:
         )
         db.session.add(lst)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -66,7 +67,7 @@ class EmailMarketingService:
                 existing.status = 'subscribed'
                 existing.unsubscribed_at = None
                 try:
-                    db.session.commit()
+                    db.session.flush()
                 except Exception:
                     db.session.rollback()
                     raise
@@ -81,7 +82,7 @@ class EmailMarketingService:
         )
         db.session.add(sub)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -103,7 +104,7 @@ class EmailMarketingService:
             sub.status = 'unsubscribed'
             sub.unsubscribed_at = now
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -125,7 +126,7 @@ class EmailMarketingService:
         )
         db.session.add(tpl)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -158,7 +159,7 @@ class EmailMarketingService:
         )
         db.session.add(campaign)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -222,7 +223,7 @@ class EmailMarketingService:
         campaign.sent_count = sent
         campaign.bounce_count = len(subscribers) - sent
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

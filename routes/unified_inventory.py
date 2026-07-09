@@ -6,6 +6,7 @@ from models import Campaign, WarrantyClaim, Shipment
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
 from services.logging_core import LoggingCore
+from utils.db_safety import atomic_transaction
 
 uinv_bp = Blueprint('unified_inventory', __name__, url_prefix='/uinv')
 
@@ -42,12 +43,11 @@ def campaigns_create():
             end_date=datetime.now(timezone.utc) + timedelta(days=30),
             is_active=True,
         )
-        db.session.add(c)
-        db.session.commit()
-        LoggingCore.log_audit('create', 'campaigns', c.id)
+        with atomic_transaction('campaign_create'):
+            db.session.add(c)
+            LoggingCore.log_audit('create', 'campaigns', c.id)
         flash('Campaign created.', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'Error: {e}', 'danger')
     return redirect(url_for('unified_inventory.campaigns_index'))
 
@@ -82,12 +82,11 @@ def warranty_create():
             description=request.form.get('description'),
             status='open',
         )
-        db.session.add(claim)
-        db.session.commit()
-        LoggingCore.log_audit('create', 'warranty_claims', claim.id)
+        with atomic_transaction('warranty_claim_create'):
+            db.session.add(claim)
+            LoggingCore.log_audit('create', 'warranty_claims', claim.id)
         flash('Warranty claim created.', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'Error: {e}', 'danger')
     return redirect(url_for('unified_inventory.warranty_index'))
 
@@ -124,11 +123,10 @@ def shipments_create():
             insurance=float(request.form.get('insurance', 0)),
             status='pending',
         )
-        db.session.add(s)
-        db.session.commit()
-        LoggingCore.log_audit('create', 'shipments', s.id)
+        with atomic_transaction('shipment_create'):
+            db.session.add(s)
+            LoggingCore.log_audit('create', 'shipments', s.id)
         flash('Shipment created.', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'Error: {e}', 'danger')
     return redirect(url_for('unified_inventory.shipments_index'))

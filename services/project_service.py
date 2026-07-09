@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Project, TaskStage, Task, Timesheet, ProjectMember, Customer
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for
@@ -56,7 +57,7 @@ class ProjectService:
             )
             db.session.add(stage)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -84,7 +85,7 @@ class ProjectService:
             project.customer_id = int(data['customer_id']) if data['customer_id'] else None
         project.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -126,7 +127,7 @@ class ProjectService:
         )
         db.session.add(task)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -144,7 +145,7 @@ class ProjectService:
         task.stage_id = int(stage_id)
         task.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -170,7 +171,7 @@ class ProjectService:
         task.effective_hours = Decimal(str(task.effective_hours or 0)) + hours
         db.session.add(ts)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -217,7 +218,7 @@ class ProjectService:
         )
         db.session.add(member)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

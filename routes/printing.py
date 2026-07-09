@@ -16,6 +16,7 @@ from services.print_service import PrintService
 from utils.decorators import permission_required
 from utils.tenanting import tenant_get_or_404, get_active_tenant_id
 from utils.branching import branch_scope_id
+from utils.db_safety import atomic_transaction
 
 printing_bp = Blueprint('printing', __name__, url_prefix='/printing')
 
@@ -315,7 +316,8 @@ def print_settings():
         settings.enable_qr_code = request.form.get('enable_qr_code') == 'on'
         settings.enable_watermark = request.form.get('enable_watermark') == 'on'
         settings.show_terms = request.form.get('show_terms') == 'on'
-        db.session.commit()
+        with atomic_transaction('print_settings'):
+            pass
         flash('تم حفظ إعدادات الطباعة', 'success')
         return redirect(url_for('printing.print_settings'))
 

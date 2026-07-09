@@ -111,7 +111,7 @@ class ErrorLogger:
                 ip_address=request.remote_addr if request else None
             )
             db.session.add(audit)
-            db.session.commit()
+            db.session.flush()
         except Exception:
             pass
 

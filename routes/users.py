@@ -204,7 +204,6 @@ def create():
             return redirect(url_for('users.index'))
 
         except Exception:
-            db.session.rollback()
             current_app.logger.exception('User creation error')
             flash(ErrorMessages.create_failed('user'), 'danger')
             return _create_form_context(roles, branches, form_values)
@@ -250,44 +249,43 @@ def edit(id):
 
     if request.method == 'POST':
         try:
-            try:
-                user.email = normalize_user_email_required(request.form.get('email'))
-            except FieldValidationError as exc:
-                flash(str(exc), 'danger')
-                return render_template('users/edit.html', user=user, roles=roles, branches=branches)
-            user.full_name = request.form.get('full_name')
-            user.full_name_ar = request.form.get('full_name_ar')
-            user.phone = normalize_phone_optional(request.form.get('phone'))
-            role_id = request.form.get('role_id', type=int)
-            branch_id = _clean_branch_id(request.form.get('branch_id'))
-            role = _validate_user_branch(role_id, branch_id)
-
-            if role_level_for(getattr(role, 'slug', None)) > current_level:
-                flash('لا يمكنك تعيين دور أعلى من دورك.', 'danger')
-                return render_template('users/edit.html', user=user, roles=roles, branches=branches)
-
-            user.role_id = role_id
-            user.branch_id = branch_id
-            enforce_company_user_tenant(user, role=role, is_owner=False)
-
-            new_password = request.form.get('new_password')
-            if new_password:
-                is_valid, pwd_errors = PasswordValidator.validate(new_password)
-                if not is_valid:
-                    flash(ErrorMessages.weak_password(pwd_errors), 'danger')
+            with atomic_transaction('user_update'):
+                try:
+                    user.email = normalize_user_email_required(request.form.get('email'))
+                except FieldValidationError as exc:
+                    flash(str(exc), 'danger')
                     return render_template('users/edit.html', user=user, roles=roles, branches=branches)
-                user.set_password(new_password)
+                user.full_name = request.form.get('full_name')
+                user.full_name_ar = request.form.get('full_name_ar')
+                user.phone = normalize_phone_optional(request.form.get('phone'))
+                role_id = request.form.get('role_id', type=int)
+                branch_id = _clean_branch_id(request.form.get('branch_id'))
+                role = _validate_user_branch(role_id, branch_id)
 
-            user.is_active = request.form.get('is_active') == '1'
+                if role_level_for(getattr(role, 'slug', None)) > current_level:
+                    flash('لا يمكنك تعيين دور أعلى من دورك.', 'danger')
+                    return render_template('users/edit.html', user=user, roles=roles, branches=branches)
 
-            LoggingCore.log_audit('update', 'users', user.id)
+                user.role_id = role_id
+                user.branch_id = branch_id
+                enforce_company_user_tenant(user, role=role, is_owner=False)
 
-            db.session.commit()
+                new_password = request.form.get('new_password')
+                if new_password:
+                    is_valid, pwd_errors = PasswordValidator.validate(new_password)
+                    if not is_valid:
+                        flash(ErrorMessages.weak_password(pwd_errors), 'danger')
+                        return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+                    user.set_password(new_password)
+
+                user.is_active = request.form.get('is_active') == '1'
+
+                LoggingCore.log_audit('update', 'users', user.id)
+
             flash('تم تحديث بيانات المستخدم بنجاح!', 'success')
             return redirect(url_for('users.index'))
 
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error('Error updating user %s: %s', id, e)
             flash(ErrorMessages.update_failed('user'), 'danger')
             return render_template('users/edit.html', user=user, roles=roles, branches=branches)
@@ -306,13 +304,12 @@ def toggle_active(id):
     user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
-    user.is_active = not user.is_active
-    db.session.commit()
+    with atomic_transaction('user_toggle_active'):
+        user.is_active = not user.is_active
+        LoggingCore.log_audit('toggle_active', 'users', user.id)
 
     status_msg = 'تفعيل' if user.is_active else 'إلغاء تفعيل'
     flash(f'تم {status_msg} المستخدم "{user.username}" بنجاح!', 'success')
-
-    LoggingCore.log_audit('toggle_active', 'users', user.id)
 
     return redirect(url_for('users.index'))
 
@@ -340,33 +337,35 @@ def delete(id):
         return redirect(url_for('users.index'))
 
     try:
-        from models import Sale
+        with atomic_transaction('user_delete'):
+            from models import Sale
 
-        sales_query = Sale.query.filter_by(seller_id=id)
-        if tid is not None:
-            sales_query = sales_query.filter(Sale.tenant_id == tid)
-        sales_count = sales_query.count()
+            sales_query = Sale.query.filter_by(seller_id=id)
+            if tid is not None:
+                sales_query = sales_query.filter(Sale.tenant_id == tid)
+            sales_count = sales_query.count()
 
-        if sales_count > 0:
-            user.is_active = False
-            db.session.commit()
+            has_sales = sales_count > 0
+            if has_sales:
+                user.is_active = False
+                LoggingCore.log_audit('deactivate', 'users', id)
+            else:
+                username = user.username
+                db.session.delete(user)
+                LoggingCore.log_audit('delete', 'users', id)
+
+        if has_sales:
             flash(
                 f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '
                 'لا يمكن حذفه نهائياً للحفاظ على السجلات.',
                 'warning',
             )
-            LoggingCore.log_audit('deactivate', 'users', id)
         else:
-            username = user.username
-            db.session.delete(user)
-            db.session.commit()
-            flash(f'تم حذف المستخدم "{username}" نهائياً!', 'success')
-            LoggingCore.log_audit('delete', 'users', id)
+            flash(f'تم حذف المستخدم "{user.username}" نهائياً!', 'success')
 
         return redirect(url_for('users.index'))
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error('Error deleting user %s: %s', id, e)
         flash(ErrorMessages.delete_failed('user'), 'danger')
         return redirect(url_for('users.index'))

@@ -377,9 +377,9 @@ class SaleService:
 
             if defer_fulfillment:
                 try:
-                    db.session.commit()
+                    db.session.flush()
                 except Exception:
-                    current_app.logger.exception('Deferred sale commit failed for %s', sale.sale_number)
+                    current_app.logger.exception('Deferred sale flush failed for %s', sale.sale_number)
                     db.session.rollback()
                     raise
 

@@ -497,14 +497,11 @@ def archive_payment(id):
 
     try:
         archive_service = ArchiveService()
-        archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
-        LoggingCore.log_audit('archive', 'payments', payment.id)
-
-        # Commit all
-        db.session.commit()
+        with atomic_transaction('payment_archive'):
+            archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
+            LoggingCore.log_audit('archive', 'payments', payment.id)
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f'Failed to archive payment {id}: {e}')
         flash(f'فشلت الأرشفة: {str(e)}', 'danger')
         return redirect(url_for('payments.receipts'))
@@ -531,11 +528,11 @@ def restore_payment(id):
         return render_template('errors/403.html'), 403
 
     try:
-        db.session.delete(archived)
-        db.session.commit()
-        LoggingCore.log_audit('restore', 'payments', id)
+        with atomic_transaction('payment_restore'):
+            db.session.delete(archived)
+            LoggingCore.log_audit('restore', 'payments', id)
     except Exception as e:
-        db.session.rollback()
+        pass
 
     return redirect(url_for('payments.archived_receipts'))
 
@@ -918,7 +915,6 @@ def create_voucher_submit():
                     # تحديث رصيد المورد
                     supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
 
-                db.session.commit()
                 flash('تم إنشاء سند صرف لمورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
 
@@ -1013,12 +1009,10 @@ def create_voucher_submit():
                     # تحديث رصيد العميل
                     customer.apply_receipt(-Decimal(str(payment.amount_aed or 0)))
 
-                db.session.commit()
                 flash('تم إنشاء سند صرف لعميل/شريك بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Voucher creation error: {e}")
         flash(f'حدث خطأ أثناء حفظ السند: {str(e)}', 'danger')
         return redirect(url_for('payments.create_voucher'))
@@ -1238,11 +1232,12 @@ def archive_receipt(id):
         return render_template('errors/403.html'), 403
 
     try:
-        archive_service = ArchiveService()
-        archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض')
-        LoggingCore.log_audit('archive', 'receipts', receipt.id)
+        with atomic_transaction('receipt_archive'):
+            archive_service = ArchiveService()
+            archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض', commit=False)
+            LoggingCore.log_audit('archive', 'receipts', receipt.id)
     except Exception as e:
-        db.session.rollback()
+        pass
 
     return redirect(url_for('payments.receipts'))
 
@@ -1266,11 +1261,11 @@ def restore_receipt(id):
         return render_template('errors/403.html'), 403
 
     try:
-        db.session.delete(archived)
-        db.session.commit()
-        LoggingCore.log_audit('restore', 'receipts', id)
+        with atomic_transaction('receipt_restore'):
+            db.session.delete(archived)
+            LoggingCore.log_audit('restore', 'receipts', id)
     except Exception as e:
-        db.session.rollback()
+        pass
 
     return redirect(url_for('payments.archived_receipts'))
 
@@ -1329,8 +1324,8 @@ def delete_receipt(id):
             if receipt.cheque:
                 archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
-            LoggingCore.log_audit('archive', 'receipts', id)
-            db.session.commit()
+            with atomic_transaction('receipt_delete_archive'):
+                LoggingCore.log_audit('archive', 'receipts', id)
             flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
         else:
             # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
@@ -1348,14 +1343,13 @@ def delete_receipt(id):
                 db.session.delete(receipt.cheque)
 
             db.session.delete(receipt)
-            LoggingCore.log_audit('delete', 'receipts', id)
-            db.session.commit()
+            with atomic_transaction('receipt_delete_hard'):
+                LoggingCore.log_audit('delete', 'receipts', id)
             flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', 'success')
 
         return redirect(url_for('payments.receipts'))
 
     except Exception as e:
-        db.session.rollback()
         flash(f'فشل الحذف: {str(e)}', 'danger')
         return redirect(url_for('payments.view_receipt', id=id))
 
@@ -1390,8 +1384,8 @@ def delete_payment(id):
             if payment.cheque:
                 archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
-            LoggingCore.log_audit('archive', 'payments', id)
-            db.session.commit()
+            with atomic_transaction('payment_delete_archive'):
+                LoggingCore.log_audit('archive', 'payments', id)
             flash(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)', 'warning')
         else:
             # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
@@ -1416,14 +1410,13 @@ def delete_payment(id):
                 db.session.delete(payment.cheque)
 
             db.session.delete(payment)
-            LoggingCore.log_audit('delete', 'payments', id)
-            db.session.commit()
+            with atomic_transaction('payment_delete_hard'):
+                LoggingCore.log_audit('delete', 'payments', id)
             flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', 'success')
 
         return redirect(url_for('payments.receipts'))
 
     except Exception as e:
-        db.session.rollback()
         flash(f'فشل الحذف: {str(e)}', 'danger')
         return redirect(url_for('payments.view_payment', id=id))
 
@@ -1623,7 +1616,6 @@ def create_payment(purchase_id):
             return redirect(url_for('purchases.view', id=purchase_id))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
 
     # استخدام نفس القالب الموحد لسندات القبض/الصرف

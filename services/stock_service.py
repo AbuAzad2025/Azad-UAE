@@ -1133,7 +1133,7 @@ class StockService:
 
         if commit:
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
                 db.session.rollback()
                 errors += 1

@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Tenant
 from models.gl import GLAccount, GLAccountMapping
 from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
@@ -43,7 +44,8 @@ class GLProvisioningService:
             GLProvisioningService._provision_base_accounts(tenant, result)
             GLProvisioningService._provision_industry_accounts(tenant, result)
             GLProvisioningService._provision_module_mappings(tenant, result)
-            db.session.commit()
+            with atomic_transaction('provision_tenant'):
+                db.session.flush()
         except Exception as e:
             db.session.rollback()
             result.errors.append(str(e))

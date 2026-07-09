@@ -259,7 +259,7 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
             user_agent=str(request.headers.get('User-Agent')) if request else None,
         )
         db.session.add(log)
-        db.session.commit()
+        db.session.flush()
     except Exception as e:
         # Just log error but don't crash the app
         try:

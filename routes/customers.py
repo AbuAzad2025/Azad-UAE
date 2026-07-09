@@ -11,6 +11,7 @@ from decimal import Decimal
 from datetime import datetime
 from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404, assert_tenant_record
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.db_safety import atomic_transaction
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
@@ -301,16 +302,14 @@ def create():
                 notes=form.notes.data
             )
             
-            db.session.add(customer)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'customers', customer.id)
+            with atomic_transaction('customer_create'):
+                db.session.add(customer)
+                LoggingCore.log_audit('create', 'customers', customer.id)
             
             flash('✅ تم إضافة الزبون بنجاح!', 'success')
             return redirect(url_for('customers.index'))
         
         except Exception as e:
-            db.session.rollback()
             from utils.error_messages import ErrorMessages
             current_app.logger.error(f"Error in customer operation: {e}")
             flash(ErrorMessages.database_error(), 'danger')
@@ -353,36 +352,34 @@ def edit(id):
     
     if request.method == 'POST':
         try:
-            customer.name = request.form.get('name')
-            customer.name_ar = request.form.get('name_ar')
-            customer.customer_type = request.form.get('customer_type')
-            from utils.field_validators import normalize_phone_optional, validate_currency_code
-            try:
-                from models import Tenant
-                default_currency = resolve_default_currency()
-            except Exception:
-                default_currency = get_system_default_currency()
+            with atomic_transaction('customer_update'):
+                customer.name = request.form.get('name')
+                customer.name_ar = request.form.get('name_ar')
+                customer.customer_type = request.form.get('customer_type')
+                from utils.field_validators import normalize_phone_optional, validate_currency_code
+                try:
+                    from models import Tenant
+                    default_currency = resolve_default_currency()
+                except Exception:
+                    default_currency = get_system_default_currency()
 
-            customer.phone = normalize_phone_optional(request.form.get('phone'))
-            customer.email = request.form.get('email')
-            customer.address = request.form.get('address')
-            customer.tax_number = request.form.get('tax_number')
-            customer.preferred_currency = validate_currency_code(
-                request.form.get('preferred_currency') or request.form.get('default_currency') or default_currency
-            )
-            is_active_raw = request.form.get('is_active', '1')
-            customer.is_active = str(is_active_raw) in ('1', 'true', 'on', 'True')
-            customer.notes = request.form.get('notes')
-            
-            db.session.commit()
-            
-            LoggingCore.log_audit('update', 'customers', customer.id)
+                customer.phone = normalize_phone_optional(request.form.get('phone'))
+                customer.email = request.form.get('email')
+                customer.address = request.form.get('address')
+                customer.tax_number = request.form.get('tax_number')
+                customer.preferred_currency = validate_currency_code(
+                    request.form.get('preferred_currency') or request.form.get('default_currency') or default_currency
+                )
+                is_active_raw = request.form.get('is_active', '1')
+                customer.is_active = str(is_active_raw) in ('1', 'true', 'on', 'True')
+                customer.notes = request.form.get('notes')
+                
+                LoggingCore.log_audit('update', 'customers', customer.id)
             
             flash('✅ تم تحديث بيانات الزبون بنجاح!', 'success')
             return redirect(url_for('customers.view', id=customer.id))
         
         except Exception as e:
-            db.session.rollback()
             from utils.error_messages import ErrorMessages
             current_app.logger.error(f"Error in customer operation: {e}")
             flash(ErrorMessages.database_error(), 'danger')
@@ -400,41 +397,40 @@ def delete(id):
     
     tid = get_active_tenant_id(current_user)
     try:
-        # Check for related records preventing deletion
-        sales_query = Sale.query.filter_by(customer_id=id, tenant_id=tid)
-        from models import Payment, Receipt
-        payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
-        receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
-        if branch_scope_id() is not None:
-            sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
-            payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
-            receipts_query = receipts_query.filter(Receipt.branch_id == branch_scope_id())
-        sales_count = sales_query.count()
-        payments_count = payments_query.count()
-        receipts_count = receipts_query.count()
+        with atomic_transaction('customer_delete'):
+            sales_query = Sale.query.filter_by(customer_id=id, tenant_id=tid)
+            from models import Payment, Receipt
+            payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
+            receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
+            if branch_scope_id() is not None:
+                sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
+                payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
+                receipts_query = receipts_query.filter(Receipt.branch_id == branch_scope_id())
+            sales_count = sales_query.count()
+            payments_count = payments_query.count()
+            receipts_count = receipts_query.count()
+            
+            has_relations = sales_count > 0 or payments_count > 0 or receipts_count > 0
+            if has_relations:
+                customer.is_active = False
+            else:
+                db.session.delete(customer)
+            LoggingCore.log_audit('delete', 'customers', id)
         
-        if sales_count > 0 or payments_count > 0 or receipts_count > 0:
-            customer.is_active = False
-            db.session.commit()
+        if has_relations:
             flash(f'⚠️ تم إلغاء تفعيل العميل "{customer.name}" بدلاً من حذفه لوجود ({sales_count} فاتورة، {payments_count} دفعة، {receipts_count} سند قبض) مرتبطة به.', 'warning')
         else:
-            db.session.delete(customer)
-            db.session.commit()
             flash(f'✅ تم حذف العميل "{customer.name}" نهائياً!', 'success')
         
-        LoggingCore.log_audit('delete', 'customers', id)
-        
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting customer {id}: {e}")
         try:
-            # Re-fetch customer to ensure it's attached to the new session transaction
-            customer = Customer.query.filter_by(id=id, tenant_id=tid).first()
-            if customer:
-                customer.is_active = False
-                db.session.add(customer)
-                db.session.commit()
-                flash(f'⚠️ تعذر الحذف النهائي للعميل "{customer.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.', 'warning')
+            with atomic_transaction('customer_soft_delete'):
+                customer = Customer.query.filter_by(id=id, tenant_id=tid).first()
+                if customer:
+                    customer.is_active = False
+                    db.session.add(customer)
+                    flash(f'⚠️ تعذر الحذف النهائي للعميل "{customer.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.', 'warning')
         except Exception as inner_e:
             current_app.logger.error(f"Error falling back to soft delete for customer {id}: {inner_e}")
             from utils.error_messages import ErrorMessages

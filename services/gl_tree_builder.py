@@ -1,4 +1,5 @@
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from sqlalchemy import or_
@@ -48,13 +49,6 @@ class GLTreeBuilder:
         Args:
             tenant_id: معرف المستأجر
             cleanup_extra: إذا كان True، سيتم إيقاف الحسابات غير الموجودة في الشجرة الأساسية
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
-
-            
         Returns:
             dict: تقرير بالتغييرات التي تمت
         """
@@ -127,11 +121,8 @@ class GLTreeBuilder:
         if has_changes:
             db.session.flush()
             if commit:
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                    raise
+                with atomic_transaction('gl_tree_builder_build'):
+                    pass
 
         
         return audit_report

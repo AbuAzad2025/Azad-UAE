@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import date
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.fixed_asset import FixedAsset
 
 
@@ -42,10 +43,7 @@ class DepreciationService:
             except Exception as exc:
                 errors.append(f'{asset.asset_number}: {exc}')
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        with atomic_transaction('depreciation_run_monthly'):
+            db.session.flush()
 
         return {'posted': posted, 'skipped': skipped, 'errors': errors}

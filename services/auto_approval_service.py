@@ -4,6 +4,7 @@ Auto Approval Service
 """
 from datetime import datetime, timezone, timedelta
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
 from services.logging_core import LoggingCore
 import logging
@@ -53,11 +54,8 @@ class AutoApprovalService:
                 approved_count += 1
                 approved_amount += float(donation.amount_usd or 0)
             
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('auto_approve_donations'):
+                db.session.flush()
 
             
             if approved_count > 0:
@@ -71,7 +69,6 @@ class AutoApprovalService:
             }
             
         except Exception as e:
-            db.session.rollback()
             logger.error(f'❌ Error in auto-approval: {str(e)}')
             return {
                 'success': False,
@@ -128,11 +125,8 @@ class AutoApprovalService:
                 approved_count += 1
                 approved_amount += float(purchase.amount_paid or 0)
             
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('auto_approve_purchases'):
+                db.session.flush()
 
             
             if approved_count > 0:
@@ -146,7 +140,6 @@ class AutoApprovalService:
             }
             
         except Exception as e:
-            db.session.rollback()
             logger.error(f'❌ Error in auto-approval purchases: {str(e)}')
             return {
                 'success': False,

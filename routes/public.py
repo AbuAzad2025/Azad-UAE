@@ -2,6 +2,7 @@
 Public Routes - Landing Page, Pricing, User Guide, SEO
 """
 from flask import Blueprint, render_template, redirect, url_for, Response, request, session, abort
+from utils.db_safety import atomic_transaction
 from flask_login import current_user
 from datetime import datetime, timezone
 
@@ -119,8 +120,8 @@ def donate_azad_submit():
             ip_address=request.remote_addr,
             user_agent=(request.headers.get('User-Agent') or '')[:500],
         )
-        db.session.add(donation)
-        db.session.commit()
+        with atomic_transaction('donation_submit'):
+            db.session.add(donation)
         return render_template('public/donate_thanks.html', vault=_safe_vault_for_public(vault), donation=donation, lang=lang, is_en=is_en)
     except ValueError as exc:
         flash(str(exc), 'danger')
@@ -128,7 +129,6 @@ def donate_azad_submit():
     except Exception:
         import logging
         logging.getLogger(__name__).exception('Donation submit failed')
-        db.session.rollback()
         flash('تعذر إرسال التبرع.' if not is_en else 'Could not submit donation.', 'danger')
         return redirect(url_for('public.donate_azad'))
 

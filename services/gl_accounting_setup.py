@@ -99,6 +99,7 @@ from dataclasses import asdict, dataclass
 from typing import Iterable
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Tenant
 from models._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
 from models.gl import GLAccount, GLAccountMapping
@@ -691,11 +692,8 @@ class GLAccountingSetupService:
         if dry_run:
             db.session.rollback()
         else:
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('gl_accounting_setup_execute'):
+                db.session.flush()
 
 
         return SetupResult(

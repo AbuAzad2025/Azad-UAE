@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Ticket, TicketComment, TicketCategory, TicketPriority, Customer
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for
@@ -58,7 +59,7 @@ class TicketService:
         )
         db.session.add(ticket)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -73,7 +74,7 @@ class TicketService:
         ticket.assigned_user_id = int(user_id) if user_id else None
         ticket.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -89,7 +90,7 @@ class TicketService:
         ticket.resolved_at = datetime.now(timezone.utc)
         ticket.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -105,7 +106,7 @@ class TicketService:
         ticket.closed_at = datetime.now(timezone.utc)
         ticket.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -122,7 +123,7 @@ class TicketService:
         ticket.closed_at = None
         ticket.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -147,7 +148,7 @@ class TicketService:
         if ticket.status == 'open':
             ticket.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

@@ -109,17 +109,17 @@ class PaymentVault(db.Model):
             self.is_locked = False
             self.last_access = datetime.utcnow()
             self.failed_attempts = 0
-            db.session.commit()
+            db.session.flush()
             return True
         else:
             self.failed_attempts = (self.failed_attempts or 0) + 1
-            db.session.commit()
+            db.session.flush()
             return False
     
     def lock_vault(self):
         """قفل الخزينة"""
         self.is_locked = True
-        db.session.commit()
+        db.session.flush()
     
     def is_vault_accessible(self):
         """التحقق من إمكانية الوصول للخزينة"""
@@ -138,7 +138,7 @@ class PaymentVault(db.Model):
     def reset_failed_attempts(self):
         """إعادة تعيين المحاولات الفاشلة"""
         self.failed_attempts = 0
-        db.session.commit()
+        db.session.flush()
     
     def is_locked_out(self):
         """التحقق من القفل بسبب المحاولات الفاشلة"""
@@ -244,5 +244,5 @@ class PaymentLog(db.Model):
             user_agent=user_agent
         )
         db.session.add(log)
-        db.session.commit()
+        db.session.flush()
         return log

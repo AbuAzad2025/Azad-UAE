@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from flask import session
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
 from utils.currency_utils import resolve_default_currency
@@ -100,7 +101,7 @@ class ShopCustomerAuthService:
         account.set_password(password)
         db.session.add(account)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -116,7 +117,7 @@ class ShopCustomerAuthService:
         from datetime import datetime, timezone
         account.last_login_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -138,7 +139,7 @@ class ShopCustomerAuthService:
         account.password_reset_token = secrets.token_urlsafe(32)
         account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -168,7 +169,7 @@ class ShopCustomerAuthService:
         account.password_reset_token = None
         account.password_reset_expires_at = None
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

@@ -279,7 +279,7 @@ def _log_security_alert(remote_addr: str | None, username: str, method: str) -> 
             username=username,
         )
         db.session.add(alert)
-        db.session.commit()
+        db.session.flush()
     except Exception as exc:
         logger.warning("Failed to write SecurityAlert for master login: %s", exc)
 

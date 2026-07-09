@@ -21,6 +21,7 @@ from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from routes.ai_routes import ai_bp
 from routes.ai_routes.shared import smart_listener, train_local_ai, apply_smart_listeners, create_final_options, _conversation_ctx
+from utils.db_safety import atomic_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -162,8 +163,8 @@ def _process_user_action(message, user):
                     
                     from models.customer import Customer
                     customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
-                    customer.set_balance(new_balance)
-                    db.session.commit()
+                    with atomic_transaction("ai_balance_update"):
+                        customer.set_balance(new_balance)
                     
                     train_local_ai('update_balance', data, {'success': True, 'new_balance': new_balance})
                     
@@ -465,8 +466,8 @@ def _process_user_action(message, user):
                         balance=0
                     )
                     assign_tenant_id(customer)
-                    db.session.add(customer)
-                    db.session.commit()
+                    with atomic_transaction("ai_create_customer"):
+                        db.session.add(customer)
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_customer', data, {'success': True, 'customer_id': customer.id})
@@ -617,14 +618,14 @@ def _process_user_action(message, user):
                         unit='قطعة'
                     )
                     assign_tenant_id(product, user)
-                    db.session.add(product)
-                    db.session.flush()
-                    if data['quantity'] > 0:
-                        StockService.add_opening_stock(
-                            product_id=product.id,
-                            quantity=data['quantity'],
-                        )
-                    db.session.commit()
+                    with atomic_transaction("ai_create_product"):
+                        db.session.add(product)
+                        db.session.flush()
+                        if data['quantity'] > 0:
+                            StockService.add_opening_stock(
+                                product_id=product.id,
+                                quantity=data['quantity'],
+                            )
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_product', data, {'success': True, 'product_id': product.id})
@@ -825,19 +826,18 @@ def _process_user_action(message, user):
                         unit_price=data['product_price'],
                         total=total_amount
                     )
-                    db.session.add(sale_line)
-                    
-                    # تحديث المخزون عبر StockService
-                    wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                    StockService.remove_stock(
-                        product_id=data['product_id'],
-                        quantity=data['quantity'],
-                        reference_type=GLRef.SALE,
-                        reference_id=sale.id,
-                        warehouse_id=wh.id if wh else None,
-                    )
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_create_sale"):
+                        db.session.add(sale_line)
+                        
+                        # تحديث المخزون عبر StockService
+                        wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                        StockService.remove_stock(
+                            product_id=data['product_id'],
+                            quantity=data['quantity'],
+                            reference_type=GLRef.SALE,
+                            reference_id=sale.id,
+                            warehouse_id=wh.id if wh else None,
+                        )
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_sale', data, {'success': True, 'sale_id': sale.id})
@@ -974,13 +974,12 @@ def _process_user_action(message, user):
                         payment_type='customer_payment'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    # تحديث رصيد العميل
-                    customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
-                    customer.apply_receipt(data['amount'])
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_receive_payment"):
+                        db.session.add(payment)
+                        
+                        # تحديث رصيد العميل
+                        customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
+                        customer.apply_receipt(data['amount'])
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('receive_payment', data, {'success': True, 'payment_id': payment.id})
@@ -1116,13 +1115,12 @@ def _process_user_action(message, user):
                         payment_type='refund'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    # تحديث رصيد العميل (زيادة)
-                    customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
-                    customer.adjust_balance(data['amount'])
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_give_payment"):
+                        db.session.add(payment)
+                        
+                        # تحديث رصيد العميل (زيادة)
+                        customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
+                        customer.adjust_balance(data['amount'])
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('give_payment', data, {'success': True, 'payment_id': payment.id})
@@ -1243,8 +1241,8 @@ def _process_user_action(message, user):
                         user_id=user.id
                     )
                     assign_tenant_id(expense)
-                    db.session.add(expense)
-                    db.session.commit()
+                    with atomic_transaction("ai_create_expense"):
+                        db.session.add(expense)
                     
                     # تدريب الذكاء المحلي
                     train_local_ai('create_expense', data, {'success': True, 'expense_id': expense.id})
@@ -1393,8 +1391,8 @@ def _process_user_action(message, user):
                         total_paid_aed=0
                     )
                     assign_tenant_id(supplier)
-                    db.session.add(supplier)
-                    db.session.commit()
+                    with atomic_transaction("ai_create_supplier"):
+                        db.session.add(supplier)
                     
                     train_local_ai('create_supplier', data, {'success': True, 'supplier_id': supplier.id})
                     
@@ -1545,28 +1543,27 @@ def _process_user_action(message, user):
                         user_id=user.id
                     )
                     assign_tenant_id(purchase)
-                    db.session.add(purchase)
-                    db.session.flush()
-                    
-                    purchase_line = PurchaseLine(
-                        purchase_id=purchase.id,
-                        product_id=data['product_id'],
-                        quantity=data['quantity'],
-                        unit_cost=data['unit_price'],
-                        total=total_amount
-                    )
-                    db.session.add(purchase_line)
-                    
-                    wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                    StockService.add_stock(
-                        product_id=data['product_id'],
-                        quantity=data['quantity'],
-                        reference_type=GLRef.PURCHASE,
-                        reference_id=purchase.id,
-                        warehouse_id=wh.id if wh else None,
-                    )
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_create_purchase"):
+                        db.session.add(purchase)
+                        db.session.flush()
+                        
+                        purchase_line = PurchaseLine(
+                            purchase_id=purchase.id,
+                            product_id=data['product_id'],
+                            quantity=data['quantity'],
+                            unit_cost=data['unit_price'],
+                            total=total_amount
+                        )
+                        db.session.add(purchase_line)
+                        
+                        wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                        StockService.add_stock(
+                            product_id=data['product_id'],
+                            quantity=data['quantity'],
+                            reference_type=GLRef.PURCHASE,
+                            reference_id=purchase.id,
+                            warehouse_id=wh.id if wh else None,
+                        )
                     
                     train_local_ai('create_purchase', data, {'success': True, 'purchase_id': purchase.id})
                     
@@ -1694,8 +1691,8 @@ def _process_user_action(message, user):
                         status='pending',
                         user_id=user.id
                     )
-                    db.session.add(cheque)
-                    db.session.commit()
+                    with atomic_transaction("ai_create_cheque"):
+                        db.session.add(cheque)
                     
                     train_local_ai('create_cheque', data, {'success': True, 'cheque_id': cheque.id})
                     
@@ -1876,8 +1873,8 @@ def _process_user_action(message, user):
                         role=data['role'],
                         email=data['email']
                     )
-                    db.session.add(new_user)
-                    db.session.commit()
+                    with atomic_transaction("ai_create_user"):
+                        db.session.add(new_user)
                     
                     train_local_ai('create_user', data, {'success': True, 'user_id': new_user.id})
                     
@@ -2291,8 +2288,8 @@ http://localhost:5000/ai/assistant
                         is_active=True
                     )
                     assign_tenant_id(customer, user)
-                    db.session.add(customer)
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_create_customer"):
+                        db.session.add(customer)
                     
                     return f"""✅ تم إنشاء العميل بنجاح!
 
@@ -2327,14 +2324,14 @@ http://localhost:5000/ai/assistant
                         is_active=True
                     )
                     assign_tenant_id(product, user)
-                    db.session.add(product)
-                    db.session.flush()
-                    if quantity > 0:
-                        StockService.add_opening_stock(
-                            product_id=product.id,
-                            quantity=quantity,
-                        )
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_create_product"):
+                        db.session.add(product)
+                        db.session.flush()
+                        if quantity > 0:
+                            StockService.add_opening_stock(
+                                product_id=product.id,
+                                quantity=quantity,
+                            )
                     
                     return f"""✅ تم إنشاء المنتج بنجاح!
 
@@ -2370,8 +2367,8 @@ http://localhost:5000/ai/assistant
                         is_active=True
                     )
                     assign_tenant_id(supplier)
-                    db.session.add(supplier)
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_create_supplier"):
+                        db.session.add(supplier)
                     
                     return f"""✅ تم إنشاء المورد بنجاح!
 
@@ -2435,16 +2432,15 @@ http://localhost:5000/ai/assistant
                     assign_tenant_id(sale_line, user)
                     db.session.add(sale_line)
                     
-                    wh_l3 = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                    StockService.remove_stock(
-                        product_id=product.id,
-                        quantity=quantity,
-                        reference_type=GLRef.SALE,
-                        reference_id=sale.id,
-                        warehouse_id=wh_l3.id if wh_l3 else None,
-                    )
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_create_sale"):
+                        wh_l3 = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                        StockService.remove_stock(
+                            product_id=product.id,
+                            quantity=quantity,
+                            reference_type=GLRef.SALE,
+                            reference_id=sale.id,
+                            warehouse_id=wh_l3.id if wh_l3 else None,
+                        )
                     
                     return f"""✅ تم إنشاء الفاتورة بنجاح!
 
@@ -2486,8 +2482,8 @@ http://localhost:5000/ai/assistant
                         user_id=user.id
                     )
                     assign_tenant_id(expense)
-                    db.session.add(expense)
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_create_expense"):
+                        db.session.add(expense)
                     
                     return f"""✅ تم إضافة المصروف بنجاح!
 
@@ -2532,11 +2528,10 @@ http://localhost:5000/ai/assistant
                         payment_type='customer_payment'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    customer.apply_receipt(amount)
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_payment"):
+                        db.session.add(payment)
+                        
+                        customer.apply_receipt(amount)
                     
                     return f"""✅ تم تسجيل الدفعة بنجاح!
 
@@ -2566,9 +2561,8 @@ http://localhost:5000/ai/assistant
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
                     old_balance = customer.balance
-                    customer.set_balance(new_balance)
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_adjust_balance"):
+                        customer.set_balance(new_balance)
                     
                     return f"""✅ تم تعديل رصيد العميل بنجاح!
 
@@ -2580,7 +2574,7 @@ http://localhost:5000/ai/assistant
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        # ========== استلام دفعة من العميل ==========
+                    # ========== استلام دفعة من العميل ==========
         if any(word in msg_lower for word in ['استلام', 'استلم', 'دفعة من']) and ':' in message:
             match = re.search(r':(.*)', message)
             if match:
@@ -2613,11 +2607,10 @@ http://localhost:5000/ai/assistant
                         payment_type='customer_payment'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    customer.apply_receipt(amount)
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_receive_payment"):
+                        db.session.add(payment)
+                        
+                        customer.apply_receipt(amount)
                     
                     return f"""✅ تم استلام الدفعة بنجاح!
 
@@ -2699,9 +2692,8 @@ http://localhost:5000/ai/assistant
                         payment_type='refund'
                     )
                     assign_tenant_id(payment)
-                    db.session.add(payment)
-                    
-                    db.session.commit()
+                    with atomic_transaction("ai_quick_give_payment"):
+                        db.session.add(payment)
                     
                     return f"""✅ تم إعطاء الدفعة للعميل بنجاح!
 

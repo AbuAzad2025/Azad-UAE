@@ -7,6 +7,7 @@ from datetime import datetime
 from utils.decorators import branch_scope_id, permission_required
 from utils.branching import should_show_all_branch_columns
 from utils.tenanting import get_active_tenant_id
+from utils.db_safety import atomic_transaction
 
 payroll_bp = Blueprint('payroll', __name__, url_prefix='/payroll')
 
@@ -56,6 +57,8 @@ def add_employee():
     scoped_branch_id = branch_scope_id()
     if request.method == 'POST':
         try:
+            if not request.form.get('name'):
+                raise ValueError('اسم الموظف مطلوب.')
             if scoped_branch_id is not None:
                 form_branch_id = request.form.get('branch_id', type=int)
                 if form_branch_id != scoped_branch_id:
@@ -66,7 +69,8 @@ def add_employee():
                         branches = branches.filter(Branch.tenant_id == tid)
                     branches = branches.all()
                     return render_template('payroll/add_employee.html', branches=branches)
-            PayrollService.create_employee(request.form)
+            with atomic_transaction('payroll_add_employee'):
+                PayrollService.create_employee(request.form)
             flash('تم إضافة الموظف بنجاح', 'success')
             return redirect(url_for('payroll.employees_list'))
         except Exception as e:
@@ -90,17 +94,27 @@ def advances():
         try:
             scoped_branch_id = branch_scope_id()
             tid = get_active_tenant_id(current_user)
-            employee_id = int(request.form.get('employee_id'))
+            employee_id_str = request.form.get('employee_id')
+            if not employee_id_str:
+                raise ValueError('معرف الموظف مطلوب.')
+            employee_id = int(employee_id_str)
+            amount_str = request.form.get('amount')
+            if not amount_str:
+                raise ValueError('المبلغ مطلوب.')
+            amount = float(amount_str)
             employee = db.session.get(Employee, employee_id)
             _assert_employee_scope(employee, scoped_branch_id, tid)
-            PayrollService.create_advance(
-                employee_id=employee_id,
-                amount=float(request.form.get('amount')),
-                description=request.form.get('description'),
-                user_id=current_user.id,
-                actor_user=current_user
-            )
+            with atomic_transaction('payroll_create_advance'):
+                PayrollService.create_advance(
+                    employee_id=employee_id,
+                    amount=amount,
+                    description=request.form.get('description'),
+                    user_id=current_user.id,
+                    actor_user=current_user
+                )
             flash('تم تسجيل السلفة بنجاح', 'success')
+        except ValueError as e:
+            flash(f'خطأ في البيانات: {e}', 'danger')
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
 
@@ -127,33 +141,48 @@ def process_payroll():
     if request.method == 'POST':
         if 'generate_branch' in request.form:
             try:
-                branch_id = int(request.form.get('branch_id'))
+                branch_id_str = request.form.get('branch_id')
+                if not branch_id_str:
+                    raise ValueError('معرف الفرع مطلوب.')
+                branch_id = int(branch_id_str)
                 tid = get_active_tenant_id(current_user)
                 _assert_branch_scope(branch_id, scoped_branch_id, tid)
-                month = int(request.form.get('month'))
-                year = int(request.form.get('year'))
-
-                gen, skipped = PayrollService.generate_branch_payroll(branch_id, month, year, current_user.id)
+                month_str = request.form.get('month')
+                year_str = request.form.get('year')
+                if not month_str or not year_str:
+                    raise ValueError('الشهر والسنة مطلوبان.')
+                month = int(month_str)
+                year = int(year_str)
+                with atomic_transaction('payroll_generate_branch'):
+                    gen, skipped = PayrollService.generate_branch_payroll(branch_id, month, year, current_user.id)
                 flash(f'تم توليد الرواتب بنجاح: {gen} موظف، وتم تخطي {skipped} (تمت معالجتهم سابقاً أو نظام مياومة)', 'success')
+            except ValueError as e:
+                flash(f'خطأ في البيانات: {e}', 'danger')
             except Exception as e:
                 flash(f'حدث خطأ: {e}', 'danger')
         else:
             try:
+                employee_id_str = request.form.get('employee_id')
+                if not employee_id_str:
+                    raise ValueError('معرف الموظف مطلوب.')
+                employee_id = int(employee_id_str)
                 tid = get_active_tenant_id(current_user)
-                employee_id = int(request.form.get('employee_id'))
                 employee = db.session.get(Employee, employee_id)
                 _assert_employee_scope(employee, scoped_branch_id, tid)
-                PayrollService.process_payroll(
-                    employee_id=employee_id,
-                    month=int(request.form.get('month')),
-                    year=int(request.form.get('year')),
-                    days_worked=float(request.form.get('days_worked', 0)),
-                    allowances=float(request.form.get('allowances', 0)),
-                    deductions=float(request.form.get('deductions', 0)),
-                    user_id=current_user.id,
-                    actor_user=current_user
-                )
+                with atomic_transaction('payroll_process'):
+                    PayrollService.process_payroll(
+                        employee_id=employee_id,
+                        month=int(request.form.get('month')),
+                        year=int(request.form.get('year')),
+                        days_worked=float(request.form.get('days_worked', 0)),
+                        allowances=float(request.form.get('allowances', 0)),
+                        deductions=float(request.form.get('deductions', 0)),
+                        user_id=current_user.id,
+                        actor_user=current_user
+                    )
                 flash('تم صرف الراتب بنجاح', 'success')
+            except ValueError as e:
+                flash(f'خطأ في البيانات: {e}', 'danger')
             except Exception as e:
                 flash(f'حدث خطأ: {e}', 'danger')
 

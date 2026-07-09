@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import (
     Department, JobPosition, HRContract, Attendance, LeaveType, LeaveRequest, User, Branch,
     PayrollTransaction,
@@ -54,7 +55,7 @@ class HRService:
         )
         db.session.add(att)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -80,7 +81,7 @@ class HRService:
         att.work_hours = hours
         att.state = 'validated'
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -145,7 +146,7 @@ class HRService:
         )
         db.session.add(leave)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -162,7 +163,7 @@ class HRService:
         leave.manager_id = manager.id
         leave.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -180,7 +181,7 @@ class HRService:
         leave.rejected_reason = reason
         leave.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -217,7 +218,7 @@ class HRService:
         )
         db.session.add(dept)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -253,7 +254,7 @@ class HRService:
         )
         db.session.add(contract)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

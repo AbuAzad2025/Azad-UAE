@@ -6,6 +6,7 @@ import os
 import re
 from sqlalchemy import func, text
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import AuditLog, Sale, User
 
 logger = logging.getLogger(__name__)
@@ -40,11 +41,7 @@ class MonitoringService:
             changes={'visible_tables': visible_tables, 'restricted_tables': restricted_tables},
         )
         db.session.add(new_log)
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
 
     @staticmethod

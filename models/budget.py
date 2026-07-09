@@ -130,7 +130,7 @@ class Budget(db.Model):
         if self.total_budgeted != 0:
             self.variance_percentage = (self.total_variance / self.total_budgeted) * 100
         
-        db.session.commit()
+        db.session.flush()
     
     def activate(self):
         """تفعيل الموازنة"""
@@ -138,7 +138,7 @@ class Budget(db.Model):
             raise ValueError('الموازنة نشطة مسبقاً')
         
         self.status = 'active'
-        db.session.commit()
+        db.session.flush()
     
     def close(self):
         """إغلاق الموازنة"""
@@ -149,7 +149,7 @@ class Budget(db.Model):
         self.update_actuals()
         
         self.status = 'closed'
-        db.session.commit()
+        db.session.flush()
 
 
 class BudgetLine(db.Model):

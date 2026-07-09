@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.store_payment_method import StorePaymentMethod
 
 DEFAULT_METHODS = (
@@ -88,7 +89,7 @@ class StorePaymentMethodService:
                 row.set_config(cfg)
             db.session.add(row)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -132,7 +133,7 @@ class StorePaymentMethodService:
             raise ValueError('طريقة الدفع غير موجودة.')
         method.is_enabled = bool(enabled)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -170,7 +171,7 @@ class StorePaymentMethodService:
             method.set_config(config)
         db.session.add(method)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -216,7 +217,7 @@ class StorePaymentMethodService:
                     cfg.pop(key, None)
         method.set_config(cfg)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -232,7 +233,7 @@ class StorePaymentMethodService:
             raise ValueError('لا يمكن حذف طرق الدفع الأساسية — يمكن إيقافها فقط.')
         db.session.delete(method)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

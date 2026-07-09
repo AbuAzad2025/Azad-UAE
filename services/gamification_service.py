@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import Dict, List
 from extensions import db
+from utils.db_safety import atomic_transaction
 
 
 class GamificationService:
@@ -52,11 +53,7 @@ class GamificationService:
         
         level_up = old_badge['name_ar'] != new_badge['name_ar']
         
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
         
         return {

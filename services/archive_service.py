@@ -3,6 +3,7 @@ from flask import current_app
 from flask_login import current_user
 from extensions import db
 from models import ArchivedRecord
+from utils.db_safety import atomic_transaction
 
 
 class ArchiveService:
@@ -30,34 +31,19 @@ class ArchiveService:
 
             db.session.add(archived)
 
-            if commit:
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                    raise
-
-                current_app.logger.info(f'Archived: {table_name} #{record.id}')
-            else:
-                db.session.flush()
-                current_app.logger.info(f'Archived (Pending Commit): {table_name} #{record.id}')
+            db.session.flush()
+            current_app.logger.info(f'Archived: {table_name} #{record.id}')
 
             return archived
 
         except Exception as e:
-            if commit:
-                db.session.rollback()
             current_app.logger.error(f'Archive failed: {e}')
             raise
 
     @staticmethod
     def soft_delete(record):
         record.is_active = False
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
 
     @staticmethod
@@ -67,7 +53,7 @@ class ArchiveService:
                 ArchiveService.archive_record(table_name, record, reason='Hard Delete')
 
             db.session.delete(record)
-            db.session.commit()
+            db.session.flush()
 
             current_app.logger.warning(f'Hard deleted: {table_name} #{record.id}')
 
@@ -107,7 +93,7 @@ class ArchiveService:
 
             if existing:
                 existing.is_active = True
-                db.session.commit()
+                db.session.flush()
                 current_app.logger.info(f'Restored: {archived_record.table_name} #{archived_record.record_id}')
                 return existing
 
@@ -161,12 +147,8 @@ class ArchiveService:
             db.session.delete(archive)
             count += 1
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-
+        with atomic_transaction('cleanup_old_archives'):
+            db.session.flush()
 
         current_app.logger.info(f'Cleaned up {count} old archives')
 

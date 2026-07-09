@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 from extensions import db
+from utils.db_safety import atomic_transaction
 from decimal import Decimal
 from sqlalchemy import event
 from models.gl import GLJournalEntry, GLJournalLine
@@ -105,7 +106,7 @@ class AdvancedJournalEntryManager:
         )
         if commit:
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
                 db.session.rollback()
                 raise
@@ -181,7 +182,7 @@ class AdvancedJournalEntryManager:
         )
         try:
             if commit:
-                db.session.commit()
+                db.session.flush()
             else:
                 db.session.flush()
         except Exception:
@@ -196,7 +197,7 @@ class AdvancedJournalEntryManager:
         """Post a validated entry to the GL.
 
         Args:
-            commit: If True (default), performs db.session.commit().
+            commit: If True (default), performs db.session.flush().
                     If False, performs db.session.flush() instead, letting
                     the caller own the transaction boundary. Used by
                     reverse_entry_advanced and post_or_fail(commit=False)
@@ -216,7 +217,7 @@ class AdvancedJournalEntryManager:
         )
         try:
             if commit:
-                db.session.commit()
+                db.session.flush()
             else:
                 db.session.flush()
         except Exception:
@@ -275,7 +276,7 @@ class AdvancedJournalEntryManager:
             )
         try:
             if commit:
-                db.session.commit()
+                db.session.flush()
             else:
                 db.session.flush()
         except Exception:
@@ -309,7 +310,7 @@ class AdvancedJournalEntryManager:
         )
         try:
             if commit:
-                db.session.commit()
+                db.session.flush()
             else:
                 db.session.flush()
         except Exception:

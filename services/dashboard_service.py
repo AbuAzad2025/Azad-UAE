@@ -1,5 +1,6 @@
 from models.dashboard import DashboardWidget, UserDashboardLayout
 from extensions import db
+from utils.db_safety import atomic_transaction
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
@@ -51,7 +52,7 @@ class DashboardService:
             db.session.add(layout)
         
         try:
-            db.session.commit()
+            db.session.flush()
         except IntegrityError:
             db.session.rollback()
             raise

@@ -69,7 +69,7 @@ def batch_commit(items, batch_size=100):
     for i in range(0, len(items), batch_size):
         batch = items[i:i+batch_size]
         db.session.bulk_save_objects(batch)
-        db.session.commit()
+        db.session.flush()
         logger.info(f"💾 Batch committed: {len(batch)} items")
 
 

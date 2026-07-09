@@ -6,6 +6,7 @@ from decimal import Decimal
 from flask import current_app
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
@@ -122,7 +123,7 @@ class StoreOrderService:
             sale.recalculate_payment_status()
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -211,7 +212,7 @@ class StoreOrderService:
                 from services.store_coupon_service import StoreCouponService
                 StoreCouponService.release_use(coupon_code, sale.tenant_id)
                 try:
-                    db.session.commit()
+                    db.session.flush()
                 except Exception:
                     db.session.rollback()
                     raise
@@ -223,7 +224,7 @@ class StoreOrderService:
             from services.store_coupon_service import StoreCouponService
             StoreCouponService.release_use(sale.coupon_code, sale.tenant_id)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

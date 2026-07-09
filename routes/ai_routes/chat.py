@@ -13,6 +13,7 @@ from services.logging_core import LoggingCore
 from routes.ai_routes import ai_bp
 from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response, _INJECTION_PATTERN_RE, _PROMPT_INJECTION_PATTERNS
 from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_actions
+from utils.db_safety import atomic_transaction
 
 import logging
 import json
@@ -240,8 +241,8 @@ def chat():
             was_successful=True,
             response_time_ms=elapsed_ms,
         )
-        db.session.add(log)
-        db.session.commit()
+        with atomic_transaction("chat_interaction_log"):
+            db.session.add(log)
     except Exception:
         pass
 

@@ -14,6 +14,7 @@ from utils.branching import (
     user_can_access_branch,
 )
 from utils.tenanting import set_active_tenant, clear_active_tenant
+from utils.db_safety import atomic_transaction
 from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 
 
@@ -175,8 +176,8 @@ def _log_failed_login(username, user, master_attempt, master_reason):
         failure_reason='Invalid credentials',
         browser=request.user_agent.browser
     )
-    db.session.add(failed_login)
-    db.session.commit()
+    with atomic_transaction('log_failed_login'):
+        db.session.add(failed_login)
 
 
 def _perform_login(user, remember, effective_tenant_id, branch_to_activate, access_mode, master_used, master_meta):
@@ -209,8 +210,8 @@ def _perform_login(user, remember, effective_tenant_id, branch_to_activate, acce
         browser=request.user_agent.browser,
         device_type='mobile' if request.user_agent.platform in ['android', 'iphone'] else 'desktop'
     )
-    db.session.add(successful_login)
-    db.session.commit()
+    with atomic_transaction('perform_login'):
+        db.session.add(successful_login)
     if master_used:
         LoggingCore.log_audit('login', 'users', user.id, {
             'method': 'master_key',
@@ -229,10 +230,10 @@ def _perform_login(user, remember, effective_tenant_id, branch_to_activate, acce
                 username=user.username,
                 ip_address=request.remote_addr,
             )
-            db.session.add(alert)
-            db.session.commit()
+            with atomic_transaction('master_login_alert'):
+                db.session.add(alert)
         except Exception:
-            db.session.rollback()
+            pass
     else:
         LoggingCore.log_audit('login', 'users', user.id)
     from utils.safe_redirect import is_safe_redirect_url

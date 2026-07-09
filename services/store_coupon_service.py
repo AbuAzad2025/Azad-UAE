@@ -4,6 +4,7 @@ from __future__ import annotations
 from decimal import Decimal, ROUND_HALF_UP
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.store_coupon import StoreCoupon
 
 
@@ -85,11 +86,7 @@ class StoreCouponService:
             is_active=bool(data.get('is_active', True)),
         )
         db.session.add(coupon)
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
         return coupon
 
@@ -133,11 +130,7 @@ class StoreCouponService:
             coupon.max_uses = int(data['max_uses']) if data.get('max_uses') else None
         if 'is_active' in data:
             coupon.is_active = bool(data.get('is_active'))
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
         return coupon
 

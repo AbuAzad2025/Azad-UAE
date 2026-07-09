@@ -7,6 +7,7 @@ from decimal import Decimal
 from flask import current_app
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.payment_vault import PaymentVault
 from utils.currency_utils import get_system_default_currency
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
@@ -81,11 +82,7 @@ class StoreOnlinePaymentService:
 
         sale.checkout_gateway_ref = str(payment_id)
         sale.checkout_payment_method = sale.checkout_payment_method or 'online_pay'
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
 
         return {

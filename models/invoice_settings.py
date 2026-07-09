@@ -163,7 +163,7 @@ class InvoiceSettings(db.Model):
             settings = InvoiceSettings(is_active=True, tenant_id=tid)
             InvoiceSettings._seed_from_tenant(settings, tenant)
             db.session.add(settings)
-            db.session.commit()
+            db.session.flush()
             return settings
 
         return InvoiceSettings.query.filter_by(is_active=True).filter(

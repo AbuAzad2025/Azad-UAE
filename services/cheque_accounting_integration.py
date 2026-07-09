@@ -1,4 +1,5 @@
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.cheque import Cheque
 from models.gl import GLJournalEntry
 from services.cheque_service import (
@@ -34,7 +35,7 @@ class ChequeAccountingIntegration:
             raise ValueError("الشيك ليس في حالة معلق")
         try:
             entry = process_cheque_receive(cheque)
-            db.session.commit()
+            db.session.flush()
             return entry
         except Exception as e:
             db.session.rollback()
@@ -50,7 +51,7 @@ class ChequeAccountingIntegration:
             raise ValueError("الشيك ليس في حالة معلق")
         try:
             process_cheque_issue(cheque)
-            db.session.commit()
+            db.session.flush()
             entry = ChequeAccountingIntegration._scoped_entries(
                 cheque, reference_type=GLRef.CHEQUE_ISSUE, reference_id=cheque.id
             ).order_by(GLJournalEntry.id.desc()).first()
@@ -74,7 +75,7 @@ class ChequeAccountingIntegration:
                 exchange_rate = target_aed / cheque.amount
             process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=exchange_rate)
             try:
-                db.session.commit()
+                db.session.flush()
             except Exception:
                 db.session.rollback()
                 raise
@@ -101,7 +102,7 @@ class ChequeAccountingIntegration:
             raise ValueError("الشيك ليس في حالة يمكن ارتداده")
         try:
             process_cheque_bounce(cheque, reason=bounce_reason or 'غير محدد')
-            db.session.commit()
+            db.session.flush()
             # إرجاع القيد المرتبط
             entry = ChequeAccountingIntegration._scoped_entries(
                 cheque, reference_type=GLRef.CHEQUE_BOUNCE, reference_id=cheque.id

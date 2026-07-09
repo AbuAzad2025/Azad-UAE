@@ -12,6 +12,7 @@ from typing import Any
 from flask import current_app
 from flask_login import current_user as flask_user
 from extensions import db
+from utils.db_safety import atomic_transaction
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class AIExecutor:
             credit_limit=Decimal(str(credit_limit)),
         )
         db.session.add(customer)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,
@@ -139,7 +140,7 @@ class AIExecutor:
             is_active=True,
         )
         db.session.add(product)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,
@@ -320,7 +321,7 @@ class AIExecutor:
                 sale.balance_due = due - remaining
                 sale.payment_status = "partial"
                 remaining = Decimal("0")
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,
@@ -368,7 +369,7 @@ class AIExecutor:
             branch_id=self._current_branch_id(),
         )
         db.session.add(expense)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,
@@ -398,7 +399,7 @@ class AIExecutor:
             is_active=True,
         )
         db.session.add(supplier)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,
@@ -428,7 +429,7 @@ class AIExecutor:
             is_active=True,
         )
         db.session.add(employee)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "success": True,

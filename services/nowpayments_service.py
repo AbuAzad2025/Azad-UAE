@@ -10,6 +10,7 @@ import requests
 from flask import current_app
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Donation
 from services.payments.nowpayments_provider import NowPaymentsProvider
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
@@ -93,11 +94,8 @@ class NOWPaymentsService:
                 )
 
                 db.session.add(donation)
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                    raise
+                with atomic_transaction('nowpayments_create_payment'):
+                    db.session.flush()
 
                 return {
                     'success': True,
@@ -276,11 +274,8 @@ class NOWPaymentsService:
             elif status == 'refunded':
                 donation.status = 'refunded'
 
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('nowpayments_process_callback'):
+                db.session.flush()
 
             return True
 

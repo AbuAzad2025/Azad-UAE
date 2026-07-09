@@ -8,6 +8,7 @@ from flask import current_app
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Customer, Product, Sale, User, Warehouse
 from services.sale_service import SaleService
 from utils.currency_utils import resolve_default_currency
@@ -248,11 +249,7 @@ class StoreCheckoutService:
         if coupon_obj:
             sale.coupon_code = coupon_obj.code
             StoreCouponService.mark_used(coupon_obj)
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            db.session.flush()
 
 
         StoreNotificationService.notify_new_order(sale, store)

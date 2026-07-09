@@ -12,6 +12,7 @@ from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
 from datetime import datetime, date, timedelta
+from utils.db_safety import atomic_transaction
 
 ledger_bp = Blueprint('ledger', __name__, url_prefix='/ledger')
 
@@ -165,7 +166,8 @@ def gl_periods():
         period.is_closed = action == 'close'
         period.closed_at = datetime.now(timezone.utc) if period.is_closed else None
         period.closed_by = current_user.id if period.is_closed else None
-        db.session.commit()
+        with atomic_transaction('update_gl_period'):
+            pass
         flash('تم تحديث حالة الفترة المحاسبية.', 'success')
         return redirect(url_for('ledger.gl_periods'))
 
@@ -494,16 +496,16 @@ def manual_entry():
                     branch_id = getattr(current_user, 'branch_id', None)
             except (ValueError, TypeError):
                 branch_id = branch_scope_id() or getattr(current_user, 'branch_id', None)
-            entry = GLService.create_manual_entry(
-                description=description,
-                lines=lines,
-                entry_date=entry_date,
-                notes=notes,
-                created_by=current_user.id,
-                branch_id=branch_id
-            )
-            
-            LoggingCore.log_audit('create', 'gl_journal_entries', entry.id)
+            with atomic_transaction('create_manual_entry'):
+                entry = GLService.create_manual_entry(
+                    description=description,
+                    lines=lines,
+                    entry_date=entry_date,
+                    notes=notes,
+                    created_by=current_user.id,
+                    branch_id=branch_id
+                )
+                LoggingCore.log_audit('create', 'gl_journal_entries', entry.id)
             
             flash(f'✅ تم إنشاء القيد {entry.entry_number} بنجاح', 'success')
             return redirect(url_for('ledger.view_entry', id=entry.id))
@@ -511,7 +513,6 @@ def manual_entry():
         except ValueError as e:
             flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
     from utils.gl_tenant import scope_gl_accounts
@@ -550,12 +551,10 @@ def reverse_entry(id):
             return render_template('errors/403.html'), 403
         
         description = request.form.get('description')
-        reversed_entry = entry.reverse_entry(description)
-        
-        db.session.commit()
-        
-        LoggingCore.log_audit('create', 'gl_journal_entries', reversed_entry.id, 
-                        changes={'reversed_from': entry.entry_number})
+        with atomic_transaction('reverse_entry'):
+            reversed_entry = entry.reverse_entry(description)
+            LoggingCore.log_audit('create', 'gl_journal_entries', reversed_entry.id, 
+                            changes={'reversed_from': entry.entry_number})
         
         flash(f'✅ تم عكس القيد بنجاح - القيد الجديد: {reversed_entry.entry_number}', 'success')
         return redirect(url_for('ledger.view_entry', id=reversed_entry.id))
@@ -564,7 +563,6 @@ def reverse_entry(id):
         flash(f'❌ خطأ: {str(e)}', 'danger')
         return redirect(url_for('ledger.view_entry', id=id))
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
         return redirect(url_for('ledger.view_entry', id=id))
 
@@ -603,7 +601,7 @@ def api_search_accounts():
 def api_calculate_journal_balance():
     """API لحساب توازن القيد اليدوي - Backend Calculation"""
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({'success': False, 'error': 'No data provided'}), 400
         
@@ -826,15 +824,13 @@ def admin_add_account():
                 bank_swift_code=bank_swift_code,
             )
             
-            db.session.add(account)
-            db.session.commit()
-            
+            with atomic_transaction('create_gl_account'):
+                db.session.add(account)
             LoggingCore.log_audit('create', 'gl_accounts', account.id)
             flash(f'✅ تم إنشاء الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('ledger.admin_accounts'))
             
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
     # الحصول على الحسابات الرئيسية للقائمة المنسدلة

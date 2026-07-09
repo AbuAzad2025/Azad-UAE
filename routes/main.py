@@ -11,6 +11,7 @@ from utils.decorators import branch_scope_id
 from utils.branching import get_visible_products_query
 from utils.tenanting import get_active_tenant_id
 from utils.gl_tenant import get_gl_account_by_code
+from utils.db_safety import atomic_transaction
 
 main_bp = Blueprint('main', __name__)
 
@@ -298,75 +299,74 @@ def my_profile_update():
     user = current_user
 
     try:
-        # Whitelist: only these fields may be changed by the user
-        allowed_fields = {
-            'full_name', 'full_name_ar', 'email', 'phone',
-        }
+        with atomic_transaction('profile_update'):
+            # Whitelist: only these fields may be changed by the user
+            allowed_fields = {
+                'full_name', 'full_name_ar', 'email', 'phone',
+            }
 
-        # Sanitize and update allowed fields
-        if 'full_name' in request.form:
-            user.full_name = InputSanitizer.sanitize_text(
-                request.form.get('full_name', ''), max_length=100
-            ) or user.full_name
+            # Sanitize and update allowed fields
+            if 'full_name' in request.form:
+                user.full_name = InputSanitizer.sanitize_text(
+                    request.form.get('full_name', ''), max_length=100
+                ) or user.full_name
 
-        if 'full_name_ar' in request.form:
-            user.full_name_ar = InputSanitizer.sanitize_text(
-                request.form.get('full_name_ar', ''), max_length=100
-            ) or user.full_name_ar
+            if 'full_name_ar' in request.form:
+                user.full_name_ar = InputSanitizer.sanitize_text(
+                    request.form.get('full_name_ar', ''), max_length=100
+                ) or user.full_name_ar
 
-        if 'email' in request.form:
-            email = InputSanitizer.sanitize_email(request.form.get('email', ''))
-            if email:
-                # Check email uniqueness (excluding self)
-                existing = User.query.filter(
-                    User.email == email,
-                    User.id != user.id,
-                    User.tenant_id == user.tenant_id,
-                ).first()
-                if existing:
-                    flash('⚠️ هذا البريد الإلكتروني مستخدم من قبل.', 'warning')
+            if 'email' in request.form:
+                email = InputSanitizer.sanitize_email(request.form.get('email', ''))
+                if email:
+                    # Check email uniqueness (excluding self)
+                    existing = User.query.filter(
+                        User.email == email,
+                        User.id != user.id,
+                        User.tenant_id == user.tenant_id,
+                    ).first()
+                    if existing:
+                        flash('⚠️ هذا البريد الإلكتروني مستخدم من قبل.', 'warning')
+                        return redirect(url_for('main.my_profile'))
+                    user.email = email
+
+            if 'phone' in request.form:
+                from utils.field_validators import normalize_phone_optional
+                user.phone = normalize_phone_optional(request.form.get('phone', ''))
+
+            current_password = request.form.get('current_password', '').strip()
+            new_password = request.form.get('new_password', '').strip()
+            confirm_password = request.form.get('confirm_password', '').strip()
+
+            if new_password:
+                if not current_password:
+                    flash('⚠️ يجب إدخال كلمة المرور الحالية.', 'warning')
                     return redirect(url_for('main.my_profile'))
-                user.email = email
 
-        if 'phone' in request.form:
-            from utils.field_validators import normalize_phone_optional
-            user.phone = normalize_phone_optional(request.form.get('phone', ''))
+                if not check_password_hash(user.password_hash, current_password):
+                    flash('❌ كلمة المرور الحالية غير صحيحة.', 'danger')
+                    return redirect(url_for('main.my_profile'))
 
-        current_password = request.form.get('current_password', '').strip()
-        new_password = request.form.get('new_password', '').strip()
-        confirm_password = request.form.get('confirm_password', '').strip()
+                if new_password != confirm_password:
+                    flash('❌ كلمة المرور الجديدة غير متطابقة.', 'danger')
+                    return redirect(url_for('main.my_profile'))
 
-        if new_password:
-            if not current_password:
-                flash('⚠️ يجب إدخال كلمة المرور الحالية.', 'warning')
-                return redirect(url_for('main.my_profile'))
+                from utils.password_validator import PasswordValidator
+                is_valid, errors = PasswordValidator.validate(new_password)
+                if not is_valid:
+                    from utils.error_messages import ErrorMessages
+                    flash(ErrorMessages.weak_password(errors), 'danger')
+                    return redirect(url_for('main.my_profile'))
 
-            if not check_password_hash(user.password_hash, current_password):
-                flash('❌ كلمة المرور الحالية غير صحيحة.', 'danger')
-                return redirect(url_for('main.my_profile'))
+                user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
+                flash('✅ تم تغيير كلمة المرور بنجاح.', 'success')
 
-            if new_password != confirm_password:
-                flash('❌ كلمة المرور الجديدة غير متطابقة.', 'danger')
-                return redirect(url_for('main.my_profile'))
-
-            from utils.password_validator import PasswordValidator
-            is_valid, errors = PasswordValidator.validate(new_password)
-            if not is_valid:
-                from utils.error_messages import ErrorMessages
-                flash(ErrorMessages.weak_password(errors), 'danger')
-                return redirect(url_for('main.my_profile'))
-
-            user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
-            flash('✅ تم تغيير كلمة المرور بنجاح.', 'success')
-
-        db.session.commit()
         if new_password:
             from utils.session_security import rotate_session
             rotate_session()
         flash('✅ تم تحديث البيانات بنجاح.', 'success')
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"My profile update error: {e}")
         flash(f'❌ خطأ في التحديث: {str(e)}', 'danger')
 

@@ -33,7 +33,7 @@ class QuickLearner:
                 is_active=True,
             )
             db.session.add(mem)
-        db.session.commit()
+        db.session.flush()
         return True
 
     def get_answer(self, question: str, tenant_id: int = None) -> Optional[str]:
@@ -81,6 +81,6 @@ class QuickLearner:
         row.access_count = (row.access_count or 0) + 1
         from datetime import datetime, timezone
         row.last_accessed = datetime.now(timezone.utc)
-        db.session.commit()
+        db.session.flush()
 
 quick_learner = QuickLearner()

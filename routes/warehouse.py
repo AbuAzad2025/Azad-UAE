@@ -241,37 +241,36 @@ def edit_warehouse(id):
 
     if request.method == 'POST':
         try:
-            warehouse.name = request.form.get('name', '').strip()
-            warehouse.name_ar = request.form.get('name_ar', '').strip()
-            warehouse.code = request.form.get('code', '').strip()
-            warehouse.location = request.form.get('location', '').strip()
-            warehouse.parent_id = request.form.get('parent_id', type=int) or None
-            warehouse.manager_id = request.form.get('manager_id', type=int) or None
-            warehouse.branch_id = request.form.get('branch_id', type=int) or None
-            warehouse.is_main = request.form.get('is_main') == 'on'
-            warehouse.allow_negative_inventory = request.form.get('allow_negative_inventory') == 'on'
+            with atomic_transaction('warehouse_update'):
+                warehouse.name = request.form.get('name', '').strip()
+                warehouse.name_ar = request.form.get('name_ar', '').strip()
+                warehouse.code = request.form.get('code', '').strip()
+                warehouse.location = request.form.get('location', '').strip()
+                warehouse.parent_id = request.form.get('parent_id', type=int) or None
+                warehouse.manager_id = request.form.get('manager_id', type=int) or None
+                warehouse.branch_id = request.form.get('branch_id', type=int) or None
+                warehouse.is_main = request.form.get('is_main') == 'on'
+                warehouse.allow_negative_inventory = request.form.get('allow_negative_inventory') == 'on'
 
-            if not warehouse.name:
-                flash('اسم المستودع مطلوب', 'warning')
-                return render_template('warehouse/edit_warehouse.html',
-                                       warehouse=warehouse,
-                                       parent_warehouses=parent_warehouses,
-                                       users=users,
-                                       branches=branches)
-            if not warehouse.location:
-                flash('الموقع مطلوب', 'warning')
-                return render_template('warehouse/edit_warehouse.html',
-                                       warehouse=warehouse,
-                                       parent_warehouses=parent_warehouses,
-                                       users=users,
-                                       branches=branches)
+                if not warehouse.name:
+                    flash('اسم المستودع مطلوب', 'warning')
+                    return render_template('warehouse/edit_warehouse.html',
+                                           warehouse=warehouse,
+                                           parent_warehouses=parent_warehouses,
+                                           users=users,
+                                           branches=branches)
+                if not warehouse.location:
+                    flash('الموقع مطلوب', 'warning')
+                    return render_template('warehouse/edit_warehouse.html',
+                                           warehouse=warehouse,
+                                           parent_warehouses=parent_warehouses,
+                                           users=users,
+                                           branches=branches)
 
-            db.session.flush()
-            log_mutation('update', 'Warehouse', warehouse.id)
+                log_mutation('update', 'Warehouse', warehouse.id)
             flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', 'success')
             return redirect(url_for('warehouse.list_warehouses'))
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error editing warehouse {id}: {e}")
             flash(ErrorMessages.update_failed('warehouse'), 'error')
             return render_template('warehouse/edit_warehouse.html',
@@ -408,7 +407,6 @@ def create_warehouse():
             return redirect(url_for('warehouse.list_warehouses'))
             
         except ValueError as e:
-            db.session.rollback()
             current_app.logger.warning(f"ValueError creating warehouse: {e}")
             flash(str(e), 'warning')
             return render_template('warehouse/create_warehouse.html',
@@ -417,7 +415,6 @@ def create_warehouse():
                                    branches=branches,
                                    form_data=request.form)
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error creating warehouse: {e}")
             flash(ErrorMessages.create_failed('warehouse'), 'error')
             return render_template('warehouse/create_warehouse.html',
@@ -461,22 +458,21 @@ def delete_warehouse(id):
         return redirect(url_for('warehouse.list_warehouses'))
         
     try:
-        # Check for stock
-        has_stock = StockMovement.query.filter_by(warehouse_id=id).first()
-        if has_stock:
-            # Soft delete
-            warehouse.is_active = False
-            db.session.commit()
-            flash(f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به', 'warning')
-        else:
-            db.session.delete(warehouse)
-            db.session.commit()
-            flash(f'تم حذف المستودع "{warehouse.name}" بنجاح', 'success')
+        with atomic_transaction('warehouse_delete'):
+            has_stock = StockMovement.query.filter_by(warehouse_id=id).first()
+            if has_stock:
+                warehouse.is_active = False
+            else:
+                db.session.delete(warehouse)
             
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting warehouse {id}: {e}")
         flash(ErrorMessages.delete_failed('warehouse'), 'danger')
+    else:
+        if has_stock:
+            flash(f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به', 'warning')
+        else:
+            flash(f'تم حذف المستودع "{warehouse.name}" بنجاح', 'success')
         
     return redirect(url_for('warehouse.list_warehouses'))
 
@@ -509,15 +505,14 @@ def add_stock(product_id):
         else:
             ensure_warehouse_access(warehouse_id, current_user)
         
-        movement = StockService.adjust_stock(
-            product_id=product_id,
-            warehouse_id=warehouse_id,
-            quantity=quantity,
-            notes=notes or 'إضافة كمية يدوية'
-        )
-        
-        db.session.commit()
-        product = movement.product
+        with atomic_transaction('warehouse_add_stock'):
+            movement = StockService.adjust_stock(
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                quantity=quantity,
+                notes=notes or 'إضافة كمية يدوية'
+            )
+            product = movement.product
         
         return jsonify({
             'success': True,
@@ -526,7 +521,6 @@ def add_stock(product_id):
         })
         
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error adding stock: {e}")
         return jsonify({'success': False, 'message': ErrorMessages.unexpected_error()}), 500
 

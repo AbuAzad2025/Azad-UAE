@@ -525,8 +525,7 @@ class TestWarehouseExtended:
         assert resp.status_code == 200
 
     def test_edit_post_generic_exception(self, warehouse_admin_client):
-        with patch("routes.warehouse.db.session") as session:
-            session.flush.side_effect = RuntimeError("fail")
+        with patch("routes.warehouse.log_mutation", side_effect=RuntimeError("fail")):
             with patch("routes.warehouse.render_template", return_value="edit"):
                 resp = warehouse_admin_client.post("/warehouse/1/edit", data={
                     "name": "WH",

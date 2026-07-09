@@ -18,6 +18,7 @@ from utils.error_messages import ErrorMessages
 from services.logging_core import LoggingCore
 from utils.helpers import save_uploaded_file
 from utils.tenanting import get_active_tenant_id
+from utils.db_safety import atomic_transaction
 
 store_bp = Blueprint('store', __name__, url_prefix='/store')
 
@@ -69,84 +70,82 @@ def admin_settings():
 
     if request.method == 'POST':
         try:
-            is_enabled = request.form.get('is_enabled') == 'on'
-            if store.platform_disabled and is_enabled:
-                is_enabled = False
-                flash('تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله.', 'warning')
-            title = (request.form.get('title') or '').strip()
-            tagline = (request.form.get('tagline') or '').strip()
-            phone = (request.form.get('phone') or '').strip()
-            whatsapp = (request.form.get('whatsapp') or '').strip()
-            email = (request.form.get('email') or '').strip()
-            slug_raw = request.form.get('store_slug') or store.store_slug
-            slug = StoreService.validate_slug(slug_raw)
-            slug = StoreService.ensure_unique_slug(slug, tenant_id=tenant_id)
+            with atomic_transaction('store_settings'):
+                is_enabled = request.form.get('is_enabled') == 'on'
+                if store.platform_disabled and is_enabled:
+                    is_enabled = False
+                    flash('تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله.', 'warning')
+                title = (request.form.get('title') or '').strip()
+                tagline = (request.form.get('tagline') or '').strip()
+                phone = (request.form.get('phone') or '').strip()
+                whatsapp = (request.form.get('whatsapp') or '').strip()
+                email = (request.form.get('email') or '').strip()
+                slug_raw = request.form.get('store_slug') or store.store_slug
+                slug = StoreService.validate_slug(slug_raw)
+                slug = StoreService.ensure_unique_slug(slug, tenant_id=tenant_id)
 
-            if is_enabled and not title:
-                raise ValueError('عنوان المتجر مطلوب عند التفعيل.')
+                if is_enabled and not title:
+                    raise ValueError('عنوان المتجر مطلوب عند التفعيل.')
 
-            store.is_enabled = is_enabled
-            store.store_slug = slug
-            store.title = title or store.title
-            store.tagline = tagline or None
-            store.phone = phone or None
-            store.whatsapp = whatsapp or None
-            store.email = email or None
-            store.warehouse_id = online_wh.id
+                store.is_enabled = is_enabled
+                store.store_slug = slug
+                store.title = title or store.title
+                store.tagline = tagline or None
+                store.phone = phone or None
+                store.whatsapp = whatsapp or None
+                store.email = email or None
+                store.warehouse_id = online_wh.id
 
-            min_raw = (request.form.get('min_order_amount') or '').strip()
-            if min_raw:
-                store.min_order_amount = Decimal(min_raw)
-            else:
-                store.min_order_amount = None
-            store.delivery_note = (request.form.get('delivery_note') or '').strip() or None
+                min_raw = (request.form.get('min_order_amount') or '').strip()
+                if min_raw:
+                    store.min_order_amount = Decimal(min_raw)
+                else:
+                    store.min_order_amount = None
+                store.delivery_note = (request.form.get('delivery_note') or '').strip() or None
 
-            store.meta_title = (request.form.get('meta_title') or '').strip() or None
-            store.meta_description = (request.form.get('meta_description') or '').strip() or None
-            store.meta_keywords = (request.form.get('meta_keywords') or '').strip() or None
-            store.meta_title_en = (request.form.get('meta_title_en') or '').strip() or None
-            store.meta_description_en = (request.form.get('meta_description_en') or '').strip() or None
-            store.return_policy_ar = (request.form.get('return_policy_ar') or '').strip() or None
-            store.return_policy_en = (request.form.get('return_policy_en') or '').strip() or None
-            store.notify_whatsapp_on_order = request.form.get('notify_whatsapp_on_order') == 'on'
-            store.notify_email_on_order = request.form.get('notify_email_on_order') == 'on'
+                store.meta_title = (request.form.get('meta_title') or '').strip() or None
+                store.meta_description = (request.form.get('meta_description') or '').strip() or None
+                store.meta_keywords = (request.form.get('meta_keywords') or '').strip() or None
+                store.meta_title_en = (request.form.get('meta_title_en') or '').strip() or None
+                store.meta_description_en = (request.form.get('meta_description_en') or '').strip() or None
+                store.return_policy_ar = (request.form.get('return_policy_ar') or '').strip() or None
+                store.return_policy_en = (request.form.get('return_policy_en') or '').strip() or None
+                store.notify_whatsapp_on_order = request.form.get('notify_whatsapp_on_order') == 'on'
+                store.notify_email_on_order = request.form.get('notify_email_on_order') == 'on'
 
-            threshold_raw = (request.form.get('low_stock_threshold') or '').strip()
-            store.low_stock_threshold = Decimal(threshold_raw) if threshold_raw else Decimal('5')
+                threshold_raw = (request.form.get('low_stock_threshold') or '').strip()
+                store.low_stock_threshold = Decimal(threshold_raw) if threshold_raw else Decimal('5')
 
-            subdomain_raw = (request.form.get('subdomain') or '').strip()
-            if subdomain_raw:
-                subdomain = StoreService.normalize_subdomain(subdomain_raw)
-                store.subdomain = StoreService.ensure_unique_subdomain(subdomain, tenant_id=tenant_id)
-            else:
-                store.subdomain = None
+                subdomain_raw = (request.form.get('subdomain') or '').strip()
+                if subdomain_raw:
+                    subdomain = StoreService.normalize_subdomain(subdomain_raw)
+                    store.subdomain = StoreService.ensure_unique_subdomain(subdomain, tenant_id=tenant_id)
+                else:
+                    store.subdomain = None
 
-            custom_domain = (request.form.get('custom_domain') or '').strip().lower()
-            if custom_domain:
-                clash = TenantStore.query.filter(
-                    TenantStore.custom_domain == custom_domain,
-                    TenantStore.tenant_id != tenant_id,
-                ).first()
-                if clash:
-                    raise ValueError('النطاق المخصص مستخدم من متجر آخر.')
-            store.custom_domain = custom_domain or None
+                custom_domain = (request.form.get('custom_domain') or '').strip().lower()
+                if custom_domain:
+                    clash = TenantStore.query.filter(
+                        TenantStore.custom_domain == custom_domain,
+                        TenantStore.tenant_id != tenant_id,
+                    ).first()
+                    if clash:
+                        raise ValueError('النطاق المخصص مستخدم من متجر آخر.')
+                store.custom_domain = custom_domain or None
 
-            logo_file = request.files.get('logo')
-            if logo_file and logo_file.filename:
-                logo_path = save_uploaded_file(logo_file, 'uploads/store_logos', {'png', 'jpg', 'jpeg', 'webp', 'gif'})
-                if logo_path:
-                    store.logo_path = logo_path
+                logo_file = request.files.get('logo')
+                if logo_file and logo_file.filename:
+                    logo_path = save_uploaded_file(logo_file, 'uploads/store_logos', {'png', 'jpg', 'jpeg', 'webp', 'gif'})
+                    if logo_path:
+                        store.logo_path = logo_path
 
-            db.session.commit()
-            LoggingCore.log_audit('update', 'tenant_stores', store.id)
+                LoggingCore.log_audit('update', 'tenant_stores', store.id)
             flash('تم حفظ إعدادات المتجر.', 'success')
             return redirect(url_for('store.admin_index'))
         except ValueError as exc:
-            db.session.rollback()
             current_app.logger.warning(f"ValueError in store settings: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
-            db.session.rollback()
             current_app.logger.error(f"Error saving store settings: {exc}")
             flash(ErrorMessages.action_failed('حفظ الإعدادات'), 'danger')
 
@@ -198,52 +197,50 @@ def admin_transfer():
 
     if request.method == 'POST':
         try:
-            direction = request.form.get('direction', 'to_online')
-            product_id = request.form.get('product_id', type=int)
-            source_id = request.form.get('source_warehouse_id', type=int)
-            quantity = request.form.get('quantity', type=float)
-            notes = (request.form.get('notes') or '').strip()
+            with atomic_transaction('stock_transfer'):
+                direction = request.form.get('direction', 'to_online')
+                product_id = request.form.get('product_id', type=int)
+                source_id = request.form.get('source_warehouse_id', type=int)
+                quantity = request.form.get('quantity', type=float)
+                notes = (request.form.get('notes') or '').strip()
 
-            if not product_id or not quantity or quantity <= 0:
-                raise ValueError('اختر منتجاً وكمية صحيحة.')
+                if not product_id or not quantity or quantity <= 0:
+                    raise ValueError('اختر منتجاً وكمية صحيحة.')
 
-            product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
-            if not product:
-                raise ValueError('المنتج غير موجود.')
+                product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
+                if not product:
+                    raise ValueError('المنتج غير موجود.')
 
-            if direction == 'to_online':
-                if not source_id:
-                    raise ValueError('اختر المستودع المصدر.')
-                if source_id not in [w.id for w in physical_warehouses]:
-                    raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
-                from_id, to_id = source_id, online_wh.id
-                label = notes or 'نشر للمتجر — تحويل إلى مستودع أونلاين'
-            else:
-                if not source_id:
-                    source_id = online_wh.id
-                if source_id not in [w.id for w in physical_warehouses] and source_id != online_wh.id:
-                    raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
-                from_id, to_id = online_wh.id, source_id
-                label = notes or 'سحب من المتجر — تحويل من مستودع أونلاين'
+                if direction == 'to_online':
+                    if not source_id:
+                        raise ValueError('اختر المستودع المصدر.')
+                    if source_id not in [w.id for w in physical_warehouses]:
+                        raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
+                    from_id, to_id = source_id, online_wh.id
+                    label = notes or 'نشر للمتجر — تحويل إلى مستودع أونلاين'
+                else:
+                    if not source_id:
+                        source_id = online_wh.id
+                    if source_id not in [w.id for w in physical_warehouses] and source_id != online_wh.id:
+                        raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
+                    from_id, to_id = online_wh.id, source_id
+                    label = notes or 'سحب من المتجر — تحويل من مستودع أونلاين'
 
-            StockService.transfer_stock(
-                product_id=product_id,
-                from_warehouse_id=from_id,
-                to_warehouse_id=to_id,
-                quantity=quantity,
-                notes=label,
-                user=current_user,
-            )
-            db.session.commit()
-            LoggingCore.log_audit('transfer', 'stock_movements', product_id)
+                StockService.transfer_stock(
+                    product_id=product_id,
+                    from_warehouse_id=from_id,
+                    to_warehouse_id=to_id,
+                    quantity=quantity,
+                    notes=label,
+                    user=current_user,
+                )
+                LoggingCore.log_audit('transfer', 'stock_movements', product_id)
             flash('تم تحويل المخزون بنجاح.', 'success')
             return redirect(url_for('store.admin_catalog'))
         except ValueError as exc:
-            db.session.rollback()
             current_app.logger.warning(f"ValueError in stock transfer: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
-            db.session.rollback()
             current_app.logger.error(f"Error transferring stock: {exc}")
             flash(ErrorMessages.action_failed('تحويل المخزون'), 'danger')
 
@@ -327,15 +324,14 @@ def admin_order_confirm(order_id):
         abort(404)
     mark_paid = request.form.get('mark_paid') == 'on'
     try:
-        StoreOrderService.confirm_order(sale, mark_paid=mark_paid)
-        LoggingCore.log_audit('confirm', 'store_orders', sale.id)
+        with atomic_transaction('order_confirm'):
+            StoreOrderService.confirm_order(sale, mark_paid=mark_paid)
+            LoggingCore.log_audit('confirm', 'store_orders', sale.id)
         flash(f'تم تأكيد الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
-        db.session.rollback()
         current_app.logger.warning(f"ValueError confirming order {order_id}: {exc}")
         flash(str(exc), 'warning')
     except Exception as exc:
-        db.session.rollback()
         current_app.logger.error(f"Error confirming order {order_id}: {exc}")
         flash(ErrorMessages.action_failed('تأكيد الطلب'), 'danger')
     return redirect(url_for('store.admin_order_detail', order_id=order_id))
@@ -350,15 +346,14 @@ def admin_order_cancel(order_id):
     if not sale:
         abort(404)
     try:
-        StoreOrderService.cancel_order(sale)
-        LoggingCore.log_audit('cancel', 'store_orders', sale.id)
+        with atomic_transaction('order_cancel'):
+            StoreOrderService.cancel_order(sale)
+            LoggingCore.log_audit('cancel', 'store_orders', sale.id)
         flash(f'تم إلغاء الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
-        db.session.rollback()
         current_app.logger.warning(f"ValueError cancelling order {order_id}: {exc}")
         flash(str(exc), 'warning')
     except Exception as exc:
-        db.session.rollback()
         current_app.logger.error(f"Error cancelling order {order_id}: {exc}")
         flash(ErrorMessages.action_failed('إلغاء الطلب'), 'danger')
     return redirect(url_for('store.admin_order_detail', order_id=order_id))
@@ -409,27 +404,27 @@ def admin_coupons():
     if request.method == 'POST':
         action = request.form.get('action', 'create')
         try:
-            if action == 'create':
-                StoreCouponService.create_coupon(tenant_id, {
-                    'code': request.form.get('code'),
-                    'description': request.form.get('description'),
-                    'discount_percent': request.form.get('discount_percent'),
-                    'discount_amount': request.form.get('discount_amount'),
-                    'min_order_amount': request.form.get('min_order_amount'),
-                    'max_uses': request.form.get('max_uses'),
-                    'is_active': request.form.get('is_active') == 'on',
-                })
-                flash('تم إنشاء الكوبون.', 'success')
-            elif action == 'toggle':
-                coupon_id = request.form.get('coupon_id', type=int)
-                enabled = request.form.get('enabled') == '1'
-                StoreCouponService.update_coupon(coupon_id, tenant_id, {'is_active': enabled})
-                flash('تم تحديث الكوبون.', 'success')
+            with atomic_transaction('coupon_operation'):
+                if action == 'create':
+                    StoreCouponService.create_coupon(tenant_id, {
+                        'code': request.form.get('code'),
+                        'description': request.form.get('description'),
+                        'discount_percent': request.form.get('discount_percent'),
+                        'discount_amount': request.form.get('discount_amount'),
+                        'min_order_amount': request.form.get('min_order_amount'),
+                        'max_uses': request.form.get('max_uses'),
+                        'is_active': request.form.get('is_active') == 'on',
+                    })
+                    flash('تم إنشاء الكوبون.', 'success')
+                elif action == 'toggle':
+                    coupon_id = request.form.get('coupon_id', type=int)
+                    enabled = request.form.get('enabled') == '1'
+                    StoreCouponService.update_coupon(coupon_id, tenant_id, {'is_active': enabled})
+                    flash('تم تحديث الكوبون.', 'success')
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in coupon operation: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
-            db.session.rollback()
             current_app.logger.error(f"Error in coupon operation: {exc}")
             flash(ErrorMessages.action_failed('العملية على الكوبون'), 'danger')
         return redirect(url_for('store.admin_coupons'))

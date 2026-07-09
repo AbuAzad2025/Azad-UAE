@@ -148,7 +148,10 @@ def create():
             
             exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             
-            amount = Decimal(str(request.form.get('amount')))
+            amount_str = request.form.get('amount')
+            if not amount_str:
+                raise ValueError('المبلغ مطلوب.')
+            amount = Decimal(str(amount_str))
             
             cheque_date_str = request.form.get('cheque_date')
             cheque_date_obj = None
@@ -158,65 +161,59 @@ def create():
                 except ValueError:
                     pass
 
-            expense = Expense(
-                tenant_id=tenant_id,
-                expense_number=expense_number,
-                category_id=request.form.get('category_id', type=int),
-                description=request.form.get('description'),
-                description_ar=request.form.get('description_ar'),
-                amount=amount,
-                currency=currency,
-                exchange_rate=exchange_rate,
-                amount_aed=amount * exchange_rate,
-                payment_method=request.form.get('payment_method'),
-                reference_number=request.form.get('reference_number'),
-                cheque_number=request.form.get('cheque_number'),
-                cheque_date=cheque_date_obj,
-                bank_name=request.form.get('bank_name'),
-                supplier_name=request.form.get('supplier_name'),
-                notes=request.form.get('notes'),
-                user_id=current_user.id,
-                branch_id=expense_branch_id
-            )
-            
-            db.session.add(expense)
-            db.session.flush()
-            
-            # Handle Cheque Creation
-            cheque = None
-            if expense.payment_method == 'cheque':
-                cheque_date_str = request.form.get('cheque_date')
-                cheque_date_val = datetime.strptime(cheque_date_str, '%Y-%m-%d').date() if cheque_date_str else datetime.now().date()
-                
-                cheque = Cheque(
-                    tenant_id=getattr(current_user, 'tenant_id', None),
-                    cheque_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
-                    cheque_bank_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
-                    cheque_type='outgoing',
-                    bank_name=expense.bank_name or 'Unknown',
-                    amount=expense.amount,
-                    currency=expense.currency,
-                    exchange_rate=expense.exchange_rate,
-                    amount_aed=expense.amount_aed,
-                    issue_date=datetime.now().date(),
-                    due_date=cheque_date_val,
-                    status='pending',
-                    payee_name=expense.supplier_name or 'Expense Payment',
-                    expense_id=expense.id,
-                    notes=expense.notes,
+            with atomic_transaction('expense_create'):
+                expense = Expense(
+                    tenant_id=tenant_id,
+                    expense_number=expense_number,
+                    category_id=request.form.get('category_id', type=int),
+                    description=request.form.get('description'),
+                    description_ar=request.form.get('description_ar'),
+                    amount=amount,
+                    currency=currency,
+                    exchange_rate=exchange_rate,
+                    amount_aed=amount * exchange_rate,
+                    payment_method=request.form.get('payment_method'),
+                    reference_number=request.form.get('reference_number'),
+                    cheque_number=request.form.get('cheque_number'),
+                    cheque_date=cheque_date_obj,
+                    bank_name=request.form.get('bank_name'),
+                    supplier_name=request.form.get('supplier_name'),
+                    notes=request.form.get('notes'),
                     user_id=current_user.id,
-                    branch_id=expense.branch_id,
+                    branch_id=expense_branch_id
                 )
-                db.session.add(cheque)
+                db.session.add(expense)
                 db.session.flush()
-            
-            try:
-                from utils.tenanting import get_active_tenant_id
-                GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user))
                 
+                cheque = None
+                if expense.payment_method == 'cheque':
+                    cheque_date_str = request.form.get('cheque_date')
+                    cheque_date_val = datetime.strptime(cheque_date_str, '%Y-%m-%d').date() if cheque_date_str else datetime.now().date()
+                    cheque = Cheque(
+                        tenant_id=getattr(current_user, 'tenant_id', None),
+                        cheque_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
+                        cheque_bank_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
+                        cheque_type='outgoing',
+                        bank_name=expense.bank_name or 'Unknown',
+                        amount=expense.amount,
+                        currency=expense.currency,
+                        exchange_rate=expense.exchange_rate,
+                        amount_aed=expense.amount_aed,
+                        issue_date=datetime.now().date(),
+                        due_date=cheque_date_val,
+                        status='pending',
+                        payee_name=expense.supplier_name or 'Expense Payment',
+                        expense_id=expense.id,
+                        notes=expense.notes,
+                        user_id=current_user.id,
+                        branch_id=expense.branch_id,
+                    )
+                    db.session.add(cheque)
+                    db.session.flush()
+                
+                GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user))
                 tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user)
                 lines = _build_expense_gl_lines(expense, tid)
-                
                 post_or_fail(
                     lines,
                     description=f'Expense {expense.expense_number}',
@@ -226,30 +223,16 @@ def create():
                     exchange_rate=expense.exchange_rate,
                     branch_id=expense.branch_id
                 )
-                
                 if cheque:
                     process_cheque_issue(cheque)
-                    
-            except Exception as e:
-                db.session.rollback()
-                flash(f'❌ فشل الترحيل المحاسبي: {str(e)}', 'danger')
-                try:
-                    from models import Tenant
-                    _dc = resolve_default_currency()
-                except Exception:
-                    _dc = get_system_default_currency()
-                return render_template('expenses/create.html',
-                                     categories=tenant_query(ExpenseCategory).filter_by(is_active=True).all(),
-                                     exchange_rates=CurrencyService.get_all_rates(_dc))
-            
-            with atomic_transaction('expense_create'):
-                db.session.flush()
             
             LoggingCore.log_audit('create', 'expenses', expense.id)
             
             flash('✅ تم إضافة المصروف بنجاح!', 'success')
             return redirect(url_for('expenses.view', id=expense.id))
         
+        except ValueError as e:
+            flash(f'❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة.', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
@@ -327,69 +310,64 @@ def edit(id):
                 default_currency = get_system_default_currency()
             
             new_category_id = request.form.get('category_id', type=int)
-            new_amount = Decimal(str(request.form.get('amount', 0)))
+            new_amount_str = request.form.get('amount')
+            if not new_amount_str:
+                raise ValueError('المبلغ مطلوب.')
+            new_amount = Decimal(str(new_amount_str))
             new_currency = (request.form.get('currency') or default_currency).strip()
             new_description = request.form.get('description', '').strip()
             new_supplier_name = request.form.get('supplier_name', '').strip()
             new_notes = request.form.get('notes', '').strip()
             
-            # الكشف عن تغيير الحقول المالية
             financial_change = (
                 new_amount != expense.amount or
                 new_currency != expense.currency or
                 new_category_id != expense.category_id
             )
             
-            if financial_change and expense.status == 'confirmed':
-                # عكس القيد المحاسبي القديم
-                from utils.gl_tenant import reverse_document_gl
-                reverse_document_gl(
-                    GLRef.EXPENSE, expense.id,
-                    f'Reverse Expense {expense.expense_number} (Edit)',
-                    tenant_id=expense.tenant_id,
-                )
-                expense.is_reversed = True
-                db.session.flush()
-
-            # تحديث الحقول
-            expense.category_id = new_category_id
-            expense.description = new_description
-            expense.description_ar = request.form.get('description_ar')
-            expense.amount = new_amount
-            expense.currency = new_currency
-            expense.supplier_name = new_supplier_name
-            expense.notes = new_notes
-            
-            # إعادة حساب المبلغ بالدرهم
-            exchange_rate = CurrencyService.get_exchange_rate(expense.currency)
-            expense.exchange_rate = exchange_rate
-            expense.amount_aed = new_amount * exchange_rate
-            
-            if financial_change and expense.status == 'confirmed':
-                # إعادة ترحيل القيد المحاسبي بالقيم الجديدة
-                from utils.tenanting import get_active_tenant_id
-                GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id(current_user))
-                
-                tid = expense.tenant_id or get_active_tenant_id(current_user)
-                lines = _build_expense_gl_lines(expense, tid)
-                from services.gl_posting import post_or_fail
-                post_or_fail(
-                    lines,
-                    description=f'Expense {expense.expense_number} (Amended)',
-                    reference_type=GLRef.EXPENSE,
-                    reference_id=expense.id,
-                    currency=expense.currency,
-                    exchange_rate=expense.exchange_rate,
-                    branch_id=expense.branch_id,
-                )
-            
             with atomic_transaction('expense_edit'):
-                db.session.flush()
+                expense.category_id = new_category_id
+                expense.description = new_description
+                expense.description_ar = request.form.get('description_ar')
+                expense.amount = new_amount
+                expense.currency = new_currency
+                expense.supplier_name = new_supplier_name
+                expense.notes = new_notes
+                
+                exchange_rate = CurrencyService.get_exchange_rate(expense.currency)
+                expense.exchange_rate = exchange_rate
+                expense.amount_aed = new_amount * exchange_rate
+                
+                if financial_change and expense.status == 'confirmed':
+                    from utils.gl_tenant import reverse_document_gl
+                    reverse_document_gl(
+                        GLRef.EXPENSE, expense.id,
+                        f'Reverse Expense {expense.expense_number} (Edit)',
+                        tenant_id=expense.tenant_id,
+                    )
+                    expense.is_reversed = True
+                    db.session.flush()
+                    
+                    GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id(current_user))
+                    tid = expense.tenant_id or get_active_tenant_id(current_user)
+                    lines = _build_expense_gl_lines(expense, tid)
+                    from services.gl_posting import post_or_fail
+                    post_or_fail(
+                        lines,
+                        description=f'Expense {expense.expense_number} (Amended)',
+                        reference_type=GLRef.EXPENSE,
+                        reference_id=expense.id,
+                        currency=expense.currency,
+                        exchange_rate=expense.exchange_rate,
+                        branch_id=expense.branch_id,
+                    )
             
             LoggingCore.log_audit('update', 'expenses', id)
             flash('✅ تم تحديث المصروف بنجاح!', 'success')
             return redirect(url_for('expenses.view', id=id))
         
+        except ValueError as e:
+            flash(f'❌ خطأ في البيانات: {str(e)}', 'danger')
         except Exception as e:
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
@@ -418,38 +396,29 @@ def delete(id):
         
     try:
         if has_links:
-            archive_service = ArchiveService()
-            archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات', commit=False)
-            
-            if cheque:
-                 archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف', commit=False)
-            
-            LoggingCore.log_audit('archive', 'expenses', id)
-            with atomic_transaction('expense_archive'):
-                db.session.flush()
+            with atomic_transaction('expense_archive_with_links'):
+                archive_service = ArchiveService()
+                archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات', commit=False)
+                if cheque:
+                    archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف', commit=False)
+                LoggingCore.log_audit('archive', 'expenses', id)
             flash(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)', 'warning')
             
         else:
-            # عكس القيود المحاسبية بدلاً من الحذف
-            from services.gl_service import GLService
-            GLService.reverse_entry(
-                reference_type=GLRef.EXPENSE,
-                reference_id=expense.id,
-                description=f'Reverse Expense {expense.expense_number} (Deleted)',
-                tenant_id=expense.tenant_id,
-            )
-
-            # 2. عكس/حذف الشيك إذا كان معلقاً
-            if cheque:
-                from services.cheque_service import process_cheque_cancel
-                process_cheque_cancel(cheque, reason=f'حذف المصروف {expense.expense_number}')
-                db.session.delete(cheque)
-                
-            # 3. حذف المصروف
-            db.session.delete(expense)
-            LoggingCore.log_audit('delete', 'expenses', id)
             with atomic_transaction('expense_delete'):
-                db.session.flush()
+                from services.gl_service import GLService
+                GLService.reverse_entry(
+                    reference_type=GLRef.EXPENSE,
+                    reference_id=expense.id,
+                    description=f'Reverse Expense {expense.expense_number} (Deleted)',
+                    tenant_id=expense.tenant_id,
+                )
+                if cheque:
+                    from services.cheque_service import process_cheque_cancel
+                    process_cheque_cancel(cheque, reason=f'حذف المصروف {expense.expense_number}')
+                    db.session.delete(cheque)
+                db.session.delete(expense)
+                LoggingCore.log_audit('delete', 'expenses', id)
             flash(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً', 'success')
             
         return redirect(url_for('expenses.index'))
@@ -477,21 +446,17 @@ def cancel(id):
 
         cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
 
-        # عكس القيد المحاسبي — إذا كان هناك شيك مرتبط، فـ process_cheque_cancel يتولى القيد
-        if cheque and cheque.status not in ('cancelled',):
-            from services.cheque_service import process_cheque_cancel
-            process_cheque_cancel(cheque, reason=f'إلغاء المصروف {expense.expense_number}', create_gl=True)
-        else:
-            reverse_document_gl(
-                GLRef.EXPENSE, expense.id,
-                f'Cancel Expense {expense.expense_number}',
-                tenant_id=getattr(expense, 'tenant_id', None),
-            )
-
-        expense.is_reversed = True
-
         with atomic_transaction('expense_cancel'):
-            db.session.flush()
+            if cheque and cheque.status not in ('cancelled',):
+                from services.cheque_service import process_cheque_cancel
+                process_cheque_cancel(cheque, reason=f'إلغاء المصروف {expense.expense_number}', create_gl=True)
+            else:
+                reverse_document_gl(
+                    GLRef.EXPENSE, expense.id,
+                    f'Cancel Expense {expense.expense_number}',
+                    tenant_id=getattr(expense, 'tenant_id', None),
+                )
+            expense.is_reversed = True
         LoggingCore.log_audit('cancel', 'expenses', id)
         flash(f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.', 'success')
     except Exception as e:
@@ -544,7 +509,7 @@ def create_category():
     try:
         # دعم JSON و Form Data
         if request.is_json:
-            data = request.get_json()
+            data = request.get_json(silent=True) or {}
         else:
             data = request.form
         
@@ -644,11 +609,12 @@ def archive(id):
         return render_template('errors/403.html'), 403
     
     try:
-        archive_service = ArchiveService()
-        archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف')
-        LoggingCore.log_audit('archive', 'expenses', expense.id)
-    except Exception as e:
-        db.session.rollback()
+        with atomic_transaction('expense_archive'):
+            archive_service = ArchiveService()
+            archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف')
+            LoggingCore.log_audit('archive', 'expenses', expense.id)
+    except Exception:
+        pass
     
     return redirect(url_for('expenses.index'))
 

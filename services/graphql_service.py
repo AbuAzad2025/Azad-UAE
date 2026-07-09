@@ -3,6 +3,7 @@ from flask_login import current_user
 
 from models import Sale, Customer, Product, Payment
 from extensions import db
+from utils.db_safety import atomic_transaction
 from utils.tenanting import tenant_query, assign_tenant_id
 
 
@@ -161,7 +162,7 @@ class CreateSale(graphene.Mutation):
         assign_tenant_id(sale)
         db.session.add(sale)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

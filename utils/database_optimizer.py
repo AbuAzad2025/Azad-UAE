@@ -26,7 +26,7 @@ class DatabaseOptimizer:
         try:
             if 'postgresql' in str(db.engine.url):
                 db.session.execute(text('ANALYZE'))
-                db.session.commit()
+                db.session.flush()
             logger.info("✅ Database tables analyzed")
             return {'success': True}
         except Exception as e:

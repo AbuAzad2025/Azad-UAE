@@ -225,12 +225,13 @@ def send_abandoned_cart_reminders():
 
     for ac in first_reminder:
         try:
-            store = StoreService.get_tenant_store(ac.tenant_id)
-            if not store or not store.email:
-                continue
-            ac.reminder_sent_at = now
-            ac.reminder_count = (ac.reminder_count or 0) + 1
-            db.session.commit()
+            with atomic_transaction('abandoned_cart_first_reminder'):
+                store = StoreService.get_tenant_store(ac.tenant_id)
+                if not store or not store.email:
+                    continue
+                ac.reminder_sent_at = now
+                ac.reminder_count = (ac.reminder_count or 0) + 1
+                db.session.flush()
         except Exception:
             db.session.rollback()
 
@@ -243,12 +244,13 @@ def send_abandoned_cart_reminders():
 
     for ac in second_reminder:
         try:
-            store = StoreService.get_tenant_store(ac.tenant_id)
-            if not store or not store.email:
-                continue
-            ac.reminder_sent_at = now
-            ac.reminder_count = (ac.reminder_count or 0) + 1
-            db.session.commit()
+            with atomic_transaction('abandoned_cart_second_reminder'):
+                store = StoreService.get_tenant_store(ac.tenant_id)
+                if not store or not store.email:
+                    continue
+                ac.reminder_sent_at = now
+                ac.reminder_count = (ac.reminder_count or 0) + 1
+                db.session.flush()
         except Exception:
             db.session.rollback()
 

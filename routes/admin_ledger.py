@@ -13,6 +13,7 @@ from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query, active_tenant_id
 from utils.tenanting import tenant_query, assert_tenant_record
+from utils.db_safety import atomic_transaction
 
 admin_ledger_bp = Blueprint('admin_ledger', __name__, url_prefix='/admin/ledger')
 
@@ -159,15 +160,13 @@ def add_account():
                 description=description
             )
             
-            db.session.add(account)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'gl_accounts', account.id)
+            with atomic_transaction('add_gl_account'):
+                db.session.add(account)
+                LoggingCore.log_audit('create', 'gl_accounts', account.id)
             flash(f'✅ تم إنشاء الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('admin_ledger.accounts_management'))
             
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in admin ledger operation: {e}")
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
@@ -213,14 +212,13 @@ def edit_account(id):
             else:
                 account.level = 0
             
-            db.session.commit()
-            
-            LoggingCore.log_audit('update', 'gl_accounts', account.id)
+            with atomic_transaction('edit_gl_account'):
+                db.session.flush()
+                LoggingCore.log_audit('update', 'gl_accounts', account.id)
             flash(f'✅ تم تحديث الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('admin_ledger.accounts_management'))
             
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in admin ledger operation: {e}")
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
@@ -248,14 +246,12 @@ def delete_account(id):
             flash('❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به', 'danger')
             return redirect(url_for('admin_ledger.accounts_management'))
         
-        db.session.delete(account)
-        db.session.commit()
-        
-        LoggingCore.log_audit('delete', 'gl_accounts', id)
+        with atomic_transaction('delete_gl_account'):
+            db.session.delete(account)
+            LoggingCore.log_audit('delete', 'gl_accounts', id)
         flash(f'✅ تم حذف الحساب {account.full_name} بنجاح', 'success')
         
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('admin_ledger.accounts_management'))
@@ -298,14 +294,12 @@ def reverse_journal(id):
     entry = _entries().filter_by(id=id).first_or_404()
     
     try:
-        reversed_entry = entry.reverse_entry()
-        db.session.commit()
-        
-        LoggingCore.log_audit('reverse', 'gl_journal_entries', id)
+        with atomic_transaction('reverse_journal'):
+            reversed_entry = entry.reverse_entry()
+            LoggingCore.log_audit('reverse', 'gl_journal_entries', id)
         flash(f'✅ تم عكس القيد {entry.entry_number} بنجاح', 'success')
         
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('admin_ledger.view_journal', id=id))

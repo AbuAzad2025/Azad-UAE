@@ -5,6 +5,7 @@ import re
 from decimal import Decimal
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Product, Tenant, TenantStore, Warehouse, Branch
 from models.system_settings import SystemSettings
 from utils.branching import get_branch_stock_map, get_accessible_warehouses
@@ -221,7 +222,7 @@ class StoreService:
     def set_stores_globally_enabled(enabled: bool):
         settings = SystemSettings.get_current()
         settings.enable_ecommerce = bool(enabled)
-        db.session.commit()
+        db.session.flush()
 
     @staticmethod
     def is_platform_locked(store: 'TenantStore | None') -> bool:
@@ -237,11 +238,7 @@ class StoreService:
     def set_platform_disabled(store: 'TenantStore', disabled: bool):
         """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
         store.platform_disabled = bool(disabled)
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        db.session.flush()
 
         return store
 

@@ -318,7 +318,7 @@ class FixedAsset(db.Model):
             tenant_id=getattr(self, 'tenant_id', None),
         )
         
-        db.session.commit()
+        db.session.flush()
 
 class DepreciationSchedule(db.Model):
     """

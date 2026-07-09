@@ -107,7 +107,7 @@ def _log_ai_error(error_type: str, message: str, endpoint: str = "ai_chat",
             timestamp=datetime.utcnow(),
         )
         db.session.add(log)
-        db.session.commit()
+        db.session.flush()
     except Exception as exc:
         db.session.rollback()
         logger.warning('AI error log failed (%s): %s', error_type, exc)
@@ -175,7 +175,7 @@ class ActionDispatcher:
                     customer_type=args.get("type", "regular"),
                 )
                 db.session.add(customer)
-                db.session.commit()
+                db.session.flush()
                 _audit("create", "Customer", customer.id, {"name": name})
                 return ActionResult(True, f"تم إنشاء العميل {name} بنجاح",
                                     {"id": customer.id, "name": name},
@@ -247,7 +247,7 @@ class ActionDispatcher:
                     is_active=True,
                 )
                 db.session.add(product)
-                db.session.commit()
+                db.session.flush()
                 _audit("create", "Product", product.id, {"name": name})
                 return ActionResult(True, f"تم إنشاء المنتج {name} بنجاح",
                                     {"id": product.id, "name": name},
@@ -391,7 +391,7 @@ class ActionDispatcher:
                     branch_id=args.get("branch_id"),
                 )
                 db.session.add(expense)
-                db.session.commit()
+                db.session.flush()
                 _audit("create", "Expense", expense.id,
                        {"description": description, "amount": float(amount)})
                 return ActionResult(True,
@@ -420,7 +420,7 @@ class ActionDispatcher:
                     tax_number=args.get("tax_number", ""),
                 )
                 db.session.add(supplier)
-                db.session.commit()
+                db.session.flush()
                 _audit("create", "Supplier", supplier.id, {"name": name})
                 return ActionResult(True, f"تم إنشاء المورد {name} بنجاح",
                                     {"id": supplier.id, "name": name},
@@ -550,7 +550,7 @@ class ActionDispatcher:
                     is_active=True,
                 )
                 db.session.add(user)
-                db.session.commit()
+                db.session.flush()
                 _audit("create", "User", user.id, {"username": username})
                 return ActionResult(True, f"تم إنشاء المستخدم {username} بنجاح",
                                     {"id": user.id, "username": username},

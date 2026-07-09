@@ -11,6 +11,7 @@ from models import PaymentVault, PaymentTransaction, PaymentLog, Donation, CardP
 from services.nowpayments_service import NOWPaymentsService
 from services.logging_core import LoggingCore
 from utils.decorators import owner_only
+from utils.db_safety import atomic_transaction
 import secrets
 import string
 import logging
@@ -213,11 +214,11 @@ def _validate_api_key(*, required_scope: str = 'write') -> tuple | None:
 
     # Track usage
     try:
-        api_key.last_used = datetime.now(timezone.utc)
-        api_key.usage_count = (api_key.usage_count or 0) + 1
-        db.session.commit()
+        with atomic_transaction('api_key_usage_tracking'):
+            api_key.last_used = datetime.now(timezone.utc)
+            api_key.usage_count = (api_key.usage_count or 0) + 1
     except Exception:
-        db.session.rollback()
+        pass
 
     return None
 
@@ -272,8 +273,8 @@ def unlock_vault():
             vault.nowpayments_ipn_secret = ""
             vault.bitcoin_address = ""
             vault.is_locked = False
-            db.session.add(vault)
-            db.session.commit()
+            with atomic_transaction('vault_creation'):
+                db.session.add(vault)
             
             # تسجيل العملية
             PaymentLog.log_action(
@@ -473,17 +474,17 @@ def settings():
         vault.max_failed_attempts = _as_int(request.form.get('max_failed_attempts'), vault.max_failed_attempts)
         
         vault.updated_at = datetime.utcnow()
-        db.session.commit()
         
         # تسجيل العملية
-        PaymentLog.log_action(
-            vault_id=vault.id,
-            action='settings_updated',
-            description='تم تحديث إعدادات الخزينة',
-            level='info',
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
+        with atomic_transaction('vault_settings_update'):
+            PaymentLog.log_action(
+                vault_id=vault.id,
+                action='settings_updated',
+                description='تم تحديث إعدادات الخزينة',
+                level='info',
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
         
         flash('✅ تم تحديث إعدادات الخزينة بنجاح!', 'success')
         return redirect(url_for('payment_vault.settings'))
@@ -628,8 +629,8 @@ def create_package():
             max_branches=_as_int(request.form.get('max_branches'), 1),
         )
 
-        db.session.add(package)
-        db.session.commit()
+        with atomic_transaction('package_creation'):
+            db.session.add(package)
 
         LoggingCore.log_audit(
             action='create',
@@ -640,7 +641,6 @@ def create_package():
 
         flash('✅ تم إنشاء الباقة بنجاح', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ أثناء إنشاء الباقة: {str(e)}', 'danger')
 
     return redirect(url_for('payment_vault.packages_management'))
@@ -696,19 +696,17 @@ def edit_package(package_id):
             features = request.form.get('features', '').strip()
             package.features = features.split('\n') if features else []
             
-            db.session.commit()
-            
-            LoggingCore.log_audit(
-                action='update',
-                table_name='packages',
-                record_id=package.id,
-                changes={'updated': 'Package updated'}
-            )
+            with atomic_transaction('package_update'):
+                LoggingCore.log_audit(
+                    action='update',
+                    table_name='packages',
+                    record_id=package.id,
+                    changes={'updated': 'Package updated'}
+                )
             
             flash('✅ تم تحديث الباقة بنجاح!', 'success')
             return redirect(url_for('payment_vault.packages_management'))
         except Exception as e:
-            db.session.rollback()
             flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return render_template('payment_vault/edit_package.html', package=package)
@@ -725,19 +723,17 @@ def delete_package(package_id):
     package = Package.query.get_or_404(package_id)
     
     try:
-        db.session.delete(package)
-        db.session.commit()
-        
-        LoggingCore.log_audit(
-            action='delete',
-            table_name='packages',
-            record_id=package_id,
-            changes={'deleted': f'Package {package.name_ar} deleted'}
-        )
+        with atomic_transaction('package_deletion'):
+            db.session.delete(package)
+            LoggingCore.log_audit(
+                action='delete',
+                table_name='packages',
+                record_id=package_id,
+                changes={'deleted': f'Package {package.name_ar} deleted'}
+            )
         
         return jsonify({'success': True, 'message': 'تم حذف الباقة بنجاح!'})
     except Exception:
-        db.session.rollback()
         logger.exception('Payment vault package delete failed')
         return jsonify({'success': False, 'error': 'Could not delete package at this time'}), 400
 
@@ -932,18 +928,16 @@ def process_payment():
             
             # تشفير البيانات
             if card_payment.encrypt_card_data(card_number, cvv, expiry):
-                db.session.add(card_payment)
-                db.session.commit()
-                
-                # تسجيل
-                PaymentLog.log_action(
-                    vault_id=_get_vault_for_current_tenant().id if _get_vault_for_current_tenant() else None,
-                    action='card_payment_received',
-                    description=f'دفع بالبطاقة: {card_payment.get_card_display()} - ${amount}',
-                    level='info',
-                    ip_address=request.remote_addr,
-                    user_agent=request.headers.get('User-Agent')
-                )
+                with atomic_transaction('card_payment_storage'):
+                    db.session.add(card_payment)
+                    PaymentLog.log_action(
+                        vault_id=_get_vault_for_current_tenant().id if _get_vault_for_current_tenant() else None,
+                        action='card_payment_received',
+                        description=f'دفع بالبطاقة: {card_payment.get_card_display()} - ${amount}',
+                        level='info',
+                        ip_address=request.remote_addr,
+                        user_agent=request.headers.get('User-Agent')
+                    )
                 
                 return jsonify({
                     'success': True,
@@ -996,17 +990,17 @@ def change_password():
         # تحديث كلمة المرور
         vault.set_vault_password(new_password)
         vault.updated_at = datetime.utcnow()
-        db.session.commit()
         
         # تسجيل العملية
-        PaymentLog.log_action(
-            vault_id=vault.id,
-            action='password_changed',
-            description='تم تغيير كلمة مرور الخزينة',
-            level='info',
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
+        with atomic_transaction('vault_password_change'):
+            PaymentLog.log_action(
+                vault_id=vault.id,
+                action='password_changed',
+                description='تم تغيير كلمة مرور الخزينة',
+                level='info',
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
         
         flash('✅ تم تغيير كلمة مرور الخزينة بنجاح!', 'success')
         return redirect(url_for('payment_vault.dashboard'))
@@ -1037,7 +1031,7 @@ def api_create_purchase():
         if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
-        data = request.get_json()
+        data = request.get_json(silent=True)
         
         # التحقق من البيانات المطلوبة
         required_fields = ['package_id', 'customer_name', 'customer_email', 'payment_method', 'amount_paid']
@@ -1088,8 +1082,8 @@ def api_create_purchase():
             notes=sanitize(data.get('notes', ''), 500)
         )
         
-        db.session.add(purchase)
-        db.session.commit()
+        with atomic_transaction('api_purchase_creation'):
+            db.session.add(purchase)
         
         # تحويل إلى Bitcoin عبر NOWPayments (إلا إذا كان تحويل بنكي)
         payment_result = {'success': False}
@@ -1124,7 +1118,6 @@ def api_create_purchase():
                     'original_method': purchase.payment_method,
                     'converted_to_crypto': True
                 }
-                db.session.commit()
         else:
             # تحويل بنكي - لا يتم تحويله لـ Bitcoin
             purchase.payment_details = {
@@ -1132,7 +1125,6 @@ def api_create_purchase():
                 'converted_to_crypto': False,
                 'note': 'يتطلب تواصل مباشر للحصول على تفاصيل الحساب البنكي'
             }
-            db.session.commit()
         
         # تسجيل في جدول التبرعات للتوافق
         donation = Donation.query.filter_by(
@@ -1154,16 +1146,14 @@ def api_create_purchase():
                 ip_address=request.remote_addr,
                 user_agent=request.headers.get('User-Agent', '')[:500]
             )
-            db.session.add(donation)
-            db.session.commit()
-        
-        # تسجيل في الخزينة
-        LoggingCore.log_audit(
-            action=f'purchase_created: {package.name_ar} - ${purchase.amount_paid}',
-            table_name='package_purchases',
-            record_id=purchase.id,
-            changes={'customer': customer_name, 'package': package.name_ar, 'amount': purchase.amount_paid}
-        )
+            with atomic_transaction('api_purchase_finalize'):
+                db.session.add(donation)
+                LoggingCore.log_audit(
+                    action=f'purchase_created: {package.name_ar} - ${purchase.amount_paid}',
+                    table_name='package_purchases',
+                    record_id=purchase.id,
+                    changes={'customer': customer_name, 'package': package.name_ar, 'amount': purchase.amount_paid}
+                )
         
         # الرد مع معلومات الدفع
         response_data = {
@@ -1188,7 +1178,6 @@ def api_create_purchase():
         return jsonify(response_data), 201
         
     except Exception:
-        db.session.rollback()
         logger.exception('Payment vault purchase API failed')
         return jsonify({'success': False, 'error': 'Could not create purchase at this time'}), 500
 
@@ -1214,7 +1203,7 @@ def api_create_donation():
         if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
-        data = request.get_json()
+        data = request.get_json(silent=True)
         
         if not data.get('amount') or not data.get('payment_method'):
             return jsonify({'success': False, 'error': 'المبلغ وطريقة الدفع مطلوبة'}), 400
@@ -1254,8 +1243,8 @@ def api_create_donation():
             user_agent=request.headers.get('User-Agent', '')[:500]
         )
         
-        db.session.add(donation)
-        db.session.commit()
+        with atomic_transaction('api_donation_creation'):
+            db.session.add(donation)
         
         # إنشاء دفعة عبر NOWPayments
         nowpayments = NOWPaymentsService()
@@ -1282,14 +1271,14 @@ def api_create_donation():
             donation.wallet_address = payment_result.get('pay_address')
             donation.gateway_transaction_id = payment_result.get('payment_id')
             donation.gateway_name = 'nowpayments'
-            db.session.commit()
         
-        LoggingCore.log_audit(
-            action=f'donation_created: ${donation.amount_usd}',
-            table_name='donations',
-            record_id=donation.id,
-            changes={'amount': float(donation.amount_usd), 'method': donation.payment_method}
-        )
+        with atomic_transaction('api_donation_finalize'):
+            LoggingCore.log_audit(
+                action=f'donation_created: ${donation.amount_usd}',
+                table_name='donations',
+                record_id=donation.id,
+                changes={'amount': float(donation.amount_usd), 'method': donation.payment_method}
+            )
         
         # الرد مع معلومات الدفع
         response_data = {
@@ -1313,7 +1302,6 @@ def api_create_donation():
         return jsonify(response_data), 201
         
     except Exception:
-        db.session.rollback()
         logger.exception('Payment vault donation API failed')
         return jsonify({'success': False, 'error': 'Could not create donation at this time'}), 500
 
@@ -1396,10 +1384,10 @@ def activate_purchase(id):
             donation.status = 'completed'
             donation.completed_at = datetime.now(timezone.utc)
         
-        db.session.commit()
+        with atomic_transaction('purchase_activate'):
+            pass  # التغييرات تمت مباشرة
         flash('✅ تم تفعيل الباقة', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('payment_vault.purchase_detail', id=id))
@@ -1431,11 +1419,11 @@ def toggle_package_status(package_id):
     package.is_active = not package.is_active
     
     try:
-        db.session.commit()
+        with atomic_transaction('package_toggle'):
+            pass  # التغييرات تمت مباشرة
         status_text = 'تم تنشيط' if package.is_active else 'تم تعطيل'
         return jsonify({'success': True, 'message': f'{status_text} الباقة {package.name_ar}'})
     except Exception:
-        db.session.rollback()
         logger.exception('Payment vault package toggle failed')
         return jsonify({'success': False, 'error': 'Could not update package at this time'}), 500
 
@@ -1466,17 +1454,15 @@ def approve_donation(donation_id):
         donation.completed_at = datetime.now(timezone.utc)
         from services.donation_gl_service import DonationGLService
         DonationGLService.post_completed_donation(donation)
-        db.session.commit()
-        
-        LoggingCore.log_audit(
-            action=f'donation_approved: ${donation.amount_usd}',
-            table_name='donations',
-            record_id=donation.id
-        )
+        with atomic_transaction('donation_approve'):
+            LoggingCore.log_audit(
+                action=f'donation_approved: ${donation.amount_usd}',
+                table_name='donations',
+                record_id=donation.id
+            )
         
         flash('✅ تم قبول التبرع', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('payment_vault.donations'))
@@ -1491,17 +1477,15 @@ def reject_donation(donation_id):
 
     try:
         donation.status = 'failed'
-        db.session.commit()
-        
-        LoggingCore.log_audit(
-            action=f'donation_rejected: ${donation.amount_usd}',
-            table_name='donations',
-            record_id=donation.id
-        )
+        with atomic_transaction('donation_reject'):
+            LoggingCore.log_audit(
+                action=f'donation_rejected: ${donation.amount_usd}',
+                table_name='donations',
+                record_id=donation.id
+            )
         
         flash('✅ تم رفض التبرع', 'warning')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('payment_vault.donations'))
@@ -1679,7 +1663,7 @@ def nowpayments_webhook():
         
         # الحصول على البيانات
         payload = request.data
-        data = request.get_json()
+        data = request.get_json(silent=True)
         signature = request.headers.get('x-nowpayments-sig', '')
 
         stale = _reject_stale_webhook_timestamp(data)
@@ -1741,7 +1725,7 @@ def stripe_webhook():
         
         # الحصول على البيانات
         payload = request.data
-        data = request.get_json()
+        data = request.get_json(silent=True)
         signature = request.headers.get('Stripe-Signature', '')
 
         stale = _reject_stale_webhook_timestamp(data)

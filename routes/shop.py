@@ -31,6 +31,7 @@ from services.store_payment_method_service import StorePaymentMethodService
 
 from services.store_service import StoreService
 
+from utils.db_safety import atomic_transaction
 from utils.shop_i18n import shop_lang, t
 from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
 
@@ -212,7 +213,7 @@ def _track_cart_activity(store, account, session):
             cart_data=cart_json,
         )
         db.session.add(ac)
-    db.session.commit()
+    db.session.flush()
 
 
 @shop_bp.route('/<slug>/lang/<lang_code>')
@@ -249,9 +250,9 @@ def wishlist_add(slug, product_id):
     if request.content_type and 'application/json' in request.content_type:
         existing = ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).first()
         if not existing:
-            wl = ShopWishlist(tenant_id=store.tenant_id, account_id=account.id, product_id=product_id)
-            db.session.add(wl)
-            db.session.commit()
+            with atomic_transaction('wishlist_add'):
+                wl = ShopWishlist(tenant_id=store.tenant_id, account_id=account.id, product_id=product_id)
+                db.session.add(wl)
         count = ShopWishlist.query.filter_by(account_id=account.id).count()
         return jsonify({'success': True, 'wishlisted': True, 'count': count})
     return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
@@ -263,8 +264,8 @@ def wishlist_remove(slug, product_id):
     account = _shop_account(store)
     if not account:
         return jsonify({'success': False}), 401
-    ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).delete()
-    db.session.commit()
+    with atomic_transaction('wishlist_remove'):
+        ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).delete()
     if request.content_type and 'application/json' in request.content_type:
         return jsonify({'success': True, 'wishlisted': False})
     return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
@@ -707,8 +708,8 @@ def add_review(slug, product_id):
         comment=comment or None,
         is_approved=False,
     )
-    db.session.add(review)
-    db.session.commit()
+    with atomic_transaction('review_add'):
+        db.session.add(review)
     flash(t('review_submitted', shop_lang()), 'success')
     return redirect(url_for('shop.product_detail', slug=store.store_slug, product_id=product_id))
 
@@ -726,9 +727,9 @@ def stock_alert(slug, product_id):
     if existing:
         flash(t('alert_exists', shop_lang()), 'info')
     else:
-        alert = ShopStockAlert(tenant_id=store.tenant_id, product_id=product_id, email=email)
-        db.session.add(alert)
-        db.session.commit()
+        with atomic_transaction('stock_alert'):
+            alert = ShopStockAlert(tenant_id=store.tenant_id, product_id=product_id, email=email)
+            db.session.add(alert)
         flash(t('alert_created', shop_lang()), 'success')
     return redirect(url_for('shop.product_detail', slug=store.store_slug, product_id=product_id))
 
@@ -745,9 +746,9 @@ def newsletter_subscribe(slug):
     from models.shop_newsletter import ShopNewsletter
     existing = ShopNewsletter.query.filter_by(tenant_id=store.tenant_id, email=email).first()
     if not existing:
-        sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
-        db.session.add(sub)
-        db.session.commit()
+        with atomic_transaction('newsletter_subscribe'):
+            sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
+            db.session.add(sub)
     flash(t('newsletter_subscribed', shop_lang()), 'success')
     return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
 
@@ -1038,10 +1039,8 @@ def checkout(slug):
                 except ValueError as pe:
                     sale.payment_status = 'init_failed'
                     sale.notes = (sale.notes or '') + f'\n[فشل init الدفع الإلكتروني: {str(pe)}]'
-                    try:
-                        db.session.commit()
-                    except Exception:
-                        db.session.rollback()
+                    with atomic_transaction('checkout_payment_fail'):
+                        pass
                     token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
                     flash(str(pe) + ' — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً.', 'warning')
                     return redirect(url_for('shop.order_confirmation', slug=store.store_slug, token=token))
@@ -1051,14 +1050,9 @@ def checkout(slug):
             return redirect(url_for('shop.order_confirmation', slug=store.store_slug, token=token))
 
         except ValueError as exc:
-
-            db.session.rollback()
             flash(str(exc), 'danger')
 
         except Exception:
-
-            db.session.rollback()
-
             flash('تعذر إتمام الطلب. حاول مجدداً.' if ctx['lang'] == 'ar' else 'Could not place order. Try again.', 'danger')
 
 
@@ -1320,15 +1314,15 @@ def save_payment(slug):
     method_code = request.form.get('method_code', '').strip()
     label = (request.form.get('label') or '').strip() or method_code
     from models.shop_saved_payment import ShopSavedPayment
-    pm = ShopSavedPayment(
-        tenant_id=store.tenant_id,
-        account_id=account.id,
-        method_code=method_code,
-        label=label,
-        details='{}',
-    )
-    db.session.add(pm)
-    db.session.commit()
+    with atomic_transaction('save_payment'):
+        pm = ShopSavedPayment(
+            tenant_id=store.tenant_id,
+            account_id=account.id,
+            method_code=method_code,
+            label=label,
+            details='{}',
+        )
+        db.session.add(pm)
     flash(t('payment_saved', shop_lang()), 'success')
     return redirect(url_for('shop.saved_payments', slug=store.store_slug))
 
@@ -1341,8 +1335,8 @@ def delete_saved_payment(slug, payment_id):
         return jsonify({'success': False}), 401
     from models.shop_saved_payment import ShopSavedPayment
     pm = ShopSavedPayment.query.filter_by(id=payment_id, account_id=account.id).first_or_404()
-    db.session.delete(pm)
-    db.session.commit()
+    with atomic_transaction('delete_payment'):
+        db.session.delete(pm)
     flash(t('payment_deleted', shop_lang()), 'success')
     return redirect(url_for('shop.saved_payments', slug=store.store_slug))
 

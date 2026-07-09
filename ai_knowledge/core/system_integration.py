@@ -183,7 +183,7 @@ class SystemIntegrator:
             )
             
             db.session.add(customer)
-            db.session.commit()
+            db.session.flush()
             
             return {
                 'success': True,

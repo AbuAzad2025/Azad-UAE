@@ -25,6 +25,7 @@ from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
 from utils.tenanting import get_active_tenant_id
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from services.logging_core import LoggingCore
+from utils.db_safety import atomic_transaction
 from sqlalchemy import text, inspect
 import json
 import logging
@@ -734,14 +735,13 @@ def create_user():
             )
             enforce_company_user_tenant(user, role=role, is_owner=is_owner)
 
-            db.session.add(user)
-            db.session.commit()
+            with atomic_transaction('create_user'):
+                db.session.add(user)
             _invalidate_owner_changes()
             flash(f'تم إضافة المستخدم {username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
 
         except Exception as e:
-            db.session.rollback()
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.user_update_failed(str(e)), 'error')
             return render_template(
@@ -815,13 +815,13 @@ def edit_user(user_id):
 
             user.updated_by = current_user.id
 
-            db.session.commit()
+            with atomic_transaction('edit_user'):
+                pass
             _invalidate_owner_changes()
             flash(f'تم تحديث المستخدم {user.username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في تحديث المستخدم: {str(e)}', 'error')
 
     return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
@@ -881,14 +881,12 @@ def delete_user(user_id):
         return redirect(url_for('owner.users_list'))
 
     try:
-        # Soft delete - تعطيل بدلاً من الحذف
-        user.is_active = False
-        user.updated_by = current_user.id
-        db.session.commit()
+        with atomic_transaction('delete_user'):
+            user.is_active = False
+            user.updated_by = current_user.id
         _invalidate_owner_changes()
         flash(f'تم تعطيل المستخدم {user.username}', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'خطأ في حذف المستخدم: {str(e)}', 'error')
 
     return redirect(url_for('owner.users_list'))
@@ -1138,12 +1136,12 @@ def update_integration(service):
         integration.updated_by = current_user.id
         integration.updated_at = datetime.now(timezone.utc)
 
-        db.session.commit()
+        with atomic_transaction('update_integration'):
+            pass
         _invalidate_owner_changes()
         flash(f'✅ تم حفظ إعدادات {service} بنجاح!', 'success')
 
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في حفظ الإعدادات: {str(e)}', 'danger')
         current_app.logger.error(f"Error saving integration {service}: {e}")
 
@@ -1653,8 +1651,8 @@ def truncate_table():
         return redirect(url_for('owner.database_tools'))
 
     try:
-        db.session.execute(text(f"DELETE FROM {safe_table}"))
-        db.session.commit()
+        with atomic_transaction('truncate_table'):
+            db.session.execute(text(f"DELETE FROM {safe_table}"))
 
         LoggingCore.log_audit(
             'truncate_table',
@@ -1665,7 +1663,6 @@ def truncate_table():
 
         flash(f'✅ تم مسح جدول {safe_table} بنجاح', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
 
     return redirect(url_for('owner.database_tools'))
@@ -1743,11 +1740,11 @@ def update_row(table_name, row_id):
         params = dict(safe_updates)
         params['row_id'] = row_id
 
-        db.session.execute(
-            text(f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'),
-            params,
-        )
-        db.session.commit()
+        with atomic_transaction('update_row'):
+            db.session.execute(
+                text(f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'),
+                params,
+            )
 
         LoggingCore.log_audit(
             'update_row',
@@ -1757,7 +1754,6 @@ def update_row(table_name, row_id):
         )
         return jsonify({'success': True})
     except Exception:
-        db.session.rollback()
         current_app.logger.exception('Owner table row update failed')
         return jsonify({'success': False, 'error': 'تعذر تحديث السجل حالياً'}), 500
 
@@ -2132,13 +2128,13 @@ def company_info():
             except Exception as exc:
                 logger.debug("sync invoice from tenant: %s", exc)
 
-            db.session.commit()
+            with atomic_transaction('company_info'):
+                pass
             _invalidate_owner_changes()
             flash('تم حفظ معلومات الشركة بنجاح', 'success')
             return redirect(url_for('owner.company_info'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ المعلومات: {str(e)}', 'error')
 
     return render_template('owner/company_info.html', tenant=tenant)
@@ -2177,12 +2173,12 @@ def developer_settings():
             settings.set_custom_setting('developer_whatsapp', request.form.get('developer_whatsapp', '').strip())
             settings.set_custom_setting('developer_logo', request.form.get('developer_logo', '').strip())
             settings.updated_by = current_user.id
-            db.session.commit()
+            with atomic_transaction('developer_settings'):
+                pass
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات الشركة المطورة بنجاح', 'success')
             return redirect(url_for('owner.developer_settings'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في الحفظ: {str(e)}', 'error')
     return render_template('owner/developer_settings.html', dev=dev, config=current_app.config)
 
@@ -2251,13 +2247,13 @@ def system_config():
 
             settings.updated_by = current_user.id
 
-            db.session.commit()
+            with atomic_transaction('system_config'):
+                pass
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات النظام بنجاح', 'success')
             return redirect(url_for('owner.system_config'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
 
     return render_template('owner/system_config.html', settings=settings)
@@ -2325,9 +2321,9 @@ def tenant_ai_toggle(tenant_id):
     if ai_access_level not in ('basic', 'advanced', 'execute'):
         ai_access_level = 'execute'
     try:
-        tenant.enable_ai = enabled
-        ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
-        db.session.commit()
+        with atomic_transaction('tenant_ai_toggle'):
+            tenant.enable_ai = enabled
+            ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
         LoggingCore.log_audit(
             'platform_tenant_ai_enable' if enabled else 'platform_tenant_ai_disable',
             'tenants',
@@ -2340,7 +2336,6 @@ def tenant_ai_toggle(tenant_id):
             'success',
         )
     except Exception as exc:
-        db.session.rollback()
         flash(f'تعذر تحديث إعداد AI: {exc}', 'danger')
     return redirect(url_for('owner.tenant_ai'))
 
@@ -2599,13 +2594,13 @@ def invoice_settings():
 
             settings.updated_by = current_user.id
 
-            db.session.commit()
+            with atomic_transaction('invoice_settings'):
+                pass
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات الترويسات بنجاح', 'success')
             return redirect(url_for('owner.invoice_settings'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
 
     return render_template('owner/invoice_settings.html', settings=settings)
@@ -2955,10 +2950,14 @@ def security_alerts():
 @owner_required
 def resolve_alert(id):
     alert = SecurityAlert.query.get_or_404(id)
-    alert.is_resolved = True
-    alert.resolved_at = datetime.now(timezone.utc)
-    alert.resolved_by = current_user.id
-    db.session.commit()
+    try:
+        with atomic_transaction('resolve_alert'):
+            alert.is_resolved = True
+            alert.resolved_at = datetime.now(timezone.utc)
+            alert.resolved_by = current_user.id
+    except Exception as e:
+        flash(f'❌ خطأ في حل التنبيه: {str(e)}', 'danger')
+        return redirect(url_for('owner.security_alerts'))
     _invalidate_owner_changes()
     flash('✅ تم حل التنبيه الأمني', 'success')
     return redirect(url_for('owner.security_alerts'))
@@ -2974,9 +2973,13 @@ def ip_whitelist():
         settings = SystemSettings.get_current()
         whitelist = settings.owner_whitelist_ips or []
 
-        whitelist.append({'ip': ip_address, 'description': description})
-        settings.owner_whitelist_ips = whitelist
-        db.session.commit()
+        try:
+            with atomic_transaction('add_ip_whitelist'):
+                whitelist.append({'ip': ip_address, 'description': description})
+                settings.owner_whitelist_ips = whitelist
+        except Exception as e:
+            flash(f'❌ خطأ في إضافة IP: {str(e)}', 'danger')
+            return redirect(url_for('owner.ip_whitelist'))
         _invalidate_owner_changes()
         flash('✅ تم إضافة IP للقائمة البيضاء', 'success')
         return redirect(url_for('owner.ip_whitelist'))
@@ -2994,9 +2997,13 @@ def delete_ip_whitelist(index):
     whitelist = settings.owner_whitelist_ips or []
 
     if 0 <= index < len(whitelist):
-        whitelist.pop(index)
-        settings.owner_whitelist_ips = whitelist
-        db.session.commit()
+        try:
+            with atomic_transaction('delete_ip_whitelist'):
+                whitelist.pop(index)
+                settings.owner_whitelist_ips = whitelist
+        except Exception as e:
+            flash(f'❌ خطأ في حذف IP: {str(e)}', 'danger')
+            return redirect(url_for('owner.ip_whitelist'))
         _invalidate_owner_changes()
         flash('✅ تم حذف IP من القائمة البيضاء', 'success')
 
@@ -3017,8 +3024,12 @@ def api_keys():
             created_by=current_user.id
         )
 
-        db.session.add(key)
-        db.session.commit()
+        try:
+            with atomic_transaction('create_api_key'):
+                db.session.add(key)
+        except Exception as e:
+            flash(f'❌ خطأ في إنشاء المفتاح: {str(e)}', 'danger')
+            return redirect(url_for('owner.api_keys'))
         _invalidate_owner_changes()
         flash(f'✅ تم إنشاء API Key ({_mask_api_key(key.key)})', 'success')
         return redirect(url_for('owner.api_keys'))
@@ -3032,8 +3043,12 @@ def api_keys():
 @owner_required
 def toggle_api_key(id):
     key = APIKey.query.get_or_404(id)
-    key.is_active = not key.is_active
-    db.session.commit()
+    try:
+        with atomic_transaction('toggle_api_key'):
+            key.is_active = not key.is_active
+    except Exception as e:
+        flash(f'❌ خطأ في تحديث المفتاح: {str(e)}', 'danger')
+        return redirect(url_for('owner.api_keys'))
     _invalidate_owner_changes()
     status = 'تفعيل' if key.is_active else 'تعطيل'
     flash(f'✅ تم {status} API Key', 'success')
@@ -3064,16 +3079,19 @@ def tax_settings():
         return redirect(url_for('owner.dashboard'))
 
     if request.method == 'POST':
-        tenant.enable_tax = request.form.get('enable_tax') == 'on'
-        tenant.vat_country = (request.form.get('vat_country') or 'PS').strip().upper()[:2]
-        rate = request.form.get('default_tax_rate', type=float)
-        if rate is None and tenant.enable_tax:
-            rate = float(suggested_rate_for_country(tenant.vat_country))
-        tenant.default_tax_rate = Decimal(str(rate or 0))
-        tenant.vat_number = (request.form.get('vat_number') or '').strip() or None
-        tenant.tax_number = (request.form.get('tax_number') or '').strip() or tenant.tax_number
-
-        db.session.commit()
+        try:
+            with atomic_transaction('tax_settings'):
+                tenant.enable_tax = request.form.get('enable_tax') == 'on'
+                tenant.vat_country = (request.form.get('vat_country') or 'PS').strip().upper()[:2]
+                rate = request.form.get('default_tax_rate', type=float)
+                if rate is None and tenant.enable_tax:
+                    rate = float(suggested_rate_for_country(tenant.vat_country))
+                tenant.default_tax_rate = Decimal(str(rate or 0))
+                tenant.vat_number = (request.form.get('vat_number') or '').strip() or None
+                tenant.tax_number = (request.form.get('tax_number') or '').strip() or tenant.tax_number
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات الضرائب: {str(e)}', 'danger')
+            return redirect(url_for('owner.tax_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات الضرائب للشركة الحالية', 'success')
         return redirect(url_for('owner.tax_settings'))
@@ -3093,17 +3111,20 @@ def currency_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
 
-        default_currency = request.form.get('default_currency', 'AED')
-        settings.default_currency = default_currency
         try:
-            from models import Tenant
-            tenant = Tenant.get_current()
-            tenant.default_currency = default_currency
-        except Exception as exc:
-            logger.debug("tenant currency settings sync: %s", exc)
-        settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
-
-        db.session.commit()
+            with atomic_transaction('currency_settings'):
+                default_currency = request.form.get('default_currency', 'AED')
+                settings.default_currency = default_currency
+                try:
+                    from models import Tenant
+                    tenant = Tenant.get_current()
+                    tenant.default_currency = default_currency
+                except Exception as exc:
+                    logger.debug("tenant currency settings sync: %s", exc)
+                settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات العملات: {str(e)}', 'danger')
+            return redirect(url_for('owner.currency_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات العملات', 'success')
         return redirect(url_for('owner.currency_settings'))
@@ -3131,17 +3152,25 @@ def payment_gateways():
         vault = PaymentVault(tenant_id=None)
         vault.set_vault_password(current_app.config.get('SECRET_KEY', 'default-vault-password'))
         db.session.add(vault)
-        db.session.commit()
+        try:
+            with atomic_transaction('create_payment_vault'):
+                pass
+        except Exception as e:
+            flash(f'❌ خطأ في إنشاء مخزن الدفع: {str(e)}', 'danger')
+            return redirect(url_for('owner.payment_gateways'))
         _invalidate_owner_changes()
 
     if request.method == 'POST':
-        vault.stripe_publishable_key = request.form.get('stripe_publishable_key')
-        vault.stripe_secret_key = request.form.get('stripe_secret_key')
-        vault.paypal_client_id = request.form.get('paypal_client_id')
-        vault.paypal_client_secret = request.form.get('paypal_client_secret')
-        vault.nowpayments_api_key = request.form.get('nowpayments_api_key')
-
-        db.session.commit()
+        try:
+            with atomic_transaction('update_payment_gateways'):
+                vault.stripe_publishable_key = request.form.get('stripe_publishable_key')
+                vault.stripe_secret_key = request.form.get('stripe_secret_key')
+                vault.paypal_client_id = request.form.get('paypal_client_id')
+                vault.paypal_client_secret = request.form.get('paypal_client_secret')
+                vault.nowpayments_api_key = request.form.get('nowpayments_api_key')
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات الدفع: {str(e)}', 'danger')
+            return redirect(url_for('owner.payment_gateways'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات بوابات الدفع', 'success')
         return redirect(url_for('owner.payment_gateways'))
@@ -3155,14 +3184,17 @@ def email_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
 
-        settings.smtp_server = request.form.get('smtp_server')
-        settings.smtp_port = request.form.get('smtp_port', type=int)
-        settings.smtp_username = request.form.get('smtp_username')
-        settings.smtp_password = request.form.get('smtp_password')
-        settings.smtp_use_tls = request.form.get('smtp_use_tls') == 'on'
-        settings.email_from = request.form.get('email_from')
-
-        db.session.commit()
+        try:
+            with atomic_transaction('email_settings'):
+                settings.smtp_server = request.form.get('smtp_server')
+                settings.smtp_port = request.form.get('smtp_port', type=int)
+                settings.smtp_username = request.form.get('smtp_username')
+                settings.smtp_password = request.form.get('smtp_password')
+                settings.smtp_use_tls = request.form.get('smtp_use_tls') == 'on'
+                settings.email_from = request.form.get('email_from')
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات البريد: {str(e)}', 'danger')
+            return redirect(url_for('owner.email_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات البريد الإلكتروني', 'success')
         return redirect(url_for('owner.email_settings'))
@@ -3178,13 +3210,16 @@ def sms_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
 
-        sms_provider = (request.form.get('sms_provider') or '').strip()
-        settings.sms_provider = sms_provider or None
-        settings.sms_api_key = request.form.get('sms_api_key')
-        settings.sms_sender_name = request.form.get('sms_sender_name')
-        settings.sms_enabled = request.form.get('sms_enabled') == 'on'
-
-        db.session.commit()
+        try:
+            with atomic_transaction('sms_settings'):
+                sms_provider = (request.form.get('sms_provider') or '').strip()
+                settings.sms_provider = sms_provider or None
+                settings.sms_api_key = request.form.get('sms_api_key')
+                settings.sms_sender_name = request.form.get('sms_sender_name')
+                settings.sms_enabled = request.form.get('sms_enabled') == 'on'
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات الرسائل: {str(e)}', 'danger')
+            return redirect(url_for('owner.sms_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات الرسائل النصية', 'success')
         return redirect(url_for('owner.sms_settings'))
@@ -3200,12 +3235,15 @@ def whatsapp_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
 
-        settings.whatsapp_api_url = request.form.get('whatsapp_api_url')
-        settings.whatsapp_api_key = request.form.get('whatsapp_api_key')
-        settings.whatsapp_phone_number = request.form.get('whatsapp_phone_number')
-        settings.whatsapp_enabled = request.form.get('whatsapp_enabled') == 'on'
-
-        db.session.commit()
+        try:
+            with atomic_transaction('whatsapp_settings'):
+                settings.whatsapp_api_url = request.form.get('whatsapp_api_url')
+                settings.whatsapp_api_key = request.form.get('whatsapp_api_key')
+                settings.whatsapp_phone_number = request.form.get('whatsapp_phone_number')
+                settings.whatsapp_enabled = request.form.get('whatsapp_enabled') == 'on'
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ إعدادات واتساب: {str(e)}', 'danger')
+            return redirect(url_for('owner.whatsapp_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات واتساب', 'success')
         return redirect(url_for('owner.whatsapp_settings'))
@@ -3221,14 +3259,17 @@ def notification_templates():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
 
-        templates = {
-            'invoice_email': request.form.get('invoice_email_template'),
-            'payment_sms': request.form.get('payment_sms_template'),
-            'reminder_whatsapp': request.form.get('reminder_whatsapp_template')
-        }
-
-        settings.notification_templates = templates
-        db.session.commit()
+        try:
+            with atomic_transaction('notification_templates'):
+                templates = {
+                    'invoice_email': request.form.get('invoice_email_template'),
+                    'payment_sms': request.form.get('payment_sms_template'),
+                    'reminder_whatsapp': request.form.get('reminder_whatsapp_template')
+                }
+                settings.notification_templates = templates
+        except Exception as e:
+            flash(f'❌ خطأ في حفظ القوالب: {str(e)}', 'danger')
+            return redirect(url_for('owner.notification_templates'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث قوالب الإشعارات', 'success')
         return redirect(url_for('owner.notification_templates'))
@@ -3308,12 +3349,15 @@ def data_cleanup():
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         deleted_count = 0
 
-        if cleanup_type == 'logs':
-            deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
-        elif cleanup_type == 'archived':
-            deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
-
-        db.session.commit()
+        try:
+            with atomic_transaction('data_cleanup'):
+                if cleanup_type == 'logs':
+                    deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
+                elif cleanup_type == 'archived':
+                    deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
+        except Exception as e:
+            flash(f'❌ خطأ في التنظيف: {str(e)}', 'danger')
+            return redirect(url_for('owner.data_cleanup'))
         _invalidate_owner_changes()
         flash(f'✅ تم حذف {deleted_count} سجل قديم', 'success')
         return redirect(url_for('owner.data_cleanup'))
@@ -3508,14 +3552,13 @@ def tenant_create():
                 is_active=True,
                 is_suspended=False,
             )
-            db.session.add(tenant)
-            db.session.commit()
+            with atomic_transaction('tenant_create'):
+                db.session.add(tenant)
             _invalidate_owner_changes()
             _audit_owner_db_action('tenant_create', {'tenant_id': tenant.id, 'slug': slug})
             flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', 'success')
             return redirect(url_for('owner.tenants_list'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في إنشاء التينانت: {str(e)}', 'danger')
     return render_template('owner/tenant_create.html')
 
@@ -3532,12 +3575,15 @@ def tenant_suspend(tenant_id):
         flash('⚠️ لا يمكن تعليق التينانت الرئيسي.', 'danger')
         return redirect(url_for('owner.tenants_list'))
 
-    tenant.is_active = False
-    tenant.is_suspended = True
-    tenant.suspension_reason = reason or 'Suspended by owner'
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_suspend'):
+            tenant.is_active = False
+            tenant.is_suspended = True
+            tenant.suspension_reason = reason or 'Suspended by owner'
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في تعليق التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_suspend', {'tenant_id': tenant_id, 'reason': reason})
     flash(f'تم تعليق التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
@@ -3550,12 +3596,15 @@ def tenant_activate(tenant_id):
     """Re-activate a suspended tenant."""
     tenant = Tenant.query.get_or_404(tenant_id)
 
-    tenant.is_active = True
-    tenant.is_suspended = False
-    tenant.suspension_reason = None
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_activate'):
+            tenant.is_active = True
+            tenant.is_suspended = False
+            tenant.suspension_reason = None
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في تفعيل التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_activate', {'tenant_id': tenant_id})
     flash(f'تم تفعيل التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
@@ -3598,13 +3647,13 @@ def tenant_edit(tenant_id):
             tenant.allow_custom_integrations = request.form.get('allow_custom_integrations') == 'on'
             tenant.updated_at = datetime.now(timezone.utc)
 
-            db.session.commit()
+            with atomic_transaction('tenant_edit'):
+                pass
             _invalidate_owner_changes()
             _audit_owner_db_action('tenant_edit', {'tenant_id': tenant_id})
             flash(f'تم تحديث بيانات التينانت "{tenant.name_ar}" بنجاح.', 'success')
             return redirect(url_for('owner.tenants_list'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في تحديث التينانت: {str(e)}', 'danger')
 
     return render_template('owner/tenant_edit.html', tenant=tenant)
@@ -3627,12 +3676,15 @@ def tenant_delete(tenant_id):
         flash(f'⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق.', 'warning')
         return redirect(url_for('owner.tenants_list'))
 
-    tenant.is_active = False
-    tenant.is_suspended = True
-    tenant.suspension_reason = 'Deleted by owner'
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_delete'):
+            tenant.is_active = False
+            tenant.is_suspended = True
+            tenant.suspension_reason = 'Deleted by owner'
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في حذف التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_soft_delete', {'tenant_id': tenant_id})
     flash(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')

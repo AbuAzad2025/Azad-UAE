@@ -28,11 +28,11 @@ def get_context(user_id: int, tenant_id: int = None):
                 updated = updated.replace(tzinfo=timezone.utc)
             if now - updated > timedelta(hours=2):
                 mem.is_active = False
-                db.session.commit()
+                db.session.flush()
                 return None
         mem.access_count = (mem.access_count or 0) + 1
         mem.last_accessed = now
-        db.session.commit()
+        db.session.flush()
         return data
     except Exception:
         return None
@@ -61,7 +61,7 @@ def set_context(user_id: int, data: dict, tenant_id: int = None):
             is_active=True,
         )
         db.session.add(mem)
-    db.session.commit()
+    db.session.flush()
 
 
 def clear_context(user_id: int, tenant_id: int = None):
@@ -75,4 +75,4 @@ def clear_context(user_id: int, tenant_id: int = None):
     if mem:
         mem.is_active = False
         mem.updated_at = datetime.now(timezone.utc)
-        db.session.commit()
+        db.session.flush()

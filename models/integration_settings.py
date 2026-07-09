@@ -62,7 +62,7 @@ class IntegrationSettings(db.Model):
                 config_data=json.dumps({}, ensure_ascii=False)
             )
             db.session.add(integration)
-            db.session.commit()
+            db.session.flush()
         return integration
     
     def get_config(self):

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import CRMLead, CRMStage, CRMTeam, CRMActivity, Customer
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for, is_global_user
@@ -64,7 +65,7 @@ class CRMLeadService:
         )
         db.session.add(lead)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -103,7 +104,7 @@ class CRMLeadService:
                 lead.closed_at = datetime.now(timezone.utc)
         lead.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -130,7 +131,7 @@ class CRMLeadService:
             lead.status = 'open'
         lead.updated_at = datetime.now(timezone.utc)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -251,7 +252,7 @@ class CRMLeadService:
         )
         db.session.add(activity)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -321,7 +322,7 @@ class CRMLeadService:
         )
         db.session.add(activity)
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

@@ -18,6 +18,7 @@ from services.cheque_service import (
     process_cheque_bounce,
     process_cheque_cancel,
 )
+from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, permission_required, branch_scope_id
 from utils.tenanting import get_active_tenant_id
 from utils.branching import should_show_all_branch_columns
@@ -330,22 +331,20 @@ def create():
             calculate_amount_aed(cheque)
             cheque.update_status_based_on_date()
             
-            db.session.add(cheque)
-            db.session.flush()
-            
-            if cheque.cheque_type == 'incoming':
-                process_cheque_receive(cheque)
-            elif cheque.cheque_type == 'outgoing':
-                process_cheque_issue(cheque)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'cheques', cheque.id)
+            with atomic_transaction('cheque_create'):
+                db.session.add(cheque)
+                db.session.flush()
+                if cheque.cheque_type == 'incoming':
+                    process_cheque_receive(cheque)
+                elif cheque.cheque_type == 'outgoing':
+                    process_cheque_issue(cheque)
+                LoggingCore.log_audit('create', 'cheques', cheque.id)
             
             flash(f'✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح', 'success')
             return redirect(url_for('cheques.view', id=cheque.id))
         
         except Exception as e:
-            db.session.rollback()
+            pass
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
             import uuid as _uuid
@@ -442,15 +441,14 @@ def edit(id):
             calculate_amount_aed(cheque)
             cheque.update_status_based_on_date()
             
-            db.session.commit()
-            
-            LoggingCore.log_audit('update', 'cheques', id)
+            with atomic_transaction('cheque_update'):
+                LoggingCore.log_audit('update', 'cheques', id)
             
             flash('✅ تم تحديث الشيك بنجاح', 'success')
             return redirect(url_for('cheques.view', id=id))
         
         except Exception as e:
-            db.session.rollback()
+            pass
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
             import uuid as _uuid
@@ -485,20 +483,17 @@ def deposit_cheque(id):
         deposit_date_str = request.form.get('deposit_date')
         deposit_date = datetime.strptime(deposit_date_str, '%Y-%m-%d').date() if deposit_date_str else None
         
-        process_cheque_deposit(cheque, deposit_date)
-        db.session.commit()
-        
-        LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
-                        f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك')
+        with atomic_transaction('cheque_deposit'):
+            process_cheque_deposit(cheque, deposit_date)
+            LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
+                            f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك')
         
         flash(f'✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك', 'success')
     
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
-        db.session.rollback()
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
     
     return redirect(url_for('cheques.view', id=id))
@@ -527,8 +522,8 @@ def clear_cheque(id):
             default_currency = get_system_default_currency()
         
         # تأكيد الصرف - هنا تحدث المحاسبة!
-        process_cheque_clear(cheque, clearance_date, clearance_exchange_rate)
-        db.session.commit()
+        with atomic_transaction('cheque_clear'):
+            process_cheque_clear(cheque, clearance_date, clearance_exchange_rate)
         
         # رسالة مفصلة عند وجود فرق عملة
         if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal('0.01'):
@@ -539,17 +534,16 @@ def clear_cheque(id):
         else:
             gain_loss_msg = ''
         
-        LoggingCore.log_audit('cheque_clear', 'cheques', id,
-                        f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}')
+        with atomic_transaction('cheque_clear_log'):
+            LoggingCore.log_audit('cheque_clear', 'cheques', id,
+                            f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}')
         
         flash(f'✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}', 'success')
     
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
-        db.session.rollback()
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
     
     return redirect(url_for('cheques.view', id=id))
@@ -570,20 +564,17 @@ def bounce_cheque(id):
         full_reason = f"{reason}. {details}" if details else reason
         
         # رفض الشيك - إرجاع الدين
-        process_cheque_bounce(cheque, full_reason)
-        db.session.commit()
-        
-        LoggingCore.log_audit('cheque_bounce', 'cheques', id,
-                        f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}')
+        with atomic_transaction('cheque_bounce'):
+            process_cheque_bounce(cheque, full_reason)
+            LoggingCore.log_audit('cheque_bounce', 'cheques', id,
+                            f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}')
         
         flash(f'❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون', 'warning')
     
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
-        db.session.rollback()
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
     
     return redirect(url_for('cheques.view', id=id))
@@ -605,15 +596,13 @@ def cancel(id):
     try:
         reason = request.form.get('cancel_reason')
         
-        process_cheque_cancel(cheque, reason)
-        db.session.commit()
-        
-        LoggingCore.log_audit('cancel', 'cheques', id)
+        with atomic_transaction('cheque_cancel'):
+            process_cheque_cancel(cheque, reason)
+            LoggingCore.log_audit('cancel', 'cheques', id)
         
         flash(f'✅ تم إلغاء الشيك {cheque.cheque_bank_number}', 'success')
     
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
     
     return redirect(url_for('cheques.view', id=id))
@@ -645,10 +634,9 @@ def delete(id):
             reason = request.form.get('delete_reason', 'أرشفة بسبب وجود ارتباطات')
             
             # عكس القيد المحاسبي إذا كان نشطاً (يتم داخل دالة archive)
-            cheque.archive(reason)
-            db.session.commit()
-            
-            LoggingCore.log_audit('archive', 'cheques', id)
+            with atomic_transaction('cheque_archive'):
+                cheque.archive(reason)
+                LoggingCore.log_audit('archive', 'cheques', id)
             flash(f'✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)', 'warning')
             
         else:
@@ -665,16 +653,14 @@ def delete(id):
             gl_query.delete(synchronize_session=False)
             
             # حذف الشيك
-            db.session.delete(cheque)
-            db.session.commit()
-            
-            LoggingCore.log_audit('delete', 'cheques', id)
+            with atomic_transaction('cheque_delete_hard'):
+                db.session.delete(cheque)
+                LoggingCore.log_audit('delete', 'cheques', id)
             flash(f'✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً', 'success')
             
         return redirect(url_for('cheques.index'))
     
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
         return redirect(url_for('cheques.view', id=id))
 
@@ -689,15 +675,13 @@ def restore(id):
         return render_template('errors/403.html'), 403
 
     try:
-        cheque.restore()
-        db.session.commit()
-        
-        LoggingCore.log_audit('restore', 'cheques', id)
+        with atomic_transaction('cheque_restore'):
+            cheque.restore()
+            LoggingCore.log_audit('restore', 'cheques', id)
         
         flash(f'✅ تم استعادة الشيك {cheque.cheque_bank_number}', 'success')
     
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
     
     return redirect(url_for('cheques.view', id=id))

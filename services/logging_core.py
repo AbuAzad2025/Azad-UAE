@@ -40,6 +40,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from flask import g, has_request_context, request, current_app
+from utils.db_safety import atomic_transaction
 
 try:
     from colorama import init as colorama_init, Fore, Style
@@ -1099,7 +1100,8 @@ class LoggingCore:
                 username=str(user),
             )
             db.session.add(alert)
-            db.session.commit()
+            with atomic_transaction('log_security'):
+                db.session.flush()
         except Exception:
             db.session.rollback()
 
@@ -1498,11 +1500,8 @@ class LoggingCore:
                 user.login_attempts = (user.login_attempts or 0) + 1
                 if user.login_attempts >= 5:
                     user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('track_login_attempt'):
+                db.session.flush()
 
 
     @classmethod

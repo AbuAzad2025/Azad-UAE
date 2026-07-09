@@ -1,6 +1,7 @@
 import hashlib
 from datetime import datetime, timezone
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models.bank_reconciliation import BankStatementLine
 import io
 
@@ -54,7 +55,7 @@ class BankImportService:
             db.session.add(line)
             lines.append(line)
             
-        db.session.commit()
+        db.session.flush()
         return lines
 
     @staticmethod
@@ -79,5 +80,5 @@ class BankImportService:
         line.matched_journal_entry_id = journal_entry_id
         line.matched_at = datetime.now(timezone.utc)
         line.matched_by = user_id
-        db.session.commit()
+        db.session.flush()
         return True

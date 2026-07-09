@@ -15,6 +15,7 @@ from utils.decorators import permission_required, admin_required
 from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
+from utils.db_safety import atomic_transaction
 
 advanced_ledger_bp = Blueprint('advanced_ledger', __name__, url_prefix='/ledger/advanced')
 
@@ -98,15 +99,13 @@ def add_customs_tax():
                 description=request.form.get('description')
             )
             
-            db.session.add(tax)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'customs_taxes', tax.id)
+            with atomic_transaction('add_customs_tax'):
+                db.session.add(tax)
+                LoggingCore.log_audit('create', 'customs_taxes', tax.id)
             flash(f'✅ تم إضافة {tax.name_ar} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.customs_taxes'))
             
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in advanced ledger operation: {e}")
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
@@ -155,15 +154,13 @@ def add_expense_category():
                 gl_account_code=account.code if account else None
             )
             
-            db.session.add(category)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'expense_categories', category.id)
+            with atomic_transaction('add_expense_category'):
+                db.session.add(category)
+                LoggingCore.log_audit('create', 'expense_categories', category.id)
             flash(f'✅ تم إضافة فئة المصروفات {category.name_ar} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.expense_categories'))
             
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in advanced ledger operation: {e}")
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
@@ -236,15 +233,13 @@ def add_advanced_expense():
             # حساب الضرائب والجمارك
             expense.calculate_taxes()
             
-            db.session.add(expense)
-            db.session.commit()
-            
-            LoggingCore.log_audit('create', 'advanced_expenses', expense.id)
+            with atomic_transaction('add_advanced_expense'):
+                db.session.add(expense)
+                LoggingCore.log_audit('create', 'advanced_expenses', expense.id)
             flash(f'✅ تم إضافة المصروف {expense.expense_number} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.advanced_expenses'))
             
         except Exception as e:
-            db.session.rollback()
             current_app.logger.error(f"Error in advanced ledger operation: {e}")
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
@@ -280,17 +275,17 @@ def reverse_journal_entry(entry_id):
     try:
         reason = request.form.get('reason', 'عكس القيد')
         
-        reversal_entry = AdvancedJournalEntryManager.reverse_entry_advanced(
-            entry_id=entry_id,
-            reversed_by=current_user,
-            reason=reason,
-            create_reversal_entry=True
-        )
+        with atomic_transaction('reverse_journal_entry'):
+            reversal_entry = AdvancedJournalEntryManager.reverse_entry_advanced(
+                entry_id=entry_id,
+                reversed_by=current_user,
+                reason=reason,
+                create_reversal_entry=True
+            )
         
         flash(f'✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}', 'success')
         
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error reversing journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')
@@ -305,16 +300,16 @@ def delete_journal_entry(entry_id):
     try:
         reason = request.form.get('reason', 'حذف القيد')
         
-        AdvancedJournalEntryManager.delete_entry(
-            entry_id=entry_id,
-            deleted_by=current_user,
-            reason=reason
-        )
+        with atomic_transaction('delete_journal_entry'):
+            AdvancedJournalEntryManager.delete_entry(
+                entry_id=entry_id,
+                deleted_by=current_user,
+                reason=reason
+            )
         
         flash('✅ تم إلغاء القيد بنجاح', 'success')
         
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')
@@ -329,16 +324,16 @@ def approve_journal_entry(entry_id):
     try:
         approval_notes = request.form.get('approval_notes', 'موافقة على القيد')
         
-        AdvancedJournalEntryManager.approve_entry(
-            entry_id=entry_id,
-            approved_by=current_user,
-            approval_notes=approval_notes
-        )
+        with atomic_transaction('approve_journal_entry'):
+            AdvancedJournalEntryManager.approve_entry(
+                entry_id=entry_id,
+                approved_by=current_user,
+                approval_notes=approval_notes
+            )
         
         flash('✅ تم الموافقة على القيد وترحيله بنجاح', 'success')
         
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error approving journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')

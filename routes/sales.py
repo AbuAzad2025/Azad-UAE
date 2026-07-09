@@ -521,22 +521,19 @@ def delete(id):
 
     try:
         with atomic_transaction('sale_delete'):
-            try:
-                from services.gl_service import GLService
-                GLService.reverse_entry(
-                    reference_type=GLRef.SALE,
-                    reference_id=sale.id,
-                    description=f'Reverse Sale {sale.sale_number} (Archived)',
-                    tenant_id=getattr(sale, 'tenant_id', None),
-                )
-                GLService.reverse_entry(
-                    reference_type=GLRef.SALE_COGS,
-                    reference_id=sale.id,
-                    description=f'Reverse COGS {sale.sale_number} (Archived)',
-                    tenant_id=getattr(sale, 'tenant_id', None),
-                )
-            except Exception as rev_err:
-                current_app.logger.warning('GL reversal skipped for draft sale %s: %s', sale.sale_number, rev_err)
+            from services.gl_service import GLService
+            GLService.reverse_entry(
+                reference_type=GLRef.SALE,
+                reference_id=sale.id,
+                description=f'Reverse Sale {sale.sale_number} (Archived)',
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
+            GLService.reverse_entry(
+                reference_type=GLRef.SALE_COGS,
+                reference_id=sale.id,
+                description=f'Reverse COGS {sale.sale_number} (Archived)',
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
             archive_service = ArchiveService()
             archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
             archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
@@ -613,7 +610,7 @@ def api_calculate_sale_totals():
     try:
         from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
         
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({'success': False, 'error': 'No data provided'}), 400
         

@@ -6,6 +6,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_, or_
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import (
     BankReconciliation, BankReconciliationItem, BankStatementLine,
     GLAccount, GLJournalEntry, GLJournalLine,
@@ -64,7 +65,7 @@ class BankReconciliationService:
         reconciliation.calculate_reconciliation()
         
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -149,7 +150,7 @@ class BankReconciliationService:
         reconciliation.calculate_reconciliation()
         
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -180,7 +181,7 @@ class BankReconciliationService:
         reconciliation.calculate_reconciliation()
         
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -257,7 +258,7 @@ class BankReconciliationService:
         reconciliation.status = 'completed'
         
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -536,7 +537,7 @@ class BankReconciliationService:
                 stmt.status = 'ignored'
 
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise
@@ -578,7 +579,7 @@ class BankReconciliationService:
 
         reconciliation.calculate_reconciliation()
         try:
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
             raise

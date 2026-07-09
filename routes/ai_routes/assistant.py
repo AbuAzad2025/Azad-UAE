@@ -13,6 +13,7 @@ from extensions import db
 from services.stock_service import StockService
 from utils.gl_reference_types import GLRef
 from routes.ai_routes import ai_bp
+from utils.db_safety import atomic_transaction
 
 import pandas as pd
 
@@ -187,58 +188,57 @@ def _process_excel_intelligently(file, warehouse_id, user):
         products_updated = 0
         errors = []
         
-        for index, row in df.iterrows():
-            try:
-                name = str(row[column_mapping['name']]).strip()
-                part_number = str(row[column_mapping['part_number']]).strip()
-                price = float(row[column_mapping['price']])
-                
-                if 'quantity' in column_mapping and column_mapping['quantity'] in row:
-                    quantity_val = row[column_mapping['quantity']]
-                    if pd.isna(quantity_val) or quantity_val == '':
-                        quantity = 0
+        with atomic_transaction("excel_upload"):
+            for index, row in df.iterrows():
+                try:
+                    name = str(row[column_mapping['name']]).strip()
+                    part_number = str(row[column_mapping['part_number']]).strip()
+                    price = float(row[column_mapping['price']])
+                    
+                    if 'quantity' in column_mapping and column_mapping['quantity'] in row:
+                        quantity_val = row[column_mapping['quantity']]
+                        if pd.isna(quantity_val) or quantity_val == '':
+                            quantity = 0
+                        else:
+                            quantity = int(float(quantity_val))
                     else:
-                        quantity = int(float(quantity_val))
-                else:
-                    quantity = 0
-                
-                if not name or name == 'nan' or part_number == 'nan':
-                    continue
-                
-                existing_product = Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
-                
-                if existing_product:
-                    existing_product.regular_price = price
-                    products_updated += 1
-                    if quantity > 0:
-                        wh_import = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
-                        StockService.add_stock(
-                            product_id=existing_product.id,
-                            quantity=quantity,
-                            reference_type=GLRef.PRODUCT_UPDATE,
-                            warehouse_id=wh_import.id if wh_import else None,
+                        quantity = 0
+                    
+                    if not name or name == 'nan' or part_number == 'nan':
+                        continue
+                    
+                    existing_product = Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
+                    
+                    if existing_product:
+                        existing_product.regular_price = price
+                        products_updated += 1
+                        if quantity > 0:
+                            wh_import = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                            StockService.add_stock(
+                                product_id=existing_product.id,
+                                quantity=quantity,
+                                reference_type=GLRef.PRODUCT_UPDATE,
+                                warehouse_id=wh_import.id if wh_import else None,
+                            )
+                    else:
+                        product = Product(
+                            name=name,
+                            part_number=part_number,
+                            regular_price=price,
+                            current_stock=0,
+                            is_active=True
                         )
-                else:
-                    product = Product(
-                        name=name,
-                        part_number=part_number,
-                        regular_price=price,
-                        current_stock=0,
-                        is_active=True
-                    )
-                    assign_tenant_id(product, user)
-                    db.session.add(product)
-                    if quantity > 0:
-                        StockService.add_opening_stock(
-                            product_id=product.id,
-                            quantity=quantity,
-                        )
-                    products_created += 1
-                
-            except Exception as e:
-                errors.append(f'السطر {index + 2}: {str(e)}')
-        
-        db.session.commit()
+                        assign_tenant_id(product, user)
+                        db.session.add(product)
+                        if quantity > 0:
+                            StockService.add_opening_stock(
+                                product_id=product.id,
+                                quantity=quantity,
+                            )
+                        products_created += 1
+                    
+                except Exception as e:
+                    errors.append(f'السطر {index + 2}: {str(e)}')
         
         _train_ai_from_excel(df, products_created, products_updated, user.id)
         

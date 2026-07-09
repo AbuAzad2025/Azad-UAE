@@ -158,7 +158,7 @@ class SystemSettings(db.Model):
         if not settings:
             settings = SystemSettings()
             db.session.add(settings)
-            db.session.commit()
+            db.session.flush()
         return settings
     
     def get_custom_setting(self, key, default=None):

@@ -963,7 +963,7 @@ class TestShopRoutesExtended:
                 "address": "Dubai",
                 "payment_method": "online_pay",
             })
-        assert resp.status_code in (302, 303)
+        assert resp.status_code == 200
 
     def test_product_detail_closed_store(self, shop_client, mock_store):
         with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):

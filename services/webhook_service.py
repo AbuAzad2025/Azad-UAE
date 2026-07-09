@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from sqlalchemy import or_
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import Donation, PackagePurchase
 from services.notification_service import NotificationService
 
@@ -87,11 +88,8 @@ class WebhookService:
             purchase.payment_status = 'failed'
             logger.warning('Purchase %s failed', purchase.id)
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        with atomic_transaction('webhook_process_purchase'):
+            db.session.flush()
 
         return {'success': True, 'message': f'Purchase updated to {payment_status}'}
 
@@ -130,11 +128,8 @@ class WebhookService:
             donation.status = 'failed'
             logger.warning('Donation %s failed', donation.id)
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        with atomic_transaction('webhook_process_donation'):
+            db.session.flush()
 
         return {'success': True, 'message': f'Donation updated to {payment_status}'}
 
@@ -170,11 +165,8 @@ class WebhookService:
                 sale,
                 gateway_reference=payment_id or getattr(sale, 'checkout_gateway_ref', None),
             )
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
+            with atomic_transaction('webhook_process_store_order'):
+                db.session.flush()
 
             return {'success': True, 'message': 'Store order already confirmed (idempotent)'}
 

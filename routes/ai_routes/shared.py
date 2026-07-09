@@ -11,6 +11,7 @@ from services.ai_service import AIService
 from routes.ai_routes import ai_bp, _AutoSaveCtx, _get_conversation_context, _set_conversation_context, _clear_conversation_context
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from datetime import datetime, timezone
+from utils.db_safety import atomic_transaction
 
 def _conversation_ctx(user_id: int, tenant_id: int = None):
     """Fetch persisted context wrapped in auto-save dict."""
@@ -296,8 +297,8 @@ def _stream_ai_response(message, context, ai_mode):
             was_successful=True,
             response_time_ms=elapsed_ms,
         )
-        db.session.add(log)
-        db.session.commit()
+        with atomic_transaction("ai_interaction_log"):
+            db.session.add(log)
     except Exception:
         pass
 

@@ -4,6 +4,7 @@ from extensions import db
 from models import Branch
 from utils.decorators import admin_required
 from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404
+from utils.db_safety import atomic_transaction
 
 branches_bp = Blueprint('branches', __name__, url_prefix='/branches')
 
@@ -63,10 +64,10 @@ def create():
             is_main=is_main
         )
 
-        db.session.add(branch)
-        db.session.flush()
-        _sync_branch_financial_accounts(branch.tenant_id)
-        db.session.commit()
+        with atomic_transaction('branch_create'):
+            db.session.add(branch)
+            db.session.flush()
+            _sync_branch_financial_accounts(branch.tenant_id)
 
         flash('تم إضافة الفرع بنجاح', 'success')
         return redirect(url_for('branches.index'))
@@ -90,9 +91,9 @@ def edit(id):
         raw_piv = request.form.get('prices_include_vat')
         branch.prices_include_vat = True if raw_piv == 'on' else (False if raw_piv == 'off' else None)
 
-        db.session.flush()
-        _sync_branch_financial_accounts(branch.tenant_id)
-        db.session.commit()
+        with atomic_transaction('branch_update'):
+            db.session.flush()
+            _sync_branch_financial_accounts(branch.tenant_id)
 
         flash('تم تحديث الفرع بنجاح', 'success')
         return redirect(url_for('branches.index'))
@@ -111,7 +112,7 @@ def delete(id):
         flash('لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)', 'danger')
         return redirect(url_for('branches.index'))
 
-    db.session.delete(branch)
-    db.session.commit()
+    with atomic_transaction('branch_delete'):
+        db.session.delete(branch)
     flash('تم حذف الفرع بنجاح', 'success')
     return redirect(url_for('branches.index'))

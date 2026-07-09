@@ -33,7 +33,7 @@ def log_sensitive_action(action: str, table_name: str = None, record_id: int = N
         )
         
         db.session.add(audit_entry)
-        db.session.commit()
+        db.session.flush()
         
         if severity == 'high':
             notify_admin_of_sensitive_action(action, audit_entry)
@@ -64,7 +64,7 @@ def track_login_attempt(username: str, success: bool, ip_address: str):
                 from datetime import timedelta
                 user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
         
-        db.session.commit()
+        db.session.flush()
 
 
 def get_security_events(user_id: int = None, days: int = 30):

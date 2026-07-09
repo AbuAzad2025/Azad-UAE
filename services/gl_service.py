@@ -822,7 +822,7 @@ class GLService:
         )
         if notes:
             entry.notes = notes
-            db.session.commit()
+            db.session.flush()
         return entry
 
     @staticmethod

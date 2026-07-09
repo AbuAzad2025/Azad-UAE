@@ -10,6 +10,7 @@ from routes.owner import (
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
+from utils.db_safety import atomic_transaction
 from routes.owner.shared import (
     _invalidate_owner_changes, _audit_owner_db_action,
     _mask_db_uri, _mask_api_key, _validate_select_only_sql,
@@ -187,8 +188,8 @@ def truncate_table():
         return redirect(url_for('owner.database_tools'))
 
     try:
-        db.session.execute(text(f"DELETE FROM {safe_table}"))  # nosec B608
-        db.session.commit()
+        with atomic_transaction('truncate_table'):
+            db.session.execute(text(f"DELETE FROM {safe_table}"))  # nosec B608
 
         LoggingCore.log_audit(
             'truncate_table',
@@ -199,7 +200,6 @@ def truncate_table():
 
         flash(f'✅ تم مسح جدول {safe_table} بنجاح', 'success')
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
 
     return redirect(url_for('owner.database_tools'))
@@ -275,11 +275,11 @@ def update_row(table_name, row_id):
         params = dict(safe_updates)
         params['row_id'] = row_id
 
-        db.session.execute(
-            text(f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'),  # nosec B608
-            params,
-        )
-        db.session.commit()
+        with atomic_transaction('update_table_row'):
+            db.session.execute(
+                text(f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'),  # nosec B608
+                params,
+            )
 
         LoggingCore.log_audit(
             'update_row',
@@ -289,7 +289,6 @@ def update_row(table_name, row_id):
         )
         return jsonify({'success': True})
     except Exception:
-        db.session.rollback()
         current_app.logger.exception('Owner table row update failed')
         return jsonify({'success': False, 'error': 'تعذر تحديث السجل حالياً'}), 500
 
@@ -586,12 +585,15 @@ def data_cleanup():
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         deleted_count = 0
 
-        if cleanup_type == 'logs':
-            deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
-        elif cleanup_type == 'archived':
-            deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
-
-        db.session.commit()
+        try:
+            with atomic_transaction('data_cleanup'):
+                if cleanup_type == 'logs':
+                    deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
+                elif cleanup_type == 'archived':
+                    deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
+        except Exception as e:
+            flash(f'❌ خطأ في التنظيف: {str(e)}', 'danger')
+            return redirect(url_for('owner.data_cleanup'))
         _invalidate_owner_changes()
         flash(f'✅ تم حذف {deleted_count} سجل قديم', 'success')
         return redirect(url_for('owner.data_cleanup'))

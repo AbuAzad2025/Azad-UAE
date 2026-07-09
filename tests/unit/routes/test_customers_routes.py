@@ -264,7 +264,7 @@ class TestCustomersStatement:
 
     def test_delete_exception_soft_delete_fallback(self, customers_client, bypass_customers_auth):
         refetched = MagicMock(name='Refetched', is_active=True)
-        with patch('routes.customers.db') as mock_db, \
+        with patch('routes.customers.db.session.delete', side_effect=RuntimeError('fk block')) as mock_delete, \
              patch('routes.customers._customer_in_scope', return_value=True), \
              patch('routes.customers.get_active_tenant_id', return_value=1), \
              patch('routes.customers.Sale') as SaleMod, \
@@ -275,7 +275,6 @@ class TestCustomersStatement:
             SaleMod.query.filter_by.return_value.count.return_value = 0
             PayMod.query.filter_by.return_value.count.return_value = 0
             RcvMod.query.filter_by.return_value.count.return_value = 0
-            mock_db.session.commit.side_effect = [RuntimeError('fk block'), None]
             CustMod.query.filter_by.return_value.first.return_value = refetched
             capp.logger = MagicMock()
             resp = customers_client.post('/customers/1/delete', follow_redirects=False)
@@ -283,7 +282,7 @@ class TestCustomersStatement:
         assert refetched.is_active is False
 
     def test_delete_fallback_inner_failure(self, customers_client, bypass_customers_auth):
-        with patch('routes.customers.db') as mock_db, \
+        with patch('routes.customers.db.session.delete', side_effect=RuntimeError('fk block')), \
              patch('routes.customers._customer_in_scope', return_value=True), \
              patch('routes.customers.get_active_tenant_id', return_value=1), \
              patch('routes.customers.Sale') as SaleMod, \
@@ -294,7 +293,6 @@ class TestCustomersStatement:
             SaleMod.query.filter_by.return_value.count.return_value = 0
             PayMod.query.filter_by.return_value.count.return_value = 0
             RcvMod.query.filter_by.return_value.count.return_value = 0
-            mock_db.session.commit.side_effect = RuntimeError('fk block')
             CustMod.query.filter_by.return_value.first.side_effect = RuntimeError('refetch fail')
             capp.logger = MagicMock()
             resp = customers_client.post('/customers/1/delete', follow_redirects=False)
@@ -454,12 +452,11 @@ class TestCustomersCoverageGaps:
         form.is_active.data = True
         form.notes.data = ''
         with patch('forms.customer.CustomerForm', return_value=form), \
-             patch('routes.customers.db') as mock_db, \
+             patch('routes.customers.db.session.add', side_effect=RuntimeError('commit fail')), \
              patch('utils.tenant_limits.check_customers_limit'), \
              patch('routes.customers.resolve_default_currency', return_value='AED'), \
              patch('routes.customers.Customer'), \
              patch('utils.error_messages.ErrorMessages.database_error', return_value='db error'):
-            mock_db.session.commit.side_effect = RuntimeError('commit fail')
             resp = customers_client.post('/customers/create', data={'name': 'Fail Customer'})
         assert resp.status_code == 200
 
@@ -485,10 +482,8 @@ class TestCustomersCoverageGaps:
         assert resp.status_code in (200, 302)
 
     def test_edit_db_exception(self, customers_client, bypass_customers_auth):
-        with patch('routes.customers.db') as mock_db, \
-             patch('routes.customers.resolve_default_currency', return_value='AED'), \
+        with patch('routes.customers.LoggingCore.log_audit', side_effect=RuntimeError('update fail')), \
              patch('utils.error_messages.ErrorMessages.database_error', return_value='db error'):
-            mock_db.session.commit.side_effect = RuntimeError('update fail')
             resp = customers_client.post('/customers/1/edit', data={
                 'name': 'Broken',
                 'phone': '0507777777',

@@ -1,5 +1,6 @@
 from extensions import db
 from models.industry_field_definition import IndustryFieldDefinition
+from utils.db_safety import atomic_transaction
 
 
 CORE_FIELDS = [
@@ -108,32 +109,15 @@ INDUSTRY_FIELDS = {
 
 
 def seed_industry_fields():
-    order = 0
-    for field_code, name_ar, name_en, field_type in CORE_FIELDS:
-        existing = IndustryFieldDefinition.query.filter_by(
-            industry_code='core', field_code=field_code
-        ).first()
-        if not existing:
-            db.session.add(IndustryFieldDefinition(
-                industry_code='core',
-                field_code=field_code,
-                field_name_ar=name_ar,
-                field_name_en=name_en,
-                field_type=field_type,
-                applies_to='product',
-                sort_order=order,
-            ))
-        order += 1
-
-    for industry_code, fields in INDUSTRY_FIELDS.items():
+    with atomic_transaction("seed_industry_fields"):
         order = 0
-        for field_code, name_ar, name_en, field_type in fields:
+        for field_code, name_ar, name_en, field_type in CORE_FIELDS:
             existing = IndustryFieldDefinition.query.filter_by(
-                industry_code=industry_code, field_code=field_code
+                industry_code='core', field_code=field_code
             ).first()
             if not existing:
                 db.session.add(IndustryFieldDefinition(
-                    industry_code=industry_code,
+                    industry_code='core',
                     field_code=field_code,
                     field_name_ar=name_ar,
                     field_name_en=name_en,
@@ -143,4 +127,20 @@ def seed_industry_fields():
                 ))
             order += 1
 
-    db.session.commit()
+        for industry_code, fields in INDUSTRY_FIELDS.items():
+            order = 0
+            for field_code, name_ar, name_en, field_type in fields:
+                existing = IndustryFieldDefinition.query.filter_by(
+                    industry_code=industry_code, field_code=field_code
+                ).first()
+                if not existing:
+                    db.session.add(IndustryFieldDefinition(
+                        industry_code=industry_code,
+                        field_code=field_code,
+                        field_name_ar=name_ar,
+                        field_name_en=name_en,
+                        field_type=field_type,
+                        applies_to='product',
+                        sort_order=order,
+                    ))
+                order += 1

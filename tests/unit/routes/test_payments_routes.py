@@ -1051,7 +1051,6 @@ class TestPaymentsDeepCoverage:
             })
         assert resp.status_code == 200
         render.assert_called_once()
-        session.rollback.assert_called()
 
     def test_api_customer_balance_currency_fallback(self, payments_client, mocker):
         customer = MagicMock(id=1)

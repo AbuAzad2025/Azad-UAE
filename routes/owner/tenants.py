@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Import the shared owner_bp blueprint and helpers from the package
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes, _owner_branch_scope, _audit_owner_db_action
+from utils.db_safety import atomic_transaction
 
 @owner_bp.route('/tenant-stores')
 @owner_required
@@ -67,9 +68,9 @@ def tenant_ai_toggle(tenant_id):
     if ai_access_level not in ('basic', 'advanced', 'execute'):
         ai_access_level = 'execute'
     try:
-        tenant.enable_ai = enabled
-        ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
-        db.session.commit()
+        with atomic_transaction('tenant_ai_toggle'):
+            tenant.enable_ai = enabled
+            ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
         LoggingCore.log_audit(
             'platform_tenant_ai_enable' if enabled else 'platform_tenant_ai_disable',
             'tenants',
@@ -82,7 +83,6 @@ def tenant_ai_toggle(tenant_id):
             'success',
         )
     except Exception as exc:
-        db.session.rollback()
         flash(f'تعذر تحديث إعداد AI: {exc}', 'danger')
     return redirect(url_for('owner.tenant_ai'))
 
@@ -179,10 +179,9 @@ def tenant_create():
                 is_active=True,
                 is_suspended=False,
             )
-            db.session.add(tenant)
-            db.session.commit()
+            with atomic_transaction('tenant_create'):
+                db.session.add(tenant)
             from services.gl_service import GLService
-            from utils.db_safety import atomic_transaction
             with atomic_transaction('tenant_gl_setup'):
                 GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
                 # Explicitly ensure GL concept -> account mappings exist.
@@ -195,7 +194,6 @@ def tenant_create():
             flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', 'success')
             return redirect(url_for('owner.tenants_list'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في إنشاء التينانت: {str(e)}', 'danger')
     return render_template('owner/tenant_create.html')
 
@@ -211,12 +209,15 @@ def tenant_suspend(tenant_id):
         flash('⚠️ لا يمكن تعليق التينانت الرئيسي.', 'danger')
         return redirect(url_for('owner.tenants_list'))
 
-    tenant.is_active = False
-    tenant.is_suspended = True
-    tenant.suspension_reason = reason or 'Suspended by owner'
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_suspend'):
+            tenant.is_active = False
+            tenant.is_suspended = True
+            tenant.suspension_reason = reason or 'Suspended by owner'
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في تعليق التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_suspend', {'tenant_id': tenant_id, 'reason': reason})
     flash(f'تم تعليق التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
@@ -228,12 +229,15 @@ def tenant_activate(tenant_id):
     """Re-activate a suspended tenant."""
     tenant = Tenant.query.get_or_404(tenant_id)
 
-    tenant.is_active = True
-    tenant.is_suspended = False
-    tenant.suspension_reason = None
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_activate'):
+            tenant.is_active = True
+            tenant.is_suspended = False
+            tenant.suspension_reason = None
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في تفعيل التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_activate', {'tenant_id': tenant_id})
     flash(f'تم تفعيل التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
@@ -247,42 +251,40 @@ def tenant_edit(tenant_id):
 
     if request.method == 'POST':
         try:
-            tenant.name = request.form.get('name_ar', tenant.name).strip()
-            tenant.name_ar = request.form.get('name_ar', tenant.name_ar).strip()
-            tenant.name_en = request.form.get('name_en', tenant.name_en).strip()
-            tenant.slug = request.form.get('slug', tenant.slug).strip()
-            tenant.business_type = request.form.get('business_type', tenant.business_type).strip()
-            tenant.phone_1 = request.form.get('phone_1', tenant.phone_1).strip() or None
-            tenant.phone_2 = request.form.get('phone_2', tenant.phone_2).strip() or None
-            tenant.email = request.form.get('email', tenant.email).strip() or None
-            tenant.address_ar = request.form.get('address_ar', tenant.address_ar).strip() or None
-            tenant.default_currency = request.form.get('default_currency', tenant.default_currency).strip() or get_system_default_currency()
-            tenant.max_users = int(request.form.get('max_users', tenant.max_users or 5))
-            tenant.max_products = int(request.form.get('max_products', tenant.max_products or 1000))
-            tenant.max_customers = int(request.form.get('max_customers', tenant.max_customers or 500))
-            tenant.max_suppliers = int(request.form.get('max_suppliers', tenant.max_suppliers or 200))
-            tenant.max_branches = int(request.form.get('max_branches', tenant.max_branches or 3))
-            tenant.max_warehouses = int(request.form.get('max_warehouses', tenant.max_warehouses or 2))
-            tenant.max_invoices_per_month = int(request.form.get('max_invoices_per_month', tenant.max_invoices_per_month or 1000))
-            tenant.max_sales_per_month = int(request.form.get('max_sales_per_month', tenant.max_sales_per_month or 5000))
-            tenant.data_retention_days = int(request.form.get('data_retention_days', tenant.data_retention_days or 365))
-            tenant.enable_pos = request.form.get('enable_pos') == 'on'
-            tenant.enable_payroll = request.form.get('enable_payroll') == 'on'
-            tenant.enable_cheques = request.form.get('enable_cheques') == 'on'
-            tenant.enable_expenses = request.form.get('enable_expenses') == 'on'
-            tenant.enable_store = request.form.get('enable_store') == 'on'
-            tenant.allow_data_export = request.form.get('allow_data_export') == 'on'
-            tenant.allow_custom_integrations = request.form.get('allow_custom_integrations') == 'on'
-            tenant.prices_include_vat = request.form.get('prices_include_vat') == 'on'
-            tenant.updated_at = datetime.now(timezone.utc)
-
-            db.session.commit()
+            with atomic_transaction('tenant_edit'):
+                tenant.name = request.form.get('name_ar', tenant.name).strip()
+                tenant.name_ar = request.form.get('name_ar', tenant.name_ar).strip()
+                tenant.name_en = request.form.get('name_en', tenant.name_en).strip()
+                tenant.slug = request.form.get('slug', tenant.slug).strip()
+                tenant.business_type = request.form.get('business_type', tenant.business_type).strip()
+                tenant.phone_1 = request.form.get('phone_1', tenant.phone_1).strip() or None
+                tenant.phone_2 = request.form.get('phone_2', tenant.phone_2).strip() or None
+                tenant.email = request.form.get('email', tenant.email).strip() or None
+                tenant.address_ar = request.form.get('address_ar', tenant.address_ar).strip() or None
+                tenant.default_currency = request.form.get('default_currency', tenant.default_currency).strip() or get_system_default_currency()
+                tenant.max_users = int(request.form.get('max_users', tenant.max_users or 5))
+                tenant.max_products = int(request.form.get('max_products', tenant.max_products or 1000))
+                tenant.max_customers = int(request.form.get('max_customers', tenant.max_customers or 500))
+                tenant.max_suppliers = int(request.form.get('max_suppliers', tenant.max_suppliers or 200))
+                tenant.max_branches = int(request.form.get('max_branches', tenant.max_branches or 3))
+                tenant.max_warehouses = int(request.form.get('max_warehouses', tenant.max_warehouses or 2))
+                tenant.max_invoices_per_month = int(request.form.get('max_invoices_per_month', tenant.max_invoices_per_month or 1000))
+                tenant.max_sales_per_month = int(request.form.get('max_sales_per_month', tenant.max_sales_per_month or 5000))
+                tenant.data_retention_days = int(request.form.get('data_retention_days', tenant.data_retention_days or 365))
+                tenant.enable_pos = request.form.get('enable_pos') == 'on'
+                tenant.enable_payroll = request.form.get('enable_payroll') == 'on'
+                tenant.enable_cheques = request.form.get('enable_cheques') == 'on'
+                tenant.enable_expenses = request.form.get('enable_expenses') == 'on'
+                tenant.enable_store = request.form.get('enable_store') == 'on'
+                tenant.allow_data_export = request.form.get('allow_data_export') == 'on'
+                tenant.allow_custom_integrations = request.form.get('allow_custom_integrations') == 'on'
+                tenant.prices_include_vat = request.form.get('prices_include_vat') == 'on'
+                tenant.updated_at = datetime.now(timezone.utc)
             _invalidate_owner_changes()
             _audit_owner_db_action('tenant_edit', {'tenant_id': tenant_id})
             flash(f'تم تحديث بيانات التينانت "{tenant.name_ar}" بنجاح.', 'success')
             return redirect(url_for('owner.tenants_list'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في تحديث التينانت: {str(e)}', 'danger')
 
     return render_template('owner/tenant_edit.html', tenant=tenant)
@@ -304,12 +306,15 @@ def tenant_delete(tenant_id):
         flash(f'⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق.', 'warning')
         return redirect(url_for('owner.tenants_list'))
 
-    tenant.is_active = False
-    tenant.is_suspended = True
-    tenant.suspension_reason = 'Deleted by owner'
-    tenant.updated_at = datetime.now(timezone.utc)
-
-    db.session.commit()
+    try:
+        with atomic_transaction('tenant_delete'):
+            tenant.is_active = False
+            tenant.is_suspended = True
+            tenant.suspension_reason = 'Deleted by owner'
+            tenant.updated_at = datetime.now(timezone.utc)
+    except Exception as e:
+        flash(f'خطأ في حذف التينانت: {str(e)}', 'danger')
+        return redirect(url_for('owner.tenants_list'))
     _invalidate_owner_changes()
     _audit_owner_db_action('tenant_soft_delete', {'tenant_id': tenant_id})
     flash(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
@@ -327,14 +332,14 @@ def api_tenant_toggle_status(tenant_id):
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         if tenant.id == 1:
             return jsonify({'success': False, 'error': 'لا يمكن تعطيل التينانت الرئيسي'}), 400
-        tenant.is_active = not tenant.is_active
-        tenant.is_suspended = not tenant.is_active
-        if not tenant.is_active:
-            tenant.suspension_reason = 'Disabled via API'
-        else:
-            tenant.suspension_reason = None
-        tenant.updated_at = datetime.now(timezone.utc)
-        db.session.commit()
+        with atomic_transaction('api_tenant_toggle_status'):
+            tenant.is_active = not tenant.is_active
+            tenant.is_suspended = not tenant.is_active
+            if not tenant.is_active:
+                tenant.suspension_reason = 'Disabled via API'
+            else:
+                tenant.suspension_reason = None
+            tenant.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
         _audit_owner_db_action('api_tenant_toggle_status', {
             'tenant_id': tenant_id, 'is_active': tenant.is_active
@@ -346,7 +351,6 @@ def api_tenant_toggle_status(tenant_id):
             'message': f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح',
         })
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/api/tenant/<int:tenant_id>/update-package', methods=['POST'])
@@ -356,7 +360,7 @@ def api_tenant_update_package(tenant_id):
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
@@ -369,11 +373,12 @@ def api_tenant_update_package(tenant_id):
         if field not in allowed_fields:
             return jsonify({'success': False, 'error': f'Unknown field: {field}'}), 400
         try:
-            setattr(tenant, field, int(value))
+            val = int(value)
         except (ValueError, TypeError):
             return jsonify({'success': False, 'error': 'Invalid integer value'}), 400
-        tenant.updated_at = datetime.now(timezone.utc)
-        db.session.commit()
+        with atomic_transaction('api_tenant_update_package'):
+            setattr(tenant, field, val)
+            tenant.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
         _audit_owner_db_action('api_tenant_update_package', {
             'tenant_id': tenant_id, 'field': field, 'value': value
@@ -383,5 +388,4 @@ def api_tenant_update_package(tenant_id):
             'message': f'تم تحديث {field} إلى {value}',
         })
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500

@@ -186,10 +186,9 @@ def api_customers():
 def api_walkin_customer():
     """Quick / walk-in customer for POS (tenant-scoped)."""
     try:
-        customer = get_pos_walkin_customer()
-        db.session.commit()
+        with atomic_transaction('pos_walkin_customer'):
+            customer = get_pos_walkin_customer()
     except Exception as exc:
-        db.session.rollback()
         return jsonify({"success": False, "error": str(exc)}), 400
 
     return jsonify(
@@ -350,36 +349,35 @@ def api_checkout():
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}
         ), 500
 
-    sale.pos_session_id = session.id
-    db.session.add(sale)
-    db.session.flush()
-    from decimal import Decimal as _Decimal
-    session.total_sales = _Decimal(str(session.total_sales or 0)) + _Decimal(str(sale.total_amount or 0))
-    if payment_data and payment_data.get('payment_method') == 'cash':
-        session.total_cash_sales = _Decimal(str(session.total_cash_sales or 0)) + _Decimal(str(payment_data.get('amount', 0)))
-    db.session.add(session)
-    db.session.commit()
-    log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
+    with atomic_transaction('pos_checkout'):
+        sale.pos_session_id = session.id
+        db.session.add(sale)
+        from decimal import Decimal as _Decimal
+        session.total_sales = _Decimal(str(session.total_sales or 0)) + _Decimal(str(sale.total_amount or 0))
+        if payment_data and payment_data.get('payment_method') == 'cash':
+            session.total_cash_sales = _Decimal(str(session.total_cash_sales or 0)) + _Decimal(str(payment_data.get('amount', 0)))
+        db.session.add(session)
+        log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
 
     order_type = (payload.get('order_type') or 'takeaway').strip()
     if order_type in ('dine_in', 'takeaway', 'delivery'):
         from models import PosKdsOrder
-        kds_order = PosKdsOrder(
-            tenant_id=sale.tenant_id,
-            sale_id=sale.id,
-            session_id=session.id,
-            branch_id=get_active_branch_id(),
-            order_number=sale.sale_number,
-            items_json=json.dumps([{
-                'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
-                'quantity': float(ld['quantity']),
-                'unit_price': float(ld.get('unit_price') or 0),
-                'notes': ld.get('notes', ''),
-            } for ld in lines_data]),
-            status='pending',
-        )
-        db.session.add(kds_order)
-        db.session.commit()
+        with atomic_transaction('pos_kds_order'):
+            kds_order = PosKdsOrder(
+                tenant_id=sale.tenant_id,
+                sale_id=sale.id,
+                session_id=session.id,
+                branch_id=get_active_branch_id(),
+                order_number=sale.sale_number,
+                items_json=json.dumps([{
+                    'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
+                    'quantity': float(ld['quantity']),
+                    'unit_price': float(ld.get('unit_price') or 0),
+                    'notes': ld.get('notes', ''),
+                } for ld in lines_data]),
+                status='pending',
+            )
+            db.session.add(kds_order)
         _notify_kds(
             {
                 'type': 'new_order',
@@ -448,10 +446,9 @@ def api_session_open():
         return jsonify({"success": False, "error": "لا يوجد فرع نشط. يرجى تحديد فرع."}), 400
 
     try:
-        session = create_pos_session(current_user, branch_id, opening_balance, notes)
-        db.session.commit()
+        with atomic_transaction('pos_session_open'):
+            session = create_pos_session(current_user, branch_id, opening_balance, notes)
     except Exception as exc:
-        db.session.rollback()
         return jsonify({"success": False, "error": str(exc)}), 400
 
     return jsonify({
@@ -482,10 +479,9 @@ def api_session_close():
         return jsonify({"success": False, "error": str(exc)}), 404
 
     try:
-        close_pos_session(session, closing_cash, notes)
-        db.session.commit()
+        with atomic_transaction('pos_session_close'):
+            close_pos_session(session, closing_cash, notes)
     except Exception as exc:
-        db.session.rollback()
         return jsonify({"success": False, "error": str(exc)}), 400
 
     return jsonify({

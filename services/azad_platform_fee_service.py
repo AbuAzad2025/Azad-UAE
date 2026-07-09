@@ -6,6 +6,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from models import AzadPlatformFee
 from models.payment_vault import PaymentVault, PaymentTransaction
 from services.gl_posting import post_or_fail
@@ -219,7 +220,8 @@ class AzadPlatformFeeService:
             )
             for fee in fees:
                 fee.status = 'settled'
-            db.session.commit()
+            with atomic_transaction('settle_platform_fees'):
+                db.session.flush()
             results.append({
                 'tenant_id': tid,
                 'fee_count': len(fees),
@@ -270,7 +272,8 @@ class AzadPlatformFeeService:
         vault.transactions.append(txn)
         for fee in fees:
             fee.status = 'paid'
-        db.session.commit()
+        with atomic_transaction('confirm_settlement_paid'):
+            db.session.flush()
         current_app.logger.info(
             'Platform settlement paid: txn=%s fees=%d total=%s',
             txn_id, len(fees), total,

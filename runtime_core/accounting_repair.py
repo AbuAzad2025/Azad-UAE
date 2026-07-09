@@ -13,6 +13,7 @@ from decimal import Decimal
 from flask import current_app
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 
 
 def repair_accounting_data():
@@ -31,13 +32,14 @@ def repair_accounting_data():
     from services import gl_helpers
     from utils.tenanting import get_active_tenant_id
 
-    tenant_id = get_active_tenant_id()
-    if tenant_id is None:
-        from models import Tenant
-        default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-        tenant_id = default_tenant.id if default_tenant else None
+    with atomic_transaction('accounting_repair'):
+        tenant_id = get_active_tenant_id()
+        if tenant_id is None:
+            from models import Tenant
+            default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+            tenant_id = default_tenant.id if default_tenant else None
 
-    GLService.ensure_core_accounts(tenant_id=tenant_id)
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
 
     merchant = Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id).order_by(Customer.id.asc()).first()
     if not merchant:
@@ -164,12 +166,6 @@ def repair_accounting_data():
         )
     else:
         posted_inventory_adjustment = Decimal("0")
-
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        raise
 
     current_app.logger.info(
         "AccountingRepair: merchant_id=%s products_linked=%s legacy_cheque_refs=%s inventory_adjustment=%s",

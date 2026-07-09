@@ -14,6 +14,7 @@ from models.error_audit_log import ErrorAuditLog
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action, _owner_branch_scope, _mask_api_key
+from utils.db_safety import atomic_transaction
 
 import logging
 
@@ -135,10 +136,14 @@ def security_alerts():
 @owner_required
 def resolve_alert(id):
     alert = SecurityAlert.query.get_or_404(id)
-    alert.is_resolved = True
-    alert.resolved_at = datetime.now(timezone.utc)
-    alert.resolved_by = current_user.id
-    db.session.commit()
+    try:
+        with atomic_transaction('resolve_alert'):
+            alert.is_resolved = True
+            alert.resolved_at = datetime.now(timezone.utc)
+            alert.resolved_by = current_user.id
+    except Exception as e:
+        flash(f'❌ خطأ في حل التنبيه: {str(e)}', 'danger')
+        return redirect(url_for('owner.security_alerts'))
     _invalidate_owner_changes()
     flash('✅ تم حل التنبيه الأمني', 'success')
     return redirect(url_for('owner.security_alerts'))
@@ -153,9 +158,13 @@ def ip_whitelist():
         settings = SystemSettings.get_current()
         whitelist = settings.owner_whitelist_ips or []
 
-        whitelist.append({'ip': ip_address, 'description': description})
-        settings.owner_whitelist_ips = whitelist
-        db.session.commit()
+        try:
+            with atomic_transaction('add_ip_whitelist'):
+                whitelist.append({'ip': ip_address, 'description': description})
+                settings.owner_whitelist_ips = whitelist
+        except Exception as e:
+            flash(f'❌ خطأ في إضافة IP: {str(e)}', 'danger')
+            return redirect(url_for('owner.ip_whitelist'))
         _invalidate_owner_changes()
         flash('✅ تم إضافة IP للقائمة البيضاء', 'success')
         return redirect(url_for('owner.ip_whitelist'))
@@ -172,9 +181,13 @@ def delete_ip_whitelist(index):
     whitelist = settings.owner_whitelist_ips or []
 
     if 0 <= index < len(whitelist):
-        whitelist.pop(index)
-        settings.owner_whitelist_ips = whitelist
-        db.session.commit()
+        try:
+            with atomic_transaction('delete_ip_whitelist'):
+                whitelist.pop(index)
+                settings.owner_whitelist_ips = whitelist
+        except Exception as e:
+            flash(f'❌ خطأ في حذف IP: {str(e)}', 'danger')
+            return redirect(url_for('owner.ip_whitelist'))
         _invalidate_owner_changes()
         flash('✅ تم حذف IP من القائمة البيضاء', 'success')
 
@@ -194,8 +207,12 @@ def api_keys():
             created_by=current_user.id
         )
 
-        db.session.add(key)
-        db.session.commit()
+        try:
+            with atomic_transaction('create_api_key'):
+                db.session.add(key)
+        except Exception as e:
+            flash(f'❌ خطأ في إنشاء المفتاح: {str(e)}', 'danger')
+            return redirect(url_for('owner.api_keys'))
         _invalidate_owner_changes()
         flash(f'✅ تم إنشاء API Key ({_mask_api_key(key.key)})', 'success')
         return redirect(url_for('owner.api_keys'))
@@ -208,8 +225,12 @@ def api_keys():
 @owner_required
 def toggle_api_key(id):
     key = APIKey.query.get_or_404(id)
-    key.is_active = not key.is_active
-    db.session.commit()
+    try:
+        with atomic_transaction('toggle_api_key'):
+            key.is_active = not key.is_active
+    except Exception as e:
+        flash(f'❌ خطأ في تحديث المفتاح: {str(e)}', 'danger')
+        return redirect(url_for('owner.api_keys'))
     _invalidate_owner_changes()
     status = 'تفعيل' if key.is_active else 'تعطيل'
     flash(f'✅ تم {status} API Key', 'success')

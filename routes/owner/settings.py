@@ -15,6 +15,7 @@ from services.logging_core import LoggingCore
 from services.store_service import StoreService
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action, _owner_branch_scope, _mask_api_key, _get_developer_from_settings
+from utils.db_safety import atomic_transaction
 
 import logging
 import os
@@ -79,16 +80,14 @@ def update_integration(service):
             }
 
         # حفظ الإعدادات
-        integration.set_config(config_data)
-        integration.updated_by = current_user.id
-        integration.updated_at = datetime.now(timezone.utc)
-
-        db.session.commit()
+        with atomic_transaction('update_integration'):
+            integration.set_config(config_data)
+            integration.updated_by = current_user.id
+            integration.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
         flash(f'✅ تم حفظ إعدادات {service} بنجاح!', 'success')
 
     except Exception as e:
-        db.session.rollback()
         flash(f'❌ خطأ في حفظ الإعدادات: {str(e)}', 'danger')
         current_app.logger.error(f"Error saving integration {service}: {e}")
 
@@ -167,60 +166,58 @@ def company_info():
 
     if request.method == 'POST':
         try:
-            tenant.name_ar = request.form.get('name_ar', '').strip()
-            tenant.name_en = request.form.get('name_en', '').strip()
-            tenant.name = tenant.name_en or tenant.name_ar
-            tenant.slug = request.form.get('slug', '').strip()
-            from services.industry_service import IndustryService
-            business_type = request.form.get('business_type', 'general').strip()
-            tenant.business_type = business_type if IndustryService.validate_industry_code(business_type) else 'general'
-            tenant.industry = tenant.business_type
+            with atomic_transaction('company_info'):
+                tenant.name_ar = request.form.get('name_ar', '').strip()
+                tenant.name_en = request.form.get('name_en', '').strip()
+                tenant.name = tenant.name_en or tenant.name_ar
+                tenant.slug = request.form.get('slug', '').strip()
+                from services.industry_service import IndustryService
+                business_type = request.form.get('business_type', 'general').strip()
+                tenant.business_type = business_type if IndustryService.validate_industry_code(business_type) else 'general'
+                tenant.industry = tenant.business_type
 
-            # Contact Info
-            tenant.address_ar = request.form.get('address_ar', '').strip()
-            tenant.address_en = request.form.get('address_en', '').strip()
-            tenant.city = request.form.get('city', '').strip()
-            tenant.country = request.form.get('country', 'PS')
-            tenant.phone_1 = request.form.get('phone_1', '').strip()
-            tenant.phone_2 = request.form.get('phone_2', '').strip()
-            tenant.mobile = request.form.get('mobile', '').strip()
-            tenant.email = request.form.get('email', '').strip()
-            tenant.website = request.form.get('website', '').strip()
+                # Contact Info
+                tenant.address_ar = request.form.get('address_ar', '').strip()
+                tenant.address_en = request.form.get('address_en', '').strip()
+                tenant.city = request.form.get('city', '').strip()
+                tenant.country = request.form.get('country', 'PS')
+                tenant.phone_1 = request.form.get('phone_1', '').strip()
+                tenant.phone_2 = request.form.get('phone_2', '').strip()
+                tenant.mobile = request.form.get('mobile', '').strip()
+                tenant.email = request.form.get('email', '').strip()
+                tenant.website = request.form.get('website', '').strip()
 
-            # Legal Info
-            tenant.tax_number = request.form.get('tax_number', '').strip()
-            tenant.commercial_register = request.form.get('commercial_register', '').strip()
-            tenant.license_number = request.form.get('license_number', '').strip()
+                # Legal Info
+                tenant.tax_number = request.form.get('tax_number', '').strip()
+                tenant.commercial_register = request.form.get('commercial_register', '').strip()
+                tenant.license_number = request.form.get('license_number', '').strip()
 
-            # Branding
-            tenant.brand_color_primary = request.form.get('brand_color_primary', '#007A3D')
-            tenant.brand_color_secondary = request.form.get('brand_color_secondary', '#D4AF37')
+                # Branding
+                tenant.brand_color_primary = request.form.get('brand_color_primary', '#007A3D')
+                tenant.brand_color_secondary = request.form.get('brand_color_secondary', '#D4AF37')
 
-            tenant.updated_by = current_user.id
+                tenant.updated_by = current_user.id
 
-            # مزامنة اسم الشركة مع إعدادات الفواتير حتى يظهر في الترويسات وصفحة الدخول من مصدر واحد
-            try:
-                inv = InvoiceSettings.get_active()
-                if inv:
-                    inv.company_name_ar = tenant.name_ar or inv.company_name_ar
-                    inv.company_name_en = tenant.name_en or tenant.name or inv.company_name_en
-                    inv.address_ar = tenant.address_ar or inv.address_ar
-                    inv.address_en = tenant.address_en or inv.address_en
-                    inv.phone_1 = tenant.phone_1 or inv.phone_1
-                    inv.phone_2 = tenant.phone_2 or inv.phone_2
-                    inv.email = tenant.email or inv.email
-                    inv.website = tenant.website or inv.website
-                    inv.tax_number = tenant.tax_number or inv.tax_number
-            except Exception as exc:
-                logger.debug("sync invoice from tenant: %s", exc)
-
-            db.session.commit()
+                # مزامنة اسم الشركة مع إعدادات الفواتير حتى يظهر في الترويسات وصفحة الدخول من مصدر واحد
+                try:
+                    inv = InvoiceSettings.get_active()
+                    if inv:
+                        inv.company_name_ar = tenant.name_ar or inv.company_name_ar
+                        inv.company_name_en = tenant.name_en or tenant.name or inv.company_name_en
+                        inv.address_ar = tenant.address_ar or inv.address_ar
+                        inv.address_en = tenant.address_en or inv.address_en
+                        inv.phone_1 = tenant.phone_1 or inv.phone_1
+                        inv.phone_2 = tenant.phone_2 or inv.phone_2
+                        inv.email = tenant.email or inv.email
+                        inv.website = tenant.website or inv.website
+                        inv.tax_number = tenant.tax_number or inv.tax_number
+                except Exception as exc:
+                    logger.debug("sync invoice from tenant: %s", exc)
             _invalidate_owner_changes()
             flash('تم حفظ معلومات الشركة بنجاح', 'success')
             return redirect(url_for('owner.company_info'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ المعلومات: {str(e)}', 'error')
 
     return render_template('owner/company_info.html', tenant=tenant)
@@ -249,21 +246,20 @@ def developer_settings():
 
     if request.method == 'POST':
         try:
-            settings.set_custom_setting('developer_name_ar', request.form.get('developer_name_ar', '').strip())
-            settings.set_custom_setting('developer_name', request.form.get('developer_name', '').strip())
-            settings.set_custom_setting('developer_credit', request.form.get('developer_credit', '').strip())
-            settings.set_custom_setting('developer_phone', request.form.get('developer_phone', '').strip())
-            settings.set_custom_setting('developer_email', request.form.get('developer_email', '').strip())
-            settings.set_custom_setting('developer_website', request.form.get('developer_website', '').strip())
-            settings.set_custom_setting('developer_whatsapp', request.form.get('developer_whatsapp', '').strip())
-            settings.set_custom_setting('developer_logo', request.form.get('developer_logo', '').strip())
-            settings.updated_by = current_user.id
-            db.session.commit()
+            with atomic_transaction('developer_settings'):
+                settings.set_custom_setting('developer_name_ar', request.form.get('developer_name_ar', '').strip())
+                settings.set_custom_setting('developer_name', request.form.get('developer_name', '').strip())
+                settings.set_custom_setting('developer_credit', request.form.get('developer_credit', '').strip())
+                settings.set_custom_setting('developer_phone', request.form.get('developer_phone', '').strip())
+                settings.set_custom_setting('developer_email', request.form.get('developer_email', '').strip())
+                settings.set_custom_setting('developer_website', request.form.get('developer_website', '').strip())
+                settings.set_custom_setting('developer_whatsapp', request.form.get('developer_whatsapp', '').strip())
+                settings.set_custom_setting('developer_logo', request.form.get('developer_logo', '').strip())
+                settings.updated_by = current_user.id
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات الشركة المطورة بنجاح', 'success')
             return redirect(url_for('owner.developer_settings'))
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في الحفظ: {str(e)}', 'error')
     return render_template('owner/developer_settings.html', dev=dev, config=current_app.config)
 
@@ -275,66 +271,64 @@ def system_config():
 
     if request.method == 'POST':
         try:
-            settings.enable_sales = request.form.get('enable_sales') == 'on'
-            settings.enable_purchases = request.form.get('enable_purchases') == 'on'
-            settings.enable_inventory = request.form.get('enable_inventory') == 'on'
-            settings.enable_customers = request.form.get('enable_customers') == 'on'
-            settings.enable_expenses = request.form.get('enable_expenses') == 'on'
-            settings.enable_gl = request.form.get('enable_gl') == 'on'
-            settings.enable_reports = request.form.get('enable_reports') == 'on'
-            settings.enable_ai_assistant = request.form.get('enable_ai_assistant') == 'on'
-            settings.enable_pos = request.form.get('enable_pos') == 'on'
+            with atomic_transaction('system_config'):
+                settings.enable_sales = request.form.get('enable_sales') == 'on'
+                settings.enable_purchases = request.form.get('enable_purchases') == 'on'
+                settings.enable_inventory = request.form.get('enable_inventory') == 'on'
+                settings.enable_customers = request.form.get('enable_customers') == 'on'
+                settings.enable_expenses = request.form.get('enable_expenses') == 'on'
+                settings.enable_gl = request.form.get('enable_gl') == 'on'
+                settings.enable_reports = request.form.get('enable_reports') == 'on'
+                settings.enable_ai_assistant = request.form.get('enable_ai_assistant') == 'on'
+                settings.enable_pos = request.form.get('enable_pos') == 'on'
 
-            settings.enable_barcode_scanner = request.form.get('enable_barcode_scanner') == 'on'
-            settings.enable_multi_warehouse = request.form.get('enable_multi_warehouse') == 'on'
-            settings.enable_multi_currency = request.form.get('enable_multi_currency') == 'on'
-            settings.enable_discounts = request.form.get('enable_discounts') == 'on'
-            settings.enable_returns = request.form.get('enable_returns') == 'on'
-            settings.enable_ecommerce = request.form.get('enable_ecommerce') == 'on'
+                settings.enable_barcode_scanner = request.form.get('enable_barcode_scanner') == 'on'
+                settings.enable_multi_warehouse = request.form.get('enable_multi_warehouse') == 'on'
+                settings.enable_multi_currency = request.form.get('enable_multi_currency') == 'on'
+                settings.enable_discounts = request.form.get('enable_discounts') == 'on'
+                settings.enable_returns = request.form.get('enable_returns') == 'on'
+                settings.enable_ecommerce = request.form.get('enable_ecommerce') == 'on'
 
-            # Azad Platform Fees
-            try:
-                fee_rate = Decimal(request.form.get('azad_platform_fee_rate', '1.00'))
-                settings.azad_platform_fee_rate = fee_rate.quantize(Decimal('0.01'))
-            except Exception:
-                pass
-            try:
-                settings.subscription_monthly_fee_aed = Decimal(request.form.get('subscription_monthly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
-            except Exception:
-                pass
-            try:
-                settings.subscription_yearly_fee_aed = Decimal(request.form.get('subscription_yearly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
-            except Exception:
-                pass
-            try:
-                settings.subscription_perpetual_fee_aed = Decimal(request.form.get('subscription_perpetual_fee_aed', '0') or '0').quantize(Decimal('0.001'))
-            except Exception:
-                pass
+                # Azad Platform Fees
+                try:
+                    fee_rate = Decimal(request.form.get('azad_platform_fee_rate', '1.00'))
+                    settings.azad_platform_fee_rate = fee_rate.quantize(Decimal('0.01'))
+                except Exception:
+                    pass
+                try:
+                    settings.subscription_monthly_fee_aed = Decimal(request.form.get('subscription_monthly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+                except Exception:
+                    pass
+                try:
+                    settings.subscription_yearly_fee_aed = Decimal(request.form.get('subscription_yearly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+                except Exception:
+                    pass
+                try:
+                    settings.subscription_perpetual_fee_aed = Decimal(request.form.get('subscription_perpetual_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+                except Exception:
+                    pass
 
-            try:
-                default_currency = request.form.get('default_currency', 'ILS')
-                settings.default_currency = default_currency
-            except Exception:
-                pass
-            try:
-                from models import Tenant
-                tenant = Tenant.get_current()
-                tenant.default_currency = default_currency
-            except Exception as exc:
-                logger.debug("tenant default_currency sync: %s", exc)
-            settings.default_language = request.form.get('default_language', 'ar')
-            settings.timezone = request.form.get('timezone', 'Asia/Dubai')
-            settings.items_per_page = int(request.form.get('items_per_page', 25))
+                try:
+                    default_currency = request.form.get('default_currency', 'ILS')
+                    settings.default_currency = default_currency
+                except Exception:
+                    pass
+                try:
+                    from models import Tenant
+                    tenant = Tenant.get_current()
+                    tenant.default_currency = default_currency
+                except Exception as exc:
+                    logger.debug("tenant default_currency sync: %s", exc)
+                settings.default_language = request.form.get('default_language', 'ar')
+                settings.timezone = request.form.get('timezone', 'Asia/Dubai')
+                settings.items_per_page = int(request.form.get('items_per_page', 25))
 
-            settings.updated_by = current_user.id
-
-            db.session.commit()
+                settings.updated_by = current_user.id
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات النظام بنجاح', 'success')
             return redirect(url_for('owner.system_config'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
 
     return render_template('owner/system_config.html', settings=settings)
@@ -452,125 +446,123 @@ def invoice_settings():
 
     if request.method == 'POST':
         try:
-            # Company Info
-            settings.company_name_ar = request.form.get('company_name_ar', '').strip()
-            settings.company_name_en = request.form.get('company_name_en', '').strip()
+            with atomic_transaction('invoice_settings'):
+                # Company Info
+                settings.company_name_ar = request.form.get('company_name_ar', '').strip()
+                settings.company_name_en = request.form.get('company_name_en', '').strip()
 
-            # Contact Info
-            settings.address_ar = request.form.get('address_ar', '').strip()
-            settings.address_en = request.form.get('address_en', '').strip()
-            settings.phone_1 = request.form.get('phone_1', '').strip()
-            settings.phone_2 = request.form.get('phone_2', '').strip()
-            settings.email = request.form.get('email', '').strip()
-            settings.website = request.form.get('website', '').strip()
+                # Contact Info
+                settings.address_ar = request.form.get('address_ar', '').strip()
+                settings.address_en = request.form.get('address_en', '').strip()
+                settings.phone_1 = request.form.get('phone_1', '').strip()
+                settings.phone_2 = request.form.get('phone_2', '').strip()
+                settings.email = request.form.get('email', '').strip()
+                settings.website = request.form.get('website', '').strip()
 
-            settings.tax_number = request.form.get('tax_number', '').strip()
-            settings.commercial_register = request.form.get('commercial_register', '').strip()
-            settings.license_number = request.form.get('license_number', '').strip()
+                settings.tax_number = request.form.get('tax_number', '').strip()
+                settings.commercial_register = request.form.get('commercial_register', '').strip()
+                settings.license_number = request.form.get('license_number', '').strip()
 
-            # Bank Info
-            settings.bank_name = request.form.get('bank_name', '').strip()
-            settings.bank_account_number = request.form.get('bank_account_number', '').strip()
-            settings.iban = request.form.get('iban', '').strip()
-            settings.swift_code = request.form.get('swift_code', '').strip()
+                # Bank Info
+                settings.bank_name = request.form.get('bank_name', '').strip()
+                settings.bank_account_number = request.form.get('bank_account_number', '').strip()
+                settings.iban = request.form.get('iban', '').strip()
+                settings.swift_code = request.form.get('swift_code', '').strip()
 
-            # Design
-            settings.header_color = request.form.get('header_color', '#667eea').strip()
-            settings.accent_color = request.form.get('accent_color', '#764ba2').strip()
-            settings.text_color = request.form.get('text_color', '#333333').strip()
+                # Design
+                settings.header_color = request.form.get('header_color', '#667eea').strip()
+                settings.accent_color = request.form.get('accent_color', '#764ba2').strip()
+                settings.text_color = request.form.get('text_color', '#333333').strip()
 
-            # Layout
-            settings.show_logo = request.form.get('show_logo') == 'on'
-            settings.logo_position = request.form.get('logo_position', 'left')
-            settings.logo_size = request.form.get('logo_size', 'medium')
+                # Layout
+                settings.show_logo = request.form.get('show_logo') == 'on'
+                settings.logo_position = request.form.get('logo_position', 'left')
+                settings.logo_size = request.form.get('logo_size', 'medium')
 
-            # Footer
-            settings.footer_text_ar = request.form.get('footer_text_ar', '').strip()
-            settings.footer_text_en = request.form.get('footer_text_en', '').strip()
-            settings.show_terms = request.form.get('show_terms') == 'on'
+                # Footer
+                settings.footer_text_ar = request.form.get('footer_text_ar', '').strip()
+                settings.footer_text_en = request.form.get('footer_text_en', '').strip()
+                settings.show_terms = request.form.get('show_terms') == 'on'
 
-            # Terms
-            settings.terms_conditions_ar = request.form.get('terms_conditions_ar', '').strip()
-            settings.terms_conditions_en = request.form.get('terms_conditions_en', '').strip()
-            settings.payment_terms_ar = request.form.get('payment_terms_ar', '').strip()
-            settings.payment_terms_en = request.form.get('payment_terms_en', '').strip()
+                # Terms
+                settings.terms_conditions_ar = request.form.get('terms_conditions_ar', '').strip()
+                settings.terms_conditions_en = request.form.get('terms_conditions_en', '').strip()
+                settings.payment_terms_ar = request.form.get('payment_terms_ar', '').strip()
+                settings.payment_terms_en = request.form.get('payment_terms_en', '').strip()
 
-            # Notes
-            settings.default_invoice_note_ar = request.form.get('default_invoice_note_ar', '').strip()
-            settings.default_invoice_note_en = request.form.get('default_invoice_note_en', '').strip()
-            settings.default_receipt_note_ar = request.form.get('default_receipt_note_ar', '').strip()
-            settings.default_receipt_note_en = request.form.get('default_receipt_note_en', '').strip()
+                # Notes
+                settings.default_invoice_note_ar = request.form.get('default_invoice_note_ar', '').strip()
+                settings.default_invoice_note_en = request.form.get('default_invoice_note_en', '').strip()
+                settings.default_receipt_note_ar = request.form.get('default_receipt_note_ar', '').strip()
+                settings.default_receipt_note_en = request.form.get('default_receipt_note_en', '').strip()
 
-            # QR & Watermark
-            settings.enable_qr_code = request.form.get('enable_qr_code') == 'on'
-            settings.qr_position = request.form.get('qr_position', 'bottom-right')
-            settings.enable_watermark = request.form.get('enable_watermark') == 'on'
-            settings.watermark_text = request.form.get('watermark_text', '').strip()
+                # QR & Watermark
+                settings.enable_qr_code = request.form.get('enable_qr_code') == 'on'
+                settings.qr_position = request.form.get('qr_position', 'bottom-right')
+                settings.enable_watermark = request.form.get('enable_watermark') == 'on'
+                settings.watermark_text = request.form.get('watermark_text', '').strip()
 
-            settings.paper_size = request.form.get('paper_size', 'A4')
-            settings.orientation = request.form.get('orientation', 'portrait')
-            settings.default_language = request.form.get('default_language', 'ar')
+                settings.paper_size = request.form.get('paper_size', 'A4')
+                settings.orientation = request.form.get('orientation', 'portrait')
+                settings.default_language = request.form.get('default_language', 'ar')
 
-            # Additional
-            settings.show_barcode = request.form.get('show_barcode') == 'on'
-            settings.show_page_numbers = request.form.get('show_page_numbers') == 'on'
-            settings.show_due_date = request.form.get('show_due_date') == 'on'
+                # Additional
+                settings.show_barcode = request.form.get('show_barcode') == 'on'
+                settings.show_page_numbers = request.form.get('show_page_numbers') == 'on'
+                settings.show_due_date = request.form.get('show_due_date') == 'on'
 
-            # Social Media
-            settings.facebook_url = request.form.get('facebook_url', '').strip()
-            settings.instagram_url = request.form.get('instagram_url', '').strip()
-            settings.whatsapp_number = request.form.get('whatsapp_number', '').strip()
+                # Social Media
+                settings.facebook_url = request.form.get('facebook_url', '').strip()
+                settings.instagram_url = request.form.get('instagram_url', '').strip()
+                settings.whatsapp_number = request.form.get('whatsapp_number', '').strip()
 
-            # Template
-            settings.active_template = request.form.get('active_template', 'modern')
+                # Template
+                settings.active_template = request.form.get('active_template', 'modern')
 
-            # Handle logo upload
-            if 'company_logo' in request.files:
-                logo_file = request.files['company_logo']
-                if logo_file and logo_file.filename:
-                    import os
-                    from werkzeug.utils import secure_filename
+                # Handle logo upload
+                if 'company_logo' in request.files:
+                    logo_file = request.files['company_logo']
+                    if logo_file and logo_file.filename:
+                        import os
+                        from werkzeug.utils import secure_filename
 
-                    filename = secure_filename(logo_file.filename)
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    filename = f"logo_{timestamp}_{filename}"
+                        filename = secure_filename(logo_file.filename)
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"logo_{timestamp}_{filename}"
 
-                    upload_folder = os.path.join('static', 'uploads', 'logos')
-                    os.makedirs(upload_folder, exist_ok=True)
+                        upload_folder = os.path.join('static', 'uploads', 'logos')
+                        os.makedirs(upload_folder, exist_ok=True)
 
-                    filepath = os.path.join(upload_folder, filename)
-                    logo_file.save(filepath)
+                        filepath = os.path.join(upload_folder, filename)
+                        logo_file.save(filepath)
 
-                    settings.logo_path = f"uploads/logos/{filename}"
+                        settings.logo_path = f"uploads/logos/{filename}"
 
-            # Handle watermark image upload
-            if 'watermark_image' in request.files:
-                watermark_file = request.files['watermark_image']
-                if watermark_file and watermark_file.filename:
-                    import os
-                    from werkzeug.utils import secure_filename
+                # Handle watermark image upload
+                if 'watermark_image' in request.files:
+                    watermark_file = request.files['watermark_image']
+                    if watermark_file and watermark_file.filename:
+                        import os
+                        from werkzeug.utils import secure_filename
 
-                    filename = secure_filename(watermark_file.filename)
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    filename = f"watermark_{timestamp}_{filename}"
+                        filename = secure_filename(watermark_file.filename)
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"watermark_{timestamp}_{filename}"
 
-                    upload_folder = os.path.join('static', 'uploads', 'watermarks')
-                    os.makedirs(upload_folder, exist_ok=True)
+                        upload_folder = os.path.join('static', 'uploads', 'watermarks')
+                        os.makedirs(upload_folder, exist_ok=True)
 
-                    filepath = os.path.join(upload_folder, filename)
-                    watermark_file.save(filepath)
+                        filepath = os.path.join(upload_folder, filename)
+                        watermark_file.save(filepath)
 
-                    settings.watermark_image_path = f"uploads/watermarks/{filename}"
+                        settings.watermark_image_path = f"uploads/watermarks/{filename}"
 
-            settings.updated_by = current_user.id
-
-            db.session.commit()
+                settings.updated_by = current_user.id
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات الترويسات بنجاح', 'success')
             return redirect(url_for('owner.invoice_settings'))
 
         except Exception as e:
-            db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
 
     return render_template('owner/invoice_settings.html', settings=settings)
@@ -810,16 +802,19 @@ def tax_settings():
         return redirect(url_for('owner.dashboard'))
 
     if request.method == 'POST':
-        tenant.enable_tax = request.form.get('enable_tax') == 'on'
-        tenant.vat_country = (request.form.get('vat_country') or 'PS').strip().upper()[:2]
-        rate = request.form.get('default_tax_rate', type=float)
-        if rate is None and tenant.enable_tax:
-            rate = float(suggested_rate_for_country(tenant.vat_country))
-        tenant.default_tax_rate = Decimal(str(rate or 0))
-        tenant.vat_number = (request.form.get('vat_number') or '').strip() or None
-        tenant.tax_number = (request.form.get('tax_number') or '').strip() or tenant.tax_number
-
-        db.session.commit()
+        try:
+            with atomic_transaction('tax_settings'):
+                tenant.enable_tax = request.form.get('enable_tax') == 'on'
+                tenant.vat_country = (request.form.get('vat_country') or 'PS').strip().upper()[:2]
+                rate = request.form.get('default_tax_rate', type=float)
+                if rate is None and tenant.enable_tax:
+                    rate = float(suggested_rate_for_country(tenant.vat_country))
+                tenant.default_tax_rate = Decimal(str(rate or 0))
+                tenant.vat_number = (request.form.get('vat_number') or '').strip() or None
+                tenant.tax_number = (request.form.get('tax_number') or '').strip() or tenant.tax_number
+        except Exception as e:
+            flash(f'خطأ في حفظ إعدادات الضرائب: {str(e)}', 'danger')
+            return redirect(url_for('owner.tax_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات الضرائب للشركة الحالية', 'success')
         return redirect(url_for('owner.tax_settings'))
@@ -836,19 +831,22 @@ def currency_settings():
     from services.currency_service import CurrencyService
 
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
-
-        default_currency = request.form.get('default_currency', 'AED')
-        settings.default_currency = default_currency
         try:
-            from models import Tenant
-            tenant = Tenant.get_current()
-            tenant.default_currency = default_currency
-        except Exception as exc:
-            logger.debug("tenant currency settings sync: %s", exc)
-        settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
+            with atomic_transaction('currency_settings'):
+                settings = SystemSettings.get_current()
 
-        db.session.commit()
+                default_currency = request.form.get('default_currency', 'AED')
+                settings.default_currency = default_currency
+                try:
+                    from models import Tenant
+                    tenant = Tenant.get_current()
+                    tenant.default_currency = default_currency
+                except Exception as exc:
+                    logger.debug("tenant currency settings sync: %s", exc)
+                settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
+        except Exception as e:
+            flash(f'خطأ في حفظ إعدادات العملات: {str(e)}', 'danger')
+            return redirect(url_for('owner.currency_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات العملات', 'success')
         return redirect(url_for('owner.currency_settings'))
@@ -907,8 +905,8 @@ def exchange_rates():
                     id=record_id, tenant_id=tenant_id
                 ).first()
                 if rec:
-                    db.session.delete(rec)
-                    db.session.commit()
+                    with atomic_transaction('exchange_rate_delete'):
+                        db.session.delete(rec)
                     flash('✅ تم حذف السجل.', 'success')
                 else:
                     flash('⚠️ السجل غير موجود أو لا يخصك.', 'warning')
@@ -936,20 +934,19 @@ def payment_gateways():
 
     vault = PaymentVault.get_platform_vault()
     if not vault:
-        vault = PaymentVault(tenant_id=None)
-        vault.set_vault_password(current_app.config.get('SECRET_KEY', 'default-vault-password'))
-        db.session.add(vault)
-        db.session.commit()
+        with atomic_transaction('payment_gateway_create_vault'):
+            vault = PaymentVault(tenant_id=None)
+            vault.set_vault_password(current_app.config.get('SECRET_KEY', 'default-vault-password'))
+            db.session.add(vault)
         _invalidate_owner_changes()
 
     if request.method == 'POST':
-        vault.stripe_publishable_key = request.form.get('stripe_publishable_key')
-        vault.stripe_secret_key = request.form.get('stripe_secret_key')
-        vault.paypal_client_id = request.form.get('paypal_client_id')
-        vault.paypal_client_secret = request.form.get('paypal_client_secret')
-        vault.nowpayments_api_key = request.form.get('nowpayments_api_key')
-
-        db.session.commit()
+        with atomic_transaction('payment_gateway_update'):
+            vault.stripe_publishable_key = request.form.get('stripe_publishable_key')
+            vault.stripe_secret_key = request.form.get('stripe_secret_key')
+            vault.paypal_client_id = request.form.get('paypal_client_id')
+            vault.paypal_client_secret = request.form.get('paypal_client_secret')
+            vault.nowpayments_api_key = request.form.get('nowpayments_api_key')
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات بوابات الدفع', 'success')
         return redirect(url_for('owner.payment_gateways'))
@@ -960,16 +957,19 @@ def payment_gateways():
 @owner_required
 def email_settings():
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
+        try:
+            with atomic_transaction('email_settings'):
+                settings = SystemSettings.get_current()
 
-        settings.smtp_server = request.form.get('smtp_server')
-        settings.smtp_port = request.form.get('smtp_port', type=int)
-        settings.smtp_username = request.form.get('smtp_username')
-        settings.smtp_password = request.form.get('smtp_password')
-        settings.smtp_use_tls = request.form.get('smtp_use_tls') == 'on'
-        settings.email_from = request.form.get('email_from')
-
-        db.session.commit()
+                settings.smtp_server = request.form.get('smtp_server')
+                settings.smtp_port = request.form.get('smtp_port', type=int)
+                settings.smtp_username = request.form.get('smtp_username')
+                settings.smtp_password = request.form.get('smtp_password')
+                settings.smtp_use_tls = request.form.get('smtp_use_tls') == 'on'
+                settings.email_from = request.form.get('email_from')
+        except Exception as e:
+            flash(f'خطأ في حفظ إعدادات البريد: {str(e)}', 'danger')
+            return redirect(url_for('owner.email_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات البريد الإلكتروني', 'success')
         return redirect(url_for('owner.email_settings'))
@@ -982,15 +982,18 @@ def email_settings():
 @owner_required
 def sms_settings():
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
+        try:
+            with atomic_transaction('sms_settings'):
+                settings = SystemSettings.get_current()
 
-        sms_provider = (request.form.get('sms_provider') or '').strip()
-        settings.sms_provider = sms_provider or None
-        settings.sms_api_key = request.form.get('sms_api_key')
-        settings.sms_sender_name = request.form.get('sms_sender_name')
-        settings.sms_enabled = request.form.get('sms_enabled') == 'on'
-
-        db.session.commit()
+                sms_provider = (request.form.get('sms_provider') or '').strip()
+                settings.sms_provider = sms_provider or None
+                settings.sms_api_key = request.form.get('sms_api_key')
+                settings.sms_sender_name = request.form.get('sms_sender_name')
+                settings.sms_enabled = request.form.get('sms_enabled') == 'on'
+        except Exception as e:
+            flash(f'خطأ في حفظ إعدادات الرسائل النصية: {str(e)}', 'danger')
+            return redirect(url_for('owner.sms_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات الرسائل النصية', 'success')
         return redirect(url_for('owner.sms_settings'))
@@ -1003,14 +1006,17 @@ def sms_settings():
 @owner_required
 def whatsapp_settings():
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
+        try:
+            with atomic_transaction('whatsapp_settings'):
+                settings = SystemSettings.get_current()
 
-        settings.whatsapp_api_url = request.form.get('whatsapp_api_url')
-        settings.whatsapp_api_key = request.form.get('whatsapp_api_key')
-        settings.whatsapp_phone_number = request.form.get('whatsapp_phone_number')
-        settings.whatsapp_enabled = request.form.get('whatsapp_enabled') == 'on'
-
-        db.session.commit()
+                settings.whatsapp_api_url = request.form.get('whatsapp_api_url')
+                settings.whatsapp_api_key = request.form.get('whatsapp_api_key')
+                settings.whatsapp_phone_number = request.form.get('whatsapp_phone_number')
+                settings.whatsapp_enabled = request.form.get('whatsapp_enabled') == 'on'
+        except Exception as e:
+            flash(f'خطأ في حفظ إعدادات واتساب: {str(e)}', 'danger')
+            return redirect(url_for('owner.whatsapp_settings'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات واتساب', 'success')
         return redirect(url_for('owner.whatsapp_settings'))
@@ -1023,16 +1029,20 @@ def whatsapp_settings():
 @owner_required
 def notification_templates():
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
+        try:
+            with atomic_transaction('notification_templates'):
+                settings = SystemSettings.get_current()
 
-        templates = {
-            'invoice_email': request.form.get('invoice_email_template'),
-            'payment_sms': request.form.get('payment_sms_template'),
-            'reminder_whatsapp': request.form.get('reminder_whatsapp_template')
-        }
+                templates = {
+                    'invoice_email': request.form.get('invoice_email_template'),
+                    'payment_sms': request.form.get('payment_sms_template'),
+                    'reminder_whatsapp': request.form.get('reminder_whatsapp_template')
+                }
 
-        settings.notification_templates = templates
-        db.session.commit()
+                settings.notification_templates = templates
+        except Exception as e:
+            flash(f'خطأ في حفظ قوالب الإشعارات: {str(e)}', 'danger')
+            return redirect(url_for('owner.notification_templates'))
         _invalidate_owner_changes()
         flash('✅ تم تحديث قوالب الإشعارات', 'success')
         return redirect(url_for('owner.notification_templates'))
@@ -1051,30 +1061,33 @@ def api_update_tenant_settings():
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'success': False, 'error': 'Invalid JSON'}), 400
         tenant = db.session.get(Tenant, get_active_tenant_id())
         if not tenant:
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         field = data.get('field')
         value = data.get('value')
+        if field not in ('default_tax_rate', 'prices_include_vat', 'logo_url'):
+            return jsonify({'success': False, 'error': f'Unknown field: {field}'}), 400
         if field == 'default_tax_rate':
             try:
-                tenant.default_tax_rate = Decimal(str(value))
+                parsed = Decimal(str(value))
             except Exception:
                 return jsonify({'success': False, 'error': 'Invalid tax rate value'}), 400
-        elif field == 'prices_include_vat':
-            tenant.prices_include_vat = bool(value)
-        elif field == 'logo_url':
-            tenant.logo_url = str(value).strip()
-        else:
-            return jsonify({'success': False, 'error': f'Unknown field: {field}'}), 400
-        tenant.updated_at = datetime.now(timezone.utc)
-        db.session.commit()
+        with atomic_transaction('api_update_tenant_settings'):
+            if field == 'default_tax_rate':
+                tenant.default_tax_rate = parsed
+            elif field == 'prices_include_vat':
+                tenant.prices_include_vat = bool(value)
+            elif field == 'logo_url':
+                tenant.logo_url = str(value).strip()
+            tenant.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
         _audit_owner_db_action('api_update_tenant_settings', {'field': field, 'tenant_id': tenant.id})
         return jsonify({'success': True, 'message': f'تم تحديث {field} بنجاح'})
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/api/toggle-warehouse-negative', methods=['POST'])
@@ -1085,7 +1098,9 @@ def api_toggle_warehouse_negative():
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'success': False, 'error': 'Invalid JSON'}), 400
         warehouse_id = data.get('warehouse_id')
         if not warehouse_id:
             return jsonify({'success': False, 'error': 'warehouse_id required'}), 400
@@ -1093,15 +1108,14 @@ def api_toggle_warehouse_negative():
         warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
         if not warehouse:
             return jsonify({'success': False, 'error': 'Warehouse not found'}), 404
-        warehouse.allow_negative_inventory = not warehouse.allow_negative_inventory
-        db.session.commit()
+        with atomic_transaction('api_toggle_warehouse_negative'):
+            warehouse.allow_negative_inventory = not warehouse.allow_negative_inventory
         _invalidate_owner_changes()
         return jsonify({
             'success': True,
             'allow_negative_inventory': warehouse.allow_negative_inventory,
         })
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/api/supervisor-override', methods=['POST'])
@@ -1111,7 +1125,9 @@ def api_supervisor_override():
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'success': False, 'error': 'Invalid JSON'}), 400
         action = data.get('action', '')
         supervisor_id = data.get('supervisor_id')
         password = data.get('password', '')

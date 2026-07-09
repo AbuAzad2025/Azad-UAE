@@ -563,7 +563,7 @@ class ExchangeRateService:
             ).first()
             if existing:
                 existing.rate = Decimal(str(rate))
-                db.session.commit()
+                db.session.flush()
                 return
 
             record = ExchangeRateRecord(
@@ -576,7 +576,7 @@ class ExchangeRateService:
                 effective_date=today,
             )
             db.session.add(record)
-            db.session.commit()
+            db.session.flush()
         except Exception:
             db.session.rollback()
 

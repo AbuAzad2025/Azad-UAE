@@ -19,6 +19,7 @@ from utils.static_asset_paths import tenant_upload_dir
 from services.stock_service import StockService
 from utils.gl_reference_types import GLRef
 from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id, get_active_tenant_id
+from utils.db_safety import atomic_transaction
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
 
@@ -423,105 +424,96 @@ def import_products():
                 if not warehouse:
                     warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
                 
-                for index, row in df.iterrows():
-                    try:
-                        name = str(row['name']).strip()
-                        if not name or pd.isna(name): continue
-                        
-                        price = float(row['price']) if not pd.isna(row['price']) else 0.0
-                        cost = float(row.get('cost', 0)) if not pd.isna(row.get('cost')) else 0.0
-                        stock = float(row.get('stock', 0)) if not pd.isna(row.get('stock')) else 0.0
-                        
-                        # Handle Warranty
-                        warranty_days = 0
-                        warranty_raw = row.get('warranty', 0)
-                        if not pd.isna(warranty_raw):
-                            try:
-                                warranty_days = int(float(warranty_raw))
-                            except (ValueError, TypeError):
-                                warranty_days = 0
-                        
-                        sku = str(row.get('sku', '')).strip()
-                        if pd.isna(sku) or not sku:
-                            sku = generate_sku() # Auto-generate
-                        
-                        barcode = str(row.get('barcode', '')).strip()
-                        if pd.isna(barcode) or not barcode:
-                            # Auto-generate barcode if missing (using SKU or random)
-                            barcode = sku 
-                        
-                        tid = get_active_tenant_id(current_user)
-                        dup_q = Product.query.filter(
-                            (Product.sku == sku) | (Product.barcode == barcode)
-                        )
-                        if tid is not None:
-                            dup_q = dup_q.filter(Product.tenant_id == tid)
-                        existing = dup_q.first()
-                        
-                        if existing:
-                            if request.form.get('update_existing'):
-                                # Update logic
-                                existing.name = name
-                                existing.regular_price = price
-                                existing.cost_price = cost
-                                existing.warranty_days = warranty_days
-                                # Stock update is tricky - usually we add adjustment or overwrite
-                                # For simplicity in import: Overwrite if stock provided
-                                if stock > 0:
-                                     # Calculate diff
-                                     diff = stock - float(existing.current_stock)
-                                     if diff != 0:
-                                         StockService.adjust_stock(existing.id, diff, "Import Update", warehouse.id if warehouse else None)
-                                success_count += 1
-                            else:
-                                error_count += 1
-                                errors.append(f"المنتج {name} موجود مسبقاً (SKU: {sku})")
-                            continue
-                        
-                        # Create New
-                        category_name = str(row.get('category', '')).strip()
-                        category_id = None
-                        if category_name and not pd.isna(category_name) and category_name.lower() != 'nan':
-                            cat = ProductCategory.query.filter_by(tenant_id=tid).filter(ProductCategory.name.ilike(category_name)).first()
-                            if cat:
-                                category_id = cat.id
-                            else:
-                                # Create category on fly? Or skip. Let's create.
-                                new_cat = ProductCategory(name=category_name)
-                                assign_tenant_id(new_cat, current_user)
-                                db.session.add(new_cat)
-                                db.session.flush()
-                                category_id = new_cat.id
-                        
-                        new_product = Product(
-                            name=name,
-                            sku=sku,
-                            barcode=barcode,
-                            regular_price=price,
-                            cost_price=cost,
-                            category_id=category_id,
-                            warranty_days=warranty_days,
-                            current_stock=0 # Will adjust via service
-                        )
-                        assign_tenant_id(new_product, current_user)
-                        db.session.add(new_product)
-                        db.session.flush()
-                        
-                        if stock > 0:
-                            StockService.add_opening_stock(
-                                product_id=new_product.id,
-                                quantity=stock,
-                                notes='مخزون افتتاحي من استيراد ملف',
-                                warehouse_id=warehouse.id if warehouse else None,
+                with atomic_transaction('product_import'):
+                    for index, row in df.iterrows():
+                        try:
+                            name = str(row['name']).strip()
+                            if not name or pd.isna(name): continue
+                            
+                            price = float(row['price']) if not pd.isna(row['price']) else 0.0
+                            cost = float(row.get('cost', 0)) if not pd.isna(row.get('cost')) else 0.0
+                            stock = float(row.get('stock', 0)) if not pd.isna(row.get('stock')) else 0.0
+                            
+                            warranty_days = 0
+                            warranty_raw = row.get('warranty', 0)
+                            if not pd.isna(warranty_raw):
+                                try:
+                                    warranty_days = int(float(warranty_raw))
+                                except (ValueError, TypeError):
+                                    warranty_days = 0
+                            
+                            sku = str(row.get('sku', '')).strip()
+                            if pd.isna(sku) or not sku:
+                                sku = generate_sku()
+                            
+                            barcode = str(row.get('barcode', '')).strip()
+                            if pd.isna(barcode) or not barcode:
+                                barcode = sku 
+                            
+                            tid = get_active_tenant_id(current_user)
+                            dup_q = Product.query.filter(
+                                (Product.sku == sku) | (Product.barcode == barcode)
                             )
-                        
-                        success_count += 1
-                        
-                    except Exception as e:
-                        error_count += 1
-                        errors.append(f"خطأ في السطر {index+2}: {str(e)}")
-                
-                db.session.commit()
+                            if tid is not None:
+                                dup_q = dup_q.filter(Product.tenant_id == tid)
+                            existing = dup_q.first()
+                            
+                            if existing:
+                                if request.form.get('update_existing'):
+                                    existing.name = name
+                                    existing.regular_price = price
+                                    existing.cost_price = cost
+                                    existing.warranty_days = warranty_days
+                                    if stock > 0:
+                                        diff = stock - float(existing.current_stock)
+                                        if diff != 0:
+                                            StockService.adjust_stock(existing.id, diff, "Import Update", warehouse.id if warehouse else None)
+                                    success_count += 1
+                                else:
+                                    error_count += 1
+                                    errors.append(f"المنتج {name} موجود مسبقاً (SKU: {sku})")
+                                continue
+                            
+                            category_name = str(row.get('category', '')).strip()
+                            category_id = None
+                            if category_name and not pd.isna(category_name) and category_name.lower() != 'nan':
+                                cat = ProductCategory.query.filter_by(tenant_id=tid).filter(ProductCategory.name.ilike(category_name)).first()
+                                if cat:
+                                    category_id = cat.id
+                                else:
+                                    new_cat = ProductCategory(name=category_name)
+                                    assign_tenant_id(new_cat, current_user)
+                                    db.session.add(new_cat)
+                                    db.session.flush()
+                                    category_id = new_cat.id
+                            
+                            new_product = Product(
+                                name=name,
+                                sku=sku,
+                                barcode=barcode,
+                                regular_price=price,
+                                cost_price=cost,
+                                category_id=category_id,
+                                warranty_days=warranty_days,
+                                current_stock=0
+                            )
+                            assign_tenant_id(new_product, current_user)
+                            db.session.add(new_product)
+                            db.session.flush()
+                            
+                            if stock > 0:
+                                StockService.add_opening_stock(
+                                    product_id=new_product.id,
+                                    quantity=stock,
+                                    notes='مخزون افتتاحي من استيراد ملف',
+                                    warehouse_id=warehouse.id if warehouse else None,
+                                )
+                            
+                            success_count += 1
+                            
+                        except Exception as e:
+                            error_count += 1
+                            errors.append(f"خطأ في السطر {index+2}: {str(e)}")
                 
                 if success_count > 0:
                     flash(f'تم استيراد {success_count} منتج بنجاح.', 'success')
@@ -565,47 +557,46 @@ def import_grid():
     if not warehouse:
         warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
     
-    for i in range(len(names)):
-        name = names[i].strip()
-        if not name: continue
-        
-        try:
-            price = float(prices[i]) if i < len(prices) and prices[i] else 0.0
-            cost = float(costs[i]) if i < len(costs) and costs[i] else 0.0
-            stock = float(stocks[i]) if i < len(stocks) and stocks[i] else 0.0
+    with atomic_transaction('product_grid_import'):
+        for i in range(len(names)):
+            name = names[i].strip()
+            if not name: continue
             
-            sku = skus[i].strip() if i < len(skus) else ''
-            if not sku: sku = generate_sku()
-            
-            barcode = barcodes[i].strip() if i < len(barcodes) else ''
-            if not barcode: barcode = sku
-            
-            new_product = Product(
-                name=name,
-                sku=sku,
-                barcode=barcode,
-                regular_price=price,
-                cost_price=cost,
-                current_stock=0
-            )
-            assign_tenant_id(new_product, current_user)
-            db.session.add(new_product)
-            db.session.flush()
-            
-            if stock > 0:
-                StockService.add_opening_stock(
-                    product_id=new_product.id,
-                    quantity=stock,
-                    notes='مخزون افتتاحي من إدخال سريع',
-                    warehouse_id=warehouse.id if warehouse else None,
+            try:
+                price = float(prices[i]) if i < len(prices) and prices[i] else 0.0
+                cost = float(costs[i]) if i < len(costs) and costs[i] else 0.0
+                stock = float(stocks[i]) if i < len(stocks) and stocks[i] else 0.0
+                
+                sku = skus[i].strip() if i < len(skus) else ''
+                if not sku: sku = generate_sku()
+                
+                barcode = barcodes[i].strip() if i < len(barcodes) else ''
+                if not barcode: barcode = sku
+                
+                new_product = Product(
+                    name=name,
+                    sku=sku,
+                    barcode=barcode,
+                    regular_price=price,
+                    cost_price=cost,
+                    current_stock=0
                 )
-            
-            count += 1
-        except Exception as e:
-            errors += 1
-            current_app.logger.error(f"Grid Import Error: {e}")
-            
-    db.session.commit()
+                assign_tenant_id(new_product, current_user)
+                db.session.add(new_product)
+                db.session.flush()
+                
+                if stock > 0:
+                    StockService.add_opening_stock(
+                        product_id=new_product.id,
+                        quantity=stock,
+                        notes='مخزون افتتاحي من إدخال سريع',
+                        warehouse_id=warehouse.id if warehouse else None,
+                    )
+                
+                count += 1
+            except Exception as e:
+                errors += 1
+                current_app.logger.error(f"Grid Import Error: {e}")
     
     if count > 0:
         flash(f'تم إضافة {count} منتج بنجاح.', 'success')
@@ -811,55 +802,54 @@ def create():
                     product.extra_fields = extra_fields
                 assign_tenant_id(product, current_user)
                 
-                if 'image' in request.files:
-                    file = request.files['image']
-                    if file.filename and product.tenant_id:
-                        image_path = save_uploaded_file(
-                            file, tenant_upload_dir(product.tenant_id, "products")
-                        )
-                        if image_path:
-                            product.image_url = image_path
-                
-                db.session.add(product)
-                db.session.flush()
-                for tier_code, field_name in [
-                    ('wholesale', 'tier_wholesale_price'),
-                    ('retail', 'tier_retail_price'),
-                    ('distributor', 'tier_distributor_price'),
-                    ('rep', 'tier_rep_price'),
-                ]:
-                    price_val = safe_float(request.form.get(field_name))
-                    if price_val and price_val > 0:
-                        from models import ProductPriceTier
-                        from utils.currency_utils import resolve_tenant_base_currency
-                        tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
-                        tier = ProductPriceTier(
-                            tenant_id=product.tenant_id,
+                with atomic_transaction('product_create'):
+                    if 'image' in request.files:
+                        file = request.files['image']
+                        if file.filename and product.tenant_id:
+                            image_path = save_uploaded_file(
+                                file, tenant_upload_dir(product.tenant_id, "products")
+                            )
+                            if image_path:
+                                product.image_url = image_path
+                    
+                    db.session.add(product)
+                    db.session.flush()
+                    for tier_code, field_name in [
+                        ('wholesale', 'tier_wholesale_price'),
+                        ('retail', 'tier_retail_price'),
+                        ('distributor', 'tier_distributor_price'),
+                        ('rep', 'tier_rep_price'),
+                    ]:
+                        price_val = safe_float(request.form.get(field_name))
+                        if price_val and price_val > 0:
+                            from models import ProductPriceTier
+                            from utils.currency_utils import resolve_tenant_base_currency
+                            tier_currency = resolve_tenant_base_currency(tenant_id=product.tenant_id)
+                            tier = ProductPriceTier(
+                                tenant_id=product.tenant_id,
+                                product_id=product.id,
+                                tier_code=tier_code,
+                                price=price_val,
+                                currency=tier_currency,
+                            )
+                            db.session.add(tier)
+                    if partner_rows:
+                        for row in partner_rows:
+                            partner_row = ProductPartner(
+                                product_id=product.id,
+                                partner_customer_id=row['partner_customer_id'],
+                                percentage=row['percentage'],
+                            )
+                            assign_tenant_id(partner_row, current_user)
+                            product.partner_shares.append(partner_row)
+                    
+                    if initial_stock > 0:
+                        StockService.add_opening_stock(
                             product_id=product.id,
-                            tier_code=tier_code,
-                            price=price_val,
-                            currency=tier_currency,
+                            quantity=initial_stock,
+                            notes=f'مخزون افتتاحي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}',
+                            warehouse_id=warehouse_id,
                         )
-                        db.session.add(tier)
-                if partner_rows:
-                    for row in partner_rows:
-                        partner_row = ProductPartner(
-                            product_id=product.id,
-                            partner_customer_id=row['partner_customer_id'],
-                            percentage=row['percentage'],
-                        )
-                        assign_tenant_id(partner_row, current_user)
-                        product.partner_shares.append(partner_row)
-                
-                if initial_stock > 0:
-                    StockService.add_opening_stock(
-                        product_id=product.id,
-                        quantity=initial_stock,
-                        notes=f'مخزون افتتاحي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}',
-                        warehouse_id=warehouse_id,
-                    )
-                
-                db.session.commit()
                 
                 LoggingCore.log_audit('create', 'products', product.id)
                 
@@ -1004,73 +994,69 @@ def edit(id):
                 flash('⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.', 'warning')
                 return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
 
-            product.partner_shares.clear()
-            if partner_rows:
-                product_tid = int(product.tenant_id)
-                for row in partner_rows:
-                    partner_customer = Customer.query.filter_by(id=row['partner_customer_id'], tenant_id=product_tid).first()
-                    if not partner_customer:
-                        flash('⚠️ الشريك المحدد غير موجود.', 'warning')
-                        return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
-                    p_tid = getattr(partner_customer, 'tenant_id', None)
-                    if p_tid is not None and int(p_tid) != product_tid:
-                        flash('⚠️ الشريك المحدد ينتمي لشركة أخرى.', 'warning')
-                        return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
-                    product.partner_shares.append(ProductPartner(
-                        product_id=product.id,
-                        partner_customer_id=row['partner_customer_id'],
-                        percentage=row['percentage'],
-                        tenant_id=product_tid,
-                    ))
-            
-            from models import ProductPriceTier
-            for tier_code, field_name in [
-                ('wholesale', 'tier_wholesale_price'),
-                ('retail', 'tier_retail_price'),
-                ('distributor', 'tier_distributor_price'),
-                ('rep', 'tier_rep_price'),
-            ]:
-                price_val = safe_float(request.form.get(field_name))
-                existing = ProductPriceTier.query.filter_by(
-                    product_id=product.id,
-                    tier_code=tier_code,
-                ).first()
-                if price_val and price_val > 0:
-                    if existing:
-                        existing.price = price_val
-                    else:
-                        tier = ProductPriceTier(
-                            tenant_id=product.tenant_id,
+            with atomic_transaction('product_edit'):
+                product.partner_shares.clear()
+                if partner_rows:
+                    product_tid = int(product.tenant_id)
+                    for row in partner_rows:
+                        partner_customer = Customer.query.filter_by(id=row['partner_customer_id'], tenant_id=product_tid).first()
+                        if not partner_customer:
+                            raise ValueError('الشريك المحدد غير موجود.')
+                        p_tid = getattr(partner_customer, 'tenant_id', None)
+                        if p_tid is not None and int(p_tid) != product_tid:
+                            raise ValueError('الشريك المحدد ينتمي لشركة أخرى.')
+                        product.partner_shares.append(ProductPartner(
                             product_id=product.id,
-                            tier_code=tier_code,
-                            price=price_val,
-                        )
-                        db.session.add(tier)
-                elif existing:
-                    existing.is_active = False
-            if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
-                if scoped_branch_id is not None and not warehouse_id:
-                    flash('⚠️ يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع.', 'warning')
-                    return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
-                StockService.adjust_stock(
-                    product_id=product.id,
-                    quantity=new_stock - old_stock,
-                    notes=f'تعديل مخزون من {old_stock} إلى {new_stock}',
-                    warehouse_id=warehouse_id,
-                    reference_type=GLRef.PRODUCT_UPDATE,
-                    reference_id=product.id,
-                )
-            
-            if 'image' in request.files:
-                file = request.files['image']
-                if file.filename and product.tenant_id:
-                    image_path = save_uploaded_file(
-                        file, tenant_upload_dir(product.tenant_id, "products")
+                            partner_customer_id=row['partner_customer_id'],
+                            percentage=row['percentage'],
+                            tenant_id=product_tid,
+                        ))
+                
+                from models import ProductPriceTier
+                for tier_code, field_name in [
+                    ('wholesale', 'tier_wholesale_price'),
+                    ('retail', 'tier_retail_price'),
+                    ('distributor', 'tier_distributor_price'),
+                    ('rep', 'tier_rep_price'),
+                ]:
+                    price_val = safe_float(request.form.get(field_name))
+                    existing = ProductPriceTier.query.filter_by(
+                        product_id=product.id,
+                        tier_code=tier_code,
+                    ).first()
+                    if price_val and price_val > 0:
+                        if existing:
+                            existing.price = price_val
+                        else:
+                            tier = ProductPriceTier(
+                                tenant_id=product.tenant_id,
+                                product_id=product.id,
+                                tier_code=tier_code,
+                                price=price_val,
+                            )
+                            db.session.add(tier)
+                    elif existing:
+                        existing.is_active = False
+                if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
+                    if scoped_branch_id is not None and not warehouse_id:
+                        raise ValueError('يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع.')
+                    StockService.adjust_stock(
+                        product_id=product.id,
+                        quantity=new_stock - old_stock,
+                        notes=f'تعديل مخزون من {old_stock} إلى {new_stock}',
+                        warehouse_id=warehouse_id,
+                        reference_type=GLRef.PRODUCT_UPDATE,
+                        reference_id=product.id,
                     )
-                    if image_path:
-                        product.image_url = image_path
-            
-            db.session.commit()
+                
+                if 'image' in request.files:
+                    file = request.files['image']
+                    if file.filename and product.tenant_id:
+                        image_path = save_uploaded_file(
+                            file, tenant_upload_dir(product.tenant_id, "products")
+                        )
+                        if image_path:
+                            product.image_url = image_path
             
             LoggingCore.log_audit('update', 'products', product.id)
             
@@ -1116,17 +1102,19 @@ def delete(id):
         sales_count = sales_query.count()
         purchases_count = purchases_query.count()
         
+        with atomic_transaction('product_delete'):
+            if sales_count > 0 or purchases_count > 0:
+                product.is_active = False
+                LoggingCore.log_audit('deactivate', 'products', id)
+            else:
+                db.session.delete(product)
+                LoggingCore.log_audit('delete', 'products', id)
+        
         if sales_count > 0 or purchases_count > 0:
-            product.is_active = False
-            db.session.commit()
-            LoggingCore.log_audit('deactivate', 'products', id)
             if _wants_json():
                 return jsonify({'success': True, 'message': f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'})
             flash(f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
         else:
-            db.session.delete(product)
-            db.session.commit()
-            LoggingCore.log_audit('delete', 'products', id)
             if _wants_json():
                 return jsonify({'success': True, 'message': f'تم حذف المنتج "{product.name}" نهائياً!'})
             flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', 'success')
@@ -1225,8 +1213,8 @@ def create_category():
             is_active=True
         )
 
-        db.session.add(category)
-        db.session.commit()
+        with atomic_transaction('product_category_create'):
+            db.session.add(category)
 
         if request.is_json:
             return jsonify({
@@ -1284,10 +1272,10 @@ def update_category(id):
             flash(message, 'warning')
             return redirect(url_for('products.categories'))
 
-        category.name = name
-        category.name_ar = name_ar
-        category.description = description
-        db.session.commit()
+        with atomic_transaction('product_category_update'):
+            category.name = name
+            category.name_ar = name_ar
+            category.description = description
         LoggingCore.log_audit('update', 'product_categories', category.id)
 
         if request.is_json:
@@ -1324,8 +1312,8 @@ def delete_category(id):
             flash(message, 'warning')
             return redirect(url_for('products.categories'))
 
-        category.is_active = False
-        db.session.commit()
+        with atomic_transaction('product_category_delete'):
+            category.is_active = False
         LoggingCore.log_audit('delete', 'product_categories', category.id)
 
         if request.is_json:
@@ -1430,14 +1418,14 @@ def adjust_stock(id):
         else:
             return jsonify({'success': False, 'message': 'نوع التعديل غير صحيح'}), 400
         
-        delta = quantity if adjustment_type != 'set' else (new_stock - old_stock)
-        StockService.adjust_stock(
-            product_id=product.id,
-            quantity=delta if adjustment_type != 'subtract' else -quantity,
-            notes=notes or f'تعديل يدوي - {reason}',
-            warehouse_id=warehouse.id if warehouse else None
-        )
-        db.session.commit()
+        with atomic_transaction('product_adjust_stock'):
+            delta = quantity if adjustment_type != 'set' else (new_stock - old_stock)
+            StockService.adjust_stock(
+                product_id=product.id,
+                quantity=delta if adjustment_type != 'subtract' else -quantity,
+                notes=notes or f'تعديل يدوي - {reason}',
+                warehouse_id=warehouse.id if warehouse else None
+            )
         
         LoggingCore.log_audit('update', 'products', product.id, f'تعديل مخزون: {old_stock} → {new_stock}')
         
