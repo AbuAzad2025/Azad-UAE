@@ -214,19 +214,6 @@ def create_app(config_class=Config):
     except ImportError:
         app.logger.warning("Event listeners not available")
 
-    # Run default tenant maintenance check at startup
-    try:
-        from scripts.fix_default_tenant import run_default_tenant_maintenance
-        result = run_default_tenant_maintenance(dry_run=False)
-        if result.get('action_needed'):
-            app.logger.info(f'[OK] Default tenant maintenance completed: {result.get("patched", [])}')
-        else:
-            app.logger.info('[OK] Default tenant maintenance check passed - no action needed')
-    except ImportError:
-        app.logger.info('Default tenant maintenance script not available - skipping')
-    except Exception as e:
-        app.logger.warning(f'Default tenant maintenance check failed: {e}')
-
     # Register CLI Commands
     try:
         from cli_commands import register_cli_commands

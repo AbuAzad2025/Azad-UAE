@@ -698,27 +698,48 @@ def fix_cost_centers():
 def rebuild_gl_tree():
     """إعادة بناء شجرة الحسابات المحاسبية لجميع المستأجرين"""
     cleanup_extra = request.form.get('cleanup_extra') == 'on'
-    
+
     try:
         from services.maintenance_service import MaintenanceService
-        
+
         with atomic_transaction('rebuild_gl_tree'):
             report = MaintenanceService.rebuild_gl_tree(cleanup_extra=cleanup_extra)
-        
+
         total_created = sum(t.get('created', 0) for t in report.get('tenants', []))
         total_updated = sum(t.get('updated', 0) for t in report.get('tenants', []))
-        
+
         _audit_owner_db_action('rebuild_gl_tree', {
             'cleanup_extra': cleanup_extra,
             'tenants_processed': len(report.get('tenants', [])),
             'total_created': total_created,
             'total_updated': total_updated,
         })
-        
+
         flash(f'✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب', 'success')
     except Exception as e:
         current_app.logger.error('rebuild_gl_tree failed user_id=%s: %s', current_user.id, e)
         flash(f'❌ خطأ: {str(e)}', 'danger')
-    
+
     return redirect(url_for('owner.database_tools'))
+
+
+@owner_bp.route('/api/recent-audit-logs')
+@owner_required
+def api_recent_audit_logs():
+    """API endpoint for maintenance audit log display."""
+    from models import AuditLog
+    from sqlalchemy import desc
+
+    logs = AuditLog.query.filter(
+        AuditLog.action.in_(['fix_cost_centers', 'rebuild_gl_tree'])
+    ).order_by(desc(AuditLog.created_at)).limit(20).all()
+
+    return jsonify({
+        'logs': [{
+            'timestamp': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'action': log.action,
+            'success': log.metadata.get('success', True) if log.metadata else True,
+            'details': log.details or ''
+        } for log in logs]
+    })
 

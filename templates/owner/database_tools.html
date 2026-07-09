@@ -192,6 +192,72 @@
             </a>
           </div>
         </div>
+
+        <hr class="mt-4 mb-4">
+
+        <div class="row">
+          <div class="col-md-6">
+            <form class="needs-validation" action="{{ url_for('owner.fix_cost_centers') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'FIX_COST_CENTERS')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
+                <i class="fas fa-wrench mr-2"></i> إصلاح فهارس مراكز التكلفة
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                <strong>⚠ لا رجعة فيها</strong> — يزيل الفهرس القديم <code>ix_cost_centers_code</code>
+                وينظف السجلات ذات <code>tenant_id = NULL</code>.
+                <br>يتطلب كتابة: <kbd>FIX_COST_CENTERS</kbd>
+              </small>
+            </form>
+          </div>
+          <div class="col-md-6">
+            <form class="needs-validation" action="{{ url_for('owner.rebuild_gl_tree') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'REBUILD_GL_TREE')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="cleanup_extra" name="cleanup_extra">
+                <label class="custom-control-label text-danger small" for="cleanup_extra">
+                  <i class="fas fa-exclamation-triangle"></i> تعطيل الحسابات الإضافية (خارج الشجرة الأساسية)
+                </label>
+              </div>
+              <button type="submit" class="btn btn-info btn-block btn-lg" id="btn-rebuild-gl-tree">
+                <i class="fas fa-sync-alt mr-2"></i> إعادة بناء شجرة الحسابات (GL)
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                يعيد بناء شجرة الحسابات المحاسبية لجميع المستأجرين باستخدام <code>GLTreeBuilder</code>.
+                <br>يتطلب كتابة: <kbd>REBUILD_GL_TREE</kbd>
+              </small>
+            </form>
+          </div>
+        </div>
+
+        <div class="row mt-4" id="maintenance-audit-log" style="display: none;">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>سجل عمليات الصيانة الأخيرة</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshAuditLog()">
+                  <i class="fas fa-sync-alt"></i> تحديث
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0" id="audit-log-table">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>الوقت</th>
+                        <th>العملية</th>
+                        <th>النتيجة</th>
+                        <th>التفاصيل</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -238,6 +304,74 @@ function truncateTable(tableName) {
     }
   });
 }
+
+function confirmMaintenance(form, requiredWord) {
+  const userInput = prompt(
+    '⚠️ عملية صيانة خطيرة لا يمكن التراجع عنها!\n\n' +
+    'للتأكيد، اكتب بالضبط: ' + requiredWord + '\n\n' +
+    '(الحالة مهمة - يجب أن تكون حروف كبيرة)'
+  );
+
+  if (userInput !== requiredWord) {
+    if (userInput !== null) {
+      alert('❌ تأكيد غير صحيح. يجب كتابة الكلمة بالضبط كما هي موضحة.');
+    }
+    return false;
+  }
+
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> جاري التنفيذ...';
+  }
+
+  document.getElementById('maintenance-audit-log').style.display = 'block';
+  return true;
+}
+
+async function refreshAuditLog() {
+  try {
+    const response = await fetch('{{ url_for("owner.api_recent_audit_logs") }}', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const data = await response.json();
+    renderAuditLog(data.logs || []);
+  } catch (e) {
+    console.error('Failed to load audit log:', e);
+  }
+}
+
+function renderAuditLog(logs) {
+  const tbody = document.querySelector('#audit-log-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = logs.map(log => `
+    <tr>
+      <td>${log.timestamp}</td>
+      <td><code>${log.action}</code></td>
+      <td>
+        <span class="badge badge-${log.success ? 'success' : 'danger'}">
+          ${log.success ? '✅ نجح' : '❌ فشل'}
+        </span>
+      </td>
+      <td><small>${log.details || '-'}</small></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" class="text-center text-muted">لا توجد عمليات صيانة مسجلة</td></tr>';
+}
+
+let auditLogInterval;
+const auditLogSection = document.getElementById('maintenance-audit-log');
+const observer = new MutationObserver(() => {
+  if (auditLogSection && auditLogSection.style.display !== 'none') {
+    refreshAuditLog();
+    if (!auditLogInterval) {
+      auditLogInterval = setInterval(refreshAuditLog, 30000);
+    }
+  } else if (auditLogInterval) {
+    clearInterval(auditLogInterval);
+    auditLogInterval = null;
+  }
+});
+observer.observe(auditLogSection, { attributes: true, attributeFilter: ['style'] });
 </script>
 {% endblock %}
 
