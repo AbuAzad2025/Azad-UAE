@@ -955,22 +955,15 @@ class LoggingCore:
 
     @classmethod
     def mark_error_resolved(cls, log_id: int, user_id: int, note: str = "") -> bool:
-        from extensions import db
-        from sqlalchemy import text
+        from models.error_audit_log import ErrorAuditLog
         try:
-            sql = text("""
-                UPDATE error_audit_logs
-                SET is_resolved = true, resolved_at = :now, resolved_by = :user_id, resolution_note = :note
-                WHERE id = :log_id
-            """)
-            with db.engine.connect() as conn:
-                conn.execute(sql, {
-                    "now": datetime.now(timezone.utc),
-                    "user_id": user_id,
-                    "note": note[:500],
-                    "log_id": log_id,
-                })
-                conn.commit()
+            with atomic_transaction('mark_error_resolved'):
+                log = ErrorAuditLog.query.filter_by(id=log_id).first()
+                if log:
+                    log.is_resolved = True
+                    log.resolved_at = datetime.now(timezone.utc)
+                    log.resolved_by = user_id
+                    log.resolution_note = note[:500]
             return True
         except Exception:
             return False

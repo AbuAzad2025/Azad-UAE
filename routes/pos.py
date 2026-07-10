@@ -328,19 +328,46 @@ def api_checkout():
         notes = f"{tag} {notes}".strip() if notes else tag
 
     try:
-        sale = SaleService.create_sale(
-            customer=customer,
-            seller=current_user,
-            lines_data=lines_data,
-            warehouse_id=warehouse_id,
-            currency=currency,
-            user_exchange_rate=exchange_rate,
-            discount_amount=payload.get("discount_amount", 0) or 0,
-            shipping_cost=payload.get("shipping_cost", 0) or 0,
-            tax_rate=payload.get("tax_rate", 0) or 0,
-            notes=notes,
-            payment_data=payment_data,
-        )
+        with atomic_transaction('pos_checkout_flow'):
+            sale = SaleService.create_sale(
+                customer=customer,
+                seller=current_user,
+                lines_data=lines_data,
+                warehouse_id=warehouse_id,
+                currency=currency,
+                user_exchange_rate=exchange_rate,
+                discount_amount=payload.get("discount_amount", 0) or 0,
+                shipping_cost=payload.get("shipping_cost", 0) or 0,
+                tax_rate=payload.get("tax_rate", 0) or 0,
+                notes=notes,
+                payment_data=payment_data,
+            )
+            sale.pos_session_id = session.id
+            db.session.add(sale)
+            session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
+            if payment_data and payment_data.get('payment_method') == 'cash':
+                session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + Decimal(str(payment_data.get('amount', 0)))
+            db.session.add(session)
+            log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
+
+            order_type = (payload.get('order_type') or 'takeaway').strip()
+            if order_type in ('dine_in', 'takeaway', 'delivery'):
+                from models import PosKdsOrder
+                kds_order = PosKdsOrder(
+                    tenant_id=sale.tenant_id,
+                    sale_id=sale.id,
+                    session_id=session.id,
+                    branch_id=get_active_branch_id(),
+                    order_number=sale.sale_number,
+                    items_json=json.dumps([{
+                        'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
+                        'quantity': float(ld['quantity']),
+                        'unit_price': float(ld.get('unit_price') or 0),
+                        'notes': ld.get('notes', ''),
+                    } for ld in lines_data]),
+                    status='pending',
+                )
+                db.session.add(kds_order)
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
     except Exception as exc:
@@ -349,35 +376,7 @@ def api_checkout():
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}
         ), 500
 
-    with atomic_transaction('pos_checkout'):
-        sale.pos_session_id = session.id
-        db.session.add(sale)
-        from decimal import Decimal as _Decimal
-        session.total_sales = _Decimal(str(session.total_sales or 0)) + _Decimal(str(sale.total_amount or 0))
-        if payment_data and payment_data.get('payment_method') == 'cash':
-            session.total_cash_sales = _Decimal(str(session.total_cash_sales or 0)) + _Decimal(str(payment_data.get('amount', 0)))
-        db.session.add(session)
-        log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
-
-    order_type = (payload.get('order_type') or 'takeaway').strip()
     if order_type in ('dine_in', 'takeaway', 'delivery'):
-        from models import PosKdsOrder
-        with atomic_transaction('pos_kds_order'):
-            kds_order = PosKdsOrder(
-                tenant_id=sale.tenant_id,
-                sale_id=sale.id,
-                session_id=session.id,
-                branch_id=get_active_branch_id(),
-                order_number=sale.sale_number,
-                items_json=json.dumps([{
-                    'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
-                    'quantity': float(ld['quantity']),
-                    'unit_price': float(ld.get('unit_price') or 0),
-                    'notes': ld.get('notes', ''),
-                } for ld in lines_data]),
-                status='pending',
-            )
-            db.session.add(kds_order)
         _notify_kds(
             {
                 'type': 'new_order',

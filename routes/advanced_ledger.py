@@ -16,6 +16,7 @@ from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
 from utils.db_safety import atomic_transaction
+from utils.tenanting import tenant_get_or_404
 
 advanced_ledger_bp = Blueprint('advanced_ledger', __name__, url_prefix='/ledger/advanced')
 
@@ -366,11 +367,13 @@ def cheque_integration():
 @admin_required
 def receive_cheque(cheque_id):
     """تسجيل استلام شيك"""
+    cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
-        entry = ChequeAccountingIntegration.receive_cheque(
-            cheque_id=cheque_id,
-            received_by=current_user
-        )
+        with atomic_transaction('advanced_receive_cheque'):
+            entry = ChequeAccountingIntegration.receive_cheque(
+                cheque_id=cheque.id,
+                received_by=current_user
+            )
         
         flash(f'✅ تم تسجيل استلام الشيك بنجاح - القيد: {entry.entry_number}', 'success')
         
@@ -386,16 +389,18 @@ def receive_cheque(cheque_id):
 @admin_required
 def clear_cheque(cheque_id):
     """تسجيل صرف شيك"""
+    cheque = tenant_get_or_404(Cheque, cheque_id)
     try:
-        bank_charges = Decimal(request.form.get('bank_charges', 0))
-        exchange_gain_loss = Decimal(request.form.get('exchange_gain_loss', 0))
-        
-        entry = ChequeAccountingIntegration.clear_cheque(
-            cheque_id=cheque_id,
-            cleared_by=current_user,
-            bank_charges=bank_charges,
-            exchange_gain_loss=exchange_gain_loss
-        )
+        with atomic_transaction('advanced_clear_cheque'):
+            bank_charges = Decimal(request.form.get('bank_charges', 0))
+            exchange_gain_loss = Decimal(request.form.get('exchange_gain_loss', 0))
+            
+            entry = ChequeAccountingIntegration.clear_cheque(
+                cheque_id=cheque.id,
+                cleared_by=current_user,
+                bank_charges=bank_charges,
+                exchange_gain_loss=exchange_gain_loss
+            )
         
         flash(f'✅ تم تسجيل صرف الشيك بنجاح - القيد: {entry.entry_number}', 'success')
         

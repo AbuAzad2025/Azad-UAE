@@ -237,9 +237,8 @@ class StoreService:
     @staticmethod
     def set_platform_disabled(store: 'TenantStore', disabled: bool):
         """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
-        store.platform_disabled = bool(disabled)
-        db.session.flush()
-
+        with atomic_transaction('set_platform_disabled'):
+            store.platform_disabled = bool(disabled)
         return store
 
     @staticmethod

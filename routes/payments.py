@@ -1290,62 +1290,61 @@ def delete_receipt(id):
         has_links = True
 
     try:
-        # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
-        if receipt.source_type == 'sale' and receipt.source_id:
-            from models import Sale
-            sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
-            if sale:
-                sale.paid_amount -= receipt.amount
-                sale.paid_amount_aed -= receipt.amount_aed
+        with atomic_transaction('receipt_delete'):
+            # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
+            if receipt.source_type == 'sale' and receipt.source_id:
+                from models import Sale
+                sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
+                if sale:
+                    sale.paid_amount -= receipt.amount
+                    sale.paid_amount_aed -= receipt.amount_aed
 
-                # منع القيم السالبة
-                if sale.paid_amount < 0: sale.paid_amount = 0
-                if sale.paid_amount_aed < 0: sale.paid_amount_aed = 0
+                    # منع القيم السالبة
+                    if sale.paid_amount < 0: sale.paid_amount = 0
+                    if sale.paid_amount_aed < 0: sale.paid_amount_aed = 0
 
-                # تحديث الرصيد المتبقي (باستخدام عملة الأساس AED)
-                sale.balance_due = sale.amount_aed - sale.paid_amount_aed
+                    # تحديث الرصيد المتبقي (باستخدام عملة الأساس AED)
+                    sale.balance_due = sale.amount_aed - sale.paid_amount_aed
 
-                # تحديث حالة الدفع
-                if sale.balance_due <= 0:
-                    sale.payment_status = 'paid'
-                    sale.balance_due = 0
-                elif sale.paid_amount_aed > 0:
-                    sale.payment_status = 'partial'
-                else:
-                    sale.payment_status = 'unpaid'
+                    # تحديث حالة الدفع
+                    if sale.balance_due <= 0:
+                        sale.payment_status = 'paid'
+                        sale.balance_due = 0
+                    elif sale.paid_amount_aed > 0:
+                        sale.payment_status = 'partial'
+                    else:
+                        sale.payment_status = 'unpaid'
 
-        # 2. القرار: أرشفة أو حذف
-        if has_links:
-            # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
-            archive_service = ArchiveService()
-            archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
+            # 2. القرار: أرشفة أو حذف
+            if has_links:
+                # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
+                archive_service = ArchiveService()
+                archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
 
-            # أرشفة الشيكات المرتبطة
-            if receipt.cheque:
-                archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+                # أرشفة الشيكات المرتبطة
+                if receipt.cheque:
+                    archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
-            with atomic_transaction('receipt_delete_archive'):
                 LoggingCore.log_audit('archive', 'receipts', id)
-            flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
-        else:
-            # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
-            from services.gl_service import GLService
-            GLService.reverse_entry(
-                reference_type=GLRef.RECEIPT,
-                reference_id=receipt.id,
-                description=f'Reverse Receipt {receipt.receipt_number} (Deleted)',
-                tenant_id=receipt.tenant_id,
-            )
+                flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
+            else:
+                # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
+                from services.gl_service import GLService
+                GLService.reverse_entry(
+                    reference_type=GLRef.RECEIPT,
+                    reference_id=receipt.id,
+                    description=f'Reverse Receipt {receipt.receipt_number} (Deleted)',
+                    tenant_id=receipt.tenant_id,
+                )
 
-            # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
-            # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
-            if receipt.cheque:
-                db.session.delete(receipt.cheque)
+                # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
+                # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
+                if receipt.cheque:
+                    db.session.delete(receipt.cheque)
 
-            db.session.delete(receipt)
-            with atomic_transaction('receipt_delete_hard'):
+                db.session.delete(receipt)
                 LoggingCore.log_audit('delete', 'receipts', id)
-            flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', 'success')
+                flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', 'success')
 
         return redirect(url_for('payments.receipts'))
 
@@ -1374,45 +1373,44 @@ def delete_payment(id):
     # يمكن إضافة شروط أخرى للارتباط هنا
 
     try:
-        # 1. القرار: أرشفة أو حذف
-        if has_links:
-            # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
-            archive_service = ArchiveService()
-            archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
+        with atomic_transaction('payment_delete'):
+            # 1. القرار: أرشفة أو حذف
+            if has_links:
+                # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
+                archive_service = ArchiveService()
+                archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
 
-            # أرشفة الشيكات المرتبطة
-            if payment.cheque:
-                archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+                # أرشفة الشيكات المرتبطة
+                if payment.cheque:
+                    archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
-            with atomic_transaction('payment_delete_archive'):
                 LoggingCore.log_audit('archive', 'payments', id)
-            flash(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)', 'warning')
-        else:
-            # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
-            from services.gl_service import GLService
-            GLService.reverse_entry(
-                reference_type=GLRef.PAYMENT,
-                reference_id=payment.id,
-                description=f'Reverse Payment {payment.payment_number} (Deleted)',
-                tenant_id=payment.tenant_id,
-            )
+                flash(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)', 'warning')
+            else:
+                # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
+                from services.gl_service import GLService
+                GLService.reverse_entry(
+                    reference_type=GLRef.PAYMENT,
+                    reference_id=payment.id,
+                    description=f'Reverse Payment {payment.payment_number} (Deleted)',
+                    tenant_id=payment.tenant_id,
+                )
 
-            # عكس أثر المورد/الفاتورة إذا كان مربوطاً
-            if payment.supplier_id:
-                from models import Supplier
-                supplier = Supplier.query.filter_by(id=payment.supplier_id, tenant_id=payment.tenant_id).first()
-                if supplier:
-                    supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
+                # عكس أثر المورد/الفاتورة إذا كان مربوطاً
+                if payment.supplier_id:
+                    from models import Supplier
+                    supplier = Supplier.query.filter_by(id=payment.supplier_id, tenant_id=payment.tenant_id).first()
+                    if supplier:
+                        supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
 
-            # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
-            # حذف الشيكات المرتبطة أولاً
-            if payment.cheque:
-                db.session.delete(payment.cheque)
+                # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
+                # حذف الشيكات المرتبطة أولاً
+                if payment.cheque:
+                    db.session.delete(payment.cheque)
 
-            db.session.delete(payment)
-            with atomic_transaction('payment_delete_hard'):
+                db.session.delete(payment)
                 LoggingCore.log_audit('delete', 'payments', id)
-            flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', 'success')
+                flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', 'success')
 
         return redirect(url_for('payments.receipts'))
 

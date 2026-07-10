@@ -71,7 +71,7 @@ a.btn.btn-outline-secondary span {
 
 {% block content %}
 <div class="card">
-  <form class="needs-validation" method="POST" action="{{ url_for('customers.create') }}" class="customer-create-form">
+  <form class="needs-validation customer-create-form" method="POST" action="{{ url_for('customers.create') }}">
     {{ form.hidden_tag() }}
     <div class="card-body">
       <div class="row">

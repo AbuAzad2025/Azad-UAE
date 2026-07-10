@@ -4,6 +4,7 @@ from models import CRMStage, CRMTeam, Customer, User
 from services.crm_lead_service import CRMLeadService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
+from utils.db_safety import atomic_transaction
 
 crm_bp = Blueprint('crm', __name__, url_prefix='/crm')
 
@@ -67,7 +68,8 @@ def leads_list():
 def create_lead():
     if request.method == 'POST':
         try:
-            CRMLeadService.create_lead(request.form, current_user)
+            with atomic_transaction('crm_create_lead'):
+                CRMLeadService.create_lead(request.form, current_user)
             flash('تم إنشاء العميل المتوقع بنجاح', 'success')
             return redirect(url_for('crm.leads_list'))
         except Exception as e:
@@ -112,7 +114,8 @@ def edit_lead(lead_id):
         return redirect(url_for('crm.leads_list'))
     if request.method == 'POST':
         try:
-            CRMLeadService.update_lead(lead_id, request.form, current_user)
+            with atomic_transaction('crm_update_lead'):
+                CRMLeadService.update_lead(lead_id, request.form, current_user)
             flash('تم تحديث العميل المتوقع بنجاح', 'success')
             return redirect(url_for('crm.leads_list'))
         except Exception as e:
@@ -138,7 +141,8 @@ def edit_lead(lead_id):
 def api_move_stage():
     data = request.get_json(silent=True) or {}
     try:
-        CRMLeadService.move_stage(data['lead_id'], data['stage_id'], current_user)
+        with atomic_transaction('crm_move_stage'):
+            CRMLeadService.move_stage(data['lead_id'], data['stage_id'], current_user)
         return jsonify({'success': True})
     except (ValueError, KeyError) as e:
         return jsonify({'success': False, 'error': str(e)}), 400
@@ -158,7 +162,8 @@ def api_stats():
 def api_add_activity():
     data = request.get_json(silent=True) or {}
     try:
-        CRMLeadService.add_activity(data['lead_id'], data, current_user)
+        with atomic_transaction('crm_add_activity'):
+            CRMLeadService.add_activity(data['lead_id'], data, current_user)
         return jsonify({'success': True})
     except (ValueError, KeyError) as e:
         return jsonify({'success': False, 'error': str(e)}), 400

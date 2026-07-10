@@ -278,29 +278,28 @@ def delete(id):
             with atomic_transaction('purchase_archive_fallback'):
                 db.session.flush()
         else:
-            # عكس القيود المحاسبية بدلاً من الحذف
-            from services.gl_service import GLService
-            GLService.reverse_entry(
-                reference_type=GLRef.PURCHASE,
-                reference_id=purchase.id,
-                description=f'Reverse Purchase {purchase.purchase_number} (Deleted)',
-                tenant_id=purchase.tenant_id,
-            )
-
-            # عكس أثر المورد
-            if purchase.supplier_id:
-                from models import Supplier
-                supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
-                if supplier:
-                    from decimal import Decimal
-                    supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
-
-            # حذف بنود الفاتورة
-            PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
-            db.session.delete(purchase)
-            LoggingCore.log_audit('delete', 'purchases', id)
             with atomic_transaction('purchase_delete'):
-                db.session.flush()
+                # عكس القيود المحاسبية بدلاً من الحذف
+                from services.gl_service import GLService
+                GLService.reverse_entry(
+                    reference_type=GLRef.PURCHASE,
+                    reference_id=purchase.id,
+                    description=f'Reverse Purchase {purchase.purchase_number} (Deleted)',
+                    tenant_id=purchase.tenant_id,
+                )
+
+                # عكس أثر المورد
+                if purchase.supplier_id:
+                    from models import Supplier
+                    supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
+                    if supplier:
+                        from decimal import Decimal
+                        supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
+
+                # حذف بنود الفاتورة
+                PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
+                db.session.delete(purchase)
+                LoggingCore.log_audit('delete', 'purchases', id)
             flash(f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً', 'success')
             
         return redirect(url_for('purchases.index'))

@@ -525,6 +525,107 @@ def add_stock(product_id):
         return jsonify({'success': False, 'message': ErrorMessages.unexpected_error()}), 500
 
 
+@warehouse_bp.route('/transfer', methods=['POST'])
+@login_required
+@permission_required('manage_warehouse')
+def api_transfer():
+    """نقل مخزون بين مستودعين (API)"""
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Content-Type must be application/json'}), 415
+    payload = request.get_json(silent=True) or {}
+    product_id = payload.get('product_id')
+    source_id = payload.get('source_id')
+    destination_id = payload.get('destination_id')
+    quantity = payload.get('quantity')
+    notes = (payload.get('notes') or '').strip()
+
+    if not all([product_id, source_id, destination_id, quantity]):
+        return jsonify({'success': False, 'message': 'المنتج، المصدر، الوجهة، والكمية مطلوبة'}), 400
+
+    try:
+        with atomic_transaction('warehouse_api_transfer'):
+            out_movement, in_movement = StockService.transfer_stock(
+                product_id=product_id,
+                from_warehouse_id=source_id,
+                to_warehouse_id=destination_id,
+                quantity=quantity,
+                notes=notes or 'تحويل يدوي',
+                user=current_user,
+            )
+            from models.warehouse import ProductWarehouseStock
+            src_pws = ProductWarehouseStock.query.filter_by(
+                tenant_id=out_movement.tenant_id,
+                product_id=product_id,
+                warehouse_id=source_id,
+            ).first()
+            dst_pws = ProductWarehouseStock.query.filter_by(
+                tenant_id=in_movement.tenant_id,
+                product_id=product_id,
+                warehouse_id=destination_id,
+            ).first()
+
+        return jsonify({
+            'success': True,
+            'source_onhand': float(src_pws.quantity) if src_pws else 0,
+            'destination_onhand': float(dst_pws.quantity) if dst_pws else 0,
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"Stock transfer error: {e}")
+        return jsonify({'success': False, 'message': 'فشل نقل المخزون'}), 500
+
+
+@warehouse_bp.route('/exchange', methods=['POST'])
+@login_required
+@permission_required('manage_warehouse')
+def api_exchange():
+    """إضافة أو سحب مخزون من مستودع (تسوية)"""
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Content-Type must be application/json'}), 415
+    payload = request.get_json(silent=True) or {}
+    warehouse_id = payload.get('warehouse_id')
+    product_id = payload.get('product_id')
+    quantity = payload.get('quantity', 0)
+    direction = (payload.get('direction') or 'IN').upper()
+    notes = (payload.get('notes') or '').strip()
+    unit_cost = payload.get('unit_cost')
+
+    if not warehouse_id or not product_id or not quantity:
+        return jsonify({'success': False, 'message': 'المستودع، المنتج، والكمية مطلوبة'}), 400
+
+    try:
+        qty = Decimal(str(quantity))
+        if direction == 'OUT':
+            qty = -qty
+        elif direction != 'IN':
+            return jsonify({'success': False, 'message': 'الاتجاه يجب أن يكون IN أو OUT'}), 400
+
+        with atomic_transaction('warehouse_api_exchange'):
+            movement = StockService.adjust_stock(
+                product_id=product_id,
+                quantity=qty,
+                notes=notes or f'تسوية مخزون ({direction})',
+                warehouse_id=warehouse_id,
+            )
+            from models.warehouse import ProductWarehouseStock
+            pws = ProductWarehouseStock.query.filter_by(
+                tenant_id=movement.tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+            ).first()
+
+        return jsonify({
+            'success': True,
+            'new_quantity': float(pws.quantity) if pws else 0,
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"Stock exchange error: {e}")
+        return jsonify({'success': False, 'message': 'فشل تسوية المخزون'}), 500
+
+
 @warehouse_bp.route('/api/upload_product_image', methods=['POST'])
 @login_required
 @permission_required('manage_products')

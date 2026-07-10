@@ -397,51 +397,51 @@ def edit(id):
     
     if request.method == 'POST':
         try:
-            cheque.cheque_bank_number = request.form.get('cheque_bank_number')
-            cheque.bank_name = request.form.get('bank_name')
-            cheque.bank_branch = request.form.get('bank_branch')
-            cheque.account_number = request.form.get('account_number')
-            
-            cheque.amount = Decimal(str(request.form.get('amount')))
-            try:
-                from models import Tenant
-                default_currency = resolve_default_currency()
-            except Exception as e:
-                import sys
-                import traceback
-                sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
-                traceback.print_exc()
-                try:
-                    LoggingCore.log_error(
-                        message=str(e),
-                        category="CHEQUES",
-                        source="routes.cheques.create_cheque.get_default_currency",
-                        level="WARNING",
-                        exception=e
-                    )
-                except Exception:
-                    pass
-                default_currency = get_system_default_currency()
-            cheque.currency = request.form.get('currency') or default_currency
-            
-            exchange_rate = _resolve_transaction_rate(
-                cheque.currency,
-                request.form.get('exchange_rate', type=float),
-            )
-            cheque.exchange_rate = exchange_rate
-            
-            cheque.issue_date = datetime.strptime(request.form.get('issue_date'), '%Y-%m-%d').date()
-            cheque.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
-            
-            cheque.drawer_name = request.form.get('drawer_name')
-            cheque.drawer_id_number = request.form.get('drawer_id_number')
-            cheque.payee_name = request.form.get('payee_name')
-            cheque.notes = request.form.get('notes')
-            
-            calculate_amount_aed(cheque)
-            cheque.update_status_based_on_date()
-            
             with atomic_transaction('cheque_update'):
+                cheque.cheque_bank_number = request.form.get('cheque_bank_number')
+                cheque.bank_name = request.form.get('bank_name')
+                cheque.bank_branch = request.form.get('bank_branch')
+                cheque.account_number = request.form.get('account_number')
+                
+                cheque.amount = Decimal(str(request.form.get('amount')))
+                try:
+                    from models import Tenant
+                    default_currency = resolve_default_currency()
+                except Exception as e:
+                    import sys
+                    import traceback
+                    sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
+                    traceback.print_exc()
+                    try:
+                        LoggingCore.log_error(
+                            message=str(e),
+                            category="CHEQUES",
+                            source="routes.cheques.create_cheque.get_default_currency",
+                            level="WARNING",
+                            exception=e
+                        )
+                    except Exception:
+                        pass
+                    default_currency = get_system_default_currency()
+                cheque.currency = request.form.get('currency') or default_currency
+                
+                exchange_rate = _resolve_transaction_rate(
+                    cheque.currency,
+                    request.form.get('exchange_rate', type=float),
+                )
+                cheque.exchange_rate = exchange_rate
+                
+                cheque.issue_date = datetime.strptime(request.form.get('issue_date'), '%Y-%m-%d').date()
+                cheque.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+                
+                cheque.drawer_name = request.form.get('drawer_name')
+                cheque.drawer_id_number = request.form.get('drawer_id_number')
+                cheque.payee_name = request.form.get('payee_name')
+                cheque.notes = request.form.get('notes')
+                
+                calculate_amount_aed(cheque)
+                cheque.update_status_based_on_date()
+                
                 LoggingCore.log_audit('update', 'cheques', id)
             
             flash('✅ تم تحديث الشيك بنجاح', 'success')
@@ -640,20 +640,19 @@ def delete(id):
             flash(f'✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)', 'warning')
             
         else:
-            # حذف نهائي (Hard Delete)
-            # حذف القيود المحاسبية المرتبطة
-            from models import GLJournalEntry
-            
-            ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
-            gl_query = GLJournalEntry.query.filter(
-                GLJournalEntry.reference_type.in_(ref_types),
-                GLJournalEntry.reference_id == cheque.id,
-                GLJournalEntry.tenant_id == cheque.tenant_id,
-            )
-            gl_query.delete(synchronize_session=False)
-            
-            # حذف الشيك
             with atomic_transaction('cheque_delete_hard'):
+                # حذف القيود المحاسبية المرتبطة
+                from models import GLJournalEntry
+                
+                ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
+                gl_query = GLJournalEntry.query.filter(
+                    GLJournalEntry.reference_type.in_(ref_types),
+                    GLJournalEntry.reference_id == cheque.id,
+                    GLJournalEntry.tenant_id == cheque.tenant_id,
+                )
+                gl_query.delete(synchronize_session=False)
+                
+                # حذف الشيك
                 db.session.delete(cheque)
                 LoggingCore.log_audit('delete', 'cheques', id)
             flash(f'✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً', 'success')

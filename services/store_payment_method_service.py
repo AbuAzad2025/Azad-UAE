@@ -69,29 +69,26 @@ DEFAULT_METHODS = (
 class StorePaymentMethodService:
     @staticmethod
     def ensure_defaults():
-        for item in DEFAULT_METHODS:
-            existing = StorePaymentMethod.query.filter_by(code=item['code']).first()
-            if existing:
-                continue
-            row = StorePaymentMethod(
-                code=item['code'],
-                name_ar=item['name_ar'],
-                name_en=item['name_en'],
-                description_ar=item.get('description_ar'),
-                description_en=item.get('description_en'),
-                icon=item.get('icon', 'fas fa-money-bill-wave'),
-                is_enabled=bool(item.get('is_enabled', False)),
-                is_builtin=bool(item.get('is_builtin', False)),
-                sort_order=int(item.get('sort_order', 100)),
-            )
-            cfg = item.get('config')
-            if cfg:
-                row.set_config(cfg)
-            db.session.add(row)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
+        with atomic_transaction('ensure_payment_defaults'):
+            for item in DEFAULT_METHODS:
+                existing = StorePaymentMethod.query.filter_by(code=item['code']).first()
+                if existing:
+                    continue
+                row = StorePaymentMethod(
+                    code=item['code'],
+                    name_ar=item['name_ar'],
+                    name_en=item['name_en'],
+                    description_ar=item.get('description_ar'),
+                    description_en=item.get('description_en'),
+                    icon=item.get('icon', 'fas fa-money-bill-wave'),
+                    is_enabled=bool(item.get('is_enabled', False)),
+                    is_builtin=bool(item.get('is_builtin', False)),
+                    sort_order=int(item.get('sort_order', 100)),
+                )
+                cfg = item.get('config')
+                if cfg:
+                    row.set_config(cfg)
+                db.session.add(row)
 
     @staticmethod
     def list_all(*, enabled_only=False):
@@ -130,12 +127,8 @@ class StorePaymentMethodService:
         method = db.session.get(StorePaymentMethod, int(method_id))
         if not method:
             raise ValueError('طريقة الدفع غير موجودة.')
-        method.is_enabled = bool(enabled)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
-
+        with atomic_transaction('toggle_payment_method'):
+            method.is_enabled = bool(enabled)
         return method
 
     @staticmethod
@@ -149,29 +142,26 @@ class StorePaymentMethodService:
         if len(name_ar) < 2 and len(name_en) < 2:
             raise ValueError('الاسم بالعربية أو الإنجليزية مطلوب.')
 
-        method = StorePaymentMethod(
-            code=code,
-            name_ar=name_ar or name_en,
-            name_en=name_en or name_ar,
-            description_ar=(data.get('description_ar') or '').strip() or None,
-            description_en=(data.get('description_en') or '').strip() or None,
-            icon=(data.get('icon') or 'fas fa-money-bill-wave').strip(),
-            is_enabled=bool(data.get('is_enabled')),
-            is_builtin=False,
-            sort_order=int(data.get('sort_order') or 100),
-        )
-        config = {}
-        for key in ('bank_name', 'iban', 'account_name', 'providers', 'instructions'):
-            val = (data.get(key) or '').strip()
-            if val:
-                config[key] = val
-        if config:
-            method.set_config(config)
-        db.session.add(method)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
+        with atomic_transaction('create_payment_method'):
+            method = StorePaymentMethod(
+                code=code,
+                name_ar=name_ar or name_en,
+                name_en=name_en or name_ar,
+                description_ar=(data.get('description_ar') or '').strip() or None,
+                description_en=(data.get('description_en') or '').strip() or None,
+                icon=(data.get('icon') or 'fas fa-money-bill-wave').strip(),
+                is_enabled=bool(data.get('is_enabled')),
+                is_builtin=False,
+                sort_order=int(data.get('sort_order') or 100),
+            )
+            config = {}
+            for key in ('bank_name', 'iban', 'account_name', 'providers', 'instructions'):
+                val = (data.get(key) or '').strip()
+                if val:
+                    config[key] = val
+            if config:
+                method.set_config(config)
+            db.session.add(method)
 
         return method
 
@@ -181,42 +171,39 @@ class StorePaymentMethodService:
         if not method:
             raise ValueError('طريقة الدفع غير موجودة.')
 
-        name_ar = (data.get('name_ar') or '').strip()
-        name_en = (data.get('name_en') or '').strip()
-        if name_ar:
-            method.name_ar = name_ar
-        if name_en:
-            method.name_en = name_en
-        method.description_ar = (data.get('description_ar') or '').strip() or None
-        method.description_en = (data.get('description_en') or '').strip() or None
-        if data.get('icon'):
-            method.icon = data['icon'].strip()
-        method.is_enabled = bool(data.get('is_enabled'))
-        method.sort_order = int(data.get('sort_order') or method.sort_order or 100)
+        with atomic_transaction('update_payment_method'):
+            name_ar = (data.get('name_ar') or '').strip()
+            name_en = (data.get('name_en') or '').strip()
+            if name_ar:
+                method.name_ar = name_ar
+            if name_en:
+                method.name_en = name_en
+            method.description_ar = (data.get('description_ar') or '').strip() or None
+            method.description_en = (data.get('description_en') or '').strip() or None
+            if data.get('icon'):
+                method.icon = data['icon'].strip()
+            method.is_enabled = bool(data.get('is_enabled'))
+            method.sort_order = int(data.get('sort_order') or method.sort_order or 100)
 
-        if not method.is_builtin and data.get('code'):
-            new_code = StorePaymentMethod.normalize_code(data['code'])
-            clash = StorePaymentMethod.query.filter(
-                StorePaymentMethod.code == new_code,
-                StorePaymentMethod.id != method.id,
-            ).first()
-            if clash:
-                raise ValueError('رمز طريقة الدفع مستخدم مسبقاً.')
-            method.code = new_code
+            if not method.is_builtin and data.get('code'):
+                new_code = StorePaymentMethod.normalize_code(data['code'])
+                clash = StorePaymentMethod.query.filter(
+                    StorePaymentMethod.code == new_code,
+                    StorePaymentMethod.id != method.id,
+                ).first()
+                if clash:
+                    raise ValueError('رمز طريقة الدفع مستخدم مسبقاً.')
+                method.code = new_code
 
-        cfg = method.get_config()
-        for key in ('bank_name', 'iban', 'account_name', 'providers', 'instructions'):
-            if key in data:
-                val = (data.get(key) or '').strip()
-                if val:
-                    cfg[key] = val
-                elif key in cfg:
-                    cfg.pop(key, None)
-        method.set_config(cfg)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
+            cfg = method.get_config()
+            for key in ('bank_name', 'iban', 'account_name', 'providers', 'instructions'):
+                if key in data:
+                    val = (data.get(key) or '').strip()
+                    if val:
+                        cfg[key] = val
+                    elif key in cfg:
+                        cfg.pop(key, None)
+            method.set_config(cfg)
 
         return method
 
@@ -227,11 +214,8 @@ class StorePaymentMethodService:
             raise ValueError('طريقة الدفع غير موجودة.')
         if method.is_builtin:
             raise ValueError('لا يمكن حذف طرق الدفع الأساسية — يمكن إيقافها فقط.')
-        db.session.delete(method)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
+        with atomic_transaction('delete_payment_method'):
+            db.session.delete(method)
 
     @staticmethod
     def format_checkout_instructions(method: StorePaymentMethod, lang='ar') -> str:

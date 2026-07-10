@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, abort
 from flask_login import login_required, current_user
 from sqlalchemy import func, desc
 from extensions import db, csrf
@@ -156,18 +156,19 @@ def gl_periods():
 
     tenant_id = require_active_tenant_id()
     if request.method == 'POST':
+        if not current_user.has_permission('manage_ledger'):
+            abort(403)
         year = request.form.get('year', type=int)
         month = request.form.get('month', type=int)
         action = request.form.get('action', 'close')
-        period = GLPeriod.query.filter_by(tenant_id=tenant_id, year=year, month=month).first()
-        if not period:
-            period = GLPeriod(tenant_id=tenant_id, year=year, month=month)
-            db.session.add(period)
-        period.is_closed = action == 'close'
-        period.closed_at = datetime.now(timezone.utc) if period.is_closed else None
-        period.closed_by = current_user.id if period.is_closed else None
         with atomic_transaction('update_gl_period'):
-            pass
+            period = GLPeriod.query.filter_by(tenant_id=tenant_id, year=year, month=month).first()
+            if not period:
+                period = GLPeriod(tenant_id=tenant_id, year=year, month=month)
+                db.session.add(period)
+            period.is_closed = action == 'close'
+            period.closed_at = datetime.now(timezone.utc) if period.is_closed else None
+            period.closed_by = current_user.id if period.is_closed else None
         flash('تم تحديث حالة الفترة المحاسبية.', 'success')
         return redirect(url_for('ledger.gl_periods'))
 
@@ -179,7 +180,7 @@ def gl_periods():
 
 @ledger_bp.route('/run-depreciation', methods=['POST'])
 @login_required
-@permission_required('view_ledger')
+@permission_required('manage_ledger')
 def run_depreciation():
     from services.depreciation_service import DepreciationService
     from utils.tenanting import require_active_tenant_id

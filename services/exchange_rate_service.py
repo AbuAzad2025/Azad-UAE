@@ -29,6 +29,8 @@ from typing import Any
 
 from flask import current_app
 
+from utils.db_safety import atomic_transaction
+
 # Import existing currency service for manual-rate fallback detection only
 from services.currency_service import CurrencyService
 
@@ -554,29 +556,28 @@ class ExchangeRateService:
             from datetime import date
 
             today = date.today().isoformat()
-            existing = ExchangeRateRecord.query.filter_by(
-                tenant_id=tenant_id,
-                from_currency=from_currency,
-                to_currency=to_currency,
-                effective_date=today,
-                source=source,
-            ).first()
-            if existing:
-                existing.rate = Decimal(str(rate))
-                db.session.flush()
-                return
+            with atomic_transaction('save_rate_record'):
+                existing = ExchangeRateRecord.query.filter_by(
+                    tenant_id=tenant_id,
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                    effective_date=today,
+                    source=source,
+                ).first()
+                if existing:
+                    existing.rate = Decimal(str(rate))
+                    return
 
-            record = ExchangeRateRecord(
-                tenant_id=tenant_id,
-                from_currency=from_currency,
-                to_currency=to_currency,
-                rate=Decimal(str(rate)),
-                source=source,
-                api_provider=api_provider,
-                effective_date=today,
-            )
-            db.session.add(record)
-            db.session.flush()
+                record = ExchangeRateRecord(
+                    tenant_id=tenant_id,
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                    rate=Decimal(str(rate)),
+                    source=source,
+                    api_provider=api_provider,
+                    effective_date=today,
+                )
+                db.session.add(record)
         except Exception:
             pass
 

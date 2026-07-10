@@ -173,13 +173,15 @@ class WebhookService:
         if payment_status == 'finished':
             if sale.status != 'confirmed':
                 try:
-                    StoreOrderService.confirm_order(sale, mark_paid=True)
+                    with atomic_transaction('webhook_confirm_store_order'):
+                        StoreOrderService.confirm_order(sale, mark_paid=True)
                 except ValueError as exc:
                     logger.warning('Store order confirm skipped: %s', exc)
             logger.info('Store order %s paid via gateway', sale.sale_number)
         elif payment_status in ('failed', 'expired', 'refunded'):
             if sale.status == 'pending':
-                StoreOrderService.cancel_order(sale)
+                with atomic_transaction('webhook_cancel_store_order'):
+                    StoreOrderService.cancel_order(sale)
             logger.warning('Store order %s payment %s', sale.sale_number, payment_status)
 
         return {'success': True, 'message': f'Store order updated to {payment_status}'}

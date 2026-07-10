@@ -204,7 +204,7 @@
       var qty = form.querySelector('[name="quantity"]')?.value;
       var date = form.querySelector('[name="date"]')?.value || '';
       var notes = form.querySelector('[name="notes"]')?.value || '';
-      var endpoint = '/warehouses/' + (sid || '').toString().trim() + '/transfer';
+      var endpoint = '/warehouse/transfer';
       if (!pid || !sid || !did || !qty || sid === did) {
         showNotification('تحقق من المدخلات: اختر الصنف، المصدر، الوجهة، والكمية أكبر من صفر.', 'warning');
         if (btn) btn.disabled = false;
@@ -248,13 +248,14 @@
       var unit_cost = form.querySelector('[name="unit_cost"]')?.value;
       var partner_id = form.querySelector('[name="partner_id"]')?.value || null;
       var notes = form.querySelector('[name="notes"]')?.value || '';
-      var endpoint = '/warehouses/' + (wid || '').toString().trim() + '/exchange';
+      var endpoint = '/warehouse/exchange';
       if (!wid || !pid || !qty || !dir) {
         showNotification('تحقق من المدخلات: اختر الصنف والاتجاه والكمية.', 'warning');
         if (btn) btn.disabled = false;
         return;
       }
       postJSON(endpoint, {
+        warehouse_id: Number(wid),
         product_id: Number(pid),
         quantity: Number(qty),
         direction: dir,
