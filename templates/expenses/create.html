@@ -74,7 +74,7 @@
 
 {% block content %}
 <div class="card">
-  <form class="needs-validation" method="POST" action="{{ url_for('expenses.create') }}" class="expense-create-form">
+  <form class="needs-validation expense-create-form" method="POST" action="{{ url_for('expenses.create') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
@@ -256,7 +256,7 @@ $(function () {
     }
     
     $.ajax({
-      url: `/api/currency-rate/${currency}/{{ tenant_default_currency or 'AED' }}`,
+      url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', '{{ tenant_default_currency or "AED" }}'),
       method: 'GET',
       success: function(data) {
         if (data && data.rate) {

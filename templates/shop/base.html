@@ -85,7 +85,7 @@
         <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
         <a href="{{ url_for('shop.wishlist_view', slug=store.store_slug) }}"><i class="fas fa-heart"></i> {{ t('wishlist') }}</a>
         <a href="{{ url_for('shop.saved_payments', slug=store.store_slug) }}"><i class="fas fa-credit-card"></i> {{ t('saved_payments') }}</a>
-        <form class="needs-validation" method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" class="ic-1">
+        <form class="needs-validation ic-1" method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="ps-btn ps-btn-outline ps-">{{ t('logout') }}</button>
         </form>

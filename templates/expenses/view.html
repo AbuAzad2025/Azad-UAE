@@ -226,7 +226,7 @@
 
                                 </a>
 
-                                <form class="needs-validation" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}');">
+                                <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}');">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

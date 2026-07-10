@@ -18,7 +18,7 @@
 
 
 {% block content %}
-<form class="needs-validation" method="POST" action="{{ url_for('sales.create') }}" id="saleForm" class="sale-create-form">
+<form class="needs-validation sale-create-form" method="POST" action="{{ url_for('sales.create') }}" id="saleForm">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
   <input type="hidden" name="line_count" id="line_count" value="0" aria-label="line count">
   

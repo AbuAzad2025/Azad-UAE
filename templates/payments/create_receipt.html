@@ -275,7 +275,7 @@
 
 <div class="card">
 
-  <form class="needs-validation" method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
+  <form class="needs-validation receipt-create-form" method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}">
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -951,7 +951,7 @@ function loadCustomerBalance() {
 
     return;
 
-  }  $.get('/customers/' + customerId + '/balance', function(data) {    // {{ t('View') }} {{ t('Balance') }} مع {{ t('اللون') }} {{ t('المناسب') }}
+  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), function(data) {    // {{ t('View') }} {{ t('Balance') }} مع {{ t('اللون') }} {{ t('المناسب') }}
 
     var balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
 

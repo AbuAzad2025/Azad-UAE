@@ -55,7 +55,7 @@
               {% endif %}
             </td>
             <td class="text-center">
-              <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_ai_toggle', tenant_id=tenant.id) }}" class="d-inline">
+              <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_ai_toggle', tenant_id=tenant.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <select name="ai_access_level" class="form-control form-control-sm d-inline-block erp-w-120" aria-label="ai access level">
                   <option value="basic" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'basic' %}selected{% endif %}>Basic</option>

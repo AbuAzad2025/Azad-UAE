@@ -12,7 +12,7 @@
         </div>
     </div>
     <div>
-        <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}" class="ic-2">
+        <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success mr-2" onclick="return confirm('{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}')">
                 <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('تلقائي') }}

@@ -8,14 +8,14 @@
   <div class="col-12">
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-    {% endif %}
       <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
     </a>
+    {% endif %}
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
-    {% endif %}
       <i class="fas fa-book mr-2"></i>{{ t('View') }} {{ t('القيود') }}
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -62,7 +62,7 @@
     </h3>
   </div>
   <div class="card-body">
-    <form class="needs-validation" method="post" action="{{ url_for('ledger.manual_entry') }}" id="journalEntryForm" class="manual-entry-form">
+    <form class="needs-validation manual-entry-form" method="post" action="{{ url_for('ledger.manual_entry') }}" id="journalEntryForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <input type="hidden" name="line_count" id="lineCountHidden" value="2" aria-label="line count">
       

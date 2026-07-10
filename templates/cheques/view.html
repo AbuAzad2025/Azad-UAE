@@ -169,9 +169,11 @@
                   <td>
                     {% if current_user.has_permission('manage_customers') %}
                     <a href="{{ url_for('customers.view', id=cheque.customer.id) }}">
-                    {% endif %}
                       {{ cheque.customer.name }}
                     </a>
+                    {% else %}
+                      {{ cheque.customer.name }}
+                    {% endif %}
                   </td>
                 </tr>
                 {% endif %}
@@ -192,9 +194,11 @@
                   <td>
                     {% if current_user.has_permission('manage_suppliers') %}
                     <a href="{{ url_for('suppliers.view', id=cheque.supplier.id) }}">
-                    {% endif %}
                       {{ cheque.supplier.name }}
                     </a>
+                    {% else %}
+                      {{ cheque.supplier.name }}
+                    {% endif %}
                   </td>
                 </tr>
                 {% endif %}
@@ -361,7 +365,7 @@
                    value="..." readonly aria-label="actual amount preview">
           </div>
           
-          <div id="gain_loss_preview" class="d-none" class="alert">
+          <div id="gain_loss_preview" class="d-none alert">
             <strong>{{ t('فرق') }} {{ t('Currency') }}:</strong> <span id="gain_loss_amount"></span>
           </div>
           {% endif %}
@@ -510,7 +514,7 @@ function cancelCheque() {
 function fetchCurrentExchangeRate() {
   // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} من API
   $.ajax({
-    url: '/api/currency-rate/{{ cheque.currency }}/{{ tenant_default_currency or 'AED' }}',
+    url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', '{{ cheque.currency }}').replace('Y', '{{ tenant_default_currency or "AED" }}'),
     method: 'GET',
     success: function(data) {
       if (data.rate) {

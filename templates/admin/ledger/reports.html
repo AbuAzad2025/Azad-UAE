@@ -128,7 +128,7 @@
         <div class="row">
           <div class="col-md-6">
             <h6>{{ t('Report_2') }} {{ t('مخصص') }} {{ t('حسب') }} {{ t('Date') }}:</h6>
-            <form class="needs-validation" method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
+            <form class="needs-validation ledger-reports-form" method="GET" action="{{ url_for('ledger.admin_trial_balance') }}">
               <div class="form-group">
                 <label for="tb_date_from">من {{ t('History') }}:</label>
                 <input type="date" id="tb_date_from" name="date_from" class="form-control" required aria-label="من {{ t('History') }}">

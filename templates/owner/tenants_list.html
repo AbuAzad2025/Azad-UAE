@@ -84,7 +84,7 @@
                     <i class="bi bi-pause-circle"></i> تعليق
                   </button>
                   {% else %}
-                  <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
+                  <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=tenant.id) }}" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-success">
                       <i class="bi bi-play-circle"></i> تفعيل

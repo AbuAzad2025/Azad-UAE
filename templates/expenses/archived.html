@@ -78,7 +78,7 @@ $(document).ready(function() {
     var csrfToken = $('meta[name="csrf-token"]').attr('content');
     
     $.ajax({
-      url: '/expenses/' + id + '/restore',
+      url: '{{ url_for("expenses.restore", id=0) }}'.replace('0', id),
       type: 'POST',
       headers: {
         'X-CSRFToken': csrfToken

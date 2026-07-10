@@ -1,16 +1,16 @@
-﻿﻿{% extends 'base.html' %}
+?{% extends 'base.html' %}
 {% block title %}API Keys{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-key text-warning"></i> إدارة مفاتيح API</h1>
+        <h1 class="m-0"><i class="fas fa-key text-warning"></i> ????? ?????? API</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="?????? ????? ??????">
+            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -22,10 +22,10 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning" aria-label="مفاتيح API">
+          <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning" aria-label="?????? API">
             <i class="fas fa-key"></i> API Keys
           </a>
-          <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning" aria-label="قائمة IP المسموحة">
+          <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning" aria-label="????? IP ????????">
             <i class="fas fa-network-wired"></i> IP Whitelist
           </a>
         </div>
@@ -38,50 +38,50 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-warning text-dark">
-        <h3 class="card-title"><i class="fas fa-user-shield mr-2"></i> إنشاء مفتاح جديد</h3>
+        <h3 class="card-title"><i class="fas fa-user-shield mr-2"></i> ????? ????? ????</h3>
       </div>
       <div class="card-body">
-        <form class="needs-validation" method="POST" action="{{ url_for('owner.api_keys') }}" class="api-keys-form mb-4">
+        <form class="needs-validation api-keys-form mb-4" method="POST" action="{{ url_for('owner.api_keys') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="row align-items-end">
             <div class="col-md-5">
               <div class="form-group">
-                <label for="input_name">اسم المفتاح</label>
+                <label for="input_name">??? ???????</label>
                 <input type="text" name="name" class="form-control" placeholder="My API Key" required id="input_name" minlength="2" maxlength="100">
-                <small class="form-text text-muted">اسم واضح يساعدك على تمييز استخدام المفتاح لاحقاً.</small>
+                <small class="form-text text-muted">??? ???? ?????? ??? ????? ??????? ??????? ??????.</small>
               </div>
             </div>
             <div class="col-md-5">
               <div class="form-group">
-                <label>{{ t('الخدمة') }}</label>
+                <label>{{ t('??????') }}</label>
                 <select name="service" class="form-control" required aria-label="service">
                   <option value="api">API {{ t('General_2') }}</option>
                   <option value="integration">Integration</option>
                   <option value="webhook">Webhook</option>
                   <option value="mobile">Mobile App</option>
                 </select>
-                <small class="form-text text-muted">حدد الغرض من المفتاح لضبط الصلاحيات المناسبة.</small>
+                <small class="form-text text-muted">??? ????? ?? ??????? ???? ????????? ????????.</small>
               </div>
             </div>
             <div class="col-md-2">
-              <button type="submit" class="btn btn-warning btn-block" aria-label="إنشاء مفتاح API جديد">
-                <i class="fas fa-plus mr-1"></i> إنشاء
+              <button type="submit" class="btn btn-warning btn-block" aria-label="????? ????? API ????">
+                <i class="fas fa-plus mr-1"></i> ?????
               </button>
             </div>
           </div>
         </form>
 
-        <h5 class="mb-3"><i class="fas fa-list-alt text-warning"></i> مفاتيح مفعّلة</h5>
+        <h5 class="mb-3"><i class="fas fa-list-alt text-warning"></i> ?????? ??????</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
               <tr>
                 <th>{{ t('Name') }}</th>
-                <th>{{ t('الخدمة') }}</th>
-                <th>جزء من المفتاح</th>
+                <th>{{ t('??????') }}</th>
+                <th>??? ?? ???????</th>
                 <th>{{ t('Last_Used') }}</th>
                 <th>{{ t('Status') }}</th>
-                <th class="text-center">{{ t('إجراء') }}</th>
+                <th class="text-center">{{ t('?????') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -91,18 +91,18 @@
                   <td>{{ key.name }}</td>
                   <td><span class="badge badge-secondary">{{ key.service }}</span></td>
                   <td><code>{{ mask_api_key(key.key) }}</code></td>
-                  <td>{{ key.last_used.strftime('%Y-%m-%d %H:%M') if key.last_used else 'لم يُستخدم بعد' }}</td>
+                  <td>{{ key.last_used.strftime('%Y-%m-%d %H:%M') if key.last_used else '?? ??????? ???' }}</td>
                   <td>
                     {% if key.is_active %}
                     <span class="badge badge-success">{{ t('Active') }}</span>
                     {% else %}
-                    <span class="badge badge-secondary">{{ t('معطل') }}</span>
+                    <span class="badge badge-secondary">{{ t('????') }}</span>
                     {% endif %}
                   </td>
                   <td class="text-center">
                     <form method="POST" action="{{ url_for('owner.toggle_api_key', id=key.id) }}" class="d-inline">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                      <button type="submit" class="btn btn-outline-warning" title="تفعيل/تعطيل" aria-label="تفعيل/تعطيل">
+                      <button type="submit" class="btn btn-outline-warning" title="?????/?????" aria-label="?????/?????">
                         <i class="fas fa-toggle-on"></i>
                       </button>
                     </form>
@@ -112,7 +112,7 @@
               {% else %}
                 <tr>
                   <td colspan="6" class="text-center text-muted">
-                    <i class="fas fa-info-circle"></i> لا توجد مفاتيح API حتى الآن.
+                    <i class="fas fa-info-circle"></i> ?? ???? ?????? API ??? ????.
                   </td>
                 </tr>
               {% endif %}

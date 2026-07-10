@@ -93,7 +93,7 @@
     <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i>{{ t('Data_2') }} {{ t('Supplier') }}</h3>
   </div>
   
-  <form class="needs-validation" method="POST" action="{{ url_for('suppliers.create') }}" class="supplier-create-form">
+  <form class="needs-validation supplier-create-form" method="POST" action="{{ url_for('suppliers.create') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">

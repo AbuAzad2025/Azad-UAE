@@ -31,7 +31,7 @@
             <h3 class="card-title text-white"><i class="fas fa-plus-circle"></i> {{ t('Info_2') }} {{ t('Warehouse') }}</h3>
           </div>
           {% set form_data = form_data if form_data is defined else request.form %}
-          <form class="needs-validation" method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="warehouse-create-form">
+          <form method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="needs-validation warehouse-create-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <div class="card-body">
               <div class="row">
@@ -172,9 +172,9 @@
               </button>
               {% if current_user.has_permission('manage_warehouse') %}
               <a href="{{ url_for('warehouse.list_warehouses') }}" class="btn btn-secondary btn-lg">
-              {% endif %}
                 <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
               </a>
+              {% endif %}
             </div>
           </form>
         </div>

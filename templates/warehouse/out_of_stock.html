@@ -140,23 +140,20 @@
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.view', id=product.id) }}"
-                {% endif %}
-                   class="btn btn-info" title="{{ t('View') }}">
+                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
-                {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.edit', id=product.id) }}"
                 {% endif %}
-                   class="btn btn-warning" title="{{ t('Edit') }}">
+                {% if current_user.has_permission('manage_products') %}
+                <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
                   <i class="fas fa-edit"></i>
                 </a>
-                {% if current_user.has_permission('manage_purchases') %}
-                <a href="{{ url_for('purchases.create') }}"
                 {% endif %}
-                   class="btn btn-success" title="{{ t('طلب') }} {{ t('Purchase') }} {{ t('عاجل') }}">
+                {% if current_user.has_permission('manage_purchases') %}
+                <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('طلب') }} {{ t('Purchase') }} {{ t('عاجل') }}">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
+                {% endif %}
               </div>
             </td>
           </tr>

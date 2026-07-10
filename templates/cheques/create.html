@@ -83,7 +83,7 @@
     </h3>
   </div>
   <div class="card-body">
-    <form class="needs-validation" method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
+    <form class="needs-validation cheque-create-form" method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       
@@ -305,7 +305,7 @@ $(function() {
     }
     
     $.ajax({
-      url: `/api/currency-rate/${currency}/${TENANT_BASE_CURRENCY}`,
+      url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', TENANT_BASE_CURRENCY),
       method: 'GET',
       success: function(data) {
         if (data && data.rate) {

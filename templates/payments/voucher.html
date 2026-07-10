@@ -246,7 +246,7 @@ async function loadVoucherRate() {
     return;
   }
   try {
-    var response = await fetch('/api/currency-rate/' + encodeURIComponent(currency) + '/AED');
+    var response = await fetch('{{ url_for("api.currency_rate", from_currency="X", to_currency="AED") }}'.replace('X', encodeURIComponent(currency)));
     var data = await response.json();
     if (data.success && data.rate) {
       $('#exchange_rate').val(Number(data.rate).toFixed(6));

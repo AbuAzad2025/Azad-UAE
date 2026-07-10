@@ -1,18 +1,18 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
+???????{% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تعديل مستخدم {{ user.username }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or '???? ????????' }} - ????? ?????? {{ user.username }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">✏️ تعديل مستخدم: {{ user.username }}</h1>
+        <h1 class="m-0">?? ????? ??????: {{ user.username }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -28,20 +28,20 @@
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
     <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary">
-      <i class="fas fa-users"></i> قائمة المستخدمين
+      <i class="fas fa-users"></i> ????? ??????????
     </a>
     <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary">
-      <i class="fas fa-user-plus"></i> إضافة مستخدم
+      <i class="fas fa-user-plus"></i> ????? ??????
     </a>
     <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-user-shield"></i> الأدوار والصلاحيات
+      <i class="fas fa-user-shield"></i> ??????? ??????????
     </a>
   </div>
 </div>
 
 <div class="content edit-user-page">
   <div class="container-fluid">
-    <form class="needs-validation" method="POST" action="{{ url_for('owner.edit_user', user_id=user.id) }}" id="editUserForm" class="edit-user-form">
+    <form class="needs-validation edit-user-form" method="POST" action="{{ url_for('owner.edit_user', user_id=user.id) }}" id="editUserForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">
@@ -49,11 +49,11 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-primary">
-              <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+              <h3 class="card-title text-white">?? ????????? ????????</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label for="input_username">اسم المستخدم *</label>
+                <label for="input_username">??? ???????? *</label>
                 <input type="text" name="username" class="form-control" value="{{ user.username }}" required 
                        pattern="[a-zA-Z0-9_]{3,20}" id="input_username" aria-label="username" minlength="2" maxlength="100">
               </div>
@@ -71,20 +71,20 @@
               <hr>
               
               <div class="alert alert-warning text-dark"
-                <i class="fas fa-key"></i> <strong>تغيير كلمة المرور</strong>
-                <p class="mb-0">اترك الحقول فارغة إذا لم ترد تغيير كلمة المرور</p>
+                <i class="fas fa-key"></i> <strong>????? ???? ??????</strong>
+                <p class="mb-0">???? ?????? ????? ??? ?? ??? ????? ???? ??????</p>
               </div>
               
               <div class="form-group">
-                <label>كلمة المرور الجديدة</label>
+                <label>???? ?????? ???????</label>
                 <input type="password" name="new_password" class="form-control" minlength="8" 
-                       placeholder="••••••••" id="new_password">
+                       placeholder="��������" id="new_password">
               </div>
               
               <div class="form-group">
-                <label>تأكيد كلمة المرور الجديدة</label>
+                <label>????? ???? ?????? ???????</label>
                 <input type="password" name="confirm_new_password" class="form-control" minlength="8" 
-                       placeholder="••••••••" id="confirm_new_password">
+                       placeholder="��������" id="confirm_new_password">
               </div>
             </div>
           </div>
@@ -94,11 +94,11 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-success">
-              <h3 class="card-title text-white">🔐 الدور والصلاحيات</h3>
+              <h3 class="card-title text-white">?? ????? ??????????</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label for="role_select">الدور الوظيفي *</label>
+                <label for="role_select">????? ??????? *</label>
                 <select name="role_id" class="form-control" required id="role_select" aria-label="role id">
                   {% for role in roles %}
                   <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {{ 'selected' if user.role_id == role.id }}>
@@ -110,15 +110,15 @@
 
               <div class="form-group">
                 <label for="branch_id">{{ t('Branch') }}<span class="text-danger branch-required-indicator">*</span></label>
-                <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
-                  <option value="">-- اختر الفرع --</option>
+                <select name="branch_id" id="branch_id" class="form-control" aria-label="???? ?????">
+                  <option value="">-- ???? ????? --</option>
                   {% for branch in branches %}
                   <option value="{{ branch.id }}" {{ 'selected' if user.branch_id == branch.id }}>
                     {{ branch.name }} ({{ branch.code }})
                   </option>
                   {% endfor %}
                 </select>
-                <small class="text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+                <small class="text-muted" id="branch-help-text">?????? ??? ?????? ??? ?????? ???? ??????/?????? ????.</small>
               </div>
               
               <div class="form-group">
@@ -127,7 +127,7 @@
                          {{ 'checked' if user.is_owner }} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
                     <i class="fas fa-crown text-warning"></i> <strong>{{ t('System_Owner') }}</strong>
-                    <br><small class="text-danger">⚠️ صلاحيات كاملة غير محدودة!</small>
+                    <br><small class="text-danger">?? ??????? ????? ??? ??????!</small>
                   </label>
                 </div>
               </div>
@@ -137,7 +137,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" 
                          {{ 'checked' if user.is_active }} aria-label="is active">
                   <label class="custom-control-label" for="is_active">
-                    <i class="fas fa-check-circle text-success"></i> حساب نشط
+                    <i class="fas fa-check-circle text-success"></i> ???? ???
                   </label>
                 </div>
               </div>
@@ -147,14 +147,14 @@
           
           <div class="card">
             <div class="card-header bg-info">
-              <h3 class="card-title text-white">📊 المعلومات</h3>
+              <h3 class="card-title text-white">?? ?????????</h3>
             </div>
             <div class="card-body">
-              <p><i class="fas fa-calendar-plus"></i> <strong>تاريخ الإنشاء:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at }}</p>
-              <p><i class="fas fa-sign-in-alt"></i> <strong>آخر دخول:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'لم يسجل دخول' }}</p>
-              <p><i class="fas fa-user-clock"></i> <strong>المستخدم منذ:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'غير محدد' }}</p>
+              <p><i class="fas fa-calendar-plus"></i> <strong>????? ???????:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at }}</p>
+              <p><i class="fas fa-sign-in-alt"></i> <strong>??? ????:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '?? ???? ????' }}</p>
+              <p><i class="fas fa-user-clock"></i> <strong>???????? ???:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '??? ????' }}</p>
               {% if user.updated_at %}
-              <p><i class="fas fa-edit"></i> <strong>آخر تحديث:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+              <p><i class="fas fa-edit"></i> <strong>??? ?????:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
               {% endif %}
             </div>
           </div>
@@ -165,10 +165,10 @@
       <div class="row">
         <div class="col-12">
           <button type="submit" class="btn btn-primary btn-lg">
-            <i class="fas fa-save mr-2"></i>حفظ التعديلات
+            <i class="fas fa-save mr-2"></i>??? ?????????
           </button>
           <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info btn-lg">
-            <i class="fas fa-eye mr-2"></i>الملف الشخصي
+            <i class="fas fa-eye mr-2"></i>????? ??????
           </a>
           <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg">
             <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
@@ -190,30 +190,30 @@ $(document).ready(function() {
     $('#branch_id').prop('required', !!required);
     $('.branch-required-indicator').toggle(!!required);
     $('#branch-help-text').text(required
-      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
-      : 'اختياري فقط للمستخدمين العالميين.'
+      ? '?????? ??? ?????? ??? ?????? ???? ??????/?????? ????.'
+      : '??????? ??? ?????????? ?????????.'
     );
   }
 
   $('#role_select, #is_owner').on('change', syncBranchRequirement);
   syncBranchRequirement();
 
-  // التحقق من تطابق كلمة المرور
+  // ?????? ?? ????? ???? ??????
   $('#editUserForm').submit(function(e) {
     const newPass = $('#new_password').val();
     const confirmPass = $('#confirm_new_password').val();
     
-    // إذا تم إدخال كلمة مرور جديدة
+    // ??? ?? ????? ???? ???? ?????
     if (newPass && newPass !== confirmPass) {
       e.preventDefault();
-      alert('كلمة المرور الجديدة غير متطابقة!');
+      alert('???? ?????? ??????? ??? ???????!');
       $('#confirm_new_password').focus();
       return false;
     }
 
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      alert('يجب اختيار فرع لهذا المستخدم قبل الحفظ.');
+      alert('??? ?????? ??? ???? ???????? ??? ?????.');
       $('#branch_id').focus();
       return false;
     }
@@ -221,10 +221,10 @@ $(document).ready(function() {
     return true;
   });
   
-  // تحذير عند تفعيل Owner
+  // ????? ??? ????? Owner
   $('#is_owner').change(function() {
     if ($(this).is(':checked')) {
-      if (!confirm('⚠️ تحذير!\n\nالمالك لديه صلاحيات كاملة غير محدودة!\n\nهل أنت متأكد؟')) {
+      if (!confirm('?? ?????!\n\n?????? ???? ??????? ????? ??? ??????!\n\n?? ??? ??????')) {
         $(this).prop('checked', false);
       }
     }

@@ -237,11 +237,10 @@
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('manage_products') %}
-                <a href="{{ url_for('products.view', id=product.id) }}"
-                {% endif %}
-                   class="btn btn-info" title="{{ t('View') }}">
+                <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
+                {% endif %}
                 <button type="button" class="btn btn-warning"
                         data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}"
                         title="{{ t('Edit') }} {{ t('Inventory') }}">
@@ -366,7 +365,7 @@ $(document).ready(function() {
 function adjustStock(productId, productName) {
   $('#product_id').val(productId);
   $('#product_name').text(productName);
-  $('#adjustStockForm').attr('action', `/products/${productId}/adjust-stock`);
+  $('#adjustStockForm').attr('action', '{{ url_for("products.adjust_stock", product_id=0) }}'.replace('0', productId));
   $('#adjustStockModal').modal('show');
 }
 

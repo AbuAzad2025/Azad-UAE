@@ -103,7 +103,7 @@
           
           {% if current_user.is_admin %}
           <div class="mt-4">
-            <form class="needs-validation" method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" class="d-inline">
+            <form class="needs-validation d-inline" method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning" onclick="return confirm('هل {{ t('تريد') }} {{ t('عكس') }} هذا {{ t('القيد_2') }}')">
                 <i class="fas fa-undo"></i> {{ t('عكس') }} {{ t('القيد') }}

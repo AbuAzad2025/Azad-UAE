@@ -73,7 +73,7 @@
                 {% endif %}
               </td>
               <td class="text-left">
-                <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_store_platform_toggle', store_id=row.store.id) }}" class="d-inline">
+                <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_store_platform_toggle', store_id=row.store.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   {% if row.platform_disabled %}
                   <input type="hidden" name="platform_disabled" value="0" aria-label="platform disabled">

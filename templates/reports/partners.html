@@ -59,7 +59,7 @@
             <h6 class="m-0 font-weight-bold text-primary">{{ t('تصفية') }} {{ t('Report') }}</h6>
         </div>
         <div class="card-body">
-            <form class="needs-validation" method="get" class="row g-3 align-items-end">
+            <form class="needs-validation row g-3 align-items-end" method="get">
                 <div class="col-md-4">
                     <label class="form-label" for="input_date_from">من {{ t('History') }}</label>
                     <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" id="input_date_from" aria-label="من {{ t('History') }}">
@@ -380,7 +380,7 @@
             }
 
             searchTimeout = setTimeout(() => {
-                $.get(`/reports/api/entity-search?q=${encodeURIComponent(query)}&type=${type}`, function(data) {
+                $.get(`{{ url_for("reports.api_entity_search") }}?q=${encodeURIComponent(query)}&type=${type}`, function(data) {
                     searchResults.empty();
                     if (data.length > 0) {
                         data.forEach(item => {
@@ -434,7 +434,7 @@
             
             detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ t('جاري') }} {{ t('Download') }} {{ t('Report') }} {{ t('التفصيلي') }}...</p></div>');
             
-            $.get(`/reports/entity_report_fragment/${type}/${id}`, function(html) {
+            $.get(`{{ url_for("reports.entity_report_fragment", type="X", id=0) }}`.replace('X', type).replace('0', id), function(html) {
                 detailsContainer.html(html);
             }).fail(function(err) {
                 console.error(err);

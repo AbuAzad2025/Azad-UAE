@@ -9,7 +9,7 @@
 {% block content %}
 <div class="row">
   <div class="col-lg-8">
-    <form class="needs-validation" method="POST" class="card">
+    <form class="needs-validation card" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-warning text-dark">
         <i class="fas fa-edit mr-2"></i>{{ t('Data_2') }} {{ t('Partner_2') }}

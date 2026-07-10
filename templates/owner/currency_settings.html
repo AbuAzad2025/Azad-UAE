@@ -1,20 +1,20 @@
-﻿﻿{% extends 'base.html' %}
-{% block title %}إدارة العملات{% endblock %}
+?{% extends 'base.html' %}
+{% block title %}????? ???????{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-dollar-sign text-success"></i> إدارة العملات</h1>
+        <h1 class="m-0"><i class="fas fa-dollar-sign text-success"></i> ????? ???????</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="?????? ????? ??????">
+            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">إدارة العملات</li>
+            <li class="breadcrumb-item active">????? ???????</li>
           </ol>
         </div>
       </div>
@@ -22,14 +22,14 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success" aria-label="العملات">
-            <i class="fas fa-dollar-sign"></i> العملات
+          <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success" aria-label="???????">
+            <i class="fas fa-dollar-sign"></i> ???????
           </a>
-          <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info" aria-label="أسعار الصرف">
-            <i class="fas fa-exchange-alt"></i> أسعار الصرف
+          <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info" aria-label="????? ?????">
+            <i class="fas fa-exchange-alt"></i> ????? ?????
           </a>
-          <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success" aria-label="الضرائب">
-            <i class="fas fa-percent"></i> الضرائب
+          <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success" aria-label="???????">
+            <i class="fas fa-percent"></i> ???????
           </a>
         </div>
       </div>
@@ -41,20 +41,20 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-success text-white">
-        <h3 class="card-title"><i class="fas fa-coins mr-2"></i> إعدادات العملات الأساسية</h3>
+        <h3 class="card-title"><i class="fas fa-coins mr-2"></i> ??????? ??????? ????????</h3>
       </div>
       <div class="card-body">
-        <form class="needs-validation" method="POST" action="{{ url_for('owner.currency_settings') }}" class="currency-settings-form mb-4">
+        <form class="needs-validation currency-settings-form mb-4" method="POST" action="{{ url_for('owner.currency_settings') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
             <label>{{ t('Default_Currency') }}</label>
             <select name="default_currency" class="form-control" aria-label="default currency">
-              <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
-              <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
+              <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - ???? ???????</option>
+              <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - ????? ??????</option>
               <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
-              <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ريال سعودي</option>
-              <option value="ILS" {{ 'selected' if settings.default_currency == 'ILS' }}>ILS - شيقل إسرائيلي</option>
+              <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ???? ?????</option>
+              <option value="ILS" {{ 'selected' if settings.default_currency == 'ILS' }}>ILS - ???? ????????</option>
             </select>
           </div>
 
@@ -66,26 +66,26 @@
                      name="auto_update_rates"
                      {% if settings.auto_update_rates %}checked{% endif %} aria-label="auto update rates">
               <label class="custom-control-label" for="auto_update">
-                تحديث تلقائي لأسعار الصرف
+                ????? ?????? ?????? ?????
               </label>
             </div>
             <small class="form-text text-muted mt-2">
-              ⚡ عند التفعيل سيقوم النظام بجلب أسعار الصرف من المزود المعتمد تلقائياً.
+              ? ??? ??????? ????? ?????? ???? ????? ????? ?? ?????? ??????? ????????.
             </small>
           </div>
 
-          <button type="submit" class="btn btn-success" aria-label="حفظ إعدادات العملات">
-            <i class="fas fa-save mr-1"></i> حفظ الإعدادات
+          <button type="submit" class="btn btn-success" aria-label="??? ??????? ???????">
+            <i class="fas fa-save mr-1"></i> ??? ?????????
           </button>
         </form>
 
-        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success"></i> أسعار الصرف الحالية</h5>
+        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success"></i> ????? ????? ???????</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
               <tr>
                 <th>{{ t('Currency') }}</th>
-                <th>السعر مقابل {{ tenant_currency_symbol }}</th>
+                <th>????? ????? {{ tenant_currency_symbol }}</th>
               </tr>
             </thead>
             <tbody>

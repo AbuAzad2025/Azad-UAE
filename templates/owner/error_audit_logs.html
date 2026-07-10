@@ -62,7 +62,7 @@
     {# Filters #}
     <div class="card card-outline card-secondary mt-3">
       <div class="card-body">
-        <form class="needs-validation" method="get" action="{{ url_for('owner.error_audit_logs') }}" class="form-inline">
+        <form class="needs-validation form-inline" method="get" action="{{ url_for('owner.error_audit_logs') }}">
           <div class="form-group mr-3 mb-2">
             <label for="category" class="mr-2">{{ t('الفئة') }}</label>
             <select name="category" id="category" class="form-control form-control-sm" aria-label="category">

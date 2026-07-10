@@ -26,7 +26,7 @@
 
 <div class="content">
   <div class="container-fluid">
-    <form class="needs-validation" method="POST" action="{{ url_for('owner.system_config') }}" class="system-config-form">
+    <form class="needs-validation system-config-form" method="POST" action="{{ url_for('owner.system_config') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       

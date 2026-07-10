@@ -155,13 +155,13 @@
 <script>
 function unlockVault(vaultId) {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '/payment-vault/unlock';
+    window.location.href = '{{ url_for("payment_vault.unlock") }}';
   }
 }
 
 function lockVault(vaultId) {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('المحفظة_2') }}')) {
-    window.location.href = '/payment-vault/lock';
+    window.location.href = '{{ url_for("payment_vault.lock") }}';
   }
 }
 </script>

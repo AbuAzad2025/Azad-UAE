@@ -72,7 +72,7 @@
     <h3 class="card-title"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Data_2') }} {{ t('Supplier') }}</h3>
   </div>
   
-  <form class="needs-validation" method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}" class="supplier-edit-form">
+  <form class="needs-validation supplier-edit-form" method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">

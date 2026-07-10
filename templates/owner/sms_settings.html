@@ -1,20 +1,20 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
-{% block title %}إعدادات الرسائل{% endblock %}
+???????{% extends 'base.html' %}
+{% block title %}??????? ???????{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-sms text-info"></i> إعدادات الرسائل النصية</h1>
+        <h1 class="m-0"><i class="fas fa-sms text-info"></i> ??????? ??????? ??????</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">إعدادات الرسائل</li>
+            <li class="breadcrumb-item active">??????? ???????</li>
           </ol>
         </div>
       </div>
@@ -26,10 +26,10 @@
             <i class="fas fa-sms"></i> SMS
           </a>
           <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-info">
-            <i class="fas fa-envelope"></i> البريد
+            <i class="fas fa-envelope"></i> ??????
           </a>
           <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success">
-            <i class="fab fa-whatsapp"></i> واتساب
+            <i class="fab fa-whatsapp"></i> ??????
           </a>
         </div>
       </div>
@@ -41,22 +41,22 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-info text-white">
-        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> إعداد الاتصال بمزود الرسائل</h3>
+        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> ????? ??????? ????? ???????</h3>
       </div>
       <div class="card-body">
-        <form class="needs-validation" method="POST" action="{{ url_for('owner.sms_settings') }}" class="sms-settings-form">
+        <form class="needs-validation sms-settings-form" method="POST" action="{{ url_for('owner.sms_settings') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>مزود الخدمة</label>
+            <label>???? ??????</label>
             <select name="sms_provider" class="form-control" aria-label="sms provider">
               <option value="" {{ 'selected' if not settings.sms_provider }}>{{ t('None') }}</option>
               <option value="twilio" {{ 'selected' if settings.sms_provider == 'twilio' }}>Twilio</option>
               <option value="nexmo" {{ 'selected' if settings.sms_provider == 'nexmo' }}>Nexmo (Vonage)</option>
-              <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>مزود محلي</option>
+              <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>???? ????</option>
             </select>
             <small class="form-text text-muted mt-2">
-              اختر مزود الرسائل الذي تملك بياناته. يمكنك لاحقاً ربط API خارجي حسب الحاجة.
+              ???? ???? ??????? ???? ???? ???????. ????? ?????? ??? API ????? ??? ??????.
             </small>
           </div>
 
@@ -66,21 +66,21 @@
                    name="sms_api_key"
                    class="form-control"
                    value="{{ settings.sms_api_key or '' }}"
-                   placeholder="API Key من المزود" id="input_sms_api_key">
+                   placeholder="API Key ?? ??????" id="input_sms_api_key">
             <small class="form-text text-muted">
-              أدخل مفتاح API الخاص بالحساب لدى المزود، سيتم حفظه بشكل آمن.
+              ???? ????? API ????? ??????? ??? ??????? ???? ???? ???? ???.
             </small>
           </div>
 
           <div class="form-group">
-            <label for="input_sms_sender_name">اسم المرسل</label>
+            <label for="input_sms_sender_name">??? ??????</label>
             <input type="text"
                    name="sms_sender_name"
                    class="form-control"
                    value="{{ settings.sms_sender_name or '' }}"
                    placeholder="Azad Garage"
                    maxlength="11" id="input_sms_sender_name" minlength="2">
-            <small class="form-text text-muted">الحد الأقصى 11 حرفاً، بدون مسافات لمنتجات بعض المزودين.</small>
+            <small class="form-text text-muted">???? ?????? 11 ?????? ???? ?????? ??????? ??? ????????.</small>
           </div>
 
           <div class="form-group">
@@ -91,16 +91,16 @@
                      name="sms_enabled"
                      {% if settings.sms_enabled %}checked{% endif %} aria-label="sms enabled">
               <label class="custom-control-label" for="sms_enabled">
-                تفعيل الرسائل النصية
+                ????? ??????? ??????
               </label>
             </div>
             <small class="form-text text-muted mt-2">
-              عند التفعيل، سيستخدم النظام الرسائل النصية لإرسال الإشعارات للعملاء.
+              ??? ???????? ??????? ?????? ??????? ?????? ?????? ????????? ???????.
             </small>
           </div>
 
           <button type="submit" class="btn btn-info btn-lg">
-            <i class="fas fa-save mr-1"></i> حفظ الإعدادات
+            <i class="fas fa-save mr-1"></i> ??? ?????????
           </button>
         </form>
       </div>

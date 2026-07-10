@@ -9,7 +9,7 @@
 {% block content %}
 <div class="row">
   <div class="col-lg-8">
-    <form class="needs-validation" method="POST" class="card">
+    <form class="needs-validation card" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-primary text-white">
         <i class="fas fa-user-tie mr-2"></i>{{ t('Data_2') }} {{ t('Partner_2') }}
@@ -51,7 +51,7 @@
               <option value="warehouse">{{ t('Warehouse_2') }} {{ t('محدد') }}</option>
             </select>
           </div>
-          <div class="col-md-6" id="scope_id_container" class="d-none">
+          <div class="col-md-6 d-none" id="scope_id_container">
             <label class="form-label fw-semibold" id="scope_id_label">—</label>
             <select name="scope_id" id="scope_id" class="form-select" aria-label="scope id">
               <option value="">— {{ t('اختر') }} —</option>

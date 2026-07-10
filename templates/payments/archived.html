@@ -285,7 +285,7 @@ $(document).ready(function() {
 
     var id = $(this).data('id');
 
-    var endpoint = type === 'receipt' ? '/payments/receipts/' : '/payments/payments/';
+    var endpoint = type === 'receipt' ? '{{ url_for("payments.receipts") }}/' : '{{ url_for("payments.index") }}/';
 
     var url = endpoint + id + '/restore';
 

@@ -178,7 +178,7 @@
             </a>
           </div>
           <div class="col-md-4">
-            <form class="needs-validation" action="{{ url_for('owner.export_database') }}" method="POST" class="ic-1">
+            <form class="needs-validation ic-1" action="{{ url_for('owner.export_database') }}" method="POST">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">

@@ -97,9 +97,11 @@
               <td>
                 {% if current_user.has_permission('manage_products') %}
                 <a href="{{ url_for('products.edit', id=item.product.id) }}">
-                {% endif %}
                   {{ item.product.name_ar or item.product.name }}
                 </a>
+                {% else %}
+                  {{ item.product.name_ar or item.product.name }}
+                {% endif %}
               </td>
               <td>{{ item.product.sku or '-' }}</td>
               <td>

@@ -22,7 +22,7 @@
 
 <div class="card mb-3 no-print">
   <div class="card-body">
-    <form class="needs-validation" method="get" class="form-inline" action="">
+    <form class="needs-validation form-inline" method="get" action="">
       <input type="hidden" name="type" value="{{ analysis_type }}" aria-label="type">
       <label class="ml-2 mr-2" for="input_as_of_date">حتى {{ t('History') }}:</label>
       <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date" aria-label="as of date">
@@ -134,9 +134,11 @@
                 <td>
                   {% if current_user.has_permission('manage_customers') %}
                   <a href="{{ url_for('customers.view', id=item.customer.id) }}">
-                  {% endif %}
                     {{ item.customer.name }}
                   </a>
+                  {% else %}
+                    {{ item.customer.name }}
+                  {% endif %}
                 </td>
                 <td class="text-center">{{ format_currency(item['0-30']) }}</td>
                 <td class="text-center text-info">{{ format_currency(item['31-60']) }}</td>
@@ -154,9 +156,11 @@
                 <td>
                   {% if current_user.has_permission('manage_suppliers') %}
                   <a href="{{ url_for('suppliers.view', id=item.supplier.id) }}">
-                  {% endif %}
                     {{ item.supplier.name }}
                   </a>
+                  {% else %}
+                    {{ item.supplier.name }}
+                  {% endif %}
                 </td>
                 <td class="text-center">{{ format_currency(item['0-30']) }}</td>
                 <td class="text-center text-info">{{ format_currency(item['31-60']) }}</td>

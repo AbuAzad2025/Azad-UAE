@@ -1,20 +1,20 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
-{% block title %}تنظيف البيانات{% endblock %}
+???????{% extends 'base.html' %}
+{% block title %}????? ????????{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-trash-alt text-danger"></i> تنظيف البيانات القديمة</h1>
+        <h1 class="m-0"><i class="fas fa-trash-alt text-danger"></i> ????? ???????? ???????</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+            <i class="fas fa-arrow-right mr-1"></i> ?????? ????? ??????
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">تنظيف البيانات</li>
+            <li class="breadcrumb-item active">????? ????????</li>
           </ol>
         </div>
       </div>
@@ -23,10 +23,10 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-            <i class="fas fa-trash"></i> تنظيف البيانات
+            <i class="fas fa-trash"></i> ????? ????????
           </a>
           <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success">
-            <i class="fas fa-check-double"></i> التحقق من النسخ
+            <i class="fas fa-check-double"></i> ?????? ?? ?????
           </a>
         </div>
       </div>
@@ -38,12 +38,12 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-danger text-white">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2"></i> تحذير هام قبل الحذف</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2"></i> ????? ??? ??? ?????</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
           <i class="fas fa-exclamation-circle"></i>
-          <strong>{{ t('Warning') }}</strong> لا يمكن التراجع عن عمليات الحذف. تأكد من وجود نسخة احتياطية حديثة قبل تنفيذ أي تنظيف.
+          <strong>{{ t('Warning') }}</strong> ?? ???? ??????? ?? ?????? ?????. ???? ?? ???? ???? ???????? ????? ??? ????? ?? ?????.
         </div>
 
         <div class="row mb-4">
@@ -53,7 +53,7 @@
                 <i class="fas fa-file-alt"></i>
               </span>
               <div class="info-box-content">
-                <span class="info-box-text">سجلات قديمة (90+ {{ t('يوم') }}</span>
+                <span class="info-box-text">????? ????? (90+ {{ t('???') }}</span>
                 <span class="info-box-number">{{ stats.old_logs }}</span>
               </div>
             </div>
@@ -64,36 +64,36 @@
                 <i class="fas fa-archive"></i>
               </span>
               <div class="info-box-content">
-                <span class="info-box-text">أرشيف قديم (180+ {{ t('يوم') }}</span>
+                <span class="info-box-text">????? ???? (180+ {{ t('???') }}</span>
                 <span class="info-box-number">{{ stats.old_archived }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <form class="needs-validation" method="POST" action="{{ url_for('owner.data_cleanup') }}" class="data-cleanup-form">
+        <form class="needs-validation data-cleanup-form" method="POST" action="{{ url_for('owner.data_cleanup') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>نوع البيانات للحذف</label>
+            <label>??? ???????? ?????</label>
             <select name="cleanup_type" class="form-control" required aria-label="cleanup type">
-              <option value="">{{ t('اختر') }}</option>
-              <option value="logs">سجلات المراجعة</option>
+              <option value="">{{ t('????') }}</option>
+              <option value="logs">????? ????????</option>
               <option value="archived">{{ t('Archived_Records') }}</option>
             </select>
-            <small class="form-text text-muted">حدد الفئة التي ترغب في حذفها. ننصح بالتدرج وعدم حذف كل شيء مرة واحدة.</small>
+            <small class="form-text text-muted">??? ????? ???? ???? ?? ?????. ???? ??????? ???? ??? ?? ??? ??? ?????.</small>
           </div>
 
           <div class="form-group">
-            <label for="input_days">حذف البيانات الأقدم من (أيام)</label>
+            <label for="input_days">??? ???????? ?????? ?? (????)</label>
             <input type="number" name="days" class="form-control" value="90" min="30" max="365" id="input_days" aria-label="days">
-            <small class="form-text text-muted">يمكنك اختيار فترة زمنية مختلفة، لكن الحد الأدنى 30 يوماً للحفاظ على السجلات الحديثة.</small>
+            <small class="form-text text-muted">????? ?????? ???? ????? ??????? ??? ???? ?????? 30 ????? ?????? ??? ??????? ???????.</small>
           </div>
 
           <button type="submit"
                   class="btn btn-danger btn-lg"
-                  onclick="return confirm('هل أنت متأكد من حذف البيانات القديمة؟ هذا الإجراء لا يمكن التراجع عنه!')">
-            <i class="fas fa-trash mr-1"></i> تنظيف الآن
+                  onclick="return confirm('?? ??? ????? ?? ??? ???????? ???????? ??? ??????? ?? ???? ??????? ???!')">
+            <i class="fas fa-trash mr-1"></i> ????? ????
           </button>
         </form>
       </div>

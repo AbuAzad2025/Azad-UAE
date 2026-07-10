@@ -10,9 +10,9 @@
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
-    {% endif %}
       <i class="fas fa-plus-circle mr-2"></i>{{ t('قيد') }} {{ t('Manual') }}
     </a>
+    {% endif %}
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
       <i class="fas fa-book mr-2"></i>{{ t('القيود') }}
     </a>

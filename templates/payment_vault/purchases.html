@@ -197,7 +197,7 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
-                                        <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" class="ic-2">
+                                        <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                             <button type="submit" class="btn btn-success" onclick="return confirm('هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}')" title="{{ t('Confirm') }}">
                                                 <i class="fas fa-check"></i>
