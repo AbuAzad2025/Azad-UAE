@@ -1,4 +1,6 @@
 {% set _company_name = (settings.company_name_ar if settings is defined and settings and settings.company_name_ar else none) or (company.name_ar if company is defined and company and company.name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' %}
+{# Azad Intelligent Systems watermark overlay — fixed position, behind content, on all print documents #}
+<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
 <div class="erp-print-banner">
   <div class="erp-print-banner-title">
     {{ doc_title or 'مستند مالي' }}

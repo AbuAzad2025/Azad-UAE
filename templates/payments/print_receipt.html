@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ t('Print') }} {{ t('Receipt_4') }} - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
   <style>
     * { box-sizing: border-box; }
     body {
@@ -226,6 +227,7 @@
       <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
       <p class="ic-8">تم {{ t('Printing') }}: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
     </div>
+    {% include 'partials/print_developer_footer.html' %}
   </div>
   
   <div class="no-print ic-9">

@@ -339,6 +339,7 @@
       <div><strong>{{ t('توقيع') }} {{ t('Customer') }}</strong></div>
     </div>
     
+    {% include 'partials/print_developer_footer.html' %}
     
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}

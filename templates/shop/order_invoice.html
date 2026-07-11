@@ -43,6 +43,7 @@
   </style>
 </head>
 <body class="invoice-print">
+<div class="erp-watermark" aria-hidden="true"><span>Azad Intelligent Systems</span></div>
   <div class="invoice">
     <div class="watermark">{{ t('invoice') }}</div>
     <div class="header">
@@ -114,6 +115,7 @@
       <p>{{ t('thank_you') if t('thank_you') != 'thank_you' else 'شكراً لتسوقكم معنا' }}</p>
       <p style="font-size:9px;">{{ store.footer_text or '' }}</p>
     </div>
+    {% include 'partials/print_developer_footer.html' %}
   </div>
 </body>
 </html>

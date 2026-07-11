@@ -1,11 +1,9 @@
-{# Developer/platform footer — Azad only, not tenant header logo. #}
+{# Developer/platform footer — Azad Intelligent Systems branding with WhatsApp support. #}
 <div class="print-developer-footer">
   <p class="mb-0">{{ print_branding.powered_by_text if print_branding is defined else (developer_credit or config.DEVELOPER_CREDIT) }}</p>
-  {% if developer_phone or developer_email %}
   <p class="erp-print-footer-contact">
-    {% if developer_phone %}📞 {{ developer_phone }}{% endif %}
-    {% if developer_phone and developer_email %} | {% endif %}
-    {% if developer_email %}📧 {{ developer_email }}{% endif %}
+    {% if developer_phone %}📞 {{ developer_phone }} | {% endif %}
+    <span class="erp-print-whatsapp">واتساب: +972562150193</span>
+    {% if developer_email %} | 📧 {{ developer_email }}{% endif %}
   </p>
-  {% endif %}
 </div>

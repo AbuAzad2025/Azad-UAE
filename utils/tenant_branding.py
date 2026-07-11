@@ -16,7 +16,7 @@ from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON, tenant_asset_rel
 from utils.cache_decorators import cached_query
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
-_POWERED_BY = "Powered by Azad Smart Systems"
+_POWERED_BY = "Powered by Azad Intelligent Systems"
 
 
 def normalize_static_rel(path: str | None) -> str:
