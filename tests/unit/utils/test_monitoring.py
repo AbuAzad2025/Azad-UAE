@@ -109,7 +109,7 @@ class TestErrorLogger:
             ):
                 ErrorLogger.log_error(RuntimeError('boom'))
         session.add.assert_called_once_with(audit_entry)
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
 
 class TestMetricsCollector:
