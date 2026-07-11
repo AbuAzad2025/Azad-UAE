@@ -367,11 +367,11 @@ class TestVaultPageRoutes:
         resp = vault_owner_client.get('/payment-vault/cards')
         assert resp.status_code == 200
 
-    def test_card_decrypt(self, vault_owner_client, mock_unlocked_vault, mocker):
+    def test_card_decrypt(self, vault_owner_client, mock_unlocked_vault, mock_db, mocker):
         card = MagicMock()
         card.get_card_display.return_value = '****1111'
         card.to_dict.return_value = {'last_four': '1111'}
-        mocker.patch('routes.payment_vault.CardPayment.query').get_or_404.return_value = card
+        mock_db.get.return_value = card
         mocker.patch('routes.payment_vault.PaymentLog.log_action')
         resp = vault_owner_client.post('/payment-vault/card/1/decrypt')
         assert resp.status_code == 200
