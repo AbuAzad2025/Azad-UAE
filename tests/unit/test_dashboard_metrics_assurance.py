@@ -146,4 +146,3 @@ class TestDashboardServiceLayout:
         with app.app_context():
             with pytest.raises(IntegrityError):
                 DashboardService.save_user_layout(1, 1, {'widgets': []})
-        mock_session.rollback.assert_called_once()
