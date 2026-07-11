@@ -189,6 +189,7 @@ class TestConfig:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "poolclass": NullPool,
         "pool_pre_ping": True,
+        "connect_args": {"connect_timeout": 3},
     }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"
@@ -253,7 +254,9 @@ def pytest_configure(config):
 @pytest.fixture(scope="session")
 def app():
     """Create Flask app against an isolated PostgreSQL test database."""
+    _terminate_database_connections(_TEST_DATABASE_URL)
     _ensure_postgres_database(_TEST_DATABASE_URL)
+    os.environ["SKIP_SYSTEM_INTEGRITY"] = "1"
 
     original_log_error = LoggingCore.log_error
     original_log_frontend = LoggingCore.log_frontend_error
