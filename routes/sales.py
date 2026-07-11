@@ -542,7 +542,7 @@ def delete(id):
             )
             archive_service = ArchiveService()
             archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
-            archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
+            archive_service.archive_record('sales', sale, reason=archive_reason)
             LoggingCore.log_audit('archive', 'sales', id)
         flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"', 'warning')
         return redirect(url_for('sales.index'))

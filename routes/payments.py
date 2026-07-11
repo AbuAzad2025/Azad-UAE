@@ -504,7 +504,7 @@ def archive_payment(id):
     try:
         archive_service = ArchiveService()
         with atomic_transaction('payment_archive'):
-            archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
+            archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف')
             LoggingCore.log_audit('archive', 'payments', payment.id)
 
     except Exception as e:
@@ -1246,7 +1246,7 @@ def archive_receipt(id):
     try:
         with atomic_transaction('receipt_archive'):
             archive_service = ArchiveService()
-            archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض', commit=False)
+            archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض')
             LoggingCore.log_audit('archive', 'receipts', receipt.id)
     except Exception as e:
         pass
@@ -1331,11 +1331,11 @@ def delete_receipt(id):
             if has_links:
                 # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
                 archive_service = ArchiveService()
-                archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
+                archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات')
 
                 # أرشفة الشيكات المرتبطة
                 if receipt.cheque:
-                    archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+                    archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف')
 
                 LoggingCore.log_audit('archive', 'receipts', id)
                 flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
@@ -1390,11 +1390,11 @@ def delete_payment(id):
             if has_links:
                 # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
                 archive_service = ArchiveService()
-                archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
+                archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات')
 
                 # أرشفة الشيكات المرتبطة
                 if payment.cheque:
-                    archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+                    archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف')
 
                 LoggingCore.log_audit('archive', 'payments', id)
                 flash(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)', 'warning')

@@ -398,9 +398,9 @@ def delete(id):
         if has_links:
             with atomic_transaction('expense_archive_with_links'):
                 archive_service = ArchiveService()
-                archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات', commit=False)
+                archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات')
                 if cheque:
-                    archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف', commit=False)
+                    archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف')
                 LoggingCore.log_audit('archive', 'expenses', id)
             flash(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)', 'warning')
             

@@ -9,36 +9,28 @@ from utils.db_safety import atomic_transaction
 class ArchiveService:
 
     @staticmethod
-    def archive_record(table_name, record, reason=None, commit=True):
-        try:
-            if hasattr(record, 'to_dict'):
-                data = record.to_dict()
-            else:
-                data = {c.name: getattr(record, c.name) for c in record.__table__.columns}
+    def archive_record(table_name, record, reason=None):
+        if hasattr(record, 'to_dict'):
+            data = record.to_dict()
+        else:
+            data = {c.name: getattr(record, c.name) for c in record.__table__.columns}
 
-            tenant_id = getattr(record, 'tenant_id', None)
-            if tenant_id is None:
-                raise ValueError(f'Cannot archive {table_name} #{record.id}: record has no tenant_id')
+        tenant_id = getattr(record, 'tenant_id', None)
+        if tenant_id is None:
+            raise ValueError(f'Cannot archive {table_name} #{record.id}: record has no tenant_id')
 
-            archived = ArchivedRecord(
-                tenant_id=tenant_id,
-                table_name=table_name,
-                record_id=record.id,
-                data=data,
-                archived_by=current_user.id if current_user.is_authenticated else None,
-                reason=reason
-            )
+        archived = ArchivedRecord(
+            tenant_id=tenant_id,
+            table_name=table_name,
+            record_id=record.id,
+            data=data,
+            archived_by=current_user.id if current_user.is_authenticated else None,
+            reason=reason
+        )
 
-            db.session.add(archived)
-
-            db.session.flush()
-            current_app.logger.info(f'Archived: {table_name} #{record.id}')
-
-            return archived
-
-        except Exception as e:
-            current_app.logger.error(f'Archive failed: {e}')
-            raise
+        db.session.add(archived)
+        db.session.flush()
+        return archived
 
     @staticmethod
     def soft_delete(record):

@@ -62,8 +62,8 @@ class TestArchiveRecord:
 
         with app.app_context():
             with pytest.raises(RuntimeError):
-                ArchiveService.archive_record('sales', record, commit=True)
-        mock_session.rollback.assert_called()
+                ArchiveService.archive_record('sales', record)
+        mock_session.flush.assert_called()
 
     def test_deferred_commit_flushes_only(self, app, mocker):
         record = MagicMock(id=3, tenant_id=1)
@@ -75,7 +75,7 @@ class TestArchiveRecord:
         from services.archive_service import ArchiveService
 
         with app.app_context():
-            ArchiveService.archive_record('payments', record, commit=False)
+            ArchiveService.archive_record('payments', record)
         mock_session.flush.assert_called_once()
         mock_session.commit.assert_not_called()
 
@@ -104,7 +104,7 @@ class TestDeletePaths:
         with app.app_context():
             with pytest.raises(RuntimeError):
                 ArchiveService.soft_delete(record)
-        mock_session.rollback.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_hard_delete_archives_then_deletes(self, app, mocker):
         record = MagicMock(id=9, tenant_id=1)
@@ -134,7 +134,7 @@ class TestDeletePaths:
         with app.app_context():
             with pytest.raises(RuntimeError):
                 ArchiveService.hard_delete('sales', record)
-        mock_session.rollback.assert_called()
+        mock_session.flush.assert_called()
 
 
 class TestRestoreAndQuery:
@@ -247,7 +247,7 @@ class TestRestoreAndQuery:
         with app.app_context():
             with pytest.raises(RuntimeError):
                 ArchiveService.archive_record('sales', record)
-        mock_session.rollback.assert_called()
+        mock_session.add.assert_not_called()
 
     def test_restore_unknown_table_raises(self, app, mocker):
         archived = MagicMock(table_name='unknown_tbl', tenant_id=1, record_id=1)

@@ -273,7 +273,7 @@ def delete(id):
         if has_links:
             # أرشفة فقط (بدون عكس القيد - الأرشفة إخفاء إداري)
             archive_service = ArchiveService()
-            archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات', commit=False)
+            archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات')
             
             LoggingCore.log_audit('archive', 'purchases', id)
             with atomic_transaction('purchase_archive'):
@@ -283,7 +283,7 @@ def delete(id):
             # منع الحذف النهائي لفواتير الشراء التي أثرت على المخزون
             flash(f'⚠️ لا يمكن حذف فاتورة الشراء "{purchase.purchase_number}" لأنها أثرت على المخزون. يمكنك أرشفتها بدلاً من ذلك.', 'warning')
             archive_service = ArchiveService()
-            archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود حركة مخزون', commit=False)
+            archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود حركة مخزون')
             LoggingCore.log_audit('archive', 'purchases', id)
             with atomic_transaction('purchase_archive_fallback'):
                 db.session.flush()
