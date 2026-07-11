@@ -607,7 +607,7 @@
       var $printWin = window.open('', '_blank', 'width=1200,height=800');
       if (!$printWin) return;
       $printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><title>' + (options && options.title || 'طباعة') + '</title>');
-      $printWin.document.write('<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; } thead th { background: ' + (options && options.headerColor || '#0d6efd') + '; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>');
+      $printWin.document.write('<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; word-break: break-word; overflow-wrap: anywhere; } thead th { background: ' + (options && options.headerColor || '#0d6efd') + '; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>');
       $printWin.document.write($clone[0].outerHTML);
       $printWin.document.write('</body></html>');
       $printWin.document.close();

@@ -5,6 +5,8 @@
 @page {
   size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
   margin: 5mm;
+  orphans: 3;
+  widows: 3;
 }
 
 /* ── Body ── */
@@ -159,10 +161,16 @@ th, td {
 /* ── Print @media rules ── */
 @media print {
   html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
+  .invoice, .receipt { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
   table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
   thead { display: table-header-group; } tfoot { display: table-footer-group; }
-  tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
+  thead th { page-break-after: avoid; }
+  tr, .totals, .signature, .signature-section, .invoice-footer, .notes, .notes-section,
+  .amount-box, .amount-showcase, .amount-display, .payment-method, .payment-box,
+  .allocations-section, .allocation-item, .cheque-box, .cheque-card, .cheque-details-gulf,
+  .bank-info, .info-box, .info-item, .payment-item { page-break-inside: avoid; break-inside: avoid; }
+  h1, h2, h3, h4, h5, h6 { page-break-after: avoid; page-break-inside: avoid; }
+  td { overflow-wrap: anywhere; word-break: break-word; }
   .no-print { display: none !important; }
 
   /* Color adjustment for all print */
