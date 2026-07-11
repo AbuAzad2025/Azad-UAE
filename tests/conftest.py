@@ -329,6 +329,14 @@ def _cleanup_db_connections(app):
         db.session.remove()
     except Exception:
         pass
+    try:
+        db.engine.dispose()
+    except Exception:
+        pass
+    try:
+        db.engines['reporting'].dispose()
+    except Exception:
+        pass
 
 
 def _restore_polluted_model_queries():
