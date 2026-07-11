@@ -285,7 +285,7 @@ def app():
         except Exception:
             pass
         try:
-            db.get_engine(bind='reporting').dispose()
+            db.engines['reporting'].dispose()
         except Exception:
             pass
         try:
