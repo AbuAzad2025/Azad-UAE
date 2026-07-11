@@ -92,7 +92,10 @@ class TestFrontendSecurityAudit:
         templates_dir = PROJECT_ROOT / 'templates'
         issues = []
         for path in templates_dir.rglob('*.html'):
-            text = path.read_text(encoding='utf-8')
+            try:
+                text = path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                text = path.read_text(encoding='utf-8', errors='replace')
             if '<form' in text.lower() and ('method="post"' in text.lower() or "method='post'" in text.lower()):
                 if 'csrf_token' not in text and 'hidden_tag' not in text:
                     rel = str(path.relative_to(templates_dir))
@@ -114,7 +117,10 @@ class TestFrontendSecurityAudit:
         templates_dir = PROJECT_ROOT / 'templates'
         issues = []
         for path in templates_dir.rglob('*.html'):
-            text = path.read_text(encoding='utf-8')
+            try:
+                text = path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                text = path.read_text(encoding='utf-8', errors='replace')
             # Check for unescaped user input
             if '{{ ' in text and ' | ' in text:
                 if '|safe' in text:

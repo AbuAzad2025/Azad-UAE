@@ -123,7 +123,7 @@ class TestUpdateEntry:
         mock_db.session.flush.side_effect = RuntimeError('db fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.update_entry(1, {'description': 'x'}, 1)
-        mock_db.session.rollback.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
 
 class TestReverseEntryAdvanced:

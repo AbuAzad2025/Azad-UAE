@@ -284,6 +284,15 @@ def app():
             db.engine.dispose()
         except Exception:
             pass
+        try:
+            db.get_engine(bind='reporting').dispose()
+        except Exception:
+            pass
+        try:
+            from sqlalchemy.orm import close_all_sessions
+            close_all_sessions()
+        except Exception:
+            pass
 
     LoggingCore.log_error = original_log_error
     LoggingCore.log_frontend_error = original_log_frontend

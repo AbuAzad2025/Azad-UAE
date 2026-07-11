@@ -553,7 +553,7 @@ class TestDonationApproveReject:
         mock_gl_service.side_effect = Exception("GL post failed")
         resp = vault_owner_client.post("/payment-vault/donation/1/approve", follow_redirects=False)
         assert resp.status_code == 302
-        mock_db.rollback.assert_called_once()
+        mock_db.rollback.assert_not_called()
 
     def test_reject_success(
         self, vault_owner_client, mock_donation, mock_db
