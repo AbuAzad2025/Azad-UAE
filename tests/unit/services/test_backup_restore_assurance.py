@@ -218,9 +218,11 @@ class TestImportScopedTables:
         call_count = {'n': 0}
 
         def execute_side_effect(*args, **kwargs):
-            call_count['n'] += 1
-            if call_count['n'] == 4:
-                raise RuntimeError('constraint violation')
+            sql = str(args[0]) if args else ''
+            if 'INSERT INTO "products"' in sql:
+                call_count['n'] += 1
+                if call_count['n'] >= 2:
+                    raise RuntimeError('constraint violation')
             return MagicMock()
 
         conn.execute.side_effect = execute_side_effect
