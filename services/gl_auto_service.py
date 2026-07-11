@@ -65,13 +65,11 @@ def validate_journal_entry_balance(mapper, connection, target):
 
 
 def register_gl_event_listeners():
-    from models import GLJournalEntry
-    from sqlalchemy import event
-
-    @event.listens_for(GLJournalEntry, 'before_insert')
-    @event.listens_for(GLJournalEntry, 'before_update')
-    def _handler(mapper, connection, target):
-        validate_journal_entry_balance(mapper, connection, target)
+    # GLJournalEntry balance validation is handled by the model-level event
+    # listener in models/gl.py (lines 429-446) which is the authoritative check.
+    # This function is kept as a no-op for backward compatibility with
+    # models/events.py and existing tests.
+    pass
 
 
 def register_validation_event_listeners():

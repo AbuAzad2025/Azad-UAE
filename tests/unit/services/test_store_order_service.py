@@ -108,7 +108,7 @@ class TestConfirmOrder:
             'services.store_order_service.SaleService.has_inventory_posted',
             return_value=True,
         )
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with app.app_context():
             with pytest.raises(RuntimeError):
                 StoreOrderService.confirm_order(online_sale)
@@ -215,14 +215,14 @@ class TestCancelCommitFailures:
         online_sale.coupon_code = 'CPN'
         mocker.patch('services.store_order_service.SaleService.cancel_sale')
         mocker.patch('services.store_coupon_service.StoreCouponService.release_use')
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with app.app_context():
             with pytest.raises(RuntimeError):
                 StoreOrderService.cancel_order(online_sale)
 
     def test_cancel_pending_commit_failure(self, mocker, online_sale, app):
         mocker.patch('services.store_coupon_service.StoreCouponService.release_use')
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with app.app_context():
             with pytest.raises(RuntimeError):
                 StoreOrderService.cancel_order(online_sale)

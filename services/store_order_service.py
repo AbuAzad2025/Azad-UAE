@@ -205,16 +205,14 @@ class StoreOrderService:
         StoreOrderService._reverse_loyalty_points(sale)
 
         if sale.status == 'confirmed' or StoreOrderService.is_fulfilled(sale):
-            coupon_code = sale.coupon_code
             SaleService.cancel_sale(sale)
-            if coupon_code:
+            if sale.coupon_code:
                 from services.store_coupon_service import StoreCouponService
-                StoreCouponService.release_use(coupon_code, sale.tenant_id)
-        try:
-            db.session.flush()
-        except Exception:
-            raise
-
+                StoreCouponService.release_use(sale.coupon_code, sale.tenant_id)
+            try:
+                db.session.flush()
+            except Exception:
+                raise
             return sale
 
         sale.status = 'cancelled'

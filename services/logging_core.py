@@ -994,6 +994,7 @@ class LoggingCore:
         try:
             entry = AuditLog(
                 user_id=ctx["user_id"],
+                tenant_id=ctx["tenant_id"],
                 action=action,
                 table_name=table_name,
                 record_id=record_id,

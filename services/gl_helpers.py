@@ -88,8 +88,8 @@ def get_account(code, tenant_id=None):
     code = str(code)
     if tenant_id is not None:
         return GLAccount.query.filter_by(code=code, tenant_id=int(tenant_id)).first()
-    logger.warning("get_account(%s) without tenant_id — first chart match (legacy fallback)", code)
-    return GLAccount.query.filter_by(code=code).order_by(GLAccount.id.asc()).first()
+    tenant_id = resolve_tenant_id()
+    return GLAccount.query.filter_by(code=code, tenant_id=int(tenant_id)).first()
 
 
 def next_entry_number(tenant_id, entry_date=None):

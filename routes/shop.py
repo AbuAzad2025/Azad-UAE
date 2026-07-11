@@ -1011,21 +1011,22 @@ def checkout(slug):
 
 
 
-            sale = StoreCheckoutService.create_web_order(
+            with atomic_transaction('store_checkout'):
+                sale = StoreCheckoutService.create_web_order(
 
-                store, cart, name, phone, address, notes,
+                    store, cart, name, phone, address, notes,
 
-                payment_method_code=payment_method,
+                    payment_method_code=payment_method,
 
-                shop_account=account,
+                    shop_account=account,
 
-                coupon_code=(request.form.get('coupon_code') or '').strip(),
+                    coupon_code=(request.form.get('coupon_code') or '').strip(),
 
-                customer_email=email or None,
+                    customer_email=email or None,
 
-            )
+                )
 
-            StoreService.save_cart(session, store.tenant_id, {})
+                StoreService.save_cart(session, store.tenant_id, {})
 
             if payment_method == 'online_pay':
 
@@ -1037,10 +1038,9 @@ def checkout(slug):
                     )
                     return redirect(payment['payment_url'])
                 except ValueError as pe:
-                    sale.payment_status = 'init_failed'
-                    sale.notes = (sale.notes or '') + f'\n[فشل init الدفع الإلكتروني: {str(pe)}]'
                     with atomic_transaction('checkout_payment_fail'):
-                        pass
+                        sale.payment_status = 'init_failed'
+                        sale.notes = (sale.notes or '') + f'\n[فشل init الدفع الإلكتروني: {str(pe)}]'
                     token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
                     flash(str(pe) + ' — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً.', 'warning')
                     return redirect(url_for('shop.order_confirmation', slug=store.store_slug, token=token))

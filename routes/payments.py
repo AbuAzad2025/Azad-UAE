@@ -1586,29 +1586,32 @@ def create_payment(purchase_id):
                     db.session.flush()
                     payment.cheque_id = cheque.id
                     payment.payment_confirmed = False
+                    process_cheque_issue(cheque)
+                else:
+                    from services.gl_service import GLService
+                    tenant_id = getattr(payment, 'tenant_id', None)
+                    GLService.ensure_core_accounts(tenant_id=tenant_id)
+                    cash_or_bank = GLService.get_payment_credit_account(
+                        payment_method_value,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
+                    lines = [
+                        {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                        {'account': cash_or_bank, 'concept_code': GLService.get_payment_credit_concept(payment_method_value), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                    ]
+                    post_or_fail(
+                        lines,
+                        description=f'Payment {payment.payment_number}',
+                        reference_type=GLRef.PAYMENT,
+                        reference_id=payment.id,
+                        currency=payment.currency,
+                        exchange_rate=payment.exchange_rate,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
 
-                from services.gl_service import GLService
-                tenant_id = getattr(payment, 'tenant_id', None)
-                GLService.ensure_core_accounts(tenant_id=tenant_id)
-                cash_or_bank = GLService.get_payment_credit_account(
-                    payment_method_value,
-                    branch_id=payment.branch_id,
-                    tenant_id=tenant_id,
-                )
-                lines = [
-                    {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
-                    {'account': cash_or_bank, 'concept_code': GLService.get_payment_credit_concept(payment_method_value), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
-                ]
-                post_or_fail(
-                    lines,
-                    description=f'Payment {payment.payment_number}',
-                    reference_type=GLRef.PAYMENT,
-                    reference_id=payment.id,
-                    currency=payment.currency,
-                    exchange_rate=payment.exchange_rate,
-                    branch_id=payment.branch_id,
-                    tenant_id=tenant_id,
-                )
+                supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
 
             flash('تم إنشاء سند الصرف بنجاح', 'success')
             return redirect(url_for('purchases.view', id=purchase_id))

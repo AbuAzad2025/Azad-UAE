@@ -238,7 +238,7 @@ class StoreCheckoutService:
             currency=currency,
             discount_amount=discount_amount,
             shipping_cost=0,
-            tax_rate=0,
+            tax_rate=Decimal(str(tenant.default_tax_rate or 0)) if (tenant and tenant.enable_tax) else Decimal('0'),
             notes=(notes or '') + delivery_block,
             payment_data=None,
             source='online_store',

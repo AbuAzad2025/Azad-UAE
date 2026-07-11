@@ -98,10 +98,10 @@ class TestValidateJournalEntryBalance:
 
 
 class TestRegisterEventListeners:
-    def test_register_gl_event_listeners_attaches_handlers(self):
+    def test_register_gl_event_listeners_is_noop(self):
         with patch('sqlalchemy.event.listens_for') as mock_listens:
             gl_auto_service.register_gl_event_listeners()
-            assert mock_listens.call_count == 2
+            assert mock_listens.call_count == 0  # model/gl.py handles balance validation
 
     def test_register_validation_event_listeners_attaches_handlers(self):
         with patch('sqlalchemy.event.listens_for') as mock_listens:
@@ -210,17 +210,6 @@ class TestRegisterEventListeners:
         with caplog.at_level('ERROR'):
             payment_handler(None, None, target)
 
-    def test_gl_listener_invokes_balance_check(self):
-        captured = []
-
-        def fake_listens_for(model, event):
-            def decorator(fn):
-                captured.append(fn)
-                return fn
-            return decorator
-
-        with patch('sqlalchemy.event.listens_for', side_effect=fake_listens_for):
-            gl_auto_service.register_gl_event_listeners()
-
+    def test_gl_validate_balance_passes_balanced(self):
         target = MagicMock(entry_number='JE-9', total_debit=Decimal('10'), total_credit=Decimal('10'))
-        captured[0](None, None, target)
+        gl_auto_service.validate_journal_entry_balance(None, None, target)

@@ -3,7 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from extensions import db
 from models import Purchase, PurchaseLine, PurchaseReturn, PurchaseReturnLine, Product, Supplier, Warehouse
-from services.stock_service import StockService
+from services.stock_service import StockService, _safe_for_update
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService, GL_ACCOUNTS
 from services.gl_posting import post_or_fail
@@ -457,9 +457,12 @@ class PurchaseService:
             if mwac and tenant_id and warehouse_id:
                 from models.product_warehouse_cost import ProductWarehouseCost
                 from models.product_cost_history import ProductCostHistory
-                pwc = ProductWarehouseCost.query.filter_by(
-                    tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,
-                ).first()
+                pwc = _safe_for_update(
+                    ProductWarehouseCost.query.filter_by(
+                        tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,
+                    ),
+                    label=f'purchase_return_PWC_{product_id}_{warehouse_id}',
+                )
                 if pwc and pwc.total_quantity > 0:
                     cost_history = ProductCostHistory.query.filter_by(
                         tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,

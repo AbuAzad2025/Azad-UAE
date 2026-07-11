@@ -221,7 +221,8 @@ def create():
                     reference_id=expense.id,
                     currency=expense.currency,
                     exchange_rate=expense.exchange_rate,
-                    branch_id=expense.branch_id
+                    branch_id=expense.branch_id,
+                    tenant_id=tid,
                 )
                 if cheque:
                     process_cheque_issue(cheque)

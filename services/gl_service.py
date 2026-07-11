@@ -826,15 +826,18 @@ class GLService:
         return entry
 
     @staticmethod
-    def get_account_balance_for_branch(account_id, branch_id=None):
+    def get_account_balance_for_branch(account_id, branch_id=None, tenant_id=None):
         """رصيد حساب محدد مع عزل اختياري للفرع (عند اللزوم). branch_id=None = كل الفروع."""
         from sqlalchemy import func
         account = db.session.get(GLAccount, account_id)
         if not account:
             return None
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
         q = db.session.query(func.sum(GLJournalLine.amount_aed)).filter(
             GLJournalLine.account_id == account_id
         ).join(GLJournalEntry).filter(GLJournalEntry.status == 'posted')
+        if tenant_id is not None:
+            q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
         if branch_id:
             q = q.filter(GLJournalEntry.branch_id == branch_id)
         total = q.scalar() or Decimal('0')
@@ -843,14 +846,19 @@ class GLService:
         return float(total)
 
     @staticmethod
-    def get_account_statement(account_id, date_from=None, date_to=None, branch_id=None):
+    def get_account_statement(account_id, date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """كشف حساب تفصيلي. عند تمرير branch_id يُعزل العرض لقيود الفرع فقط."""
         from sqlalchemy import func
 
-        account = GLAccount.query.get_or_404(account_id)
+        account = db.session.get(GLAccount, account_id)
+        if not account:
+            return None
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
         query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry).filter(GLJournalEntry.status == 'posted')
 
+        if tenant_id is not None:
+            query = query.filter(GLJournalEntry.tenant_id == int(tenant_id))
         if branch_id:
             query = query.filter(GLJournalEntry.branch_id == branch_id)
 
@@ -865,6 +873,8 @@ class GLService:
         # حساب الرصيد الافتتاحي
         opening_query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry)
 
+        if tenant_id is not None:
+            opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
         if branch_id:
             opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
 

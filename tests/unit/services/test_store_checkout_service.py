@@ -8,6 +8,7 @@ import pytest
 from extensions import db
 from models import Customer, Product
 from services.store_checkout_service import StoreCheckoutService
+from utils.db_safety import atomic_transaction
 
 
 class TestOrderTokens:
@@ -375,14 +376,15 @@ class TestCreateWebOrder:
         mocker.patch('services.store_checkout_service.SaleService.create_sale', return_value=MagicMock(id=1))
         mocker.patch('services.store_notification_service.StoreNotificationService.notify_new_order')
         mocker.patch('services.store_coupon_service.StoreCouponService.mark_used')
-        mocker.patch('extensions.db.session.commit', side_effect=RuntimeError('commit fail'))
+        mocker.patch('extensions.db.session.flush', side_effect=RuntimeError('flush fail'))
         rollback = mocker.patch('extensions.db.session.rollback')
         sample_user.is_owner = True
         with pytest.raises(RuntimeError):
-            StoreCheckoutService.create_web_order(
-                tenant_store, {str(sample_product_with_stock.id): 1},
-                'Coupon Fail', '05088887777', 'Addr', coupon_code='FAIL10',
-            )
+            with atomic_transaction('test_coupon_fail'):
+                StoreCheckoutService.create_web_order(
+                    tenant_store, {str(sample_product_with_stock.id): 1},
+                    'Coupon Fail', '05088887777', 'Addr', coupon_code='FAIL10',
+                )
         rollback.assert_called()
 
     def test_get_or_create_customer_sets_address_when_empty(self, db_session, sample_tenant):

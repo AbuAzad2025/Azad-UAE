@@ -7,7 +7,7 @@ from services.currency_service import CurrencyService
 from services.gl_service import GLService
 from services.purchase_service import PurchaseService
 from utils.decorators import permission_required
-from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
+from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns, get_active_branch_id
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
