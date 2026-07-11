@@ -139,7 +139,7 @@ class TestDashboardServiceLayout:
         mock_q.filter_by.return_value.first.return_value = existing
         mocker.patch.object(UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q)
         mock_session = mocker.patch('services.dashboard_service.db.session')
-        mock_session.commit.side_effect = IntegrityError('dup', {}, Exception())
+        mock_session.flush.side_effect = IntegrityError('dup', {}, Exception())
 
         from services.dashboard_service import DashboardService
 
