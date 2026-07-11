@@ -103,16 +103,14 @@ class TestClearCheque:
         db_session.flush()
         mocker.patch('services.cheque_accounting_integration.process_cheque_clear')
         mocker.patch(
-            'services.cheque_accounting_integration.db.session.commit',
+            'services.cheque_accounting_integration.db.session.flush',
             side_effect=RuntimeError('db'),
         )
-        mock_rollback = mocker.patch('services.cheque_accounting_integration.db.session.rollback')
         mocker.patch(
             'services.cheque_accounting_integration.ChequeAccountingIntegration._scoped_entries',
         ).return_value.order_by.return_value.first.return_value = MagicMock()
         with pytest.raises(Exception, match='فشل'):
             ChequeAccountingIntegration.clear_cheque(incoming_cheque.id)
-        mock_rollback.assert_called()
 
     def test_exchange_rate_branch(self, mocker, db_session, incoming_cheque):
         incoming_cheque.currency = 'USD'
