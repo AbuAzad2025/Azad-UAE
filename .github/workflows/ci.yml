@@ -3,37 +3,80 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**.css'
+      - '**.svg'
+      - '**.png'
+      - '**.jpg'
+      - '**.ico'
+      - '**.woff'
+      - '**.woff2'
+      - '**.ttf'
+      - 'templates/**'
+      - 'static/adminlte/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**.css'
+      - '**.svg'
+      - '**.png'
+      - '**.jpg'
+      - '**.ico'
+      - '**.woff'
+      - '**.woff2'
+      - '**.ttf'
+      - 'templates/**'
+      - 'static/adminlte/**'
 
 jobs:
+  # ── Matrix engine: adapt PG version grid to Git ref ──
+  determine-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          IS_MAIN_OR_TAG='${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}'
+          if [ "$IS_MAIN_OR_TAG" = "true" ]; then
+            MATRIX='{"include":[
+              {"postgres-version":15,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg15"},
+              {"postgres-version":16,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg16"},
+              {"postgres-version":17,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg17"},
+              {"postgres-version":15,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
+              {"postgres-version":15,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
+              {"postgres-version":15,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
+              {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
+              {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
+              {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
+              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/",                    "cov-flag":"e2e"}
+            ]}'
+          else
+            MATRIX='{"include":[
+              {"postgres-version":16,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes"},
+              {"postgres-version":16,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
+              {"postgres-version":16,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
+              {"postgres-version":16,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
+              {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
+              {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
+              {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
+              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/",                    "cov-flag":"e2e"}
+            ]}'
+          fi
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   # ── Python tests split by directory ──
   test:
-    needs: []
+    needs: [determine-matrix]
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        include:
-          # Routes — tested across all 3 PG versions (separate Codecov flags for visibility)
-          - { postgres-version: 15, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg15 }
-          - { postgres-version: 16, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg16 }
-          - { postgres-version: 17, test-group: routes,  test-path: "tests/unit/routes/",             cov-flag: unit-routes-pg17 }
-          # Services
-          - { postgres-version: 15, test-group: services, test-path: "tests/unit/services/",          cov-flag: unit-services }
-          # Models
-          - { postgres-version: 15, test-group: models,   test-path: "tests/unit/models/",            cov-flag: unit-models }
-          # AI Knowledge
-          - { postgres-version: 15, test-group: ai_knowledge, test-path: "tests/unit/ai_knowledge/",  cov-flag: unit-ai-knowledge }
-          # Utils + App + Runtime Core
-          - { postgres-version: 15, test-group: utils,    test-path: "tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", cov-flag: unit-utils }
-          # Standalone unit tests (top-level tests/unit/ excluding subdirectories)
-          - { postgres-version: 15, test-group: core,     test-path: "tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", cov-flag: unit-core }
-          # Integration
-          - { postgres-version: 15, test-group: integration, test-path: "tests/integration/",         cov-flag: integration }
-          # E2E
-          - { postgres-version: 15, test-group: e2e,      test-path: "tests/e2e/",                   cov-flag: e2e }
-      fail-fast: false
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.determine-matrix.outputs.matrix) }}
 
     services:
       postgres:
@@ -88,7 +131,7 @@ jobs:
 
   # ── App boot verification (quick smoke test) ──
   verify-boot:
-    needs: []
+    needs: [determine-matrix]
     runs-on: ubuntu-latest
     services:
       postgres:
