@@ -22,7 +22,6 @@ Date    : 2026-06-21
 
 from decimal import Decimal, ROUND_HALF_UP
 import pytest
-from sqlalchemy import text as sa_text
 
 
 @pytest.fixture(autouse=True)
@@ -34,19 +33,19 @@ def _vat_app_context(app):
 @pytest.fixture(autouse=True)
 def _vat_product(db_session, sample_tenant):
     """Ensure a product with id=1 exists for tests that reference product_id=1."""
-    from decimal import Decimal
-    existing = db_session.execute(
-        sa_text("SELECT id FROM products WHERE id = 1 AND tenant_id = :tid"),
-        {"tid": sample_tenant.id},
-    ).scalar()
+    from models import Product
+    existing = db_session.get(Product, 1)
     if existing is None:
-        db_session.execute(
-            sa_text(
-                "INSERT INTO products (id, tenant_id, name, sku, cost_price, regular_price) "
-                "VALUES (1, :tid, 'VAT Test Product', 'SKU-VAT-001', 50.000, 100.000)"
-            ),
-            {"tid": sample_tenant.id},
+        p = Product(
+            id=1,
+            tenant_id=sample_tenant.id,
+            name="VAT Test Product",
+            sku="SKU-VAT-001",
+            cost_price=Decimal("50.000"),
+            regular_price=Decimal("100.000"),
+            current_stock=Decimal("0"),
         )
+        db_session.add(p)
         db_session.commit()
 
 
@@ -181,7 +180,7 @@ def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
 class TestSaleVatInclusiveTotals:
     """Ensure Sale.calculate_totals correctly extracts VAT when prices_include_vat=True."""
 
-    def test_sale_vat_inclusive_extraction(self, db_session, vat_inclusive_tenant, sample_product_vat):
+    def test_sale_vat_inclusive_extraction(self, db_session, vat_inclusive_tenant):
         """When prices_include_vat=True, tax_amount must be extracted from subtotal."""
         from models import Sale, SaleLine
 
