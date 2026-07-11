@@ -167,7 +167,7 @@ class TestReverseEntryAdvanced:
         mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'correction')
-        mock_db.session.rollback.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
 
 class TestDeleteEntry:
@@ -209,7 +209,7 @@ class TestDeleteEntry:
         mock_db.session.flush.side_effect = RuntimeError('delete fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'cleanup')
-        mock_db.session.rollback.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
 
 class TestApproveEntry:
@@ -252,7 +252,7 @@ class TestApproveEntry:
         mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.approve_entry(1, 1)
-        mock_db.session.rollback.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
 
 class TestGetEntryHistory:

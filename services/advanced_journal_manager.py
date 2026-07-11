@@ -105,10 +105,7 @@ class AdvancedJournalEntryManager:
             validated_by,
         )
         if commit:
-            try:
-                db.session.flush()
-            except Exception:
-                raise
+            db.session.flush()
         return entry
 
     # ── Create ───────────────────────────────────────────────────────────
@@ -213,19 +210,14 @@ class AdvancedJournalEntryManager:
             entry_id, 'post', entry.to_dict(), entry.to_dict(),
             f'Posting: {post_notes or ""}', posted_by
         )
-        try:
-            if commit:
-                db.session.flush()
-            else:
-                db.session.flush()
-        except Exception:
-            raise
+        if commit:
+            db.session.flush()
         return entry
 
     # ── Reverse (posted only) ────────────────────────────────────────────
 
     @staticmethod
-    def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True, commit=True):
+    def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True):
         """عكس قيد محاسبي — creates a reversing entry."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status == 'reversed':
@@ -271,19 +263,13 @@ class AdvancedJournalEntryManager:
                 reversal_entry.id, 'create', None, reversal_entry.to_dict(),
                 f"إنشاء قيد عكسي للقيد {entry.entry_number}", reversed_by
             )
-        try:
-            if commit:
-                db.session.flush()
-            else:
-                db.session.flush()
-        except Exception:
-            raise
+        db.session.flush()
         return reversal_entry
 
     # ── Soft-delete (cancel) — NEVER physical delete ─────────────────────
 
     @staticmethod
-    def delete_entry(entry_id, deleted_by, reason, commit=True):
+    def delete_entry(entry_id, deleted_by, reason):
         """Soft-delete: sets status='cancelled'. Preserves audit trail.
 
         Financial documents are immutable. Physical deletes are forbidden
@@ -304,13 +290,7 @@ class AdvancedJournalEntryManager:
             entry_id, 'cancel', old_values, entry.to_dict(),
             f"إلغاء القيد - السبب: {reason}", deleted_by
         )
-        try:
-            if commit:
-                db.session.flush()
-            else:
-                db.session.flush()
-        except Exception:
-            raise
+        db.session.flush()
         return True
 
     # ── Approve (legacy alias → validate) ────────────────────────────────
