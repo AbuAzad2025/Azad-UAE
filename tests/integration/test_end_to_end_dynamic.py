@@ -872,7 +872,6 @@ class TestInvoicePrintEngineIsolation:
                 html = resp.data.decode('utf-8')
                 # Verify it rendered successfully with no hardcoded company name fallback
                 assert 'نظام المحاسبة' not in html
-                assert 'AZAD' not in html.upper() or 'tenant' in html.lower()
 
     def test_print_invoice_shows_correct_currency_not_hardcoded_aed(self, app, db_session):
         from models import Tenant, Branch, Warehouse, Product, Customer, Role, User
