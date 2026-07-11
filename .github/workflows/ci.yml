@@ -67,7 +67,7 @@ jobs:
               {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/",                    "cov-flag":"e2e"}
             ]}'
           fi
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "matrix=$(echo "$MATRIX" | jq -c .)" >> $GITHUB_OUTPUT
 
   # ── Python tests split by directory ──
   test:
