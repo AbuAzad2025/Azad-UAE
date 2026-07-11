@@ -67,7 +67,7 @@ class TestAnalyzeTables:
             result = DatabaseOptimizer.analyze_tables()
         assert result == {'success': True}
         session.execute.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
         logger.info.assert_called_once()
 
     def test_analyze_skips_sql_for_non_postgresql(self):
