@@ -80,7 +80,7 @@ class TestLogSensitiveAction:
             user_agent='pytest',
         )
         session.add.assert_called_once_with(audit_entry)
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
         notify.assert_not_called()
 
     def test_high_severity_notifies_admin(self, flask_app):
@@ -138,7 +138,7 @@ class TestTrackLoginAttempt:
 
         assert user.login_attempts == 0
         assert user.last_login is not None
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
     def test_failed_attempt_increments_without_lock_below_threshold(self):
         user = MagicMock()
@@ -156,7 +156,7 @@ class TestTrackLoginAttempt:
 
         assert user.login_attempts == 3
         assert user.locked_until is None
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
     def test_failed_attempt_locks_account_at_threshold(self):
         user = MagicMock()
@@ -188,7 +188,7 @@ class TestTrackLoginAttempt:
 
             track_login_attempt('missing', success=False, ip_address='9.9.9.9')
 
-        session.commit.assert_not_called()
+        session.flush.assert_not_called()
 
 
 class TestGetSecurityEvents:
