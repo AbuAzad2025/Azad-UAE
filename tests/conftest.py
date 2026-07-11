@@ -264,18 +264,12 @@ def app():
 
     _app = create_app(config_class=TestConfig)
 
-    # Save the original db.session before migration (which overwrites it)
-    _orig_db_session = db.session
-
     with _app.app_context():
-        try:
-            from flask_migrate import upgrade
-            upgrade()
-        except Exception:
-            db.create_all()
-        # Restore db.session in case migration overwrote it with a session
-        # bound to a now-closed migration Connection
-        db.session = _orig_db_session
+        # Use db.create_all() instead of flask_migrate.upgrade() — the
+        # test DB is always fresh so no migration is needed, and Alembic
+        # creates its own engine (without NullPool / connect_timeout)
+        # which can exhaust CI PostgreSQL connections.
+        db.create_all()
         yield _app
         try:
             db.session.remove()
