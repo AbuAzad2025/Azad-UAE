@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const actions =
         '<div class="btn-group btn-group-sm" role="group">' +
-          '<a href="/payments/' + p.id + '" class="btn btn-info">عرض</a>' +
+          '<a href="' + window.ROUTES.payments.view + p.id + '" class="btn btn-info">عرض</a>' +
           '<button type="button" class="btn btn-warning btn-archive" data-id="' + p.id + '" title="أرشفة الدفعة">أرشفة</button>' +
           '<button type="button" class="btn btn-danger btn-del" data-id="' + p.id + '">حذف عادي</button>' +
           '<a href="/hard-delete/payment/' + p.id + '" class="btn btn-outline-danger" title="حذف قوي" onclick="return confirm(\'حذف قوي - سيتم حذف جميع البيانات المرتبطة!\')">حذف قوي</a>' +
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!confirm('هل أنت متأكد من حذف سند الدفع #' + id + '؟')) return;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.getElementById('csrf_token')?.value || '';
     try {
-      const r = await fetch('/payments/' + id + '/delete', {
+      const r = await fetch(window.ROUTES.payments.delete + id, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.getElementById('csrf_token')?.value || '';
     try {
-      const r = await fetch('/payments/archive/' + id, {
+      const r = await fetch(window.ROUTES.payments.archive + id, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

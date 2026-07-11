@@ -103,7 +103,7 @@
 
     dom.confirm.onclick = function () {
       var cfg = document.getElementById("vendors-config");
-      var base = (cfg && cfg.dataset && cfg.dataset.payUrl) ? cfg.dataset.payUrl : "/payments/create";
+      var base = (cfg && cfg.dataset && cfg.dataset.payUrl) ? cfg.dataset.payUrl : window.ROUTES.vendors.payUrl;
       var amountNum = toNumber(dom.amount.value);
       if (!(amountNum > 0)) return;
 

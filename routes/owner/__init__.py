@@ -75,6 +75,7 @@ from . import backups         # noqa: E402
 from . import database        # noqa: E402
 from . import settings        # noqa: E402 — configurations, tax, currency, invoices, comms
 from . import monitoring      # noqa: E402 — health, security, analytics, error audit
+from . import maintenance     # noqa: E402 — system maintenance tools
 
 # Re-export route handler names so `from routes.owner import X` works
 # (matching the flat-module API from pre-refactoring routes/owner.py).

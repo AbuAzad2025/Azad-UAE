@@ -2,6 +2,15 @@
  * وحدة الصيانة المحسّنة - JavaScript
  * Enhanced Service Module - JavaScript
  */
+
+// SERVICE_ROUTES - Centralized route configuration
+var SERVICE_ROUTES = {
+  exportCsv: '{{ url_for("service.export_csv") }}',
+  searchWarehouses: '{{ url_for("api.search_warehouses") }}',
+  productsByWarehouse: function(wid) { return '{{ url_for("api.warehouse_products", warehouse_id=0) }}'.replace('0', wid); },
+  productInfo: function(pid) { return '{{ url_for("api.product_info", product_id=0) }}'.replace('0', pid); }
+};
+
 (function () {
   'use strict';
 
@@ -14,6 +23,18 @@
   function round2(v) {
     return (Math.round((toNum(v) + Number.EPSILON) * 100) / 100).toFixed(2);
   }
+
+  // Centralized routes configuration
+  window.SERVICE_ROUTES = {
+    exportCsv: '/service/export/csv',
+    searchWarehouses: '/api/search_warehouses',
+    productsByWarehouse: function (wid) { return '/api/warehouses/' + (wid || 0) + '/products'; },
+    productInfo: function (pid, wid) { 
+      var url = '/api/products/' + (pid || 0) + '/info';
+      if (wid) url = url + '?wid=' + wid;
+      return url;
+    }
+  };
 
   // Loading State محسّن
   function showLoading($el) {
@@ -42,9 +63,15 @@
     $('#exportCsv').on('click', function () {
       var $btn = $(this);
       showLoading($btn);
+      // owner.export_database expects POST with format parameter
+      var $form = $('<form>', { method: 'POST', action: window.SERVICE_ROUTES.exportCsv, style: 'display:none' });
+      $form.append($('<input>', { type: 'hidden', name: 'format', value: 'json' }));
+      $form.append($('<input>', { type: 'hidden', name: 'csrf_token', value: $('input[name="csrf_token"]').first().val() || '' }));
+      $(document.body).append($form);
+      $form.submit();
       setTimeout(function () {
-        window.location.assign('/service/export/csv');
         hideLoading($btn);
+        $form.remove();
       }, 500);
     });
     
@@ -191,12 +218,7 @@
 
   function buildProductInfoUrl(tpl, pid, wid) {
     if (!tpl) return '';
-    var url = tpl;
-    if (/[\?&]pid=/.test(url)) url = url.replace(/pid=\d+/i, 'pid=' + String(pid));
-    else if (/\/(0|\d+)(?=\/info(?:\/)?$)/.test(url)) url = url.replace(/\/(0|\d+)(?=\/info(?:\/)?$)/, '/' + String(pid));
-    else url = setQueryParam(url, 'pid', String(pid));
-    if (wid) url = /[\?&]warehouse_id=/.test(url) ? url.replace(/warehouse_id=\d+/i, 'warehouse_id=' + String(wid)) : setQueryParam(url, 'warehouse_id', String(wid));
-    return url;
+    return SERVICE_ROUTES.productInfo(pid);
   }
 
   function fetchAndFillUnitPrice($scope) {
@@ -232,9 +254,9 @@
 
     if (whEndpoint && $wh.hasClass('select2')) initSelect2Ajax($wh, whEndpoint);
 
-    function initProductsForWarehouse(wid) {
+function initProductsForWarehouse(wid) {
       if (!prEndpointTemplate) return;
-      var url = buildByWarehouseUrl(prEndpointTemplate, wid);
+      var url = SERVICE_ROUTES.productsByWarehouse(wid);
       if ($pr.data('select2')) $pr.select2('destroy');
       $pr.val(null).trigger('change');
       initSelect2Ajax($pr, url);
@@ -279,11 +301,11 @@
         '<div class="row g-2 align-items-end mb-2 part-line">' +
           '<div class="col-md-3">' +
             '<label class="form-label d-block">المستودع</label>' +
-            '<select class="form-select select2" name="warehouse_id" data-endpoint="/api/search_warehouses"></select>' +
+            '<select class="form-select select2" name="warehouse_id" data-endpoint="' + SERVICE_ROUTES.searchWarehouses + '"></select>' +
           '</div>' +
           '<div class="col-md-3">' +
             '<label class="form-label d-block">القطعة</label>' +
-            '<select class="form-select select2" name="part_id" data-endpoint-by-warehouse="/api/warehouses/0/products" data-product-info="/api/products/0/info"></select>' +
+            '<select class="form-select select2" name="part_id" data-endpoint-by-warehouse="' + SERVICE_ROUTES.productsByWarehouse(0) + '" data-product-info="' + SERVICE_ROUTES.productInfo(0) + '"></select>' +
           '</div>' +
           '<div class="col-md-2"><label class="form-label">الكمية</label><input type="number" min="1" class="form-control" name="quantity" value="1"></div>' +
           '<div class="col-md-2"><label class="form-label">سعر الوحدة</label><input type="number" step="0.01" min="0" class="form-control" name="unit_price"></div>' +

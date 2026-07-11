@@ -231,6 +231,98 @@
           </div>
         </div>
 
+        <hr class="mt-4 mb-4">
+
+        <div class="row">
+          <div class="col-md-4">
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_run_default_tenant_maintenance') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'RUN_DEFAULT_TENANT_MAINTENANCE')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="maint_dry_run" name="dry_run">
+                <label class="custom-control-label text-muted small" for="maint_dry_run">
+                  🔍 تجربة جافة (فحص فقط)
+                </label>
+              </div>
+              <button type="submit" class="btn btn-secondary btn-block btn-lg">
+                <i class="fas fa-user-shield mr-2"></i> صيانة المستأجر الافتراضي (Patch + Backup)
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                يصحح أعمدة NOT NULL المفقودة ويعيد إنشاء النسخة الاحتياطية.
+                <br>يتطلب كتابة: <kbd>RUN_DEFAULT_TENANT_MAINTENANCE</kbd>
+              </small>
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_cleanup_test_dbs') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'CLEANUP_TEST_DBS')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="cleanup_dry_run" name="dry_run">
+                <label class="custom-control-label text-muted small" for="cleanup_dry_run">
+                  🔍 تجربة جافة (فحص فقط)
+                </label>
+              </div>
+              <button type="submit" class="btn btn-danger btn-block btn-lg">
+                <i class="fas fa-trash-alt mr-2"></i> تنظيف قواعد البيانات الاختبارية
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                يحذف قواعد البيانات القديمة: azadexa_test, azad_uae_test, azad_diag_*, إلخ.
+                <br>يتطلب كتابة: <kbd>CLEANUP_TEST_DBS</kbd>
+              </small>
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_fix_default_tenant') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'FIX_DEFAULT_TENANT')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="fix_dry_run" name="dry_run">
+                <label class="custom-control-label text-muted small" for="fix_dry_run">
+                  🔍 تجربة جافة
+                </label>
+              </div>
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="fix_no_backup" name="no_backup">
+                <label class="custom-control-label text-muted small" for="fix_no_backup">
+                  ⛔ تخطي تجديد النسخة الاحتياطية
+                </label>
+              </div>
+              <button type="submit" class="btn btn-dark btn-block btn-lg">
+                <i class="fas fa-database mr-2"></i> تصحيح المستأجر الافتراضي فقط
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                يصحح أعمدة NOT NULL فقط (بدون backup افتراضيًا).
+                <br>يتطلب كتابة: <kbd>FIX_DEFAULT_TENANT</kbd>
+              </small>
+            </form>
+          </div>
+        </div>
+
+        <hr class="mt-4 mb-4">
+
+        <div class="row">
+          <div class="col-md-6">
+            <form class="needs-validation" action="{{ url_for('owner.maintenance_regenerate_default_backup') }}" method="POST"
+                  onsubmit="return confirmMaintenance(this, 'REGENERATE_DEFAULT_BACKUP')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <div class="custom-control custom-checkbox mb-2">
+                <input type="checkbox" class="custom-control-input" id="backup_dry_run" name="dry_run">
+                <label class="custom-control-label text-muted small" for="backup_dry_run">
+                  🔍 تجربة جافة
+                </label>
+              </div>
+              <button type="submit" class="btn btn-success btn-block btn-lg">
+                <i class="fas fa-sync-alt mr-2"></i> تجديد نسخة المستأجر الافتراضي الاحتياطية
+              </button>
+              <small class="form-text text-muted d-block mt-2 text-center">
+                يعيد إنشاء النسخة الاحتياطية scoped للمستأجر الافتراضي.
+                <br>يتطلب كتابة: <kbd>REGENERATE_DEFAULT_BACKUP</kbd>
+              </small>
+            </form>
+          </div>
+        </div>
+
         <div class="row mt-4" id="maintenance-audit-log" style="display: none;">
           <div class="col-12">
             <div class="card">

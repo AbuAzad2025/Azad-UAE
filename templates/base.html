@@ -89,6 +89,24 @@
   window._FX_FALLBACK_BASE = '{{ tenant_default_currency or 'USD' }}';
   window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or 'درهم إماراتي' }}';
   window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol or 'د.إ' }}';
+window.ROUTES = {
+    payments: {
+      view: '{{ url_for("payments.view_receipt", id=0) }}'.replace('/0', ''),
+      print: '{{ url_for("payments.print_receipt", id=0) }}'.replace('/0', ''),
+      delete: '{{ url_for("payments.delete_payment", id=0) }}'.replace('/0', ''),
+      archive: '{{ url_for("payments.archive_payment", id=0) }}'.replace('/0', ''),
+      searchEntities: '{{ url_for("payments.search_entities") }}'
+    },
+    service: {
+      exportCsv: '{{ url_for("owner.export_database") }}',
+      searchWarehouses: '{{ url_for("api.api_search_warehouses") }}',
+      productsByWarehouse: function(wid) { return '{{ url_for("api.api_warehouse_products", wid=0) }}'.replace('/0', '/' + wid); },
+      productInfo: function(pid) { return '{{ url_for("api.api_product_info", pid=0) }}'.replace('/0', '/' + pid); }
+    },
+    vendors: {
+      payUrl: '{{ url_for("payments.create_voucher") }}'
+    }
+  };
   document.addEventListener('click', function(e) {
     const btn = e.target.closest('[data-action="window-print"]');
     if (btn) { e.preventDefault(); window.print(); }

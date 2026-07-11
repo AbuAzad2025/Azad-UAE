@@ -27,16 +27,17 @@
   }
 
   function openCreateModal() {
-    loadModalContent('ملاحظة جديدة', window.NOTES_ENDPOINTS.createForm, 'create');
+    loadModalContent('ملاحظة جديدة', window.ROUTES.notes.createForm, 'create');
   }
 
   function openEditModal(id) {
-    loadModalContent('تعديل الملاحظة', window.NOTES_ENDPOINTS.editForm(id), 'edit', id);
+    loadModalContent('تعديل الملاحظة', window.ROUTES.notes.editForm + id, 'edit', id);
   }
 
   function cardHTML(note) {
     const badgeClassMap = { URGENT: 'badge-danger', HIGH: 'badge-warning', MEDIUM: 'badge-info' };
     const badgeClass = badgeClassMap[note.priority] || 'badge-secondary';
+    const detailUrl = window.ROUTES.notes.detail + note.id;
     return `
       <div class="col-md-6 col-lg-4 mb-3" id="note-card-${note.id}">
         <div class="card note-card h-100 ${note.is_pinned ? 'border-warning' : ''}">
@@ -60,7 +61,7 @@
               <button class="btn btn-sm btn-outline-danger btn-delete-note" data-id="${note.id}"><i class="fas fa-trash"></i></button>
               <button class="btn btn-sm btn-outline-warning btn-pin-note" data-id="${note.id}"><i class="fas fa-thumbtack"></i></button>
             </div>
-            <a href="/notes/${note.id}" class="btn btn-sm btn-outline-secondary">تفاصيل</a>
+            <a href="${detailUrl}" class="btn btn-sm btn-outline-secondary">تفاصيل</a>
           </div>
         </div>
       </div>`;
@@ -75,7 +76,7 @@
       btn.addEventListener('click', async () => {
         if (!confirm('تأكيد حذف الملاحظة؟')) return;
         const id = btn.dataset.id;
-        const res = await fetch(window.NOTES_ENDPOINTS.delete(id), {
+        const res = await fetch(window.ROUTES.notes.delete + id, {
           method: 'POST',
           headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCSRF() }
         });
@@ -93,7 +94,7 @@
     scope.querySelectorAll('.btn-pin-note').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
-        const res = await fetch(window.NOTES_ENDPOINTS.togglePin(id), {
+        const res = await fetch(window.ROUTES.notes.togglePin + id, {
           method: 'POST',
           headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCSRF() }
         });
@@ -143,7 +144,7 @@
       e.preventDefault();
       clearErrors(form);
 
-      const action = form.getAttribute('action') || (mode === 'edit' ? window.NOTES_ENDPOINTS.update(id) : window.NOTES_ENDPOINTS.createForm);
+      const action = form.getAttribute('action') || (mode === 'edit' ? window.ROUTES.notes.editForm + id : window.ROUTES.notes.createForm);
       const res = await fetch(action, {
         method: 'POST',
         body: new FormData(form),

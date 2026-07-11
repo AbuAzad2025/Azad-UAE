@@ -93,15 +93,15 @@ def create_app(config_class=Config):
 
     # Default tenant maintenance check at startup
     try:
-        from scripts.fix_default_tenant import run_default_tenant_maintenance
+        from services.maintenance_service import run_default_tenant_maintenance_api
         with app.app_context():
-            result = run_default_tenant_maintenance(dry_run=False)
-            if result:
+            result = run_default_tenant_maintenance_api(dry_run=False)
+            if result.get('action_needed'):
                 app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
             else:
                 app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
     except ImportError:
-        app.logger.info("Default tenant maintenance script not available - skipping")
+        app.logger.info("Default tenant maintenance service not available - skipping")
     except Exception as e:
         app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
 
