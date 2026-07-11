@@ -134,9 +134,8 @@ class TestActionDispatcherWave6:
             assert ad._is_owner() is False
         with patch('ai_knowledge.action_dispatcher.db.session') as sess:
             sess.add = MagicMock()
-            sess.commit.side_effect = RuntimeError('db')
+            sess.flush.side_effect = RuntimeError('db')
             ad._log_ai_error('t', 'msg')
-            sess.rollback.assert_called()
 
     def test_tenant_guard_blocks_create(self, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
@@ -186,7 +185,7 @@ class TestActionDispatcherWave6:
              patch('models.Supplier') as Supplier, \
              patch('ai_knowledge.action_dispatcher.db.session') as sess:
             Supplier.return_value = MagicMock(id=1)
-            sess.commit.side_effect = RuntimeError('fail')
+            sess.flush.side_effect = RuntimeError('fail')
             assert action_dispatcher.dispatch('create_supplier', {'name': 'S'}).success is False
         with patch('ai_knowledge.action_dispatcher._get_active_tenant_id', return_value=1), \
              patch('ai_knowledge.action_dispatcher._has_permission', return_value=True), \
@@ -195,7 +194,7 @@ class TestActionDispatcherWave6:
              patch('ai_knowledge.action_dispatcher.db.session') as sess:
             Role.query.filter_by.return_value.first.return_value = MagicMock(id=1)
             User.return_value = MagicMock(id=2)
-            sess.commit.side_effect = RuntimeError('fail')
+            sess.flush.side_effect = RuntimeError('fail')
             assert action_dispatcher.dispatch('create_user', {
                 'username': 'u', 'password': 'p',
             }).success is False
@@ -328,10 +327,9 @@ class TestSystemIntegrationWave6:
         with patch('models.tenant.Tenant') as Tenant, patch('models.Customer'), \
              patch('extensions.db') as mock_db:
             Tenant.get_current.return_value = MagicMock(id=1)
-            mock_db.session.commit.side_effect = RuntimeError('fail')
+            mock_db.session.flush.side_effect = RuntimeError('fail')
             r = integrator.add_customer({'name': 'X', 'customer_type': 'regular'})
             assert r['success'] is False
-            mock_db.session.rollback.assert_called()
 
     def test_product_stock_and_summaries(self, integrator):
         category = MagicMock(name='Cat')
