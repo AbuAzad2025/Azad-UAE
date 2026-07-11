@@ -96,7 +96,7 @@ class TestBatchCommit:
         with patch('extensions.db.session', session):
             batch_commit(items, batch_size=2)
         assert session.bulk_save_objects.call_count == 2
-        assert session.commit.call_count == 2
+        assert session.flush.call_count == 2
 
 
 class TestPerformanceMonitor:
