@@ -106,7 +106,7 @@ class TestQuickLearner:
         with patch('models.ai.AiMemory') as MockMem, patch('extensions.db') as mock_db:
             MockMem.query.filter_by.return_value.first.return_value = None
             assert QuickLearner().learn('سؤال', 'جواب') is True
-            mock_db.session.commit.assert_called()
+            mock_db.session.flush.assert_called()
 
     def test_singleton(self):
         assert quick_learner is not None
