@@ -7,6 +7,7 @@ import sys
 
 import pytest
 from sqlalchemy import create_engine, text as sa_text
+from sqlalchemy.pool import NullPool
 from urllib.parse import urlparse, urlunparse
 
 
@@ -186,11 +187,8 @@ class TestConfig:
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_size": 5,
-        "max_overflow": 10,
+        "poolclass": NullPool,
         "pool_pre_ping": True,
-        "pool_timeout": 5,
-        "pool_recycle": 30,
     }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"
