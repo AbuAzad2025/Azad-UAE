@@ -173,7 +173,9 @@ class TestRepairAccountingData:
     def test_commit_rollback_on_failure(self, app, mocker):
         mock_db, merchant, product = self._base_patches(mocker)
         mocker.patch('services.gl_service.GLService.post_entry')
-        mock_db.session.commit.side_effect = RuntimeError('commit fail')
+        from utils.db_safety import db as safety_db
+        mocker.patch.object(safety_db.session, 'commit', side_effect=RuntimeError('commit fail'))
+        rb_mock = mocker.patch.object(safety_db.session, 'rollback')
         with pytest.raises(RuntimeError):
             repair_accounting_data()
-        mock_db.session.rollback.assert_called_once()
+        rb_mock.assert_called_once()
