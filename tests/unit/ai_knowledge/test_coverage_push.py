@@ -285,7 +285,7 @@ class TestSystemIntegrationCoverage:
             result = integrator.add_customer({'name': 'New Co', 'customer_type': 'regular'})
             assert result['success'] is True
             mock_db.session.add.assert_called_once()
-            mock_db.session.commit.assert_called_once()
+            mock_db.session.flush.assert_called_once()
 
 
 class TestDataAnalyzerCoverage:
