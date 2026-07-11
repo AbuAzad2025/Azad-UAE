@@ -87,7 +87,7 @@ class TestRunRepoPythonScript:
     """run_repo_python_script — path escape guard."""
 
     def test_runs_existing_script_under_repo(self, mocker, tmp_path):
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
         script_rel = 'scripts/verify_backup.py'
         script_abs = os.path.join(root, script_rel.replace('/', os.sep))
         if not os.path.isfile(script_abs):
@@ -138,7 +138,7 @@ class TestRunPythonModule:
         assert cmd[2] == 'pytest'
 
     def test_repo_script_passes_env_and_cwd(self, mocker, tmp_path):
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
         script_rel = 'scripts/verify_backup.py'
         script_abs = os.path.join(root, script_rel.replace('/', os.sep))
         if not os.path.isfile(script_abs):
