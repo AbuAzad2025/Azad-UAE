@@ -181,9 +181,7 @@ class TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = _TEST_DATABASE_URL
-    SQLALCHEMY_BINDS = {
-        "reporting": _TEST_DATABASE_URL,
-    }
+    SQLALCHEMY_BINDS = {}
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "poolclass": NullPool,
@@ -305,6 +303,16 @@ _POLLUTED_MODEL_SPECS = (
     ('package', 'Package'),
     ('audit', 'AuditLog'),
 )
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_db_connections(app):
+    """Dispose db connections after each test to prevent connection exhaustion."""
+    yield
+    try:
+        db.session.remove()
+    except Exception:
+        pass
 
 
 def _restore_polluted_model_queries():
