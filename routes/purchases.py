@@ -175,9 +175,18 @@ def print_purchase(id):
         return render_template('errors/403.html'), 403
     from models.invoice_settings import InvoiceSettings
     from utils.tenant_branding import get_print_header_context
+    from utils.currency_utils import resolve_default_currency
+    from utils.qr_generator import generate_qr_data_url
     tid = purchase.tenant_id
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branding = get_print_header_context(tid)
+    qr_data_url = ''
+    if settings and settings.enable_qr_code:
+        from services.document_verification_service import DocumentVerificationService
+        ver = DocumentVerificationService.get_or_create_verification('purchase', purchase.id, tid)
+        if ver:
+            ver_url = url_for('public.verify_document', token=ver.public_token, _external=True)
+            qr_data_url = generate_qr_data_url(ver_url)
     return render_template(
         'purchases/print.html',
         purchase=purchase,
@@ -185,6 +194,7 @@ def print_purchase(id):
         settings=settings,
         print_branding=print_branding,
         print_tenant_id=tid,
+        qr_data_url=qr_data_url,
     )
 
 

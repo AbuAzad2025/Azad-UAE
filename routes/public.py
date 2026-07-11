@@ -227,6 +227,25 @@ Crawl-delay: 1
     return Response(robots_content, mimetype='text/plain')
 
 
+@public_bp.route('/verify/<token>')
+def verify_document(token):
+    """Public read-only document verification page — QR/link target."""
+    from services.document_verification_service import DocumentVerificationService
+
+    data = DocumentVerificationService.lookup_by_token(token)
+    if data is None:
+        abort(404)
+
+    return render_template(
+        'public/verify_document.html',
+        doc=data['document'],
+        doc_type=data['document_type'],
+        doc_id=data['document_id'],
+        doc_hash=data['document_hash'],
+        verified_at=datetime.now(timezone.utc),
+    )
+
+
 @public_bp.route('/suspended/<int:tenant_id>')
 def tenant_suspend_page(tenant_id):
     """Public page shown when a tenant is suspended."""

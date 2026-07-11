@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>توثيق المستند — Azad Intelligent Systems</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .verify-card {
+      max-width: 600px;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .verify-card::before {
+      content: 'Azad Intelligent Systems';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 48px;
+      font-weight: 700;
+      color: rgba(0,0,0,0.025);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .verify-header {
+      text-align: center;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .verify-header h1 {
+      font-size: 22px;
+      color: #1a202c;
+      margin-bottom: 4px;
+    }
+    .verify-header .badge {
+      display: inline-block;
+      background: #38a169;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+    .verify-header .badge.invalid {
+      background: #e53e3e;
+    }
+    .verify-body {
+      position: relative;
+      z-index: 1;
+    }
+    .verify-field {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    .verify-field .label {
+      color: #718096;
+      font-weight: 600;
+    }
+    .verify-field .value {
+      color: #2d3748;
+      text-align: left;
+      direction: ltr;
+    }
+    .verify-field .value.rtl {
+      direction: rtl;
+      text-align: right;
+    }
+    .verify-footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 11px;
+      color: #a0aec0;
+      position: relative;
+      z-index: 1;
+    }
+    .verify-footer .brand {
+      font-weight: 700;
+      color: #4a5568;
+    }
+    .verify-icon {
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .verify-icon svg {
+      width: 48px;
+      height: 48px;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .verify-card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <div class="verify-card">
+    <div class="verify-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <div class="verify-header">
+      <h1>توثيق المستند</h1>
+      <span class="badge">موثق — رسمي</span>
+    </div>
+    <div class="verify-body">
+      {% set _labels = {
+        'sale': 'فاتورة مبيعات',
+        'payment': 'سند صرف',
+        'receipt': 'سند قبض',
+        'purchase': 'فاتورة مشتريات',
+        'expense': 'سند مصروف',
+      } %}
+      <div class="verify-field">
+        <span class="label">نوع المستند</span>
+        <span class="value rtl">{{ _labels.get(doc_type, doc_type) }}</span>
+      </div>
+      <div class="verify-field">
+        <span class="label">رقم المستند</span>
+        <span class="value">{{ doc_id }}</span>
+      </div>
+      {% if doc.sale_number %}
+      <div class="verify-field">
+        <span class="label">رقم الفاتورة</span>
+        <span class="value rtl">{{ doc.sale_number }}</span>
+      </div>
+      {% endif %}
+      {% if doc.purchase_number %}
+      <div class="verify-field">
+        <span class="label">رقم أمر الشراء</span>
+        <span class="value rtl">{{ doc.purchase_number }}</span>
+      </div>
+      {% endif %}
+      {% if doc.payment_number %}
+      <div class="verify-field">
+        <span class="label">رقم السند</span>
+        <span class="value rtl">{{ doc.payment_number }}</span>
+      </div>
+      {% endif %}
+      {% if doc.receipt_number %}
+      <div class="verify-field">
+        <span class="label">رقم سند القبض</span>
+        <span class="value rtl">{{ doc.receipt_number }}</span>
+      </div>
+      {% endif %}
+      {% if doc.expense_number %}
+      <div class="verify-field">
+        <span class="label">رقم سند المصروف</span>
+        <span class="value rtl">{{ doc.expense_number }}</span>
+      </div>
+      {% endif %}
+      {% set _amount = doc.total_amount or doc.amount or 0 %}
+      <div class="verify-field">
+        <span class="label">المبلغ</span>
+        <span class="value">{{ "%.2f"|format(_amount|float) }}</span>
+      </div>
+      {% if doc.currency %}
+      <div class="verify-field">
+        <span class="label">العملة</span>
+        <span class="value">{{ doc.currency }}</span>
+      </div>
+      {% endif %}
+      {% set _date = doc.sale_date or doc.purchase_date or doc.payment_date or doc.receipt_date or doc.expense_date %}
+      {% if _date %}
+      <div class="verify-field">
+        <span class="label">التاريخ</span>
+        <span class="value rtl">{{ _date.strftime('%Y-%m-%d') }}</span>
+      </div>
+      {% endif %}
+      <div class="verify-field">
+        <span class="label">بصمة التوثيق</span>
+        <span class="value" style="font-size:10px;word-break:break-all;direction:ltr;text-align:left;max-width:300px;">{{ doc_hash[:16] }}...</span>
+      </div>
+    </div>
+    <div class="verify-footer">
+      <p>تم التحقق في {{ verified_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+      <p class="brand">Azad Intelligent Systems — توثيق آمن</p>
+    </div>
+  </div>
+</body>
+</html>

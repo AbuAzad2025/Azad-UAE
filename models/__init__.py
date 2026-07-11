@@ -79,6 +79,7 @@ from .hr import Department, JobPosition, HRContract, Attendance, LeaveType, Leav
 from .email_marketing import EmailList, EmailSubscriber, EmailTemplate, EmailCampaign, CampaignLog
 from .print_history import PrintHistory
 from .document_snapshot import DocumentSnapshot
+from .document_verification import DocumentVerification
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -157,4 +158,5 @@ __all__ = [
     'EmailList', 'EmailSubscriber', 'EmailTemplate', 'EmailCampaign', 'CampaignLog',
     'PrintHistory',
     'DocumentSnapshot',
+    'DocumentVerification',
 ]

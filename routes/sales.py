@@ -290,20 +290,26 @@ def print_invoice(id):
     amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
-        qr_data_url = generate_qr_data_url({
-            't': 'invoice',
-            'n': sale.sale_number,
-            'a': float(sale.total_amount or 0),
-            'c': sale.currency or default_currency,
-            'd': sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '',
-            'co': (
-                settings.company_name_ar
-                if settings and settings.company_name_ar and settings.company_name_ar != 'None'
-                else (tenant.name_ar if tenant and tenant.name_ar else '')
-            ),
-            'u': print_user_name,
-            'b': print_branch.name if print_branch else '',
-        })
+        from services.document_verification_service import DocumentVerificationService
+        ver = DocumentVerificationService.get_or_create_verification('sale', sale.id, tid)
+        if ver:
+            ver_url = url_for('public.verify_document', token=ver.public_token, _external=True)
+            qr_data_url = generate_qr_data_url(ver_url)
+        else:
+            qr_data_url = generate_qr_data_url({
+                't': 'invoice',
+                'n': sale.sale_number,
+                'a': float(sale.total_amount or 0),
+                'c': sale.currency or default_currency,
+                'd': sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '',
+                'co': (
+                    settings.company_name_ar
+                    if settings and settings.company_name_ar and settings.company_name_ar != 'None'
+                    else (tenant.name_ar if tenant and tenant.name_ar else '')
+                ),
+                'u': print_user_name,
+                'b': print_branch.name if print_branch else '',
+            })
     
     # استخدام القالب النشط من الإعدادات
     template = settings.active_template if settings and settings.active_template else 'modern'

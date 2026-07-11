@@ -456,16 +456,22 @@ def print_payment(id):
     amount_in_words = number_to_arabic_words(float(payment.amount or 0), payment.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
-        qr_data_url = generate_qr_data_url({
-            't': 'payment',
-            'n': payment.payment_number,
-            'a': float(payment.amount or 0),
-            'c': payment.currency or default_currency,
-            'd': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
-            'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
-            'u': print_user_name,
-            'b': print_branch.name if print_branch else '',
-        })
+        from services.document_verification_service import DocumentVerificationService
+        ver = DocumentVerificationService.get_or_create_verification('payment', payment.id, tid)
+        if ver:
+            ver_url = url_for('public.verify_document', token=ver.public_token, _external=True)
+            qr_data_url = generate_qr_data_url(ver_url)
+        else:
+            qr_data_url = generate_qr_data_url({
+                't': 'payment',
+                'n': payment.payment_number,
+                'a': float(payment.amount or 0),
+                'c': payment.currency or default_currency,
+                'd': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
+                'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
+                'u': print_user_name,
+                'b': print_branch.name if print_branch else '',
+            })
     return render_template(
         'payments/print_receipt.html',
         receipt=payment,
@@ -1098,16 +1104,22 @@ def print_receipt(id):
     amount_in_words = number_to_arabic_words(float(receipt.amount or 0), receipt.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
-        qr_data_url = generate_qr_data_url({
-            't': 'receipt',
-            'n': receipt.receipt_number,
-            'a': float(receipt.amount or 0),
-            'c': receipt.currency or default_currency,
-            'd': receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '',
-            'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
-            'u': print_user_name,
-            'b': print_branch.name if print_branch else '',
-        })
+        from services.document_verification_service import DocumentVerificationService
+        ver = DocumentVerificationService.get_or_create_verification('receipt', receipt.id, tid)
+        if ver:
+            ver_url = url_for('public.verify_document', token=ver.public_token, _external=True)
+            qr_data_url = generate_qr_data_url(ver_url)
+        else:
+            qr_data_url = generate_qr_data_url({
+                't': 'receipt',
+                'n': receipt.receipt_number,
+                'a': float(receipt.amount or 0),
+                'c': receipt.currency or default_currency,
+                'd': receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '',
+                'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
+                'u': print_user_name,
+                'b': print_branch.name if print_branch else '',
+            })
     try:
         return render_template(
             template_path,
