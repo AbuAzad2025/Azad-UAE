@@ -85,7 +85,7 @@ class TestWave8ActionDispatcher:
             sess.commit = MagicMock()
             ad._log_ai_error('wave8', 'ok', request_data={'x': 1})
             sess.add.assert_called_once()
-            sess.commit.assert_called_once()
+            sess.flush.assert_called_once()
 
     def test_profit_summary_and_purchase_fail(self, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher

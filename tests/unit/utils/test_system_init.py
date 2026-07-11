@@ -167,7 +167,7 @@ class TestRoleAndPermissionBootstrap:
         ):
             system_init_module._ensure_permissions()
         session.add.assert_called()
-        session.commit.assert_called()
+        session.flush.assert_called()
 
     def test_ensure_owner_role_creates_and_assigns_permissions(self, flask_app):
         role = MagicMock(slug='owner', permissions=[])
@@ -299,7 +299,7 @@ class TestCoreDataBootstrap:
             'services.store_payment_method_service.StorePaymentMethodService.ensure_defaults'
         ) as store_defaults, patch('utils.seed_industry_fields.seed_industry_fields') as seed_fields:
             system_init_module._ensure_core_data()
-        session.commit.assert_called()
+        session.flush.assert_called()
         settings.system_name = 'Azad ERP System'
         store_defaults.assert_called_once()
         seed_fields.assert_called_once()
@@ -413,7 +413,7 @@ class TestOwnerUserBootstrap:
             user, created = system_init_module._ensure_owner_user(role)
         assert created is False
         assert user.role == role
-        session.commit.assert_called()
+        session.flush.assert_called()
 
 
 class TestTenantGlTrees:
@@ -448,7 +448,7 @@ class TestRecordServerActivation:
         ), patch('extensions.mail.send'):
             system_init_module._record_server_activation(owner, True)
         session.add.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
     def test_records_server_changed_alert(self, flask_app):
         settings = MagicMock()

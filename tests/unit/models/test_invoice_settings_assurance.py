@@ -59,7 +59,7 @@ class TestInvoiceSettingsModel:
         with app.app_context():
             settings = InvoiceSettings.get_active(tenant_id=2)
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
         assert settings.tenant_id == 2
 
     def test_get_active_missing_tenant_falls_back_legacy(self, app, mocker):

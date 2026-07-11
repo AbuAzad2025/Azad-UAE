@@ -71,7 +71,7 @@ class TestCreateTicket:
             )
         assert ticket.subject == 'Printer down'
         assert ticket.sla_deadline is not None
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
 
 class TestStateTransitions:
@@ -92,7 +92,7 @@ class TestStateTransitions:
         with app.app_context():
             result = TicketService.assign_ticket(1, 9, MagicMock())
         assert result.assigned_user_id == 9
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_resolve_sets_resolved_timestamp(self, app, mocker):
         ticket = self._ticket()
@@ -197,7 +197,7 @@ class TestTicketEdgeCases:
         mocker.patch('services.ticket_service.is_global_owner_user', return_value=False)
         mocker.patch('services.ticket_service.TicketService._next_number', return_value='TKT-202506-0001')
         mock_session = mocker.patch('services.ticket_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('db')
+        mock_session.flush.side_effect = RuntimeError('db')
         from services.ticket_service import TicketService
         with app.app_context():
             with pytest.raises(RuntimeError, match='db'):
@@ -250,7 +250,7 @@ class TestTicketEdgeCases:
         ticket = MagicMock(tenant_id=1, id=1, status='open')
         mock_session = mocker.patch('services.ticket_service.db.session')
         mock_session.get.return_value = ticket
-        mock_session.commit.side_effect = RuntimeError('db fail')
+        mock_session.flush.side_effect = RuntimeError('db fail')
         mocker.patch('services.ticket_service.get_active_tenant_id', return_value=1)
         from services.ticket_service import TicketService
         args = {

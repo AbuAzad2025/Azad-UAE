@@ -18,7 +18,7 @@ class TestSystemSettingsModel:
         with app.app_context():
             settings = SystemSettings.get_current()
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
         assert isinstance(settings, SystemSettings)
 
     def test_get_current_returns_existing(self, app, mocker):

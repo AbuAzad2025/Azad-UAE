@@ -37,11 +37,11 @@ class TestLogSystemStatsAction:
         session = mocker.patch('services.monitoring_service.db.session')
         MonitoringService.log_system_stats_action(5, 2)
         session.add.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
     def test_rollback_on_commit_failure(self, mocker):
         session = mocker.patch('services.monitoring_service.db.session')
-        session.commit.side_effect = RuntimeError('fail')
+        session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             MonitoringService.log_system_stats_action(1, 0)
         session.rollback.assert_called_once()

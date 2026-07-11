@@ -105,7 +105,7 @@ class TestAIExecutorCustomerOps:
         assert result['success'] is True
         assert result['id'] == 10
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_list_customers_search_sanitized(self, executor, mocker):
         mock_c = MagicMock(id=1, name='Test', phone='1', balance=Decimal('0'))

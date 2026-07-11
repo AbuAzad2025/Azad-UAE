@@ -154,7 +154,7 @@ class TestCreateSaleMutation:
             result = CreateSale.mutate(None, None, customer_id=7, total_amount=150.0)
         assert result.success is True
         session.add.assert_called_once()
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
 
     def test_mutate_customer_not_found(self, mocker):
         user = MagicMock(is_authenticated=True, id=1)
@@ -192,7 +192,7 @@ class TestCreateSaleMutation:
         mocker.patch('utils.helpers.generate_number', return_value='INV-2')
         mocker.patch('services.graphql_service.assign_tenant_id')
         session = mocker.patch('services.graphql_service.db.session')
-        session.commit.side_effect = RuntimeError('commit failed')
+        session.flush.side_effect = RuntimeError('commit failed')
         from services.graphql_service import CreateSale
 
         with app.app_context():

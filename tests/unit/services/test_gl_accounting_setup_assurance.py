@@ -298,7 +298,7 @@ class TestExecuteCommit:
         mocker.patch.object(GLAccountingSetupService, '_build_plan', return_value=[])
         mock_session = mocker.patch('services.gl_accounting_setup.db.session')
         GLAccountingSetupService.execute(1, dry_run=False)
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_execute_commit_failure_reraises(self, mocker):
         tenant = _tenant()
@@ -307,7 +307,7 @@ class TestExecuteCommit:
         mocker.patch('services.gl_accounting_setup.Tenant.query', mock_q)
         mocker.patch.object(GLAccountingSetupService, '_build_plan', return_value=[])
         mock_session = mocker.patch('services.gl_accounting_setup.db.session')
-        mock_session.commit.side_effect = RuntimeError('commit fail')
+        mock_session.flush.side_effect = RuntimeError('commit fail')
         with pytest.raises(RuntimeError, match='commit fail'):
             GLAccountingSetupService.execute(1, dry_run=False)
         mock_session.rollback.assert_called_once()
@@ -331,7 +331,7 @@ class TestExecuteCommit:
         mocker.patch('services.gl_accounting_setup.GLAccountMapping', mapping_cls)
         GLAccountingSetupService.execute(1, dry_run=False)
         assert mock_session.flush.call_count >= 2
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_skips_map_without_account_id(self, mocker):
         tenant = _tenant()

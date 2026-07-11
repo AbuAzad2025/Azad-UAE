@@ -106,7 +106,7 @@ class TestIntegrationSettingsModel:
         assert row.service_name == 'currency_api'
         assert row.enabled is False
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_to_dict_includes_enabled_toggle(self):
         from models.integration_settings import IntegrationSettings

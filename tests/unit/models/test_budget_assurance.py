@@ -103,7 +103,7 @@ class TestBudgetUpdateActuals:
         assert line.variance == Decimal('-100')
         assert line.variance_percentage == Decimal('-50')
         assert budget.total_actual == Decimal('100')
-        mock_db.commit.assert_called_once()
+        mock_db.flush.assert_called_once()
 
     def test_update_actuals_revenue_account(self, mocker, mock_gl_columns, mock_db):
         budget = _budget(lines=[_line('revenue', Decimal('500'))])
@@ -166,7 +166,7 @@ class TestBudgetLifecycle:
         budget = _budget(status='draft')
         budget.activate()
         assert budget.status == 'active'
-        mock_db.commit.assert_called_once()
+        mock_db.flush.assert_called_once()
 
     def test_activate_rejects_non_draft(self, mock_db):
         budget = _budget(status='active')
@@ -180,7 +180,7 @@ class TestBudgetLifecycle:
         budget.close()
         budget.update_actuals.assert_called_once()
         assert budget.status == 'closed'
-        mock_db.commit.assert_called_once()
+        mock_db.flush.assert_called_once()
 
     def test_close_rejects_non_active(self, mock_db):
         budget = _budget(status='draft')

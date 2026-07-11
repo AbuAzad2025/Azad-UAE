@@ -30,7 +30,7 @@ class TestArchiveRecord:
 
         assert archived.tenant_id == 1
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_missing_tenant_id_raises(self, app, mocker):
         class Row:
@@ -55,7 +55,7 @@ class TestArchiveRecord:
         record.to_dict.return_value = {'id': 2}
         mocker.patch('services.archive_service.current_user', MagicMock(is_authenticated=False))
         mock_session = mocker.patch('services.archive_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('db down')
+        mock_session.flush.side_effect = RuntimeError('db down')
         mocker.patch('services.archive_service.current_app').logger = MagicMock()
 
         from services.archive_service import ArchiveService
@@ -92,12 +92,12 @@ class TestDeletePaths:
         with app.app_context():
             ArchiveService.soft_delete(record)
         assert record.is_active is False
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_soft_delete_rollback_on_failure(self, app, mocker):
         record = MagicMock()
         mock_session = mocker.patch('services.archive_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('lock')
+        mock_session.flush.side_effect = RuntimeError('lock')
 
         from services.archive_service import ArchiveService
 
@@ -119,7 +119,7 @@ class TestDeletePaths:
             ArchiveService.hard_delete('sales', record, archive_first=True)
 
         mock_session.delete.assert_called_once_with(record)
-        mock_session.commit.assert_called()
+        mock_session.flush.assert_called()
 
     def test_hard_delete_interrupt_rolls_back(self, app, mocker):
         record = MagicMock(id=9, tenant_id=1)
@@ -127,7 +127,7 @@ class TestDeletePaths:
         mocker.patch('services.archive_service.current_user', MagicMock(is_authenticated=False))
         mocker.patch('services.archive_service.current_app').logger = MagicMock()
         mock_session = mocker.patch('services.archive_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('interrupt')
+        mock_session.flush.side_effect = RuntimeError('interrupt')
 
         from services.archive_service import ArchiveService
 
@@ -174,7 +174,7 @@ class TestRestoreAndQuery:
 
         assert result is existing
         assert existing.is_active is True
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_get_archived_records_filters_table(self, app, mocker):
         from models import ArchivedRecord

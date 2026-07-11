@@ -29,7 +29,7 @@ class TestProvisionTenant:
         mocker.patch.object(GLProvisioningService, '_provision_module_mappings')
         session = mocker.patch('services.gl_provisioning_service.db.session')
         result = GLProvisioningService.provision_tenant(1)
-        session.commit.assert_called_once()
+        session.flush.assert_called_once()
         assert result.errors == []
 
     def test_provision_exception_rolls_back(self, mocker):

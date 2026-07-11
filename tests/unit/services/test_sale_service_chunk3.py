@@ -183,7 +183,7 @@ class TestCreateSaleCommissionAndOptions:
     def test_defer_fulfillment_commit_failure(self, app):
         customer, seller, product = _actors()
         with _create_ctx(customer, seller, product, defer_fulfillment=True) as (svc, _, db_sess, _):
-            db_sess.commit.side_effect = RuntimeError('defer commit fail')
+            db_sess.flush.side_effect = RuntimeError('defer commit fail')
             with pytest.raises(RuntimeError, match='defer commit fail'):
                 svc.create_sale(
                     customer, seller, [{'product': product, 'quantity': 1, 'unit_price': 100}],
@@ -240,7 +240,7 @@ class TestCreateSaleCommissionAndOptions:
                     currency='AED',
                 )
                 fulfill.assert_not_called()
-                db_sess.commit.assert_called()
+                db_sess.flush.assert_called()
         assert sale is not None
 
     def test_sale_status_and_checkout_method(self, app):

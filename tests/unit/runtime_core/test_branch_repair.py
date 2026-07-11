@@ -130,7 +130,7 @@ class TestEnsureBranchIsolation:
         assert result['main_branch_id'] == 10
         assert result['schema_changes'] == 3
         assert sale.branch_id == 3
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
     def test_creates_main_branch_when_missing(self, app, mocker, restore_models):
         mocker.patch('runtime_core.branch_repair._ensure_column', return_value=False)

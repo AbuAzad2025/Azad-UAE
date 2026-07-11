@@ -130,7 +130,7 @@ class TestDepreciationRunMonthly:
         asset.post_depreciation.return_value = MagicMock(id=2)
         self._mock_assets_query(mocker, [asset])
         mock_session = mocker.patch('services.depreciation_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('commit failed')
+        mock_session.flush.side_effect = RuntimeError('commit failed')
 
         from services.depreciation_service import DepreciationService
         with app.app_context():
@@ -342,7 +342,7 @@ class TestFixedAssetModelCoverage:
         assert asset.status == 'sold'
         assert asset.disposal_gain_loss == Decimal('2000')
         assert 'sold unit' in asset.notes
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_depreciation_schedule_repr(self):
         from models.fixed_asset import DepreciationSchedule

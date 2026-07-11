@@ -167,7 +167,7 @@ class TestConversationStoreDeep:
              patch('ai_knowledge.core.conversation_store.db') as mock_db:
             MockMem.query = mock_q
             assert get_context(5, tenant_id=1)['topic'] == 'sales'
-            mock_db.session.commit.assert_called()
+            mock_db.session.flush.assert_called()
 
     def test_get_context_expired(self):
         from ai_knowledge.core.conversation_store import get_context

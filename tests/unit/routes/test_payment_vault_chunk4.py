@@ -287,14 +287,14 @@ class TestPaymentVaultModel:
         assert vault.unlock_vault('secret') is True
         assert vault.is_locked is False
         assert vault.failed_attempts == 0
-        mock_session.commit.assert_called()
+        mock_session.flush.assert_called()
 
     def test_unlock_vault_failure_increments_attempts(self, mocker):
         vault = self._vault()
         mock_session = mocker.patch('models.payment_vault.db.session')
         assert vault.unlock_vault('bad') is False
         assert vault.failed_attempts == 1
-        mock_session.commit.assert_called()
+        mock_session.flush.assert_called()
 
     def test_lock_and_reset_failed_attempts(self, mocker):
         vault = self._vault()
@@ -303,7 +303,7 @@ class TestPaymentVaultModel:
         assert vault.is_locked is True
         vault.reset_failed_attempts()
         assert vault.failed_attempts == 0
-        assert mock_session.commit.call_count >= 2
+        assert mock_session.flush.call_count >= 2
 
     def test_is_vault_accessible_locked(self):
         vault = self._vault()
@@ -320,7 +320,7 @@ class TestPaymentVaultModel:
         mock_session = mocker.patch('models.payment_vault.db.session')
         assert vault.is_vault_accessible() is False
         assert vault.is_locked is True
-        mock_session.commit.assert_called()
+        mock_session.flush.assert_called()
 
     def test_is_vault_accessible_when_unlocked_and_fresh(self):
         from datetime import datetime
@@ -343,7 +343,7 @@ class TestPaymentVaultModel:
             amount=10,
         )
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
         assert log.action == 'unlock'
 
         vault = self._vault()

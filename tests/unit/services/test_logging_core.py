@@ -280,7 +280,7 @@ class TestAuditAndSecurity:
         mocker.patch('models.security_alert.SecurityAlert')
         mock_db = mocker.patch('extensions.db')
         LoggingCore.log_security('failed_login', 'bad attempt', user='u', ip='1.1.1.1')
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
     def test_log_security_rollback(self, mocker):
         mocker.patch('models.security_alert.SecurityAlert', side_effect=RuntimeError())
@@ -442,7 +442,7 @@ class TestPerformanceAndActivity:
         mock_db = mocker.patch('extensions.db')
         LoggingCore.track_login_attempt('alice', success=False, ip_address='1.1.1.1')
         assert user.login_attempts == 5
-        mock_db.session.commit.assert_called()
+        mock_db.session.flush.assert_called()
         LoggingCore.track_login_attempt('alice', success=True, ip_address='1.1.1.1')
         assert user.login_attempts == 0
 

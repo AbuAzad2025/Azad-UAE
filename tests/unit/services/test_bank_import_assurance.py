@@ -48,7 +48,7 @@ class TestStatementImport:
             )
         assert len(lines) == 1
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_duplicate_reference_skipped(self, app, mocker):
         from models.bank_reconciliation import BankStatementLine
@@ -121,7 +121,7 @@ class TestMatchConfirmation:
         with app.app_context():
             assert BankImportService.confirm_match(1, 99, 7, tenant_id=1) is True
         assert line.status == 'matched'
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_confirm_match_cross_tenant_blocked(self, app, mocker):
         from models.bank_reconciliation import BankStatementLine

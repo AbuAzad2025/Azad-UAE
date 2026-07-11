@@ -127,7 +127,7 @@ class TestCreatePayment:
 
         assert result['payment_url'] == 'https://pay'
         assert sale.checkout_gateway_ref == 'pid-1'
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     def test_commit_failure_rolls_back(self, app, mocker):
         sale = MagicMock(
@@ -144,7 +144,7 @@ class TestCreatePayment:
         resp.json.return_value = {'payment_id': 'p2', 'payment_url': 'https://u'}
         mocker.patch('services.store_online_payment_service.requests.post', return_value=resp)
         mock_session = mocker.patch('services.store_online_payment_service.db.session')
-        mock_session.commit.side_effect = RuntimeError('db')
+        mock_session.flush.side_effect = RuntimeError('db')
 
         from services.store_online_payment_service import StoreOnlinePaymentService
 
