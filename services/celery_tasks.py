@@ -244,7 +244,6 @@ def send_abandoned_cart_reminders():
                 db.session.flush()
         except Exception:
             current_app.logger.exception('Abandoned cart first reminder failed')
-            raise
 
     second_reminder = ShopAbandonedCart.query.filter(
         ShopAbandonedCart.reminder_sent_at.isnot(None),
@@ -264,7 +263,6 @@ def send_abandoned_cart_reminders():
                 db.session.flush()
         except Exception:
             current_app.logger.exception('Abandoned cart second reminder failed')
-            raise
 
 
 @celery.task
