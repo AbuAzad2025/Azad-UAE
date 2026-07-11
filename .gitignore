@@ -106,6 +106,7 @@ package.json
 /verify_*.py
 /check_*.py
 /*.txt
+!requirements.txt
 
 
 
