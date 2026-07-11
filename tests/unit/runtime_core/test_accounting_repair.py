@@ -178,6 +178,6 @@ class TestRepairAccountingData:
         def _fail_on_commit(desc):
             yield
             raise RuntimeError('commit fail')
-        mocker.patch('utils.db_safety.atomic_transaction', _fail_on_commit)
+        mocker.patch('runtime_core.accounting_repair.atomic_transaction', _fail_on_commit)
         with pytest.raises(RuntimeError):
             repair_accounting_data()
