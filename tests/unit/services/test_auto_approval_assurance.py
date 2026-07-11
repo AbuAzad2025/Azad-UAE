@@ -81,7 +81,7 @@ class TestApprovePendingDonations:
             result = AutoApprovalService.approve_pending_donations()
         assert result['success'] is False
         assert 'query failed' in result['error']
-        mock_session.rollback.assert_called()
+        mock_session.flush.assert_not_called()
 
 
 class TestApprovePendingPurchases:
