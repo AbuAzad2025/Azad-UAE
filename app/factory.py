@@ -87,9 +87,10 @@ def create_app(config_class=Config):
     LoggingCore.schedule_cleanup(app, interval_hours=24)
 
     # System integrity check
-    print("Running system integrity check...")
-    run_system_integrity_check(app)
-    print("System integrity check passed")
+    if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
+        print("Running system integrity check...")
+        run_system_integrity_check(app)
+        print("System integrity check passed")
 
     # Default tenant maintenance check at startup
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
