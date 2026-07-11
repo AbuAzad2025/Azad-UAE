@@ -180,7 +180,7 @@ def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
 class TestSaleVatInclusiveTotals:
     """Ensure Sale.calculate_totals correctly extracts VAT when prices_include_vat=True."""
 
-    def test_sale_vat_inclusive_extraction(self, db_session, vat_inclusive_tenant):
+    def test_sale_vat_inclusive_extraction(self, db_session, vat_inclusive_tenant, sample_product_vat):
         """When prices_include_vat=True, tax_amount must be extracted from subtotal."""
         from models import Sale, SaleLine
 
