@@ -166,7 +166,7 @@ class TestShopCustomerAuthGaps:
             acc.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             db_session.commit()
 
-        mocker.patch('services.shop_customer_auth_service.db.session.commit', side_effect=RuntimeError('db'))
+        mocker.patch('services.shop_customer_auth_service.db.session.flush', side_effect=RuntimeError('db'))
         with pytest.raises(RuntimeError, match='db'):
             call_fn(ShopCustomerAuthService, sample_tenant.id)
         ShopCustomerAuthService  # noqa: B018 — keep import used

@@ -57,7 +57,7 @@ class TestCreateEmployee:
             PayrollService.create_employee({'name': 'X'})
 
     def test_create_employee_commit_failure(self, db_session, sample_branch):
-        with patch('services.payroll_service.db.session.commit', side_effect=RuntimeError('db')):
+        with patch('services.payroll_service.db.session.flush', side_effect=RuntimeError('db')):
             with pytest.raises(RuntimeError):
                 PayrollService.create_employee({
                     'name': 'Fail',
@@ -101,7 +101,7 @@ class TestCreateAdvance:
         with patch('services.payroll_service.GLService.ensure_core_accounts'), \
              patch('services.payroll_service.GLService.get_default_liquidity_account', return_value='1100'), \
              patch('services.payroll_service.post_or_fail', return_value=gl_entry), \
-             patch('services.payroll_service.db.session.commit', side_effect=RuntimeError('fail')):
+             patch('services.payroll_service.db.session.flush', side_effect=RuntimeError('fail')):
             with pytest.raises(RuntimeError):
                 PayrollService.create_advance(emp.id, '50', 'x', user_id=1)
 
@@ -367,7 +367,7 @@ class TestProcessPayroll:
              patch('services.payroll_service.GLService.get_account_code_for_concept', return_value='6100'), \
              patch('services.payroll_service.post_or_fail', return_value=gl_entry), \
              patch('services.payroll_service.PayrollService.post_payroll_accruals'), \
-             patch('services.payroll_service.db.session.commit', side_effect=RuntimeError('db')):
+             patch('services.payroll_service.db.session.flush', side_effect=RuntimeError('db')):
             with pytest.raises(RuntimeError):
                 PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
 

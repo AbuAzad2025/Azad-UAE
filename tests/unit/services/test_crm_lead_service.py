@@ -402,7 +402,7 @@ class TestCreateLeadMockedRollback:
         mocker.patch("services.crm_lead_service.is_global_user", return_value=True)
         mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=None)
         mock_db.session = MagicMock()
-        mock_db.session.commit.side_effect = RuntimeError("db fail")
+        mock_db.session.flush.side_effect = RuntimeError("db fail")
         mocker.patch("services.crm_lead_service.db", mock_db)
         with pytest.raises(RuntimeError, match="db fail"):
             CRMLeadService.create_lead({"name": "Fail"}, mock_user)
@@ -446,7 +446,7 @@ class TestCoverageGaps:
 
     def test_update_lead_commit_rollback(self, mocker, sample_user, crm_lead):
         set_active_tenant(crm_lead.tenant_id, user=sample_user)
-        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("upd"))
+        mocker.patch("services.crm_lead_service.db.session.flush", side_effect=RuntimeError("upd"))
         mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
         with pytest.raises(RuntimeError, match="upd"):
             CRMLeadService.update_lead(crm_lead.id, {"name": "X"}, sample_user)
@@ -459,7 +459,7 @@ class TestCoverageGaps:
 
     def test_move_stage_commit_rollback(self, mocker, sample_user, crm_lead, crm_stage):
         set_active_tenant(crm_lead.tenant_id, user=sample_user)
-        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("move"))
+        mocker.patch("services.crm_lead_service.db.session.flush", side_effect=RuntimeError("move"))
         mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
         with pytest.raises(RuntimeError, match="move"):
             CRMLeadService.move_stage(crm_lead.id, crm_stage.id, sample_user)
@@ -473,7 +473,7 @@ class TestCoverageGaps:
         set_active_tenant(crm_lead.tenant_id, user=sample_user)
         crm_lead.email = f"rb-{crm_lead.id}@test.com"
         crm_lead.phone = f"050{crm_lead.id:07d}"
-        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("conv"))
+        mocker.patch("services.crm_lead_service.db.session.flush", side_effect=RuntimeError("conv"))
         mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
         with pytest.raises(RuntimeError, match="conv"):
             CRMLeadService.convert_to_customer(crm_lead.id, sample_user)
@@ -481,7 +481,7 @@ class TestCoverageGaps:
 
     def test_add_activity_commit_rollback(self, mocker, sample_user, crm_lead):
         set_active_tenant(crm_lead.tenant_id, user=sample_user)
-        mocker.patch("services.crm_lead_service.db.session.commit", side_effect=RuntimeError("act"))
+        mocker.patch("services.crm_lead_service.db.session.flush", side_effect=RuntimeError("act"))
         mock_rollback = mocker.patch("services.crm_lead_service.db.session.rollback")
         with pytest.raises(RuntimeError, match="act"):
             CRMLeadService.add_activity(crm_lead.id, {"summary": "call"}, sample_user)
