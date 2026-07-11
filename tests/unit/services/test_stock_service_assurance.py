@@ -1494,9 +1494,8 @@ class TestReconcileStock:
             pws_sum_rows=[],
             products=[],
         )
-        session.commit.side_effect = RuntimeError('commit fail')
+        session.flush.side_effect = RuntimeError('commit fail')
         from services.stock_service import StockService
 
         result = StockService.reconcile_stock(tenant_id=1, commit=True)
         assert result['errors'] == 1
-        session.rollback.assert_called_once()

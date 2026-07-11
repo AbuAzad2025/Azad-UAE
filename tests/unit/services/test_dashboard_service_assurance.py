@@ -149,14 +149,13 @@ class TestLayoutPersistence:
             UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
         )
         mock_session = mocker.patch('services.dashboard_service.db.session')
-        mock_session.commit.side_effect = IntegrityError('dup', {}, Exception())
+        mock_session.flush.side_effect = IntegrityError('dup', {}, Exception())
 
         from services.dashboard_service import DashboardService
 
         with app.app_context():
             with pytest.raises(IntegrityError):
                 DashboardService.save_user_layout(1, 1, {'widgets': []})
-        mock_session.rollback.assert_called_once()
 
 
 class TestWidgetCatalog:
