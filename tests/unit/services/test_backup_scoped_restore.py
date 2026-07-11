@@ -155,6 +155,7 @@ class TestImportScopedTablesExtended:
         conn.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
         conn.execute.side_effect = RuntimeError('fail')
         self._mock_engine(mocker, conn)
+        mocker.patch('services.backup_scoped_restore.normalize_row_to_target', side_effect=lambda c, t, r: r)
         tables = {
             'tenants': [{'id': 1}],
             'roles': [{'id': 1}],
@@ -180,6 +181,7 @@ class TestImportScopedTablesExtended:
 
         conn.execute.side_effect = execute_side_effect
         self._mock_engine(mocker, conn)
+        mocker.patch('services.backup_scoped_restore.normalize_row_to_target', side_effect=lambda c, t, r: r)
         tables = {
             'tenants': [{'id': 1}],
             'roles': [{'id': 1}],
