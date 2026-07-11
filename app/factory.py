@@ -92,18 +92,19 @@ def create_app(config_class=Config):
     print("System integrity check passed")
 
     # Default tenant maintenance check at startup
-    try:
-        from services.maintenance_service import run_default_tenant_maintenance_api
-        with app.app_context():
-            result = run_default_tenant_maintenance_api(dry_run=False)
-            if result.get('action_needed'):
-                app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
-            else:
-                app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
-    except ImportError:
-        app.logger.info("Default tenant maintenance service not available - skipping")
-    except Exception as e:
-        app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
+    if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
+        try:
+            from services.maintenance_service import run_default_tenant_maintenance_api
+            with app.app_context():
+                result = run_default_tenant_maintenance_api(dry_run=False)
+                if result.get('action_needed'):
+                    app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
+                else:
+                    app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
+        except ImportError:
+            app.logger.info("Default tenant maintenance service not available - skipping")
+        except Exception as e:
+            app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
 
     # Proxy Fix for Nginx/Cloudflare
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
