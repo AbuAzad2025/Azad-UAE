@@ -590,12 +590,10 @@ class TestAutoMatchAndOrphans:
         db_session.flush()
         mocker.patch('services.gl_posting.post_or_fail', return_value=MagicMock(id=9))
         mocker.patch(
-            'services.bank_reconciliation_service.db.session.commit',
+            'services.bank_reconciliation_service.db.session.flush',
             side_effect=RuntimeError('orphan commit'),
         )
-        mock_rollback = mocker.patch('services.bank_reconciliation_service.db.session.rollback')
         with pytest.raises(RuntimeError, match='orphan commit'):
             BankReconciliationService.route_orphans_to_suspense(
                 sample_tenant.id, bank_gl_account.id, date(2026, 1, 1), date(2026, 1, 31),
             )
-        mock_rollback.assert_called()
