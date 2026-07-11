@@ -453,7 +453,7 @@ class TestCommitRollbackPaths:
             return_value={'closing_balance': '4000', 'opening_balance': '1000'},
         )
         mocker.patch('services.bank_reconciliation_service.generate_number', return_value='BR-FAIL')
-        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('commit'))
+        mocker.patch('services.bank_reconciliation_service.db.session.flush', side_effect=RuntimeError('commit'))
         with patch('flask_login.utils._get_user', return_value=sample_user):
             with pytest.raises(RuntimeError, match='commit'):
                 BankReconciliationService.create_reconciliation(
@@ -465,12 +465,12 @@ class TestCommitRollbackPaths:
                 )
 
     def test_add_bank_charge_commit_failure(self, mocker, draft_reconciliation):
-        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('lock'))
+        mocker.patch('services.bank_reconciliation_service.db.session.flush', side_effect=RuntimeError('lock'))
         with pytest.raises(RuntimeError, match='lock'):
             BankReconciliationService.add_bank_charge(draft_reconciliation.id, Decimal('5'), 'fee')
 
     def test_add_bank_interest_commit_failure(self, mocker, draft_reconciliation):
-        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('lock'))
+        mocker.patch('services.bank_reconciliation_service.db.session.flush', side_effect=RuntimeError('lock'))
         with pytest.raises(RuntimeError, match='lock'):
             BankReconciliationService.add_bank_interest(draft_reconciliation.id, Decimal('3'), 'interest')
 
@@ -479,7 +479,7 @@ class TestCommitRollbackPaths:
         draft_reconciliation.bank_interest = Decimal('0')
         draft_reconciliation.calculate_reconciliation()
         db_session.flush()
-        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('done'))
+        mocker.patch('services.bank_reconciliation_service.db.session.flush', side_effect=RuntimeError('done'))
         with pytest.raises(RuntimeError, match='done'):
             BankReconciliationService.complete_reconciliation(draft_reconciliation.id)
 
@@ -511,7 +511,7 @@ class TestCommitRollbackPaths:
         )
         db_session.add(line)
         db_session.flush()
-        mocker.patch('services.bank_reconciliation_service.db.session.commit', side_effect=RuntimeError('apply'))
+        mocker.patch('services.bank_reconciliation_service.db.session.flush', side_effect=RuntimeError('apply'))
         with pytest.raises(RuntimeError, match='apply'):
             BankReconciliationService.apply_matches(
                 draft_reconciliation.id,
