@@ -1874,10 +1874,10 @@ class TestOwnerGapClosure:
         user_cls.query = user_q
         with patch("models.Role", _model_class(all=[role])), \
              patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db:
+             patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
             mock_db.session.get.return_value = role
-            mock_db.session.commit.side_effect = RuntimeError("commit fail")
-            mock_db.session.rollback = MagicMock()
+            mock_safety_session.commit.side_effect = RuntimeError("commit fail")
             resp = owner_client.post(
                 "/owner/users/create",
                 data={"username": "newu", "password": "Str0ng!Pass", "role_id": "2", "tenant_id": "1"},
@@ -1918,14 +1918,12 @@ class TestOwnerGapClosure:
                 },
             )
         assert resp.status_code == 200
-        mock_db.session.commit.side_effect = RuntimeError("fail")
-        mock_db.session.rollback = MagicMock()
         with patch("models.Role", _model_class(all=[role])), \
              patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db2:
+             patch("routes.owner.db") as mock_db2, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
             mock_db2.session.get.return_value = role
-            mock_db2.session.commit.side_effect = RuntimeError("fail")
-            mock_db2.session.rollback = MagicMock()
+            mock_safety_session.commit.side_effect = RuntimeError("fail")
             resp2 = owner_client.post(
                 "/owner/users/2/edit",
                 data={"username": "e", "email": "e@t.com", "full_name": "E", "role_id": "2"},
@@ -1937,9 +1935,9 @@ class TestOwnerGapClosure:
         user_cls = _model_class(entity=target)
         user_cls.query.get_or_404.return_value = target
         with patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("delete fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("delete fail")
             resp = owner_client.post("/owner/users/9/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
@@ -2240,18 +2238,18 @@ class TestOwnerGapClosure:
         tenant = _mock_tenant()
         tenant_cls = _tenant_class(tenant)
         with patch("routes.owner.Tenant", tenant_cls), \
-             patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("save fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("save fail")
             resp = owner_client.post(
                 "/owner/company-info",
                 data={"name_ar": "شركة", "slug": "co"},
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("dev fail")
-            mock_db.session.rollback = MagicMock()
+        with patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("dev fail")
             resp2 = owner_client.post(
                 "/owner/developer-settings",
                 data={"developer_name": "Dev"},
@@ -2282,9 +2280,9 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
         with patch("routes.owner.InvoiceSettings", settings_cls), \
              patch("models.invoice_settings.InvoiceSettings", settings_cls), \
-             patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("inv fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("inv fail")
             resp2 = owner_client.post(
                 "/owner/invoice-settings",
                 data={"company_name_ar": "شركة"},
@@ -2421,9 +2419,9 @@ class TestOwnerGapClosure:
         assert resp2.status_code in (302, 303)
         tenant_cls.query.filter_by.return_value.first.return_value = None
         with patch("routes.owner.tenants.Tenant", tenant_cls), \
-             patch("routes.owner.tenants.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("create fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.tenants.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("create fail")
             resp3 = owner_client.post(
                 "/owner/tenants/create",
                 data={"name_ar": "شركة", "slug": "newco", "default_currency": "AED"},
@@ -2442,9 +2440,9 @@ class TestOwnerGapClosure:
         tenant_cls2 = _tenant_class(tenant2)
         tenant_cls2.query.get_or_404.return_value = tenant2
         with patch("routes.owner.Tenant", tenant_cls2), \
-             patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("edit fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("edit fail")
             resp2 = owner_client.post(
                 "/owner/tenants/2/edit",
                 data={"name_ar": "محدث", "slug": "up"},
@@ -2467,9 +2465,9 @@ class TestOwnerGapClosure:
              patch("utils.decorators.is_global_owner_user", return_value=False), \
              patch("utils.tenanting.get_active_tenant_id", return_value=1), \
              patch("routes.owner.settings.Warehouse", wh_cls), \
-             patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("wh fail")
-            mock_db.session.rollback = MagicMock()
+             patch("routes.owner.settings.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("wh fail")
             resp2 = app.test_client().post(
                 "/owner/api/toggle-warehouse-negative",
                 json={"warehouse_id": 1},
@@ -2534,9 +2532,9 @@ class TestOwnerGapClosure:
             follow_redirects=False,
         )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.db") as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError("cfg fail")
-            mock_db.session.rollback = MagicMock()
+        with patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("cfg fail")
             resp2 = owner_client.post(
                 "/owner/system-config",
                 data={"enable_sales": "on"},
@@ -2707,10 +2705,10 @@ class TestOwnerGapClosure:
                 json={"field": "max_users", "value": "not-int"},
             )
         assert resp.status_code == 400
-        with patch("routes.owner.tenants.db") as mock_db:
+        with patch("routes.owner.tenants.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
             mock_db.session.get.return_value = tenant
-            mock_db.session.commit.side_effect = RuntimeError("pkg fail")
-            mock_db.session.rollback = MagicMock()
+            mock_safety_session.commit.side_effect = RuntimeError("pkg fail")
             resp2 = owner_client.post(
                 "/owner/api/tenant/2/update-package",
                 json={"field": "max_users", "value": 10},
@@ -2932,7 +2930,8 @@ class TestOwnerFinalGaps:
 
         tenant = _mock_tenant(id=2)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db:
+        with _owner_route_patches(), patch("routes.owner.db") as mock_db, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
             mock_db.session.get.return_value = tenant
             with app.test_request_context(
                 "/owner/tenant-ai/2/toggle",
@@ -2940,8 +2939,7 @@ class TestOwnerFinalGaps:
                 data={"enable_ai": "1", "ai_access_level": "bogus"},
             ):
                 tenant_ai_toggle(2)
-            mock_db.session.commit.side_effect = RuntimeError("ai fail")
-            mock_db.session.rollback = MagicMock()
+            mock_safety_session.commit.side_effect = RuntimeError("ai fail")
             with app.test_request_context(
                 "/owner/tenant-ai/2/toggle", method="POST", data={"enable_ai": "1"}
             ):
@@ -3074,7 +3072,8 @@ class TestOwnerFinalGaps:
         with _owner_route_patches(), ExitStack() as stack:
             for p in base:
                 stack.enter_context(p)
-            with patch("routes.owner.db") as mock_db:
+            with patch("routes.owner.db") as mock_db, \
+                 patch("utils.db_safety.db.session") as mock_safety_session:
                 mock_db.session.get.return_value = tenant
                 with app.test_request_context(
                     "/owner/api/update-tenant-settings",
@@ -3082,8 +3081,7 @@ class TestOwnerFinalGaps:
                     json={"field": "logo_url", "value": "http://x"},
                 ):
                     api_update_tenant_settings()
-                mock_db.session.commit.side_effect = RuntimeError("fail")
-                mock_db.session.rollback = MagicMock()
+                mock_safety_session.commit.side_effect = RuntimeError("fail")
                 with app.test_request_context(
                     "/owner/api/update-tenant-settings",
                     method="POST",
