@@ -687,7 +687,7 @@ class TestActionDispatcherWave4:
         with permitted[0], permitted[1], permitted[2], permitted[3], \
              patch('ai_knowledge.action_dispatcher.db.session') as session, \
              patch('models.Customer') as Customer:
-            session.commit.side_effect = RuntimeError('db')
+            session.flush.side_effect = RuntimeError('db')
             assert action_dispatcher.dispatch('create_customer', {'name': 'Ali'}).success is False
         with permitted[0], permitted[1], permitted[2], permitted[3], \
              patch('models.Customer') as Customer:
