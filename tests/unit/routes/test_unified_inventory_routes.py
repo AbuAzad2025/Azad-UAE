@@ -69,8 +69,9 @@ class TestCampaignsRoutes:
         assert resp.status_code == 302
 
     def test_campaigns_create_rollback_on_error(self, uinv_client):
-        with uinv_ctx(tid=1) as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError('db')
+        with uinv_ctx(tid=1), \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError('db')
             resp = uinv_client.post('/uinv/campaigns', data={'name': 'Bad'}, follow_redirects=False)
         assert resp.status_code == 302
 
@@ -103,8 +104,9 @@ class TestWarrantyRoutes:
         assert resp.status_code == 302
 
     def test_warranty_create_error_rolls_back(self, uinv_client):
-        with uinv_ctx(tid=1) as mock_db:
-            mock_db.session.commit.side_effect = ValueError('bad')
+        with uinv_ctx(tid=1), \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = ValueError('bad')
             resp = uinv_client.post('/uinv/warranty', data={'sale_id': 'x', 'product_id': '1'})
         assert resp.status_code == 302
 
@@ -132,7 +134,8 @@ class TestShipmentRoutes:
         assert resp.status_code == 302
 
     def test_shipments_create_error_rolls_back(self, uinv_client):
-        with uinv_ctx(tid=1) as mock_db:
-            mock_db.session.commit.side_effect = RuntimeError('fail')
+        with uinv_ctx(tid=1), \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError('fail')
             resp = uinv_client.post('/uinv/shipments', data={'source_id': '1'})
         assert resp.status_code == 302

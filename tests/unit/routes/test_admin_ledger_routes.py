@@ -244,14 +244,15 @@ class TestAdminLedgerAccounts:
              patch("routes.admin_ledger.active_tenant_id", return_value=1), \
              patch("routes.admin_ledger.resolve_default_currency", return_value="AED"), \
              patch("routes.admin_ledger.GLAccount"), \
-             patch("utils.error_messages.ErrorMessages.unexpected_error", return_value="unexpected"):
-            mocks["session"].commit.side_effect = RuntimeError("db fail")
+             patch("utils.error_messages.ErrorMessages.unexpected_error", return_value="unexpected"), \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("db fail")
             resp = ledger_client.post(
                 "/admin/ledger/accounts/add",
                 data={"code": "2002", "name": "Fail", "type": "asset"},
             )
         assert resp.status_code == 200
-        mocks["session"].rollback.assert_called()
+        mock_safety_session.rollback.assert_called()
 
     def test_edit_account_get(self, ledger_client):
         account = _mock_account(code="3001", id=7)
@@ -518,23 +519,25 @@ class TestAdminLedgerCoverageGaps:
         q = _accounts_query(edit_account=account)
         with _ledger_patches(accounts_query=q) as mocks, \
              patch("routes.admin_ledger.resolve_default_currency", return_value="AED"), \
-             patch("utils.error_messages.ErrorMessages.unexpected_error", return_value="err"):
-            mocks["session"].commit.side_effect = RuntimeError("db")
+             patch("utils.error_messages.ErrorMessages.unexpected_error", return_value="err"), \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("db")
             resp = ledger_client.post(
                 "/admin/ledger/accounts/13/edit",
                 data={"code": "3101", "name": "Fail", "type": "asset"},
             )
         assert resp.status_code == 200
-        mocks["session"].rollback.assert_called()
+        mock_safety_session.rollback.assert_called()
 
     def test_delete_account_exception(self, ledger_client):
         account = _mock_account(id=14)
         q = _accounts_query(edit_account=account)
-        with _ledger_patches(accounts_query=q, journal_lines_first=None) as mocks:
-            mocks["session"].commit.side_effect = RuntimeError("delete fail")
+        with _ledger_patches(accounts_query=q, journal_lines_first=None) as mocks, \
+             patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("delete fail")
             resp = ledger_client.post("/admin/ledger/accounts/14/delete")
         assert resp.status_code == 302
-        mocks["session"].rollback.assert_called()
+        mock_safety_session.rollback.assert_called()
 
     def test_reverse_journal_exception(self, ledger_client):
         entry = MagicMock()

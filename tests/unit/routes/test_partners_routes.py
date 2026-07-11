@@ -100,13 +100,14 @@ class TestPartnersCreate:
         partners_client._partners_mocks["session"].commit.assert_called_once()
 
     def test_create_post_exception_rolls_back(self, partners_client):
-        partners_client._partners_mocks["session"].commit.side_effect = RuntimeError("db fail")
-        resp = partners_client.post("/partners/create", data={
-            "name": "Bad Partner",
-            "scope_type": "company",
-        })
+        with patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("db fail")
+            resp = partners_client.post("/partners/create", data={
+                "name": "Bad Partner",
+                "scope_type": "company",
+            })
         assert resp.status_code == 200
-        partners_client._partners_mocks["session"].rollback.assert_called_once()
+        mock_safety_session.rollback.assert_called_once()
 
 
 class TestPartnersView:
@@ -154,11 +155,12 @@ class TestPartnersEdit:
 
     def test_edit_post_exception_rolls_back(self, partners_client):
         partner = _partner_mock(2)
-        partners_client._partners_mocks["session"].commit.side_effect = RuntimeError("fail")
-        with patch("routes.partners.tenant_query", return_value=_tenant_query_chain(first=partner)):
-            resp = partners_client.post("/partners/2/edit", data={"name": "X", "scope_type": "company"})
+        with patch("utils.db_safety.db.session") as mock_safety_session:
+            mock_safety_session.commit.side_effect = RuntimeError("fail")
+            with patch("routes.partners.tenant_query", return_value=_tenant_query_chain(first=partner)):
+                resp = partners_client.post("/partners/2/edit", data={"name": "X", "scope_type": "company"})
         assert resp.status_code == 200
-        partners_client._partners_mocks["session"].rollback.assert_called_once()
+        mock_safety_session.rollback.assert_called_once()
 
 
 class TestPartnersStatement:
