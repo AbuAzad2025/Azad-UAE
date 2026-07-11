@@ -68,16 +68,23 @@ def _resolve_test_database_url() -> str:
     return _build_database_url(base, _TEST_DB_NAME)
 
 
+def _admin_engine(url: str):
+    """Create a throw-away admin engine with NullPool + short connect_timeout."""
+    return create_engine(
+        _admin_database_url(url),
+        isolation_level="AUTOCOMMIT",
+        poolclass=NullPool,
+        pool_pre_ping=True,
+        connect_args={"connect_timeout": 3},
+    )
+
+
 def _ensure_postgres_database(url: str) -> None:
     parsed, db_name = _parse_database_url(url)
     if not db_name:
         raise RuntimeError(f"Invalid database URL (no database name): {url}")
 
-    admin_engine = create_engine(
-        _admin_database_url(url),
-        isolation_level="AUTOCOMMIT",
-        pool_pre_ping=True,
-    )
+    admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:
             exists = conn.execute(
@@ -92,11 +99,7 @@ def _ensure_postgres_database(url: str) -> None:
 
 def _terminate_database_connections(url: str) -> None:
     _, db_name = _parse_database_url(url)
-    admin_engine = create_engine(
-        _admin_database_url(url),
-        isolation_level="AUTOCOMMIT",
-        pool_pre_ping=True,
-    )
+    admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:
             conn.execute(
@@ -116,11 +119,7 @@ def _drop_postgres_database(url: str) -> None:
         raise RuntimeError(f"Refusing to drop protected database: {db_name}")
 
     _terminate_database_connections(url)
-    admin_engine = create_engine(
-        _admin_database_url(url),
-        isolation_level="AUTOCOMMIT",
-        pool_pre_ping=True,
-    )
+    admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:
             conn.execute(sa_text(f'DROP DATABASE IF EXISTS "{db_name}"'))
