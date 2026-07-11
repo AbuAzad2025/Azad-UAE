@@ -98,7 +98,7 @@ def sample_product_vat(db_session, sample_tenant):
     p = Product(
         tenant_id=sample_tenant.id,
         name="VAT Test Product",
-        sku="SKU-VAT-001",
+        sku="SKU-VAT-002",
         cost_price=Decimal("50.000"),
         regular_price=Decimal("100.000"),
     )
