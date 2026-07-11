@@ -112,7 +112,7 @@ class TestUpdateEntry:
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         result = AdvancedJournalEntryManager.update_entry(1, {'description': 'new'}, 1)
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called_once()
         assert result is entry
 
     def test_rolls_back_on_commit_failure(self, mocker):
@@ -120,7 +120,7 @@ class TestUpdateEntry:
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
-        mock_db.session.commit.side_effect = RuntimeError('db fail')
+        mock_db.session.flush.side_effect = RuntimeError('db fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.update_entry(1, {'description': 'x'}, 1)
         mock_db.session.rollback.assert_called_once()
@@ -153,7 +153,7 @@ class TestReverseEntryAdvanced:
         result = AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'correction')
         assert result is reversal
         assert entry.is_reversed is True
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
     def test_rolls_back_on_commit_failure(self, mocker):
         entry = _mock_entry(status='posted')
@@ -164,7 +164,7 @@ class TestReverseEntryAdvanced:
         mocker.patch.object(AdvancedJournalEntryManager, 'post_entry', return_value=reversal)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
-        mock_db.session.commit.side_effect = RuntimeError('fail')
+        mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, 1, 'correction')
         mock_db.session.rollback.assert_called_once()
@@ -199,14 +199,14 @@ class TestDeleteEntry:
         mock_db = mocker.patch('services.advanced_journal_manager.db')
         assert AdvancedJournalEntryManager.delete_entry(1, 1, 'cleanup') is True
         assert entry.status == 'cancelled'
-        mock_db.session.commit.assert_called_once()
+        mock_db.session.flush.assert_called_once()
 
     def test_delete_rollback_on_commit_failure(self, mocker):
         entry = _mock_entry(status='draft')
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
-        mock_db.session.commit.side_effect = RuntimeError('delete fail')
+        mock_db.session.flush.side_effect = RuntimeError('delete fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.delete_entry(1, 1, 'cleanup')
         mock_db.session.rollback.assert_called_once()
@@ -249,7 +249,7 @@ class TestApproveEntry:
         mocker.patch.object(AdvancedJournalEntryManager, '_entry_or_404', return_value=entry)
         mocker.patch.object(AdvancedJournalEntryManager, '_log_audit')
         mock_db = mocker.patch('services.advanced_journal_manager.db')
-        mock_db.session.commit.side_effect = RuntimeError('fail')
+        mock_db.session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             AdvancedJournalEntryManager.approve_entry(1, 1)
         mock_db.session.rollback.assert_called_once()
