@@ -83,7 +83,8 @@
         }
     };
     const pricesIncludeVatMeta = document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content') === 'true';
-    const currencySymbol = document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content') || baseCurrency;
+    const CURRENCY_SYMBOLS = { USD:'$', ILS:'₪', JOD:'د.أ', EUR:'€', AED:(document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content') || 'د.إ'), SAR:'ر.س', EGP:'ج.م', GBP:'£', KWD:'د.ك', QAR:'ر.ق', OMR:'ر.ع', BHD:'د.ب' };
+    const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
     const recalc = async () => {
         const taxRate = Math.max(0, Math.min(100, toNum(qs('#taxRate').value)));
         const shipping = Math.max(0, toNum(qs('#shippingCost').value));
@@ -102,7 +103,7 @@
         qs('#kpiSubtotal').textContent = fmt(subtotal);
         qs('#kpiDiscount').textContent = fmt(discount + discountAmount);
         qs('#kpiTotal').textContent = fmt(quickTotal);
-        qs('#kpiCurrency').textContent = currencySymbol;
+        qs('#kpiCurrency').textContent = currencySymbolFor(selectedCurrency());
         // Backend API for exact calculation (handles prices_include_vat correctly)
         if (state.cart.length > 0) {
             try {
@@ -130,7 +131,7 @@
                     qs('#kpiSubtotal').textContent = fmt(data.subtotal);
                     qs('#kpiDiscount').textContent = fmt(data.discount);
                     qs('#kpiTotal').textContent = fmt(data.total);
-                    qs('#kpiCurrency').textContent = currencySymbol;
+                    qs('#kpiCurrency').textContent = currencySymbolFor(selectedCurrency());
                     return { subtotal: data.subtotal, tax: data.tax_amount, shipping, discountAmount, taxRate, total: data.total, prices_include_vat: data.prices_include_vat };
                 }
             } catch (_) {}
@@ -256,7 +257,7 @@
                 ? '<span class="badge badge-warning badge-pill ml-1">نفد</span>'
                 : `<span class="badge badge-secondary badge-pill ml-1">${fmt(p.stock)}</span>`;
             a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-            a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ''}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(p.price)}</span></span>`;
+            a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ''}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(priceForCurrency(p.price))} ${currencySymbolFor(selectedCurrency())}</span></span>`;
             a.addEventListener('click', async () => {
                 if (p.is_inactive) { showAlert('المنتج غير نشط.', 'warning'); return; }
                 await addToCart(p);

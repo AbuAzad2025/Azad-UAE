@@ -7,7 +7,8 @@ const fmt=(n)=>(Number(n||0)).toFixed(2);
 const toNum=(v)=>{const n=Number(v);return Number.isFinite(n)?n:0;};
 const baseCurrency=document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content')||window._FX_FALLBACK_BASE||'';
 const pricesIncludeVatMeta=document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content')==='true';
-const currencySymbol=document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content')||baseCurrency;
+const CURRENCY_SYMBOLS={USD:'$',ILS:'₪',JOD:'د.أ',EUR:'€',AED:(document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content')||'د.إ'),SAR:'ر.س',EGP:'ج.م',GBP:'£',KWD:'د.ك',QAR:'ر.ق',OMR:'ر.ع',BHD:'د.ب'};
+const currencySymbolFor=(code)=>CURRENCY_SYMBOLS[code]||code;
 const esc=(s)=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
 const showAlert=(msg,level='danger')=>{let el=qs('#posAlert');if(!el){el=document.createElement('div');el.id='posAlert';el.className='alert d-none';document.querySelector('.pos-cart-panel').prepend(el);}el.className='alert alert-'+level;el.innerHTML=msg;el.classList.remove('d-none');setTimeout(()=>{el.classList.add('d-none');},5000);};
 const selectedCurrency=()=>qs('#currency')?.value||baseCurrency;
@@ -28,8 +29,8 @@ const recalc=async ()=>{
   qs('#kpiTax').textContent=fmt(quickTax);
   qs('#kpiDiscount').textContent=fmt(lineDiscount+discountAmount);
   qs('#kpiShipping').textContent=fmt(shipping);
-  qs('#kpiTotal').textContent=fmt(quickTotal);
-  qs('#kpiCurrency').textContent=currencySymbol;
+   qs('#kpiTotal').textContent=fmt(quickTotal);
+   qs('#kpiCurrency').textContent=currencySymbolFor(selectedCurrency());
   const taxRow=qs('#taxRow');if(taxRow)taxRow.style.display=taxRate>0?'':'none';
   if(state.cart.length>0){qs('#cartEmpty')?.classList.add('d-none');qs('#cartItems')?.classList.remove('d-none');}
   else{qs('#cartEmpty')?.classList.remove('d-none');qs('#cartItems')?.classList.add('d-none');}
@@ -42,7 +43,7 @@ const recalc=async ()=>{
         qs('#kpiTax').textContent=fmt(data.tax_amount);
         qs('#kpiDiscount').textContent=fmt(data.discount);
         qs('#kpiTotal').textContent=fmt(data.total);
-        qs('#kpiCurrency').textContent=currencySymbol;
+        qs('#kpiCurrency').textContent=currencySymbolFor(selectedCurrency());
         return{subtotal:data.subtotal,tax:data.tax_amount,shipping,discountAmount,lineDiscount,taxRate,total:data.total,prices_include_vat:data.prices_include_vat};
       }
     }catch(_){}
