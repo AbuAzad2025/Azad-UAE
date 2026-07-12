@@ -240,7 +240,6 @@ class TestProjectServiceCommitRollbackPaths:
     def test_create_project_flush_failure(self, sample_user, sample_tenant, mocker):
         _patch_tenant(mocker, sample_tenant.id)
         mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('flush failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
         with pytest.raises(RuntimeError, match='flush failed'):
             ProjectService.create_project({'name': 'Flush Fail'}, sample_user)
 
