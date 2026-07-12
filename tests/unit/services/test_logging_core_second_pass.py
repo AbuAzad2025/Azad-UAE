@@ -569,11 +569,11 @@ class TestMiscSecondPass:
     def test_track_login_attempt_commit_failure(self, mocker):
         user = MagicMock(login_attempts=0)
         mocker.patch('models.User').query.filter_by.return_value.first.return_value = user
-        mock_db = mocker.patch('extensions.db')
-        mock_db.session.flush.side_effect = RuntimeError('commit fail')
+        mock_session = mocker.patch('utils.db_safety.db.session')
+        mock_session.flush.side_effect = RuntimeError('commit fail')
         with pytest.raises(RuntimeError):
             LoggingCore.track_login_attempt('bob', success=True, ip_address='1.1.1.1')
-        mock_db.session.rollback.assert_called_once()
+        mock_session.rollback.assert_called_once()
 
 
 class TestAutoCleanupSecondPass:
