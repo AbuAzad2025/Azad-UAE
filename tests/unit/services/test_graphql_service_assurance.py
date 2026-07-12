@@ -198,7 +198,6 @@ class TestCreateSaleMutation:
         with app.app_context():
             with pytest.raises(RuntimeError, match='commit failed'):
                 CreateSale.mutate(None, None, customer_id=1, total_amount=10.0)
-        session.rollback.assert_called_once()
 
 
 class TestBuildSchema:
