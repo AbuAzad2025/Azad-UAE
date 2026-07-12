@@ -103,7 +103,7 @@ def _do_seed_demo(app):
     from models.branch import Branch
     from models.warehouse import Warehouse
     from models.cash_box import CashBox
-    from models.user import User, Role
+    from models.user import User, Role, Permission
     from models.customer import Customer
     from models.supplier import Supplier
     from models.partner import Partner
@@ -311,6 +311,27 @@ def _do_seed_demo(app):
         r = _get_or_create_role(rdata["slug"], rdata["name"])
         role_map[rdata["slug"]] = r
     role_map["admin"] = Role.query.filter_by(slug='admin').first()
+
+    # 8b. Grant permissions to demo roles so permission-gated pages (e.g. /customers)
+    # are actually accessible. The 'admin' slug is intentionally NOT granted
+    # permissions by system_init, so we assign them here for the demo.
+    def _grant_perms(role, codes):
+        role.permissions = Permission.query.filter(Permission.code.in_(codes)).all()
+
+    _grant_perms(role_map["admin"], [p.code for p in Permission.query.all()])
+    _grant_perms(role_map["demo_accountant"], [
+        "manage_payments", "manage_expenses", "view_reports",
+        "view_ledger", "manage_ledger", "manage_payroll",
+    ])
+    _grant_perms(role_map["demo_cashier"], [
+        "manage_sales", "manage_customers", "view_reports",
+        "view_ledger", "view_kds", "manage_payments", "manage_store",
+    ])
+    _grant_perms(role_map["demo_warehouse"], [
+        "manage_products", "manage_purchases", "manage_warehouse",
+        "view_reports", "view_ledger", "manage_suppliers",
+    ])
+    db.session.flush()
 
     # 9. Branch employees
     for username, full_name_ar, role_slug, br_code in BRANCH_EMPLOYEES:
