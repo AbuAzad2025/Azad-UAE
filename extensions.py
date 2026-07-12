@@ -81,11 +81,6 @@ def init_extensions(app):
     if app.config.get("MAIL_USERNAME"):
         mail.init_app(app)
     babel.init_app(app, locale_selector=get_locale)
-    try:
-        from utils.tenant_orm import register_tenant_orm_scoping
-        register_tenant_orm_scoping(app)
-    except Exception as exc:
-        app.logger.error("[ERROR] Tenant ORM scoping failed: %s", exc)
     app.logger.info("[OK] Extensions initialized")
 def get_or_create(session, model, defaults=None, **kwargs):
     instance = session.query(model).filter_by(**kwargs).first()

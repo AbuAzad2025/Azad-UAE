@@ -1,6 +1,12 @@
 """
 Feature Flag Service — Phase 10
 Per-tenant feature flag resolution with global defaults from config.
+
+NOTE: The flags in FEATURE_FLAG_KEYS are *platform-level* capability toggles
+(e.g. ENABLE_TREASURY, ENABLE_LANDED_COST).  They are resolved from the Flask
+config; there is no per-tenant database column for them.
+Per-tenant feature gating (e.g. enable_pos, enable_ai) uses the ``Tenant``
+model's ``enable_*`` boolean columns directly (see utils/decorators.py).
 """
 
 from flask import current_app
@@ -20,26 +26,19 @@ FEATURE_FLAG_KEYS = {
 
 
 class FeatureFlagService:
-    """خدمة إدارة مفاتيح الميزات per-tenant"""
+    """Platform-level feature flag resolution from global config."""
 
     @staticmethod
     def is_enabled(flag_key: str, tenant_id=None) -> bool:
         """
-        Resolve feature flag: tenant override → config default → False.
+        Resolve feature flag from global Flask config.
+
+        ``tenant_id`` is accepted for backward compatibility but is **not**
+        used — per-tenant feature gating is handled by the ``enable_*``
+        columns on the ``Tenant`` model, not by this service (see
+        ``utils/decorators.require_subscription_feature``).
         """
         config_key = FEATURE_FLAG_KEYS.get(flag_key, flag_key)
-
-        # 1. Tenant override (if tenant.settings has the flag)
-        if tenant_id is not None:
-            from models import Tenant
-            from extensions import db
-            tenant = db.session.get(Tenant, tenant_id)
-            if tenant and hasattr(tenant, 'settings') and tenant.settings:
-                settings = tenant.settings if isinstance(tenant.settings, dict) else {}
-                if flag_key in settings:
-                    return bool(settings[flag_key])
-
-        # 2. Global config default (Flask config is a dict — use .get, not getattr)
         return bool(current_app.config.get(config_key, False))
 
     @staticmethod

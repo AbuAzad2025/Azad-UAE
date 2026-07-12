@@ -206,3 +206,114 @@ def accountant_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+# ── SaaS subscription feature gate ────────────────────────────────────
+# Blocks a route when the active tenant has a feature disabled or its
+# subscription plan is lower than the required tier.
+#
+# Usage:
+#   @require_subscription_feature('pos')
+#   @require_subscription_feature('enterprise')
+# ---------------------------------------------------------------------
+
+# Known `enable_*` boolean columns on the Tenant model.
+_FEATURE_COLUMNS = frozenset({
+    'multi_warehouse', 'multi_currency', 'gl', 'ai', 'reports', 'api',
+    'pos', 'payroll', 'cheques', 'expenses', 'store',
+})
+
+# Plan hierarchy (higher = more features).
+_PLAN_LEVELS = {'basic': 10, 'pro': 20, 'enterprise': 30}
+
+
+def require_subscription_feature(feature_name: str):
+    """Gate a route by tenant feature flag or subscription plan.
+
+    Feature names like 'pos', 'ai', 'payroll' map to the corresponding
+    ``Tenant.enable_<name>`` column.
+    Plan names ('pro', 'enterprise') require at least that plan tier.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            from utils.tenanting import get_active_tenant_id
+            from models.tenant import Tenant
+            tid = get_active_tenant_id()
+            if not tid:
+                abort(403, description="لا يوجد مستأجر نشط")
+            tenant = db.session.get(Tenant, int(tid))
+            if not tenant:
+                abort(403, description="المستأجر غير موجود")
+
+            col = f"enable_{feature_name}"
+            if col.replace('enable_', '') in _FEATURE_COLUMNS:
+                if not getattr(tenant, col, True):
+                    abort(403, description=f"ميزة \"{feature_name}\" غير مفعلة لهذا الحساب")
+                return f(*args, **kwargs)
+
+            if feature_name in _PLAN_LEVELS:
+                required = _PLAN_LEVELS[feature_name]
+                current_plan = _PLAN_LEVELS.get(tenant.subscription_plan or 'basic', 0)
+                if current_plan < required:
+                    abort(403, description=f"هذه الميزة تتطلب خطة {feature_name}")
+                return f(*args, **kwargs)
+
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+# ── Resource-limit enforcement decorator ──────────────────────────────
+# Calls ``utils/tenant_limits.py`` convenience helpers before the route
+# executes.  Raises HTTP 403 with a user-facing message when the limit
+# is exceeded.
+#
+# Usage:
+#   @enforce_resource_limit('users')
+#   @enforce_resource_limit('invoices_monthly')
+# ---------------------------------------------------------------------
+
+_LIMIT_CHECKERS = {}
+
+
+def _load_limit_checkers():
+    """Lazy-populate the limit-checker mapping (avoids import cycles)."""
+    if _LIMIT_CHECKERS:
+        return
+    from utils.tenant_limits import (
+        check_users_limit, check_branches_limit, check_warehouses_limit,
+        check_products_limit, check_customers_limit, check_suppliers_limit,
+        check_sales_monthly_limit, check_invoices_monthly_limit,
+    )
+    _LIMIT_CHECKERS['users'] = check_users_limit
+    _LIMIT_CHECKERS['branches'] = check_branches_limit
+    _LIMIT_CHECKERS['warehouses'] = check_warehouses_limit
+    _LIMIT_CHECKERS['products'] = check_products_limit
+    _LIMIT_CHECKERS['customers'] = check_customers_limit
+    _LIMIT_CHECKERS['suppliers'] = check_suppliers_limit
+    _LIMIT_CHECKERS['sales_monthly'] = check_sales_monthly_limit
+    _LIMIT_CHECKERS['invoices_monthly'] = check_invoices_monthly_limit
+
+
+def enforce_resource_limit(resource_name: str):
+    """Gate a route by tenant resource quota (e.g. 'users', 'invoices_monthly').
+
+    The underlying ``check_*_limit()`` raises ``TenantLimitError`` when the
+    limit would be exceeded; this decorator translates it into HTTP 403 so
+    both web and API routes receive a consistent response.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            _load_limit_checkers()
+            checker = _LIMIT_CHECKERS.get(resource_name)
+            if checker is not None:
+                from utils.tenant_limits import TenantLimitError
+                try:
+                    checker()
+                except TenantLimitError as e:
+                    abort(403, description=str(e))
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+

@@ -101,6 +101,20 @@ def register_error_handlers(app):
     def handle_generic_exception(exc):
         if isinstance(exc, HTTPException):
             return exc
+        # Tenant isolation violation → 403 Forbidden
+        if exc.__class__.__name__ == 'TenantIsolationError':
+            from utils.tenant_orm import TenantIsolationError
+            LoggingCore.log_error(
+                message=str(exc),
+                category="SECURITY",
+                level="CRITICAL",
+                source="app.errorhandler.tenant_isolation",
+                exception=exc,
+            )
+            if _wants_json_error_response():
+                return jsonify({"success": False, "error": str(exc)}), 403
+            flash(str(exc), 'danger')
+            return render_template("errors/403.html"), 403
         category = "DATABASE" if isinstance(exc, SQLAlchemyError) else "BACKEND"
         source = "app.errorhandler.database" if category == "DATABASE" else "app.errorhandler.generic"
         LoggingCore.log_error(

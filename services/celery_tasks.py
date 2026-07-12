@@ -119,13 +119,24 @@ def run_inventory_reconciliation(tenant_id: int | None = None):
 
 @celery.task
 def generate_monthly_report(month: int, year: int):
-    from app import create_app
-    from services.report_service import ReportService
-    
-    app = create_app()
-    with app.app_context():
-        report = ReportService.generate_monthly_report(month, year)
-        return {'success': True, 'report_id': report.id if report else None}
+    """⚠ SAFETY-GUARDED: placeholder — no unscoped multi-tenant data access.
+
+    The original implementation imported ``services.report_service.ReportService``
+    which does **not exist** in this codebase, and ran an unscoped platform-wide
+    query that could leak cross-tenant data.  Until a properly scoped
+    per-tenant reporting service is built, this task is a no-op.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        "generate_monthly_report(%d, %d) — disabled. "
+        "No tenant-scoped ReportService is available yet.",
+        month, year,
+    )
+    return {
+        'success': False,
+        'error': 'Disabled: ReportService not implemented — use per-tenant reporting instead.',
+    }
 
 
 @celery.task

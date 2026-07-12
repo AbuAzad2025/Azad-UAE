@@ -216,6 +216,13 @@ def create_app(config_class=Config):
     except ImportError:
         app.logger.warning("Event listeners not available")
 
+    # Tenant ORM scoping (after all models are imported so registry is populated)
+    try:
+        from utils.tenant_orm import register_tenant_orm_scoping
+        register_tenant_orm_scoping(app)
+    except Exception as exc:
+        app.logger.error("[ERROR] Tenant ORM scoping failed: %s", exc)
+
     # Register CLI Commands
     try:
         from cli_commands import register_cli_commands

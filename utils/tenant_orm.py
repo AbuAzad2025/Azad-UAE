@@ -1,6 +1,7 @@
 """
-Automatic ORM-level tenant isolation for every SELECT and session.get().
-Applies to all mapped models that expose a tenant_id column.
+Automatic ORM-level tenant isolation:
+- SELECT auto-scoping via do_orm_execute + with_loader_criteria
+- INSERT/UPDATE/DELETE guard via before_flush (TenantIsolationError)
 """
 
 from __future__ import annotations
@@ -13,6 +14,11 @@ from sqlalchemy import event, inspect as sa_inspect, true as sql_true
 from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
+
+
+class TenantIsolationError(Exception):
+    """Raised when a write operation violates tenant isolation."""
+
 
 _SKIP_BLUEPRINTS = frozenset({
     "auth",      # Login/logout/register — platform-level auth, not tenant data
@@ -76,6 +82,12 @@ def _discover_tenant_models() -> list[type]:
     except Exception:
         pass
 
+    if not classes:
+        # Don't cache an empty result — the registry may not have been
+        # populated yet (models loaded after this first call).  The
+        # registration call (factory.py) will set the cache once all
+        # models are available.
+        return []
     _TENANT_MODELS = classes
     return classes
 
@@ -181,6 +193,95 @@ def _inject_tenant_criteria(execute_state):
         )
 
     execute_state.statement = statement
+
+
+# ── Write-path guard (INSERT / UPDATE / DELETE) ─────────────────────────
+# Every tenant-bearing object being flushed must match the active tenant.
+# The guard skips when there is no request context (Celery/CLI) or when
+# g.skip_tenant_scope is True (without_tenant_scope() context manager).
+#
+# INSERT: if obj.tenant_id is None it is auto-stamped; if it differs from
+#   the active tenant TenantIsolationError is raised.
+# UPDATE / DELETE: any tenant-bearing row whose tenant_id is non-NULL and
+#   does NOT match the active tenant triggers an error.
+# -------------------------------------------------------------------------
+
+@event.listens_for(Session, "before_flush")
+def _inject_tenant_write_guard(session, flush_context, instances):
+    if not has_request_context():
+        return
+    if getattr(g, "skip_tenant_scope", False):
+        return
+
+    tid = _active_tenant_for_orm()
+    tenant_models = _discover_tenant_models()
+
+    # ── INSERT guard + auto-stamp ─────────────────────────────────────
+    for obj in session.new:
+        if obj.__class__ not in tenant_models:
+            continue
+        mapper = sa_inspect(obj.__class__, raiseerr=False)
+        if mapper is None or "tenant_id" not in mapper.columns:
+            continue
+        obj_tid = getattr(obj, "tenant_id", None)
+        if obj_tid is None:
+            if tid is not None:
+                obj.tenant_id = tid
+            else:
+                raise TenantIsolationError(
+                    f"Cannot INSERT {obj.__class__.__name__} without an active tenant context"
+                )
+        elif tid is not None and int(obj_tid) != int(tid):
+            _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
+            raise TenantIsolationError(
+                f"Cross-tenant INSERT on {obj.__class__.__name__}: "
+                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+            )
+
+    # ── UPDATE guard ──────────────────────────────────────────────────
+    for obj in session.dirty:
+        if obj.__class__ not in tenant_models:
+            continue
+        mapper = sa_inspect(obj.__class__, raiseerr=False)
+        if mapper is None or "tenant_id" not in mapper.columns:
+            continue
+        obj_tid = getattr(obj, "tenant_id", None)
+        if obj_tid is None:
+            continue
+        if tid is not None and int(obj_tid) != int(tid):
+            _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
+            raise TenantIsolationError(
+                f"Cross-tenant UPDATE on {obj.__class__.__name__}: "
+                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+            )
+
+    # ── DELETE guard ──────────────────────────────────────────────────
+    for obj in session.deleted:
+        if obj.__class__ not in tenant_models:
+            continue
+        mapper = sa_inspect(obj.__class__, raiseerr=False)
+        if mapper is None or "tenant_id" not in mapper.columns:
+            continue
+        obj_tid = getattr(obj, "tenant_id", None)
+        if obj_tid is None:
+            continue
+        if tid is not None and int(obj_tid) != int(tid):
+            _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
+            raise TenantIsolationError(
+                f"Cross-tenant DELETE on {obj.__class__.__name__}: "
+                f"obj.tenant_id={obj_tid} != active_tenant={tid}"
+            )
+
+
+def _log_cross_tenant_warning(model_name: str, obj_tid, active_tid):
+    try:
+        from flask import current_app
+        current_app.logger.warning(
+            "[TENANT_ISOLATION] Cross-tenant write blocked: %s obj.tenant_id=%s active_tenant=%s",
+            model_name, obj_tid, active_tid,
+        )
+    except Exception:
+        pass
 
 
 def register_tenant_orm_scoping(app):
