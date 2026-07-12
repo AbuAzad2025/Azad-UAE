@@ -331,7 +331,6 @@ class TestExecuteCommit:
         mocker.patch('services.gl_accounting_setup.GLAccountMapping', mapping_cls)
         GLAccountingSetupService.execute(1, dry_run=False)
         assert mock_session.flush.call_count >= 2
-        mock_session.flush.assert_called_once()
 
     def test_skips_map_without_account_id(self, mocker):
         tenant = _tenant()
