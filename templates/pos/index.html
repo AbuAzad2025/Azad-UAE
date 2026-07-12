@@ -2,462 +2,251 @@
 
 {% block title %}{{ t('Point Of Sale') }} POS{% endblock %}
 
-{% block page_title %}
-
-<div class="d-flex justify-content-between align-items-center">
-
-  <div>
-
-    <h1 class="mb-0"><i class="fas fa-cash-register mr-2"></i>{{ t('Point Of Sale') }} (POS)</h1>
-
-    <p class="text-muted mb-0">{{ t('Fast Cashier Screen') }}</p>
-
-  </div>
-
-  <div>
-
-    <a href="{{ url_for('pos.grid') }}" class="btn btn-outline-info">
-
-      <i class="fas fa-th mr-2"></i>عرض الشبكة
-
-    </a>
-
-    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
-
-      <i class="fas fa-file-invoice mr-2"></i>{{ t('Sales') }}
-
-    </a>
-
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
-
-    </a>
-
-  </div>
-
-</div>
-
-{% endblock %}
+{% block page_title %}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pos_v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div id="posSessionBar" class="pos-session-bar d-flex justify-content-between align-items-center d-none">
-  <div>
-    <i class="fas fa-cash-register mr-1"></i>
-    <span id="sessionLabel">{{ t('Session_2') }}</span>
-    <strong id="sessionNumber"></strong>
-    <span class="mx-2">|</span>
-    <span id="sessionTime" class="small opacity-75"></span>
-    <span class="mx-2">|</span>
-    <span>{{ t('Balance') }}: <strong id="sessionBalance">0.00</strong></span>
-    <span class="mx-2">|</span>
-    <span>{{ t('Sales') }}: <strong id="sessionTotal">0.00</strong></span>
+<div class="pos-app">
+
+  <!-- ===== Top bar ===== -->
+  <div class="pos-topbar">
+    <div class="pos-brand">
+      <div class="pos-flag" aria-hidden="true"></div>
+      <div class="pos-logo">AZAD <span>POS</span></div>
+    </div>
+
+    <div class="pos-topbar-center">
+      <div id="posSessionBar" class="d-none">
+        <div class="info">
+          <span><span class="k">{{ t('Session_2') }}:</span> <span class="v" id="sessionNumber"></span></span>
+          <span class="k" id="sessionTime"></span>
+          <span><span class="k">{{ t('Balance') }}:</span> <span class="v" id="sessionBalance">0.00</span></span>
+          <span><span class="k">{{ t('Sales') }}:</span> <span class="v" id="sessionTotal">0.00</span></span>
+        </div>
+        <button id="closeSessionBtn" class="pos-chip closed" type="button"><span class="dot"></span><i class="fas fa-sign-out-alt"></i> {{ t('Close') }} {{ t('Session_2') }}</button>
+      </div>
+      <div id="posSessionRequired" class="d-none">
+        <span><i class="fas fa-exclamation-triangle"></i> {{ t('Must Open Cashier Session') }}</span>
+        <button id="openSessionBtn" class="pos-chip" type="button"><span class="dot"></span><i class="fas fa-plus"></i> {{ t('Open') }} {{ t('Session_2') }}</button>
+      </div>
+    </div>
+
+    <div class="pos-topbar-actions">
+      <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="إدارة الطاولات"><i class="fas fa-chair"></i></button>
+      <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="تعليق الفاتورة"><i class="fas fa-pause"></i></button>
+      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="عرض الشبكة"><i class="fas fa-th"></i></a>
+      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ t('Sales') }}"><i class="fas fa-file-invoice"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ t('Main_2') }}"><i class="fas fa-home"></i></a>
+    </div>
   </div>
-  <div>
-    <button id="closeSessionBtn" class="btn btn-sm btn-warning"><i class="fas fa-sign-out-alt mr-1"></i>{{ t('Close') }} {{ t('Session_2') }}</button>
-  </div>
-</div>
 
-<div id="posSessionRequired" class="pos-session-required d-flex justify-content-between align-items-center d-none">
-  <div>
-    <i class="fas fa-exclamation-triangle mr-1"></i>
-    {{ t('Must Open Cashier Session') }}
-  </div>
-  <div>
-    <button id="openSessionBtn" class="btn btn-sm btn-success"><i class="fas fa-plus mr-1"></i>{{ t('Open') }} {{ t('Session_2') }}</button>
-  </div>
-</div>
+  <!-- ===== Main grid ===== -->
+  <div class="pos-grid">
 
-<div class="pos-wrap">
+    <!-- LEFT: search + categories + product grid -->
+    <div class="pos-main">
 
-  <div class="row">
+      <div class="pos-search-row">
 
-    <div class="col-lg-8">
-
-      <div class="card card-outline card-primary">
-
-        <div class="card-header">
-
-          <h3 class="card-title"><i class="fas fa-barcode mr-2"></i>{{ t('Add') }} {{ t('Products') }}</h3>
-
+        <div class="pos-search">
+          <i class="fas fa-user text-muted"></i>
+          <input id="customerSearch" placeholder="{{ t('Search By Name Or Phone') }} (F4)">
+          <button id="walkinCustomer" class="search-clear" title="{{ t('Quick Cash Customer') }}">{{ t('Cash_5') }}</button>
+          <button id="clearCustomer" class="search-clear" title="{{ t('Clear') }}">✕</button>
+          <div id="customerResults" class="pos-cust-results d-none"></div>
         </div>
 
-        <div class="card-body">
-
-          <div class="row">
-
-            <div class="col-md-6">
-
-              <label class="mb-1">{{ t('Customer') }}</label>
-
-              <div class="input-group">
-
-                <input id="customerSearch" class="form-control" placeholder="{{ t('Search By Name Or Phone') }} (F4)">
-
-                <div class="input-group-append">
-
-                  <button id="walkinCustomer" class="btn btn-outline-primary" type="button" title="{{ t('Quick Cash Customer') }}">{{ t('Cash_5') }}</button>
-
-                  <button id="clearCustomer" class="btn btn-outline-secondary" type="button">{{ t('Clear') }}</button>
-
-                </div>
-
-              </div>
-
-              <div id="customerResults" class="list-group mt-2 pos-results d-none"></div>
-
-              <div class="text-muted mt-2" id="customerSelectedHint">{{ t('No Customer Selected Hint') }}</div>
-
-            </div>
-
-            <div class="col-md-6">
-
-              <label class="mb-1">{{ t('Search') }}/{{ t('Barcode') }}</label>
-
-              <div class="input-group">
-
-                <input id="productSearch" class="form-control barcode-input" placeholder="{{ t('Scan Barcode Or Type Name Code') }}">
-
-                <div class="input-group-append">
-
-                  <button id="clearProductSearch" class="btn btn-outline-secondary" type="button">{{ t('Clear') }}</button>
-
-                </div>
-
-              </div>
-
-              <div id="productResults" class="list-group mt-2 pos-results d-none"></div>
-
-              <div class="text-muted mt-2">{{ t('Keyboard Shortcuts') }}</div>
-
-              <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> {{ t('Searching') }}</div>
-
-            </div>
-
-          </div>
-
-          <hr>
-
-          <div class="table-responsive">
-
-            <table class="table table-hover pos-cart-table mb-0">
-
-              <thead>
-
-                <tr>
-
-                  <th class="ic-1">{{ t('Product') }}</th>
-
-                  <th class="ic-2">{{ t('Quantity') }}</th>
-
-                  <th class="ic-3">{{ t('Price') }}</th>
-
-                  <th class="ic-4">{{ t('Discount_2') }}%</th>
-
-                  <th class="ic-5">{{ t('Total_3') }}</th>
-
-                  <th class="ic-4"></th>
-
-                </tr>
-
-              </thead>
-
-              <tbody id="cartBody">
-
-                <tr id="cartEmptyRow">
-
-                  <td colspan="6" class="text-center text-muted py-4">{{ t('Cart Empty') }}</td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+        <div class="pos-search">
+          <i class="fas fa-barcode text-muted"></i>
+          <input id="productSearch" class="barcode-input" placeholder="{{ t('Scan Barcode Or Type Name Code') }} (Ctrl+K)">
+          <span class="kbd">Ctrl K</span>
+          <button id="clearProductSearch" class="search-clear" title="{{ t('Clear') }}">✕</button>
+          <div id="productResults" class="pos-product-results d-none"></div>
         </div>
 
+      </div>
+
+      <div id="customerSelectedHint" class="text-muted small"></div>
+      <div id="productLoading" class="small text-info d-none"><i class="fas fa-spinner fa-spin"></i> {{ t('Searching') }}</div>
+
+      <div id="posCategories" class="pos-categories"></div>
+
+      <div id="posProductGrid" class="pos-products">
+        <div class="pos-cart-empty">اختر فئة لعرض المنتجات</div>
       </div>
 
     </div>
 
-    <div class="col-lg-4 pos-right">
+    <!-- RIGHT: cart + calc + pay -->
+    <div class="pos-side">
 
-      <div class="card pos-kpi">
-
-        <div class="card-body">
-
-          <div class="d-flex justify-content-between align-items-center">
-
-            <div>
-
-              <div>{{ t('Total_3') }}</div>
-
-              <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol }}</span></div>
-
-            </div>
-
-            <div class="text-right">
-
-              <div class="small">{{ t('Subtotal') }}</div>
-
-              <div><strong id="kpiSubtotal">0.00</strong></div>
-
-              <div class="small mt-2">{{ t('Discount') }}</div>
-
-              <div><strong id="kpiDiscount">0.00</strong></div>
-
-            </div>
-
-          </div>
-
-        </div>
-
+      <div class="pos-side-head">
+        <h3>{{ t('Cart') }}</h3>
+        <span class="cnt" id="cartCount">0</span>
       </div>
 
-      <div class="card card-outline card-info">
-
-        <div class="card-header">
-
-          <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>{{ t('Invoice') }} {{ t('Settings') }}</h3>
-
-        </div>
-
-        <div class="card-body">
-
-          <div class="form-group">
-
-            <label>{{ t('Warehouse') }}</label>
-
-            <select id="warehouseId" class="form-control" aria-label="warehouseId">
-
-              <option value="">{{ t('Auto') }} ({{ t('Main') }})</option>
-
-              {% for w in warehouses %}
-
-                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} ({{ t('Main') }}){% endif %}</option>
-
-              {% endfor %}
-
-            </select>
-
-          </div>
-
-          <div class="row">
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>{{ t('Currency') }}</label>
-
-                {% from 'macros/currency_options.html' import currency_select %}
-
-                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
-
-              </div>
-
-            </div>
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>{{ t('Exchange Rate') }}</label>
-
-                <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1" aria-label="exchangeRate">
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="row" id="pos-tax-row" {% if not tenant_enable_tax %}class="d-none"{% endif %}>
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>{{ t('Tax_2') }} %</label>
-
-                {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
-
-                <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}" aria-label="taxRate">
-
-              </div>
-
-            </div>
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>{{ t('Shipping_2') }}</label>
-
-                <input id="shippingCost" type="number" step="0.01" class="form-control" value="0" aria-label="shippingCost">
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="form-group">
-
-            <label>{{ t('General Discount') }}</label>
-
-            <input id="discountAmount" type="number" step="0.01" class="form-control" value="0" aria-label="discountAmount">
-
-          </div>
-
-        </div>
-
+      <div class="pos-cart-scroll">
+        <table class="pos-cart-table">
+          <tbody id="cartBody">
+            <tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">{{ t('Cart Empty') }}</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="card card-outline card-success">
-
-        <div class="card-header">
-
-          <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>{{ t('Payment_2') }}</h3>
-
-        </div>
-
-        <div class="card-body">
-
-          <div class="form-group">
-
-            <label>{{ t('Payment Method') }}</label>
-
-            <select id="paymentMethod" class="form-control" aria-label="paymentMethod">
-
-              <option value="">{{ t('No Payment Now Credit') }}</option>
-
-              <option value="cash">{{ t('Cash_4') }}</option>
-
-              <option value="card">{{ t('Card') }}</option>
-
-              <option value="bank_transfer">{{ t('Bank Transfer') }}</option>
-
-              <option value="cheque">{{ t('Cheque_3') }}</option>
-
-              <option value="e_wallet">{{ t('E Wallet') }}</option>
-
-            </select>
-
-          </div>
-
-          <div class="form-group">
-
-            <label>نوع الطلب (Order Type)
-              <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" title="إدارة أنواع الطلبات" target="_blank"><i class="fas fa-cog"></i></a>
-            </label>
-
-            <select id="orderType" class="form-control" aria-label="orderType">
-              <option value="">--</option>
-            </select>
-
-          </div>
-
-          <div class="row">
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>{{ t('Paid Amount') }}</label>
-
-                <input id="paidAmount" type="number" step="0.01" class="form-control" value="0" aria-label="paidAmount">
-
-              </div>
-
-            </div>
-
-            <div class="col-6">
-
-              <div class="form-group">
-
-                <label>رقم مرجع</label>
-
-                <input id="referenceNumber" class="form-control" placeholder="اختياري">
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <button id="checkoutBtn" class="btn btn-success btn-block btn-lg pos-checkout-btn">
-
-            <span class="btn-text"><i class="fas fa-check mr-2"></i>حفظ الفاتورة</span>
-            <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
-
-          </button>
-
-          <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2 pos-checkout-btn">
-
-            <span class="btn-text"><i class="fas fa-print mr-2"></i>حفظ + طباعة</span>
-            <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
-
-          </button>
-
-        </div>
-
+      <!-- totals -->
+      <div class="pos-totals">
+        <div class="row"><span>{{ t('Subtotal') }}</span><b id="kpiSubtotal">0.00</b></div>
+        <div class="row"><span>{{ t('Discount') }}</span><b id="kpiDiscount">0.00</b></div>
+        <div class="row grand"><span>{{ t('Total_3') }}</span><span class="amt"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol }}</span></span></div>
       </div>
 
-      <div id="posAlert" class="alert d-none"></div>
+      <!-- calculator / paid amount -->
+      <div class="pos-calc">
+        <input id="paidAmount" class="pos-calc-display" type="text" inputmode="decimal" value="0" aria-label="{{ t('Paid Amount') }}">
+        <div class="pos-calc-grid" id="posCalc">
+          <button type="button" data-act="digit" data-val="7">7</button>
+          <button type="button" data-act="digit" data-val="8">8</button>
+          <button type="button" data-act="digit" data-val="9">9</button>
+          <button type="button" data-act="add" data-val="50" class="op">+50</button>
+          <button type="button" data-act="digit" data-val="4">4</button>
+          <button type="button" data-act="digit" data-val="5">5</button>
+          <button type="button" data-act="digit" data-val="6">6</button>
+          <button type="button" data-act="add" data-val="100" class="op">+100</button>
+          <button type="button" data-act="digit" data-val="1">1</button>
+          <button type="button" data-act="digit" data-val="2">2</button>
+          <button type="button" data-act="digit" data-val="3">3</button>
+          <button type="button" data-act="clear" class="clear">C</button>
+          <button type="button" data-act="digit" data-val="0">0</button>
+          <button type="button" data-act="dot">.</button>
+          <button type="button" data-act="back" class="clear">⌫</button>
+          <button type="button" data-act="add" data-val="10" class="op">+10</button>
+        </div>
+      </div>
 
-    </div>
-
-  </div>
-
-</div>
-
-<div class="modal fade" id="posDoneModal" tabindex="-1" role="dialog" aria-hidden="true">
-
-  <div class="modal-dialog modal-dialog-centered" role="document">
-
-    <div class="modal-content">
-
-      <div class="modal-header">
-
-        <h5 class="modal-title">تم إنشاء الفاتورة</h5>
-
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-
-          <span aria-hidden="true">&times;</span>
-
+      <!-- invoice settings -->
+      <div class="pos-settings">
+        <button class="pos-settings-toggle" type="button" data-toggle="collapse" data-target="#posSettingsBody" aria-expanded="false">
+          <span><i class="fas fa-sliders-h mr-2"></i>{{ t('Invoice') }} {{ t('Settings') }}</span>
+          <i class="fas fa-chevron-down"></i>
         </button>
-
+        <div class="collapse" id="posSettingsBody">
+          <div class="pos-settings-body">
+            <div class="field">
+              <label>{{ t('Warehouse') }}</label>
+              <select id="warehouseId" class="form-control">
+                <option value="">{{ t('Auto') }} ({{ t('Main') }})</option>
+                {% for w in warehouses %}
+                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} ({{ t('Main') }}){% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>{{ t('Currency') }}</label>
+                {% from 'macros/currency_options.html' import currency_select %}
+                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
+              </div>
+              <div class="field">
+                <label>{{ t('Exchange Rate') }}</label>
+                <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1">
+              </div>
+            </div>
+            <div class="row2" id="pos-tax-row" {% if not tenant_enable_tax %}style="display:none;"{% endif %}>
+              <div class="field">
+                <label>{{ t('Tax_2') }} %</label>
+                {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
+                <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}">
+              </div>
+              <div class="field">
+                <label>{{ t('Shipping_2') }}</label>
+                <input id="shippingCost" type="number" step="0.01" class="form-control" value="0">
+              </div>
+            </div>
+            <div class="field">
+              <label>{{ t('General Discount') }}</label>
+              <input id="discountAmount" type="number" step="0.01" class="form-control" value="0">
+            </div>
+            <div class="field">
+              <label>ملاحظة الطلب</label>
+              <textarea id="orderNote" class="form-control" rows="2" placeholder="ملاحظات على الفاتورة (اختياري)"></textarea>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="modal-body">
+      <!-- payment -->
+      <div class="pos-pay">
+        <label class="small text-muted">{{ t('Payment Method') }}</label>
+        <div class="pos-pay-method" id="posPayMethod">
+          <div class="pm" data-method="cash">نقدي</div>
+          <div class="pm" data-method="card">بطاقة</div>
+          <div class="pm" data-method="bank_transfer">تحويل</div>
+          <div class="pm" data-method="e_wallet">محفظة</div>
+        </div>
+        <select id="paymentMethod" class="d-none">
+          <option value="">{{ t('No Payment Now Credit') }}</option>
+          <option value="cash">{{ t('Cash_4') }}</option>
+          <option value="card">{{ t('Card') }}</option>
+          <option value="bank_transfer">{{ t('Bank Transfer') }}</option>
+          <option value="cheque">{{ t('Cheque_3') }}</option>
+          <option value="e_wallet">{{ t('E Wallet') }}</option>
+        </select>
 
-        <div>رقم الفاتورة: <strong id="doneSaleNumber"></strong></div>
+        <div class="field">
+          <label>نوع الطلب (Order Type)
+            <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" title="إدارة أنواع الطلبات"><i class="fas fa-cog"></i></a>
+          </label>
+          <select id="orderType" class="form-control">
+            <option value="">--</option>
+          </select>
+        </div>
 
+        <div class="ref-field" id="refField">
+          <label class="small text-muted">رقم مرجع</label>
+          <input id="referenceNumber" class="form-control" placeholder="اختياري">
+        </div>
+
+        <div class="pos-actions">
+          <button id="checkoutBtn" class="pos-btn pos-btn-primary full">
+            <span class="btn-text"><i class="fas fa-check mr-2"></i>حفظ الفاتورة</span>
+            <span class="btn-spinner d-none"><i class="fas fa-spinner fa-spin"></i></span>
+          </button>
+          <button id="checkoutPrintBtn" class="pos-btn pos-btn-ghost full">
+            <span class="btn-text"><i class="fas fa-print mr-2"></i>حفظ + طباعة</span>
+            <span class="btn-spinner d-none"><i class="fas fa-spinner fa-spin"></i></span>
+          </button>
+        </div>
       </div>
 
-      <div class="modal-footer">
-
-        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">عرض</a>
-
-        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">طباعة</a>
-
-        <button type="button" class="btn btn-success" data-dismiss="modal">إغلاق</button>
-
-      </div>
+      <div id="posAlert" class="alert d-none m-3"></div>
 
     </div>
 
   </div>
+</div>
 
+<!-- ===== Modals (keep IDs intact) ===== -->
+<div class="modal fade" id="posDoneModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">تم إنشاء الفاتورة</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div>رقم الفاتورة: <strong id="doneSaleNumber"></strong></div>
+      </div>
+      <div class="modal-footer">
+        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">عرض</a>
+        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">طباعة</a>
+        <button type="button" class="btn btn-success" data-dismiss="modal">إغلاق</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="modal fade" id="openSessionModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -465,9 +254,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="fas fa-cash-register mr-2"></i>فتح جلسة كاشير</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <div id="openSessionAlert" class="alert d-none mb-3"></div>
@@ -481,7 +268,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
         <button id="openSessionConfirm" type="button" class="btn btn-success"><i class="fas fa-check mr-1"></i>فتح الجلسة</button>
       </div>
     </div>
@@ -493,9 +280,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="fas fa-sign-out-alt mr-2"></i>إغلاق جلسة الكاشير</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <div id="closeSessionAlert" class="alert d-none mb-3"></div>
@@ -526,15 +311,33 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i>تقرير الجلسة</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body" id="sessionReportBody">
         <div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="posTablesModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-chair mr-2"></i>إدارة الطاولات</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div id="posFloors" class="pos-categories mb-3"></div>
+        <div id="posTablesGrid" class="pos-products" style="max-height:50vh;"></div>
+        <div id="posTableSelected" class="text-muted small mt-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
+        <button type="button" class="btn btn-danger" id="posTableClear">إلغاء الطاولة</button>
       </div>
     </div>
   </div>
@@ -547,6 +350,7 @@
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
+<meta name="pos-config" content="{{ pos_config | tojson | safe }}">
+<script>window.POS_CONFIG = {{ pos_config | tojson | safe }};</script>
 <script src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 {% endblock %}
-

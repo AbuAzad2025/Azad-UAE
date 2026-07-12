@@ -35,6 +35,7 @@ pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
 def _pos_register_context():
     from utils.tax_settings import get_prices_include_vat
     from utils.currency_utils import resolve_default_currency
+    from services.industry_service import get_pos_profile
     warehouses = [
         w
         for w in get_accessible_warehouses(current_user)
@@ -51,6 +52,10 @@ def _pos_register_context():
             tenant_id=get_active_tenant_id(current_user),
             branch_id=branch_id,
         ),
+        'pos_config': get_pos_profile(tenant) if tenant else {
+            'business_type': 'general', 'mode': 'retail',
+            'enable_tables': False, 'enable_hold': True, 'enable_kds': True,
+        },
     }
 
 

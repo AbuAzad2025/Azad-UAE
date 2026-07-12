@@ -115,7 +115,7 @@ def _do_seed_demo(app):
     from models.sale import Sale
     from models.purchase import Purchase
     from models.expense import Expense, ExpenseCategory
-    from services.gl_provisioning_service import GLProvisioningService
+    from services.tenant_provisioning import validate_tenant_industry, provision_tenant_gl
     from services.document_sequence_service import DocumentSequenceService
     from models import ensure_default_pos_order_types, PosOrderType
 
@@ -231,6 +231,8 @@ def _do_seed_demo(app):
     demo_tenant = Tenant(
         name="Demo", name_ar="ديمو", slug="demo", business_type="general", is_active=True,
     )
+    # Application-level industry enforcement (no DB schema change).
+    validate_tenant_industry(demo_tenant.business_type, demo_tenant.industry)
     db.session.add(demo_tenant)
     db.session.flush()
     tid = demo_tenant.id
@@ -248,7 +250,7 @@ def _do_seed_demo(app):
     cashbox = CashBox(name_ar="الصندوق الرئيسي", code="MAIN", tenant_id=tid, branch_id=branch.id, box_type="cash", currency="ILS", current_balance=0, is_active=True, is_default=True)
     db.session.add(cashbox)
 
-    GLProvisioningService.provision_tenant(tid)
+    provision_tenant_gl(tid)  # idempotent base + industry-extension seeding
     for code in SEQUENCE_CODES:
         DocumentSequenceService.get_or_create(tid, code)
 
@@ -381,6 +383,7 @@ def _do_seed_demo(app):
         db.session.add(prod)
 
     demo_tenant.business_type = "multi_branch_retail"
+    provision_tenant_gl(tid)  # re-apply idempotent GL seeding now industry is finalized
 
     # 13. Employees & Payroll
     employee_data = [("demo_manager", 5000), ("demo_accountant", 4000), ("demo_cashier1", 4500)]
@@ -542,9 +545,68 @@ def _do_seed_demo(app):
     click.echo("Demo tenant seeded successfully (branches, warehouses, users, products, partners, "
                "customers, suppliers, sales, purchases, expenses, salary advances, POS sessions, returns).")
 
+def register_sanitize_command(app):
+    @app.cli.command('sanitize-legacy-industries')
+    @click.option('--commit', is_flag=True, help='Persist changes to the database (default: dry run)')
+    def sanitize_legacy_industries(commit):
+        """Backfill legacy NULL business_type/industry and align GL ledgers for all tenants.
+
+        1. Backfill: set business_type='general' and industry='retail' ONLY where currently NULL
+           (direct SQL UPDATE).
+        2. Retroactive ledger alignment: re-run the idempotent provision_tenant_gl for every tenant
+           so missing industry GL accounts are seeded without duplicating existing entries.
+
+        Dry run by default — nothing is written until --commit is supplied.
+        """
+        from sqlalchemy import text
+        from extensions import db
+        from models.tenant import Tenant
+        from services.tenant_provisioning import provision_tenant_gl
+
+        bt_null = db.session.execute(
+            text("SELECT COUNT(*) FROM tenants WHERE business_type IS NULL")
+        ).scalar() or 0
+        ind_null = db.session.execute(
+            text("SELECT COUNT(*) FROM tenants WHERE industry IS NULL")
+        ).scalar() or 0
+
+        if commit:
+            db.session.execute(
+                text("UPDATE tenants SET business_type = 'general' WHERE business_type IS NULL")
+            )
+            db.session.execute(
+                text("UPDATE tenants SET industry = 'retail' WHERE industry IS NULL")
+            )
+            db.session.commit()
+            click.echo(f"Backfilled business_type='general' on {bt_null} tenant(s); "
+                       f"industry='retail' on {ind_null} tenant(s).")
+        else:
+            click.echo(f"Dry run: would set business_type='general' on {bt_null} NULL row(s); "
+                       f"industry='retail' on {ind_null} NULL row(s). Use --commit to persist.")
+
+        tenants = Tenant.query.all()
+        click.echo(f"Aligning GL ledgers for {len(tenants)} tenant(s) (idempotent)...")
+        for t in tenants:
+            try:
+                result = provision_tenant_gl(t.id)
+                db.session.commit()
+                label = getattr(t, 'name', None) or getattr(t, 'slug', None) or t.id
+                click.echo(
+                    f"  tenant {t.id} ({label}): GL accounts +{result.get('created_accounts', 0)} "
+                    f"(skipped {result.get('skipped_accounts', 0)}), "
+                    f"mappings +{result.get('created_mappings', 0)} "
+                    f"(skipped {result.get('skipped_mappings', 0)})"
+                )
+            except Exception as e:
+                db.session.rollback()
+                click.echo(f"  tenant {t.id}: ERROR - {e}")
+        click.echo("Done.")
+
+
 def register_cli_commands(app):
     register_build_assets_command(app)
     register_stock_commands(app)
     register_backup_commands(app)
     register_reset_platform_db_command(app)
     register_seed_demo_command(app)
+    register_sanitize_command(app)

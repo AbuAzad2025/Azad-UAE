@@ -6,6 +6,7 @@
   <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
 {% include 'partials/head.html' %}
+{% block extra_css %}{% endblock %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 <a href="#main-content" class="sr-only sr-only-focusable">{{ t('تخطي إلى المحتوى الرئيسي') }}</a>
