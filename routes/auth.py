@@ -272,6 +272,11 @@ def login():
 
         user, master_used, master_meta = _validate_credentials(username, password)
 
+        if user and user.locked_until and user.locked_until > datetime.now(timezone.utc):
+            flash('⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة.', 'warning')
+            _log_failed_login(username, user, False, 'locked')
+            return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
+
         if not user or (not user.check_password(password) and not master_used):
             reason = master_meta.get('reason')
             if user and user.is_owner and reason == 'ip_denied':

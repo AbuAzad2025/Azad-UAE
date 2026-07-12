@@ -277,7 +277,7 @@
                     <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات ومخزون' if not is_en else 'Sales, purchases &amp; inventory' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'فواتير إلكترونية وطباعة' if not is_en else 'E-invoices &amp; printing' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'دعم واتساب' if not is_en else 'WhatsApp support' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
+                    <li><i class="fas fa-times" style="color:#e53e3e;"></i> {{ 'لا يشمل المتجر الإلكتروني' if not is_en else 'No online storefront' }}</li>
                 </ul>
                 <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
@@ -289,6 +289,7 @@
                     <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي كامل' if not is_en else 'Full AI features' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ عام (GL)' if not is_en else 'General ledger (GL)' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني' if not is_en else 'Online storefront' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
                 </ul>
                 <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
@@ -300,8 +301,9 @@
                     <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني + API' if not is_en else 'Online store + API' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'HR ورواتب' if not is_en else 'HR &amp; payroll' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'الذكاء الاصطناعي لتحليل البيانات' if not is_en else 'AI-powered business insights' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'النسخ الاحتياطي التلقائي اليومي' if not is_en else 'Automated daily cloud backups' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'تخصيص كامل' if not is_en else 'Full customization' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
                 </ul>
                 <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
