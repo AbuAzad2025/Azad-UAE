@@ -766,7 +766,7 @@ def create():
                     from utils.tenant_limits import check_products_limit, TenantLimitError
                     check_products_limit()
                 except TenantLimitError as e:
-                    flash(str(e), 'danger')
+                    flash(str(e), 'warning')
                     return redirect(url_for('products.create'))
                 
                 product = Product(

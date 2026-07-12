@@ -373,7 +373,7 @@ def create_warehouse():
                 from utils.tenant_limits import check_warehouses_limit, TenantLimitError
                 check_warehouses_limit()
             except TenantLimitError as e:
-                flash(str(e), 'danger')
+                flash(str(e), 'warning')
                 return redirect(url_for('warehouse.create_warehouse'))
 
             with atomic_transaction('warehouse_creation'):

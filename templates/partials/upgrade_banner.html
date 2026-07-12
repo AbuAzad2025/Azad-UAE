@@ -1,0 +1,39 @@
+<div id="upgrade-banner" class="row" style="display:none;">
+  <div class="col-12">
+    <div class="alert alert-warning alert-dismissible fade show erp-flash erp-flash-warning" role="alert">
+      <div class="d-flex align-items-center">
+        <div class="erp-flash-icon"><i class="fas fa-rocket"></i></div>
+        <div class="erp-flash-body flex-grow-1">
+          <strong>{{ t('ترقية الباقة') }}</strong>
+          <span class="mx-2">&mdash;</span>
+          <span>{{ t('وصلت أو تقتربت من الحد المسموح في باقتك الحالية') }}</span>
+          <a href="#" class="btn btn-sm btn-warning ml-3" onclick="window.open('{{ wa_upgrade_link }}', '_blank');">
+            <i class="fab fa-whatsapp ml-1"></i>{{ t('تواصل مع المطور للترقية') }}
+          </a>
+        </div>
+        <button type="button" class="close" data-dismiss="alert" onclick="this.closest('.alert').remove();">&times;</button>
+      </div>
+      <div class="row mt-2" id="upgrade-meter-container"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+  var usage = {{ tenant_usage | tojson | safe }};
+  var sub = {{ tenant_subscription | tojson | safe }};
+  var maxed = false;
+  var html = '';
+  for (var key in usage) {
+    var u = usage[key];
+    if (u.max && u.max > 0 && u.percent >= 80) {
+      maxed = true;
+      var barClass = u.percent >= 100 ? 'bg-danger' : (u.percent >= 90 ? 'bg-warning' : 'bg-info');
+      html += '<div class="col-md-4 col-sm-6 mb-1"><small class="text-muted">' + key + ': ' + u.current + '/' + u.max + '</small><div class="progress" style="height:6px"><div class="progress-bar ' + barClass + '" style="width:' + u.percent + '%"></div></div></div>';
+    }
+  }
+  if (maxed && sub.plan !== 'enterprise') {
+    document.getElementById('upgrade-meter-container').innerHTML = html;
+    document.getElementById('upgrade-banner').style.display = '';
+  }
+})();
+</script>

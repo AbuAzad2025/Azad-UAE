@@ -15,11 +15,34 @@ from utils.tenanting import get_active_tenant_id
 
 class TenantLimitError(Exception):
     """Raised when a tenant exceeds its plan limit."""
+    wa_upgrade_link: str = ''
+
     def __init__(self, resource: str, limit: int, current: int):
         self.resource = resource
         self.limit = limit
         self.current = current
         msg = f"لقد تجاوزت الحد المسموح ({limit} {resource}). الحالي: {current}."
+        if not TenantLimitError.wa_upgrade_link:
+            try:
+                from flask import current_app
+                link = current_app.config.get('DEVELOPER_WHATSAPP', '')
+                if not link:
+                    from extensions import db
+                    from models.setting import SystemSetting
+                    setting = db.session.query(SystemSetting).filter_by(key='developer_whatsapp').first()
+                    link = setting.value if setting else ''
+                if link:
+                    link = link.strip().replace(' ', '').lstrip('+')
+                    if not link.startswith('https'):
+                        link = f'https://wa.me/{link}'
+                    TenantLimitError.wa_upgrade_link = link
+            except Exception:
+                pass
+        if TenantLimitError.wa_upgrade_link:
+            msg += (
+                f"\n\nيمكنك التواصل مع المطور للترقية إلى باقة أعلى عبر "
+                f"<a href=\"{TenantLimitError.wa_upgrade_link}\" target=\"_blank\" class=\"alert-link\">واتساب</a>."
+            )
         super().__init__(msg)
 
 

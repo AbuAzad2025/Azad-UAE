@@ -285,7 +285,7 @@ def create():
                 from utils.tenant_limits import check_customers_limit, TenantLimitError
                 check_customers_limit()
             except TenantLimitError as e:
-                flash(str(e), 'danger')
+                flash(str(e), 'warning')
                 return redirect(url_for('customers.create'))
 
             customer = Customer(

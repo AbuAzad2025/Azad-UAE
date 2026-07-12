@@ -159,7 +159,7 @@ def create():
             try:
                 check_users_limit()
             except TenantLimitError as e:
-                flash(str(e), 'danger')
+                flash(str(e), 'warning')
                 return _create_form_context(roles, branches, form_values)
 
             conflict = User.query.filter(User.username.ilike(username)).first()

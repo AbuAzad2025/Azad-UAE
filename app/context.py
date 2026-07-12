@@ -189,6 +189,37 @@ def register_context_processors(app):
         from utils.ai_access import get_ai_access_state
         ai_access_state = get_ai_access_state(current_user if current_user.is_authenticated else None)
 
+        # ── Tenant usage vs limits (for upgrade banners / usage meters) ──
+        tenant_usage = {}
+        tenant_subscription = {}
+        wa_upgrade_link = ''
+        try:
+            from models import Tenant as Tn
+            _t = Tn.get_current()
+            if _t:
+                _res_map = {
+                    'users': ('users', 'User', lambda: User.query.filter(User.tenant_id == _t.id, User.is_active == True).count()),
+                    'branches': ('branches', 'Branch', lambda: Branch.query.filter(Branch.tenant_id == _t.id).count()),
+                    'warehouses': ('warehouses', 'Warehouse', lambda: Warehouse.query.filter(Warehouse.tenant_id == _t.id).count()),
+                    'products': ('products', 'Product', lambda: Product.query.filter(Product.tenant_id == _t.id, Product.is_active == True).count()),
+                    'customers': ('customers', 'Customer', lambda: Customer.query.filter(Customer.tenant_id == _t.id, Customer.is_active == True).count()),
+                    'suppliers': ('suppliers', 'Supplier', lambda: Supplier.query.filter(Supplier.tenant_id == _t.id, Supplier.is_active == True).count()),
+                }
+                for key, (_res_name, _model_name, _counter) in _res_map.items():
+                    max_val = getattr(_t, f'max_{key}', None)
+                    cur_val = _counter()
+                    tenant_usage[key] = {'current': cur_val, 'max': max_val, 'percent': round((cur_val / max_val * 100) if max_val and max_val > 0 else 0)}
+                tenant_subscription = {
+                    'plan': _t.subscription_plan or 'basic',
+                    'is_trial': getattr(_t, 'is_trial', False),
+                    'is_active': _t.is_active,
+                    'is_suspended': getattr(_t, 'is_suspended', False),
+                    'expiry_date': _t.subscription_end_at.isoformat() if getattr(_t, 'subscription_end_at', None) else None,
+                }
+                wa_upgrade_link = developer_whatsapp_link or _normalize_whatsapp_link(developer_whatsapp or developer_phone)
+        except Exception:
+            pass
+
         return {
             'format_currency': format_currency,
             'timeago': timeago,
@@ -258,4 +289,7 @@ def register_context_processors(app):
             'report_categories': REPORT_CATEGORIES,
             'report_registry_by_category': get_reports_by_category(current_user),
             'report_registry': REPORT_REGISTRY,
+            'tenant_usage': tenant_usage,
+            'tenant_subscription': tenant_subscription,
+            'wa_upgrade_link': wa_upgrade_link,
         }

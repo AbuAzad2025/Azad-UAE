@@ -47,7 +47,7 @@ def create():
             from utils.tenant_limits import check_branches_limit, TenantLimitError
             check_branches_limit()
         except TenantLimitError as e:
-            flash(str(e), 'danger')
+            flash(str(e), 'warning')
             return redirect(url_for('branches.create'))
 
         if tenant_query(Branch).filter_by(code=code).first():

@@ -189,7 +189,7 @@ def create():
                 from utils.tenant_limits import check_suppliers_limit, TenantLimitError
                 check_suppliers_limit()
             except TenantLimitError as e:
-                flash(str(e), 'danger')
+                flash(str(e), 'warning')
                 return redirect(url_for('suppliers.create'))
 
             tid = get_active_tenant_id(current_user)
