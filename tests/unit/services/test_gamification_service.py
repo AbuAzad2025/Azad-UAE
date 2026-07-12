@@ -79,7 +79,7 @@ class TestAwardPoints:
     def test_commit_failure_rolls_back(self, db_session, sample_user, mocker):
         sample_user.points = 0
         db_session.flush()
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with pytest.raises(RuntimeError):
             GamificationService.award_points(sample_user.id, 'sale_created')
 

@@ -695,7 +695,7 @@ class TestReconcileStock:
         assert result['updated'] >= 1
 
     def test_reconcile_commit_error(self, db_session, sample_tenant, mocker):
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit fail'))
         result = StockService.reconcile_stock(tenant_id=sample_tenant.id, commit=True)
         assert result['errors'] == 1
 

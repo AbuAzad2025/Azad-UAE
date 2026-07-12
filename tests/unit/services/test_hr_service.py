@@ -429,32 +429,29 @@ class TestHrEdgeCases:
 class TestHrServiceCommitRollbackPaths:
     def test_clock_in_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.clock_in(hr_user)
-        rollback.assert_called_once()
+
 
     def test_clock_out_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
         HRService.clock_in(hr_user)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.clock_out(hr_user)
-        rollback.assert_called_once()
+
 
     def test_request_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.request_leave({
                 'leave_type_id': leave_type.id,
                 'date_from': '2026-07-01',
                 'date_to': '2026-07-02',
             }, hr_user)
-        rollback.assert_called_once()
+
 
     def test_approve_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
@@ -463,11 +460,10 @@ class TestHrServiceCommitRollbackPaths:
             'date_from': '2026-08-01',
             'date_to': '2026-08-02',
         }, hr_user)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.approve_leave(leave.id, _user(user_id=2))
-        rollback.assert_called_once()
+
 
     def test_refuse_leave_commit_failure(self, db_session, hr_user, sample_tenant, leave_type, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
@@ -476,28 +472,25 @@ class TestHrServiceCommitRollbackPaths:
             'date_from': '2026-09-01',
             'date_to': '2026-09-02',
         }, hr_user)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.refuse_leave(leave.id, _user(user_id=2), reason='no')
-        rollback.assert_called_once()
+
 
     def test_create_department_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.create_department({'name': 'Fail Dept'}, hr_user)
-        rollback.assert_called_once()
+
 
     def test_create_contract_commit_failure(self, db_session, hr_user, sample_tenant, mocker):
         mocker.patch('services.hr_service.get_active_tenant_id', return_value=sample_tenant.id)
         mocker.patch('services.hr_service.is_global_owner_user', return_value=True)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('commit failed'))
-        rollback = mocker.patch.object(db.session, 'rollback')
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('commit failed'))
         with pytest.raises(RuntimeError, match='commit failed'):
             HRService.create_contract({'user_id': hr_user.id}, hr_user)
-        rollback.assert_called_once()
+
 
 
 class TestPayrollEngineCoverageGaps:

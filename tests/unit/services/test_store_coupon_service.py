@@ -146,7 +146,7 @@ class TestCreateCoupon:
         assert coupon.description == 'promo'
 
     def test_commit_failure(self, sample_tenant, mocker):
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with pytest.raises(RuntimeError, match='db'):
             StoreCouponService.create_coupon(sample_tenant.id, {
                 'code': f'FAIL{uuid.uuid4().hex[:4].upper()}',
@@ -234,7 +234,7 @@ class TestUpdateCoupon:
 
     def test_commit_failure(self, db_session, sample_tenant, mocker):
         row = _coupon(db_session, sample_tenant.id, discount_amount=Decimal('5'))
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('upd'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('upd'))
         with pytest.raises(RuntimeError, match='upd'):
             StoreCouponService.update_coupon(row.id, sample_tenant.id, {'description': 'x'})
 
