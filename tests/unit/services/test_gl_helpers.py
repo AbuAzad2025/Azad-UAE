@@ -112,7 +112,8 @@ class TestGetAccount:
         found = get_account(gl_account.code, tenant_id=sample_tenant.id)
         assert found.id == gl_account.id
 
-    def test_without_tenant_legacy_fallback(self, gl_account):
+    def test_without_tenant_legacy_fallback(self, gl_account, mocker):
+        mocker.patch('services.gl_helpers.resolve_tenant_id', return_value=gl_account.tenant_id)
         found = get_account(gl_account.code)
         assert found is not None
 
