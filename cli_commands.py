@@ -80,7 +80,7 @@ def register_seed_demo_command(app):
     @app.cli.command('seed-demo')
     @click.option('--force', is_flag=True, help='Re-seed even if demo tenant exists')
     def seed_demo(force):
-        """Provision & populate a demo tenant with branches, users, products, sales, purchases, and expenses."""
+        """Provision & populate a demo tenant with branches, warehouses, users, products, partners, customers, suppliers, sales, purchases, expenses, salary advances, POS sessions, and sale returns."""
         from extensions import db
         from models.tenant import Tenant
 
@@ -97,6 +97,8 @@ def register_seed_demo_command(app):
 
 def _do_seed_demo(app):
     from extensions import db
+    from decimal import Decimal
+    from sqlalchemy import inspect as sa_inspect, text
     from models.tenant import Tenant
     from models.branch import Branch
     from models.warehouse import Warehouse
@@ -107,7 +109,9 @@ def _do_seed_demo(app):
     from models.partner import Partner
     from models.product import Product, ProductCategory
     from models.tenant_store import TenantStore
-    from models.payroll import Employee, PayrollTransaction
+    from models.payroll import Employee, PayrollTransaction, SalaryAdvance
+    from models.product_return import ProductReturn, ProductReturnLine
+    from models.pos_session import PosSession
     from models.sale import Sale
     from models.purchase import Purchase
     from models.expense import Expense, ExpenseCategory
@@ -196,33 +200,28 @@ def _do_seed_demo(app):
     if demo_tenant:
         click.echo("Dropping existing demo data...")
         tid = demo_tenant.id
-        Expense.query.filter_by(tenant_id=tid).delete()
-        ExpenseCategory.query.filter_by(tenant_id=tid).delete()
-        Purchase.query.filter_by(tenant_id=tid).delete()
-        Sale.query.filter_by(tenant_id=tid).delete()
-        PayrollTransaction.query.filter_by(tenant_id=tid).delete()
-        Employee.query.filter_by(tenant_id=tid).delete()
-        Product.query.filter_by(tenant_id=tid).delete()
-        ProductCategory.query.filter_by(tenant_id=tid).delete()
-        Customer.query.filter_by(tenant_id=tid).delete()
-        Supplier.query.filter_by(tenant_id=tid).delete()
-        Partner.query.filter_by(tenant_id=tid).delete()
-        TenantStore.query.filter_by(tenant_id=tid).delete()
-        User.query.filter(User.tenant_id == tid, User.username != 'demo_admin').delete()
-        Branch.query.filter(Branch.tenant_id == tid, Branch.is_main == False).delete()
+        # Comprehensive wipe of every tenant-scoped table. We temporarily disable
+        # FK enforcement for the session so the delete order doesn't trip over
+        # ON DELETE NO ACTION constraints (e.g. stock_movements -> warehouses).
+        # This is a demo-reset utility, not production runtime.
+        eng_meta = sa_inspect(db.engine)
+        tenant_tables = [
+            t for t in eng_meta.get_table_names()
+            if any(c["name"] == "tenant_id" for c in eng_meta.get_columns(t))
+        ]
+        db.session.execute(text("SET session_replication_role = 'replica'"))
+        try:
+            for t in tenant_tables:
+                db.session.execute(
+                    text(f"DELETE FROM {t} WHERE tenant_id = :tid"), {"tid": tid}
+                )
+        finally:
+            db.session.execute(text("SET session_replication_role = 'origin'"))
+        db.session.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tid})
+        db.session.commit()
+        # Remove any global demo-only roles if present
         for slug in ["demo_accountant", "demo_cashier", "demo_warehouse"]:
             Role.query.filter_by(slug=slug).delete()
-        # Also delete main branch warehouse, cashbox to recreate cleanly
-        main_wh = Warehouse.query.filter_by(tenant_id=tid, is_main=True).first()
-        if main_wh:
-            db.session.delete(main_wh)
-        main_cb = CashBox.query.filter_by(tenant_id=tid, is_default=True).first()
-        if main_cb:
-            db.session.delete(main_cb)
-        main_br = Branch.query.filter_by(tenant_id=tid, is_main=True).first()
-        if main_br:
-            db.session.delete(main_br)
-        db.session.delete(demo_tenant)
         db.session.commit()
         click.echo("Old demo data removed.")
 
@@ -260,6 +259,8 @@ def _do_seed_demo(app):
 
     # 2. Enable store
     demo_tenant.enable_store = True
+    demo_tenant.enable_pos = True
+    demo_tenant.enable_payroll = True
     if not TenantStore.query.filter_by(tenant_id=tid).first():
         store = TenantStore(tenant_id=tid, warehouse_id=warehouse.id, is_enabled=True, platform_disabled=False, store_slug="demo", title="متجر ديمو", tagline="المتجر التجريبي لمنصة أزاديكسا", phone="0500000000", email="demo@azad.com", notify_whatsapp_on_order=False, notify_email_on_order=True)
         db.session.add(store)
@@ -393,8 +394,67 @@ def _do_seed_demo(app):
         en = f"DEMO-EXP-{i+1:03d}"
         db.session.add(Expense(tenant_id=tid, expense_number=en, category_id=exp_cats[cn].id, description=f"{cn} - شهر يوليو", amount=amt, currency="ILS", amount_aed=amt, expense_date=db.func.current_date(), payment_method="cash", user_id=seller.id))
 
+    # 18. Salary advances (سلف) — up to 5
+    employees = Employee.query.filter_by(tenant_id=tid).all()
+    advance_amounts = [500, 300, 200]
+    for i, emp in enumerate(employees[:3]):
+        if not SalaryAdvance.query.filter_by(tenant_id=tid, employee_id=emp.id).first():
+            amt = advance_amounts[i]
+            adv = SalaryAdvance(
+                tenant_id=tid, employee_id=emp.id, amount=amt,
+                total_amount=amt, deducted_amount=0, remaining_amount=amt,
+                date=db.func.current_date(), description="سلفة شهرية", status="approved",
+                is_deducted=False, created_by=seller.id if seller else None,
+            )
+            db.session.add(adv)
+
+    # 19. POS enablement + sessions — up to 5
+    demo_tenant.enable_pos = True
+    demo_tenant.enable_payroll = True
+    pos_cashier = User.query.filter_by(tenant_id=tid, username="demo_cashier1").first() or seller
+    pos_sessions = [
+        ("MAIN", 500.0, 3200.0),
+        ("DBX", 300.0, 1500.0),
+    ]
+    for i, (br_code, opening, total_sales) in enumerate(pos_sessions):
+        br, _ = branch_map.get(br_code, (branch, warehouse))
+        sess = PosSession(
+            tenant_id=tid, branch_id=br.id,
+            user_id=(pos_cashier.id if pos_cashier else (seller.id if seller else None)),
+            session_number=f"DEMO-POS-{i+1:03d}", opening_balance_cash=opening,
+            total_sales=total_sales, total_cash_sales=total_sales, status="open",
+        )
+        db.session.add(sess)
+
+    # 20. Sale returns (مرتجعات) — up to 5
+    sales_for_return = Sale.query.filter_by(tenant_id=tid).limit(3).all()
+    return_products = Product.query.filter_by(tenant_id=tid).limit(3).all()
+    for i, sale in enumerate(sales_for_return[:3]):
+        prod = return_products[i % len(return_products)] if return_products else None
+        if not prod:
+            continue
+        qty = Decimal("1")
+        price = Decimal(str(prod.regular_price or 100))
+        total = qty * price
+        ret = ProductReturn(
+            tenant_id=tid, return_number=f"DEMO-RET-{i+1:03d}", sale_id=sale.id,
+            customer_id=sale.customer_id, branch_id=branch.id, currency="ILS",
+            exchange_rate=1, return_reason="عيب في المنتج / تغيير رأي", status="completed",
+            processed_by=(seller.id if seller else None),
+            total_amount=total, refund_amount=total, amount_aed=total,
+        )
+        db.session.add(ret)
+        db.session.flush()
+        line = ProductReturnLine(
+            tenant_id=tid, return_id=ret.id, product_id=prod.id,
+            quantity=qty, unit_price=price, line_total=total,
+        )
+        db.session.add(line)
+        db.session.flush()
+
     db.session.commit()
-    click.echo("Demo tenant seeded successfully with branches, users, products, sales, purchases, and expenses.")
+    click.echo("Demo tenant seeded successfully (branches, warehouses, users, products, partners, "
+               "customers, suppliers, sales, purchases, expenses, salary advances, POS sessions, returns).")
 
 def register_cli_commands(app):
     register_build_assets_command(app)
