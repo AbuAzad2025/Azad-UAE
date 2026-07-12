@@ -790,7 +790,7 @@ class TestReturnServiceSoldQty:
 
 class TestSaleServiceRemainingGaps:
     def test_vat_inclusive_commission_revenue_path(self, app):
-        from tests.unit.test_sale_service_chunk3 import _actors, _create_ctx
+        from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
 
         customer, seller, product = _actors(
             partner_shares=[MagicMock(partner_customer_id=10, percentage=Decimal('10'))],
@@ -822,7 +822,7 @@ class TestSaleServiceRemainingGaps:
         assert SaleService._commission_base_aed(Decimal('0'), Decimal('1')) == Decimal('0')
 
     def test_commission_skips_zero_amount(self, app):
-        from tests.unit.test_sale_service_chunk3 import _actors, _create_ctx
+        from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
 
         customer, seller, product = _actors(
             partner_shares=[MagicMock(partner_customer_id=10, percentage=Decimal('0.001'))],
@@ -839,7 +839,7 @@ class TestSaleServiceRemainingGaps:
         assert db_sess.add.called
 
     def test_negative_payment_on_create_rejected(self, app):
-        from tests.unit.test_sale_service_chunk3 import _actors, _create_ctx
+        from tests.unit.services.test_sale_service_chunk3 import _actors, _create_ctx
         from services.sale_service import SaleService
 
         customer, seller, product = _actors()
