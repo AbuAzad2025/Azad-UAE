@@ -234,7 +234,7 @@ class TestUnsubscribe:
     def test_commit_failure_raises(self, db_session, sample_tenant, mocker):
         lst = _email_list(db_session, sample_tenant.id)
         _subscriber(db_session, lst, email='err@example.com')
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('unsub fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('unsub fail'))
         with pytest.raises(RuntimeError, match='unsub fail'):
             EmailMarketingService.unsubscribe('err@example.com')
 
@@ -259,7 +259,7 @@ class TestCreateTemplate:
         assert tpl.subject == 'Hi'
 
     def test_commit_failure_raises(self, tenant_user, mocker):
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('tpl fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('tpl fail'))
         with pytest.raises(RuntimeError, match='tpl fail'):
             EmailMarketingService.create_template({
                 'name': 'W', 'subject': 'S', 'body_html': '<p>x</p>',
@@ -304,7 +304,7 @@ class TestCreateCampaign:
         assert camp.scheduled_date is not None
 
     def test_commit_failure_raises(self, tenant_user, mocker):
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('camp fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('camp fail'))
         with pytest.raises(RuntimeError, match='camp fail'):
             EmailMarketingService.create_campaign({'name': 'X'}, tenant_user)
 
@@ -403,7 +403,7 @@ class TestSendCampaign:
     def test_commit_failure_raises(self, tenant_user, db_session, sample_tenant, app, mocker):
         camp = self._ready_campaign(db_session, sample_tenant)
         app.extensions['mail'] = MagicMock()
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('send fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('send fail'))
         with pytest.raises(RuntimeError, match='send fail'):
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
