@@ -687,6 +687,7 @@ class TestCreatePurchaseReturn:
             'services.purchase_service.StockService._mwac_calc',
             return_value=(Decimal('9'), Decimal('450'), Decimal('50')),
         )
+        mocker.patch('services.purchase_service._safe_for_update', return_value=pwc)
         from services.purchase_service import PurchaseService
         with app.app_context():
             PurchaseService.create_purchase_return(
