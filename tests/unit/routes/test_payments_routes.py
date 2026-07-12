@@ -144,7 +144,8 @@ def _payments_patches(**cfg):
 @pytest.fixture
 def payments_client(app_factory, bypass_permission_auth):
     from routes.payments import payments_bp
-    app = app_factory(payments_bp)
+    from routes.public import public_bp
+    app = app_factory(payments_bp, public_bp)
     return app.test_client()
 
 

@@ -80,7 +80,7 @@ def _sqlalchemy_app_context():
 
 @pytest.fixture
 def app_factory():
-    def _create_app(blueprint, config_overrides=None):
+    def _create_app(*blueprints, config_overrides=None):
         import sys
         import os
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -103,7 +103,11 @@ def app_factory():
         app.jinja_env.globals['current_user'] = current_user
 
         from routes.main import main_bp
-        app.register_blueprint(blueprint)
+        for bp in blueprints:
+            if isinstance(bp, dict):
+                app.config.update(bp)
+                continue
+            app.register_blueprint(bp)
         if 'main' not in app.blueprints:
             app.register_blueprint(main_bp)
         return app
