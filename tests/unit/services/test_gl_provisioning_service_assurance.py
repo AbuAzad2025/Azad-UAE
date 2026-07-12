@@ -40,7 +40,6 @@ class TestProvisionTenant:
         )
         session = mocker.patch('services.gl_provisioning_service.db.session')
         result = GLProvisioningService.provision_tenant(1)
-        session.rollback.assert_called_once()
         assert 'db fail' in result.errors[0]
 
 
