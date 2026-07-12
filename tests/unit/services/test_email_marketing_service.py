@@ -121,7 +121,7 @@ class TestCreateList:
         assert lst.name == 'News'
 
     def test_commit_failure_raises(self, tenant_user, mocker):
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('db'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('db'))
         with pytest.raises(RuntimeError, match='db'):
             EmailMarketingService.create_list({'name': 'News'}, tenant_user)
 
