@@ -219,10 +219,6 @@ def _do_seed_demo(app):
             db.session.execute(text("SET session_replication_role = 'origin'"))
         db.session.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tid})
         db.session.commit()
-        # Remove any global demo-only roles if present
-        for slug in ["demo_accountant", "demo_cashier", "demo_warehouse"]:
-            Role.query.filter_by(slug=slug).delete()
-        db.session.commit()
         click.echo("Old demo data removed.")
 
     demo_tenant = Tenant(
@@ -349,6 +345,8 @@ def _do_seed_demo(app):
     db.session.flush()
 
     # 11. Products
+    from models.warehouse import ProductWarehouseStock
+    from services.stock_service import StockService
     all_branches = [("MAIN", branch, warehouse)] + [(b["code"], branch_map[b["code"]][0], branch_map[b["code"]][1]) for b in BRANCHES]
     product_idx = 0
     for br_code, br, wh in all_branches:
@@ -360,6 +358,9 @@ def _do_seed_demo(app):
             sku = f"DEMO-{br_code}-{i+1:03d}"
             prod = Product(tenant_id=tid, name_ar=name_ar_text, name=name_ar_text, sku=sku, category_id=cat_objs[cat_idx].id, regular_price=price, cost_price=cost, current_stock=stock, has_serial_number=False, unit="قطعة", is_active=True)
             db.session.add(prod)
+            db.session.flush()
+            # Provision opening stock (StockMovement + ProductWarehouseStock)
+            StockService.add_stock(prod.id, stock, warehouse_id=wh.id, reference_type="initial", notes="رصيد افتتاحي")
             product_idx += 1
 
     # 12. Partner products
@@ -394,20 +395,66 @@ def _do_seed_demo(app):
         db.session.flush()
         exp_cats[cn] = c
 
-    # 15. Sales
+    # 15. Sales (via SaleService so GL, customer balance, and receipts are posted)
     customers = Customer.query.filter_by(tenant_id=tid).limit(3).all()
     seller = User.query.filter_by(tenant_id=tid, username="demo_admin").first()
-    sale_data = [1500, 3200, 850]
-    for i, cust in enumerate(customers):
-        sn = f"DEMO-SALE-{i+1:03d}"
-        db.session.add(Sale(tenant_id=tid, sale_number=sn, customer_id=cust.id, seller_id=seller.id, sale_date=db.func.current_date(), total_amount=sale_data[i], amount=sale_data[i], currency="ILS", amount_aed=sale_data[i], prices_include_vat=False, source="manual", is_active=True))
+    from services.sale_service import SaleService
+    products_for_sale = Product.query.filter_by(tenant_id=tid).limit(6).all()
+    # (customer, product, total, payment_method, paid_amount)
+    sale_specs = [
+        (customers[0], products_for_sale[0], 1500, "cash", 1500),
+        (customers[1], products_for_sale[1], 3200, "credit", 0),
+        (customers[2], products_for_sale[2], 850, "bank", 500),
+    ]
+    for cust, prod, amount, pay_method, paid in sale_specs:
+        if not cust or not prod:
+            continue
+        pws = ProductWarehouseStock.query.filter_by(tenant_id=tid, product_id=prod.id).first()
+        sale_wh_id = pws.warehouse_id if pws else warehouse.id
+        lines_data = [{"product": prod, "quantity": 1, "unit_price": Decimal(str(amount))}]
+        payment_data = None
+        if paid and paid > 0:
+            payment_data = {
+                "amount": Decimal(str(paid)),
+                "payment_method": pay_method,
+                "currency": "ILS",
+                "exchange_rate": 1,
+            }
+        SaleService.create_sale(
+            customer=cust, seller=seller, lines_data=lines_data,
+            warehouse_id=sale_wh_id, currency="ILS", tax_rate=0,
+            source="manual", payment_data=payment_data,
+        )
 
-    # 16. Purchases
+    # 16. Purchases (via PurchaseService so GL, supplier balance, and stock are posted)
+    from services.purchase_service import PurchaseService
+    from services.payment_service import PaymentService
     suppliers = Supplier.query.filter_by(tenant_id=tid).limit(3).all()
-    purch_data = [2200, 1800, 950]
-    for i, sup in enumerate(suppliers):
-        pn = f"DEMO-PUR-{i+1:03d}"
-        db.session.add(Purchase(tenant_id=tid, purchase_number=pn, supplier_name=sup.name, purchase_date=db.func.current_date(), total_amount=purch_data[i], amount=purch_data[i], currency="ILS", amount_aed=purch_data[i], prices_include_vat=False, freight=0, insurance=0, customs_duty=0, other_landed_cost=0, user_id=seller.id))
+    purch_products = Product.query.filter_by(tenant_id=tid).limit(6).all()
+    purch_specs = [
+        (suppliers[0], purch_products[3], 2200, "cash", 2200),
+        (suppliers[1], purch_products[4], 1800, "credit", 0),
+        (suppliers[2], purch_products[5], 950, "bank", 600),
+    ]
+    for sup, prod, amount, pay_method, paid in purch_specs:
+        if not sup or not prod:
+            continue
+        pws = ProductWarehouseStock.query.filter_by(tenant_id=tid, product_id=prod.id).first()
+        pur_wh_id = pws.warehouse_id if pws else warehouse.id
+        lines_data = [{"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}]
+        purchase = PurchaseService.create_purchase(
+            user=seller, supplier_data={"supplier_id": sup.id}, lines_data=lines_data,
+            warehouse_id=pur_wh_id, currency="ILS", tax_rate=0,
+        )
+        if paid and paid > 0:
+            PaymentService.create_payment({
+                "supplier_id": sup.id,
+                "amount": Decimal(str(paid)),
+                "currency": "ILS",
+                "payment_method": pay_method,
+                "branch_id": branch.id,
+                "notes": "دفعة للمورد (بذور تجريبية)",
+            })
 
     # 17. Expenses
     exp_data = [("إيجار", 2000), ("كهرباء وماء", 450), ("صيانة", 300)]
@@ -472,6 +519,15 @@ def _do_seed_demo(app):
         )
         db.session.add(line)
         db.session.flush()
+
+    # Recompute customer balances from posted sales/payments
+    # (stored sign convention: negative = customer owes us)
+    for cust in Customer.query.filter_by(tenant_id=tid).all():
+        bal = db.session.query(
+            db.func.coalesce(db.func.sum(Sale.paid_amount_aed - Sale.amount_aed), 0)
+        ).filter(Sale.customer_id == cust.id, Sale.status == 'confirmed', Sale.is_active == True).scalar() or Decimal('0')
+        cust.balance = bal
+    db.session.flush()
 
     db.session.commit()
     click.echo("Demo tenant seeded successfully (branches, warehouses, users, products, partners, "
