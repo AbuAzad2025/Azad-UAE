@@ -52,6 +52,7 @@ class Tenant(db.Model):
 
     # Subscription - الاشتراك
     subscription_plan = db.Column(db.String(50), default='basic')  # basic, pro, enterprise
+    subscription_plan_duration = db.Column(db.String(20), default='monthly')  # monthly, annual, lifetime
     subscription_start = db.Column(db.DateTime)
     subscription_end = db.Column(db.DateTime)
     is_trial = db.Column(db.Boolean, default=False)
@@ -81,6 +82,7 @@ class Tenant(db.Model):
     enable_store = db.Column(db.Boolean, default=False)
     allow_data_export = db.Column(db.Boolean, default=True)
     allow_custom_integrations = db.Column(db.Boolean, default=False)
+    enable_auto_backup = db.Column(db.Boolean, default=True)
 
     # Preferences - التفضيلات
     default_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
@@ -166,18 +168,30 @@ class Tenant(db.Model):
         )
         return None
 
+    @property
+    def is_lifetime(self):
+        return self.subscription_plan_duration == 'lifetime'
+
     def is_subscription_active(self):
-        """Check if subscription is active"""
+        if self.is_lifetime:
+            return True
         if self.subscription_end:
             return datetime.now(timezone.utc) < self.subscription_end
         return True
 
     def get_remaining_days(self):
-        """Get remaining subscription days"""
+        if self.is_lifetime:
+            return 9999
         if self.subscription_end:
             delta = self.subscription_end - datetime.now(timezone.utc)
             return max(0, delta.days)
         return 9999
+
+    def get_subscription_duration_display(self, lang='ar'):
+        labels = {'monthly': 'شهري', 'annual': 'سنوي', 'lifetime': 'مدى الحياة'}
+        if lang == 'en':
+            labels = {'monthly': 'Monthly', 'annual': 'Annual', 'lifetime': 'Lifetime'}
+        return labels.get(self.subscription_plan_duration, self.subscription_plan_duration)
 
     def to_dict(self):
         return {
@@ -190,5 +204,9 @@ class Tenant(db.Model):
             'default_currency': self.default_currency,
             'is_active': self.is_active,
             'subscription_plan': self.subscription_plan,
+            'subscription_plan_duration': self.subscription_plan_duration,
+            'subscription_end': self.subscription_end.isoformat() if self.subscription_end else None,
+            'enable_auto_backup': self.enable_auto_backup,
+            'is_trial': self.is_trial,
         }
 

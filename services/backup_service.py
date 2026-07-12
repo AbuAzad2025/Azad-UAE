@@ -723,12 +723,12 @@ class BackupService:
             return None
         with create_engine(url).connect() as conn:
             row = conn.execute(
-                text("SELECT id, slug, name FROM tenants WHERE id = :tid"),
+                text("SELECT id, slug, name, enable_auto_backup FROM tenants WHERE id = :tid"),
                 {"tid": tenant_id},
             ).fetchone()
             if not row:
                 return None
-            return {"id": row[0], "slug": row[1], "name": row[2]}
+            return {"id": row[0], "slug": row[1], "name": row[2], "enable_auto_backup": row[3] is not False}
 
     @classmethod
     def _write_checksums_file(cls, work_dir: str, members: List[str]) -> str:
@@ -782,6 +782,10 @@ class BackupService:
                 last_error=f"tenant_id {tenant_id} not found",
                 last_action="create_backup",
             )
+            return None
+
+        if not tenant.get("enable_auto_backup", True):
+            logger.info("Skipping backup for tenant %s (enable_auto_backup=False)", tenant_id)
             return None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1284,11 +1288,32 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         cls._set_schedule_state(last_run_at=now_iso, last_action="auto_backup")
         if not settings.get("enabled", True):
             return None
-        return cls.create_backup(
+
+        result = cls.create_backup(
             manual=False,
-            description=f"Scheduled {settings.get('frequency', 'daily')} backup",
+            description=f"Scheduled {settings.get('frequency', 'daily')} system backup",
             scope="system",
         )
+
+        try:
+            from sqlalchemy import create_engine, text
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+            if url:
+                with create_engine(url).connect() as conn:
+                    rows = conn.execute(
+                        text("SELECT id FROM tenants WHERE is_active = TRUE AND enable_auto_backup = TRUE")
+                    ).fetchall()
+                for (tid,) in rows:
+                    cls.create_backup(
+                        manual=False,
+                        description=f"Scheduled {settings.get('frequency', 'daily')} tenant backup",
+                        scope="tenant",
+                        tenant_id=tid,
+                    )
+        except Exception as exc:
+            logger.warning("Per-tenant auto backup loop failed (non-fatal): %s", exc)
+
+        return result
 
     @classmethod
     def get_backup_info(cls, filename: str) -> Optional[Dict[str, Any]]:

@@ -1,7 +1,7 @@
 """
 Public Routes - Landing Page, Pricing, User Guide, SEO
 """
-from flask import Blueprint, render_template, redirect, url_for, Response, request, session, abort
+from flask import Blueprint, render_template, redirect, url_for, Response, request, session, abort, current_app
 from utils.db_safety import atomic_transaction
 from flask_login import current_user
 from datetime import datetime, timezone
@@ -27,16 +27,26 @@ def _safe_vault_for_public(vault):
 @public_bp.route('/')
 def landing():
     """Landing Page الفخمة"""
-    return render_template('public/landing.html')
+    lang = session.get('language', 'ar')
+    from models.package import Package
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
+    return render_template('public/landing.html', packages=packages, is_en=lang == 'en')
 
 
 @public_bp.route('/pricing')
 def pricing():
     """صفحة الأسعار والعروض"""
     lang = session.get('language', 'ar')
+    from models.package import Package
+    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order).all()
+    ctx = {
+        'packages': packages,
+        'is_en': lang == 'en',
+        'developer_whatsapp_link': current_app.config.get('DEVELOPER_WHATSAPP') or '',
+    }
     if lang == 'en':
-        return render_template('public/pricing_en.html')
-    return render_template('public/pricing.html')
+        return render_template('public/pricing_en.html', **ctx)
+    return render_template('public/pricing.html', **ctx)
 
 
 @public_bp.route('/features')

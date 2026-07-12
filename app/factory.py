@@ -177,6 +177,22 @@ def create_app(config_class=Config):
                             reason=status.get("reason") or "Tenant suspended",
                         ), 503
 
+                if g.active_tenant_id is not None and not is_global_owner_user(_cu) and _bp not in _skip:
+                    from flask import render_template as _rt
+                    from models.tenant import Tenant as _Tn
+                    _tenant = db.session.get(_Tn, int(g.active_tenant_id))
+                    if _tenant and not _tenant.is_lifetime and not _tenant.is_subscription_active():
+                        return _rt(
+                            "public/subscription_expired.html",
+                            tenant=_tenant,
+                        ), 402
+
+                if g.active_tenant_id is not None and not is_global_owner_user(_cu):
+                    from services.saas_provisioning_service import SaaSProvisioningService
+                    _t = db.session.get(_Tn, int(g.active_tenant_id)) if g.active_tenant_id else None
+                    if _t and SaaSProvisioningService.is_demo_tenant(_t) and _bp in ("owner", "payment_vault"):
+                        abort(404)
+
     # Security Headers + Request ID
     @app.after_request
     def add_security_headers(response):

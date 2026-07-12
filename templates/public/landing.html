@@ -251,47 +251,61 @@
         <h2>{{ _pricing_title }}</h2>
         <p>{{ _pricing_sub }}</p>
         <div class="pricing-cards">
-            <div class="price-card">
+            {% if packages %}
+                {% for pkg in packages %}
+                <div class="price-card{% if pkg.is_featured %} featured{% endif %}"{% if pkg.badge_text %} data-badge="{{ pkg.badge_text }}"{% endif %}>
+                    <h3>{{ pkg.name_ar if not is_en else pkg.name_en }}</h3>
+                    <div class="price">${{ pkg.price }}<small>/{{ 'شهر' if not is_en else 'mo' }}</small></div>
+                    <ul>
+                        {% if pkg.max_users %}<li><i class="fas fa-check"></i> {{ 'حتى ' ~ pkg.max_users ~ ' مستخدمين' if not is_en else 'Up to ' ~ pkg.max_users ~ ' users' }}</li>{% endif %}
+                        {% if pkg.has_pos %}<li><i class="fas fa-check"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>{% endif %}
+                        {% if pkg.has_ai %}<li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI features' }}</li>{% endif %}
+                        {% if pkg.features %}
+                            {% for feat in pkg.features[:3] %}<li><i class="fas fa-check"></i> {{ feat }}</li>{% endfor %}
+                        {% endif %}
+                        <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
+                    </ul>
+                    <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="price-card featured" data-badge="{{ '⭐ الأكثر طلباً' if not is_en else '⭐ Most popular' }}">
                 <h3>{{ 'الباقة الأساسية' if not is_en else 'Starter' }}</h3>
-                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
+                <div class="price">$29<small>/{{ 'شهر' if not is_en else 'mo' }}</small></div>
                 <ul>
-                    <li><i class="fas fa-check"></i> {{ 'مستخدم واحد' if not is_en else '1 user' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات' if not is_en else 'Sales &amp; purchases' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون ومستودعات' if not is_en else 'Inventory &amp; warehouse' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'فواتير إلكترونية' if not is_en else 'E-invoices &amp; receipts' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إدارة العملاء والموردين' if not is_en else 'Customers &amp; suppliers' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'حتى 3 مستخدمين' if not is_en else 'Up to 3 users' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات ومخزون' if not is_en else 'Sales, purchases &amp; inventory' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'فواتير إلكترونية وطباعة' if not is_en else 'E-invoices &amp; printing' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'دعم واتساب' if not is_en else 'WhatsApp support' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
                 </ul>
                 <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
-            <div class="price-card featured" data-badge="{{ '⭐ الأكثر شعبية' if not is_en else '⭐ Most popular' }}">
+            <div class="price-card">
                 <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional' }}</h3>
-                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
+                <div class="price">$79<small>/{{ 'شهر' if not is_en else 'mo' }}</small></div>
                 <ul>
-                    <li><i class="fas fa-check"></i> {{ '5 مستخدمين' if not is_en else 'Up to 5 users' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'Everything in Starter' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'حتى 10 مستخدمين' if not is_en else 'Up to 10 users' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي كامل' if not is_en else 'Full AI features' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ عام (GL)' if not is_en else 'General ledger (GL)' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'قيود اليومية والميزانيات' if not is_en else 'Journal entries &amp; budgets' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إدارة الشيكات' if not is_en else 'Cheque management' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI features' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
                 </ul>
                 <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
             <div class="price-card">
                 <h3>{{ 'باقة المؤسسات' if not is_en else 'Enterprise' }}</h3>
-                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
+                <div class="price">$249<small>/{{ 'شهر' if not is_en else 'mo' }}</small></div>
                 <ul>
                     <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني' if not is_en else 'Online storefront' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'CRM وإدارة المشاريع' if not is_en else 'CRM &amp; projects' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'HR والرواتب' if not is_en else 'HR &amp; payroll' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'API وتخصيص كامل' if not is_en else 'API &amp; customization' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'دعم فني وأولوية' if not is_en else 'Priority support' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني + API' if not is_en else 'Online store + API' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'HR ورواتب' if not is_en else 'HR &amp; payroll' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'تخصيص كامل' if not is_en else 'Full customization' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'وأكثر...' if not is_en else 'And more...' }}</li>
                 </ul>
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-9">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
+            {% endif %}
         </div>
     </section>
 

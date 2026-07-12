@@ -4,7 +4,7 @@ from extensions import db, limiter
 from models import Sale, Customer, Product, InvoiceSettings
 from services.sale_service import SaleService
 from services.stock_service import StockService
-from utils.decorators import permission_required
+from utils.decorators import permission_required, enforce_resource_limit
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
@@ -81,6 +81,7 @@ def index():
 @sales_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_sales')
+@enforce_resource_limit('sales_monthly')
 @limiter.limit("15 per minute", methods=['POST'])
 def create():
     if request.method == 'POST':

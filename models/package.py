@@ -116,11 +116,15 @@ class PackagePurchase(db.Model):
     # ملاحظات
     notes = db.Column(db.Text)
     
+    # ربط العملية المالية بالمستأجر
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
     package = db.relationship('Package', backref='purchases')
+    tenant = db.relationship('Tenant', backref='package_purchases')
     
     def __repr__(self):
         return f'<PackagePurchase {self.customer_email} - {self.package.name_ar if self.package else "N/A"}>'
@@ -130,6 +134,7 @@ class PackagePurchase(db.Model):
         return {
             'id': self.id,
             'package_id': self.package_id,
+            'tenant_id': self.tenant_id,
             'package_name': self.package.name_ar if self.package else None,
             'customer_name': self.customer_name,
             'customer_email': self.customer_email,
