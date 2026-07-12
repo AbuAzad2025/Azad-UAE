@@ -72,7 +72,7 @@ def register_reset_platform_db_command(app):
 
         from models.tenant import Tenant
         tenant_count = Tenant.query.count()
-        click.echo(f'Done. Tenants in database: {tenant_count} (Nasrallah baseline seed)')
+        click.echo(f'Done. Tenants in database: {tenant_count} (clean baseline -- tenants are provisioned via seed commands)')
         click.echo('Create further tenants from Owner panel when ready.')
 
 
