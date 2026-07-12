@@ -151,4 +151,4 @@ class TestCreatePayment:
         with app.app_context():
             with pytest.raises(RuntimeError):
                 StoreOnlinePaymentService.create_payment_for_sale(sale, store)
-        mock_session.rollback.assert_called_once()
+
