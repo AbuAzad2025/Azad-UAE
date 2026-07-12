@@ -73,7 +73,7 @@ class TestCreateAdvance:
         with patch('services.payroll_service.GLService.ensure_core_accounts'), \
              patch('services.payroll_service.GLService.get_default_liquidity_account', return_value='1100'), \
              patch('services.payroll_service.post_or_fail', return_value=gl_entry), \
-             patch('services.payroll_service.db.session.commit'):
+             patch('services.payroll_service.db.session.flush'):
             adv = PayrollService.create_advance(emp.id, '500', 'loan', user_id=1)
         assert adv.gl_entry_id == 77
         assert adv.tenant_id == sample_tenant.id
@@ -115,7 +115,7 @@ class TestProcessPayroll:
             patch('services.payroll_service.GLService.get_account_code_for_concept', return_value='6100'),
             patch('services.payroll_service.post_or_fail', return_value=gl_entry),
             patch('services.payroll_service.PayrollService.post_payroll_accruals'),
-            patch('services.payroll_service.db.session.commit'),
+            patch('services.payroll_service.db.session.flush'),
         ]
         for p in patches:
             p.start()
@@ -379,7 +379,7 @@ class TestProcessPayroll:
              patch('services.payroll_service.GLService.get_account_code_for_concept', return_value='6100'), \
              patch('services.payroll_service.post_or_fail', return_value=gl_entry), \
              patch('services.payroll_service.PayrollService.post_payroll_accruals', side_effect=RuntimeError('accrual')), \
-             patch('services.payroll_service.db.session.commit'):
+             patch('services.payroll_service.db.session.flush'):
             txn = PayrollService.process_payroll(emp.id, 5, 2026, 0, 0, 0, user_id=1)
         assert txn.gl_entry_id == 5
 
