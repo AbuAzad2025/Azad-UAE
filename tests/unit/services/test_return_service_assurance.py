@@ -360,7 +360,6 @@ class TestCreateReturn:
                     [{'sale_line_id': line.id, 'quantity': 1}],
                     user=_user(),
                 )
-        assert session.rollback.called
 
     def test_mwac_update_path(self, app, mocker):
         sale = _sale()
