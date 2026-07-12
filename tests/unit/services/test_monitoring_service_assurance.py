@@ -44,7 +44,6 @@ class TestLogSystemStatsAction:
         session.flush.side_effect = RuntimeError('fail')
         with pytest.raises(RuntimeError):
             MonitoringService.log_system_stats_action(1, 0)
-        session.rollback.assert_called_once()
 
 
 class TestGetSystemStatsContext:

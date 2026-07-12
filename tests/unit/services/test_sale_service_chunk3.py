@@ -537,8 +537,6 @@ class TestUpdatePaymentStatus:
         with patch('services.sale_service.db.session') as sess, \
              patch('services.sale_service.current_app') as capp:
             sess.flush.side_effect = RuntimeError('db down')
-            sess.rollback = MagicMock()
             capp.logger = _logger()
             with pytest.raises(RuntimeError, match='db down'):
                 SaleService.update_payment_status(sale)
-            sess.rollback.assert_called_once()

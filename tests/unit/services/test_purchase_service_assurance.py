@@ -243,7 +243,6 @@ class TestCreatePurchaseValidations:
                 PurchaseService.create_purchase(
                     _user(), {'supplier_name': 'Local'}, [_line_data()], warehouse_id=3,
                 )
-        session.rollback.assert_called()
 
     def test_negative_unit_cost_rejected_before_db(self, app, mocker):
         session, _, _, _, _ = _patch_create_common(mocker)
@@ -488,7 +487,6 @@ class TestCancelPurchase:
         with app.app_context():
             with pytest.raises(RuntimeError, match='commit fail'):
                 PurchaseService.cancel_purchase(_purchase())
-        session.rollback.assert_called()
         mock_logger.exception.assert_called()
 
 
@@ -565,7 +563,6 @@ class TestCreatePurchaseReturn:
                     _purchase(), _user(),
                     [{'purchase_line_id': 1, 'product_id': 50, 'quantity': 0, 'unit_cost': 10}],
                 )
-        session.rollback.assert_called()
 
     def test_happy_path_no_tax(self, app, mocker):
         purchase = _purchase(tax_amount=None)

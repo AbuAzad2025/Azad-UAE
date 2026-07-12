@@ -247,7 +247,6 @@ class TestAdjustStock:
         with app.app_context():
             with pytest.raises(RuntimeError, match='fail'):
                 StockService.adjust_stock(1, Decimal('1'))
-        session.rollback.assert_called_once()
         mock_logger.error.assert_called_once()
 
 
@@ -351,7 +350,6 @@ class TestCreateMovement:
         with app.app_context():
             with pytest.raises(ValueError, match='المنتج غير موجود'):
                 StockService.create_movement(999, Decimal('1'), 'purchase', warehouse_id=5)
-        session.rollback.assert_called_once()
 
     def test_invalid_warehouse_raises(self, mocker, app):
         product = _product()

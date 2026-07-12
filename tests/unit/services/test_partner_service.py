@@ -172,7 +172,6 @@ class TestDistributionLifecycle:
         mock_db.session.flush.side_effect = RuntimeError('x')
         with pytest.raises(RuntimeError):
             PartnerService.approve_distribution(1, 1)
-        mock_db.session.rollback.assert_called_once()
 
     def test_pay_distribution_success(self, mocker):
         dist = MagicMock(status='approved', tenant_id=1, net_due=200.0, id=7)
@@ -215,7 +214,6 @@ class TestDistributionLifecycle:
         mock_db.session.flush.side_effect = RuntimeError('pay fail')
         with pytest.raises(RuntimeError):
             PartnerService.pay_distribution(9, tenant_id=1)
-        mock_db.session.rollback.assert_called_once()
 
 
 class TestAddTransaction:

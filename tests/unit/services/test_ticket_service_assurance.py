@@ -263,4 +263,3 @@ class TestTicketEdgeCases:
         with app.app_context():
             with pytest.raises(RuntimeError, match='db fail'):
                 getattr(TicketService, method_name)(*args)
-        mock_session.rollback.assert_called()

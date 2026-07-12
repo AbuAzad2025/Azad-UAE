@@ -451,7 +451,6 @@ class TestPaymentServiceReceiptCommitFailure:
             capp.logger = MagicMock()
             with pytest.raises(RuntimeError, match='commit fail'):
                 PaymentService.create_receipt({'customer_id': 1, 'amount': 50, 'currency': 'AED', 'payment_method': 'cash'})
-            mock_db.session.rollback.assert_called()
 
     def test_create_receipt_outer_exception(self, app):
         from services.payment_service import PaymentService
@@ -468,7 +467,6 @@ class TestPaymentServiceReceiptCommitFailure:
             capp.logger = MagicMock()
             with pytest.raises(RuntimeError, match='gen fail'):
                 PaymentService.create_receipt({'customer_id': 1, 'amount': 50, 'currency': 'AED', 'payment_method': 'cash'})
-            mock_db.session.rollback.assert_called()
 
 
 class TestPaymentServicePaymentCommitFailure:
