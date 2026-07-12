@@ -289,7 +289,7 @@ class TestBalancesAndStatements:
             tenant_id=sample_tenant.id,
         )
         _post_entry(entry.id)
-        balance = GLService.get_account_balance_for_branch(cash.id)
+        balance = GLService.get_account_balance_for_branch(cash.id, tenant_id=sample_tenant.id)
         assert balance is not None
 
     def test_missing_account_returns_none(self, mocker):
@@ -310,6 +310,7 @@ class TestBalancesAndStatements:
             cash.id,
             date_from=date(2026, 6, 1),
             date_to=date(2026, 6, 30),
+            tenant_id=sample_tenant.id,
         )
         assert 'transactions' in stmt
         assert stmt['closing_balance'] is not None
