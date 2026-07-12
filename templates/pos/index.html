@@ -356,16 +356,12 @@
 
           <div class="form-group">
 
-            <label>نوع الطلب (Order Type)</label>
+            <label>نوع الطلب (Order Type)
+              <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" title="إدارة أنواع الطلبات" target="_blank"><i class="fas fa-cog"></i></a>
+            </label>
 
             <select id="orderType" class="form-control" aria-label="orderType">
-
-              <option value="dine_in">تناول في المطعم (Dine-in)</option>
-
-              <option value="takeaway" selected>تيك أواي (Takeaway)</option>
-
-              <option value="delivery">توصيل (Delivery)</option>
-
+              <option value="">--</option>
             </select>
 
           </div>

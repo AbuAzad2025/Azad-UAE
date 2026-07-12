@@ -117,6 +117,13 @@ def _do_seed_demo(app):
     from models.expense import Expense, ExpenseCategory
     from services.gl_provisioning_service import GLProvisioningService
     from services.document_sequence_service import DocumentSequenceService
+    from models import ensure_default_pos_order_types, PosOrderType
+
+    # Ensure the (new) pos_order_types table exists before we seed into it.
+    # Done on a fresh connection at the very start so it is not blocked by any
+    # lock held by the seed's own session transaction further down.
+    with db.engine.begin() as _conn:
+        PosOrderType.__table__.create(_conn, checkfirst=True)
 
     SEQUENCE_CODES = ['sale', 'purchase', 'payment', 'receipt', 'gl_entry', 'cheque', 'invoice', 'return', 'expense']
 
@@ -227,6 +234,9 @@ def _do_seed_demo(app):
     db.session.add(demo_tenant)
     db.session.flush()
     tid = demo_tenant.id
+
+    # Seed generic, industry-neutral POS order types for the demo company.
+    ensure_default_pos_order_types(tid)
 
     branch = Branch(name="الفرع الرئيسي", code="MAIN", tenant_id=tid, is_main=True)
     db.session.add(branch)

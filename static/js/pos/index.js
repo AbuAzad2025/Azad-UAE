@@ -85,6 +85,23 @@
     const pricesIncludeVatMeta = document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content') === 'true';
     const CURRENCY_SYMBOLS = { USD:'$', ILS:'₪', JOD:'د.أ', EUR:'€', AED:(document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content') || 'د.إ'), SAR:'ر.س', EGP:'ج.م', GBP:'£', KWD:'د.ك', QAR:'ر.ق', OMR:'ر.ع', BHD:'د.ب' };
     const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
+    const loadOrderTypes = async () => {
+        const sel = qs('#orderType');
+        if (!sel) return;
+        try {
+            const r = await fetch('/pos/api/order-types', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+            const data = await r.json();
+            if (!data.success) return;
+            sel.innerHTML = '';
+            (data.order_types || []).forEach(ot => {
+                const o = document.createElement('option');
+                o.value = ot.code;
+                o.textContent = ot.display_name;
+                sel.appendChild(o);
+            });
+            if (data.default_code) sel.value = data.default_code;
+        } catch (_) {}
+    };
     const recalc = async () => {
         const taxRate = Math.max(0, Math.min(100, toNum(qs('#taxRate').value)));
         const shipping = Math.max(0, toNum(qs('#shippingCost').value));
@@ -592,5 +609,6 @@
     $('#posDoneModal').on('hidden.bs.modal', function () {
         qs('#productSearch').focus();
     });
+    loadOrderTypes();
     loadSession();
 })();

@@ -69,6 +69,7 @@ from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
 from .pos_floor import PosFloor, PosTable, PosTableOrder
 from .pos_kds_order import PosKdsOrder
+from .pos_order_type import PosOrderType, ensure_default_pos_order_types
 from .pos_session import PosSession
 from .document_sequence import DocumentSequence
 from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
@@ -148,6 +149,7 @@ __all__ = [
     'JournalEntryAudit',
     'PosFloor', 'PosTable', 'PosTableOrder',
     'PosKdsOrder',
+    'PosOrderType', 'ensure_default_pos_order_types',
     'PosSession',
     'DocumentSequence',
     'FiscalPosition', 'FiscalPositionTaxRule',

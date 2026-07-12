@@ -180,6 +180,9 @@ def tenant_create():
             )
             with atomic_transaction('tenant_create'):
                 db.session.add(tenant)
+                db.session.flush()
+                from models import ensure_default_pos_order_types
+                ensure_default_pos_order_types(tenant.id)
             from services.gl_service import GLService
             with atomic_transaction('tenant_gl_setup'):
                 GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)

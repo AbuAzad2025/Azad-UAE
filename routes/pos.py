@@ -2,10 +2,10 @@ from decimal import Decimal
 from datetime import datetime, timezone
 import json
 
-from flask import Blueprint, jsonify, render_template, request, current_app
+from flask import Blueprint, jsonify, render_template, request, current_app, redirect, url_for, flash
 from flask_login import current_user, login_required
 from extensions import csrf, db
-from models import Customer, PosSession, Product
+from models import Customer, PosSession, Product, PosOrderType
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from services.sale_service import SaleService
@@ -81,6 +81,99 @@ def index():
 @permission_required("manage_sales")
 def grid():
     return render_template("pos/grid.html", **_pos_register_context())
+
+
+@pos_bp.route("/api/order-types")
+@login_required
+@permission_required("manage_sales")
+def api_order_types():
+    """Return the tenant's configured, active POS order types."""
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        return jsonify({"success": False, "error": "لا يوجد فرع/شركة نشطة"}), 400
+    types = PosOrderType.for_tenant(tid, active_only=True)
+    default = PosOrderType.default_for_tenant(tid)
+    return jsonify({
+        "success": True,
+        "order_types": [t.to_dict() for t in types],
+        "default_code": default.code if default else None,
+    })
+
+
+@pos_bp.route("/settings/order-types", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_sales")
+def order_type_settings():
+    """Per-company configuration of POS order types (replaces hard-coded restaurant types)."""
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        flash("لا يوجد فرع/شركة نشطة.", "warning")
+        return redirect(url_for("main.dashboard"))
+
+    if request.method == "POST":
+        action = request.form.get("action") or ""
+        try:
+            if action == "create":
+                code = (request.form.get("code") or "").strip()
+                if not code:
+                    raise ValueError("يرجى إدخال رمز النوع (code).")
+                if PosOrderType.get_by_code(tid, code):
+                    raise ValueError("رمز النوع موجود مسبقاً.")
+                db.session.add(PosOrderType(
+                    tenant_id=tid,
+                    code=code,
+                    name_ar=(request.form.get("name_ar") or "").strip() or code,
+                    name_en=(request.form.get("name_en") or "").strip() or None,
+                    is_active=request.form.get("is_active") == "on",
+                    sort_order=int(request.form.get("sort_order") or 0),
+                    is_default=request.form.get("is_default") == "on",
+                    kds_enabled=request.form.get("kds_enabled") == "on",
+                ))
+                flash("تمت إضافة نوع الطلب.", "success")
+            elif action == "edit":
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                if not ot or ot.tenant_id != tid:
+                    raise ValueError("نوع الطلب غير موجود.")
+                ot.name_ar = (request.form.get("name_ar") or "").strip() or ot.code
+                ot.name_en = (request.form.get("name_en") or "").strip() or None
+                ot.is_active = request.form.get("is_active") == "on"
+                ot.sort_order = int(request.form.get("sort_order") or 0)
+                ot.kds_enabled = request.form.get("kds_enabled") == "on"
+                ot.is_default = request.form.get("is_default") == "on"
+                flash("تم تحديث نوع الطلب.", "success")
+            elif action == "toggle":
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                if not ot or ot.tenant_id != tid:
+                    raise ValueError("نوع الطلب غير موجود.")
+                ot.is_active = not ot.is_active
+                flash("تم تحديث حالة نوع الطلب.", "success")
+            elif action == "set_default":
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                if not ot or ot.tenant_id != tid:
+                    raise ValueError("نوع الطلب غير موجود.")
+                for o in PosOrderType.for_tenant(tid, active_only=False):
+                    o.is_default = (o.id == ot.id)
+                flash("تم تعيين النوع الافتراضي.", "success")
+            elif action == "delete":
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                if not ot or ot.tenant_id != tid:
+                    raise ValueError("نوع الطلب غير موجود.")
+                if ot.is_default:
+                    raise ValueError("لا يمكن حذف النوع الافتراضي.")
+                db.session.delete(ot)
+                flash("تم حذف نوع الطلب.", "success")
+            else:
+                raise ValueError("إجراء غير معروف.")
+            db.session.commit()
+        except ValueError as exc:
+            flash(str(exc), "warning")
+        except Exception as exc:
+            db.session.rollback()
+            flash(f"خطأ: {exc}", "danger")
+        return redirect(url_for("pos.order_type_settings"))
+
+    types = PosOrderType.for_tenant(tid, active_only=False)
+    return render_template("pos/order_types.html", types=types)
 
 
 @pos_bp.route("/api/categories")
@@ -342,6 +435,14 @@ def api_checkout():
                 notes=notes,
                 payment_data=payment_data,
             )
+            # Resolve the configured order type (legacy fallback preserved).
+            tid = get_active_tenant_id(current_user)
+            order_type = (payload.get('order_type') or '').strip()
+            ot = PosOrderType.get_by_code(tid, order_type, active_only=True) if order_type else None
+            if not ot:
+                ot = PosOrderType.default_for_tenant(tid)
+                order_type = ot.code if ot else ''
+            sale.order_type = order_type
             sale.pos_session_id = session.id
             db.session.add(sale)
             session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
@@ -350,8 +451,8 @@ def api_checkout():
             db.session.add(session)
             log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
 
-            order_type = (payload.get('order_type') or 'takeaway').strip()
-            if order_type in ('dine_in', 'takeaway', 'delivery'):
+            kds_enabled = bool(ot.kds_enabled) if ot else (order_type in ('dine_in', 'takeaway', 'delivery'))
+            if kds_enabled:
                 from models import PosKdsOrder
                 kds_order = PosKdsOrder(
                     tenant_id=sale.tenant_id,
