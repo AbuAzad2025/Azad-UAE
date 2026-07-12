@@ -248,7 +248,7 @@ def _do_seed_demo(app):
         db.session.add(role)
         db.session.flush()
 
-    demo_admin = User(username='demo_admin', email='demo@azad.com', tenant_id=tid, role_id=role.id, is_active=True, is_owner=False)
+    demo_admin = User(username='demo_admin', email='demo@azad.com', tenant_id=tid, branch_id=branch.id, role_id=role.id, is_active=True, is_owner=False)
     demo_admin.set_password('Demo@2026')
     db.session.add(demo_admin)
     db.session.flush()
@@ -439,8 +439,7 @@ def _do_seed_demo(app):
     for sup, prod, amount, pay_method, paid in purch_specs:
         if not sup or not prod:
             continue
-        pws = ProductWarehouseStock.query.filter_by(tenant_id=tid, product_id=prod.id).first()
-        pur_wh_id = pws.warehouse_id if pws else warehouse.id
+        pur_wh_id = warehouse.id
         lines_data = [{"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}]
         purchase = PurchaseService.create_purchase(
             user=seller, supplier_data={"supplier_id": sup.id}, lines_data=lines_data,
