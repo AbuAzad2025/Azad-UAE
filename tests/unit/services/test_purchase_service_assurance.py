@@ -704,6 +704,7 @@ class TestCreatePurchaseReturn:
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = None
         monkeypatch.setattr('models.product_warehouse_cost.ProductWarehouseCost.query', pwc_q)
+        mocker.patch('services.purchase_service._safe_for_update', return_value=None)
         from services.purchase_service import PurchaseService
         with app.app_context():
             PurchaseService.create_purchase_return(
@@ -720,6 +721,7 @@ class TestCreatePurchaseReturn:
         pwc = MagicMock(total_quantity=Decimal('0'), total_value=Decimal('0'), average_cost=Decimal('0'))
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = pwc
+        mocker.patch('services.purchase_service._safe_for_update', return_value=pwc)
         monkeypatch.setattr('models.product_warehouse_cost.ProductWarehouseCost.query', pwc_q)
         from services.purchase_service import PurchaseService
         with app.app_context():
@@ -748,6 +750,7 @@ class TestCreatePurchaseReturn:
             'services.purchase_service.StockService._mwac_calc',
             return_value=(Decimal('-1'), Decimal('-10'), Decimal('0')),
         )
+        mocker.patch('services.purchase_service._safe_for_update', return_value=pwc)
         from services.purchase_service import PurchaseService
         with app.app_context():
             PurchaseService.create_purchase_return(
