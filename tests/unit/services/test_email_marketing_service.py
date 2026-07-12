@@ -192,14 +192,14 @@ class TestSubscribe:
 
     def test_commit_failure_on_new(self, tenant_user, db_session, sample_tenant, mocker):
         lst = _email_list(db_session, sample_tenant.id)
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('sub fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('sub fail'))
         with pytest.raises(RuntimeError, match='sub fail'):
             EmailMarketingService.subscribe(lst.id, 'fail@example.com', user=tenant_user)
 
     def test_commit_failure_on_resubscribe(self, tenant_user, db_session, sample_tenant, mocker):
         lst = _email_list(db_session, sample_tenant.id)
         _subscriber(db_session, lst, email='old@example.com', status='unsubscribed')
-        mocker.patch.object(db.session, 'commit', side_effect=RuntimeError('resub fail'))
+        mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('resub fail'))
         with pytest.raises(RuntimeError, match='resub fail'):
             EmailMarketingService.subscribe(lst.id, 'old@example.com', user=tenant_user)
 
