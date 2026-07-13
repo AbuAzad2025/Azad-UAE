@@ -18,26 +18,49 @@
 <div class="ps-alert ps-alert-warning">{{ t('no_payment_methods') }}</div>
 {% else %}
 
-<div class="ps-layout-2">
-  <div class="ps-panel">
-    <h3>{{ t('place_order') }}</h3>
-    {% if store.delivery_note %}
-    <p class="ic-2">{{ store.delivery_note }}</p>
-    {% endif %}
+<div class="ps-checkout-grid">
+  <div class="ps-checkout-left">
+    <div class="ps-checkout-section">
+      <h3><i class="fas fa-user"></i> {{ t('customer_details') }}</h3>
+      {% if store.delivery_note %}
+      <p class="ic-2" style="margin-bottom:14px"><i class="fas fa-truck"></i> {{ store.delivery_note }}</p>
+      {% endif %}
 
-    <form class="needs-validation" method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-      <div class="ps-hp" aria-hidden="true">
-        <label for="input_website">Website</label>
-        <input type="text" name="website" tabindex="-1" autocomplete="off" id="input_website" aria-label="website">
+      <form class="needs-validation" method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+        <div class="ps-hp" aria-hidden="true">
+          <label for="input_website">Website</label>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" id="input_website" aria-label="website">
+        </div>
+
+        <div class="ps-form-group">
+          <label for="customer_name">{{ t('name') }} *</label>
+          <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name" maxlength="100">
+        </div>
+        <div class="ps-form-group">
+          <label for="customer_email">{{ t('email') }}</label>
+          <input type="email" id="customer_email" name="customer_email" autocomplete="email" value="{{ prefilled.email or account.email if account else '' }}" aria-label="email" maxlength="120">
+        </div>
+        <div class="ps-form-group">
+          <label for="phone">{{ t('phone') }} *</label>
+          <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
+        </div>
+        <div class="ps-form-group">
+          <label for="address">{{ t('address') }} *</label>
+          <textarea id="address" name="address" rows="3" required autocomplete="street-address" aria-label="address" maxlength="255">{{ prefilled.address or '' }}</textarea>
+        </div>
+        <div class="ps-form-group">
+          <label for="notes">{{ t('notes') }}</label>
+          <textarea id="notes" name="notes" rows="2" aria-label="notes" maxlength="500"></textarea>
+        </div>
       </div>
 
-      <div class="ps-form-group">
-        <label>{{ t('payment_method') }} *</label>
+      <div class="ps-checkout-section">
+        <h3><i class="fas fa-credit-card"></i> {{ t('payment_method') }} *</h3>
         <div class="ps-pay-methods" role="radiogroup">
           {% for pm in payment_methods %}
           <label class="ps-pay-option">
-            <input type="radio" name="payment_method" value="{{ pm.code }}" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}" aria-label="payment method">
+            <input type="radio" name="payment_method" value="{{ pm.code }}" form="checkout-form" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}" aria-label="payment method">
             <span class="ps-pay-card">
               <i class="{{ pm.icon }}"></i>
               <span class="ps-pay-name">{{ pm.display_name(lang) }}</span>
@@ -48,51 +71,46 @@
         <div id="ps-pay-hint" class="ps-pay-hint ic-3"></div>
       </div>
 
-      <div class="ps-form-group">
-        <label for="customer_name">{{ t('name') }} *</label>
-        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name" maxlength="100">
+      <div class="ps-checkout-section">
+        <h3><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</h3>
+        <p class="ic-4"><i class="fas fa-bell"></i> {{ t('whatsapp_email_notify') }}</p>
+        <button type="submit" form="checkout-form" class="ps-btn ps-btn-primary ps-btn-block ps-btn-lg">
+          <i class="fas fa-check-circle"></i> {{ t('place_order') }}
+        </button>
       </div>
-      <div class="ps-form-group">
-        <label for="customer_email">{{ t('email') }}</label>
-        <input type="email" id="customer_email" name="customer_email" autocomplete="email" value="{{ prefilled.email or account.email if account else '' }}" aria-label="email" maxlength="120">
-      </div>
-      <div class="ps-form-group">
-        <label for="phone">{{ t('phone') }} *</label>
-        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
-      </div>
-      <div class="ps-form-group">
-        <label for="address">{{ t('address') }} *</label>
-        <textarea id="address" name="address" rows="3" required autocomplete="street-address" aria-label="address" maxlength="255">{{ prefilled.address or '' }}</textarea>
-      </div>
-      <div class="ps-form-group">
-        <label for="coupon_code">{{ t('coupon_code') }}</label>
-        <input type="text" id="coupon_code" name="coupon_code" class="form-control" dir="ltr" value="{{ coupon_code or '' }}" placeholder="PALESTINE10">
-      </div>
-      <div class="ps-form-group">
-        <label for="notes">{{ t('notes') }}</label>
-        <textarea id="notes" name="notes" rows="2" aria-label="notes" maxlength="500"></textarea>
-      </div>
-      <p class="ic-4"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
-      <p class="ic-4"><i class="fas fa-bell"></i> {{ t('whatsapp_email_notify') }}</p>
-      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-5">{{ t('place_order') }}</button>
     </form>
   </div>
 
-  <div class="ps-panel">
-    <h3>{{ t('cart') }}</h3>
-    {% for line in totals.lines %}
-    <div class="ps-summary-row">
-      <span>{{ line.product.get_display_name(lang) }} × {{ line.quantity|int }}</span>
-      <span>{{ '%.2f'|format(line.line_total) }}</span>
+  <div class="ps-checkout-right">
+    <div class="ps-checkout-summary">
+      <h3><i class="fas fa-receipt"></i> {{ t('order_summary') }}</h3>
+      {% for line in totals.lines %}
+      <div class="ps-checkout-summary-line">
+        <span>{{ line.product.get_display_name(lang) }} × {{ line.quantity|int }}</span>
+        <span>{{ '%.2f'|format(line.line_total) }}</span>
+      </div>
+      {% endfor %}
+
+      <div class="ps-checkout-coupon-row">
+        <input type="text" name="coupon_code" form="checkout-form" dir="ltr" value="{{ coupon_code or '' }}" placeholder="{{ t('coupon_code') }}">
+        <button type="button" id="ps-apply-coupon">{{ t('apply') }}</button>
+      </div>
+
+      <div class="ps-checkout-summary-total">
+        <span>{{ t('total') }}</span>
+        <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
+      </div>
+
+      {% if min_order and min_order > 0 %}
+      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
+      {% endif %}
+
+      {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
+      <div class="ps-loyalty-info" style="margin-top:10px">
+        <i class="fas fa-gem"></i> {{ loyalty_points }} {{ t('loyalty_points') }} (= {{ '%.2f'|format(loyalty_points / 100) }})
+      </div>
+      {% endif %}
     </div>
-    {% endfor %}
-    <div class="ps-summary-row total">
-      <span>{{ t('total') }}</span>
-      <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
-    </div>
-    {% if min_order and min_order > 0 %}
-    <p class="ic-6">{{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
-    {% endif %}
   </div>
 </div>
 {% endif %}
@@ -107,12 +125,8 @@
     var sel = document.querySelector('input[name="payment_method"]:checked');
     if (!sel || !hintEl) return;
     var text = (sel.getAttribute('data-hint') || '').trim();
-    if (text) {
-      hintEl.textContent = text;
-      hintEl.style.display = 'block';
-    } else {
-      hintEl.style.display = 'none';
-    }
+    if (text) { hintEl.textContent = text; hintEl.style.display = 'block'; }
+    else { hintEl.style.display = 'none'; }
   }
   radios.forEach(function (r) { r.addEventListener('change', updateHint); });
   updateHint();

@@ -1,0 +1,31 @@
+{# AJAX slide-out cart drawer — zero page reloads during shopping.
+   Uses existing backend endpoints:
+     POST /<slug>/cart/add      → {success, cart_count, message}
+     POST /<slug>/cart/update   → {success, cart_count, subtotal, count}
+     POST /<slug>/cart/remove/<product_id> → {success, cart_count}
+     GET  /<slug>/cart/count    → {count}
+#}
+<div id="psCartOverlay" class="ps-cart-overlay" aria-hidden="true"></div>
+<aside id="psCartDrawer" class="ps-cart-drawer" role="dialog" aria-label="{{ t('cart') }}" aria-hidden="true">
+  <div class="ps-cart-drawer-header">
+    <h3><i class="fas fa-shopping-basket"></i> {{ t('cart') }}</h3>
+    <button type="button" class="ps-cart-drawer-close" data-cart-close aria-label="{{ t('close') }}">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div id="psCartDrawerBody" class="ps-cart-drawer-body">
+    <div class="ps-cart-drawer-loading"><i class="fas fa-spinner fa-spin"></i></div>
+  </div>
+  <div id="psCartDrawerFooter" class="ps-cart-drawer-footer" style="display:none">
+    <div class="ps-cart-drawer-subtotal">
+      <span>{{ t('total') }}</span>
+      <strong id="psCartDrawerTotal">0.00</strong>
+    </div>
+    <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block" data-cart-checkout>
+      <i class="fas fa-credit-card"></i> {{ t('checkout') }}
+    </a>
+    <a href="{{ url_for('shop.cart_view', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-block">
+      <i class="fas fa-eye"></i> {{ t('view_cart') }}
+    </a>
+  </div>
+</aside>
