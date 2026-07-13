@@ -44,8 +44,6 @@ def pricing():
         'is_en': lang == 'en',
         'developer_whatsapp_link': current_app.config.get('DEVELOPER_WHATSAPP') or '',
     }
-    if lang == 'en':
-        return render_template('public/pricing_en.html', **ctx)
     return render_template('public/pricing.html', **ctx)
 
 

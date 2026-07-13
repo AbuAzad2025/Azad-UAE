@@ -3,190 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شركة أزاد للأنظمة الذكية - الأسعار والعروض</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <title>{{ 'شركة أزاد للأنظمة الذكية - الأسعار والباقات' if not is_en else 'Azad IntelliTech - Pricing & Plans' }}</title>
+    <meta name="description" content="{{ 'اختر باقة أزاد المناسبة: Starter $29/شهر، Pro $79/شهر، Enterprise $249/شهر. ERP، محاسبة، مخزون، AI، نقاط بيع. تجربة مجانية 30 يوم.' if not is_en else 'Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial.' }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url_for('public.pricing', _external=True) }}">
+{% if is_en %}
+    <link rel="alternate" hreflang="ar" href="{{ url_for('public.pricing', _external=True, lang='ar') }}">
+{% else %}
+    <link rel="alternate" hreflang="en" href="{{ url_for('public.pricing', _external=True, lang='en') }}">
+{% endif %}
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
     <style>
+        :root {
+            --azad-bg: #070b14;
+            --azad-surface: #0f1724;
+            --azad-card: rgba(18, 27, 46, 0.75);
+            --azad-border: rgba(212, 160, 23, 0.10);
+            --azad-accent: #d4a017;
+            --azad-accent-light: #e8c45a;
+            --azad-accent-glow: rgba(212, 160, 23, 0.25);
+            --azad-text: #e8edf5;
+            --azad-text-secondary: #b0bcc8;
+            --azad-text-muted: #7a8799;
+            --azad-radius: 20px;
+            --azad-glass: rgba(15, 23, 36, 0.75);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Tajawal', sans-serif; background: #f8f9fa; }
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: white; text-decoration: none; margin: 0 15px; }
-        .navbar .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
-        .navbar .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.9); padding:4px; }
-        .navbar .logo span { font-size: 1.2rem; font-weight: 900; color:#fff; }
-        .pricing-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
-        .pricing-header h1 { font-size: 3rem; margin-bottom: 20px; }
-        .pricing-header p { font-size: 1.3rem; }
-        .pricing-container { max-width: 1400px; margin: -50px auto 80px; padding: 0 20px; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-        .price-card { background: white; border-radius: 20px; padding: 40px; text-align: center; position: relative; transition: transform 0.3s; box-shadow: 0 10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .price-card:hover { transform: translateY(-10px); }
-        .price-card.featured { border: 4px solid #667eea; transform: scale(1.05); z-index: 1; }
-        .badge { background: #667eea; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; }
-        .plan-name { font-size: 2rem; font-weight: 700; margin-bottom: 15px; color: #2d3748; }
-        .price { font-size: 3.5rem; font-weight: 900; color: #667eea; margin: 20px 0; }
-        .price small { font-size: 1.2rem; font-weight: 400; }
-        .price-note { color: #718096; margin-bottom: 30px; }
-        .features-list { list-style: none; margin: 30px 0; text-align: right; flex-grow: 1; }
-        .features-list li { padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; }
-        .features-list li i { color: #48bb78; margin-left: 12px; font-size: 1.2rem; }
-        .btn-select { background: #25D366; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.3s; }
-        .btn-select:hover { background: #128C7E; }
-        .cta-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
-        .cta-section h2 { font-size: 2.5rem; margin-bottom: 20px; }
-        .cta-section p { font-size: 1.3rem; margin-bottom: 40px; }
-        .cta-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-        .btn-cta { padding: 15px 40px; border-radius: 50px; font-size: 1.1rem; text-decoration: none; transition: transform 0.3s; display: inline-block; }
-        .btn-white { background: white; color: #667eea; font-weight: 700; }
-        .btn-outline { background: transparent; color: white; border: 2px solid white; }
-        .btn-cta:hover { transform: translateY(-3px); }
-        footer { background: #2d3748; color: white; padding: 40px 20px; text-align: center; }
-        .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
-        .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .ic-3 { text-align: right; }
-        .ic-4 { margin-top: 10px; }
-        .duration-toggle { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-        .duration-btn { padding: 8px 24px; border-radius: 20px; border: 2px solid #667eea; background: white; color: #667eea; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-        .duration-btn.active { background: #667eea; color: white; }
-        .wa-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        body { font-family: 'Tajawal', 'Inter', sans-serif; background: var(--azad-bg); color: var(--azad-text); min-height: 100vh; line-height: 1.6; }
+        a { text-decoration: none; }
+
+        /* ── NAV ── */
+        .azad-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 14px 0; transition: all 0.3s; }
+        .azad-nav.scrolled { background: rgba(7,11,20,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(212,160,23,0.06); }
+        .azad-nav-inner { max-width: 1260px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 24px; }
+        .azad-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .azad-brand img { width: 38px; height: 38px; border-radius: 10px; object-fit: contain; }
+        .azad-brand-text { font-weight: 800; font-size: 1rem; color: var(--azad-text); letter-spacing: -0.3px; }
+        .azad-brand-tagline { font-size: 0.65rem; color: var(--azad-text-muted); display: block; letter-spacing: 0.3px; }
+        .azad-nav-links { display: flex; align-items: center; gap: 4px; }
+        .azad-nav-links a { color: var(--azad-text-muted); padding: 8px 12px; font-size: 0.85rem; font-weight: 500; border-radius: 10px; transition: all 0.2s; }
+        .azad-nav-links a:hover { color: var(--azad-accent-light); background: rgba(212,160,23,0.08); }
+        .azad-nav-links a.active { color: var(--azad-accent-light); }
+        .azad-nav-actions { display: flex; align-items: center; gap: 8px; margin-{{ 'left' if not is_rtl else 'right' }}: auto; }
+        .btn-nav-ghost { padding: 8px 18px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; color: var(--azad-text); border: 1px solid rgba(212,160,23,0.15); transition: all 0.2s; }
+        .btn-nav-ghost:hover { border-color: var(--azad-accent); color: var(--azad-accent-light); background: rgba(212,160,23,0.06); }
+        .btn-nav-cta { padding: 8px 20px; border-radius: 12px; font-size: 0.82rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #25D366, #128C7E); transition: all 0.25s; box-shadow: 0 4px 14px rgba(37,211,102,0.2); }
+        .btn-nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.3); }
+        .nav-lang-btn { padding: 6px 12px; border-radius: 10px; color: var(--azad-text-muted); font-size: 0.8rem; font-weight: 500; transition: all 0.2s; }
+        .nav-lang-btn:hover { color: var(--azad-accent-light); background: rgba(212,160,23,0.06); }
+        .nav-hamburger { display: none; background: none; border: none; color: var(--azad-text); font-size: 1.3rem; cursor: pointer; padding: 6px 10px; border-radius: 10px; }
+        @media (max-width: 991px) { .azad-nav-links, .btn-nav-ghost, .btn-nav-cta, .nav-lang-btn { display: none; } .nav-hamburger { display: block; } }
+
+        /* ── HERO ── */
+        .pricing-hero { padding: 140px 24px 60px; text-align: center; position: relative; overflow: hidden; }
+        .pricing-hero::before { content: ''; position: absolute; top: -40%; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(circle, rgba(212,160,23,0.06) 0%, transparent 70%); pointer-events: none; }
+        .pricing-hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(212,160,23,0.08); border: 1px solid rgba(212,160,23,0.15); padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; color: var(--azad-accent-light); margin-bottom: 24px; }
+        .pricing-hero h1 { font-size: 2.8rem; font-weight: 900; background: linear-gradient(135deg, #fff 30%, var(--azad-accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px; }
+        .pricing-hero p { font-size: 1.1rem; color: var(--azad-text-secondary); max-width: 600px; margin: 0 auto 32px; }
+
+        /* ── TOGGLE ── */
+        .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 48px; }
+        .billing-toggle span { font-size: 0.9rem; color: var(--azad-text-secondary); font-weight: 500; }
+        .billing-toggle .toggle-track { width: 48px; height: 26px; background: rgba(212,160,23,0.15); border-radius: 40px; cursor: pointer; position: relative; transition: background 0.3s; border: 1px solid rgba(212,160,23,0.1); }
+        .billing-toggle .toggle-track::after { content: ''; width: 20px; height: 20px; background: var(--azad-accent); border-radius: 50%; position: absolute; top: 2px; {{ 'right' if not is_rtl else 'left' }}: 3px; transition: all 0.3s; }
+        .billing-toggle .toggle-track.active { background: rgba(212,160,23,0.25); }
+        .billing-toggle .toggle-track.active::after { {{ 'right' if not is_rtl else 'left' }}: 25px; }
+        .billing-toggle .save-badge { background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 2px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+
+        /* ── CARDS ── */
+        .pricing-grid { max-width: 1100px; margin: 0 auto 60px; padding: 0 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+        .azad-tier-card { background: var(--azad-card); backdrop-filter: blur(20px); border: 1px solid var(--azad-border); border-radius: 24px; padding: 40px 32px; display: flex; flex-direction: column; position: relative; transition: all 0.35s ease; }
+        .azad-tier-card:hover { transform: translateY(-6px); border-color: rgba(212,160,23,0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .azad-tier-card.featured { border-color: rgba(212,160,23,0.3); box-shadow: 0 0 40px rgba(212,160,23,0.06); }
+        .azad-tier-card.featured::before { content: ''; position: absolute; inset: -1px; border-radius: 24px; padding: 1px; background: linear-gradient(135deg, rgba(212,160,23,0.3), transparent 40%, transparent 60%, rgba(212,160,23,0.15)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+        .azad-tier-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--azad-accent), #b8941e); color: #fff; padding: 6px 20px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 20px rgba(212,160,23,0.25); }
+        .azad-tier-icon { font-size: 1.6rem; margin-bottom: 8px; }
+        .azad-tier-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+        .azad-tier-desc { font-size: 0.82rem; color: var(--azad-text-muted); margin-bottom: 20px; }
+        .azad-tier-price { margin-bottom: 24px; }
+        .azad-tier-price .price-amount { font-size: 2.8rem; font-weight: 900; color: var(--azad-accent-light); }
+        .azad-tier-price .price-period { font-size: 0.9rem; color: var(--azad-text-muted); }
+        .azad-tier-price .price-note { font-size: 0.75rem; color: var(--azad-text-muted); margin-top: 4px; }
+        .azad-tier-features { list-style: none; margin-bottom: 28px; flex-grow: 1; }
+        .azad-tier-features li { padding: 10px 0; border-bottom: 1px solid rgba(212,160,23,0.04); display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--azad-text-secondary); }
+        .azad-tier-features li i { width: 16px; text-align: center; }
+        .azad-tier-features li .fa-check { color: #10b981; }
+        .azad-tier-features li .fa-times { color: #ef4444; }
+        .azad-tier-btn-wa { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 24px; border-radius: 16px; background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 16px rgba(37,211,102,0.15); text-decoration: none; }
+        .azad-tier-btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.25); }
+        .azad-tier-btn-outline { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 24px; border-radius: 16px; background: rgba(212,160,23,0.06); color: var(--azad-accent-light); font-size: 0.95rem; font-weight: 700; border: 1px solid rgba(212,160,23,0.12); cursor: pointer; transition: all 0.25s; text-decoration: none; margin-top: 10px; }
+        .azad-tier-btn-outline:hover { background: rgba(212,160,23,0.1); border-color: rgba(212,160,23,0.2); }
+
+        /* ── ADD-ONS ── */
+        .addons-section { max-width: 1100px; margin: 0 auto 60px; padding: 0 24px; }
+        .addons-section h2 { text-align: center; font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .addons-section > p { text-align: center; color: var(--azad-text-muted); margin-bottom: 32px; }
+        .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .addon-item { background: var(--azad-card); backdrop-filter: blur(20px); border: 1px solid var(--azad-border); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.25s; }
+        .addon-item:hover { border-color: rgba(212,160,23,0.15); transform: translateY(-2px); }
+        .addon-item i { font-size: 1.4rem; color: var(--azad-accent); margin-bottom: 8px; }
+        .addon-item h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+        .addon-item .addon-price { font-size: 0.85rem; color: var(--azad-accent-light); font-weight: 700; }
+        .addon-item .addon-desc { font-size: 0.75rem; color: var(--azad-text-muted); }
+
+        /* ── CTA ── */
+        .cta-section { text-align: center; padding: 60px 24px 40px; }
+        .cta-section h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+        .cta-section p { color: var(--azad-text-secondary); margin-bottom: 28px; }
+        .cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+        /* ── FOOTER ── */
+        .azad-footer { background: var(--azad-surface); border-top: 1px solid var(--azad-border); padding: 48px 24px 24px; margin-top: 40px; }
+        .azad-footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 32px; }
+        .azad-footer-col h4 { font-size: 0.85rem; color: var(--azad-text); margin-bottom: 12px; font-weight: 700; }
+        .azad-footer-links { list-style: none; }
+        .azad-footer-links li { margin-bottom: 6px; }
+        .azad-footer-links a { color: var(--azad-text-muted); font-size: 0.8rem; transition: color 0.2s; }
+        .azad-footer-links a:hover { color: var(--azad-accent-light); }
+        .azad-footer-bottom { text-align: center; padding-top: 24px; margin-top: 24px; border-top: 1px solid var(--azad-border); color: var(--azad-text-muted); font-size: 0.78rem; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .pricing-hero h1 { font-size: 1.8rem; }
+            .pricing-hero { padding: 110px 16px 40px; }
+            .pricing-grid { grid-template-columns: 1fr; gap: 20px; padding: 0 16px; }
+            .azad-tier-card { padding: 28px 20px; }
+            .azad-tier-price .price-amount { font-size: 2rem; }
+            .addons-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .addons-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    {% set platform_name_ar = config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' %}
-    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
-    {% set wa_number = developer_whatsapp_link or config.DEVELOPER_WHATSAPP or '' %}
 
-    <div class="ic-1">
-        <a href="{{ url_for('language.set_language', lang='en') }}" class="btn ic-2">
-            <i class="fas fa-globe mr-2"></i> English
-        </a>
-    </div>
+{% set _company_name = config.COMPANY_NAME or 'Azad IntelliTech' %}
+{% set _logo_path = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
+{% set _features = 'المميزات' if not is_en else 'Features' %}
+{% set _pricing_label = 'الأسعار' if not is_en else 'Pricing' %}
+{% set _about = 'عن أزاد' if not is_en else 'About' %}
+{% set _faq = 'الأسئلة الشائعة' if not is_en else 'FAQ' %}
+{% set _contact_ar = 'اتصل بنا' %}
+{% set _contact_en = 'Contact' %}
+{% set _contact = _contact_ar if not is_en else _contact_en %}
+{% set _login = 'تسجيل الدخول' if not is_en else 'Login' %}
+{% set _free_trial = 'تجربة مجانية' if not is_en else 'Free Trial' %}
+{% set _close = 'إغلاق' if not is_en else 'Close' %}
+{% set _menu = 'القائمة' if not is_en else 'Menu' %}
+{% set _lang_label = 'English' if not is_en else 'العربية' %}
+{% set _lang_url = url_for('language.set_language', lang='en') if not is_en else url_for('language.set_language', lang='ar') %}
+{% set _lang_btn = 'English' if not is_en else 'العربية' %}
+{% set _wa_msg_sales = developer_wa_msg_sales or 'مرحباً، أرغب في الاستفسار عن باقات أزاد' if not is_en else 'Hello, I would like to inquire about Azad plans' %}
+{% set developer_whatsapp_link = developer_whatsapp_link or config.DEVELOPER_WHATSAPP %}
+{% set developer_credit = developer_credit or config.DEVELOPER_CREDIT %}
+{% set current_year = 'now' | strftime('%Y') %}
 
-    <nav class="navbar">
-        <a class="logo" href="{{ url_for('public.landing') }}">
-            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_ar }}">
-            <span>{{ platform_name_ar }}</span>
-        </a>
-        <div>
-            <a href="{{ url_for('public.landing') }}">الرئيسية</a>
-            <a href="{{ url_for('public.features') }}">المميزات</a>
-            <a href="{{ url_for('public.pricing') }}">الأسعار</a>
-            <a href="{{ url_for('public.user_guide') }}">دليل المستخدم</a>
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> دخول</a>
-        </div>
-    </nav>
+{% set is_rtl = not is_en %}
 
-    <header class="pricing-header">
-        <h1>🎯 الأسعار والعروض</h1>
-        <p>اختر الباقة المناسبة لحجم أعمالك - بدون رسوم خفية</p>
-    </header>
+{# ── PACKAGE DATA ── #}
+{% set plans = [
+    {
+        'id': 'starter',
+        'icon': '<i class="fas fa-rocket"></i>',
+        'name_ar': 'Starter',
+        'name_en': 'Starter',
+        'price': 29,
+        'yearly_price': 290,
+        'desc_ar': 'مثالية للشركات الصغيرة والمحلات التجارية',
+        'desc_en': 'Ideal for small businesses and retail shops',
+        'badge_ar': '',
+        'badge_en': '',
+        'is_featured': false,
+        'features_ar': [
+            'حتى 3 مستخدمين',
+            'مبيعات ومشتريات ومخزون',
+            'فواتير إلكترونية (حتى 200/شهر)',
+            'تقارير أساسية',
+            'دعم واتساب',
+            '<i class="fas fa-times"></i> لا يشمل المتجر الإلكتروني',
+            '<i class="fas fa-times"></i> لا يشمل نقاط البيع (POS)',
+        ],
+        'features_en': [
+            'Up to 3 users',
+            'Sales, purchases & inventory',
+            'E-invoices (up to 200/month)',
+            'Basic reports',
+            'WhatsApp support',
+            '<i class="fas fa-times"></i> No online store',
+            '<i class="fas fa-times"></i> No POS',
+        ],
+    },
+    {
+        'id': 'pro',
+        'icon': '<i class="fas fa-chart-line"></i>',
+        'name_ar': 'Pro',
+        'name_en': 'Pro',
+        'price': 79,
+        'yearly_price': 790,
+        'desc_ar': 'للشركات المتوسطة - نظام متكامل مع AI',
+        'desc_en': 'For growing businesses - full system with AI',
+        'badge_ar': 'الأكثر طلباً',
+        'badge_en': 'Most Popular',
+        'is_featured': true,
+        'features_ar': [
+            'حتى 10 مستخدمين',
+            'كل ميزات Starter',
+            'فواتير إلكترونية (حتى 1000/شهر)',
+            'دفتر أستاذ عام (GL)',
+            'نقاط بيع (POS)',
+            'متجر إلكتروني',
+            '🤖 ذكاء اصطناعي كامل',
+            'تقارير متقدمة',
+        ],
+        'features_en': [
+            'Up to 10 users',
+            'All Starter features',
+            'E-invoices (up to 1,000/month)',
+            'General Ledger (GL)',
+            'Point of Sale (POS)',
+            'Online store',
+            '🤖 Full AI assistant',
+            'Advanced reports',
+        ],
+    },
+    {
+        'id': 'enterprise',
+        'icon': '<i class="fas fa-building"></i>',
+        'name_ar': 'Enterprise',
+        'name_en': 'Enterprise',
+        'price': 249,
+        'yearly_price': 2490,
+        'desc_ar': 'للشركات الكبيرة - حل كامل غير محدود',
+        'desc_en': 'For large enterprises - unlimited complete solution',
+        'badge_ar': '',
+        'badge_en': '',
+        'is_featured': false,
+        'features_ar': [
+            'مستخدمين غير محدودين',
+            'كل ميزات Pro',
+            'فواتير غير محدودة',
+            'HR ورواتب وشؤون موظفين',
+            'الذكاء الاصطناعي لتحليل البيانات',
+            'النسخ الاحتياطي التلقائي اليومي',
+            'تخصيص كامل + تقارير مخصصة',
+            'دعم فني 24/7 + مدير حساب',
+        ],
+        'features_en': [
+            'Unlimited users',
+            'All Pro features',
+            'Unlimited invoices',
+            'HR & Payroll',
+            'AI-powered data analytics',
+            'Daily auto backup',
+            'Full customization + custom reports',
+            '24/7 support + account manager',
+        ],
+    },
+] %}
 
-    {% if packages %}
-    <div class="pricing-container">
-        <div class="pricing-grid">
-            {% for pkg in packages %}
-            <div class="price-card{% if pkg.is_featured %} featured{% endif %}">
-                {% if pkg.badge_text %}<div class="badge">{{ pkg.badge_text }}</div>{% endif %}
-                <div class="plan-name">{{ pkg.icon }} {{ pkg.name_ar }}</div>
-                <div class="price">${{ pkg.price }}<small>/شهرياً</small></div>
-                {% if pkg.description_ar %}<div class="price-note">{{ pkg.description_ar }}</div>{% endif %}
-                <ul class="features-list">
-                    {% if pkg.max_users %}<li><i class="fas fa-check"></i> حتى {{ pkg.max_users }} مستخدمين</li>{% endif %}
-                    {% if pkg.max_branches %}<li><i class="fas fa-check"></i> حتى {{ pkg.max_branches }} فروع</li>{% endif %}
-                    {% if pkg.has_pos %}<li><i class="fas fa-check"></i> نقاط بيع (POS)</li>{% endif %}
-                    {% if pkg.has_ai %}<li><i class="fas fa-check"></i> 🤖 ذكاء اصطناعي</li>{% endif %}
-                    {% if pkg.has_whatsapp %}<li><i class="fas fa-check"></i> تكامل واتساب</li>{% endif %}
-                    {% if pkg.has_advanced_reports %}<li><i class="fas fa-check"></i> تقارير متقدمة</li>{% endif %}
-                    {% if pkg.features %}
-                        {% for feat in pkg.features %}<li><i class="fas fa-check"></i> {{ feat }}</li>{% endfor %}
-                    {% endif %}
-                </ul>
-                {% set wa_msg = 'مرحباً، أرغب في الاشتراك في باقة ' ~ pkg.name_ar ~ ' - شهرياً' %}
-                <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ wa_msg | urlencode }}" target="_blank" rel="noopener" class="btn-select wa-btn">
-                    <i class="fab fa-whatsapp"></i> اشترك الآن
-                </a>
+{% set addons = [
+    {'icon': 'fa-store', 'name_ar': 'متجر إلكتروني', 'name_en': 'Online Store', 'price': '$15', 'desc_ar': 'متجر احترافي مع تكامل المخزون', 'desc_en': 'Pro store with inventory sync'},
+    {'icon': 'fa-cash-register', 'name_ar': 'نقطة بيع إضافية', 'name_en': 'Extra POS', 'price': '$10', 'desc_ar': 'terminal إضافي للنقاط البيع', 'desc_en': 'Additional POS terminal'},
+    {'icon': 'fa-users-gear', 'name_ar': 'HR متقدم', 'name_en': 'Advanced HR', 'price': '$20', 'desc_ar': 'رواتب، إجازات، تقييم أداء', 'desc_en': 'Payroll, leave, performance'},
+    {'icon': 'fa-database', 'name_ar': 'مساحة تخزين إضافية', 'name_en': 'Extra Storage', 'price': '$5', 'desc_ar': '+10GB لكل مستخدم', 'desc_en': '+10GB per user'},
+] %}
+
+{# ──────────────────────────────────────────────── #}
+{# NAVBAR                                           #}
+{# ──────────────────────────────────────────────── #}
+<nav class="azad-nav" id="azadNav">
+    <div class="azad-nav-inner">
+        <a class="azad-brand" href="{{ url_for('public.landing') }}">
+            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.style.display='none'">
+            <div>
+                <span class="azad-brand-text">{{ _company_name }}</span>
+                <small class="azad-brand-tagline">{{ 'ERP • AI • Cloud' if is_en else 'ERP • AI • سحابي' }}</small>
             </div>
+        </a>
+
+        <div class="azad-nav-links" style="margin-{{ 'left' if not is_rtl else 'right' }}: auto;">
+            <a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a>
+            <a href="{{ url_for('public.landing') }}#features">{{ _features }}</a>
+            <a href="{{ url_for('public.pricing') }}" class="active">{{ _pricing_label }}</a>
+            <a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a>
+            <a href="{{ url_for('public.landing') }}#contact">{{ _contact }}</a>
+        </div>
+
+        <div class="azad-nav-actions">
+            <a class="nav-lang-btn" href="{{ _lang_url }}"><i class="fas fa-globe"></i> {{ _lang_btn }}</a>
+            <a class="btn-nav-ghost" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> {{ _login }}</a>
+            <a class="btn-nav-cta" href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _free_trial }}</a>
+            <button class="nav-hamburger" id="hamburgerBtn" aria-label="{{ _menu }}"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+{# ──────────────────────────────────────────────── #}
+{# HERO                                             #}
+{# ──────────────────────────────────────────────── #}
+<section class="pricing-hero">
+    <div class="pricing-hero-badge"><i class="fas fa-tags"></i> <span>{{ 'أسعار شفافة - تجربة 30 يوم مجانية' if not is_en else 'Transparent pricing - 30-day free trial' }}</span></div>
+    <h1>{{ 'اختر الباقة المناسبة لأعمالك' if not is_en else 'Choose the right plan for your business' }}</h1>
+    <p>{{ 'باقات مرنة تبدأ من $29/شهر. كل الباقات تشمل التحديثات والدعم الفني. بدون عقود طويلة.' if not is_en else 'Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts.' }}</p>
+
+    {% set _monthly_label = 'شهري' if not is_en else 'Monthly' %}
+    {% set _yearly_label = 'سنوي' if not is_en else 'Yearly' %}
+    {% set _save_label = 'وفر شهرين' if not is_en else 'Save 2 months' %}
+    <div class="billing-toggle">
+        <span id="billingMonthly">{{ _monthly_label }}</span>
+        <div class="toggle-track" id="billingToggle" role="button" tabindex="0" aria-label="{{ 'تبديل الفواتير' if not is_en else 'Toggle billing' }}"></div>
+        <span id="billingYearly">{{ _yearly_label }} <span class="save-badge">{{ _save_label }}</span></span>
+    </div>
+</section>
+
+{# ──────────────────────────────────────────────── #}
+{# PRICING GRID                                      #}
+{# ──────────────────────────────────────────────── #}
+<div class="pricing-grid">
+    {% for p in plans %}
+    <div class="azad-tier-card{% if p.is_featured %} featured{% endif %}" data-plan="{{ p.id }}">
+        {% if p.badge_ar and p.badge_en %}
+        <div class="azad-tier-badge">{{ p.badge_ar if not is_en else p.badge_en }}</div>
+        {% endif %}
+        <div class="azad-tier-icon">{{ p.icon | safe }}</div>
+        <div class="azad-tier-name">{{ p.name_ar if not is_en else p.name_en }}</div>
+        <div class="azad-tier-desc">{{ p.desc_ar if not is_en else p.desc_en }}</div>
+
+        <div class="azad-tier-price">
+            <span class="price-amount price-display">${{ p.price }}</span>
+            <span class="price-period price-period-display">{{ '/شهرياً' if not is_en else '/month' }}</span>
+            <div class="price-note price-yearly-note" style="display:none;">${{ p.yearly_price }} {{ 'سنوياً' if not is_en else 'per year' }}</div>
+        </div>
+
+        <ul class="azad-tier-features">
+            {% for feat in (p.features_ar if not is_en else p.features_en) %}
+            <li>{{ feat | safe }}</li>
             {% endfor %}
+        </ul>
+
+        {% set wa_msg_plan = 'مرحباً، أرغب في الاشتراك في باقة ' ~ p.name_ar ~ ' - ' if not is_en else 'Hello, I would like to subscribe to the ' ~ p.name_en ~ ' plan - ' %}
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ (wa_msg_plan ~ _monthly_label) | urlencode }}" class="azad-tier-btn-wa wa-subscribe" data-wa-monthly="{{ (wa_msg_plan ~ _monthly_label) | urlencode }}" data-wa-yearly="{{ (wa_msg_plan ~ _yearly_label) | urlencode }}">
+            <i class="fab fa-whatsapp"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}
+        </a>
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-outline" target="_blank" rel="noopener">
+            <i class="fas fa-question-circle"></i> {{ 'تواصل معنا' if not is_en else 'Contact Us' }}
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{# ──────────────────────────────────────────────── #}
+{# ADD-ONS                                          #}
+{# ──────────────────────────────────────────────── #}
+<section class="addons-section">
+    <h2>{{ 'إضافات اختيارية' if not is_en else 'Optional Add-ons' }}</h2>
+    <p>{{ 'طور نظامك بإضافات متخصصة' if not is_en else 'Enhance your system with specialized add-ons' }}</p>
+    <div class="addons-grid">
+        {% for a in addons %}
+        <div class="addon-item">
+            <i class="fas {{ a.icon }}"></i>
+            <h4>{{ a.name_ar if not is_en else a.name_en }}</h4>
+            <div class="addon-price">{{ a.price }}/{{ 'شهر' if not is_en else 'mo' }}</div>
+            <div class="addon-desc">{{ a.desc_ar if not is_en else a.desc_en }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{# ──────────────────────────────────────────────── #}
+{# CTA                                              #}
+{# ──────────────────────────────────────────────── #}
+<section class="cta-section">
+    <h2>{{ '🧭 لا تجد الباقة المناسبة؟' if not is_en else '🧭 Can\'t find the right plan?' }}</h2>
+    <p>{{ 'نقدم حلولاً مخصصة حسب احتياجاتك. تحدث معنا لوضع خطة خاصة بك.' if not is_en else 'We offer custom solutions tailored to your needs. Talk to us for a custom plan.' }}</p>
+    <div class="cta-buttons">
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'تحدث مع المبيعات' if not is_en else 'Talk to Sales' }}</a>
+        <a href="tel:{{ developer_whatsapp_link or config.DEVELOPER_PHONE }}" class="azad-tier-btn-outline" style="display:inline-flex;"><i class="fas fa-phone"></i> {{ 'اتصل بنا' if not is_en else 'Call Us' }}</a>
+    </div>
+</section>
+
+{# ──────────────────────────────────────────────── #}
+{# FOOTER                                           #}
+{# ──────────────────────────────────────────────── #}
+<footer class="azad-footer">
+    <div class="azad-footer-inner">
+        <div class="azad-footer-col">
+            <h4>{{ 'أزاد' if not is_en else 'Azad' }}</h4>
+            <ul class="azad-footer-links">
+                <li><a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a></li>
+                <li><a href="{{ url_for('public.landing') }}#features">{{ _features }}</a></li>
+                <li><a href="{{ url_for('public.landing') }}#pricing">{{ _pricing_label }}</a></li>
+                <li><a href="{{ url_for('public.landing') }}#about">{{ _about }}</a></li>
+                <li><a href="{{ url_for('public.user_guide') }}">{{ 'دليل المستخدم' if not is_en else 'User Guide' }}</a></li>
+            </ul>
+        </div>
+        <div class="azad-footer-col">
+            <h4>{{ 'الدعم' if not is_en else 'Support' }}</h4>
+            <ul class="azad-footer-links">
+                <li><a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a></li>
+                <li><a href="{{ url_for('public.landing') }}#contact">{{ _contact }}</a></li>
+                <li><a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}" target="_blank" rel="noopener">WhatsApp</a></li>
+            </ul>
+        </div>
+        <div class="azad-footer-col">
+            <h4>{{ 'قانوني' if not is_en else 'Legal' }}</h4>
+            <ul class="azad-footer-links">
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-shield-alt"></i> {{ 'سياسة الخصوصية' if not is_en else 'Privacy Policy' }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-file-contract"></i> {{ 'شروط الاستخدام' if not is_en else 'Terms of Service' }}</span></li>
+            </ul>
+        </div>
+        <div class="azad-footer-col">
+            <h4>{{ developer_credit if developer_credit else _company_name }}</h4>
+            <ul class="azad-footer-links">
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch"></i> v{{ config.APP_VERSION }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
+            </ul>
         </div>
     </div>
-    {% else %}
-    <div class="pricing-container">
-        <div class="pricing-grid">
-            <div class="price-card featured">
-                <div class="badge">⭐ الأكثر طلباً</div>
-                <div class="plan-name">📦 الباقة الأساسية</div>
-                <div class="price">$29<small>/شهرياً</small></div>
-                <div class="price-note">مثالية للشركات الصغيرة - حتى 200 فاتورة/شهر</div>
-                <ul class="features-list">
-                    <li><i class="fas fa-check"></i> حتى 3 مستخدمين</li>
-                    <li><i class="fas fa-check"></i> مبيعات ومشتريات ومخزون</li>
-                    <li><i class="fas fa-check"></i> فواتير إلكترونية + طباعة</li>
-                    <li><i class="fas fa-check"></i> تقارير أساسية</li>
-                    <li><i class="fas fa-check"></i> دعم واتساب</li>
-                    <li><i class="fas fa-times" style="color:#e53e3e;"></i> لا يشمل المتجر الإلكتروني</li>
-                </ul>
-                <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'مرحباً، أرغب في الاشتراك في الباقة الأساسية' | urlencode }}" target="_blank" rel="noopener" class="btn-select wa-btn">
-                    <i class="fab fa-whatsapp"></i> اشترك الآن
-                </a>
-            </div>
-            <div class="price-card">
-                <div class="plan-name">🚀 الباقة الاحترافية</div>
-                <div class="price">$79<small>/شهرياً</small></div>
-                <div class="price-note">للشركات المتوسطة - حتى 1000 فاتورة/شهر</div>
-                <ul class="features-list">
-                    <li><i class="fas fa-check"></i> حتى 10 مستخدمين</li>
-                    <li><i class="fas fa-check"></i> كل ميزات الأساسية</li>
-                    <li><i class="fas fa-check"></i> 🤖 ذكاء اصطناعي كامل</li>
-                    <li><i class="fas fa-check"></i> دفتر أستاذ عام (GL)</li>
-                    <li><i class="fas fa-check"></i> نقاط بيع (POS)</li>
-                    <li><i class="fas fa-check"></i> متجر إلكتروني</li>
-                    <li><i class="fas fa-check"></i> تقارير متقدمة</li>
-                </ul>
-                <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'مرحباً، أرغب في الاشتراك في الباقة الاحترافية' | urlencode }}" target="_blank" rel="noopener" class="btn-select wa-btn">
-                    <i class="fab fa-whatsapp"></i> اشترك الآن
-                </a>
-            </div>
-            <div class="price-card">
-                <div class="plan-name">🏢 باقة المؤسسات</div>
-                <div class="price">$249<small>/شهرياً</small></div>
-                <div class="price-note">للشركات الكبيرة - فواتير غير محدودة</div>
-                <ul class="features-list">
-                    <li><i class="fas fa-check"></i> مستخدمين غير محدودين</li>
-                    <li><i class="fas fa-check"></i> كل الميزات المتقدمة</li>
-                    <li><i class="fas fa-check"></i> متجر إلكتروني + API</li>
-                    <li><i class="fas fa-check"></i> HR ورواتب وشؤون موظفين</li>
-                    <li><i class="fas fa-check"></i> الذكاء الاصطناعي لتحليل البيانات</li>
-                    <li><i class="fas fa-check"></i> النسخ الاحتياطي التلقائي اليومي</li>
-                    <li><i class="fas fa-check"></i> تخصيص كامل + تقارير مخصصة</li>
-                    <li><i class="fas fa-check"></i> دعم فني 24/7 + مدير حساب</li>
-                </ul>
-                <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'مرحباً، أرغب في الاشتراك في باقة المؤسسات' | urlencode }}" target="_blank" rel="noopener" class="btn-select wa-btn">
-                    <i class="fab fa-whatsapp"></i> اشترك الآن
-                </a>
-            </div>
-        </div>
+    <div class="azad-footer-bottom">
+        &copy; {{ current_year }} {{ _company_name }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}
     </div>
-    {% endif %}
+</footer>
 
-    <section class="cta-section">
-        <h2>جاهز للبدء؟</h2>
-        <p>تواصل معنا عبر واتساب أو البريد الإلكتروني</p>
-        <div class="cta-buttons">
-            <a href="https://wa.me/{{ wa_number }}" class="btn-cta btn-white" target="_blank" rel="noopener">
-                <i class="fab fa-whatsapp"></i> تحدث معنا
-            </a>
-            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'طلب شراء أو استفسار' | urlencode }}" class="btn-cta btn-outline">
-                <i class="fas fa-envelope"></i> راسلنا
-            </a>
-        </div>
-    </section>
+{# ──────────────────────────────────────────────── #}
+{# SCRIPTS                                          #}
+{# ──────────────────────────────────────────────── #}
+<script>
+(function() {
+    var isRTL = {{ 'true' if is_rtl else 'false' }};
+    var nav = document.getElementById('azadNav');
+    if (nav) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 60) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+    }
 
-    <footer>
-        <p>&copy; 2025 {{ config.COMPANY_NAME_AR }}. جميع الحقوق محفوظة.</p>
-        <p class="ic-4">{{ config.DEVELOPER_CREDIT }}</p>
-    </footer>
+    var toggle = document.getElementById('billingToggle');
+    var monthlySpan = document.getElementById('billingMonthly');
+    var yearlySpan = document.getElementById('billingYearly');
+    var isYearly = false;
+
+    function updatePrices() {
+        var amounts = document.querySelectorAll('.price-display');
+        var periods = document.querySelectorAll('.price-period-display');
+        var notes = document.querySelectorAll('.price-yearly-note');
+        var waBtns = document.querySelectorAll('.wa-subscribe');
+
+        if (isYearly) {
+            toggle.classList.add('active');
+            monthlySpan.style.color = 'var(--azad-text-muted)';
+            yearlySpan.style.color = 'var(--azad-accent-light)';
+            /* prices from data */
+            var prices = [290, 790, 2490];
+            amounts.forEach(function(el, i) {
+                if (i < prices.length) el.textContent = '$' + prices[i];
+                if (periods[i]) periods[i].textContent = '{{ "/سنوياً" if not is_en else "/year" }}';
+                if (notes[i]) notes[i].style.display = 'block';
+            });
+            waBtns.forEach(function(btn, i) {
+                var yearlyMsg = btn.getAttribute('data-wa-yearly');
+                if (yearlyMsg) btn.href = 'https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text=' + yearlyMsg;
+            });
+        } else {
+            toggle.classList.remove('active');
+            monthlySpan.style.color = 'var(--azad-accent-light)';
+            yearlySpan.style.color = 'var(--azad-text-muted)';
+            var prices = [29, 79, 249];
+            amounts.forEach(function(el, i) {
+                if (i < prices.length) el.textContent = '$' + prices[i];
+                if (periods[i]) periods[i].textContent = '{{ "/شهرياً" if not is_en else "/month" }}';
+                if (notes[i]) notes[i].style.display = 'none';
+            });
+            waBtns.forEach(function(btn, i) {
+                var monthlyMsg = btn.getAttribute('data-wa-monthly');
+                if (monthlyMsg) btn.href = 'https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text=' + monthlyMsg;
+            });
+        }
+    }
+
+    if (toggle) {
+        toggle.addEventListener('click', function() { isYearly = !isYearly; updatePrices(); });
+        toggle.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); isYearly = !isYearly; updatePrices(); } });
+    }
+
+    /* Scroll animation */
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.azad-tier-card, .addon-item').forEach(function(el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.6s ease-out';
+        observer.observe(el);
+    });
+})();
+</script>
 </body>
 </html>
-
-
