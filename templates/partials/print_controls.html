@@ -1,0 +1,12 @@
+{# Unified floating print control bar — auto-hides during active print.
+   Include at the top of any printable document body:
+   {% include 'partials/print_controls.html' %}
+#}
+<div class="print-control-bar no-print">
+  <button class="pc-btn pc-btn-print" data-action="window-print">
+    <i class="fas fa-print"></i> {{ t('Print') }}
+  </button>
+  <button class="pc-btn pc-btn-close" data-action="window-close">
+    <i class="fas fa-times"></i> {{ t('Close') }}
+  </button>
+</div>

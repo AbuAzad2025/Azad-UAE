@@ -44,9 +44,9 @@
 </head>
 <body>
     <div class="r-no-print">
-        <button onclick="window.print()"><i class="fas fa-print"></i> {{ t('Print Receipt') }}</button>
+        {% include 'partials/print_controls.html' %}
     </div>
-    <div class="receipt">
+    <div class="receipt print-container-pos">
         <div class="r-header">
             <h1>{{ tenant_name_ar or company_name_ar or 'Azad' }}</h1>
             {% if tenant_phone %}<div class="r-meta">{{ tenant_phone }}</div>{% endif %}

@@ -503,3 +503,5 @@ body.landing-sidebar-open .landing-sidebar { transform: translateX(0); }
     animation-duration: 0.01ms !important; transition-duration: 0.01ms !important;
   }
 }
+
+html[lang="ar"] body { font-family: 'Tajawal', 'Amiri', 'Segoe UI', system-ui, sans-serif; }

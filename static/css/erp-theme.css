@@ -1314,3 +1314,88 @@ a.btn.btn-outline-secondary span {
 .ic-3 { font-size: 36px; font-weight: 700; }
 .ic-4 { opacity: 0.9; font-size: 1.1rem; }
 .ic-5 { display:none; }
+
+/* ───────────────────────────────────────────────
+   8. UNIFIED PRINT SYSTEM — Anti-Clip + Dual-Canvas + Control Bar
+   ─────────────────────────────────────────────── */
+
+/* Floating print control bar (screen only, hidden during print) */
+.print-control-bar {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 99999;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+.print-control-bar .pc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  text-decoration: none;
+}
+.print-control-bar .pc-btn:hover { opacity: 0.88; }
+.print-control-bar .pc-btn-print { background: #28a745; color: #fff; }
+.print-control-bar .pc-btn-close { background: #6c757d; color: #fff; }
+
+@media print {
+  /* A4 canvas — financial statements, invoices, ledgers, reports */
+  .print-container-a4 { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+
+  /* 80mm thermal POS canvas */
+  .print-container-pos {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Anti-clip: hide all non-print chrome */
+  .no-print, #sidebar, #navbar, .navbar, .main-sidebar, .main-header, .main-footer,
+  .app-footer, .erp-mobile-nav, .breadcrumb, .content-header, .card-tools,
+  .filter-card, .btn, .actions, .dropdown, .dropdown-menu, .select2,
+  .select2-container, form:not(.erp-print-form), .print-control-bar {
+    display: none !important;
+  }
+
+  /* Main container resets */
+  .content-wrapper, .content, .container-fluid, .invoice, .receipt, .voucher,
+  .statement, .report, .invoice-container, .receipt-container, .print-container,
+  .print-wrapper, .card, .box, .invoice-block {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Anti-clip: table overflow prevention */
+  .table-responsive { overflow: visible !important; display: block !important; width: 100% !important; }
+  table { table-layout: auto !important; width: 100% !important; border-collapse: collapse !important; }
+  thead { display: table-header-group !important; }
+  tfoot { display: table-footer-group !important; }
+  th, td { word-break: break-word !important; overflow-wrap: anywhere !important; white-space: normal !important; }
+
+  /* Anti-split: prevent rows/cards from breaking across pages */
+  tr, p, .card, .invoice-block, .totals, .total-section, .signature, .signature-section,
+  .receipt-header, .invoice-footer, .receipt-footer, .voucher-footer,
+  .qr-code, .notes, .notes-section, .payment-row, .table-row,
+  .amount-box, .amount-showcase, .amount-display, .allocation-item, .cheque-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
