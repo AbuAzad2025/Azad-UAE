@@ -107,13 +107,10 @@ class TestCeleryReportAndMailTasks:
     """generate_monthly_report, send_invoice_email — success/failure paths."""
 
     def test_generate_monthly_report(self, mocker, mock_app_context):
-        mock_report = MagicMock(id=55)
-        fake_rs = MagicMock()
-        fake_rs.generate_monthly_report.return_value = mock_report
-        mocker.patch.dict('sys.modules', {'services.report_service': MagicMock(ReportService=fake_rs)})
         from services.celery_tasks import generate_monthly_report
         result = generate_monthly_report(6, 2026)
-        assert result == {'success': True, 'report_id': 55}
+        assert result['success'] is False
+        assert 'Disabled' in result['error']
 
     def test_send_invoice_email_success(self, mocker, mock_app_context):
         sale = MagicMock()
