@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Receipt #{{ sale.sale_number }}</title>
+    <style>
+        @page { size: 80mm auto; margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', 'Cairo', monospace;
+            width: 80mm;
+            color: #000;
+            background: #fff;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .receipt { padding: 4mm 3mm; }
+        .r-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px; }
+        .r-header h1 { font-size: 14px; font-weight: 700; }
+        .r-header .r-meta { font-size: 9px; margin-top: 2px; }
+        .r-grid { display: grid; grid-template-columns: 1fr auto; gap: 2px 4px; font-size: 10px; }
+        .r-grid > .r-label { font-weight: 600; }
+        .r-divider { border-top: 1px dashed #000; margin: 6px 0; }
+        .r-totals { display: grid; grid-template-columns: 1fr auto; gap: 3px 4px; font-size: 11px; font-weight: 600; }
+        .r-totals .r-grand { font-size: 13px; font-weight: 700; border-top: 1px solid #000; padding-top: 4px; margin-top: 2px; }
+        .r-items { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .r-items th { text-align: left; font-weight: 600; border-bottom: 1px dashed #000; padding: 2px 0; }
+        .r-items td { padding: 2px 0; }
+        .r-items .r-qty { text-align: center; width: 20px; }
+        .r-items .r-amt { text-align: right; white-space: nowrap; }
+        .r-footer { text-align: center; margin-top: 8px; font-size: 9px; }
+        .r-qr { text-align: center; margin: 6px 0; }
+        .r-no-print { display: none; }
+        @media screen {
+            .r-no-print { display: block; text-align: center; padding: 20px; }
+            .r-no-print button {
+                padding: 12px 36px; font-size: 16px; border: none; border-radius: 10px;
+                background: #d4a017; color: #fff; cursor: pointer; font-weight: 700;
+            }
+            body { width: auto; max-width: 80mm; margin: 20px auto; border: 1px solid #ccc; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="r-no-print">
+        <button onclick="window.print()"><i class="fas fa-print"></i> {{ t('Print Receipt') }}</button>
+    </div>
+    <div class="receipt">
+        <div class="r-header">
+            <h1>{{ tenant_name_ar or company_name_ar or 'Azad' }}</h1>
+            {% if tenant_phone %}<div class="r-meta">{{ tenant_phone }}</div>{% endif %}
+            {% if tenant_address %}<div class="r-meta">{{ tenant_address }}</div>{% endif %}
+            <div class="r-meta">{{ sale.sale_number }}</div>
+        </div>
+
+        <div class="r-grid">
+            <span class="r-label">{{ t('Date') }}:</span><span>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</span>
+            <span class="r-label">{{ t('Cashier') }}:</span><span>{{ current_user.full_name or current_user.username }}</span>
+            <span class="r-label">{{ t('Customer') }}:</span><span>{{ customer.name if customer else t('Walk-in') }}</span>
+        </div>
+
+        <div class="r-divider"></div>
+
+        <table class="r-items">
+            <thead>
+                <tr>
+                    <th>{{ t('Item') }}</th>
+                    <th class="r-qty">{{ t('Qty') }}</th>
+                    <th class="r-amt">{{ t('Amount') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in sale.lines %}
+                <tr>
+                    <td>{{ line.product.name if line.product else '' }}</td>
+                    <td class="r-qty">{{ line.quantity }}</td>
+                    <td class="r-amt">{{ format_currency(line.total_price, sale.currency) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="r-divider"></div>
+
+        <div class="r-totals">
+            <span>{{ t('Subtotal') }}</span>
+            <span>{{ format_currency(sale.subtotal, sale.currency) }}</span>
+
+            {% if sale.discount_amount and sale.discount_amount > 0 %}
+            <span>{{ t('Discount') }}</span>
+            <span>-{{ format_currency(sale.discount_amount, sale.currency) }}</span>
+            {% endif %}
+
+            {% if sale.tax_amount and sale.tax_amount > 0 %}
+            <span>{{ t('VAT') }} (5%)</span>
+            <span>{{ format_currency(sale.tax_amount, sale.currency) }}</span>
+            {% endif %}
+
+            <span class="r-grand">{{ t('Total') }}</span>
+            <span class="r-grand">{{ format_currency(sale.total_amount, sale.currency) }}</span>
+
+            {% if sale.paid_amount and sale.paid_amount > 0 %}
+            <span>{{ t('Paid') }}</span>
+            <span>{{ format_currency(sale.paid_amount, sale.currency) }}</span>
+            {% endif %}
+
+            {% if sale.balance_due and sale.balance_due > 0 %}
+            <span>{{ t('Balance Due') }}</span>
+            <span>{{ format_currency(sale.balance_due, sale.currency) }}</span>
+            {% endif %}
+        </div>
+
+        <div class="r-divider"></div>
+
+        <div class="r-footer">
+            {{ t('Thank You') }}
+            <br>{{ tenant_name_ar or company_name_ar or 'Azad' }}
+            {% if developer_whatsapp %}<br>WhatsApp: {{ developer_whatsapp }}{% endif %}
+        </div>
+    </div>
+    <script>
+        window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 300); });
+    </script>
+</body>
+</html>

@@ -134,14 +134,17 @@ def normalize_payment_method_code(method):
     value = str(method).strip().lower()
     return PAYMENT_METHOD_ALIASES.get(value, value)
 
+from models.enums import RoleEnum
+
 ROLE_LEVELS = {
-    'seller': 10,
-    'accountant': 15,
-    'branch_manager': 20,
-    'manager': 25,
-    'super_admin': 90,
-    'developer': 95,
-    'owner': 100,
+    RoleEnum.SELLER.value: 10,
+    RoleEnum.ACCOUNTANT.value: 15,
+    RoleEnum.BRANCH_MANAGER.value: 20,
+    RoleEnum.MANAGER.value: 25,
+    RoleEnum.SUPER_ADMIN.value: 90,
+    RoleEnum.DEVELOPER.value: 95,
+    RoleEnum.OWNER.value: 100,
+    RoleEnum.CASHIER.value: 8,
 }
 
 PERMISSIONS = {

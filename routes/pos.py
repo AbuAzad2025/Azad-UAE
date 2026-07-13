@@ -6,12 +6,15 @@ from flask import Blueprint, jsonify, render_template, request, current_app, red
 from flask_login import current_user, login_required
 from extensions import csrf, db
 from models import Customer, PosSession, Product, PosOrderType
+from models.enums import PermissionEnum
+from models.pos_shift import PosShift
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from services.sale_service import SaleService
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, get_active_branch_id
 from utils.decorators import permission_required
 from utils.db_safety import atomic_transaction
+from utils.helpers import generate_number
 from utils.pos_helpers import (
     POS_QA_MARKER,
     create_pos_session,
@@ -303,7 +306,7 @@ def api_walkin_customer():
 
 @pos_bp.route("/api/checkout", methods=["POST"])
 @login_required
-@permission_required("manage_sales")
+@permission_required(PermissionEnum.MANAGE_SALES)
 def api_checkout():
     if not request.is_json:
         return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
@@ -312,6 +315,10 @@ def api_checkout():
     session = get_active_session(current_user)
     if not session:
         return jsonify({"success": False, "error": "لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."}), 403
+
+    shift = _get_active_shift(current_user)
+    if not shift:
+        return jsonify({"success": False, "error": "لا توجد وردية مفتوحة. يرجى فتح وردية أولاً."}), 403
 
     use_quick = bool(payload.get("quick_customer") or payload.get("walkin"))
     customer_id = payload.get("customer_id")
@@ -349,8 +356,21 @@ def api_checkout():
         return jsonify({"success": False, "error": "بيانات السلة غير صالحة."}), 400
 
     lines_data = []
+    product_ids = [int(r["product_id"]) for r in merged]
+    if product_ids:
+        tid = get_active_tenant_id(current_user)
+        locked = {
+            p.id: p
+            for p in db.session.query(Product)
+            .filter(Product.id.in_(product_ids), Product.tenant_id == tid)
+            .with_for_update()
+            .all()
+        }
+    else:
+        locked = {}
+
     for row in merged:
-        product = tenant_get(Product, row["product_id"])
+        product = locked.get(int(row["product_id"]))
         if not product or not product.is_active:
             return jsonify({"success": False, "error": "يوجد منتج غير صالح داخل السلة."}), 400
 
@@ -383,7 +403,7 @@ def api_checkout():
         if unit_price is not None:
             standard_price = float(product.get_price_for_customer(customer.customer_type))
             if abs(float(unit_price) - standard_price) > 0.001:
-                if not current_user.has_permission('override_sale_price') and not current_user.is_owner:
+                if not current_user.has_permission(PermissionEnum.OVERRIDE_SALE_PRICE) and not current_user.is_owner:
                     return jsonify({
                         "success": False,
                         "error": f'⚠️ ليس لديك صلاحية تغيير سعر المنتج "{product.name}".\n'
@@ -646,6 +666,147 @@ def api_session_report():
 })
 
 
+def _get_active_shift(user=None) -> PosShift | None:
+    from utils.tenanting import get_active_tenant_id
+    tid = get_active_tenant_id(current_user)
+    if not tid:
+        return None
+    session = get_active_session(current_user)
+    if not session:
+        return None
+    return (
+        PosShift.query
+        .filter(
+            PosShift.tenant_id == int(tid),
+            PosShift.session_id == session.id,
+            PosShift.user_id == current_user.id,
+            PosShift.status == PosShift.SHIFT_OPEN,
+        )
+        .order_by(PosShift.id.desc())
+        .first()
+    )
+
+
+@pos_bp.route("/api/shift/current")
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_shift_current():
+    shift = _get_active_shift(current_user)
+    if not shift:
+        return jsonify({"success": False, "shift": None}), 200
+    return jsonify({"success": True, "shift": shift.to_dict()})
+
+
+@pos_bp.route("/api/shift/open", methods=["POST"])
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_shift_open():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
+    payload = request.get_json(silent=True) or {}
+    starting_cash = payload.get("starting_cash", 0) or 0
+
+    session = get_active_session(current_user)
+    if not session:
+        return jsonify({"success": False, "error": "لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."}), 403
+
+    existing = _get_active_shift(current_user)
+    if existing:
+        return jsonify({"success": False, "error": f"يوجد وردية مفتوحة: {existing.shift_number}."}), 409
+
+    try:
+        with atomic_transaction("pos_shift_open"):
+            tid = get_active_tenant_id(current_user)
+            number = generate_number(
+                prefix="SHF", model=PosShift, field_name="shift_number",
+                branch_code=session.branch_id, tenant_id=int(tid),
+            )
+            shift = PosShift(
+                tenant_id=int(tid),
+                session_id=session.id,
+                user_id=current_user.id,
+                shift_number=number,
+                starting_cash=Decimal(str(starting_cash)),
+                status=PosShift.SHIFT_OPEN,
+            )
+            db.session.add(shift)
+            db.session.flush()
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    return jsonify({"success": True, "shift": shift.to_dict()}), 201
+
+
+@pos_bp.route("/api/shift/reconcile", methods=["POST"])
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_shift_reconcile():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
+    payload = request.get_json(silent=True) or {}
+    actual_cash = payload.get("actual_cash", 0) or 0
+    notes = (payload.get("notes") or "").strip() or None
+
+    shift = _get_active_shift(current_user)
+    if not shift:
+        return jsonify({"success": False, "error": "لا توجد وردية مفتوحة."}), 404
+
+    try:
+        with atomic_transaction("pos_shift_reconcile"):
+            _accumulate_shift_totals(shift)
+            shift.reconcile(Decimal(str(actual_cash)), notes)
+            db.session.flush()
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    return jsonify({"success": True, "shift": shift.to_dict()})
+
+
+@pos_bp.route("/api/shift/close", methods=["POST"])
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def api_shift_close():
+    shift = _get_active_shift(current_user)
+    if not shift:
+        return jsonify({"success": False, "error": "لا توجد وردية مفتوحة."}), 404
+
+    if shift.status == PosShift.SHIFT_OPEN:
+        return jsonify({"success": False, "error": "يرجى تسوية الوردية قبل إغلاقها."}), 400
+
+    try:
+        with atomic_transaction("pos_shift_close"):
+            shift.close()
+            db.session.flush()
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    return jsonify({"success": True, "shift": shift.to_dict()})
+
+
+def _accumulate_shift_totals(shift: PosShift):
+    from models import Sale
+    sales = (
+        Sale.query
+        .filter(Sale.tenant_id == shift.tenant_id, Sale.pos_session_id == shift.session_id)
+        .all()
+    )
+    total = Decimal("0")
+    cash = Decimal("0")
+    card = Decimal("0")
+    for sale in sales:
+        total += Decimal(str(sale.total_amount or 0))
+        for payment in sale.payments:
+            method = getattr(payment, "payment_method", "")
+            amt = Decimal(str(payment.amount or 0))
+            if method == "cash":
+                cash += amt
+            elif method in ("card", "bank_transfer", "e_wallet"):
+                card += amt
+    shift.total_sales = total
+    shift.total_cash_sales = cash
+    shift.total_card_sales = card
+
+
 import queue as _queue
 import os as _os
 import urllib.request
@@ -785,6 +946,18 @@ def customer_display_stream(session_id):
 @pos_bp.route("/customer-display")
 def customer_display():
     return render_template("pos/customer_display.html")
+
+
+@pos_bp.route("/receipt/<int:sale_id>")
+@login_required
+@permission_required(PermissionEnum.MANAGE_SALES)
+def thermal_receipt(sale_id):
+    from models import Sale
+    sale = tenant_get(Sale, sale_id)
+    if not sale:
+        abort(404)
+    customer = sale.customer
+    return render_template("pos/receipt.html", sale=sale, customer=customer)
 
 
 @pos_bp.route("/api/hardware/print-receipt", methods=["POST"])

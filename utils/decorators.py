@@ -2,6 +2,7 @@ from functools import wraps
 from flask import abort, flash, redirect, url_for, request
 from flask_login import current_user
 
+from models.enums import RoleEnum, PermissionEnum
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
 
@@ -27,7 +28,8 @@ def permission_required(permission_code):
             if is_global_owner_user(current_user):
                 return f(*args, **kwargs)
 
-            if not current_user.has_permission(permission_code):
+            code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
+            if not current_user.has_permission(code):
                 flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
                 abort(403)
             
@@ -47,7 +49,8 @@ def any_permission_required(*permission_codes):
             if is_global_owner_user(current_user):
                 return f(*args, **kwargs)
 
-            allowed = any(current_user.has_permission(code) for code in permission_codes if code)
+            codes = [c.value if isinstance(c, PermissionEnum) else c for c in permission_codes if c]
+            allowed = any(current_user.has_permission(code) for code in codes)
             if not allowed:
                 flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
                 abort(403)
@@ -142,7 +145,7 @@ def company_admin_required(f):
         from utils.tenanting import get_active_tenant_id
 
         slug = getattr(getattr(current_user, 'role', None), 'slug', None)
-        if slug not in ('super_admin', 'manager') and not current_user.is_super_admin():
+        if slug not in RoleEnum.company_admin_values() and not current_user.is_super_admin():
             abort(403)
         if not get_active_tenant_id(current_user):
             abort(403)
@@ -167,7 +170,7 @@ def owner_or_company_admin(f):
         from utils.tenanting import get_active_tenant_id
 
         slug = getattr(getattr(current_user, 'role', None), 'slug', None)
-        if slug in ('super_admin', 'manager') or current_user.is_super_admin():
+        if slug in RoleEnum.company_admin_values() or current_user.is_super_admin():
             if get_active_tenant_id(current_user):
                 return f(*args, **kwargs)
         abort(403)
@@ -180,10 +183,9 @@ def branch_manager_required(f):
         if not current_user.is_authenticated:
             abort(404)
         
-        # Super Admin or Owner or Branch Manager
         if not (current_user.is_owner or 
                 current_user.is_super_admin() or 
-                (getattr(current_user, 'role', None) and getattr(current_user.role, 'slug', None) == 'branch_manager')):
+                (getattr(current_user, 'role', None) and getattr(current_user.role, 'slug', None) == RoleEnum.BRANCH_MANAGER.value)):
             flash('هذه الصفحة لمدراء الفروع فقط', 'danger')
             abort(403)
         
@@ -196,10 +198,9 @@ def accountant_required(f):
         if not current_user.is_authenticated:
             abort(404)
         
-        # Super Admin or Owner or Accountant or Branch Manager
         if not (current_user.is_owner or 
                 current_user.is_super_admin() or 
-                (getattr(current_user, 'role', None) and getattr(current_user.role, 'slug', None) in ['accountant', 'branch_manager'])):
+                (getattr(current_user, 'role', None) and getattr(current_user.role, 'slug', None) in RoleEnum.financial_values())):
             flash('هذه الصفحة للمحاسبين فقط', 'danger')
             abort(403)
         

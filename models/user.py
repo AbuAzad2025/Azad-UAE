@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
+from models.enums import RoleEnum, PermissionEnum
 
 role_permissions = db.Table(
     'role_permissions',
@@ -124,22 +125,23 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
     
     def is_super_admin(self):
-        return self.role and self.role.slug == 'super_admin'
+        return self.role and self.role.slug == RoleEnum.SUPER_ADMIN.value
     
     def is_admin(self):
         """Admin = Owner OR Super Admin"""
         return self.is_owner or self.is_super_admin()
     
     def is_manager(self):
-        return self.role and self.role.slug == 'manager'
+        return self.role and self.role.slug == RoleEnum.MANAGER.value
     
     def is_seller(self):
-        return self.role and self.role.slug == 'seller'
+        return self.role and self.role.slug == RoleEnum.SELLER.value
     
     def has_permission(self, permission_code):
         if self.is_owner:
             return True
-        return self.role and self.role.has_permission(permission_code)
+        code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
+        return self.role and self.role.has_permission(code)
     
     def can_see_costs(self):
         return self.is_owner or self.is_super_admin() or self.is_manager()
@@ -148,13 +150,13 @@ class User(UserMixin, db.Model):
         """Cashiers cannot apply discounts without supervisor override."""
         if self.is_owner:
             return True
-        return self.role and self.role.slug not in ('seller', 'cashier')
+        return self.role and self.role.slug not in RoleEnum.restricted_pricing_values()
 
     def can_edit_price(self):
         """Cashiers cannot edit prices without supervisor override."""
         if self.is_owner:
             return True
-        return self.role and self.role.slug not in ('seller', 'cashier')
+        return self.role and self.role.slug not in RoleEnum.restricted_pricing_values()
     
     def get_display_name(self, lang='ar'):
         """Get display name in specified language"""

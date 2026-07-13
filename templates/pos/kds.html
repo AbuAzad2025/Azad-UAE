@@ -1,11 +1,5 @@
-{% extends 'base.html' %}
-{% block title %}شاشة المطبخ KDS{% endblock %}
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <h1 class="mb-0"><i class="fas fa-utensils mr-2"></i>شاشة المطبخ (KDS)</h1>
-  <a href="{{ url_for('pos.index') }}" class="btn btn-outline-secondary"><i class="fas fa-cash-register mr-1"></i>POS</a>
-</div>
-{% endblock %}
+{% extends 'layouts/base_pos.html' %}
+{% block title %}{{ t('Kitchen Display') }} KDS{% endblock %}
 {% block extra_css %}
 <style>
 .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; padding: 8px 0; }
@@ -25,15 +19,15 @@
 {% block content %}
 <div class="mb-3">
   <div class="btn-group btn-group-sm">
-    <button class="btn btn-outline-secondary filter-btn active" data-filter="all">الكل</button>
-    <button class="btn btn-outline-warning filter-btn" data-filter="pending">قيد الانتظار</button>
-    <button class="btn btn-outline-primary filter-btn" data-filter="preparing">تحت التجهيز</button>
-    <button class="btn btn-outline-success filter-btn" data-filter="ready">جاهز</button>
+    <button class="btn btn-outline-secondary filter-btn active" data-filter="all">{{ t('All') }}</button>
+    <button class="btn btn-outline-warning filter-btn" data-filter="pending">{{ t('Pending') }}</button>
+    <button class="btn btn-outline-primary filter-btn" data-filter="preparing">{{ t('Preparing') }}</button>
+    <button class="btn btn-outline-success filter-btn" data-filter="ready">{{ t('Ready') }}</button>
   </div>
   <button id="kdsRefreshBtn" class="btn btn-sm btn-outline-info float-left" aria-label="{{ t('Refresh') }}"><i class="fas fa-sync-alt"></i></button>
 </div>
 <div id="kdsGrid" class="kds-grid">
-  <div class="text-center text-muted py-5 col-12"><i class="fas fa-spinner fa-spin fa-2x"></i><br>جارٍ التحميل...</div>
+  <div class="text-center text-muted py-5 col-12"><i class="fas fa-spinner fa-spin fa-2x"></i><br>{{ t('Loading') }}...</div>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -46,14 +40,14 @@
     fetch('/pos/api/kds/orders').then(r=>r.json()).then(orders=>{
       renderOrders(orders);
     }).catch(()=>{
-      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">فشل التحميل</div>';
+      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">{{ t('Load Failed') }}</div>';
     });
   }
 
   function renderOrders(orders) {
     const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
     if (!filtered.length) {
-      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">لا توجد طلبات</div>';
+      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">{{ t('No Orders') }}</div>';
       return;
     }
     grid.innerHTML = filtered.map(o => `
@@ -70,15 +64,15 @@
     `).join('');
   }
 
-  function statusLabel(s) { return {pending:'قيد الانتظار',preparing:'تحت التجهيز',ready:'جاهز',served:'تم التقديم',cancelled:'ملغي'}[s]||s; }
+  function statusLabel(s) { return {pending:'{{ t("Pending") }}',preparing:'{{ t("Preparing") }}',ready:'{{ t("Ready") }}',served:'{{ t("Served") }}',cancelled:'{{ t("Cancelled") }}'}[s]||s; }
   function statusBadge(s) { return {pending:'warning',preparing:'primary',ready:'success',served:'secondary',cancelled:'danger'}[s]||'secondary'; }
 
   function actionButtons(o) {
     const btns = [];
-    if (o.status === 'pending') btns.push('<button class="btn btn-primary btn-sm status-btn" data-id="'+o.id+'" data-status="preparing">تجهيز</button>');
-    if (o.status === 'preparing') btns.push('<button class="btn btn-success btn-sm status-btn" data-id="'+o.id+'" data-status="ready">جاهز</button>');
-    if (o.status === 'ready') btns.push('<button class="btn btn-secondary btn-sm status-btn" data-id="'+o.id+'" data-status="served">تم التقديم</button>');
-    if (!['served','cancelled'].includes(o.status)) btns.push('<button class="btn btn-danger btn-sm status-btn" data-id="'+o.id+'" data-status="cancelled">إلغاء</button>');
+    if (o.status === 'pending') btns.push('<button class="btn btn-primary btn-sm status-btn" data-id="'+o.id+'" data-status="preparing">{{ t("Preparing") }}</button>');
+    if (o.status === 'preparing') btns.push('<button class="btn btn-success btn-sm status-btn" data-id="'+o.id+'" data-status="ready">{{ t("Ready") }}</button>');
+    if (o.status === 'ready') btns.push('<button class="btn btn-secondary btn-sm status-btn" data-id="'+o.id+'" data-status="served">{{ t("Served") }}</button>');
+    if (!['served','cancelled'].includes(o.status)) btns.push('<button class="btn btn-danger btn-sm status-btn" data-id="'+o.id+'" data-status="cancelled">{{ t("Cancelled") }}</button>');
     return btns.join('');
   }
 

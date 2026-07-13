@@ -1,16 +1,15 @@
-{% extends 'base.html' %}
-{% block title %}شاشة العميل{% endblock %}
-{% block body_attr %}class="bg-dark"{% endblock %}
+{% extends 'layouts/base_pos.html' %}
+{% block title %}{{ t('Customer Display') }}{% endblock %}
 {% block content %}
 <div class="container text-center text-white py-5" style="min-height:100vh">
   <div id="cdStatus" class="mb-4">
     <div class="display-1 mb-3"><i class="fas fa-spinner fa-pulse"></i></div>
-    <h2 id="cdOrderNumber" class="mb-3">بانتظار الطلب...</h2>
+    <h2 id="cdOrderNumber" class="mb-3">{{ t('Waiting for Order') }}...</h2>
   </div>
   <div id="cdItems" class="row justify-content-center mb-4 d-none">
     <div class="col-md-6">
       <table class="table table-dark table-borderless text-right">
-        <thead><tr><th>البيان</th><th>الكمية</th><th>المبلغ</th></tr></thead>
+        <thead><tr><th>{{ t('Description') }}</th><th>{{ t('Qty') }}</th><th>{{ t('Amount') }}</th></tr></thead>
         <tbody id="cdItemsBody"></tbody>
       </table>
       <hr class="border-light">
@@ -23,11 +22,11 @@
         <div class="progress" style="height:30px">
           <div id="cdProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
         </div>
-        <p id="cdProgressLabel" class="mt-2 h4">قيد الانتظار</p>
+        <p id="cdProgressLabel" class="mt-2 h4">{{ t('Pending') }}</p>
       </div>
     </div>
   </div>
-  <p class="text-muted small mt-5">شكراً لزيارتكم</p>
+  <p class="text-muted small mt-5">{{ t('Thank You') }}</p>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -36,7 +35,7 @@
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
   const tenantId = params.get('tenant_id');
-  if (!sessionId || !tenantId) { document.getElementById('cdOrderNumber').textContent = 'رابط غير صالح'; return; }
+  if (!sessionId || !tenantId) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
 
   const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId));
   es.onmessage = function(e) {
@@ -49,14 +48,14 @@
 
   function updateDisplay(d) {
     document.getElementById('cdStatus').classList.remove('d-none');
-    document.getElementById('cdOrderNumber').textContent = 'فاتورة #' + (d.order_number||'');
+    document.getElementById('cdOrderNumber').textContent = '{{ t("Invoice") }} #' + (d.order_number||'');
     document.getElementById('cdItems').classList.remove('d-none');
     const tbody = document.getElementById('cdItemsBody');
     tbody.innerHTML = (d.items||[]).map(i => '<tr><td>'+i.name+'</td><td>'+i.quantity+'</td><td>'+i.total+'</td></tr>').join('');
-    document.getElementById('cdTotal').textContent = 'الإجمالي: ' + (d.total||'0.00');
+    document.getElementById('cdTotal').textContent = '{{ t("Grand Total") }}: ' + (d.total||'0.00');
     document.getElementById('cdProgress').classList.remove('d-none');
     const pct = {pending:'25%',preparing:'50%',ready:'75%',served:'100%'}[d.status]||'0%';
-    const label = {pending:'قيد الانتظار',preparing:'تحت التجهيز',ready:'جاهز',served:'تم التقديم'}[d.status]||'';
+    const label = {pending:'{{ t("Pending") }}',preparing:'{{ t("Preparing") }}',ready:'{{ t("Ready") }}',served:'{{ t("Served") }}'}[d.status]||'';
     document.getElementById('cdProgressBar').style.width = pct;
     document.getElementById('cdProgressLabel').textContent = label;
   }

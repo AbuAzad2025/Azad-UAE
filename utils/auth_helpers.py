@@ -4,6 +4,7 @@
 """
 from extensions import db
 from utils.constants import ROLE_LEVELS
+from models.enums import RoleEnum
 
 
 def role_level_for(slug):
@@ -16,7 +17,7 @@ def role_level_for_user(user):
     if not user:
         return 0
     if getattr(user, 'is_owner', False):
-        return ROLE_LEVELS.get('owner', 100)
+        return ROLE_LEVELS.get(RoleEnum.OWNER.value, 100)
     role = getattr(user, 'role', None)
     slug = getattr(role, 'slug', None) if role else None
     return role_level_for(slug)
@@ -33,7 +34,7 @@ def is_admin_surface_user(user):
         return True
     role = getattr(user, 'role', None)
     slug = getattr(role, 'slug', None) if role else None
-    return slug == 'super_admin'
+    return slug == RoleEnum.SUPER_ADMIN.value
 
 
 def is_global_owner_user(user):
@@ -50,7 +51,7 @@ def is_global_owner_user(user):
             return True
     role = getattr(user, 'role', None)
     slug = getattr(role, 'slug', None) if role else None
-    return slug == 'developer'
+    return slug == RoleEnum.DEVELOPER.value
 
 
 def user_may_have_null_tenant(*, is_owner=False, role=None):
@@ -58,7 +59,7 @@ def user_may_have_null_tenant(*, is_owner=False, role=None):
     if is_owner:
         return True
     slug = getattr(role, 'slug', None) if role else None
-    return slug == 'developer'
+    return slug == RoleEnum.DEVELOPER.value
 
 
 def enforce_company_user_tenant(user, *, role=None, is_owner=None):

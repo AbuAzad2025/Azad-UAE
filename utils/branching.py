@@ -8,7 +8,9 @@ from extensions import db
 from utils.tenanting import get_active_tenant_id, apply_tenant_scope
 
 
-GLOBAL_ROLE_SLUGS = {"developer", "super_admin"}
+from models.enums import RoleEnum
+
+GLOBAL_ROLE_SLUGS = frozenset(RoleEnum.global_scope_values())
 ACTIVE_BRANCH_SESSION_KEY = "active_branch_id"
 ACTIVE_BRANCH_MODE_SESSION_KEY = "active_branch_mode"
 

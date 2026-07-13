@@ -1,8 +1,6 @@
-{% extends 'base.html' %}
+{% extends 'layouts/base_pos.html' %}
 
 {% block title %}{{ t('Point Of Sale') }} POS{% endblock %}
-
-{% block page_title %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pos-theme.css') }}">

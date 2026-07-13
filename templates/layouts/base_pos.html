@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
+    {% include 'partials/head.html' %}
+    <style>
+        body.pos-layout {
+            background: var(--pos-bg, #0a0a0a);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        body.pos-layout .pos-fullscreen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        body.pos-layout .wrapper,
+        body.pos-layout .content-wrapper,
+        body.pos-layout .main-sidebar,
+        body.pos-layout .main-footer,
+        body.pos-layout .main-header,
+        body.pos-layout .erp-mobile-nav {
+            display: none !important;
+        }
+        body.pos-layout .pos-fullscreen {
+            display: flex !important;
+        }
+        .pos-flash-wrap {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: 90%;
+            max-width: 480px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="pos-layout">
+    <div class="pos-flash-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="pos-fullscreen">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
+    <script>
+        window.APP_ENUMS = {{ app_enums | tojson | safe }};
+        window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
+        window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -71,6 +71,7 @@ from .pos_floor import PosFloor, PosTable, PosTableOrder
 from .pos_kds_order import PosKdsOrder
 from .pos_order_type import PosOrderType, ensure_default_pos_order_types
 from .pos_session import PosSession
+from .pos_shift import PosShift
 from .document_sequence import DocumentSequence
 from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
 from .crm import CRMStage, CRMTeam, CRMTeamMember, CRMLead, CRMActivity
@@ -151,6 +152,7 @@ __all__ = [
     'PosKdsOrder',
     'PosOrderType', 'ensure_default_pos_order_types',
     'PosSession',
+    'PosShift',
     'DocumentSequence',
     'FiscalPosition', 'FiscalPositionTaxRule',
     'CRMStage', 'CRMTeam', 'CRMTeamMember', 'CRMLead', 'CRMActivity',

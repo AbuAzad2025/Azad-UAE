@@ -197,3 +197,23 @@ def generic_webhook():
     except Exception:
         logger.exception("Generic billing webhook failed")
         return jsonify({"error": "Webhook processing failed"}), 500
+
+
+@billing_webhook_bp.route("/api/cron/check-subscriptions", methods=["POST"])
+@limiter.limit("10 per minute")
+def cron_check_subscriptions():
+    """Subscription lifecycle cron — detects expiring tenants, sends WhatsApp reminders, suspends expired ones."""
+    from flask import abort
+    from utils.billing_scheduler import run_subscription_check
+
+    cron_secret = current_app.config.get("CRON_SECRET", "")
+    provided = request.headers.get("X-Cron-Secret", "") or request.args.get("key", "")
+    if cron_secret and provided != cron_secret:
+        abort(403)
+
+    try:
+        result = run_subscription_check()
+        return jsonify({"success": True, **result}), 200
+    except Exception:
+        logger.exception("Subscription cron check failed")
+        return jsonify({"error": "Cron check failed"}), 500
