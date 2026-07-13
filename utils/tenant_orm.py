@@ -28,7 +28,7 @@ _SKIP_BLUEPRINTS = frozenset({
     "shop",      # Public tenant stores — exempt by design (see below)
 })
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
-_ORM_EXEMPT_MODELS = frozenset({"User"})
+_ORM_EXEMPT_MODELS = frozenset({"User", "Package", "PackagePurchase"})
 
 # ── shop blueprint exemption rationale ─────────────────────────────────────
 # The 'shop' blueprint (/s/<slug>/...) displays tenant-store pages and is
