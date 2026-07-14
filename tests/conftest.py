@@ -4,6 +4,7 @@ Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 import os
 import shutil
 import sys
+import json
 
 import pytest
 from sqlalchemy import create_engine, text as sa_text
@@ -304,6 +305,39 @@ def app():
             _drop_postgres_database(_TEST_DATABASE_URL)
         except Exception:
             pass
+
+
+# ── Template rendering coverage tracker ──────────────────────────────────
+# Records which Jinja2 templates were rendered during tests so the CI
+# coverage-report job can compute "frontend template coverage".
+_TEMPLATE_COVERAGE_TRACKER: set[str] = set()
+
+
+def _on_template_rendered(sender, template, context, **extra):
+    name = getattr(template, "name", None)
+    if name:
+        _TEMPLATE_COVERAGE_TRACKER.add(name)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _track_template_coverage(app):
+    """Track which Jinja2 templates are rendered during the test session."""
+    try:
+        from flask import template_rendered
+        template_rendered.connect(_on_template_rendered, app)
+    except Exception:
+        pass
+    yield
+    try:
+        template_rendered.disconnect(_on_template_rendered, app)
+    except Exception:
+        pass
+    try:
+        out_path = os.path.join(PROJECT_ROOT, "templates_rendered.json")
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(sorted(_TEMPLATE_COVERAGE_TRACKER), f, indent=2)
+    except Exception:
+        pass
 
 
 _POLLUTED_MODEL_SPECS = (

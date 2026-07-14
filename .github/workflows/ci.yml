@@ -127,6 +127,22 @@ jobs:
           flags: ${{ matrix.cov-flag }}
           fail_ci_if_error: false
 
+      - name: Upload raw coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: covdata-${{ matrix.cov-flag }}
+          path: .coverage
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Upload template coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: templates-${{ matrix.cov-flag }}
+          path: templates_rendered.json
+          if-no-files-found: ignore
+          retention-days: 1
+
   # ── App boot verification (quick smoke test) ──
   verify-boot:
     needs: [determine-matrix]
@@ -180,3 +196,48 @@ jobs:
         run: |
           bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
           bandit -r . --exclude 'migrations/,tests/' || true
+
+  # ── Comprehensive coverage report (backend + frontend) ──
+  coverage-report:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install coverage
+        run: pip install coverage
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: covdata-*
+          path: coverage-data/
+
+      - name: Download template coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: templates-*
+          path: template-data/
+
+      - name: Combine coverage data
+        run: |
+          # Combine all .coverage files from matrix jobs
+          coverage combine coverage-data/covdata-*/.coverage || true
+
+      - name: Generate comprehensive coverage report
+        run: |
+          python scripts/coverage_report.py || true
+
+      - name: Upload combined coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-combined
+          path: .coverage
+          if-no-files-found: ignore
+          retention-days: 7

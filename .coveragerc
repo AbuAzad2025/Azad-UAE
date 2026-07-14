@@ -1,23 +1,32 @@
 [run]
 source = .
+branch = True
+relative_files = True
 omit =
     migrations/**
     utils/build_assets.py
     utils/seed_industry_fields.py
     tests/**
     tools/**
+    scripts/**
+    load_tests/**
     .venv/**
     venv/**
     */site-packages/**
+    node_modules/**
 
 [report]
 omit =
     migrations/**
     tests/**
     tools/**
+    scripts/**
+    load_tests/**
 exclude_lines =
     pragma: no cover
     if TYPE_CHECKING:
     if __name__ == .__main__.:
+    raise NotImplementedError
 show_missing = True
 skip_covered = False
+precision = 2
