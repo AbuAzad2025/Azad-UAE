@@ -121,6 +121,12 @@ class TestPOSSession:
                 content_type='application/json')
             assert resp.status_code == 201
 
+            # Open POS shift (required by checkout)
+            resp = client.post('/pos/api/shift/open',
+                json={'starting_cash': 500},
+                content_type='application/json')
+            assert resp.status_code == 201
+
             # Checkout
             resp = client.post('/pos/api/checkout',
                 json={
@@ -218,6 +224,10 @@ class TestPOSSession:
                 json={'opening_balance': 500},
                 content_type='application/json')
 
+            client.post('/pos/api/shift/open',
+                json={'starting_cash': 500},
+                content_type='application/json')
+
             client.post('/pos/api/checkout',
                 json={
                     'lines': [
@@ -303,6 +313,10 @@ class TestPOSSession:
 
             client.post('/pos/api/session/open',
                 json={'opening_balance': 500},
+                content_type='application/json')
+
+            client.post('/pos/api/shift/open',
+                json={'starting_cash': 500},
                 content_type='application/json')
 
             client.post('/pos/api/checkout',
@@ -398,6 +412,10 @@ class TestPOSSession:
                 json={'opening_balance': 500},
                 content_type='application/json')
 
+            client.post('/pos/api/shift/open',
+                json={'starting_cash': 500},
+                content_type='application/json')
+
             # Override price from 25 to 15 — cashier without override_sale_price should be blocked
             resp = client.post('/pos/api/checkout',
                 json={
@@ -472,6 +490,10 @@ class TestPOSSession:
 
             client.post('/pos/api/session/open',
                 json={'opening_balance': 500},
+                content_type='application/json')
+
+            client.post('/pos/api/shift/open',
+                json={'starting_cash': 500},
                 content_type='application/json')
 
             resp = client.post('/pos/api/checkout',
