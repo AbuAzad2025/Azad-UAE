@@ -75,11 +75,12 @@ def sample_seller_role(db_session):
 
 @pytest.fixture
 def users_client(client, users_manager, sample_tenant, sample_seller_role):
-    """Authenticated client without slow HTTP login (saves ~3s per test)."""
-    with client.session_transaction() as sess:
-        sess['_user_id'] = str(users_manager.id)
-        sess['active_tenant_id'] = sample_tenant.id
+    """Authenticated client using login_user."""
     with client:
+        from flask_login import login_user
+        login_user(users_manager)
+        with client.session_transaction() as sess:
+            sess['active_tenant_id'] = sample_tenant.id
         yield client
 
 

@@ -36,6 +36,7 @@ def _mock_user(**kwargs):
     user.is_owner = kwargs.get("is_owner", False)
     user.tenant_id = kwargs.get("tenant_id", 1)
     user.branch_id = kwargs.get("branch_id", 1)
+    user.locked_until = kwargs.get("locked_until", None)
     user.check_password.return_value = kwargs.get("password_ok", True)
     role = MagicMock()
     role.slug = kwargs.get("role_slug", "manager")

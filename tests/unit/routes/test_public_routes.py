@@ -43,7 +43,7 @@ class TestPublicLanding:
         with patch("routes.public.render_template", return_value="landing") as render:
             resp = public_client.get("/")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html")
+        render.assert_called_once_with("public/landing.html", packages=[], is_en=False)
 
 
 class TestPublicPricing:
@@ -51,7 +51,8 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing.html")
+        render.assert_called_once_with("public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="")
+
 
     def test_pricing_english_session(self, public_client):
         with public_client.session_transaction() as sess:
@@ -59,8 +60,7 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing-en") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing_en.html")
-
+        render.assert_called_once_with("public/pricing.html", packages=[], is_en=True, developer_whatsapp_link="")
 
 class TestPublicFeatures:
     def test_features_arabic_default(self, public_client):

@@ -2,8 +2,17 @@ import pytest
 import werkzeug.exceptions
 
 
+def _clean_db(db_session):
+    """Remove stale test data from shared session-scoped database."""
+    from extensions import db
+    db.session.execute(db.text("TRUNCATE TABLE invoice_settings, login_history, users, roles, tenants RESTART IDENTITY CASCADE"))
+    db.session.commit()
+    db_session.expire_all()
+
+
 class TestOwnerDashboardAccess:
     def test_owner_dashboard_returns_404_for_non_owner(self, client, db_session):
+        _clean_db(db_session)
         import uuid
         from models import User, Role, Tenant
 
@@ -43,8 +52,10 @@ class TestOwnerDashboardAccess:
                 assert resp.status_code == 404
 
     def test_owner_dashboard_renders_for_platform_owner(self, client, db_session):
+        _clean_db(db_session)
         import uuid
         from models import User, Role, Tenant
+        from models.invoice_settings import InvoiceSettings
 
         uid = str(uuid.uuid4())[:8]
         tenant = Tenant(name=f'PlatCo {uid}', name_ar=f'PlatCo AR {uid}', slug=f'platco-{uid}', default_currency='AED')
@@ -66,6 +77,10 @@ class TestOwnerDashboardAccess:
         )
         owner.set_password('password123')
         db_session.add(owner)
+        db_session.commit()
+
+        inv = InvoiceSettings(is_active=True, tenant_id=tenant.id)
+        db_session.add(inv)
         db_session.commit()
 
         with client:

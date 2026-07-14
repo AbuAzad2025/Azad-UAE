@@ -83,6 +83,8 @@ def _sales_patches(**kwargs):
             t = MagicMock()
             t.default_currency = 'AED'
             t.name_ar = 'شركة'
+            # prevent limit-check failure on MagicMock attribute access
+            t.max_sales_per_month = None
             return t
         if name == 'Branch':
             b = MagicMock()

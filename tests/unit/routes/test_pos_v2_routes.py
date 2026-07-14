@@ -66,6 +66,14 @@ def _pos_enabled_patches(**kwargs):
         pass
     session_mock = MagicMock()
     session_mock.get.return_value = tenant_obj
+    # Ensure db.session.query(Product).filter(...).with_for_update().all() returns products
+    _default_locked_products = kwargs.get('locked_products', [_mock_product()])
+    def _query_side(model):
+        q = MagicMock()
+        q.filter.return_value.with_for_update.return_value.all.return_value = _default_locked_products
+        q.filter.return_value.all.return_value = []
+        return q
+    session_mock.query.side_effect = _query_side
     with ExitStack() as stack:
         ss = stack.enter_context(patch('routes.pos.SystemSettings.query'))
         ss.order_by.return_value.first.return_value = global_setting
@@ -74,6 +82,12 @@ def _pos_enabled_patches(**kwargs):
         stack.enter_context(patch('routes.pos.render_template', return_value='ok'))
         stack.enter_context(patch('routes.pos.LoggingCore.log_audit'))
         stack.enter_context(patch('extensions.limiter.limit', return_value=lambda f: f))
+        # Mock PosShift.query so _get_active_shift() and checkout work
+        pos_shift_q = MagicMock()
+        pos_shift_q.filter.return_value.order_by.return_value.first.return_value = MagicMock(status='open')
+        for m in ('filter', 'filter_by', 'order_by'):
+            getattr(pos_shift_q, m).return_value = pos_shift_q
+        stack.enter_context(patch('routes.pos.PosShift.query', pos_shift_q))
         yield
 
 
@@ -275,7 +289,7 @@ class TestPosCheckout:
         assert resp.status_code == 400
 
     def test_checkout_invalid_product(self, pos_client):
-        with _pos_api_patches(tenant_get=lambda m, i: None):
+        with _pos_api_patches(locked_products=[]):
             resp = pos_client.post('/pos/api/checkout', json=self._checkout_payload(customer_id=None, quick_customer=False))
         assert resp.status_code == 400
 
@@ -289,7 +303,7 @@ class TestPosCheckout:
     def test_checkout_serial_validation(self, pos_client):
         product = _mock_product()
         product.has_serial_number = True
-        with _pos_api_patches(tenant_get=lambda m, i: product), \
+        with _pos_api_patches(locked_products=[product]), \
              patch('routes.pos.merge_checkout_lines', return_value=[{'product_id': 1, 'quantity': Decimal('2'), 'discount_percent': Decimal('0'), 'unit_price': None, 'serials': ['A']}]):
             resp = pos_client.post('/pos/api/checkout', json=self._checkout_payload())
         assert resp.status_code == 400

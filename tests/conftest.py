@@ -179,6 +179,7 @@ def make_sync_current_app_mock(name="current_app"):
 
 class TestConfig:
     TESTING = True
+    DEBUG = True
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = _TEST_DATABASE_URL
     SQLALCHEMY_BINDS = {
