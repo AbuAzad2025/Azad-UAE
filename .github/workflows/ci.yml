@@ -116,11 +116,12 @@ jobs:
           # Warm up: ensure DB schema exists
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
           # Run the assigned test group — fail-fast per job
-          pytest ${{ matrix.test-path }} -x -v --tb=short \
+          pytest ${{ matrix.test-path }} -v --tb=short \
             --cov --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
 
       - name: Upload coverage to Codecov (optional)
+        if: always()
         uses: codecov/codecov-action@v7
         with:
           files: ./coverage-${{ matrix.cov-flag }}.xml
@@ -128,6 +129,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload raw coverage data
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: covdata-${{ matrix.cov-flag }}
@@ -136,6 +138,7 @@ jobs:
           retention-days: 1
 
       - name: Upload template coverage data
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: templates-${{ matrix.cov-flag }}
