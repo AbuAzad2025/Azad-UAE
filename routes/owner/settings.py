@@ -8,6 +8,7 @@ from routes.owner import (
     StorePaymentMethod, CardVault, User, Role, Warehouse, TenantStore,
     owner_required, owner_or_company_admin, company_admin_required,
     is_global_owner_user, get_active_tenant_id, get_system_default_currency,
+    resolve_default_currency,
     get_tenant_ai_level, set_tenant_ai_level,
     get_visible_products_query,
 )
@@ -93,67 +94,71 @@ def update_integration(service):
 
     return redirect(url_for('owner.integrations'))
 
-def _owner_backup_filename(filename: str):
-    from services.backup_service import BackupService
-    return BackupService.sanitize_filename(filename)
-
-def _backup_created_by_payload():
-    role = None
-    if getattr(current_user, 'role', None):
-        role = getattr(current_user.role, 'slug', None)
-    return {
-        'user_id': getattr(current_user, 'id', None),
-        'role': role,
-        'username': getattr(current_user, 'username', None),
-    }
-
 @owner_bp.route('/reports')
 @owner_required
 def reports():
-    """صفحة التقارير"""
-    # إحصائيات عامة
+    """صفحة التقارير — platform-level when owner has no active tenant."""
     from models import User, Customer, Product, Sale, Receipt, PaymentVault, Donation, Payment
+    from models.tenant import Tenant
 
     tid = get_active_tenant_id(current_user)
     vault = PaymentVault.get_platform_vault()
     scoped_branch_id = _owner_branch_scope()
 
-    # Base customer query scoped by tenant
-    customers_stats_query = Customer.query.filter_by(tenant_id=tid, is_active=True)
-    if scoped_branch_id is not None:
-        customers_stats_query = customers_stats_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
+    is_platform_view = tid is None
 
-    # Base queries scoped by tenant
-    base_sale_q = Sale.query.filter_by(tenant_id=tid)
-    base_receipt_q = Receipt.query.filter_by(tenant_id=tid)
-    base_payment_q = Payment.query.filter_by(tenant_id=tid)
-    base_product_q = Product.query.filter_by(tenant_id=tid, is_active=True)
-    base_donation_q = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
-
-    if scoped_branch_id is not None:
+    if is_platform_view:
         stats = {
-            'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
-            'total_customers': customers_stats_query.count(),
-            'total_products': get_visible_products_query(current_user).count(),
-            'total_sales': base_sale_q.filter(Sale.branch_id == scoped_branch_id).count(),
-            'total_invoices': base_sale_q.filter(Sale.payment_status == 'paid', Sale.branch_id == scoped_branch_id).count(),
-            'total_receipts': base_receipt_q.filter(Receipt.branch_id == scoped_branch_id).count(),
-            'total_donations': base_donation_q.count(),
-            'total_payments': base_payment_q.filter(Payment.branch_id == scoped_branch_id).count(),
-            'vault_status': vault.is_locked if vault else True
+            'total_tenants': Tenant.query.filter_by(is_active=True).count(),
+            'suspended_tenants': Tenant.query.filter_by(is_suspended=True).count(),
+            'total_users': User.query.filter(User.tenant_id.isnot(None), User.is_active == True, User.is_owner == False).count(),
+            'total_customers': Customer.query.filter(Customer.tenant_id.isnot(None), Customer.is_active == True).count(),
+            'total_products': Product.query.filter(Product.tenant_id.isnot(None), Product.is_active == True).count(),
+            'total_sales': Sale.query.filter(Sale.tenant_id.isnot(None)).count(),
+            'total_invoices': Sale.query.filter(Sale.tenant_id.isnot(None), Sale.payment_status == 'paid').count(),
+            'total_receipts': Receipt.query.filter(Receipt.tenant_id.isnot(None)).count(),
+            'total_donations': Donation.query.filter(Donation.tenant_id.isnot(None), Donation.transaction_type == 'donation').count(),
+            'total_payments': Payment.query.filter(Payment.tenant_id.isnot(None)).count(),
+            'vault_status': vault.is_locked if vault else True,
+            'is_platform_view': True,
         }
     else:
-        stats = {
-            'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
-            'total_customers': customers_stats_query.count(),
-            'total_products': base_product_q.count(),
-            'total_sales': base_sale_q.count(),
-            'total_invoices': base_sale_q.filter_by(payment_status='paid').count(),
-            'total_receipts': base_receipt_q.count(),
-            'total_donations': base_donation_q.count(),
-            'total_payments': base_payment_q.count(),
-            'vault_status': vault.is_locked if vault else True
-        }
+        customers_stats_query = Customer.query.filter_by(tenant_id=tid, is_active=True)
+        if scoped_branch_id is not None:
+            customers_stats_query = customers_stats_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
+
+        base_sale_q = Sale.query.filter_by(tenant_id=tid)
+        base_receipt_q = Receipt.query.filter_by(tenant_id=tid)
+        base_payment_q = Payment.query.filter_by(tenant_id=tid)
+        base_product_q = Product.query.filter_by(tenant_id=tid, is_active=True)
+        base_donation_q = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
+
+        if scoped_branch_id is not None:
+            stats = {
+                'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
+                'total_customers': customers_stats_query.count(),
+                'total_products': get_visible_products_query(current_user).count(),
+                'total_sales': base_sale_q.filter(Sale.branch_id == scoped_branch_id).count(),
+                'total_invoices': base_sale_q.filter(Sale.payment_status == 'paid', Sale.branch_id == scoped_branch_id).count(),
+                'total_receipts': base_receipt_q.filter(Receipt.branch_id == scoped_branch_id).count(),
+                'total_donations': base_donation_q.count(),
+                'total_payments': base_payment_q.filter(Payment.branch_id == scoped_branch_id).count(),
+                'vault_status': vault.is_locked if vault else True,
+                'is_platform_view': False,
+            }
+        else:
+            stats = {
+                'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
+                'total_customers': customers_stats_query.count(),
+                'total_products': base_product_q.count(),
+                'total_sales': base_sale_q.count(),
+                'total_invoices': base_sale_q.filter_by(payment_status='paid').count(),
+                'total_receipts': base_receipt_q.count(),
+                'total_donations': base_donation_q.count(),
+                'total_payments': base_payment_q.count(),
+                'vault_status': vault.is_locked if vault else True,
+                'is_platform_view': False,
+            }
 
     return render_template('owner/reports.html', stats=stats)
 
@@ -222,20 +227,6 @@ def company_info():
 
     return render_template('owner/company_info.html', tenant=tenant)
 
-def _get_developer_from_settings():
-    """قيم الشركة المطورة من النظام (custom_settings) أو من config."""
-    cfg = current_app.config
-    settings = SystemSettings.get_current()
-    return {
-        'developer_name_ar': settings.get_custom_setting('developer_name_ar') or cfg.get('DEVELOPER_NAME_AR', ''),
-        'developer_name': settings.get_custom_setting('developer_name') or cfg.get('DEVELOPER_NAME', ''),
-        'developer_credit': settings.get_custom_setting('developer_credit') or cfg.get('DEVELOPER_CREDIT', ''),
-        'developer_phone': settings.get_custom_setting('developer_phone') or cfg.get('DEVELOPER_PHONE', ''),
-        'developer_email': settings.get_custom_setting('developer_email') or cfg.get('DEVELOPER_EMAIL', ''),
-        'developer_website': settings.get_custom_setting('developer_website') or cfg.get('DEVELOPER_WEBSITE', ''),
-        'developer_whatsapp': settings.get_custom_setting('developer_whatsapp') or cfg.get('DEVELOPER_WHATSAPP', ''),
-        'developer_logo': settings.get_custom_setting('developer_logo') or cfg.get('DEVELOPER_LOGO', ''),
-    }
 
 @owner_bp.route('/developer-settings', methods=['GET', 'POST'])
 @owner_required

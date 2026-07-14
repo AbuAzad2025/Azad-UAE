@@ -674,55 +674,6 @@ def export_excel(table_name):
         return redirect(url_for('owner.import_export_tools'))
 
 
-@owner_bp.route('/fix-cost-centers', methods=['POST'])
-@owner_required
-def fix_cost_centers():
-    """إصلاح فهارس مراكز التكلفة وإزالة السجلات المهجورة (NULL tenant_id)"""
-    try:
-        from services.maintenance_service import MaintenanceService
-        
-        with atomic_transaction('fix_cost_centers'):
-            MaintenanceService.fix_cost_centers_index()
-        
-        _audit_owner_db_action('fix_cost_centers', {'status': 'completed'})
-        flash('✅ تم إصلاح فهارس مراكز التكلفة بنجاح', 'success')
-    except Exception as e:
-        current_app.logger.error('fix_cost_centers failed user_id=%s: %s', current_user.id, e)
-        flash(f'❌ خطأ: {str(e)}', 'danger')
-    
-    return redirect(url_for('owner.database_tools'))
-
-
-@owner_bp.route('/rebuild-gl-tree', methods=['POST'])
-@owner_required
-def rebuild_gl_tree():
-    """إعادة بناء شجرة الحسابات المحاسبية لجميع المستأجرين"""
-    cleanup_extra = request.form.get('cleanup_extra') == 'on'
-
-    try:
-        from services.maintenance_service import MaintenanceService
-
-        with atomic_transaction('rebuild_gl_tree'):
-            report = MaintenanceService.rebuild_gl_tree(cleanup_extra=cleanup_extra)
-
-        total_created = sum(t.get('created', 0) for t in report.get('tenants', []))
-        total_updated = sum(t.get('updated', 0) for t in report.get('tenants', []))
-
-        _audit_owner_db_action('rebuild_gl_tree', {
-            'cleanup_extra': cleanup_extra,
-            'tenants_processed': len(report.get('tenants', [])),
-            'total_created': total_created,
-            'total_updated': total_updated,
-        })
-
-        flash(f'✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب', 'success')
-    except Exception as e:
-        current_app.logger.error('rebuild_gl_tree failed user_id=%s: %s', current_user.id, e)
-        flash(f'❌ خطأ: {str(e)}', 'danger')
-
-    return redirect(url_for('owner.database_tools'))
-
-
 @owner_bp.route('/api/recent-audit-logs')
 @owner_required
 def api_recent_audit_logs():

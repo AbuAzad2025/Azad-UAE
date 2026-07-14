@@ -310,7 +310,10 @@ def app():
 # ── Template rendering coverage tracker ──────────────────────────────────
 # Records which Jinja2 templates were rendered during tests so the CI
 # coverage-report job can compute "frontend template coverage".
+# Uses a blinker signal connected to ALL Flask apps via the "namespace" signal
+# pattern — no dependency on any specific fixture scope.
 _TEMPLATE_COVERAGE_TRACKER: set[str] = set()
+_SIGNAL_CONNECTED = False
 
 
 def _on_template_rendered(sender, template, context, **extra):
@@ -319,19 +322,24 @@ def _on_template_rendered(sender, template, context, **extra):
         _TEMPLATE_COVERAGE_TRACKER.add(name)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _track_template_coverage(app):
-    """Track which Jinja2 templates are rendered during the test session."""
+def _ensure_signal_connected():
+    """Connect to the global template_rendered signal once (catches all apps)."""
+    global _SIGNAL_CONNECTED
+    if _SIGNAL_CONNECTED:
+        return
     try:
         from flask import template_rendered
-        template_rendered.connect(_on_template_rendered, app)
+        template_rendered.connect(_on_template_rendered, sender=None)
+        _SIGNAL_CONNECTED = True
     except Exception:
         pass
-    yield
-    try:
-        template_rendered.disconnect(_on_template_rendered, app)
-    except Exception:
-        pass
+
+
+def pytest_runtest_setup(item):
+    _ensure_signal_connected()
+
+
+def pytest_sessionfinish(session, exitstatus):
     try:
         out_path = os.path.join(PROJECT_ROOT, "templates_rendered.json")
         with open(out_path, "w", encoding="utf-8") as f:

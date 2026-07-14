@@ -8,6 +8,7 @@ from routes.owner import (
     role_level_for, role_level_for_user, is_global_owner_user,
     user_may_have_null_tenant, enforce_company_user_tenant,
     get_active_tenant_id, InputSanitizer,
+    role_requires_branch,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
