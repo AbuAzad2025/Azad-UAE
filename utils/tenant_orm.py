@@ -212,9 +212,6 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         return
     if getattr(g, "skip_tenant_scope", False):
         return
-    bp = request.blueprint or ""
-    if bp in _SKIP_BLUEPRINTS:
-        return
 
     tid = _active_tenant_for_orm()
     tenant_models = _discover_tenant_models()
@@ -230,10 +227,6 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         if obj_tid is None:
             if tid is not None:
                 obj.tenant_id = tid
-            else:
-                raise TenantIsolationError(
-                    f"Cannot INSERT {obj.__class__.__name__} without an active tenant context"
-                )
         elif tid is not None and int(obj_tid) != int(tid):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(

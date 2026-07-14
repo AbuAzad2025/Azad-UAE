@@ -46,6 +46,7 @@ class TestCrossTenantWriteBlock:
                     name="Cross-tenant",
                     sku=f"X-{uuid.uuid4().hex[:8]}",
                     tenant_id=other.id,
+                    regular_price=Decimal('100.00'),
                 )
                 db_session.add(product)
                 with pytest.raises(TenantIsolationError, match="Cross-tenant INSERT"):
