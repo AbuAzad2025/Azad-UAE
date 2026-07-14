@@ -37,7 +37,7 @@ section { position: relative; }
 .landing-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
   padding: 14px 20px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255,255,255,0.10);
   overflow: hidden;
@@ -73,7 +73,7 @@ section { position: relative; }
 }
 .landing-brand img {
   height: 34px; width: auto;
-  background: rgba(255,255,255,0.94); border-radius: 8px; padding: 3px 5px;
+  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 3px 5px;
 }
 
 .landing-nav-links { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -162,8 +162,8 @@ body.landing-sidebar-open .landing-sidebar { transform: translateX(0); }
   color: white; font-weight: 900;
 }
 .landing-sidebar-header img {
-  height: 30px; background: rgba(255,255,255,0.94);
-  border-radius: 6px; padding: 2px 4px;
+  height: 30px; background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 6px; padding: 2px 4px;
 }
 .landing-sidebar-links {
   display: flex; flex-direction: column; gap: 8px;

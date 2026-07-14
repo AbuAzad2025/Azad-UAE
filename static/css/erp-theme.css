@@ -755,7 +755,7 @@ textarea.form-control { min-height: 88px; resize: vertical; line-height: 1.5; te
 .login-page .login-box { width: 560px; max-width: 94vw; }
 .login-page .card { border-radius: var(--az-radius-lg) !important; box-shadow: var(--az-shadow-lg); overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
 .login-page .card-header { background: linear-gradient(135deg, rgba(2,68,45,0.92), rgba(15,23,42,0.88)); padding: 20px 18px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.16); }
-.erp-auth-logo { background: rgba(255,255,255,0.96); padding: 8px; border-radius: var(--az-radius-md); max-height: 60px; max-width: 220px; object-fit: contain; display: inline-block; margin-bottom: 10px; }
+.erp-auth-logo { background: rgba(15, 23, 42, 0.45); padding: 8px; border-radius: var(--az-radius-md); max-height: 60px; max-width: 220px; object-fit: contain; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px); }
 .erp-auth-system-title { color: #fff; font-weight: 1000; letter-spacing: 0.6px; font-size: 1.75rem; line-height: 1.1; }
 .erp-auth-system-subtitle { color: rgba(255,255,255,0.86); font-weight: 800; font-size: 1.02rem; line-height: 1.25; }
 .login-page .login-box-msg { font-size: 1.05rem; font-weight: 800; color: var(--az-text); margin: 18px 0; }
