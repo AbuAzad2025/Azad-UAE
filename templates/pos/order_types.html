@@ -12,6 +12,7 @@
     <div class="card-header">إضافة نوع طلب جديد</div>
     <div class="card-body">
       <form method="post" class="form-row align-items-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create">
         <div class="form-group col-md-2">
           <label>الرمز (code)</label>
@@ -71,6 +72,7 @@
             <td>{% if ot.kds_enabled %}<span class="badge badge-info">نعم</span>{% endif %}</td>
             <td>
               <form method="post" class="form-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="ot_id" value="{{ ot.id }}">
                 <button type="submit" name="action" value="set_default" class="btn btn-sm btn-outline-primary mr-1">افتراضي</button>
                 <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">تبديل النشط</button>
