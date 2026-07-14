@@ -212,6 +212,9 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         return
     if getattr(g, "skip_tenant_scope", False):
         return
+    bp = request.blueprint or ""
+    if bp in _SKIP_BLUEPRINTS:
+        return
 
     tid = _active_tenant_for_orm()
     tenant_models = _discover_tenant_models()
