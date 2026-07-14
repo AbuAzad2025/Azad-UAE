@@ -987,12 +987,12 @@ class TestExtendedHelpers:
         mock_conn = MagicMock()
         mock_conn.__enter__ = MagicMock(return_value=mock_conn)
         mock_conn.__exit__ = MagicMock(return_value=False)
-        mock_conn.execute.return_value.fetchone.return_value = (7, "acme", "Acme")
+        mock_conn.execute.return_value.fetchone.return_value = (7, "acme", "Acme", True)
         mock_engine = MagicMock()
         mock_engine.connect.return_value = mock_conn
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
         row = BackupService._fetch_tenant_row(7)
-        assert row == {"id": 7, "slug": "acme", "name": "Acme"}
+        assert row == {"id": 7, "slug": "acme", "name": "Acme", "enable_auto_backup": True}
 
     def test_pre_backup_checks_integrity_ok(self, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
