@@ -349,6 +349,6 @@
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
 <meta name="pos-config" content="{{ pos_config | tojson | safe }}">
-<script>window.POS_CONFIG = {{ pos_config | tojson | safe }};</script>
+<script src="{{ url_for('static', filename='js/pos/pos-config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 {% endblock %}
