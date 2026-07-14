@@ -14,7 +14,6 @@ on:
       - '**.woff'
       - '**.woff2'
       - '**.ttf'
-      - 'templates/**'
       - 'static/adminlte/**'
   pull_request:
     branches: [main]
@@ -29,7 +28,6 @@ on:
       - '**.woff'
       - '**.woff2'
       - '**.ttf'
-      - 'templates/**'
       - 'static/adminlte/**'
 
 jobs:
