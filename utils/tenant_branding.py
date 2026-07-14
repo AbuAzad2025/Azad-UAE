@@ -61,11 +61,13 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     from utils.tenant_assets import branding_for_tenant_slug
 
     tenant = db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
-    settings = (
-        InvoiceSettings.get_active(tenant.id)
-        if tenant
-        else InvoiceSettings.get_active()
-    )
+    from utils.tenanting import without_tenant_scope
+    with without_tenant_scope():
+        settings = (
+            InvoiceSettings.get_active(tenant.id)
+            if tenant
+            else InvoiceSettings.get_active()
+        )
 
     disk: dict[str, str] = {}
     slug = (tenant.slug or "").strip().lower() if tenant else ""

@@ -18,6 +18,7 @@ from utils.error_messages import ErrorMessages
 from services.logging_core import LoggingCore
 from utils.helpers import save_uploaded_file
 from utils.tenanting import get_active_tenant_id
+from utils.branching import get_branch_stock_map
 from utils.db_safety import atomic_transaction
 
 store_bp = Blueprint('store', __name__, url_prefix='/store')
@@ -245,6 +246,13 @@ def admin_transfer():
             flash(ErrorMessages.action_failed('تحويل المخزون'), 'danger')
 
     online_stock = StoreService.online_stock_map(tenant_id, [p.id for p in products])
+    physical_ids = [w.id for w in physical_warehouses]
+    physical_stock = {}
+    for wh_id in physical_ids:
+        physical_stock[wh_id] = get_branch_stock_map(
+            product_ids=[p.id for p in products],
+            warehouse_ids=[wh_id],
+        )
 
     return render_template(
         'store/admin_transfer.html',
@@ -253,6 +261,7 @@ def admin_transfer():
         physical_warehouses=physical_warehouses,
         products=products,
         online_stock=online_stock,
+        physical_stock=physical_stock,
     )
 
 

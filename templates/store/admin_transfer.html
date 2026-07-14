@@ -1,88 +1,135 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Transfer') }} {{ t('Inventory_2') }} {{ t('Store') }}{% endblock %}
+{% block title %}{{ t('نقل المخزون') }} — {{ t('المتجر') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>{{ t('Transfer') }} {{ t('Inventory_2') }} — {{ t('Store') }} ↔ {{ t('Warehouses_2') }} {{ t('Actual_3') }}</h1>
+<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2"></i>نقل المخزون — المتجر ↔ المستودعات</h1>
 {% endblock %}
 
 {% block content %}
 <div class="row">
-  <div class="col-lg-7">
-    <div class="card">
-      <form class="needs-validation" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+  <div class="col-lg-8">
+    <div class="card card-outline card-success">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1"></i>تحويل مخزون</h3>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="card-body">
           <div class="form-group">
-            <label>{{ t('نوع') }} {{ t('Transfer_2') }}</label>
-            <select name="direction" id="direction" class="form-control" required aria-label="direction">
-              <option value="to_online">إلى {{ t('Warehouse_2') }} {{ t('الأونلاين') }} ({{ t('نشر') }} {{ t('للمتجر') }})</option>
-              <option value="from_online">من {{ t('Warehouse_2') }} {{ t('الأونلاين') }} ({{ t('سحب') }} من {{ t('Store') }})</option>
-            </select>
+            <label class="font-weight-bold">اتجاه النقل</label>
+            <div>
+              <label class="radio-inline ml-3">
+                <input type="radio" name="direction" value="to_online" checked>
+                <i class="fas fa-arrow-right text-info"></i> إلى الأونلاين
+              </label>
+              <label class="radio-inline">
+                <input type="radio" name="direction" value="from_online">
+                <i class="fas fa-arrow-left text-warning"></i> من الأونلاين
+              </label>
+            </div>
           </div>
+
           <div class="form-group">
-            <label>{{ t('Product') }}</label>
-            <select name="product_id" id="product_id" class="form-control select2" required aria-label="product id">
-              <option value="">— {{ t('اختر') }} —</option>
-              {% for product in products %}
-              <option value="{{ product.id }}" {% if request.args.get('product_id', type=int) == product.id %}selected{% endif %}>
-                {{ product.name_ar or product.name }} — {{ t('أونلاين') }}: {{ '{:,.0f}'.format(online_stock.get(product.id, 0)) }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group" id="source_wh_group">
-            <label id="source_wh_label">{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('المصدر') }})</label>
-            <select name="source_warehouse_id" class="form-control" required aria-label="source warehouse id">
-              <option value="">— {{ t('اختر') }} —</option>
+            <label class="font-weight-bold" id="wh_label">المستودع الفعلي</label>
+            <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required onchange="filterByWarehouse()">
+              <option value="">— اختر المستودع —</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
               {% endfor %}
             </select>
+            <small class="form-text text-muted" id="wh_count"></small>
           </div>
+
           <div class="form-group">
-            <label for="input_quantity">{{ t('Quantity') }}</label>
-            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" aria-label="quantity">
+            <label class="font-weight-bold" for="product_id">المنتج</label>
+            <select name="product_id" id="product_id" class="form-control" required size="10">
+              <option value="">— اختر مستودعاً أولاً —</option>
+              {% for product in products %}
+              <option value="{{ product.id }}"
+                {% for wh in physical_warehouses %}
+                data-wh-{{ wh.id }}="{{ physical_stock.get(wh.id, {}).get(product.id, 0) }}"
+                {% endfor %}>
+                {{ product.name_ar or product.name }}
+              </option>
+              {% endfor %}
+            </select>
+            <small class="form-text text-muted" id="product_stock_detail">اختر مستودعاً لعرض المنتجات المتوفرة</small>
           </div>
+
           <div class="form-group">
-            <label>{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500"></textarea>
+            <label class="font-weight-bold" for="input_quantity">الكمية</label>
+            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" placeholder="مثال: 10">
+          </div>
+
+          <div class="form-group">
+            <label for="notes">ملاحظة (اختياري)</label>
+            <textarea name="notes" class="form-control" rows="2" maxlength="500"></textarea>
           </div>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i>{{ t('تنفيذ') }} {{ t('Transfer_2') }}</button>
-          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-secondary">{{ t('الكت') }}alog</a>
+          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1"></i>تنفيذ النقل</button>
+          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">رجوع</a>
         </div>
       </form>
     </div>
   </div>
-  <div class="col-lg-5">
+
+  <div class="col-lg-4">
     <div class="card card-outline card-info">
-      <div class="card-header"><h3 class="card-title">{{ t('Warehouse_2') }} {{ t('الأونلاين') }}</h3></div>
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-cloud ml-1"></i>مستودع الأونلاين</h3>
+      </div>
       <div class="card-body">
-        <p class="mb-1"><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
-        <p class="text-muted small">{{ t('Transfer_2') }} لا {{ t('يغيّر') }} {{ t('Total_2') }} {{ t('Inventory_2') }} {{ t('Product') }} — {{ t('ينقل') }} بين {{ t('Warehouses') }} فقط. {{ t('Store') }} {{ t('يعرض') }} ما في هذا {{ t('Warehouse') }}.</p>
+        <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
+        <p class="text-muted small">الرمز: {{ online_warehouse.code }}</p>
+        <hr>
+        <p class="small text-muted mb-0">
+          <i class="fas fa-info-circle ml-1"></i>
+          المتجر يقرأ فقط من هذا المستودع.
+        </p>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-{% include 'partials/select2_assets.html' %}
 <script>
-$(function() {
-  function syncDirection() {
-    var toOnline = $('#direction').val() === 'to_online';
-    $('#source_wh_label').text(toOnline ? '{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('المصدر') }})' : '{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('الوجهة') }})');
-    if (!toOnline && $('select[name="source_warehouse_id"] option').length === 2) {
-      /* keep selection */
+function filterByWarehouse() {
+  var sel = document.getElementById('product_id');
+  var wh = document.getElementById('source_warehouse_id');
+  var whId = parseInt(wh.value) || 0;
+  var detail = document.getElementById('product_stock_detail');
+  var whCount = document.getElementById('wh_count');
+  var count = 0;
+
+  for (var i = 0; i < sel.options.length; i++) {
+    var opt = sel.options[i];
+    if (!opt.value) {
+      if (whId) opt.text = '— اختر منتجاً —';
+      else opt.text = '— اختر مستودعاً أولاً —';
+      opt.hidden = false;
+      continue;
+    }
+    if (whId) {
+      var stock = parseFloat(opt.getAttribute('data-wh-' + whId)) || 0;
+      if (stock > 0) {
+        opt.hidden = false;
+        count++;
+      } else {
+        opt.hidden = true;
+      }
+    } else {
+      opt.hidden = true;
     }
   }
-  $('#direction').on('change', syncDirection);
-  syncDirection();
-  if ($.fn.select2) {
-    $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+  sel.value = '';
+
+  if (whId) {
+    detail.textContent = 'منتجات متوفرة في هذا المستودع: ' + count;
+    whCount.textContent = count + ' منتج برصيد > 0';
+  } else {
+    detail.textContent = 'اختر مستودعاً لعرض المنتجات المتوفرة';
+    whCount.textContent = '';
   }
-});
+}
 </script>
 {% endblock %}

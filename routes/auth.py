@@ -301,6 +301,11 @@ def login():
                 branch_obj = None
 
         effective_tenant_id = _resolve_effective_tenant(user, branch_obj)
+        if effective_tenant_id is None and is_global_owner_user(user):
+            from models.tenant import Tenant
+            default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+            if default_tenant:
+                effective_tenant_id = default_tenant.id
         may_have_null_tenant = user_may_have_null_tenant(
             is_owner=getattr(user, "is_owner", False),
             role=getattr(user, "role", None)
@@ -360,7 +365,7 @@ def logout():
         flash('✅ تم تسجيل الخروج بنجاح. نراك قريباً!', 'success')
     clear_active_branch()
     clear_active_tenant()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('public.landing'))
 
 
 @auth_bp.route('/payment/status/<payment_id>')

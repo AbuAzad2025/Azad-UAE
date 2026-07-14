@@ -325,6 +325,19 @@ class StoreService:
     def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None, page=1, per_page=24, sort=None, min_price=None, max_price=None, in_stock_only=False):
         """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
+        tenant = db.session.get(Tenant, int(tenant_id))
+        base_currency = (tenant.base_currency or 'ILS').upper() if tenant else 'ILS'
+        default_currency = (tenant.default_currency or 'AED').upper() if tenant else 'AED'
+        exchange_rate = Decimal('1')
+        if base_currency != default_currency:
+            try:
+                from services.currency_service import CurrencyService
+                info = CurrencyService.get_exchange_rate_details(base_currency, default_currency)
+                rate_raw = info.get('rate') or info.get('rates', {}).get(default_currency)
+                if rate_raw:
+                    exchange_rate = Decimal(str(rate_raw))
+            except Exception:
+                exchange_rate = Decimal('1')
         items = []
         q = (search or '').strip().lower()
         for product in products:
@@ -339,15 +352,16 @@ class StoreService:
             qty = stock_map.get(product.id, Decimal('0'))
             if qty <= 0:
                 continue
-            items.append({'product': product, 'quantity': qty})
+            display_price = (Decimal(str(product.regular_price or 0)) * exchange_rate).quantize(Decimal('0.01'))
+            items.append({'product': product, 'stock': qty, 'quantity': qty, 'display_price': display_price})
         if min_price is not None:
-            items = [i for i in items if float(i['product'].regular_price or 0) >= float(min_price)]
+            items = [i for i in items if float(i['display_price']) >= float(min_price)]
         if max_price is not None:
-            items = [i for i in items if float(i['product'].regular_price or 0) <= float(max_price)]
+            items = [i for i in items if float(i['display_price']) <= float(max_price)]
         if sort == 'price_asc':
-            items.sort(key=lambda x: float(x['product'].regular_price or 0))
+            items.sort(key=lambda x: float(x['display_price']))
         elif sort == 'price_desc':
-            items.sort(key=lambda x: float(x['product'].regular_price or 0), reverse=True)
+            items.sort(key=lambda x: float(x['display_price']), reverse=True)
         elif sort == 'name_asc':
             items.sort(key=lambda x: (x['product'].get_display_name('en') or '').lower())
         elif sort == 'name_desc':
