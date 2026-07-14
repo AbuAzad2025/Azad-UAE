@@ -8,7 +8,6 @@ from routes.owner import (
     role_level_for, role_level_for_user, is_global_owner_user,
     user_may_have_null_tenant, enforce_company_user_tenant,
     get_active_tenant_id, InputSanitizer,
-    role_requires_branch,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
@@ -112,6 +111,7 @@ def create_user():
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
 
             role = db.session.get(Role, role_id)
+            from utils.branching import role_requires_branch
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
@@ -197,6 +197,7 @@ def edit_user(user_id):
             is_owner = requested_is_owner if current_user.is_owner else user.is_owner
             branch_id = request.form.get('branch_id', type=int) or None
             role = db.session.get(Role, role_id)
+            from utils.branching import role_requires_branch
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
