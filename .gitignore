@@ -108,11 +108,7 @@ package.json
 /*.txt
 !requirements.txt
 
-
-
 # Neural models (can be large)
-ai_knowledge/models/*.pkl
-ai_knowledge/models/*.joblib
 ai_knowledge/data/models/*.pkl
 ai_knowledge/data/models/*.joblib
 
@@ -120,6 +116,13 @@ ai_knowledge/data/models/*.joblib
 *.tmp
 *.temp
 ~$*
+flask_err.txt
+flask_out.txt
+server_err.log
+server_out.log
+app2.log
+flask_output.log
+tests/*.txt
 
 # Temporary scripts
 # migrate_old_data.py
@@ -141,12 +144,17 @@ ai_knowledge/learned_knowledge/
 ai_knowledge/memory/*.json
 !ai_knowledge/memory/*.example.json
 ai_knowledge/*.pkl
-ai_knowledge/models/*.pkl
-ai_knowledge/models/*.joblib
+ai_knowledge/data/models/*.pkl
+ai_knowledge/data/models/*.joblib
 ai_knowledge/data/training/*.json
 !ai_knowledge/data/training/.gitkeep
 !ai_knowledge/data/training/improvement_goals.json
 
+
+# Generated template output files
+templates_rendered.json
+store_admin*.html
+transfer_page*.html
 
 # Dev-only scripts & outputs
 scripts/backup/*.json

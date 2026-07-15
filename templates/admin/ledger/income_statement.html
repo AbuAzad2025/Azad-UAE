@@ -87,7 +87,7 @@
           {% endif %}
           {% endfor %}
           <tr class="bg-light">
-            <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Revenue') }}</th>
+            <th colspan="2" class="text-center">{{ t('Total Revenue') }}</th>
             <th class="text-center text-success">{{ format_currency(revenues_total) }}</th>
           </tr>
           
@@ -108,7 +108,7 @@
           {% endif %}
           {% endfor %}
           <tr class="bg-light">
-            <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Expenses') }}</th>
+            <th colspan="2" class="text-center">{{ t('Total Expenses') }}</th>
             <th class="text-center text-danger">{{ format_currency(expenses_total) }}</th>
           </tr>
           
@@ -141,7 +141,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ "{:,.0f}".format(revenues_total) }}</h4>
-            <p class="mb-0">{{ t('Total_2') }} {{ t('Revenue') }}</p>
+            <p class="mb-0">{{ t('Total Revenue') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-arrow-up fa-2x"></i>
@@ -157,7 +157,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ "{:,.0f}".format(expenses_total) }}</h4>
-            <p class="mb-0">{{ t('Total_2') }} {{ t('Expenses') }}</p>
+            <p class="mb-0">{{ t('Total Expenses') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-arrow-down fa-2x"></i>
@@ -167,8 +167,10 @@
     </div>
   </div>
   
+  {% set income_color = 'success' if net_income > 0 else 'danger' if net_income < 0 else 'secondary' %}
+  {% set income_icon = 'chart-line' if net_income > 0 else 'chart-line-down' if net_income < 0 else 'minus' %}
   <div class="col-md-4">
-    <div class="card bg-gradient-{{ 'success' if net_income > 0 else 'danger' if net_income < 0 else 'secondary' }} text-white">
+    <div class="card bg-gradient-{{ income_color }} text-white">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
@@ -176,7 +178,7 @@
             <p class="mb-0">{{ t('Net Income') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-{{ 'chart-line' if net_income > 0 else 'chart-line-down' if net_income < 0 else 'minus' }} fa-2x"></i>
+            <i class="fas fa-{{ income_icon }} fa-2x"></i>
           </div>
         </div>
       </div>
