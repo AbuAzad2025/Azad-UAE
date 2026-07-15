@@ -112,8 +112,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-envelope mr-2"></i>{{ t('Email_2') }} {{ t('التجاري') }} PayPal</label>
-                                        <input type="email" class="form-control" name="paypal_business_email" 
+                                        <label for="paypal_business_email"><i class="fas fa-envelope mr-2"></i>{{ t('Email_2') }} {{ t('التجاري') }} PayPal</label>
+                                        <input type="email" class="form-control" name="paypal_business_email" id="paypal_business_email"
                                                value="{{ vault.paypal_business_email or '' }}" 
                                                placeholder="business@company.com">
                                     </div>
@@ -131,16 +131,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-key mr-2"></i>PayPal Client ID</label>
-                                        <input type="text" class="form-control" name="paypal_client_id" 
+                                        <label for="paypal_client_id"><i class="fas fa-key mr-2"></i>PayPal Client ID</label>
+                                        <input type="text" class="form-control" name="paypal_client_id" id="paypal_client_id"
                                                value="{{ vault.paypal_client_id or '' }}" 
                                                placeholder="Client ID">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-lock mr-2"></i>PayPal Secret</label>
-                                        <input type="password" class="form-control" name="paypal_client_secret" 
+                                        <label for="paypal_client_secret"><i class="fas fa-lock mr-2"></i>PayPal Secret</label>
+                                        <input type="password" class="form-control" name="paypal_client_secret" id="paypal_client_secret"
                                                value="{{ vault.paypal_client_secret or '' }}" 
                                                placeholder="Secret Key">
                                     </div>
@@ -156,16 +156,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-building mr-2"></i>{{ t('Name_2') }} {{ t('Bank') }}</label>
-                                        <input type="text" class="form-control" name="bank_name" 
+                                        <label for="bank_name"><i class="fas fa-building mr-2"></i>{{ t('Name_2') }} {{ t('Bank') }}</label>
+                                        <input type="text" class="form-control" name="bank_name" id="bank_name"
                                                value="{{ vault.bank_name or '' }}" 
                                                placeholder="{{ t('Bank') }} {{ t('Arabic_4') }}" minlength="2" maxlength="100">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-user mr-2"></i>{{ t('Name_2') }} {{ t('صاحب') }} {{ t('Account') }}</label>
-                                        <input type="text" class="form-control" name="bank_account_name" 
+                                        <label for="bank_account_name"><i class="fas fa-user mr-2"></i>{{ t('Name_2') }} {{ t('صاحب') }} {{ t('Account') }}</label>
+                                        <input type="text" class="form-control" name="bank_account_name" id="bank_account_name" 
                                                value="{{ vault.bank_account_name or '' }}" 
                                                placeholder="Azad Systems LLC" minlength="2" maxlength="100">
                                     </div>
@@ -174,16 +174,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-hashtag mr-2"></i>{{ t('رقم') }} {{ t('Account') }}</label>
-                                        <input type="text" class="form-control" name="bank_account_number" 
+                                        <label for="bank_account_number"><i class="fas fa-hashtag mr-2"></i>{{ t('رقم') }} {{ t('Account') }}</label>
+                                        <input type="text" class="form-control" name="bank_account_number" id="bank_account_number"
                                                value="{{ vault.bank_account_number or '' }}" 
                                                placeholder="123456789" maxlength="34">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-barcode mr-2"></i>IBAN</label>
-                                        <input type="text" class="form-control" name="bank_iban" 
+                                        <label for="bank_iban"><i class="fas fa-barcode mr-2"></i>IBAN</label>
+                                        <input type="text" class="form-control" name="bank_iban" id="bank_iban"
                                                value="{{ vault.bank_iban or '' }}" 
                                                placeholder="AE123456789012345678901" maxlength="34">
                                     </div>
@@ -192,24 +192,24 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label><i class="fas fa-globe mr-2"></i>SWIFT Code</label>
-                                        <input type="text" class="form-control" name="bank_swift_code" 
+                                        <label for="bank_swift_code"><i class="fas fa-globe mr-2"></i>SWIFT Code</label>
+                                        <input type="text" class="form-control" name="bank_swift_code" id="bank_swift_code"
                                                value="{{ vault.bank_swift_code or '' }}" 
                                                placeholder="ARABAEADXXX">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label><i class="fas fa-map-marker-alt mr-2"></i>{{ t('Branch') }}</label>
-                                        <input type="text" class="form-control" name="bank_branch" 
+                                        <label for="bank_branch"><i class="fas fa-map-marker-alt mr-2"></i>{{ t('Branch') }}</label>
+                                        <input type="text" class="form-control" name="bank_branch" id="bank_branch"
                                                value="{{ vault.bank_branch or '' }}" 
                                                placeholder="{{ t('دبي') }} - {{ t('Branch') }} {{ t('Main') }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label><i class="fas fa-flag mr-2"></i>{{ t('البلد') }}</label>
-                                        <input type="text" class="form-control" name="bank_country" 
+                                        <label for="bank_country"><i class="fas fa-flag mr-2"></i>{{ t('البلد') }}</label>
+                                        <input type="text" class="form-control" name="bank_country" id="bank_country"
                                                value="{{ vault.bank_country or '' }}" 
                                                placeholder="{{ t('الإمارات') }}">
                                     </div>
@@ -225,16 +225,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-key mr-2"></i>Publishable Key</label>
-                                        <input type="text" class="form-control" name="stripe_publishable_key" 
+                                        <label for="stripe_publishable_key"><i class="fas fa-key mr-2"></i>Publishable Key</label>
+                                        <input type="text" class="form-control" name="stripe_publishable_key" id="stripe_publishable_key"
                                                value="{{ vault.stripe_publishable_key or '' }}" 
                                                placeholder="pk_test_...">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-lock mr-2"></i>Secret Key</label>
-                                        <input type="password" class="form-control" name="stripe_secret_key" 
+                                        <label for="stripe_secret_key"><i class="fas fa-lock mr-2"></i>Secret Key</label>
+                                        <input type="password" class="form-control" name="stripe_secret_key" id="stripe_secret_key"
                                                value="{{ vault.stripe_secret_key or '' }}" 
                                                placeholder="sk_test_...">
                                     </div>
@@ -260,16 +260,16 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>{{ t('Address_2') }} ({{ t('Arabic') }})</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}" aria-label="donation title ar"></div>
-                                <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr" aria-label="donation title en"></div>
+                                <div class="col-md-6 form-group"><label for="donation_title_ar">{{ t('Address_2') }} ({{ t('Arabic') }})</label><input class="form-control" name="donation_title_ar" id="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}" aria-label="donation title ar"></div>
+                                <div class="col-md-6 form-group"><label for="donation_title_en">Title (EN)</label><input class="form-control" name="donation_title_en" id="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr" aria-label="donation title en"></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>{{ t('Introduction') }} {{ t('Arabic') }}</label><textarea class="form-control" name="donation_intro_ar" rows="2" aria-label="donation intro ar">{{ vault.donation_intro_ar or '' }}</textarea></div>
-                                <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr" aria-label="donation intro en">{{ vault.donation_intro_en or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label for="donation_intro_ar">{{ t('Introduction') }} {{ t('Arabic') }}</label><textarea class="form-control" name="donation_intro_ar" id="donation_intro_ar" rows="2" aria-label="donation intro ar">{{ vault.donation_intro_ar or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label for="donation_intro_en">Intro EN</label><textarea class="form-control" name="donation_intro_en" id="donation_intro_en" rows="2" dir="ltr" aria-label="donation intro en">{{ vault.donation_intro_en or '' }}</textarea></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>GL {{ t('مدين') }} (1120 {{ t('Bank_2') }})</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>
-                                <div class="col-md-6 form-group"><label>GL {{ t('دائن') }} (4200 {{ t('Revenue_3') }})</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
+                                <div class="col-md-6 form-group"><label for="donation_debit_account">GL {{ t('مدين') }} (1120 {{ t('Bank_2') }})</label><input class="form-control" name="donation_debit_account" id="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>
+                                <div class="col-md-6 form-group"><label for="donation_credit_account">GL {{ t('دائن') }} (4200 {{ t('Revenue_3') }})</label><input class="form-control" name="donation_credit_account" id="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
                             </div>
                             
                             

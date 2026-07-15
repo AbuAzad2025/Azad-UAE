@@ -111,7 +111,7 @@
       font-weight: 700;
       margin-bottom: 3px;
     }
-    .cheque-item value { 
+    .cheque-item .value-text { 
       display: block; 
       font-size: 9px; 
       font-weight: 700; 
@@ -290,15 +290,15 @@
           <div class="cheque-grid">
             <div class="cheque-item">
               <label>{{ t('رقم') }} {{ t('Cheque') }}</label>
-              <value>{{ receipt.cheque_number }}</value>
+              <span class="value-text">{{ receipt.cheque_number }}</span>
             </div>
             <div class="cheque-item">
               <label>{{ t('History') }} {{ t('Due') }}</label>
-              <value>{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</value>
+              <span class="value-text">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</span>
             </div>
             <div class="cheque-item">
               <label>{{ t('Bank') }}</label>
-              <value>{{ receipt.bank_name or '-' }}</value>
+              <span class="value-text">{{ receipt.bank_name or '-' }}</span>
             </div>
           </div>
         </div>
@@ -406,7 +406,7 @@
       {% endif %}
     {% endif %}
   </div>
-{% include 'partials/print_handlers.js.html' %}
+{% include 'partials/print_handlers.html' %}
 </body>
 </html>
 

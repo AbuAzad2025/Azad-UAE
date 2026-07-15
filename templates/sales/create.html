@@ -108,7 +108,7 @@
             </div>
             <div class="col-md-2">
               <div class="form-group">
-                <label class="font-weight-bold">
+                <label for="exchange_rate" class="font-weight-bold">
                   <i class="fas fa-exchange-alt text-info mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('صرف') }} {{ t('Currency') }} {{ t('مقابل') }} {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }} - يمكن {{ t('تعديله') }} {{ t('Manually') }} ({{ t('Optional') }})"></i>
                 </label>
@@ -288,7 +288,7 @@
         </p>
         
         <div class="form-group">
-          <label>{{ t('امسح') }} {{ t('الرقم') }} {{ t('Serial_2') }} (أو {{ t('أدخله') }} {{ t('Manually') }}):</label>
+          <label for="serial_input">{{ t('امسح') }} {{ t('الرقم') }} {{ t('Serial_2') }} (أو {{ t('أدخله') }} {{ t('Manually') }}):</label>
           <div class="input-group mb-3">
             <input type="text" id="serial_input" class="form-control" placeholder="Scan or type serial..." autofocus>
             <div class="input-group-append">

@@ -19,15 +19,15 @@
 </div>
 <script>
 (function() {
-  var usage = {{ tenant_usage | tojson | safe }};
-  var sub = {{ tenant_subscription | tojson | safe }};
-  var maxed = false;
-  var html = '';
-  for (var key in usage) {
-    var u = usage[key];
+  let usage = {{ tenant_usage | tojson | safe }};
+  let sub = {{ tenant_subscription | tojson | safe }};
+  let maxed = false;
+  let html = '';
+  for (let key in usage) {
+    const u = usage[key];
     if (u.max && u.max > 0 && u.percent >= 80) {
       maxed = true;
-      var barClass = u.percent >= 100 ? 'bg-danger' : (u.percent >= 90 ? 'bg-warning' : 'bg-info');
+      let barClass = u.percent >= 100 ? 'bg-danger' : (u.percent >= 90 ? 'bg-warning' : 'bg-info');
       html += '<div class="col-md-4 col-sm-6 mb-1"><small class="text-muted">' + key + ': ' + u.current + '/' + u.max + '</small><div class="progress" style="height:6px"><div class="progress-bar ' + barClass + '" style="width:' + u.percent + '%"></div></div></div>';
     }
   }

@@ -164,9 +164,8 @@
       <div class="ps-footer-col ps-footer-azad" aria-label="AZAD Smart Systems">
         {% set _azad_logo = url_for('static', filename='assets/brand/azad/logos/logo.png') %}
         <div class="ps-azad-logo-wrap">
-          <img src="{{ _azad_logo }}" alt="AZAD Smart Systems"
-               class="ps-azad-logo"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+<img src="{{ _azad_logo }}" alt="AZAD Smart Systems"
+     class="ps-azad-logo">
           <div class="ps-azad-mark ic-2" aria-hidden="true">AZAD</div>
         </div>
         <h4 class="ps-azad-name">{{ t('azad_company') }}</h4>
@@ -185,7 +184,7 @@
       <h4>{{ t('newsletter') }}</h4>
       <form method="post" action="{{ url_for('shop.newsletter_subscribe', slug=store.store_slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="email" name="email" placeholder="{{ t('email_placeholder') }}" required>
+        <input type="email" name="email" id="newsletter_email" placeholder="{{ t('email_placeholder') }}" required aria-label="{{ t('newsletter') }}">
         <button type="submit" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('subscribe') }}</button>
       </form>
     </div>
@@ -217,6 +216,14 @@
 </div>
 <script>
 if (!localStorage.getItem('cookie_consent')) { document.getElementById('ps-cookie-banner').style.display='flex'; }
+// Hide broken images globally (replaces inline onerror handlers)
+document.addEventListener('error', function(e) {
+  if (e.target.tagName === 'IMG' && e.target.classList.contains('ps-azad-logo') && e.target.style.display !== 'none') {
+    e.target.style.display = 'none';
+    let fb = e.target.nextElementSibling;
+    if (fb) fb.style.display = 'grid';
+  }
+}, true);
 document.addEventListener('click', function(e) {
   const installBtn = e.target.closest('[data-action="pwa-install"]');
   if (installBtn && window.deferredPrompt) { e.preventDefault(); window.deferredPrompt.prompt(); }

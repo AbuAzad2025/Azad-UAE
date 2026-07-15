@@ -148,7 +148,7 @@
     }
     .cheque-row:last-child { border-bottom: none; }
     .cheque-row label { color: #856404; font-weight: 700; }
-    .cheque-row value { color: #1a1a1a; font-weight: 700; }
+    .cheque-row .value { color: #1a1a1a; font-weight: 700; }
     .allocations {
       margin: 20px 0;
       border: 1px solid #007bff;
@@ -300,15 +300,15 @@
       <div class="cheque-info">
         <div class="cheque-row">
           <label>{{ t('رقم') }} {{ t('Cheque') }}:</label>
-          <value>{{ receipt.cheque_number }}</value>
+          <span class="value">{{ receipt.cheque_number }}</span>
         </div>
         <div class="cheque-row">
           <label>{{ t('History') }} {{ t('Due') }}:</label>
-          <value>{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</value>
+          <span class="value">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</span>
         </div>
         <div class="cheque-row">
           <label>{{ t('Bank') }}:</label>
-          <value>{{ receipt.bank_name or '-' }}</value>
+          <span class="value">{{ receipt.bank_name or '-' }}</span>
         </div>
       </div>
       {% elif receipt.reference_number %}
@@ -398,7 +398,7 @@
       {% endif %}
     {% endif %}
   </div>
-{% include 'partials/print_handlers.js.html' %}
+{% include 'partials/print_handlers.html' %}
 </body>
 </html>
 

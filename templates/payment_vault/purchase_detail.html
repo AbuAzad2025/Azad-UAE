@@ -530,17 +530,15 @@
 <script>
 
 function sendEmailToCustomer() {
-
     const email = '{{ purchase.customer_email }}';
-
+    const customerName = '{{ purchase.customer_name }}';
+    const packageName = '{{ purchase.package.name_ar if purchase.package else "" }}';
+    const orderId = '{{ purchase.id }}';
+    const amountPaid = '{{ purchase.amount_paid }}';
     const subject = '{{ t('Confirm') }} {{ t('Purchase') }} {{ t('Plan') }} - {{ developer_name_ar or developer_name or "Azad Systems" }}';
-
-    const body = `{{ t('مرحباً') }} {{ purchase.customer_name }},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${purchase.package.name_ar if purchase.package else ''}\n{{ t('رقم') }} {{ t('الطلب') }}: #{{ purchase.id }}\n{{ t('Amount') }}: ${{ purchase.amount_paid }}\n\n{{ t('سنتواصل') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('التفعيل') }}.`;
-
-    
+    const body = `{{ t('مرحباً') }} ${customerName},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${packageName}\n{{ t('رقم') }} {{ t('الطلب') }}: #${orderId}\n{{ t('Amount') }}: $${amountPaid}\n\n{{ t('سنتواصل') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('التفعيل') }}.`;
 
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
 }
 
 </script>

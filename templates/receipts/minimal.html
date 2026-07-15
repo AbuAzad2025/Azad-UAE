@@ -76,7 +76,7 @@
       margin-bottom: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.03em;
     }
     .info-row {
       display: flex;
@@ -87,7 +87,7 @@
     }
     .info-row:last-child { border-bottom: none; }
     .info-row label { color: #7f8c8d; }
-    .info-row value { font-weight: 600; color: #2c3e50; }
+    .info-row .value-text { font-weight: 600; color: #2c3e50; }
     .amount-display {
       text-align: center;
       padding: 20px;
@@ -271,21 +271,21 @@
         <div class="section-title">{{ t('Info_2') }} {{ t('Customer') }}</div>
         <div class="info-row">
           <label>{{ t('Name') }}:</label>
-          <value>{{ receipt.customer.name }}</value>
+          <span class="value-text">{{ receipt.customer.name }}</span>
         </div>
         {% if receipt.customer.phone %}
         <div class="info-row">
           <label>{{ t('Phone') }}:</label>
-          <value>{{ receipt.customer.phone }}</value>
+          <span class="value-text">{{ receipt.customer.phone }}</span>
         </div>
         {% endif %}
         <div class="info-row">
           <label>{{ t('Date') }}:</label>
-          <value>{{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</value>
+          <span class="value-text">{{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</span>
         </div>
         <div class="info-row">
           <label>{{ t('User') }}:</label>
-          <value>{{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</value>
+          <span class="value-text">{{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</span>
         </div>
       </div>
 
@@ -426,7 +426,7 @@
       {% endif %}
     {% endif %}
   </div>
-{% include 'partials/print_handlers.js.html' %}
+{% include 'partials/print_handlers.html' %}
 </body>
 </html>
 

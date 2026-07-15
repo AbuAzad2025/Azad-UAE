@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="{{ current_language if current_language is defined else 'en' }}" dir="{{ 'ltr' if (is_rtl is not defined or not is_rtl) else 'rtl' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,7 +90,7 @@
                 <ul>
                     <li>Sales, purchases, products, customers, suppliers.</li>
                     <li>Warehouses, stock movements, branch-level operations.</li>
-                    <li>Payments, receipts, cheques, returns.</li>
+                    <li>Payments, receipts, checks, returns.</li>
                     <li>General Ledger (GL) and financial reporting.</li>
                     <li>Tenant storefront and online order flow.</li>
                     <li>AI assistant and operational insights.</li>
@@ -134,7 +134,7 @@
                 <ul>
                     <li>General Ledger entries and account tracking.</li>
                     <li>Receipts/payments with settlement history.</li>
-                    <li>Incoming/outgoing cheque lifecycle management.</li>
+                    <li>Incoming/outgoing check lifecycle management.</li>
                     <li>Receivables and payables monitoring.</li>
                 </ul>
                 <h3>Currency & Exchange Rate</h3>

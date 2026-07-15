@@ -112,7 +112,7 @@
                 {% endif %}
               </td>
               <td class="text-center">
-                <span class="badge {% if item.quantity <= 0 %}badge-danger{% elif item.quantity <= item.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %} p-2 erp-badge-fs"
+                <span class="badge {% if item.quantity <= 0 %}badge-danger{% elif item.quantity <= item.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %} p-2 erp-badge-fs">
                   {{ item.quantity }}
                 </span>
               </td>

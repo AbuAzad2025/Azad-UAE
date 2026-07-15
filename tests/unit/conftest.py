@@ -163,7 +163,7 @@ def bypass_owner_auth(mocker, mock_owner_user):
 
 
 @pytest.fixture
-def owner_client(app_factory, bypass_owner_auth):
+def mock_owner_client(app_factory, bypass_owner_auth):
     from routes.owner import owner_bp
     app = app_factory(owner_bp)
     return app.test_client()
@@ -192,7 +192,7 @@ def bypass_company_admin_auth(mocker, mock_owner_user):
 
 
 @pytest.fixture
-def company_admin_client(app_factory, bypass_company_admin_auth):
+def mock_company_admin_client(app_factory, bypass_company_admin_auth):
     from routes.owner import owner_bp
     app = app_factory(owner_bp)
     return app.test_client()
@@ -203,7 +203,7 @@ def company_admin_client(app_factory, bypass_company_admin_auth):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def vault_owner_client(app_factory, bypass_owner_auth):
+def mock_vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
     app = app_factory(payment_vault_bp)
     return app.test_client()

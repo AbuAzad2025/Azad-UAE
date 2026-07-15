@@ -57,15 +57,20 @@
               <div class="row">
                 <div class="col-md-6 mb-2">
                   <h6>{{ t('قسط') }} {{ t('التمويل') }} {{ t('Monthly_2') }}</h6>
+                  <label for="loanPrincipal" class="sr-only">{{ t('Value_2') }} {{ t('القرض') }}</label>
                   <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="{{ t('Value_2') }} {{ t('القرض') }}">
+                  <label for="loanRate" class="sr-only">{{ t('الفائدة') }} {{ t('السنوية') }} %</label>
                   <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="{{ t('الفائدة') }} {{ t('السنوية') }} %">
+                  <label for="loanMonths" class="sr-only">{{ t('Count') }} {{ t('الأشهر') }}</label>
                   <input class="form-control mb-2" id="loanMonths" type="number" placeholder="{{ t('Count') }} {{ t('الأشهر') }}">
                   <button type="button" class="btn btn-primary" id="btnLoanCalc">{{ t('احسب') }}</button>
                   <div class="small text-muted mt-2" id="loanResult">--</div>
                 </div>
                 <div class="col-md-6 mb-2">
                   <h6>{{ t('Profit') }} {{ t('والهامش') }}</h6>
+                  <label for="costValue" class="sr-only">{{ t('Cost') }}</label>
                   <input class="form-control mb-2" id="costValue" type="number" step="0.01" placeholder="{{ t('Cost') }}">
+                  <label for="sellValue" class="sr-only">{{ t('Price_2') }} {{ t('Sale_2') }}</label>
                   <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="{{ t('Price_2') }} {{ t('Sale_2') }}">
                   <button type="button" class="btn btn-success" id="btnMarginCalc">{{ t('احسب') }}</button>
                   <div class="small text-muted mt-2" id="marginResult">--</div>

@@ -331,12 +331,12 @@
         <div class="modal-body">
           <p>هذا الإجراء يتطلب موافقة المشرف. يرجى إدخال بيانات المشرف المصرح له.</p>
           <div class="form-group">
-            <label>معرف المشرف (رقم المستخدم)</label>
-            <input type="number" name="supervisor_id" class="form-control" required min="1" placeholder="أدخل رقم المستخدم للمشرف">
+            <label for="supervisor_id">معرف المشرف (رقم المستخدم)</label>
+            <input type="number" name="supervisor_id" id="supervisor_id" class="form-control" required min="1" placeholder="أدخل رقم المستخدم للمشرف">
           </div>
           <div class="form-group">
-            <label>كلمة مرور المشرف</label>
-            <input type="password" name="password" class="form-control" required placeholder="كلمة مرور المشرف">
+            <label for="supervisor_password">كلمة مرور المشرف</label>
+            <input type="password" name="password" id="supervisor_password" class="form-control" required placeholder="كلمة مرور المشرف">
           </div>
           <div id="overrideResult" class="alert d-none"></div>
         </div>
@@ -373,7 +373,7 @@ $(document).ready(function() {
 
   $('#supervisorOverrideForm').on('submit', function(e) {
     e.preventDefault();
-    var btn = $('#overrideSubmitBtn');
+    let btn = $('#overrideSubmitBtn');
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري التحقق...');
     $('#overrideResult').addClass('d-none');
     $.ajax({
@@ -398,7 +398,7 @@ $(document).ready(function() {
         );
       }
     }).fail(function(xhr) {
-      var msg = 'خطأ في الاتصال';
+      let msg = 'خطأ في الاتصال';
       try { msg = xhr.responseJSON.error || msg; } catch(e) {}
       $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
         '<i class="fas fa-times-circle"></i> ' + msg

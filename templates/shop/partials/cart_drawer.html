@@ -1,12 +1,12 @@
 {# AJAX slide-out cart drawer — zero page reloads during shopping.
    Uses existing backend endpoints:
-     POST /<slug>/cart/add      → {success, cart_count, message}
-     POST /<slug>/cart/update   → {success, cart_count, subtotal, count}
-     POST /<slug>/cart/remove/<product_id> → {success, cart_count}
-     GET  /<slug>/cart/count    → {count}
+     POST /[slug]/cart/add      → [success, cart_count, message]
+     POST /[slug]/cart/update   → [success, cart_count, subtotal, count]
+     POST /[slug]/cart/remove/[product_id] → [success, cart_count]
+     GET  /[slug]/cart/count    → [count]
 #}
-<div id="psCartOverlay" class="ps-cart-overlay" aria-hidden="true"></div>
-<aside id="psCartDrawer" class="ps-cart-drawer" role="dialog" aria-label="{{ t('cart') }}" aria-hidden="true">
+<div id="psCartOverlay" class="ps-cart-overlay"></div>
+<div id="psCartDrawer" class="ps-cart-drawer" role="dialog" aria-label="{{ t('cart') }}">
   <div class="ps-cart-drawer-header">
     <h3><i class="fas fa-shopping-basket"></i> {{ t('cart') }}</h3>
     <button type="button" class="ps-cart-drawer-close" data-cart-close aria-label="{{ t('close') }}">
@@ -28,4 +28,4 @@
       <i class="fas fa-eye"></i> {{ t('view_cart') }}
     </a>
   </div>
-</aside>
+</div>

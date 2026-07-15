@@ -185,8 +185,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>{{ t('الميزات') }}</label>
-                <textarea class="form-control" name="features" rows="4" placeholder="كل {{ t('ميزة') }} في {{ t('سطر') }} {{ t('مستقل') }}"></textarea>
+                <label for="input_features">{{ t('الميزات') }}</label>
+                <textarea class="form-control" name="features" rows="4" placeholder="كل {{ t('ميزة') }} في {{ t('سطر') }} {{ t('مستقل') }}" id="input_features"></textarea>
             </div>
             <div class="text-left">
                 <button type="submit" class="btn btn-primary">
@@ -255,7 +255,6 @@
                 <canvas id="packageChart" height="80"></canvas>
             </div>
         </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}

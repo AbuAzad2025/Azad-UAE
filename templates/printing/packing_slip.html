@@ -49,10 +49,12 @@
     </div>
 
     <div class="doc-title">
+      "doc-title">
       <h2>📦 {{ t('إذن') }} {{ t('تسليم') }} / Delivery Note</h2>
       <div style="font-size:9px;color:#666;margin-top:4px;">
         {{ t('رقم') }} {{ t('الإذن') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
-        {{ t('Date') }}: <strong>{{ delivery.date.strftime('%Y-%m-%d') if delivery.date else sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '' }}</strong>
+        {% set display_date = delivery.date if delivery.date else (sale.sale_date if sale and sale.sale_date else none) %}
+        {{ t('Date') }}: <strong>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</strong>
       </div>
     </div>
 

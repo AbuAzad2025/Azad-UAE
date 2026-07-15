@@ -1,9 +1,8 @@
-<script>
 (function() {
   document.addEventListener('click', function(e) {
-    var btn = e.target.closest('[data-action="window-print"]');
+    let btn = e.target.closest('[data-action="window-print"]');
     if (btn) { e.preventDefault(); window.print(); }
-    var closeBtn = e.target.closest('[data-action="window-close"]');
+    let closeBtn = e.target.closest('[data-action="window-close"]');
     if (closeBtn) { e.preventDefault(); window.close(); }
   });
   if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
@@ -12,4 +11,3 @@
     });
   }
 })();
-</script>

@@ -37,9 +37,11 @@
         </select>
       </div>
       <div class="ps-filters">
-        <input type="number" name="min_price" placeholder="{{ t('min') }}" value="{{ min_price or '' }}" min="0" step="0.01">
-        <input type="number" name="max_price" placeholder="{{ t('max') }}" value="{{ max_price or '' }}" min="0" step="0.01">
-        <label><input type="checkbox" name="in_stock_only" value="1" {% if in_stock_only %}checked{% endif %}> {{ t('in_stock_only') }}</label>
+        <label for="min_price" class="sr-only">{{ t('min') }}</label>
+        <input type="number" name="min_price" id="min_price" placeholder="{{ t('min') }}" value="{{ min_price or '' }}" min="0" step="0.01">
+        <label for="max_price" class="sr-only">{{ t('max') }}</label>
+        <input type="number" name="max_price" id="max_price" placeholder="{{ t('max') }}" value="{{ max_price or '' }}" min="0" step="0.01">
+        <label for="in_stock_only"><input type="checkbox" name="in_stock_only" id="in_stock_only" value="1" {% if in_stock_only %}checked{% endif %}> {{ t('in_stock_only') }}</label>
         <button type="submit" class="ps-btn ps-btn-sm">{{ t('filter') }}</button>
       </div>
     </div>
@@ -80,7 +82,8 @@
   <div class="ps-grid">
     {% for row in items %}
     {% set product = row.product %}
-    {% set stock = row.available if row.available is defined else row.stock if row.stock is defined else 0 %}
+    {% set available_val = row.available if row.available is defined else (row.stock if row.stock is defined else 0) %}
+    {% set stock = available_val %}
     <article class="ps-card">
       <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-card-img">
         {% if product.image_url %}

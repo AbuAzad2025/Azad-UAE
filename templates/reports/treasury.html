@@ -110,8 +110,9 @@
             </thead>
             <tbody>
               {% for a in report.liquidity.accounts %}
+              {% set badge_class = {'cash': 'success', 'bank': 'primary', 'in_transit': 'warning'}.get(a.kind, 'info') %}
               <tr>
-                <td><span class="badge badge-{{ 'success' if a.kind == 'cash' else 'primary' if a.kind == 'bank' else 'warning' if a.kind == 'in_transit' else 'info' }}">{{ a.kind_label }}</span></td>
+                <td><span class="badge badge-{{ badge_class }}">{{ a.kind_label }}</span></td>
                 <td>{{ a.code }}</td>
                 <td>{{ a.name }}</td>
                 <td>{{ a.currency }}</td>
@@ -149,7 +150,8 @@
             </thead>
             <tbody>
               {% for key, bucket in report.cheques.incoming.buckets.items() %}
-              <tr class="{{ 'table-danger' if key == 'overdue' else 'table-warning' if key == '0_7_days' else '' }}">
+              {% set row_class = {'overdue': 'table-danger', '0_7_days': 'table-warning'}.get(key, '') %}
+              <tr class="{{ row_class }}">
                 <td>{{ bucket.label }}</td>
                 <td>{{ bucket.count }}</td>
                 <td class="text-right font-weight-bold">{{ format_currency(bucket.total_amount) }}</td>
@@ -179,7 +181,8 @@
             </thead>
             <tbody>
               {% for key, bucket in report.cheques.outgoing.buckets.items() %}
-              <tr class="{{ 'table-danger' if key == 'overdue' else 'table-warning' if key == '0_7_days' else '' }}">
+              {% set row_class = {'overdue': 'table-danger', '0_7_days': 'table-warning'}.get(key, '') %}
+              <tr class="{{ row_class }}">
                 <td>{{ bucket.label }}</td>
                 <td>{{ bucket.count }}</td>
                 <td class="text-right font-weight-bold">{{ format_currency(bucket.total_amount) }}</td>
@@ -200,7 +203,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-list mr-2"></i> {{ label }}</h3>
         </div>
-        <div class="card-body table-responsive p-0 erp-scroll-300"
+        <div class="card-body table-responsive p-0 erp-scroll-300">
           <table class="table table-sm table-hover">
             <thead>
               <tr>
@@ -214,7 +217,8 @@
             <tbody>
               {% for bkey, bucket in report.cheques[direction].buckets.items() %}
                 {% for c in bucket.items %}
-                <tr class="{{ 'table-danger' if bkey == 'overdue' else 'table-warning' if bkey == '0_7_days' else '' }}">
+                {% set row_class = {'overdue': 'table-danger', '0_7_days': 'table-warning'}.get(bkey, '') %}
+                <tr class="{{ row_class }}">
                   <td>{{ c.cheque_bank_number or c.cheque_number }}</td>
                   <td>{{ c.bank_name }}</td>
                   <td class="text-right">{{ format_currency(c.amount_aed) }}</td>
@@ -263,6 +267,7 @@
             </thead>
             <tbody>
               {% for r in report.reconciliations %}
+              {% set status_badge = {'completed': 'success', 'draft': 'warning'}.get(r.status, 'info') %}
               <tr class="{{ 'table-success' if r.difference == 0 else 'table-warning' }}">
                 <td>{{ r.reconciliation_number }}</td>
                 <td>{{ r.bank_account_code }} - {{ r.bank_account_name or '' }}</td>
@@ -271,7 +276,7 @@
                 <td class="text-right">{{ format_currency(r.closing_balance_per_bank) }}</td>
                 <td class="text-right font-weight-bold">{{ format_currency(r.difference) }}</td>
                 <td>
-                  <span class="badge badge-{{ 'success' if r.status == 'completed' else 'warning' if r.status == 'draft' else 'info' }}">
+                  <span class="badge badge-{{ status_badge }}">
                     {{ r.status_ar or r.status }}
                   </span>
                 </td>

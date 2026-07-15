@@ -180,7 +180,7 @@ def make_sync_current_app_mock(name="current_app"):
 
 class TestConfig:
     TESTING = True
-    DEBUG = True
+    DEBUG = False
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = _TEST_DATABASE_URL
     SQLALCHEMY_BINDS = {
@@ -236,7 +236,6 @@ class TestConfig:
     COMPRESS_MIN_SIZE = 500
     COMPRESS_ALGORITHM = 'gzip'
     APP_ENV = "testing"
-    DEBUG = True
     HOST = "127.0.0.1"
     PORT = 5000
 
@@ -682,18 +681,19 @@ def sample_permissions(db_session):
 
 @pytest.fixture
 def sample_role(db_session, sample_permissions):
-    import uuid
     from models import Role
-    unique = str(uuid.uuid4())[:8]
-    role = Role(
-        name=f"Manager {unique}",
-        slug=f"manager-{unique}",
-        is_active=True,
-    )
-    for p in sample_permissions:
-        role.permissions.append(p)
-    db_session.add(role)
-    db_session.commit()
+    # Reuse existing super_admin role to avoid unique constraint violation
+    role = db_session.query(Role).filter_by(slug="super_admin").first()
+    if not role:
+        role = Role(
+            name="Super Admin",
+            slug="super_admin",
+            is_active=True,
+        )
+        for p in sample_permissions:
+            role.permissions.append(p)
+        db_session.add(role)
+        db_session.commit()
     return role
 
 
@@ -720,13 +720,15 @@ def sample_user(db_session, sample_tenant, sample_role, sample_branch):
     import uuid
     from models import User
     unique = str(uuid.uuid4())[:8]
+    # For super_admin/global roles, don't assign branch_id so they can access all branches
+    branch_id = None if sample_role.slug in ('super_admin', 'owner', 'developer') else sample_branch.id
     user = User(
         username=f"testuser-{unique}",
         email=f"user-{unique}@example.com",
         full_name="Test User",
         tenant_id=sample_tenant.id,
         role_id=sample_role.id,
-        branch_id=sample_branch.id,
+        branch_id=branch_id,
         is_active=True,
         is_owner=False,
     )
@@ -751,9 +753,12 @@ def sample_owner(db_session):
     )
     db_session.add(tenant)
     db_session.commit()
-    role = Role(name="Owner", slug="owner", is_active=True)
-    db_session.add(role)
-    db_session.commit()
+    # Reuse existing owner role to avoid unique constraint violation
+    role = db_session.query(Role).filter_by(slug="owner").first()
+    if not role:
+        role = Role(name="Owner", slug="owner", is_active=True)
+        db_session.add(role)
+        db_session.commit()
     user = User(
         username=f"owner-{unique}",
         email=f"owner-{unique}@example.com",

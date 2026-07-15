@@ -92,7 +92,7 @@
 <aside class="azad-drawer" id="azadDrawer" aria-hidden="true">
     <div class="azad-drawer-header">
         <a class="azad-brand" href="{{ url_for('public.landing') }}">
-            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.style.display='none'">
+            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
             <span class="azad-brand-text">{{ _company_name }}</span>
         </a>
         <button class="azad-drawer-close" id="drawerClose" aria-label="{{ _close }}"><i class="fas fa-times"></i></button>
@@ -119,7 +119,7 @@
 <nav class="azad-nav" id="azadNav">
     <div class="azad-nav-inner">
         <a class="azad-brand" href="{{ url_for('public.landing') }}">
-            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.style.display='none'">
+            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
             <div>
                 <span class="azad-brand-text">{{ _company_name }}</span>
                 <small class="azad-brand-tagline">{{ 'ERP • AI • Cloud' if is_en else 'ERP • AI • سحابي' }}</small>
@@ -191,7 +191,7 @@
             <div class="azad-hero-visual">
                 <div class="azad-hero-ring"></div>
                 <div class="azad-hero-ring azad-hero-ring-2"></div>
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" class="azad-hero-float" onerror="this.style.display='none'">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" class="azad-hero-float">
             </div>
         </div>
     </div>
@@ -356,6 +356,7 @@
                         <span class="tier-sub">{{ 'شهرياً' if not is_en else '/mo' }}</span>
                     </button>
                 </div>
+                <label for="tierSlider" class="sr-only">{{ 'اختر الباقة' if not is_en else 'Select plan' }}</label>
                 <input type="range" class="azad-tier-slider" id="tierSlider" min="0" max="2" value="0" step="1">
                 <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--azad-text-muted);margin-bottom:20px;">
                     <span>{{ 'أساسية' if not is_en else 'Starter' }}</span>
@@ -422,32 +423,32 @@
                 <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--azad-accent-light);"><i class="fas fa-puzzle-piece"></i> {{ 'موديولات إضافية (رسوم ثابتة)' if not is_en else 'Add-on Modules (Flat fee)' }}</div>
                 <div class="azad-addon-grid">
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonPOS">
+                        <input type="checkbox" id="addonPOS" aria-label="{{ 'نقاط البيع (POS)' if not is_en else 'Point of Sale' }}">
                         <div class="info"><div class="name">{{ 'نقاط البيع (POS)' if not is_en else 'Point of Sale' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonStore">
+                        <input type="checkbox" id="addonStore" aria-label="{{ 'متجر إلكتروني' if not is_en else 'Online Store' }}">
                         <div class="info"><div class="name">{{ 'متجر إلكتروني' if not is_en else 'Online Store' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonHR">
+                        <input type="checkbox" id="addonHR" aria-label="{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}">
                         <div class="info"><div class="name">{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonAI">
+                        <input type="checkbox" id="addonAI" aria-label="{{ 'مساعد ذكاء اصطناعي' if not is_en else 'AI Assistant' }}">
                         <div class="info"><div class="name">{{ 'مساعد ذكاء اصطناعي' if not is_en else 'AI Assistant' }}</div></div>
                         <span class="price-tag">+$15</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonMultiBranch">
+                        <input type="checkbox" id="addonMultiBranch" aria-label="{{ 'فروع متعددة' if not is_en else 'Multi-Branch' }}">
                         <div class="info"><div class="name">{{ 'فروع متعددة' if not is_en else 'Multi-Branch' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonRestaurant">
+                        <input type="checkbox" id="addonRestaurant" aria-label="{{ 'نظام مطاعم' if not is_en else 'Restaurant' }}">
                         <div class="info"><div class="name">{{ 'نظام مطاعم' if not is_en else 'Restaurant' }}</div></div>
                         <span class="price-tag">+$12</span>
                     </div>
@@ -456,7 +457,7 @@
                     {% if not is_en %}
                     جميع الموديولات الأساسية (محاسبة، مخزون، فواتير، عملات، شيكات، تقارير، أصول) <strong>مشمولة في جميع الباقات</strong>.
                     {% else %}
-                    All base modules (GL, inventory, invoices, multi-currency, cheques, reports, fixed assets) are <strong>included in all plans</strong>.
+                    All base modules (GL, inventory, invoices, multi-currency, checks, reports, fixed assets) are <strong>included in all plans</strong>.
                     {% endif %}
                 </div>
             </div>
@@ -611,7 +612,7 @@
     <div class="azad-section-inner">
         <div class="azad-footer-grid">
             <div class="azad-footer-brand">
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.style.display='none'">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
                 <p>{{ 'منصة ERP سحابية متكاملة — محاسبة، مخازن، AI، نقاط بيع، متجر إلكتروني، موظفين ورواتب.' if not is_en else 'Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.' }}</p>
                 <div class="azad-footer-social">
                     {% if developer_whatsapp_link %}<a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>{% endif %}
@@ -658,14 +659,18 @@
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 <script>
 (function() {
-    var isRTL = {{ 'true' if is_rtl else 'false' }};
-    var nav = document.getElementById('azadNav');
-    var hamburger = document.getElementById('hamburgerBtn');
-    var drawer = document.getElementById('azadDrawer');
-    var overlay = document.getElementById('drawerOverlay');
-    var closeBtn = document.getElementById('drawerClose');
+  // Hide broken images globally (replaces inline onerror handlers)
+  document.addEventListener('error', function(e) {
+    if (e.target.tagName === 'IMG') e.target.style.display = 'none';
+  }, true);
 
-    if (hamburger && drawer && overlay) {
+  let nav = document.getElementById('azadNav');
+  let hamburger = document.getElementById('hamburgerBtn');
+  let drawer = document.getElementById('azadDrawer');
+  let overlay = document.getElementById('drawerOverlay');
+  let closeBtn = document.getElementById('drawerClose');
+
+  if (hamburger && drawer && overlay) {
         hamburger.addEventListener('click', function() {
             drawer.classList.add('open');
             overlay.classList.add('open');

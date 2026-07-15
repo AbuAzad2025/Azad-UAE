@@ -53,6 +53,7 @@
           <label for="notes">{{ t('notes') }}</label>
           <textarea id="notes" name="notes" rows="2" aria-label="notes" maxlength="500"></textarea>
         </div>
+      </form>
       </div>
 
       <div class="ps-checkout-section">
@@ -78,7 +79,6 @@
           <i class="fas fa-check-circle"></i> {{ t('place_order') }}
         </button>
       </div>
-    </form>
   </div>
 
   <div class="ps-checkout-right">
@@ -92,7 +92,7 @@
       {% endfor %}
 
       <div class="ps-checkout-coupon-row">
-        <input type="text" name="coupon_code" form="checkout-form" dir="ltr" value="{{ coupon_code or '' }}" placeholder="{{ t('coupon_code') }}">
+        <input type="text" name="coupon_code" id="coupon_code" form="checkout-form" dir="ltr" value="{{ coupon_code or '' }}" placeholder="{{ t('coupon_code') }}" aria-label="{{ t('coupon_code') }}">
         <button type="button" id="ps-apply-coupon">{{ t('apply') }}</button>
       </div>
 
@@ -119,12 +119,13 @@
 {% block extra_js %}
 <script>
 (function () {
-  var hintEl = document.getElementById('ps-pay-hint');
-  var radios = document.querySelectorAll('input[name="payment_method"]');
+  let hintEl = document.getElementById('ps-pay-hint');
+  let radios = document.querySelectorAll('input[name="payment_method"]');
+
   function updateHint() {
-    var sel = document.querySelector('input[name="payment_method"]:checked');
+    let sel = document.querySelector('input[name="payment_method"]:checked');
     if (!sel || !hintEl) return;
-    var text = (sel.getAttribute('data-hint') || '').trim();
+    let text = (sel.getAttribute('data-hint') || '').trim();
     if (text) { hintEl.textContent = text; hintEl.style.display = 'block'; }
     else { hintEl.style.display = 'none'; }
   }

@@ -277,7 +277,7 @@
 <nav class="azad-nav" id="azadNav">
     <div class="azad-nav-inner">
         <a class="azad-brand" href="{{ url_for('public.landing') }}">
-            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.style.display='none'">
+            <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" id="brandLogo">
             <div>
                 <span class="azad-brand-text">{{ _company_name }}</span>
                 <small class="azad-brand-tagline">{{ 'ERP • AI • Cloud' if is_en else 'ERP • AI • سحابي' }}</small>
@@ -433,8 +433,7 @@
 {# ──────────────────────────────────────────────── #}
 <script>
 (function() {
-    var isRTL = {{ 'true' if is_rtl else 'false' }};
-    var nav = document.getElementById('azadNav');
+    const nav = document.getElementById('azadNav');
     if (nav) {
         window.addEventListener('scroll', function() {
             if (window.scrollY > 60) nav.classList.add('scrolled');
@@ -442,44 +441,48 @@
         });
     }
 
-    var toggle = document.getElementById('billingToggle');
-    var monthlySpan = document.getElementById('billingMonthly');
-    var yearlySpan = document.getElementById('billingYearly');
-    var isYearly = false;
+    const logo = document.getElementById('brandLogo');
+    if (logo) {
+        logo.addEventListener('error', function() { this.style.display = 'none'; });
+    }
+
+    const toggle = document.getElementById('billingToggle');
+    const monthlySpan = document.getElementById('billingMonthly');
+    const yearlySpan = document.getElementById('billingYearly');
+    let isYearly = false;
 
     function updatePrices() {
-        var amounts = document.querySelectorAll('.price-display');
-        var periods = document.querySelectorAll('.price-period-display');
-        var notes = document.querySelectorAll('.price-yearly-note');
-        var waBtns = document.querySelectorAll('.wa-subscribe');
+        const amounts = document.querySelectorAll('.price-display');
+        const periods = document.querySelectorAll('.price-period-display');
+        const notes = document.querySelectorAll('.price-yearly-note');
+        const waBtns = document.querySelectorAll('.wa-subscribe');
 
         if (isYearly) {
             toggle.classList.add('active');
             monthlySpan.style.color = 'var(--azad-text-muted)';
             yearlySpan.style.color = 'var(--azad-accent-light)';
-            /* prices from data */
-            var prices = [290, 790, 2490];
-            amounts.forEach(function(el, i) {
-                if (i < prices.length) el.textContent = '$' + prices[i];
-                if (periods[i]) periods[i].textContent = '{{ "/سنوياً" if not is_en else "/year" }}';
-                if (notes[i]) notes[i].style.display = 'block';
+            const prices = [290, 790, 2490];
+            amounts.forEach(function(el, idx) {
+                if (idx < prices.length) el.textContent = '$' + prices[idx];
+                if (periods[idx]) periods[idx].textContent = '{{ "/سنوياً" if not is_en else "/year" }}';
+                if (notes[idx]) notes[idx].style.display = 'block';
             });
-            waBtns.forEach(function(btn, i) {
-                var yearlyMsg = btn.getAttribute('data-wa-yearly');
+            waBtns.forEach(function(btn) {
+                const yearlyMsg = btn.getAttribute('data-wa-yearly');
                 if (yearlyMsg) btn.href = 'https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text=' + yearlyMsg;
             });
         } else {
             toggle.classList.remove('active');
             monthlySpan.style.color = 'var(--azad-accent-light)';
             yearlySpan.style.color = 'var(--azad-text-muted)';
-            var prices = [29, 79, 249];
-            amounts.forEach(function(el, i) {
-                if (i < prices.length) el.textContent = '$' + prices[i];
-                if (periods[i]) periods[i].textContent = '{{ "/شهرياً" if not is_en else "/month" }}';
-                if (notes[i]) notes[i].style.display = 'none';
+            const prices = [29, 79, 249];
+            amounts.forEach(function(el, idx) {
+                if (idx < prices.length) el.textContent = '$' + prices[idx];
+                if (periods[idx]) periods[idx].textContent = '{{ "/شهرياً" if not is_en else "/month" }}';
+                if (notes[idx]) notes[idx].style.display = 'none';
             });
-            waBtns.forEach(function(btn, i) {
-                var monthlyMsg = btn.getAttribute('data-wa-monthly');
+            waBtns.forEach(function(btn) {
+                const monthlyMsg = btn.getAttribute('data-wa-monthly');
                 if (monthlyMsg) btn.href = 'https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text=' + monthlyMsg;
             });
         }
@@ -491,7 +494,7 @@
     }
 
     /* Scroll animation */
-    var observer = new IntersectionObserver(function(entries) {
+    const observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';

@@ -106,6 +106,7 @@
           <div class="form-group">
             <label class="font-weight-bold">{{ t('Amount') }}</label>
             <div class="input-group">
+              <label for="amount" class="sr-only">{{ t('Amount') }}</label>
               <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" id="amount" required placeholder="0.00" min="0">
               <div class="input-group-append">
                 <span class="input-group-text" id="amount_currency_label">{{ preselected_currency or tenant_default_currency or 'AED' }}</span>
@@ -172,11 +173,11 @@
       </div>
 
       <div class="row">
-        <div class="col-md-12">
+<div class="col-md-12">
           <div class="form-group">
-            <label>{{ t('Notes') }} / {{ t('Description_3') }}</label>
-            <textarea class="form-control" name="notes" rows="3" placeholder="{{ t('أدخل') }} {{ t('Details') }} {{ t('Voucher') }}..." maxlength="500"></textarea>
-          </div>
+            <label for="notes">{{ t('Notes') }} / {{ t('Description_3') }}</label>
+            <textarea class="form-control" name="notes" id="notes" rows="3" placeholder="{{ t('أدخل') }} {{ t('Details') }} {{ t('Voucher') }}..." maxlength="500"></textarea>
+</div>
         </div>
       </div>
 
@@ -189,8 +190,8 @@
 </div>
 
 
-{{ customers_json|tojson|json_script:"customers-data" }}
-{{ suppliers_json|tojson|json_script:"suppliers-data" }}
+<script id="customers-data" type="application/json">{{ customers_json|tojson }}</script>
+<script id="suppliers-data" type="application/json">{{ suppliers_json|tojson }}</script>
 
 {% endblock %}
 
@@ -232,7 +233,7 @@ function updatePartyList() {
   });
   
   // Refresh Select2
-  // Assuming select2 is initialized globally or we trigger it
+  // Assuming select2 is initialized globally, or we trigger it
   if ($.fn.select2) {
       select.trigger('change');
   }

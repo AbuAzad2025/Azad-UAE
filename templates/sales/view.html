@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}{% endblock %}
 
@@ -862,6 +862,7 @@
 
                   <td>
 
+                    <label for="return_notes_{{ line.id }}" class="sr-only">{{ t('سبب') }} {{ t('الإرجاع') }}</label>
                     <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="{{ t('سبب') }} {{ t('الإرجاع') }}" maxlength="500">
 
                   </td>

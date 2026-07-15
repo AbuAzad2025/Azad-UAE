@@ -256,3 +256,151 @@ def bypass_ai_access(mock_user):
     for p in patches: p.start()
     yield mock_user
     for p in reversed(patches): p.stop()
+
+
+# ─── TEST DATA FACTORY ───
+class TestFactory:
+    """Helper factory for creating test data with proper tenant isolation and required fields."""
+    
+    def __init__(self, db_session, user):
+        self.db_session = db_session
+        self.user = user
+    
+    def _set_tenant_id_on_obj(self, obj, tenant_id):
+        """Set tenant_id on an object, bypassing tenant isolation guard."""
+        if hasattr(obj, 'tenant_id'):
+            obj.tenant_id = tenant_id
+        return obj
+    
+    def create_customer(self, name="Test Customer", tenant_id=None, **kwargs):
+        """Create a Customer with proper tenant isolation.
+        
+        Automatically injects tenant_id from the current user and removes
+        any branch_id (which doesn't exist on the Customer model).
+        
+        Args:
+            name: Customer name
+            tenant_id: Optional tenant_id override for cross-tenant testing
+            **kwargs: Additional Customer fields
+        """
+        from models import Customer, Tenant
+        from flask import g
+        kwargs.pop('branch_id', None)  # Customer model doesn't have branch_id
+        actual_tenant_id = tenant_id if tenant_id is not None else self.user.tenant_id
+        
+        # Ensure tenant exists for cross-tenant tests
+        if tenant_id is not None and tenant_id != self.user.tenant_id:
+            # Create the foreign tenant if it doesn't exist
+            existing_tenant = self.db_session.get(Tenant, tenant_id)
+            if not existing_tenant:
+                existing_tenant = Tenant(
+                    id=tenant_id,
+                    name=f"Test Tenant {tenant_id}",
+                    name_ar="مستأجر اختبار",
+                    slug=f"test-tenant-{tenant_id}",
+                    email=f"tenant{tenant_id}@example.com",
+                    country="AE",
+                    subscription_plan="basic",
+                    default_currency="AED",
+                    base_currency="AED",
+                    is_active=True,
+                )
+                self.db_session.add(existing_tenant)
+                self.db_session.flush()
+            g.skip_tenant_scope = True
+        
+        customer = Customer(
+            tenant_id=actual_tenant_id,
+            name=name,
+            **kwargs
+        )
+        self.db_session.add(customer)
+        self.db_session.commit()
+        g.skip_tenant_scope = False
+        return customer
+    
+    def create_sale(self, customer, total_amount=100.00, **kwargs):
+        """Create a Sale with proper tenant isolation and required fields.
+        
+        Automatically injects tenant_id from the current user and seller_id
+        from the current user (required field on Sale model).
+        """
+        from models import Sale
+        sale = Sale(
+            tenant_id=self.user.tenant_id,
+            customer_id=customer.id,
+            sale_number=kwargs.pop('sale_number', f"S-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            sale_date=kwargs.pop('sale_date', datetime.now()),
+            subtotal=kwargs.pop('subtotal', total_amount),
+            total_amount=total_amount,
+            amount=total_amount,
+            amount_aed=total_amount,
+            currency=kwargs.pop('currency', "AED"),
+            paid_amount=kwargs.pop('paid_amount', 0),
+            balance_due=kwargs.pop('balance_due', total_amount),
+            exchange_rate=kwargs.pop('exchange_rate', 1),
+            payment_status=kwargs.pop('payment_status', 'unpaid'),
+            status=kwargs.pop('status', 'confirmed'),
+            source=kwargs.pop('source', 'internal'),
+            notes=kwargs.pop('notes', ''),
+            seller_id=self.user.id,  # Required field on Sale model
+        )
+        self.db_session.add(sale)
+        self.db_session.commit()
+        return sale
+    
+    def create_payment(self, customer, sale=None, amount=50.00, **kwargs):
+        """Create a Payment with proper tenant isolation."""
+        from models import Payment
+        payment = Payment(
+            tenant_id=self.user.tenant_id,
+            customer_id=customer.id,
+            sale_id=sale.id if sale else None,
+            payment_number=kwargs.pop('payment_number', f"P-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            payment_date=kwargs.pop('payment_date', datetime.now()),
+            amount_aed=amount,
+            amount=amount,
+            currency=kwargs.pop('currency', "AED"),
+            exchange_rate=kwargs.pop('exchange_rate', 1),
+            reference_number=kwargs.pop('reference_number', f"REF-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            payment_method=kwargs.pop('payment_method', 'cash'),
+            payment_confirmed=kwargs.pop('payment_confirmed', True),
+            direction=kwargs.pop('direction', 'incoming'),
+            payment_type=kwargs.pop('payment_type', 'cash'),
+        )
+        self.db_session.add(payment)
+        self.db_session.commit()
+        return payment
+    
+    def create_receipt(self, customer, amount=25.00, **kwargs):
+        """Create a Receipt with proper tenant isolation."""
+        from models import Receipt
+        receipt = Receipt(
+            tenant_id=self.user.tenant_id,
+            customer_id=customer.id,
+            receipt_number=kwargs.pop('receipt_number', f"RCV-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            receipt_date=kwargs.pop('receipt_date', datetime.now()),
+            amount_aed=amount,
+            amount=amount,
+            currency=kwargs.pop('currency', "AED"),
+            exchange_rate=kwargs.pop('exchange_rate', 1),
+            payment_method=kwargs.pop('payment_method', 'cash'),
+            payment_confirmed=kwargs.pop('payment_confirmed', True),
+            notes=kwargs.pop('notes', ''),
+        )
+        self.db_session.add(receipt)
+        self.db_session.commit()
+        return receipt
+
+
+@ pytest.fixture
+def test_factory(db_session, auth_client):
+    """Provides a test data factory bound to the current authenticated user.
+    
+    Usage:
+        def test_something(test_factory):
+            customer = test_factory.create_customer(name="Test Customer")
+            sale = test_factory.create_sale(customer, total_amount=100.00)
+    """
+    client, user = auth_client
+    return TestFactory(db_session, user)

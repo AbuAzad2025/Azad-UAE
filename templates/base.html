@@ -119,11 +119,11 @@ window.ROUTES = {
     window.addEventListener('DOMContentLoaded', function() { setTimeout(function() { window.print(); }, 300); });
   }
   document.addEventListener('submit', function(ev) {
-    var btn = ev.target.querySelector('button[type="submit"]');
+    let btn = ev.target.querySelector('button[type="submit"]');
     if (btn && !btn.disabled) {
       setTimeout(function() {
         btn.disabled = true;
-        var icon = btn.querySelector('.fa-spinner');
+        let icon = btn.querySelector('.fa-spinner');
         if (!icon) btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
       }, 10);
     }

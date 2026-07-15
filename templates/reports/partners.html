@@ -129,9 +129,9 @@
                                     <td class="text-success">{{ format_currency(partner.total_share) }}</td>
                                     <td class="text-primary">{{ format_currency(partner.received_from) }}</td>
                                     <td class="text-danger">{{ format_currency(partner.paid_to) }}</td>
-                                    <td class="fw-bold {% if partner.net_balance >= 0 %}text-success{% else %}text-danger{% endif %} erp-fs-lg"
-                                        {{ format_currency(partner.net_balance) }}
-                                    </td>
+<td class="fw-bold {% if partner.net_balance >= 0 %}text-success{% else %}text-danger{% endif %} erp-fs-lg">
+    {{ format_currency(partner.net_balance) }}
+</td>
                                 </tr>
                                 {% else %}
                                 <tr>
@@ -222,9 +222,9 @@
                                     <td class="text-success">{{ format_currency(merchant.total_share) }}</td>
                                     <td class="text-primary">{{ format_currency(merchant.received_from) }}</td>
                                     <td class="text-danger">{{ format_currency(merchant.paid_to) }}</td>
-                                    <td class="fw-bold {% if merchant.net_balance >= 0 %}text-success{% else %}text-danger{% endif %} erp-fs-lg"
-                                        {{ format_currency(merchant.net_balance) }}
-                                    </td>
+<td class="fw-bold {% if merchant.net_balance >= 0 %}text-success{% else %}text-danger{% endif %} erp-fs-lg">
+    {{ format_currency(merchant.net_balance) }}
+</td>
                                 </tr>
                                 {% else %}
                                 <tr>
@@ -358,7 +358,7 @@
             $(this).addClass('active');
             
             // Show target content
-            var targetId = $(this).data('target');
+            let targetId = $(this).data('target');
             $(targetId).addClass('show active');
         });
 

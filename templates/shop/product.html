@@ -97,7 +97,8 @@
       <p><i class="fas fa-bell"></i> {{ t('out_of_stock_notify') }}</p>
       <form method="post" action="{{ url_for('shop.stock_alert', slug=store.store_slug, product_id=product.id) }}" class="ps-stock-alert-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="email" name="email" placeholder="{{ t('email') }}" required>
+        <label for="stock_alert_email" class="sr-only">{{ t('email') }}</label>
+        <input type="email" name="email" id="stock_alert_email" placeholder="{{ t('email') }}" required>
         <button type="submit" class="ps-btn ps-btn-outline">{{ t('notify_me') }}</button>
       </form>
     </div>

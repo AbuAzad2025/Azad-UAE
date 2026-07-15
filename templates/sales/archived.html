@@ -30,14 +30,8 @@
 
 
 
-{% block content %}
-
-<div class="card">
-
-  <div class="card-body">
-
-    <style>
-
+{% block extra_css %}
+<style>
       a.btn.btn-secondary,
 
       .btn.btn-secondary {
@@ -61,8 +55,14 @@
         color: #ffffff !important;
 
       }
-
     </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="card-body">
 
     <div class="table-responsive"><table id="salesTable" class="table table-bordered table-striped table-hover">
 
@@ -237,13 +237,13 @@ $(document).ready(function() {
 
       },
 
-      success: function(response) {
+      success: function() {
 
         location.reload();
 
       },
 
-      error: function(xhr) {
+      error: function() {
 
         location.reload();
 

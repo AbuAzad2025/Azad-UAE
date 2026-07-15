@@ -15,10 +15,10 @@
     <form method="POST" action="{{ url_for('unified_inventory.shipments_create') }}" class="mt-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row">
-        <div class="col"><input name="carrier_name" class="form-control" placeholder="Carrier" required></div>
-        <div class="col"><input name="tracking_number" class="form-control" placeholder="Tracking #" required></div>
-        <div class="col"><input name="source_id" type="number" class="form-control" placeholder="Sale ID" required></div>
-        <div class="col"><input name="shipping_cost" type="number" class="form-control" placeholder="Cost" step="0.01"></div>
+        <div class="col"><label for="shipment_carrier_name" class="sr-only">Carrier</label><input name="carrier_name" id="shipment_carrier_name" class="form-control" placeholder="Carrier" required></div>
+        <div class="col"><label for="shipment_tracking_number" class="sr-only">Tracking #</label><input name="tracking_number" id="shipment_tracking_number" class="form-control" placeholder="Tracking #" required></div>
+        <div class="col"><label for="shipment_source_id" class="sr-only">Sale ID</label><input name="source_id" id="shipment_source_id" type="number" class="form-control" placeholder="Sale ID" required></div>
+        <div class="col"><label for="shipment_shipping_cost" class="sr-only">Cost</label><input name="shipping_cost" id="shipment_shipping_cost" type="number" class="form-control" placeholder="Cost" step="0.01"></div>
         <div class="col"><button class="btn btn-success">Add</button></div>
       </div>
     </form>

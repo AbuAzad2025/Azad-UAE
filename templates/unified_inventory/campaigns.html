@@ -15,9 +15,9 @@
     <form method="POST" action="{{ url_for('unified_inventory.campaigns_create') }}" class="mt-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row">
-        <div class="col"><input name="name" class="form-control" placeholder="Name" required></div>
-        <div class="col"><input name="coupon_code" class="form-control" placeholder="Coupon Code" required></div>
-        <div class="col"><input name="discount_value" type="number" class="form-control" placeholder="Discount" step="0.01" required></div>
+        <div class="col"><label for="campaign_name" class="sr-only">Name</label><input name="name" id="campaign_name" class="form-control" placeholder="Name" required></div>
+        <div class="col"><label for="campaign_coupon_code" class="sr-only">Coupon Code</label><input name="coupon_code" id="campaign_coupon_code" class="form-control" placeholder="Coupon Code" required></div>
+        <div class="col"><label for="campaign_discount_value" class="sr-only">Discount</label><input name="discount_value" id="campaign_discount_value" type="number" class="form-control" placeholder="Discount" step="0.01" required></div>
         <div class="col"><button class="btn btn-success">Add</button></div>
       </div>
     </form>

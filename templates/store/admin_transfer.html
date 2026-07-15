@@ -63,7 +63,7 @@
 
           <div class="form-group">
             <label for="notes">ملاحظة (اختياري)</label>
-            <textarea name="notes" class="form-control" rows="2" maxlength="500"></textarea>
+            <textarea name="notes" id="notes" class="form-control" rows="2" maxlength="500"></textarea>
           </div>
         </div>
         <div class="card-footer">
@@ -94,7 +94,7 @@
 
 <script>
 function filterByWarehouse() {
-  var sel = document.getElementById('product_id');
+  let sel = document.getElementById('product_id');
   var wh = document.getElementById('source_warehouse_id');
   var whId = parseInt(wh.value) || 0;
   var detail = document.getElementById('product_stock_detail');

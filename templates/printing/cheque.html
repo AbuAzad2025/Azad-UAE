@@ -74,7 +74,7 @@
         </div>
         <div class="cheque-pay-section" style="margin:0;padding:0;">
           <span class="cheque-pay-label" style="font-size:10px;">{{ t('Date') }} / Date</span>
-          <span style="font-size:13px;font-weight:700;">{{ cheque.issue_date.strftime('%Y-%m-%d') if cheque.issue_date else cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '—' }}</span>
+          <span style="font-size:13px;font-weight:700;">{% if cheque.issue_date %}{{ cheque.issue_date.strftime('%Y-%m-%d') }}{% elif cheque.due_date %}{{ cheque.due_date.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</span>
         </div>
         <div class="cheque-signature">
           <div class="sig-line"></div>

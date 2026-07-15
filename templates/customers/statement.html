@@ -383,7 +383,7 @@ table.statement-table thead th {
             {% for trans in transactions %}
               {% set detail_id = 'details-' ~ loop.index %}
               <tr class="transaction-row {% if trans.type == 'sale' %}sale-row{% else %}payment-row{% endif %}">
-                <td>{{ trans.date.strftime('%Y-%m-%d') if trans.date else '-' }}</td>
+                <td>{% if trans.date %}{% if trans.date is string %}{{ trans.date }}{% else %}{{ trans.date.strftime('%Y-%m-%d') }}{% endif %}{% else %}-{% endif %}</td>
                 <td>
                   <div class="font-weight-bold mb-1">
                     {{ trans.description }}
