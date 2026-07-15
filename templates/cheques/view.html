@@ -332,9 +332,9 @@
           <p>{{ t('Amount') }}: <strong>{{ format_currency(cheque.amount, cheque.currency) }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('History') }} {{ t('Exchange') }}: <span class="text-danger">*</span></label>
-            <input type="date" name="clearance_date" class="form-control" 
-                   value="{{ today }}" required aria-label="clearance date">
+            <label for="clearance_date">{{ t('History') }} {{ t('Exchange') }}: <span class="text-danger">*</span></label>
+            <input type="date" name="clearance_date" id="clearance_date" class="form-control"
+                   value="{{ today }}" required>
           </div>
           
           {% if cheque.currency != tenant_default_currency %}
@@ -344,25 +344,25 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} ({{ t('Time') }} {{ t('Exchange') }}): <span class="text-danger">*</span></label>
-            <input type="number" name="clearance_exchange_rate" id="clearance_exchange_rate" 
-                   class="form-control" step="0.000001" 
-                   value="{{ suggested_rate|default(cheque.exchange_rate, true) }}" required aria-label="clearance exchange rate">
+            <label for="clearance_exchange_rate">{{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} ({{ t('Time') }} {{ t('Exchange') }}): <span class="text-danger">*</span></label>
+            <input type="number" name="clearance_exchange_rate" id="clearance_exchange_rate"
+                   class="form-control" step="0.000001"
+                   value="{{ suggested_rate|default(cheque.exchange_rate, true) }}" required>
             <small class="form-text text-muted">
               {{ t('سيتم') }} {{ t('جلب') }} {{ t('Price') }} {{ t('الحالي') }} {{ t('تلقائياً') }} من API - {{ t('يمكنك') }} {{ t('Edit_2') }}
             </small>
           </div>
           
           <div class="form-group">
-            <label>{{ t('Amount') }} {{ t('Expected') }} ({{ tenant_currency_name_ar or 'درهم' }}):</label>
-            <input type="text" class="form-control" 
-                   value="{{ format_currency(cheque.base_amount) }}" readonly aria-label="{{ t('Amount') }} {{ t('Expected') }} ({{ tenant_currency_name_ar or 'درهم' }})">
+            <label for="clearance_base_amount">{{ t('Amount') }} {{ t('Expected') }} ({{ tenant_currency_name_ar or 'درهم' }}):</label>
+            <input type="text" name="clearance_base_amount" id="clearance_base_amount" class="form-control"
+                   value="{{ format_currency(cheque.base_amount) }}" readonly>
           </div>
           
           <div class="form-group">
-            <label>{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('with Price') }} {{ t('New_2') }}):</label>
-            <input type="text" id="actual_amount_preview" class="form-control font-weight-bold" 
-                   value="..." readonly aria-label="actual amount preview">
+            <label for="actual_amount_preview">{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('with Price') }} {{ t('New_2') }}):</label>
+            <input type="text" name="actual_amount_preview" id="actual_amount_preview" class="form-control font-weight-bold"
+                   value="..." readonly>
           </div>
           
           <div id="gain_loss_preview" class="d-none alert">
@@ -397,8 +397,8 @@
           <p>{{ t('تسجيل') }} {{ t('إرتداد') }} {{ t('for Cheque') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('سبب') }} {{ t('الإرتداد') }}: <span class="text-danger">*</span></label>
-            <textarea name="bounce_reason" class="form-control" rows="3" 
+            <label for="bounce_reason">{{ t('سبب') }} {{ t('الإرتداد') }}: <span class="text-danger">*</span></label>
+            <textarea name="bounce_reason" id="bounce_reason" class="form-control" rows="3"
                       placeholder="{{ t('اكتب') }} {{ t('سبب') }} {{ t('الإرتداد') }}..." required></textarea>
           </div>
         </div>
@@ -435,9 +435,9 @@
           <p>{{ t('Amount') }}: <strong>{{ format_currency(cheque.base_amount) }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('History') }} {{ t('الإيداع') }}: <span class="text-danger">*</span></label>
-            <input type="date" name="deposit_date" class="form-control" 
-                   value="{{ today }}" required aria-label="deposit date">
+            <label for="deposit_date">{{ t('History') }} {{ t('الإيداع') }}: <span class="text-danger">*</span></label>
+            <input type="date" name="deposit_date" id="deposit_date" class="form-control"
+                   value="{{ today }}" required>
           </div>
         </div>
         <div class="modal-footer">
@@ -467,8 +467,8 @@
           <p>{{ t('Cancel') }} {{ t('Cheque') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('سبب') }} {{ t('Cancel_2') }} ({{ t('Optional') }}):</label>
-            <textarea name="cancel_reason" class="form-control" rows="2" 
+            <label for="cancel_reason">{{ t('سبب') }} {{ t('Cancel_2') }} ({{ t('Optional') }}):</label>
+            <textarea name="cancel_reason" id="cancel_reason" class="form-control" rows="2"
                       placeholder="{{ t('اكتب') }} {{ t('سبب') }} {{ t('Cancel_2') }}..."></textarea>
           </div>
         </div>
