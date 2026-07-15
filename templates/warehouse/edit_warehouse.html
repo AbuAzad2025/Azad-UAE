@@ -36,29 +36,14 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label><i class="fas fa-warehouse text-primary"></i> {{ t('Name') }} {{ t('In English_2') }} <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" required value="{{ warehouse.name }}" minlength="2" maxlength="100">
+                    <label for="warehouse_name"><i class="fas fa-warehouse text-primary"></i> {{ t('Name') }} {{ t('In English_2') }} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="warehouse_name" name="name" required value="{{ warehouse.name }}" minlength="2" maxlength="100">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label><i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}</label>
-                    <input type="text" class="form-control" id="name_ar" name="name_ar" value="{{ warehouse.name_ar or '' }}" minlength="2" maxlength="100">
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label><i class="fas fa-barcode text-secondary"></i> {{ t('Code_3') }} {{ t('Warehouse') }}</label>
-                    <input type="text" class="form-control" id="code" name="code" value="{{ warehouse.code or '' }}">
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label><i class="fas fa-map-marker-alt text-danger"></i> {{ t('Website') }} <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="location" name="location" required value="{{ warehouse.location or '' }}">
+                    <label for="warehouse_name_ar"><i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}</label>
+                    <input type="text" class="form-control" id="warehouse_name_ar" name="name_ar" value="{{ warehouse.name_ar or '' }}" minlength="2" maxlength="100">
                   </div>
                 </div>
               </div>
@@ -66,8 +51,23 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label><i class="fas fa-sitemap text-success"></i> {{ t('Warehouse') }} {{ t('الأب') }}</label>
-                    <select class="form-control" id="parent_id" name="parent_id" aria-label="parent id">
+                    <label for="warehouse_code"><i class="fas fa-barcode text-secondary"></i> {{ t('Code_3') }} {{ t('Warehouse') }}</label>
+                    <input type="text" class="form-control" id="warehouse_code" name="code" value="{{ warehouse.code or '' }}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="warehouse_location"><i class="fas fa-map-marker-alt text-danger"></i> {{ t('Website') }} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="warehouse_location" name="location" required value="{{ warehouse.location or '' }}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="warehouse_parent_id"><i class="fas fa-sitemap text-success"></i> {{ t('Warehouse') }} {{ t('الأب') }}</label>
+                    <select class="form-control" id="warehouse_parent_id" name="parent_id">
                       <option value="" {% if not warehouse.parent_id %}selected{% endif %}>{{ t('None') }}</option>
                       {% if parent_warehouses %}
                         {% for parent in parent_warehouses %}
@@ -81,8 +81,8 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label><i class="fas fa-user-tie text-primary"></i> {{ t('المدير') }} {{ t('Responsible') }}</label>
-                    <select class="form-control" id="manager_id" name="manager_id" aria-label="manager id">
+                    <label for="warehouse_manager_id"><i class="fas fa-user-tie text-primary"></i> {{ t('المدير') }} {{ t('Responsible') }}</label>
+                    <select class="form-control" id="warehouse_manager_id" name="manager_id">
                       <option value="" {% if not warehouse.manager_id %}selected{% endif %}>{{ t('None') }}</option>
                       {% if users %}
                         {% for user in users %}
@@ -99,8 +99,8 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label><i class="fas fa-building text-info"></i> {{ t('Branch') }}</label>
-                    <select class="form-control" id="branch_id" name="branch_id" aria-label="branch">
+                    <label for="warehouse_branch_id"><i class="fas fa-building text-info"></i> {{ t('Branch') }}</label>
+                    <select class="form-control" id="warehouse_branch_id" name="branch_id">
                       <option value="" {% if not warehouse.branch_id %}selected{% endif %}>-- {{ t('General_2') }} --</option>
                       {% if branches %}
                         {% for branch in branches %}

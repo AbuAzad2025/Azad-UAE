@@ -90,8 +90,8 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="fas fa-exchange-alt"></i> {{ t('نوع') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
-            <select name="cheque_type" id="cheque_type" class="form-control" required aria-label="cheque type">
+            <label for="cheque_type"><i class="fas fa-exchange-alt"></i> {{ t('نوع') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
+            <select name="cheque_type" id="cheque_type" class="form-control" required>
               <option value="">{{ t('None') }}</option>
               <option value="incoming">{{ t('Income_3') }} (من {{ t('عميل') }})</option>
               <option value="outgoing">{{ t('Expense') }} ({{ t('لمورد') }})</option>
@@ -101,8 +101,8 @@
         
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
-            <input type="text" name="cheque_bank_number" class="form-control" 
+            <label for="cheque_bank_number"><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
+            <input type="text" name="cheque_bank_number" id="cheque_bank_number" class="form-control"
                    placeholder="{{ t('رقم') }} {{ t('Cheque') }} من {{ t('Bank') }}" required>
           </div>
         </div>
@@ -112,24 +112,24 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-university"></i> {{ t('Bank') }}: <span class="text-danger">*</span></label>
-            <input type="text" name="bank_name" class="form-control" 
+            <label for="bank_name"><i class="fas fa-university"></i> {{ t('Bank') }}: <span class="text-danger">*</span></label>
+            <input type="text" name="bank_name" id="bank_name" class="form-control"
                    placeholder="{{ t('Name_2') }} {{ t('Bank') }}" required minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-map-marker-alt"></i> {{ t('Branch') }}:</label>
-            <input type="text" name="bank_branch" class="form-control" 
+            <label for="bank_branch"><i class="fas fa-map-marker-alt"></i> {{ t('Branch') }}:</label>
+            <input type="text" name="bank_branch" id="bank_branch" class="form-control"
                    placeholder="{{ t('Branch_2') }} {{ t('Bank') }}">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-credit-card"></i> {{ t('رقم') }} {{ t('Account') }}:</label>
-            <input type="text" name="account_number" class="form-control" 
+            <label for="account_number"><i class="fas fa-credit-card"></i> {{ t('رقم') }} {{ t('Account') }}:</label>
+            <input type="text" name="account_number" id="account_number" class="form-control"
                    placeholder="{{ t('رقم') }} {{ t('Account') }}" maxlength="34">
           </div>
         </div>
@@ -139,17 +139,17 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-money-bill-wave"></i> {{ t('Amount') }}: <span class="text-danger">*</span></label>
-            <input type="number" name="amount" step="0.01" class="form-control" 
+            <label for="amount"><i class="fas fa-money-bill-wave"></i> {{ t('Amount') }}: <span class="text-danger">*</span></label>
+            <input type="number" name="amount" id="amount" step="0.01" class="form-control"
                    placeholder="0.00" required min="0">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-dollar-sign"></i> {{ t('Currency') }}:</label>
+            <label for="currency"><i class="fas fa-dollar-sign"></i> {{ t('Currency') }}:</label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            <select name="currency" id="currency" class="form-control" aria-label="{{ t('Currency') }}">
+            <select name="currency" id="currency" class="form-control">
               <option value="AED" {% if dc == 'AED' %}selected{% endif %}>AED - {{ tenant_currency_name_ar or "درهم إماراتي" }}</option>
               <option value="USD" {% if dc == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }} {{ t('أمريكي') }}</option>
               <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>EUR - {{ t('Euro') }}</option>
@@ -160,8 +160,8 @@
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-exchange-alt"></i> {{ t('Price_2') }} {{ t('Exchange') }}:</label>
-            <input type="number" name="exchange_rate" step="0.000001" class="form-control" 
+            <label for="exchange_rate"><i class="fas fa-exchange-alt"></i> {{ t('Price_2') }} {{ t('Exchange') }}:</label>
+            <input type="number" name="exchange_rate" id="exchange_rate" step="0.000001" class="form-control"
                    placeholder="1.0">
           </div>
         </div>
@@ -171,16 +171,16 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="far fa-calendar"></i> {{ t('History') }} {{ t('الإصدار') }}: <span class="text-danger">*</span></label>
-            <input type="date" name="issue_date" class="form-control" 
-                   value="{{ today }}" required aria-label="issue date">
+            <label for="issue_date"><i class="far fa-calendar"></i> {{ t('History') }} {{ t('الإصدار') }}: <span class="text-danger">*</span></label>
+            <input type="date" name="issue_date" id="issue_date" class="form-control"
+                    value="{{ today }}" required>
           </div>
         </div>
         
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="far fa-calendar-check"></i> {{ t('History') }} {{ t('Due') }}: <span class="text-danger">*</span></label>
-            <input type="date" name="due_date" class="form-control" required aria-label="due date">
+            <label for="due_date"><i class="far fa-calendar-check"></i> {{ t('History') }} {{ t('Due') }}: <span class="text-danger">*</span></label>
+            <input type="date" name="due_date" id="due_date" class="form-control" required>
           </div>
         </div>
       </div>
@@ -190,8 +190,8 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-user"></i> {{ t('Customer') }} ({{ t('Optional') }}):</label>
-              <select name="customer_id" class="form-control customer-select" aria-label="customer id">
+              <label for="customer_id"><i class="fas fa-user"></i> {{ t('Customer') }} ({{ t('Optional') }}):</label>
+              <select name="customer_id" id="customer_id" class="form-control customer-select">
                 <option value="">{{ t('None') }}</option>
                 {% for customer in customers %}
                 <option value="{{ customer.id }}">{{ customer.name }}</option>
@@ -202,16 +202,16 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-signature"></i> {{ t('Name_2') }} {{ t('الساحب') }}:</label>
-              <input type="text" name="drawer_name" class="form-control" 
+              <label for="drawer_name"><i class="fas fa-signature"></i> {{ t('Name_2') }} {{ t('الساحب') }}:</label>
+              <input type="text" name="drawer_name" id="drawer_name" class="form-control"
                      placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('for Cheque') }}" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
         
         <div class="form-group">
-          <label><i class="fas fa-id-card"></i> {{ t('رقم') }} {{ t('الهوية') }}:</label>
-          <input type="text" name="drawer_id_number" class="form-control" 
+          <label for="drawer_id_number"><i class="fas fa-id-card"></i> {{ t('رقم') }} {{ t('الهوية') }}:</label>
+          <input type="text" name="drawer_id_number" id="drawer_id_number" class="form-control"
                  placeholder="{{ t('رقم') }} {{ t('الهوية') }} أو {{ t('الجواز') }}">
         </div>
       </div>
@@ -220,8 +220,8 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-truck"></i> {{ t('Supplier') }} ({{ t('Optional') }}):</label>
-              <select name="supplier_id" class="form-control supplier-select" aria-label="supplier id">
+              <label for="supplier_id"><i class="fas fa-truck"></i> {{ t('Supplier') }} ({{ t('Optional') }}):</label>
+              <select name="supplier_id" id="supplier_id" class="form-control supplier-select">
                 <option value="">{{ t('None') }}</option>
                 {% for supplier in suppliers %}
                 <option value="{{ supplier.id }}">{{ supplier.name }}</option>
@@ -232,8 +232,8 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-user-tie"></i> {{ t('Name_2') }} {{ t('المستفيد') }}:</label>
-              <input type="text" name="payee_name" class="form-control" 
+              <label for="payee_name"><i class="fas fa-user-tie"></i> {{ t('Name_2') }} {{ t('المستفيد') }}:</label>
+              <input type="text" name="payee_name" id="payee_name" class="form-control"
                      placeholder="{{ t('Name_2') }} {{ t('المستفيد') }} من {{ t('Cheque') }}" minlength="2" maxlength="100">
             </div>
           </div>
@@ -242,8 +242,8 @@
 
       
       <div class="form-group">
-        <label><i class="fas fa-sticky-note"></i> {{ t('Notes') }}:</label>
-        <textarea name="notes" class="form-control" rows="3" 
+        <label for="notes"><i class="fas fa-sticky-note"></i> {{ t('Notes') }}:</label>
+        <textarea name="notes" id="notes" class="form-control" rows="3"
                   placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500"></textarea>
       </div>
 

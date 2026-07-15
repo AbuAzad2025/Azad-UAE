@@ -36,19 +36,19 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>
+            <label for="product_name">
               <i class="fas fa-box text-primary"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="name" class="form-control" value="{{ product.name }}" required aria-label="name" minlength="2" maxlength="100">
+            <input type="text" id="product_name" name="name" class="form-control" value="{{ product.name }}" required minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>
+            <label for="product_name_ar">
               <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('بالعربي') }}
             </label>
-            <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" aria-label="name ar" minlength="2" maxlength="100">
+            <input type="text" id="product_name_ar" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -56,39 +56,39 @@
       <div class="row">
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label>
+            <label for="product_sku">
               <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (SKU)
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required aria-label="sku" maxlength="50">
+            <input type="text" id="product_sku" name="sku" class="form-control" value="{{ product.sku or '' }}" required maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label>
+            <label for="product_part_number">
               <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (Part Number)
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('رقم') }} {{ t('Supplier') }} أو {{ t('الرقم') }} {{ t('الداخلي') }} ({{ t('Optional') }})"></i>
             </label>
-            <input type="text" name="part_number" class="form-control" value="{{ product.part_number or '' }}" aria-label="part number">
+            <input type="text" id="product_part_number" name="part_number" class="form-control" value="{{ product.part_number or '' }}">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label>
+            <label for="product_barcode">
               <i class="fas fa-barcode text-secondary"></i> {{ t('Barcode') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Barcode') }} ({{ t('Optional') }})"></i>
             </label>
-            <input type="text" name="barcode" class="form-control" value="{{ product.barcode or '' }}" aria-label="barcode" maxlength="50">
+            <input type="text" id="product_barcode" name="barcode" class="form-control" value="{{ product.barcode or '' }}" maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label>
+            <label for="product_category">
               <i class="fas fa-folder text-warning"></i> {{ t('الفئة') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('تركها') }} {{ t('None') }} {{ t('لتصنيف') }} {{ t('Product') }} {{ t('لاحقاً') }} ({{ t('Optional') }})"></i>
             </label>
             <div class="input-group js-category-actions">
-              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('الفئة') }}..." aria-label="category id">
+              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('الفئة') }}...">
                 <option value="0" {% if not product.category_id %}selected{% endif %}>{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}"
@@ -110,16 +110,16 @@
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="product_country_of_origin">
               <i class="fas fa-globe text-info"></i> {{ t('بلد') }} {{ t('المنشأ') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('بلد') }} {{ t('الصنع') }} ({{ t('Optional') }})"></i>
             </label>
-            <input type="text" name="country_of_origin" class="form-control" value="{{ product.country_of_origin or '' }}" aria-label="country of origin">
+            <input type="text" id="product_country_of_origin" name="country_of_origin" class="form-control" value="{{ product.country_of_origin or '' }}">
           </div>
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="product_industry">
               <i class="fas fa-industry text-info"></i> {{ t('نوع') }} {{ t('النشاط') }}
             </label>
             <select name="industry" id="product_industry" class="form-control">
@@ -135,21 +135,21 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="product_cost_price">
               <i class="fas fa-dollar-sign text-danger"></i> {{ t('Price_2') }} {{ t('Cost') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required aria-label="cost price" min="0">
+            <input type="number" id="product_cost_price" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required min="0">
           </div>
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="product_regular_price">
               <i class="fas fa-tag text-success"></i> {{ t('Price_2') }} {{ t('عادي') }}
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('التجزئة') }} ({{ t('Required') }})"></i>
             </label>
-            <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required aria-label="regular price" min="0">
+            <input type="number" id="product_regular_price" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required min="0">
           </div>
         </div>
         <div class="col-md-3">
@@ -176,69 +176,69 @@
       <div class="row">
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label><i class="fas fa-users text-primary"></i> {{ t('جملة') }} (Wholesale)</label>
+            <label for="tier_wholesale_price"><i class="fas fa-users text-primary"></i> {{ t('جملة') }} (Wholesale)</label>
             {% set tw = product.price_tiers|selectattr('tier_code', 'equalto', 'wholesale')|first %}
-            <input type="number" name="tier_wholesale_price" class="form-control" step="0.01" min="0" value="{{ tw.price if tw else '' }}" placeholder="0.00">
+            <input type="number" id="tier_wholesale_price" name="tier_wholesale_price" class="form-control" step="0.01" min="0" value="{{ tw.price if tw else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label><i class="fas fa-user text-success"></i> {{ t('تجزئة') }} (Retail)</label>
+            <label for="tier_retail_price"><i class="fas fa-user text-success"></i> {{ t('تجزئة') }} (Retail)</label>
             {% set tr = product.price_tiers|selectattr('tier_code', 'equalto', 'retail')|first %}
-            <input type="number" name="tier_retail_price" class="form-control" step="0.01" min="0" value="{{ tr.price if tr else '' }}" placeholder="0.00">
+            <input type="number" id="tier_retail_price" name="tier_retail_price" class="form-control" step="0.01" min="0" value="{{ tr.price if tr else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label><i class="fas fa-building text-info"></i> {{ t('موزع') }} (Distributor)</label>
+            <label for="tier_distributor_price"><i class="fas fa-building text-info"></i> {{ t('موزع') }} (Distributor)</label>
             {% set td = product.price_tiers|selectattr('tier_code', 'equalto', 'distributor')|first %}
-            <input type="number" name="tier_distributor_price" class="form-control" step="0.01" min="0" value="{{ td.price if td else '' }}" placeholder="0.00">
+            <input type="number" id="tier_distributor_price" name="tier_distributor_price" class="form-control" step="0.01" min="0" value="{{ td.price if td else '' }}" placeholder="0.00">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
-            <label><i class="fas fa-id-badge text-warning"></i> {{ t('Rep') }} (Rep)</label>
+            <label for="tier_rep_price"><i class="fas fa-id-badge text-warning"></i> {{ t('Rep') }} (Rep)</label>
             {% set trp = product.price_tiers|selectattr('tier_code', 'equalto', 'rep')|first %}
-            <input type="number" name="tier_rep_price" class="form-control" step="0.01" min="0" value="{{ trp.price if trp else '' }}" placeholder="0.00">
+            <input type="number" id="tier_rep_price" name="tier_rep_price" class="form-control" step="0.01" min="0" value="{{ trp.price if trp else '' }}" placeholder="0.00">
           </div>
         </div>
       </div>
       <div class="form-group">
-        <label>
+        <label for="product_description">
           <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Description_2') }} {{ t('تفصيلي') }} ({{ t('Optional') }})"></i>
         </label>
-        <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ product.description or '' }}</textarea>
+        <textarea id="product_description" name="description" class="form-control" rows="3" maxlength="500">{{ product.description or '' }}</textarea>
       </div>
       <hr>
       <h5 class="text-warning"><i class="fas fa-warehouse"></i> {{ t('Inventory') }}</h5>
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="product_current_stock">
               <i class="fas fa-boxes text-success"></i> {{ t('Quantity') }} {{ t('الحالية') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Edit') }} {{ t('Quantity') }} {{ t('الحالية،') }} {{ t('وسيتم') }} {{ t('Create') }} {{ t('Movement_2') }} {{ t('Inventory_2') }} {{ t('تلقائية') }} {{ t('بالفرق') }}."></i>
             </label>
-            <input type="number" name="current_stock" class="form-control" step="0.001" min="0" value="{{ product.visible_stock if product.visible_stock is defined else (product.current_stock or 0) }}" placeholder="0">
+            <input type="number" id="product_current_stock" name="current_stock" class="form-control" step="0.001" min="0" value="{{ product.visible_stock if product.visible_stock is defined else (product.current_stock or 0) }}" placeholder="0">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="product_min_stock_alert">
               <i class="fas fa-exclamation-triangle text-warning"></i> حد {{ t('Alert') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('and Inventory') }} {{ t('Low_3') }}."></i>
             </label>
-            <input type="number" name="min_stock_alert" class="form-control" step="0.001" min="0" value="{{ product.min_stock_alert or 0 }}" placeholder="0">
+            <input type="number" id="product_min_stock_alert" name="min_stock_alert" class="form-control" step="0.001" min="0" value="{{ product.min_stock_alert or 0 }}" placeholder="0">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="product_warehouse_id">
               <i class="fas fa-warehouse text-info"></i> {{ t('Warehouse_2') }} {{ t('Edit_2') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('سيُطبّق') }} {{ t('Edit') }} {{ t('Inventory') }} على هذا {{ t('Warehouse') }}."></i>
             </label>
             {% set selected_warehouse = request.form.get('warehouse_id', '') if request.method == 'POST' else '' %}
-            <select name="warehouse_id" class="form-control" aria-label="warehouse id">
+            <select id="product_warehouse_id" name="warehouse_id" class="form-control">
               <option value="" {% if not selected_warehouse %}selected{% endif %}>{{ t('None') }}</option>
               {% for warehouse in warehouses %}
               <option value="{{ warehouse.id }}"
@@ -253,12 +253,12 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="product_unit">
               <i class="fas fa-balance-scale text-primary"></i> {{ t('الوحدة') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Select') }} {{ t('الوحدة') }} أو {{ t('تركها') }} {{ t('None') }} {{ t('Products_3') }} غير {{ t('المقيسة') }}."></i>
             </label>
             {% set selected_unit = request.form.get('unit') if request.method == 'POST' else product.unit %}
-            <select name="unit" class="form-control select2" data-placeholder="{{ t('اختر') }} {{ t('الوحدة') }}..." data-allow-clear="true" aria-label="unit">
+            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="{{ t('اختر') }} {{ t('الوحدة') }}..." data-allow-clear="true">
               <option value="" {% if not selected_unit %}selected{% endif %}>{{ t('None') }}</option>
               <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>{{ t('قطعة') }}</option>
               <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>{{ t('كيلو') }}</option>

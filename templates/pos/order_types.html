@@ -15,20 +15,20 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create">
         <div class="form-group col-md-2">
-          <label>الرمز (code)</label>
-          <input class="form-control" name="code" required placeholder="مثال: in_store">
+          <label for="ot_code">الرمز (code)</label>
+          <input class="form-control" id="ot_code" name="code" required placeholder="مثال: in_store">
         </div>
         <div class="form-group col-md-3">
-          <label>الاسم (عربي)</label>
-          <input class="form-control" name="name_ar" required placeholder="مثال: في المتجر">
+          <label for="ot_name_ar">الاسم (عربي)</label>
+          <input class="form-control" id="ot_name_ar" name="name_ar" required placeholder="مثال: في المتجر">
         </div>
         <div class="form-group col-md-3">
-          <label>الاسم (إنجليزي)</label>
-          <input class="form-control" name="name_en" placeholder="e.g. In-store">
+          <label for="ot_name_en">الاسم (إنجليزي)</label>
+          <input class="form-control" id="ot_name_en" name="name_en" placeholder="e.g. In-store">
         </div>
         <div class="form-group col-md-2">
-          <label>الترتيب</label>
-          <input class="form-control" type="number" name="sort_order" value="100">
+          <label for="ot_sort_order">الترتيب</label>
+          <input class="form-control" id="ot_sort_order" type="number" name="sort_order" value="100">
         </div>
         <div class="form-group col-md-2 d-flex">
           <div class="form-check mr-3">

@@ -19,16 +19,16 @@
           </h3>
           <div class="card-tools no-print">
             <form class="needs-validation form-inline d-inline mr-2" method="get">
-              <label class="mr-2">{{ t('Branch') }}:</label>
-              <select name="branch_id" class="form-control form-control-sm mr-2 ic-1" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+              <label class="mr-2" for="branch_id">{{ t('Branch') }}:</label>
+              <select name="branch_id" class="form-control form-control-sm mr-2 ic-1" id="branch_id">
                 <option value="">كل {{ t('Branches') }}</option>
                 {% for b in branches or [] %}
                 <option value="{{ b.id }}" {{ 'selected' if selected_branch_id == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
                 {% endfor %}
               </select>
 
-              <label class="mr-2">{{ t('Warehouse') }}:</label>
-              <select name="warehouse_id" class="form-control form-control-sm mr-2 ic-2" aria-label="warehouse id">
+              <label class="mr-2" for="warehouse_id">{{ t('Warehouse') }}:</label>
+              <select name="warehouse_id" class="form-control form-control-sm mr-2 ic-2" id="warehouse_id">
                 <option value="">كل {{ t('Warehouses') }}</option>
                 {% for w in warehouses or [] %}
                 <option value="{{ w.id }}" {{ 'selected' if selected_warehouse_id == w.id else '' }}>{{ w.name_ar or w.name }}</option>

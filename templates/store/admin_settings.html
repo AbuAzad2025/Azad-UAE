@@ -63,7 +63,7 @@
 
           <div class="form-group">
 
-            <label>{{ t('شعار') }} {{ t('Store') }} (Logo)</label>
+            <label for="logo">{{ t('شعار') }} {{ t('Store') }} (Logo)</label>
 
             {% if store.logo_url() %}
 
@@ -71,19 +71,19 @@
 
             {% endif %}
 
-            <input type="file" name="logo" class="form-control-file" accept="image/*" aria-label="logo">
+            <input type="file" name="logo" id="logo" class="form-control-file" accept="image/*">
 
           </div>
 
           <div class="form-group">
 
-            <label>{{ t('رابط') }} {{ t('Store') }} (slug)</label>
+            <label for="store_slug">{{ t('رابط') }} {{ t('Store') }} (slug)</label>
 
             <div class="input-group">
 
               <div class="input-group-prepend"><span class="input-group-text">/s/</span></div>
 
-              <input type="text" name="store_slug" class="form-control" value="{{ store.store_slug }}" pattern="[a-z0-9-]+" required dir="ltr" aria-label="store slug">
+              <input type="text" name="store_slug" id="store_slug" class="form-control" value="{{ store.store_slug }}" pattern="[a-z0-9-]+" required dir="ltr">
 
             </div>
 
@@ -117,17 +117,17 @@
 
           <div class="form-group">
 
-            <label>Meta Description (AR)</label>
+            <label for="meta_description">Meta Description (AR)</label>
 
-            <textarea name="meta_description" class="form-control" rows="2" maxlength="500" aria-label="meta description">{{ store.meta_description or '' }}</textarea>
+            <textarea name="meta_description" id="meta_description" class="form-control" rows="2" maxlength="500">{{ store.meta_description or '' }}</textarea>
 
           </div>
 
           <div class="form-group">
 
-            <label>Meta Description (EN)</label>
+            <label for="meta_description_en">Meta Description (EN)</label>
 
-            <textarea name="meta_description_en" class="form-control" rows="2" maxlength="500" aria-label="meta description en">{{ store.meta_description_en or '' }}</textarea>
+            <textarea name="meta_description_en" id="meta_description_en" class="form-control" rows="2" maxlength="500">{{ store.meta_description_en or '' }}</textarea>
 
           </div>
 
@@ -257,17 +257,17 @@
 
           <div class="form-group">
 
-            <label>{{ t('In Arabic') }}</label>
+            <label for="return_policy_ar">{{ t('In Arabic') }}</label>
 
-            <textarea name="return_policy_ar" class="form-control" rows="4" aria-label="return policy ar">{{ store.return_policy_ar or '' }}</textarea>
+            <textarea name="return_policy_ar" id="return_policy_ar" class="form-control" rows="4">{{ store.return_policy_ar or '' }}</textarea>
 
           </div>
 
           <div class="form-group">
 
-            <label>English</label>
+            <label for="return_policy_en">English</label>
 
-            <textarea name="return_policy_en" class="form-control" rows="4" aria-label="return policy en">{{ store.return_policy_en or '' }}</textarea>
+            <textarea name="return_policy_en" id="return_policy_en" class="form-control" rows="4">{{ store.return_policy_en or '' }}</textarea>
 
           </div>
 

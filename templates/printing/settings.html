@@ -13,23 +13,23 @@
           <div class="col-md-6">
             <h5 class="mb-3">📄 {{ t('Settings_2') }} {{ t('الورق') }}</h5>
             <div class="form-group">
-              <label>{{ t('حجم') }} {{ t('الورق') }}</label>
-              <select name="paper_size" class="form-control">
+              <label for="paper_size">{{ t('حجم') }} {{ t('الورق') }}</label>
+              <select name="paper_size" id="paper_size" class="form-control">
                 <option value="A4" {{ 'selected' if settings.paper_size == 'A4' }}>A4</option>
                 <option value="A5" {{ 'selected' if settings.paper_size == 'A5' }}>A5</option>
                 <option value="Letter" {{ 'selected' if settings.paper_size == 'Letter' }}>Letter</option>
               </select>
             </div>
             <div class="form-group">
-              <label>{{ t('اتجاه') }} {{ t('Printing') }}</label>
-              <select name="orientation" class="form-control">
+              <label for="orientation">{{ t('اتجاه') }} {{ t('Printing') }}</label>
+              <select name="orientation" id="orientation" class="form-control">
                 <option value="portrait" {{ 'selected' if settings.orientation == 'portrait' }}>{{ t('عمودي') }}</option>
                 <option value="landscape" {{ 'selected' if settings.orientation == 'landscape' }}>{{ t('أفقي') }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label>{{ t('القالب') }} {{ t('Active_5') }}</label>
-              <select name="active_template" class="form-control">
+              <label for="active_template">{{ t('القالب') }} {{ t('Active_5') }}</label>
+              <select name="active_template" id="active_template" class="form-control">
                 <option value="modern" {{ 'selected' if settings.active_template == 'modern' }}>{{ t('حديث') }}</option>
                 <option value="classic" {{ 'selected' if settings.active_template == 'classic' }}>{{ t('كلاسيكي') }}</option>
                 <option value="gulf" {{ 'selected' if settings.active_template == 'gulf' }}>{{ t('Gulf_2') }}</option>
@@ -41,12 +41,12 @@
           <div class="col-md-6">
             <h5 class="mb-3">🎨 {{ t('الألوان') }}</h5>
             <div class="form-group">
-              <label>{{ t('لون') }} {{ t('الترويسة') }}</label>
-              <input type="color" name="header_color" class="form-control form-control-color" value="{{ settings.header_color or '#667eea' }}" style="height:50px;">
+              <label for="header_color">{{ t('لون') }} {{ t('الترويسة') }}</label>
+              <input type="color" name="header_color" id="header_color" class="form-control form-control-color" value="{{ settings.header_color or '#667eea' }}" style="height:50px;">
             </div>
             <div class="form-group">
-              <label>{{ t('اللون') }} {{ t('الثانوي') }}</label>
-              <input type="color" name="accent_color" class="form-control form-control-color" value="{{ settings.accent_color or '#764ba2' }}" style="height:50px;">
+              <label for="accent_color">{{ t('اللون') }} {{ t('الثانوي') }}</label>
+              <input type="color" name="accent_color" id="accent_color" class="form-control form-control-color" value="{{ settings.accent_color or '#764ba2' }}" style="height:50px;">
             </div>
           </div>
         </div>

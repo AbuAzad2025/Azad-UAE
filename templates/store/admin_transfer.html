@@ -30,7 +30,7 @@
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" id="wh_label">المستودع الفعلي</label>
+            <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">المستودع الفعلي</label>
             <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required onchange="filterByWarehouse()">
               <option value="">— اختر المستودع —</option>
               {% for wh in physical_warehouses %}

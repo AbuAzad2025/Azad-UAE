@@ -15,8 +15,8 @@
       {% if ticket %}
       <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label>{{ t('التعليق') }}</label>
-          <textarea name="body" class="form-control" rows="2" required></textarea></div>
+        <div class="form-group"><label for="comment_body">{{ t('التعليق') }}</label>
+          <textarea id="comment_body" name="body" class="form-control" rows="2" required></textarea></div>
         <div class="checkbox mb-2"><label><input type="checkbox" name="is_internal" value="1"> {{ t('داخلي') }}</label></div>
         <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> {{ t('Add') }} {{ t('تعليق') }}</button>
       </form>
@@ -74,14 +74,14 @@
       {% else %}
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label>{{ t('الموضوع') }} <span class="text-danger">*</span></label>
-          <input name="subject" class="form-control" required></div>
-        <div class="form-group"><label>{{ t('Description') }}</label>
-          <textarea name="body" class="form-control" rows="4"></textarea></div>
+        <div class="form-group"><label for="subject">{{ t('الموضوع') }} <span class="text-danger">*</span></label>
+          <input id="subject" name="subject" class="form-control" required></div>
+        <div class="form-group"><label for="body">{{ t('Description') }}</label>
+          <textarea id="body" name="body" class="form-control" rows="4"></textarea></div>
         <div class="row">
           <div class="col-md-4">
-            <div class="form-group"><label>{{ t('Customer') }}</label>
-              <select name="customer_id" class="form-control">
+            <div class="form-group"><label for="customer_id">{{ t('Customer') }}</label>
+              <select name="customer_id" id="customer_id" class="form-control">
                 <option value="">{{ t('اختر') }}</option>
                 {% for c in customers %}
                 <option value="{{ c.id }}">{{ c.name }}</option>
@@ -89,8 +89,8 @@
               </select></div>
           </div>
           <div class="col-md-4">
-            <div class="form-group"><label>{{ t('التصنيف') }}</label>
-              <select name="category_id" class="form-control">
+            <div class="form-group"><label for="category_id">{{ t('التصنيف') }}</label>
+              <select name="category_id" id="category_id" class="form-control">
                 <option value="">{{ t('اختر') }}</option>
                 {% for c in categories %}
                 <option value="{{ c.id }}">{{ c.name_ar or c.name }}</option>
@@ -98,8 +98,8 @@
               </select></div>
           </div>
           <div class="col-md-4">
-            <div class="form-group"><label>{{ t('الأولوية') }}</label>
-              <select name="priority_id" class="form-control">
+            <div class="form-group"><label for="priority_id">{{ t('الأولوية') }}</label>
+              <select name="priority_id" id="priority_id" class="form-control">
                 <option value="">{{ t('اختر') }}</option>
                 {% for p in priorities %}
                 <option value="{{ p.id }}">{{ p.name_ar or p.name }}</option>

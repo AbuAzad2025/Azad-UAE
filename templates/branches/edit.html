@@ -51,8 +51,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label>{{ t('Address') }}</label>
-          <textarea name="address" class="form-control" aria-label="address" maxlength="255">{{ branch.address }}</textarea>
+          <label for="branch_address">{{ t('Address') }}</label>
+          <textarea name="address" class="form-control" id="branch_address" maxlength="255">{{ branch.address }}</textarea>
         </div>
         <div class="form-group form-check">
           <input type="checkbox" name="is_main" class="form-check-input" id="isMain" {% if branch.is_main %}checked{% endif %} aria-label="is main">

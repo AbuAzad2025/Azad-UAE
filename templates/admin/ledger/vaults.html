@@ -54,7 +54,14 @@
               {% endif %}
             </td>
             <td>
-              <span class="badge badge-{{ 'danger' if vault.failed_attempts > 3 else 'warning' if vault.failed_attempts > 0 else 'success' }}">
+              {% if vault.failed_attempts > 3 %}
+                {% set vault_badge = 'danger' %}
+              {% elif vault.failed_attempts > 0 %}
+                {% set vault_badge = 'warning' %}
+              {% else %}
+                {% set vault_badge = 'success' %}
+              {% endif %}
+              <span class="badge badge-{{ vault_badge }}">
                 {{ vault.failed_attempts }}
               </span>
             </td>
@@ -65,11 +72,11 @@
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if vault.is_locked %}
-                <button type="button" class="btn btn-outline-success" onclick="unlockVault({{ vault.id }})" title="{{ t('فتح') }} {{ t('الخزينة') }}">
+                <button type="button" class="btn btn-outline-success" onclick="unlockVault()" title="{{ t('فتح') }} {{ t('الخزينة') }}">
                   <i class="fas fa-unlock"></i>
                 </button>
                 {% else %}
-                <button type="button" class="btn btn-outline-warning" onclick="lockVault({{ vault.id }})" title="{{ t('قفل') }} {{ t('الخزينة') }}">
+                <button type="button" class="btn btn-outline-warning" onclick="lockVault()" title="{{ t('قفل') }} {{ t('الخزينة') }}">
                   <i class="fas fa-lock"></i>
                 </button>
                 {% endif %}
@@ -153,13 +160,13 @@
 
 {% block scripts %}
 <script>
-function unlockVault(vaultId) {
+function unlockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('المحفظة_2') }}')) {
     window.location.href = '{{ url_for("payment_vault.unlock") }}';
   }
 }
 
-function lockVault(vaultId) {
+function lockVault() {
   if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('المحفظة_2') }}')) {
     window.location.href = '{{ url_for("payment_vault.lock") }}';
   }

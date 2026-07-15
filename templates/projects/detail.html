@@ -52,16 +52,16 @@
     <form method="POST" action="{{ url_for('projects.api_log_timesheet') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label>{{ t('Task_2') }}</label>
-        <select name="task_id" class="form-control" required>
+      <div class="form-group"><label for="timesheet_task_id">{{ t('Task_2') }}</label>
+        <select name="task_id" id="timesheet_task_id" class="form-control" required>
           {% for t in tasks %}
           <option value="{{ t.id }}">{{ t.name }}</option>
           {% endfor %}
         </select></div>
-      <div class="form-group"><label>{{ t('الساعات') }}</label>
-        <input name="hours" type="number" step="0.5" class="form-control" required></div>
-      <div class="form-group"><label>{{ t('Description') }}</label>
-        <input name="description" class="form-control"></div>
+      <div class="form-group"><label for="timesheet_hours">{{ t('الساعات') }}</label>
+        <input name="hours" id="timesheet_hours" type="number" step="0.5" class="form-control" required></div>
+      <div class="form-group"><label for="timesheet_description">{{ t('Description') }}</label>
+        <input name="description" id="timesheet_description" class="form-control"></div>
     </div>
     <div class="modal-footer">
       <button type="submit" class="btn btn-success">{{ t('Save') }}</button>
@@ -75,14 +75,14 @@
     <form method="POST" action="{{ url_for('projects.add_member', project_id=project.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label>{{ t('User') }}</label>
-        <select name="user_id" class="form-control" required>
+      <div class="form-group"><label for="member_user_id">{{ t('User') }}</label>
+        <select name="user_id" id="member_user_id" class="form-control" required>
           {% for u in users %}
           <option value="{{ u.id }}">{{ u.name }}</option>
           {% endfor %}
         </select></div>
-      <div class="form-group"><label>{{ t('Role') }}</label>
-        <select name="role" class="form-control">
+      <div class="form-group"><label for="member_role">{{ t('Role') }}</label>
+        <select name="role" id="member_role" class="form-control">
           <option value="member">{{ t('عضو') }}</option>
           <option value="manager">{{ t('مدير') }}</option>
         </select></div>

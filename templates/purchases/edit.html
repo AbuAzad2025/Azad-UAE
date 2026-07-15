@@ -71,8 +71,8 @@
 
             
             <div class="form-group">
-              <label>{{ t('Notes_2') }}</label>
-              <textarea name="notes" class="form-control" rows="4" aria-label="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
+              <label for="notes">{{ t('Notes_2') }}</label>
+              <textarea name="notes" class="form-control" rows="4" id="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
               <small class="text-muted">{{ t('يمكنك') }} {{ t('Add') }} أو {{ t('Edit') }} {{ t('Notes_2') }}</small>
             </div>
 

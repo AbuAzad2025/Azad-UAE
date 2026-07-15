@@ -68,8 +68,8 @@
     <h3 class="card-title mb-0">{{ t('Details') }} {{ t('Receivables_2') }}</h3>
     <div>
       <form class="needs-validation form-inline d-inline mr-2" method="get">
-        <label class="mr-2">{{ t('Customer_2') }}</label>
-        <select name="customer" class="form-control form-control-sm mr-2 erp-min-w-200" aria-label="customer">
+        <label class="mr-2" for="customer">{{ t('Customer_2') }}</label>
+        <select name="customer" class="form-control form-control-sm mr-2 erp-min-w-200" id="customer">
           <option value="">{{ t('All') }}</option>
           {% for c in customers or [] %}
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>

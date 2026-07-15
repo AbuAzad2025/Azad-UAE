@@ -29,8 +29,8 @@
         <div class="card-body">
             <div class="row g-3 align-items-center">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">{{ t('نوع') }} {{ t('Account') }}</label>
-                    <select class="form-control" id="searchType" aria-label="searchType">
+                    <label class="form-label fw-bold" for="searchType">{{ t('نوع') }} {{ t('Account') }}</label>
+                    <select class="form-control" id="searchType">
                         <option value="supplier">{{ t('Supplier_2') }} (Supplier)</option>
                         <option value="customer">{{ t('Customer_3') }} (Customer)</option>
                         <option value="partner">{{ t('Partner') }} (Partner)</option>
@@ -38,7 +38,7 @@
                     </select>
                 </div>
                 <div class="col-md-9 position-relative">
-                    <label class="form-label fw-bold">{{ t('Search') }} {{ t('By name') }} أو {{ t('Phone') }}</label>
+                    <label class="form-label fw-bold" for="searchInput">{{ t('Search') }} {{ t('By name') }} أو {{ t('Phone') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control" id="searchInput" placeholder="{{ t('ابدأ') }} {{ t('بالكتابة') }} {{ t('for Search') }}..." autocomplete="off">

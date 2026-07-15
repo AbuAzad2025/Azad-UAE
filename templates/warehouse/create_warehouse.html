@@ -37,19 +37,19 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_name">
                       <i class="fas fa-warehouse text-primary"></i> {{ t('Name') }} {{ t('In English_2') }} 
                       <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="Main Warehouse" required value="{{ form_data.get('name', '') }}" minlength="2" maxlength="100">
+                    <input type="text" class="form-control" id="warehouse_name" name="name" placeholder="Main Warehouse" required value="{{ form_data.get('name', '') }}" minlength="2" maxlength="100">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_name_ar">
                       <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
                     </label>
-                    <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="{{ t('Warehouse') }} {{ t('Main') }}" value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
+                    <input type="text" class="form-control" id="warehouse_name_ar" name="name_ar" placeholder="{{ t('Warehouse') }} {{ t('Main') }}" value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
                   </div>
                 </div>
               </div>
@@ -57,19 +57,19 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_code">
                       <i class="fas fa-barcode text-secondary"></i> {{ t('Code_3') }} {{ t('Warehouse') }}
                     </label>
-                    <input type="text" class="form-control" id="code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
+                    <input type="text" class="form-control" id="warehouse_code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_location">
                       <i class="fas fa-map-marker-alt text-danger"></i> {{ t('Website') }}
                       <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="location" name="location" placeholder="{{ t('دبي') }} - {{ t('الإمارات') }}" required value="{{ form_data.get('location', '') }}">
+                    <input type="text" class="form-control" id="warehouse_location" name="location" placeholder="{{ t('دبي') }} - {{ t('الإمارات') }}" required value="{{ form_data.get('location', '') }}">
                   </div>
                 </div>
               </div>
@@ -77,10 +77,10 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_parent_id">
                       <i class="fas fa-sitemap text-success"></i> {{ t('Warehouse') }} {{ t('الأب') }} ({{ t('للفروع') }})
                     </label>
-                    <select class="form-control" id="parent_id" name="parent_id" aria-label="parent id">
+                    <select class="form-control" id="warehouse_parent_id" name="parent_id">
                       <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>{{ t('None') }}</option>
                       {% if parent_warehouses %}
                         {% for parent in parent_warehouses %}
@@ -94,10 +94,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_manager_id">
                       <i class="fas fa-user-tie text-primary"></i> {{ t('المدير') }} {{ t('Responsible') }}
                     </label>
-                    <select class="form-control" id="manager_id" name="manager_id" aria-label="manager id">
+                    <select class="form-control" id="warehouse_manager_id" name="manager_id">
                       <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>{{ t('None') }}</option>
                       {% if users %}
                         {% for user in users %}
@@ -114,11 +114,11 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_type">
                       <i class="fas fa-layer-group text-purple"></i> {{ t('نوع') }} {{ t('Warehouse') }}
                     </label>
                     {% set selected_type = form_data.get('warehouse_type', 'physical') %}
-                    <select class="form-control" id="warehouse_type" name="warehouse_type" aria-label="warehouse type">
+                    <select class="form-control" id="warehouse_type" name="warehouse_type">
                       <option value="physical" {% if selected_type == 'physical' %}selected{% endif %}>{{ t('Actual_4') }} ({{ t('Inventory_2') }} {{ t('تقليدي') }})</option>
                       <option value="online" {% if selected_type == 'online' %}selected{% endif %}>{{ t('أونلاين') }} ({{ t('للمتجر') }} {{ t('Email_3') }} فقط)</option>
                     </select>
@@ -130,10 +130,10 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="warehouse_branch_id">
                       <i class="fas fa-building text-info"></i> {{ t('Branch') }}
                     </label>
-                    <select class="form-control" id="branch_id" name="branch_id" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                    <select class="form-control" id="warehouse_branch_id" name="branch_id">
                       <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- {{ t('General_2') }} ({{ t('بدون') }} {{ t('Branch_2') }} {{ t('محدد') }}) --</option>
                       {% if branches %}
                         {% for branch in branches %}

@@ -88,32 +88,32 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="supplier_name">
               <i class="fas fa-truck text-warning"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
-                   value="{{ supplier.name }}" aria-label="name" minlength="2" maxlength="100">
+                   value="{{ supplier.name }}" id="supplier_name" minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="supplier_name_en">
               <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In English_2') }}
             </label>
             <input type="text" name="name_en" class="form-control"
-                   value="{{ supplier.name_en or '' }}" aria-label="name en" minlength="2" maxlength="100">
+                   value="{{ supplier.name_en or '' }}" id="supplier_name_en" minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="supplier_company_name">
               <i class="fas fa-building text-primary"></i> {{ t('Name_2') }} {{ t('Company') }}
             </label>
             <input type="text" name="company_name" class="form-control"
-                   value="{{ supplier.company_name or '' }}" aria-label="company name" minlength="2" maxlength="100">
+                   value="{{ supplier.company_name or '' }}" id="supplier_company_name" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -121,8 +121,8 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>{{ t('نوع') }} {{ t('Supplier') }}</label>
-            <select name="supplier_type" class="form-control" aria-label="supplier type">
+            <label for="supplier_supplier_type">{{ t('نوع') }} {{ t('Supplier') }}</label>
+            <select name="supplier_type" class="form-control" id="supplier_supplier_type">
               <option value="" {% if not supplier.supplier_type %}selected{% endif %}>{{ t('None') }}</option>
               <option value="parts" {% if supplier.supplier_type == 'parts' %}selected{% endif %}>{{ t('قطع') }} {{ t('غيار') }}</option>
               <option value="equipment" {% if supplier.supplier_type == 'equipment' %}selected{% endif %}>{{ t('معدات') }}</option>
@@ -135,8 +135,8 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>{{ t('التقييم') }}</label>
-            <select name="rating" class="form-control" aria-label="rating">
+            <label for="supplier_rating">{{ t('التقييم') }}</label>
+            <select name="rating" class="form-control" id="supplier_rating">
               <option value="" {% if supplier.rating is none %}selected{% endif %}>{{ t('None') }}</option>
               <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>⭐ {{ t('نجمة') }} {{ t('واحدة') }}</option>
               <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>⭐⭐ {{ t('نجمتان') }}</option>
@@ -149,8 +149,8 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>{{ t('Currency') }} {{ t('المفضلة') }}</label>
-            <select name="preferred_currency" class="form-control" aria-label="preferred currency">
+            <label for="supplier_preferred_currency">{{ t('Currency') }} {{ t('المفضلة') }}</label>
+            <select name="preferred_currency" class="form-control" id="supplier_preferred_currency">
               <option value="AED" {% if supplier.preferred_currency == 'AED' %}selected{% endif %}>AED - {{ t('Dirham') }}</option>
               <option value="USD" {% if supplier.preferred_currency == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }}</option>
               <option value="EUR" {% if supplier.preferred_currency == 'EUR' %}selected{% endif %}>EUR - {{ t('Euro') }}</option>
@@ -300,8 +300,8 @@
         
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="3" aria-label="notes" maxlength="500">{{ supplier.notes or '' }}</textarea>
+            <label for="supplier_notes">{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="3" id="supplier_notes" maxlength="500">{{ supplier.notes or '' }}</textarea>
           </div>
         </div>
       </div>

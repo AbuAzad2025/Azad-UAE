@@ -40,8 +40,8 @@
                 <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date" aria-label="end date">
               </div>
               <div class="col-md-3">
-                <label>{{ t('Supplier') }}</label>
-                <select name="supplier_id" class="form-control" aria-label="supplier id">
+                <label for="supplier_id">{{ t('Supplier') }}</label>
+                <select name="supplier_id" class="form-control" id="supplier_id">
                   <option value="">{{ t('None') }}</option>
                   {% for supplier in suppliers %}
                   <option value="{{ supplier.id }}" {% if supplier_id == supplier.id %}selected{% endif %}>

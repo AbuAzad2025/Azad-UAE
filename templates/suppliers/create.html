@@ -111,31 +111,31 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label>
-              <i class="fas fa-truck text-success"></i> {{ t('Name') }} 
+            <label for="supplier_name">
+              <i class="fas fa-truck text-success"></i> {{ t('Name') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="name" class="form-control" required
+            <input type="text" name="name" id="supplier_name" class="form-control" required
                    placeholder="{{ t('Name_2') }} {{ t('Supplier') }} {{ t('بالعربي') }}" minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="supplier_name_en">
               <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In English_2') }}
             </label>
-            <input type="text" name="name_en" class="form-control"
+            <input type="text" name="name_en" id="supplier_name_en" class="form-control"
                    placeholder="Supplier Name" minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="supplier_company_name">
               <i class="fas fa-building text-primary"></i> {{ t('Name_2') }} {{ t('Company') }}
             </label>
-            <input type="text" name="company_name" class="form-control"
+            <input type="text" name="company_name" id="supplier_company_name" class="form-control"
                    placeholder="Company Name LLC" minlength="2" maxlength="100">
           </div>
         </div>
@@ -144,11 +144,11 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>
-              <i class="fas fa-tag text-success"></i> {{ t('نوع') }} {{ t('Supplier') }} 
+            <label for="supplier_type">
+              <i class="fas fa-tag text-success"></i> {{ t('نوع') }} {{ t('Supplier') }}
               <span class="text-danger">*</span>
             </label>
-            <select name="supplier_type" class="form-control" required aria-label="supplier type">
+            <select name="supplier_type" id="supplier_type" class="form-control" required>
               <option value="" {% if supplier_type_value == '' %}selected{% endif %}>{{ t('None') }}</option>
               <option value="parts" {% if supplier_type_value == 'parts' %}selected{% endif %}>{{ t('قطع') }} {{ t('غيار') }}</option>
               <option value="equipment" {% if supplier_type_value == 'equipment' %}selected{% endif %}>{{ t('معدات') }}</option>
@@ -161,10 +161,10 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_rating">
               <i class="fas fa-star text-warning"></i> {{ t('التقييم') }}
             </label>
-            <select name="rating" class="form-control" aria-label="rating">
+            <select name="rating" id="supplier_rating" class="form-control">
               <option value="" {% if rating_value == '' %}selected{% endif %}>{{ t('None') }}</option>
               <option value="1" {% if rating_value == '1' %}selected{% endif %}>⭐ {{ t('نجمة') }} {{ t('واحدة') }}</option>
               <option value="2" {% if rating_value == '2' %}selected{% endif %}>⭐⭐ {{ t('نجمتان') }}</option>
@@ -177,10 +177,10 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_preferred_currency">
               <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('المفضلة') }}
             </label>
-            <select name="preferred_currency" class="form-control" aria-label="preferred currency">
+            <select name="preferred_currency" id="supplier_preferred_currency" class="form-control">
               <option value="AED">AED - {{ t('Dirham') }}</option>
               <option value="USD">USD - {{ t('Dollar') }}</option>
               <option value="EUR">EUR - {{ t('Euro') }}</option>
@@ -215,41 +215,41 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_phone">
               <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 1
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="phone" class="form-control" required
+            <input type="text" name="phone" id="supplier_phone" class="form-control" required
                    placeholder="+971-5x-xxx-xxxx" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_phone2">
               <i class="fas fa-mobile-alt text-info"></i> {{ t('Phone') }} 2
             </label>
-            <input type="text" name="phone2" class="form-control"
+            <input type="text" name="phone2" id="supplier_phone2" class="form-control"
                    placeholder="+971-xx-xxx-xxxx" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_email">
               <i class="fas fa-envelope text-danger"></i> {{ t('Email') }}
             </label>
-            <input type="email" name="email" class="form-control"
+            <input type="email" name="email" id="supplier_email" class="form-control"
                    placeholder="supplier@example.com">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_website">
               <i class="fas fa-globe text-success"></i> {{ t('Website') }} {{ t('Email_3') }}
             </label>
-            <input type="url" name="website" class="form-control"
+            <input type="url" name="website" id="supplier_website" class="form-control"
                    placeholder="https://example.com">
           </div>
         </div>
@@ -292,32 +292,32 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_tax_number">
               <i class="fas fa-file-invoice text-info"></i> {{ t('الرقم') }} {{ t('الضريبي') }} (TRN)
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('الرقم') }} {{ t('الضريبي') }} {{ t('for Supplier') }} (15 {{ t('رقم') }})"></i>
             </label>
-            <input type="text" name="tax_number" class="form-control"
+            <input type="text" name="tax_number" id="supplier_tax_number" class="form-control"
                    placeholder="123456789012345" maxlength="20">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_commercial_registration">
               <i class="fas fa-certificate text-warning"></i> {{ t('Log_2') }} {{ t('التجاري') }}
             </label>
-            <input type="text" name="commercial_registration" class="form-control"
+            <input type="text" name="commercial_registration" id="supplier_commercial_registration" class="form-control"
                    placeholder="{{ t('رقم') }} {{ t('Log_2') }} {{ t('التجاري') }}">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_initial_balance">
               <i class="fas fa-wallet text-success"></i> {{ t('Balance') }} {{ t('الابتدائي') }} ({{ tenant_currency_symbol }})
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Amount') }} {{ t('المستحق') }} {{ t('for Supplier') }} عند {{ t('Start_2') }} {{ t('التسجيل') }}"></i>
             </label>
-            <input type="number" name="initial_balance" class="form-control"
+            <input type="number" name="initial_balance" id="supplier_initial_balance" class="form-control"
                    value="0" step="0.01" min="0" placeholder="0.00">
             <small class="form-text text-muted">
               <i class="fas fa-info-circle"></i> {{ t('Amount') }} {{ t('المستحق') }} {{ t('for Supplier') }} من قبل (إن {{ t('وجد') }})
@@ -327,11 +327,11 @@
         
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_credit_limit">
               <i class="fas fa-coins text-info"></i> {{ t('الحد') }} {{ t('الائتماني') }} ({{ tenant_currency_symbol }})
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('الحد') }} {{ t('الأقصى') }} {{ t('للديون') }} {{ t('المسموح') }} به"></i>
             </label>
-            <input type="number" name="credit_limit" class="form-control"
+            <input type="number" name="credit_limit" id="supplier_credit_limit" class="form-control"
                    value="0" step="0.01" min="0" placeholder="0.00">
           </div>
         </div>
@@ -340,11 +340,11 @@
       <div class="row">
         <div class="col-md-3">
           <div class="form-group">
-            <label>
+            <label for="supplier_payment_terms_days">
               <i class="fas fa-calendar-alt text-primary"></i> {{ t('شروط') }} {{ t('Payment_2') }} ({{ t('Days') }})
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Count') }} {{ t('Days_2') }} {{ t('المسموح') }} {{ t('للدفع') }} (30 {{ t('يوم') }} {{ t('افتراضي') }})"></i>
             </label>
-            <input type="number" name="payment_terms_days" class="form-control"
+            <input type="number" name="payment_terms_days" id="supplier_payment_terms_days" class="form-control"
                    value="30" min="0" placeholder="30">
           </div>
         </div>
@@ -373,8 +373,8 @@
         
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="3"
+            <label for="supplier_notes">{{ t('Notes') }}</label>
+            <textarea name="notes" id="supplier_notes" class="form-control" rows="3"
                       placeholder="أي {{ t('Notes') }} {{ t('Additional') }} عن {{ t('Supplier') }}..." maxlength="500"></textarea>
           </div>
         </div>

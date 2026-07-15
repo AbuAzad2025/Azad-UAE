@@ -226,11 +226,11 @@
     <form id="excelUploadForm" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
-        <label>{{ t('اختر') }} {{ t('ملف') }} (.xlsx, .xls)</label>
+        <label for="excelFile">{{ t('اختر') }} {{ t('ملف') }} (.xlsx, .xls)</label>
         <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control" required>
       </div>
       <div class="form-group">
-        <label>{{ t('Warehouse') }}</label>
+        <label for="warehouseSelect">{{ t('Warehouse') }}</label>
         <select id="warehouseSelect" class="form-control">
           {% for warehouse in warehouses %}
           <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>

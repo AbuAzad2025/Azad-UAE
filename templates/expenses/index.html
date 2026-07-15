@@ -30,8 +30,8 @@
 <div class="card mb-3">
     <div class="card-body py-2">
         <form class="needs-validation form-inline" method="get">
-            <label class="mr-2">{{ t('التصنيف') }}:</label>
-            <select name="category" class="form-control mr-2" onchange="this.form.submit()" aria-label="category">
+            <label class="mr-2" for="category">{{ t('التصنيف') }}:</label>
+            <select name="category" class="form-control mr-2" onchange="this.form.submit()" id="category">
                 <option value="">-- {{ t('All') }} --</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if request.args.get('category', type=int) == category.id %}selected{% endif %}>

@@ -231,20 +231,20 @@
             <div class="pc-card-body">
               <div class="pc-tier-grid">
                 <div>
-                  <label class="small font-weight-bold">جملة</label>
-                  <input type="number" name="tier_wholesale_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_wholesale_price', '') }}" placeholder="0">
+                  <label for="tier_wholesale_price" class="small font-weight-bold">جملة</label>
+                  <input type="number" name="tier_wholesale_price" id="tier_wholesale_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_wholesale_price', '') }}" placeholder="0">
                 </div>
                 <div>
-                  <label class="small font-weight-bold">تجزئة</label>
-                  <input type="number" name="tier_retail_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_retail_price', '') }}" placeholder="0">
+                  <label for="tier_retail_price" class="small font-weight-bold">تجزئة</label>
+                  <input type="number" name="tier_retail_price" id="tier_retail_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_retail_price', '') }}" placeholder="0">
                 </div>
                 <div>
-                  <label class="small font-weight-bold">موزع</label>
-                  <input type="number" name="tier_distributor_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_distributor_price', '') }}" placeholder="0">
+                  <label for="tier_distributor_price" class="small font-weight-bold">موزع</label>
+                  <input type="number" name="tier_distributor_price" id="tier_distributor_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_distributor_price', '') }}" placeholder="0">
                 </div>
                 <div>
-                  <label class="small font-weight-bold">مندوب</label>
-                  <input type="number" name="tier_rep_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_rep_price', '') }}" placeholder="0">
+                  <label for="tier_rep_price" class="small font-weight-bold">مندوب</label>
+                  <input type="number" name="tier_rep_price" id="tier_rep_price" class="form-control input-ltr" dir="ltr" step="0.01" min="0" value="{{ form_data.get('tier_rep_price', '') }}" placeholder="0">
                 </div>
               </div>
               <hr class="my-3">

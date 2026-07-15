@@ -81,12 +81,12 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>
-              <i class="fas fa-folder text-primary"></i> {{ t('الفئة') }} 
+            <label for="expense_category">
+              <i class="fas fa-folder text-primary"></i> {{ t('الفئة') }}
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
-              <select name="category_id" id="expense_category" class="form-control erp-flex-1" required aria-label="category id">
+              <select name="category_id" id="expense_category" class="form-control erp-flex-1" required>
                 <option value="">{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}">{{ category.name_ar }} - {{ category.name }}</option>
@@ -103,11 +103,11 @@
 
         <div class="col-md-6">
           <div class="form-group">
-            <label>
-              <i class="fas fa-align-left text-info"></i> {{ t('Description') }} 
+            <label for="expense_description">
+              <i class="fas fa-align-left text-info"></i> {{ t('Description') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="description" class="form-control" placeholder="{{ t('Description_2') }} {{ t('Expense_2') }}..." required maxlength="500">
+            <input type="text" name="description" id="expense_description" class="form-control" placeholder="{{ t('Description_2') }} {{ t('Expense_2') }}..." required maxlength="500">
           </div>
         </div>
       </div>
@@ -115,17 +115,17 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label>
-              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }} 
+            <label for="expense_amount">
+              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
+            <input type="number" name="amount" id="expense_amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
           </div>
         </div>
 
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="currency">
               <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
@@ -136,10 +136,10 @@
 
         <div class="col-md-4">
           <div class="form-group">
-            <label>
+            <label for="exchange_rate">
               <i class="fas fa-exchange-alt text-secondary"></i> {{ t('Price_2') }} {{ t('Exchange') }}
             </label>
-            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly aria-label="exchange rate">
+            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly>
           </div>
         </div>
       </div>
@@ -147,11 +147,11 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>
-              <i class="fas fa-credit-card text-primary"></i> {{ t('طريقة') }} {{ t('Payment_2') }} 
+            <label for="payment_method">
+              <i class="fas fa-credit-card text-primary"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
               <span class="text-danger">*</span>
             </label>
-            <select name="payment_method" id="payment_method" class="form-control" required aria-label="payment method">
+            <select name="payment_method" id="payment_method" class="form-control" required>
               <option value="cash">{{ t('Cash_2') }}</option>
               <option value="card">{{ t('Card') }}</option>
               <option value="bank_transfer">{{ t('Transfer') }} {{ t('Bank_3') }}</option>
@@ -162,10 +162,10 @@
 
         <div class="col-md-6">
           <div class="form-group">
-            <label>
+            <label for="expense_supplier_name">
               <i class="fas fa-user-tie text-info"></i> {{ t('Name_2') }} {{ t('Supplier') }}/{{ t('الجهة') }}
             </label>
-            <input type="text" name="supplier_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('المستفيد') }}..." minlength="2" maxlength="100">
+            <input type="text" name="supplier_name" id="expense_supplier_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('المستفيد') }}..." minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -174,10 +174,10 @@
       <div id="paymentFieldsContainer"></div>
 
       <div class="form-group">
-        <label>
+        <label for="expense_notes">
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
         </label>
-        <textarea name="notes" class="form-control" rows="3" placeholder="أي {{ t('Notes') }}..." maxlength="500"></textarea>
+        <textarea name="notes" id="expense_notes" class="form-control" rows="3" placeholder="أي {{ t('Notes') }}..." maxlength="500"></textarea>
       </div>
     </div>
 
@@ -208,14 +208,14 @@
         <form id="addExpenseCategoryForm" method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
-            <label>
+            <label for="expense_category_name">
               <i class="fas fa-font text-primary"></i> {{ t('Name') }} {{ t('In English_2') }}
               <span class="text-danger">*</span>
             </label>
             <input type="text" id="expense_category_name" class="form-control" placeholder="{{ t('مثال') }}: Salaries, Rent, Utilities..." required>
           </div>
           <div class="form-group">
-            <label>
+            <label for="expense_category_name_ar">
               <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
             </label>
             <input type="text" id="expense_category_name_ar" class="form-control" placeholder="{{ t('مثال') }}: {{ t('رواتب،') }} {{ t('إيجارات،') }} {{ t('مرافق') }}...">

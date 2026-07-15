@@ -25,7 +25,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name">{{ t('Name') }} {{ t('الكامل') }}</label>
-                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" aria-label="full name" minlength="2" maxlength="100">
+                   <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" minlength="2" maxlength="100">
                 </div>
               </div>
             </div>
@@ -34,13 +34,13 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name_ar">{{ t('Name') }} {{ t('الكامل') }} {{ t('In Arabic') }}</label>
-                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" aria-label="full name ar" minlength="2" maxlength="100">
+                   <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_email">{{ t('Email_2') }} {{ t('Email_3') }}</label>
-                  <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email" aria-label="email">
+                   <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email">
                 </div>
               </div>
             </div>
@@ -49,13 +49,13 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_phone">{{ t('رقم') }} {{ t('Phone') }}</label>
-                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
+                   <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" pattern="^\+?[0-9\s\-]{8,20}$">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('Role') }}</label>
-                  <select name="role_id" id="role_id" class="form-control" aria-label="role id">
+                   <label for="role_id">{{ t('Role') }}</label>
+                   <select name="role_id" id="role_id" class="form-control">
                     {% for r in roles %}
                       <option value="{{ r.id }}" data-role-slug="{{ r.slug }}" {% if user.role_id == r.id %}selected{% endif %}>
                         {{ r.name_ar or r.name }}
@@ -66,8 +66,8 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('Branch') }}</label>
-                  <select name="branch_id" id="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                   <label for="branch_id">{{ t('Branch') }}</label>
+                   <select name="branch_id" id="branch_id" class="form-control">
                     <option value="">-- {{ t('اختر') }} {{ t('Branch') }} --</option>
                     {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if user.branch_id == branch.id %}selected{% endif %}>
@@ -83,14 +83,14 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('كلمة') }} {{ t('المرور') }} {{ t('New_4') }}</label>
-                  <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password" aria-label="new password">
+                   <label for="new_password">{{ t('كلمة') }} {{ t('المرور') }} {{ t('New_4') }}</label>
+                   <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}</label>
-                  <input type="password" id="confirm_password" class="form-control" minlength="10" autocomplete="new-password" aria-label="confirm password" data-equal-to="#new_password">
+                   <label for="confirm_password">{{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}</label>
+                   <input type="password" id="confirm_password" class="form-control" minlength="10" autocomplete="new-password" data-equal-to="#new_password">
                 </div>
               </div>
             </div>

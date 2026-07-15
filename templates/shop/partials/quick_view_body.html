@@ -18,10 +18,10 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="product_id" value="{{ product.id }}">
       <div class="ps-qv-qty">
-        <label>{{ t('quantity') }}</label>
+        <label for="ps_qv_qty">{{ t('quantity') }}</label>
         <div class="ps-qty-wrap">
           <button type="button" class="ps-btn ps-btn-outline" data-qty-minus>−</button>
-          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input">
+          <input type="number" id="ps_qv_qty" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input">
           <button type="button" class="ps-btn ps-btn-outline" data-qty-plus>+</button>
         </div>
       </div>

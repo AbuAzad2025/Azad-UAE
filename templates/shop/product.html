@@ -72,8 +72,8 @@
       <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
       {% if variants %}
       <div class="ps-form-group">
-        <label>{{ t('variant') }}</label>
-        <select name="variant_id" class="ps-variant-select" data-price-base="{{ product.regular_price }}">
+        <label for="ps_variant">{{ t('variant') }}</label>
+        <select id="ps_variant" name="variant_id" class="ps-variant-select" data-price-base="{{ product.regular_price }}">
           {% for v in variants %}
           <option value="{{ v.id }}" data-price="{{ '%.2f'|format(product.regular_price + v.price_adjustment) }}">
             {{ v.get_display_name(lang) }}
@@ -83,10 +83,10 @@
       </div>
       {% endif %}
       <div class="ps-form-group">
-        <label>{{ t('quantity') }}</label>
+        <label for="ps_qty">{{ t('quantity') }}</label>
         <div class="ps-qty-wrap ic-7">
           <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-minus>−</button>
-          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input ic-9" aria-label="quantity">
+          <input type="number" id="ps_qty" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input ic-9">
           <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-plus>+</button>
         </div>
       </div>
@@ -200,8 +200,8 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <h3>{{ t('write_review') }}</h3>
     <div class="ps-form-group">
-      <label>{{ t('rating') }}</label>
-      <select name="rating" required>
+      <label for="ps_rating">{{ t('rating') }}</label>
+      <select id="ps_rating" name="rating" required>
         <option value="5">★★★★★</option>
         <option value="4">★★★★</option>
         <option value="3">★★★</option>

@@ -61,15 +61,15 @@
         <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من {{ t('History') }}">
         <label class="mr-2" for="input_date_to">إلى</label>
         <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى {{ t('History') }}">
-        <label class="mr-2">{{ t('Customer_2') }}</label>
-        <select name="customer" class="form-control form-control-sm mr-2 ic-1" aria-label="customer">
+        <label class="mr-2" for="customer">{{ t('Customer_2') }}</label>
+        <select name="customer" class="form-control form-control-sm mr-2 ic-1" id="customer">
           <option value="">{{ t('All') }}</option>
           {% for c in customers or [] %}
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>
           {% endfor %}
         </select>
-        <label class="mr-2">{{ t('البائع') }}</label>
-        <select name="seller" class="form-control form-control-sm mr-2 ic-2" aria-label="seller">
+        <label class="mr-2" for="seller">{{ t('البائع') }}</label>
+        <select name="seller" class="form-control form-control-sm mr-2 ic-2" id="seller">
           <option value="">{{ t('All') }}</option>
           {% for u in sellers or [] %}
           <option value="{{ u.id }}" {{ 'selected' if seller_id == u.id else '' }}>{{ u.get_display_name() if u else '' }}</option>

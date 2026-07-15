@@ -167,8 +167,16 @@
     </div>
   </div>
   
-  {% set income_color = 'success' if net_income > 0 else 'danger' if net_income < 0 else 'secondary' %}
-  {% set income_icon = 'chart-line' if net_income > 0 else 'chart-line-down' if net_income < 0 else 'minus' %}
+  {% if net_income > 0 %}
+    {% set income_color = 'success' %}
+    {% set income_icon = 'chart-line' %}
+  {% elif net_income < 0 %}
+    {% set income_color = 'danger' %}
+    {% set income_icon = 'chart-line-down' %}
+  {% else %}
+    {% set income_color = 'secondary' %}
+    {% set income_icon = 'minus' %}
+  {% endif %}
   <div class="col-md-4">
     <div class="card bg-gradient-{{ income_color }} text-white">
       <div class="card-body">
@@ -257,5 +265,6 @@
   </div>
 </div>
 </div>
-{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% endblock %}
+
+{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}

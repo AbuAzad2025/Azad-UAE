@@ -9,24 +9,24 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label>{{ t('نوع') }} {{ t('الإجازة') }} <span class="text-danger">*</span></label>
-              <select name="leave_type_id" class="form-control" required>
+            <div class="form-group"><label for="leave_type_id">{{ t('نوع') }} {{ t('الإجازة') }} <span class="text-danger">*</span></label>
+              <select name="leave_type_id" id="leave_type_id" class="form-control" required>
                 {% for lt in leave_types %}
                 <option value="{{ lt.id }}">{{ lt.name_ar or lt.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-3">
-            <div class="form-group"><label>من {{ t('History') }}</label>
-              <input name="date_from" type="date" class="form-control" required></div>
+            <div class="form-group"><label for="date_from">من {{ t('History') }}</label>
+              <input id="date_from" name="date_from" type="date" class="form-control" required></div>
           </div>
           <div class="col-md-3">
-            <div class="form-group"><label>إلى {{ t('History') }}</label>
-              <input name="date_to" type="date" class="form-control" required></div>
+            <div class="form-group"><label for="date_to">إلى {{ t('History') }}</label>
+              <input id="date_to" name="date_to" type="date" class="form-control" required></div>
           </div>
           <div class="col-12">
-            <div class="form-group"><label>{{ t('السبب') }}</label>
-              <textarea name="reason" class="form-control" rows="3"></textarea></div>
+            <div class="form-group"><label for="reason">{{ t('السبب') }}</label>
+              <textarea id="reason" name="reason" class="form-control" rows="3"></textarea></div>
           </div>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> {{ t('Submit') }} {{ t('الطلب') }}</button>

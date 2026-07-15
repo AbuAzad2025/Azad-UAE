@@ -367,7 +367,7 @@ function createBackup() {
         alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}');
+    .catch(() => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}');
     });
   }
 }
