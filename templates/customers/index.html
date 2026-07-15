@@ -26,16 +26,6 @@
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
 <style>
-.customer-card {
-  transition: all 0.3s ease;
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.customer-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 122, 61, 0.2);
-}
 .vip-badge {
   background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
   color: #000;
@@ -80,10 +70,12 @@
     <form class="needs-validation mt-3" method="get">
       <div class="form-row">
         <div class="col-md-5 mb-2">
-          <input type="text" name="search" value="{{ request.args.get('search','') }}" class="form-control" placeholder="{{ t('Search') }} {{ t('By name') }}/{{ t('Phone') }}/{{ t('الإيميل') }}">
+          <label for="customer_search" class="sr-only">{{ t('Search') }}</label>
+          <input type="text" name="search" id="customer_search" value="{{ request.args.get('search','') }}" class="form-control" placeholder="{{ t('Search') }} {{ t('By name') }}/{{ t('Phone') }}/{{ t('الإيميل') }}">
         </div>
         <div class="col-md-3 mb-2">
-          <select name="type" class="form-control" aria-label="type">
+          <label for="customer_type_filter" class="sr-only">{{ t('نوع') }} {{ t('Customer_2') }}</label>
+          <select name="type" id="customer_type_filter" class="form-control">
             <option value="">كل {{ t('الأنواع') }}</option>
             <option value="regular" {{ 'selected' if request.args.get('type') == 'regular' else '' }}>{{ t('عادي') }}</option>
             <option value="merchant" {{ 'selected' if request.args.get('type') == 'merchant' else '' }}>{{ t('تاجر') }}</option>
