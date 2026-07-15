@@ -113,7 +113,7 @@
             </td>
             <td>{{ emp.basic_salary }} {{ emp.currency }}</td>
             <td class="actions-cell">
-                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="{{ t('كشف') }} {{ t('Account_2') }}"><i class="fas fa-file-invoice"></i></a>
+                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="{{ t('كشف') }} {{ t('Account') }}"><i class="fas fa-file-invoice"></i></a>
             </td>
           </tr>
           {% endfor %}

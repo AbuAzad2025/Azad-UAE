@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Add') }} {{ t('قيد') }} {{ t('Manual') }} - Manual Journal Entry{% endblock %}
-{% block page_title %}{{ t('Add') }} {{ t('قيد') }} {{ t('Manual') }}{% endblock %}
+{% block title %}{{ t('Manual Entry') }} - Manual Journal Entry{% endblock %}
+{% block page_title %}{{ t('Manual Entry') }}{% endblock %}
 
 {% block content %}
 
@@ -13,7 +13,7 @@
     {% endif %}
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
-      <i class="fas fa-book mr-2"></i>{{ t('View') }} {{ t('القيود') }}
+      <i class="fas fa-book mr-2"></i>{{ t('View Entries') }}
     </a>
     {% endif %}
   </div>
@@ -23,7 +23,7 @@
 <div class="card border-success mb-3 ic-1" id="quickTemplatesCard">
   <div class="card-header bg-success text-white">
     <h5 class="mb-0">
-      <i class="fas fa-magic mr-2"></i>{{ t('قوالب') }} {{ t('Quick') }}
+      <i class="fas fa-magic mr-2"></i>{{ t('Quick Templates') }}
       <button type="button" class="btn btn-light float-left ic-2" onclick="toggleCard('quickTemplates')" title="طي/{{ t('توسيع') }}">
         <i class="fas fa-minus"></i>
       </button>
@@ -58,7 +58,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle mr-2"></i>{{ t('قيد') }} {{ t('Manual') }} {{ t('New') }}
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('Manual Entry') }}
     </h3>
   </div>
   <div class="card-body">
@@ -70,7 +70,7 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Description_2') }} {{ t('القيد') }} <span class="text-danger">*</span></label>
+            <label>{{ t('Entry Description') }} <span class="text-danger">*</span></label>
             <input type="text" name="description" class="form-control" required 
                    placeholder="{{ t('مثال') }}: {{ t('قيد') }} {{ t('Reconciliation،') }} {{ t('Purchase') }} {{ t('معدات،') }} {{ t('Edit') }} {{ t('Balance_3') }}" maxlength="500">
           </div>
@@ -108,7 +108,7 @@
       <div class="card">
         <div class="card-header bg-light">
           <h5 class="mb-0">
-            <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('القيد') }}
+            <i class="fas fa-list mr-2"></i>{{ t('Entry Lines') }}
           </h5>
         </div>
         
@@ -117,18 +117,18 @@
             <table class="table table-bordered mb-0" id="linesTable">
               <thead class="bg-light">
                 <tr>
-                  <th width="5%">#</th>
-                  <th width="35%">{{ t('Account') }} <span class="text-danger">*</span></th>
-                  <th width="30%">{{ t('Description_3') }}</th>
-                  <th width="15%" class="text-center">
+                  <th style="width: 5%">#</th>
+                  <th style="width: 35%">{{ t('Account') }} <span class="text-danger">*</span></th>
+                  <th style="width: 30%">{{ t('Description') }}</th>
+                  <th style="width: 15%" class="text-center">
                     <i class="fas fa-arrow-down text-success mr-1"></i>
                     <strong class="text-success">{{ t('مدين') }}</strong>
                   </th>
-                  <th width="15%" class="text-center">
+                  <th style="width: 15%" class="text-center">
                     <i class="fas fa-arrow-up text-danger mr-1"></i>
                     <strong class="text-danger">{{ t('دائن') }}</strong>
                   </th>
-                  <th width="5%"></th>
+                  <th style="width: 5%"></th>
                 </tr>
               </thead>
               <tbody id="linesTableBody">
@@ -160,7 +160,7 @@
       <div class="row mt-3">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('القيد') }}
+            <i class="fas fa-save mr-2"></i>{{ t('Save Entry') }}
           </button>
           <button type="button" class="btn btn-primary" onclick="addLine()">
             <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('سطر') }}
@@ -254,7 +254,7 @@ function handleCreditChange(input) {
   calculateJournalTotals();
 }
 
-// {{ t('Account_2') }} {{ t('Total_3ات') }} {{ t('والتوازن') }} {{ t('للقيد') }} {{ t('Manual_2') }} - CLIENT SIDE
+// {{ t('Account') }} {{ t('Totals') }} {{ t('والتوازن') }} {{ t('للقيد') }} {{ t('Manual_2') }} - CLIENT SIDE
 function calculateJournalTotals() {
   const debitInputs = document.querySelectorAll('.debit-input');
   const creditInputs = document.querySelectorAll('.credit-input');
@@ -354,7 +354,7 @@ function loadTemplate(templateType) {
       break;
   }
   
-  // {{ t('Account_2') }} {{ t('Total_3ات') }} {{ t('فوراً') }} + {{ t('Reserve_3') }}
+  // {{ t('Account') }} {{ t('Totals') }} {{ t('فوراً') }} + {{ t('Reserve_3') }}
   calculateJournalTotals();
   setTimeout(() => calculateJournalTotals(), 100);
 }

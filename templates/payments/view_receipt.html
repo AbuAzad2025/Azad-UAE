@@ -22,7 +22,7 @@
 
     {% if is_payment %}
 
-    <form class="needs-validation d-inline" action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Exchange') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان {{ t('مرتبطاً') }} {{ t('بشيكات،') }} أو {{ t('Deleteه') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
+    <form class="needs-validation d-inline" action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Exchange') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان {{ t('مرتبطاً') }} {{ t('بشيكات،') }} أو {{ t('will Delete') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
 
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -36,7 +36,7 @@
 
     {% else %}
 
-    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Receipt_3') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان له {{ t('تخصيصات') }} أو {{ t('مرتبط') }} {{ t('بشيكات،') }} أو {{ t('Deleteه') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
+    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Receipt_3') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان له {{ t('تخصيصات') }} أو {{ t('مرتبط') }} {{ t('بشيكات،') }} أو {{ t('will Delete') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
 
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

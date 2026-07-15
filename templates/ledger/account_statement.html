@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('كشف') }} {{ t('Account') }} - {{ statement.account.full_name }}{% endblock %}
-{% block page_title %}{{ t('كشف') }} {{ t('Account') }} {{ t('التفصيلي') }}{% endblock %}
+{% block title %}{{ t('Account Statement') }} - {{ statement.account.full_name }}{% endblock %}
+{% block page_title %}{{ t('Account Statement') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
@@ -19,7 +19,7 @@
 
 <div class="erp-ledger-print">
   <div class="erp-report-header">
-    <h2>{{ t('كشف') }} {{ t('Account_2') }}: {{ statement.account.full_name }}</h2>
+    <h2>{{ t('Account Statement') }}: {{ statement.account.full_name }}</h2>
     <div class="erp-report-meta">
       {{ statement.account.type_ar }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
@@ -35,7 +35,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">{{ t('Balance') }} {{ t('الافتتاحي') }}</span>
+              <span class="info-box-text">{{ t('Opening Balance') }}</span>
               <span class="info-box-number">
                 {{ format_currency(statement.opening_balance) }}
               </span>
@@ -46,7 +46,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-success"><i class="fas fa-arrow-up"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">{{ t('Total_2') }} {{ t('المدين') }}</span>
+              <span class="info-box-text">{{ t('Debit Total') }}</span>
               <span class="info-box-number text-success">
                 {{ format_currency(statement.total_debit) }}
               </span>
@@ -57,7 +57,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">{{ t('Total_2') }} {{ t('الدائن') }}</span>
+              <span class="info-box-text">{{ t('Credit Total') }}</span>
               <span class="info-box-number text-danger">
                 {{ format_currency(statement.total_credit) }}
               </span>
@@ -70,20 +70,20 @@
         <table class="table table-bordered table-striped table-hover">
           <thead class="bg-light">
             <tr>
-              <th width="100">{{ t('Date') }}</th>
-              <th width="120">{{ t('رقم') }} {{ t('القيد') }}</th>
-              <th width="100">{{ t('النوع') }}</th>
-              <th>{{ t('Description_3') }}</th>
-              <th width="100">{{ t('المرجع') }}</th>
-              <th width="120" class="text-center">{{ t('مدين') }}</th>
-              <th width="120" class="text-center">{{ t('دائن') }}</th>
-              <th width="120" class="text-center">{{ t('Balance') }}</th>
+              <th style="width: 100px">{{ t('Date') }}</th>
+              <th style="width: 120px">{{ t('Entry Number') }}</th>
+              <th style="width: 100px">{{ t('النوع') }}</th>
+              <th>{{ t('Description') }}</th>
+              <th style="width: 100px">{{ t('المرجع') }}</th>
+              <th style="width: 120px" class="text-center">{{ t('مدين') }}</th>
+              <th style="width: 120px" class="text-center">{{ t('دائن') }}</th>
+              <th style="width: 120px" class="text-center">{{ t('Balance') }}</th>
             </tr>
           </thead>
           <tbody>
             {% if statement.opening_balance != 0 %}
             <tr class="table-info">
-              <td colspan="7" class="text-center"><strong>{{ t('Balance') }} {{ t('الافتتاحي') }}</strong></td>
+              <td colspan="7" class="text-center"><strong>{{ t('Opening Balance') }}</strong></td>
               <td class="text-center">
                 <strong>{{ format_currency(statement.opening_balance) }}</strong>
               </td>

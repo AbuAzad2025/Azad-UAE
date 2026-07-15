@@ -24,7 +24,7 @@
     <div class="card shadow mb-4 border-bottom-primary no-print">
         <div class="card-header py-3 bg-gradient-dark text-white d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold"><i class="fas fa-search me-2"></i>{{ t('Search') }} {{ t('تفصيلي') }} (Statement of Account)</h6>
-            <small class="text-white-50">{{ t('Search') }} عن {{ t('Supplier_2،') }} {{ t('Customer_3،') }} {{ t('Partner،') }} أو {{ t('تاجر') }}</small>
+            <small class="text-white-50">{{ t('Search') }} عن {{ t('Supplier') }} {{ t('Customer') }} {{ t('Partner') }} أو {{ t('تاجر') }}</small>
         </div>
         <div class="card-body">
             <div class="row g-3 align-items-center">
@@ -41,7 +41,7 @@
                     <label class="form-label fw-bold">{{ t('Search') }} {{ t('By name') }} أو {{ t('Phone') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="searchInput" placeholder="{{ t('ابدأ') }} {{ t('بالكتابة') }} {{ t('للSearch') }}..." autocomplete="off">
+                        <input type="text" class="form-control" id="searchInput" placeholder="{{ t('ابدأ') }} {{ t('بالكتابة') }} {{ t('for Search') }}..." autocomplete="off">
                     </div>
                     <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1 ic-1"></div>
                 </div>
@@ -81,7 +81,7 @@
     <div class="erp-report-print">
     <div class="erp-report-header">
         <h3>{{ t('Report_2') }} {{ t('Partners') }} {{ t('والتجار') }}</h3>
-        <p>{{ t('Summary') }} {{ t('مالي') }} {{ t('Partners_2') }} {{ t('والتجار') }} {{ t('وSuppliers') }}</p>
+        <p>{{ t('Summary') }} {{ t('مالي') }} {{ t('Partners_2') }} {{ t('والتجار') }} {{ t('and Suppliers') }}</p>
     </div>
     <ul class="nav nav-tabs mb-4 no-print" id="reportTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -118,7 +118,7 @@
                                     <th>{{ t('Partner_2') }}</th>
                                     <th>{{ t('Total_2') }} {{ t('الحصص') }} {{ t('المستحقة') }} (Revenue)</th>
                                     <th>{{ t('مقبوضات') }} من {{ t('Partner_2') }} (Received)</th>
-                                    <th>{{ t('مدفوعات') }} {{ t('للPartner') }} (Paid To)</th>
+                                    <th>{{ t('مدفوعات') }} {{ t('for Partner') }} (Paid To)</th>
                                     <th>{{ t('Net') }} {{ t('Balance') }} (Net Balance)</th>
                                 </tr>
                             </thead>
@@ -151,7 +151,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                        <table class="table table-bordered table-striped" style="width: 100%">
                             <thead class="table-dark">
                                 <tr>
                                     <th>{{ t('Product') }}</th>
@@ -176,7 +176,7 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('لProducts_2') }} {{ t('Shared') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('Products') }} {{ t('Shared') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -244,7 +244,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                        <table class="table table-bordered table-striped" style="width: 100%">
                             <thead class="table-dark">
                                 <tr>
                                     <th>{{ t('Product') }}</th>
@@ -269,7 +269,7 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('لProducts_2') }} {{ t('تجار') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('Products') }} {{ t('تجار') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -296,14 +296,14 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                        <table class="table table-bordered table-striped" style="width: 100%">
                             <thead class="table-dark">
                                 <tr>
                                     <th>{{ t('Supplier') }}</th>
                                     <th>{{ t('Total_2') }} {{ t('Purchases') }} (Purchases)</th>
-                                    <th>{{ t('Paid') }} {{ t('للSupplier_2') }} (Paid To)</th>
+                                    <th>{{ t('Paid') }} {{ t('for Supplier') }} (Paid To)</th>
                                     <th>{{ t('Return') }} من {{ t('Supplier') }} (Refunds)</th>
-                                    <th>{{ t('Balance') }} {{ t('المستحق') }} {{ t('للSupplier_2') }} (Balance Due)</th>
+                                    <th>{{ t('Balance') }} {{ t('المستحق') }} {{ t('for Supplier') }} (Balance Due)</th>
                                 </tr>
                             </thead>
                             <tbody>

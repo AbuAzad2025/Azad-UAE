@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         option.value = account.id;
         const nameText = account.full_name
           || `${account.code || ''} - ${account.name_ar || account.name || ''}`.trim();
-        option.textContent = nameText || account.code || `{{ t('Account_2') }} {{ t('رقم') }} ${account.id}`;
+        option.textContent = nameText || account.code || `{{ t('Account') }} {{ t('رقم') }} ${account.id}`;
         select.appendChild(option);
       });
     })
@@ -276,7 +276,7 @@ document.getElementById('accountStatementForm').addEventListener('submit', funct
     this.action = `/ledger/account/${accountId}/statement`;
   } else {
     e.preventDefault();
-    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('Account_2') }}');
+    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('Account') }}');
   }
 });
 </script>

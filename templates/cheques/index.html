@@ -121,12 +121,12 @@
     <div class="small-box bg-success">
       <div class="inner">
         <h3>{{ stats.total_incoming }}</h3>
-        <p>{{ t('Cheques_2') }} {{ t('Income_3ة') }}</p>
+        <p>{{ t('Cheques_2') }} {{ t('Income') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-arrow-down"></i>
       </div>
-      <a href="{{ url_for('cheques.incoming') }}" class="small-box-footer text-white" title="{{ t('Cheques') }} {{ t('الIncome_3ة') }}">
+      <a href="{{ url_for('cheques.incoming') }}" class="small-box-footer text-white" title="{{ t('Cheques') }} {{ t('Income') }}">
         {{ t('المزيد') }} <i class="fas fa-arrow-circle-left"></i>
       </a>
     </div>
@@ -136,7 +136,7 @@
     <div class="small-box bg-danger">
       <div class="inner">
         <h3>{{ stats.total_outgoing }}</h3>
-        <p>{{ t('Cheques_2') }} {{ t('Expenseة') }}</p>
+        <p>{{ t('Cheques_2') }} {{ t('Expense Entry') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-arrow-up"></i>
@@ -190,10 +190,10 @@
           <i class="fas fa-list mr-1"></i>{{ t('All') }}
         </a>
         <a href="{{ url_for('cheques.incoming') }}" class="btn btn-outline-success">
-          <i class="fas fa-arrow-down mr-1"></i>{{ t('Income_3ة') }}
+          <i class="fas fa-arrow-down mr-1"></i>{{ t('Income') }}
         </a>
         <a href="{{ url_for('cheques.outgoing') }}" class="btn btn-outline-danger">
-          <i class="fas fa-arrow-up mr-1"></i>{{ t('Expenseة') }}
+          <i class="fas fa-arrow-up mr-1"></i>{{ t('Expense Entry') }}
         </a>
         <a href="{{ url_for('cheques.alerts') }}" class="btn btn-outline-warning">
           <i class="fas fa-bell mr-1"></i>{{ t('Alerts') }}

@@ -204,7 +204,7 @@
             <div class="form-group">
               <label><i class="fas fa-signature"></i> {{ t('Name_2') }} {{ t('الساحب') }}:</label>
               <input type="text" name="drawer_name" class="form-control" 
-                     placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('للCheque_3') }}" minlength="2" maxlength="100">
+                     placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('for Cheque') }}" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ $(function() {
     }
   }).trigger('change');
   
-  // Select2 {{ t('للعملاء') }} {{ t('وSupplierين') }} ({{ t('تأكد') }} من {{ t('Download') }} {{ t('Add_2') }})
+  // Select2 {{ t('للعملاء') }} {{ t('and Suppliers') }} ({{ t('تأكد') }} من {{ t('Download') }} {{ t('Add_2') }})
   if (window.jQuery && $.fn && $.fn.select2) {
     $('.customer-select, .supplier-select').select2({
       theme: 'bootstrap4',
@@ -292,7 +292,7 @@ $(function() {
       allowClear: true
     });
   } else {
-    console.warn('Select2 لم يتم {{ t('Downloadه،') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
+    console.warn('Select2 لم يتم {{ t('Download File') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
   }
   
   // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('ديناميكياً') }}

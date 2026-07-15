@@ -193,7 +193,7 @@
                         title="{{ t('Delete') }}">
                   <i class="fas fa-trash"></i>
                 </button>
-                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="{{ t('كشف') }} {{ t('Account_2') }}">
+                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="{{ t('كشف') }} {{ t('Account') }}">
                   <i class="fas fa-file-invoice ic-3"></i>
                 </a>
                 {% if current_user.has_permission('manage_payments') %}

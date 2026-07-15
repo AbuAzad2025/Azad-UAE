@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Edit') }} {{ t('Account_2') }} {{ t('Accounting_3') }} - {{ account.name_ar }}{% endblock %}
+{% block title %}{{ t('Edit Account') }} - {{ account.name_ar }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Account_2') }} {{ t('Accounting_3') }} - {{ account.code }}
+            <i class="fas fa-edit"></i> {{ t('Edit Account') }} - {{ account.code }}
           </h3>
         </div>
         <div class="card-body">
@@ -19,19 +19,19 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_code">{{ t('Code_2') }} {{ t('Account') }} *</label>
+                  <label for="input_code">{{ t('Account Code') }} *</label>
                   <input type="text" name="code" class="form-control" value="{{ account.code }}" required readonly id="input_code" aria-label="code">
-                  <small class="text-muted">لا يمكن {{ t('Change') }} {{ t('Code_2') }} {{ t('Account') }}</small>
+                  <small class="text-muted">{{ t('Cannot Change Account Code') }}</small>
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('نوع') }} {{ t('Account') }} *</label>
+                  <label>{{ t('Account Type') }} *</label>
                   <select name="type" class="form-control" required aria-label="type">
                     <option value="asset" {% if account.type == 'asset' %}selected{% endif %}>{{ t('أصول') }}</option>
                     <option value="liability" {% if account.type == 'liability' %}selected{% endif %}>{{ t('خصوم') }}</option>
-                    <option value="equity" {% if account.type == 'equity' %}selected{% endif %}>{{ t('حقوق') }} {{ t('ملكية') }}</option>
+                    <option value="equity" {% if account.type == 'equity' %}selected{% endif %}>{{ t('Equity') }}</option>
                     <option value="revenue" {% if account.type == 'revenue' %}selected{% endif %}>{{ t('Revenues') }}</option>
                     <option value="expense" {% if account.type == 'expense' %}selected{% endif %}>{{ t('Expenses_2') }}</option>
                   </select>
@@ -42,14 +42,14 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_name_ar">{{ t('Name') }} {{ t('بالعربي') }} *</label>
+                  <label for="input_name_ar">{{ t('Name in Arabic') }} *</label>
                   <input type="text" name="name_ar" class="form-control" value="{{ account.name_ar }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_name">{{ t('Name') }} {{ t('In English') }}</label>
+                  <label for="input_name">{{ t('Name in English') }}</label>
                   <input type="text" name="name" class="form-control" value="{{ account.name or '' }}" id="input_name" aria-label="name" minlength="2" maxlength="100">
                 </div>
               </div>
@@ -58,9 +58,9 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>{{ t('Account') }} {{ t('الأب') }}</label>
+                  <label>{{ t('Parent Account') }}</label>
                   <select name="parent_id" class="form-control" aria-label="parent id">
-                    <option value="">{{ t('None') }} ({{ t('Account_2') }} {{ t('رئيسي') }})</option>
+                    <option value="">{{ t('None') }} ({{ t('Header Account') }})</option>
                     {% for parent in parent_accounts %}
                     <option value="{{ parent.id }}" {% if account.parent_id == parent.id %}selected{% endif %}>
                       {{ parent.code }} - {{ parent.name_ar }}
@@ -75,7 +75,7 @@
                   <div class="custom-control custom-switch mt-4">
                     <input type="checkbox" class="custom-control-input" id="is_header" name="is_header" 
                            {% if account.is_header %}checked{% endif %} aria-label="is header">
-                    <label class="custom-control-label" for="is_header">{{ t('Account_2') }} {{ t('رئيسي') }} (Header)</label>
+                    <label class="custom-control-label" for="is_header">{{ t('Header Account') }}</label>
                   </div>
                 </div>
               </div>
@@ -88,7 +88,7 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('الEditات') }}
+                <i class="fas fa-save"></i> {{ t('Save Changes') }}
               </button>
               <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
                 <i class="fas fa-times"></i> {{ t('Cancel') }}

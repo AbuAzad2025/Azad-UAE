@@ -204,7 +204,7 @@
       
       <div class="form-group">
         <button type="submit" class="btn btn-success">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الEditات') }}
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Changes') }}
         </button>
         <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-secondary">
           <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -231,7 +231,7 @@ $('#cheque_type').change(function() {
   }
 });
 
-// Select2 {{ t('للعملاء') }} {{ t('وSupplierين') }}
+// Select2 {{ t('للعملاء') }} {{ t('and Suppliers') }}
 $('.customer-select, .supplier-select').select2({
   theme: 'bootstrap4',
   language: 'ar',

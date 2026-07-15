@@ -2,6 +2,10 @@
 {% block title %}{{ t('Management') }} {{ t('Accounts') }} {{ t('Accounting') }} - Accounts Management{% endblock %}
 {% block page_title %}{{ t('Management') }} {{ t('Accounts') }} {{ t('Accounting') }}{% endblock %}
 
+{% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
+{% endblock %}
+
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
@@ -9,13 +13,13 @@
       <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     <a href="{{ url_for('admin_ledger.add_account') }}" class="btn btn-success">
-      <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Account_2') }} {{ t('New') }}
+      <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('New') }}
     </a>
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-info">
-    {% endif %}
       <i class="fas fa-sitemap mr-2"></i>{{ t('شجرة') }} {{ t('Accounts') }}
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -43,6 +47,7 @@
         <tbody>
           {% for account in accounts %}
           <tr>
+            {% set type_badge = 'success' if account.type == 'asset' else ('warning' if account.type == 'liability' else ('info' if account.type == 'equity' else ('primary' if account.type == 'revenue' else 'danger'))) %}
             <td>
               <span class="badge badge-light">{{ account.code }}</span>
             </td>
@@ -53,7 +58,7 @@
               {% endif %}
             </td>
             <td>
-              <span class="badge badge-{{ 'success' if account.type == 'asset' else 'warning' if account.type == 'liability' else 'info' if account.type == 'equity' else 'primary' if account.type == 'revenue' else 'danger' }}">
+              <span class="badge badge-{{ type_badge }}">
                 {{ account.type_ar }}
               </span>
             </td>
@@ -69,7 +74,8 @@
             </td>
             <td>
               {% set balance = account.get_balance() %}
-              <span class="badge badge-{{ 'success' if balance > 0 else 'danger' if balance < 0 else 'secondary' }}">
+              {% set balance_badge = 'success' if balance > 0 else ('danger' if balance < 0 else 'secondary') %}
+              <span class="badge badge-{{ balance_badge }}">
                 {{ format_currency(balance) }}
               </span>
             </td>
@@ -80,7 +86,7 @@
                 <span class="badge badge-danger">غير {{ t('Active') }}</span>
               {% endif %}
               {% if account.is_header %}
-                <br><span class="badge badge-info">{{ t('Account_2') }} {{ t('رئيسي') }}</span>
+                <br><span class="badge badge-info">{{ t('Account') }} {{ t('رئيسي') }}</span>
               {% endif %}
             </td>
             <td>
@@ -89,7 +95,7 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
-                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info" title="{{ t('كشف') }} {{ t('Account_2') }}">
+                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info" title="{{ t('كشف') }} {{ t('Account') }}">
                   <i class="fas fa-file-alt"></i>
                 </a>
                 {% endif %}
@@ -144,7 +150,7 @@ function deleteAccount(accountId, accountName) {
 }
 $(document).ready(function() {
   $('#accountsTable').DataTable({
-    language: { url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json" },
+    language: { url: "https://cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json" },
     pageLength: 25,
     order: [[ 0, "asc" ]],
     columnDefs: [ { orderable: false, targets: 7 } ]

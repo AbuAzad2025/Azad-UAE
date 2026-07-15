@@ -52,8 +52,8 @@
         <tbody>
           {% for item in report.operating_activities.items %}
           <tr>
-            <td width="70%">{{ item.description }}</td>
-            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+            <td style="width: 70%">{{ item.description }}</td>
+            <td style="width: 30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
               {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
@@ -80,8 +80,8 @@
           {% for item in report.investing_activities.items %}
           {% if item.amount > 0 %}
           <tr>
-            <td width="70%">{{ item.description }}</td>
-            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+            <td style="width: 70%">{{ item.description }}</td>
+            <td style="width: 30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
               {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
@@ -109,8 +109,8 @@
           {% for item in report.financing_activities.items %}
           {% if item.amount > 0 %}
           <tr>
-            <td width="70%">{{ item.description }}</td>
-            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+            <td style="width: 70%">{{ item.description }}</td>
+            <td style="width: 30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
               {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
@@ -133,8 +133,8 @@
       <div class="card-body">
         <div class="table-responsive"><table class="table table-borderless text-white mb-0">
           <tr>
-            <td width="70%"><strong>{{ t('Net') }} {{ t('التغير') }} في {{ t('Cash') }}:</strong></td>
-            <td width="30%" class="text-center">
+            <td style="width: 70%"><strong>{{ t('Net') }} {{ t('التغير') }} في {{ t('Cash') }}:</strong></td>
+            <td style="width: 30%" class="text-center">
               <strong class="{{ 'text-success' if report.net_change_in_cash > 0 else 'text-danger' }}">
                 {{ format_currency(report.net_change_in_cash) }}
               </strong>

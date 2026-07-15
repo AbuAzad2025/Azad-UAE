@@ -362,12 +362,12 @@ function createBackup() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('تم {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
+        alert('تم {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
       } else {
-        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }}: ' + data.message);
+        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }}');
+    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}');
     });
   }
 }

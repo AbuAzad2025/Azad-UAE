@@ -236,7 +236,7 @@
     
     <div class="col-md-6">
       <div class="report-card">
-        <h4><i class="fas fa-chart-bar mr-2"></i>{{ t('Revenue') }} {{ t('وExpenses') }} {{ t('Monthية') }}</h4>
+        <h4><i class="fas fa-chart-bar mr-2"></i>{{ t('Revenue') }} {{ t('and Expenses') }} {{ t('Monthly') }}</h4>
         <div class="chart-container">
           <canvas id="revenueExpenseChart"></canvas>
         </div>
@@ -268,7 +268,7 @@
     
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-chart-line mr-2"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('Monthية') }}</h4>
+        <h4><i class="fas fa-chart-line mr-2"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('Monthly') }}</h4>
         <div class="chart-container">
           <canvas id="profitTrendChart"></canvas>
         </div>
@@ -280,7 +280,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-table mr-2"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('وExpenses') }}</h4>
+        <h4><i class="fas fa-table mr-2"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('and Expenses') }}</h4>
         <div class="table-responsive">
           <table class="financial-table table table-hover">
             <thead>
@@ -382,7 +382,7 @@ const revenueData = {{ revenue_data|tojson }};
 const expenseData = {{ expense_data|tojson }};
 const profitData = {{ profit_data|tojson }};
 
-// {{ t('رسم') }} {{ t('بياني') }} {{ t('للإيرادات') }} {{ t('وExpenses') }}
+// {{ t('رسم') }} {{ t('بياني') }} {{ t('للإيرادات') }} {{ t('and Expenses') }}
 const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
 const revenueExpenseChart = new Chart(revenueExpenseCtx, {
   type: 'bar',

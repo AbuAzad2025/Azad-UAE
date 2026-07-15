@@ -123,13 +123,13 @@
 
   <script>
     (function () {
-      var modeInput = document.getElementById('access_mode');
-      var tabs = document.querySelectorAll('.azad-login-tab');
-      var modeHint = document.getElementById('loginModeHint');
-      var pwd = document.getElementById('password');
-      var toggle = document.getElementById('togglePassword');
-      var form = document.getElementById('azadLoginForm');
-      var submitBtn = document.getElementById('loginSubmitBtn');
+      const modeInput = document.getElementById('access_mode');
+      const tabs = document.querySelectorAll('.azad-login-tab');
+      let modeHint = document.getElementById('loginModeHint');
+      let pwd = document.getElementById('password');
+      let toggle = document.getElementById('togglePassword');
+      let form = document.getElementById('azadLoginForm');
+      let submitBtn = document.getElementById('loginSubmitBtn');
 
       function setAccessMode(mode) {
         if (!modeInput) return;
@@ -158,9 +158,9 @@
 
       if (pwd && toggle) {
         toggle.addEventListener('click', function () {
-          var show = pwd.type === 'password';
+          let show = pwd.type === 'password';
           pwd.type = show ? 'text' : 'password';
-          var icon = toggle.querySelector('i');
+          let icon = toggle.querySelector('i');
           if (icon) {
             icon.classList.toggle('fa-eye', !show);
             icon.classList.toggle('fa-eye-slash', show);
@@ -169,7 +169,7 @@
       }
 
       if (form && submitBtn) {
-        var submitOriginalHtml = submitBtn.innerHTML;
+        let submitOriginalHtml = submitBtn.innerHTML;
         form.addEventListener('submit', function () {
           submitBtn.classList.add('is-loading');
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> جاري التحقق...';

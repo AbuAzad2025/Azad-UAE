@@ -22,7 +22,7 @@
 <div class="alert alert-info py-2">
   <i class="fas fa-warehouse mr-1"></i>
   {{ t('المصدر') }}: <strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong>
-  — {% if include_zero %}كل {{ t('Products') }} {{ t('Active_2') }}{% else %}{{ t('Products_2') }} {{ t('بInventory_2') }} &gt; 0 فقط{% endif %}
+  — {% if include_zero %}كل {{ t('Products') }} {{ t('Active_2') }}{% else %}{{ t('Products_2') }} {{ t('Inventory') }} &gt; 0 فقط{% endif %}
 </div>
 <div class="card">
   <div class="table-responsive">
@@ -54,7 +54,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="text-center text-muted py-4">لا {{ t('Products_2') }}{% if not include_zero %} {{ t('بInventory_2') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}{% endif %}.</td></tr>
+        <tr><td colspan="5" class="text-center text-muted py-4">لا {{ t('Products_2') }}{% if not include_zero %} {{ t('Inventory') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}{% endif %}.</td></tr>
         {% endfor %}
       </tbody>
     </table>

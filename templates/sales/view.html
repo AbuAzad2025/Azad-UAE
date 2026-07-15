@@ -377,7 +377,7 @@
 
               <tr>
 
-                <th>{{ t('رقم') }} {{ t('Payment_2ة') }}</th>
+                <th>{{ t('رقم') }} {{ t('Payment') }}</th>
 
                 <th>{{ t('Date') }}</th>
 
@@ -531,7 +531,7 @@
 
         <h3 class="card-title text-white mb-0">
 
-          <i class="fas fa-calculator mr-2"></i>{{ t('Total_3ات') }}
+          <i class="fas fa-calculator mr-2"></i>{{ t('Totals') }}
 
         </h3>
 
@@ -820,7 +820,7 @@
 
                   <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
 
-                  <th>{{ t('Quantity') }} {{ t('Return_3ة') }}</th>
+                  <th>{{ t('Quantity') }} {{ t('Return') }}</th>
 
                   <th>{{ t('Status_2') }} {{ t('Product') }}</th>
 
@@ -1030,7 +1030,7 @@ function confirmCancel() {
 
 function confirmDelete() {
 
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('Deleteها') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('will Delete (feminine)') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
 
     document.getElementById('deleteForm').submit();
 

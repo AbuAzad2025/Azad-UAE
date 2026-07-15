@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('List') }} {{ t('Income_2') }} - Income Statement{% endblock %}
-{% block page_title %}{{ t('List') }} {{ t('Income_2') }}{% endblock %}
+{% block title %}{{ t('Income Statement') }} - Income Statement{% endblock %}
+{% block page_title %}{{ t('Income Statement') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Reports_2') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Reports') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -18,7 +18,7 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>{{ t('Filter_2') }} {{ t('Date') }}
+      <i class="fas fa-filter mr-2"></i>{{ t('Filter Date') }}
     </h5>
   </div>
   <div class="card-body">
@@ -39,7 +39,7 @@
         <div class="form-group">
           <label aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>{{ t('Update') }} {{ t('Report') }}
+            <i class="fas fa-search mr-2"></i>{{ t('Update Report') }}
           </button>
         </div>
       </div>
@@ -51,7 +51,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-chart-line mr-2"></i>{{ t('List') }} {{ t('Income_2') }}
+      <i class="fas fa-chart-line mr-2"></i>{{ t('Income Statement') }}
     </h3>
     <div class="card-tools">
       <small class="text-white">
@@ -64,9 +64,9 @@
       <table class="table table-bordered mb-0">
         <thead class="bg-light">
           <tr>
-            <th width="20%">{{ t('Code') }}</th>
-            <th width="50%">{{ t('Name_2') }} {{ t('Account') }}</th>
-            <th width="30%" class="text-center">{{ t('Amount') }}</th>
+            <th style="width: 20%">{{ t('Code') }}</th>
+            <th style="width: 50%">{{ t('Account Name') }}</th>
+            <th style="width: 30%" class="text-center">{{ t('Amount') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -115,7 +115,7 @@
           
           <tr class="bg-primary text-white">
             <th colspan="2" class="text-center">
-              <i class="fas fa-calculator mr-2"></i>{{ t('Net') }} {{ t('Income_2') }}
+              <i class="fas fa-calculator mr-2"></i>{{ t('Net Income') }}
             </th>
             <th class="text-center">
               {% if net_income > 0 %}
@@ -173,7 +173,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ "{:,.0f}".format(net_income) }}</h4>
-            <p class="mb-0">{{ t('Net') }} {{ t('Income_2') }}</p>
+            <p class="mb-0">{{ t('Net Income') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-{{ 'chart-line' if net_income > 0 else 'chart-line-down' if net_income < 0 else 'minus' }} fa-2x"></i>

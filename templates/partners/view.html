@@ -12,7 +12,7 @@
     {% if current_user.has_permission('manage_users') %}
     <a href="{{ url_for('partners.edit', id=partner.id) }}" class="btn btn-warning"><i class="fas fa-edit mr-1"></i> {{ t('Edit') }}</a>
     {% endif %}
-    <a href="{{ url_for('partners.statement', id=partner.id) }}" class="btn btn-info"><i class="fas fa-file-invoice mr-1"></i> {{ t('كشف') }} {{ t('Account_2') }}</a>
+    <a href="{{ url_for('partners.statement', id=partner.id) }}" class="btn btn-info"><i class="fas fa-file-invoice mr-1"></i> {{ t('كشف') }} {{ t('Account') }}</a>
   </div>
 </div>
 {% endblock %}

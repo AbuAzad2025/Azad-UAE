@@ -24,10 +24,10 @@
           <div class="erp-report-print">
           <div class="row mb-4">
             <div class="col-md-6">
-              <h5>{{ t('Info_2') }} {{ t('القيد') }}</h5>
+              <h5>{{ t('Entry Details') }}</h5>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('رقم') }} {{ t('القيد') }}</th>
+                  <th style="width: 40%">{{ t('Entry Number') }}</th>
                   <td>{{ entry.entry_number }}</td>
                 </tr>
                 <tr>
@@ -39,21 +39,21 @@
                   <td>{{ entry.entry_type }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Description_3') }}</th>
+                  <th>{{ t('Description') }}</th>
                   <td>{{ entry.description }}</td>
                 </tr>
               </table></div>
             </div>
             
             <div class="col-md-6">
-              <h5>{{ t('Total_3ات') }}</h5>
+              <h5>{{ t('Totals') }}</h5>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('Total_2') }} {{ t('المدين') }}</th>
+                  <th style="width: 40%">{{ t('Debit Total') }}</th>
                   <td class="text-success">{{ entry.total_debit }} {{ tenant_currency_symbol }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Total_2') }} {{ t('الدائن') }}</th>
+                  <th>{{ t('Credit Total') }}</th>
                   <td class="text-danger">{{ entry.total_credit }} {{ tenant_currency_symbol }}</td>
                 </tr>
                 <tr>
@@ -76,7 +76,7 @@
             <thead>
               <tr>
                 <th>{{ t('Account') }}</th>
-                <th>{{ t('Description_3') }}</th>
+                <th>{{ t('Description') }}</th>
                 <th class="text-success">{{ t('مدين') }}</th>
                 <th class="text-danger">{{ t('دائن') }}</th>
               </tr>
@@ -93,7 +93,7 @@
             </tbody>
             <tfoot>
               <tr class="font-weight-bold">
-                <td colspan="2" class="text-left">{{ t('Total_3') }}</td>
+                <td colspan="2" class="text-left">{{ t('Totals') }}</td>
                 <td class="text-success">{{ entry.total_debit }}</td>
                 <td class="text-danger">{{ entry.total_credit }}</td>
               </tr>

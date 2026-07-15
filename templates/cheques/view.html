@@ -360,7 +360,7 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('بPrice') }} {{ t('New_2') }}):</label>
+            <label>{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('with Price') }} {{ t('New_2') }}):</label>
             <input type="text" id="actual_amount_preview" class="form-control font-weight-bold" 
                    value="..." readonly aria-label="actual amount preview">
           </div>
@@ -394,7 +394,7 @@
       <form method="POST" action="{{ url_for('cheques.bounce_cheque', id=cheque.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
-          <p>{{ t('تسجيل') }} {{ t('إرتداد') }} {{ t('للCheque_3') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
+          <p>{{ t('تسجيل') }} {{ t('إرتداد') }} {{ t('for Cheque') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           
           <div class="form-group">
             <label>{{ t('سبب') }} {{ t('الإرتداد') }}: <span class="text-danger">*</span></label>
@@ -497,7 +497,7 @@ function clearCheque() {
   // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} عند {{ t('فتح') }} {{ t('النافذة') }}
   fetchCurrentExchangeRate();
   
-  // {{ t('Account_2') }} {{ t('Amount') }} {{ t('Actual') }} عند {{ t('Change') }} {{ t('Price') }}
+  // {{ t('Account') }} {{ t('Amount') }} {{ t('Actual') }} عند {{ t('Change') }} {{ t('Price') }}
   $('#clearance_exchange_rate').on('input', calculateActualAmount);
   {% endif %}
 }

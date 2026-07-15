@@ -439,7 +439,7 @@ function printReport() {
 }
 
 function printPDF() {
-  // {{ t('استخدام') }} jsPDF {{ t('لCreate') }} PDF
+  // {{ t('استخدام') }} jsPDF {{ t('for Create') }} PDF
   if (typeof jsPDF !== 'undefined') {
     const doc = new jsPDF('p', 'mm', 'a4');
     const element = document.getElementById('printContent');

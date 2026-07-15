@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Balance Sheet') }} {{ t('العمومية') }} - Balance Sheet{% endblock %}
-{% block page_title %}{{ t('Balance Sheet') }} {{ t('العمومية') }}{% endblock %}
+{% block title %}{{ t('Balance Sheet') }} - Balance Sheet{% endblock %}
+{% block page_title %}{{ t('Balance Sheet') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Reports_2') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Reports') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
       <i class="fas fa-print mr-2"></i>{{ t('Print') }}
@@ -18,7 +18,7 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>{{ t('Filter_2') }} {{ t('Date') }}
+      <i class="fas fa-filter mr-2"></i>{{ t('Filter Date') }}
     </h5>
   </div>
   <div class="card-body">
@@ -33,7 +33,7 @@
         <div class="form-group">
           <label aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>{{ t('Update') }} {{ t('Report') }}
+            <i class="fas fa-search mr-2"></i>{{ t('Update Report') }}
           </button>
         </div>
       </div>
@@ -56,9 +56,9 @@
           <table class="table table-bordered mb-0">
             <thead class="bg-light">
               <tr>
-                <th width="20%">{{ t('Code') }}</th>
-                <th width="50%">{{ t('Name_2') }} {{ t('Account') }}</th>
-                <th width="30%" class="text-center">{{ t('Balance') }}</th>
+                <th style="width: 20%">{{ t('Code') }}</th>
+                <th style="width: 50%">{{ t('Name_2') }} {{ t('Account') }}</th>
+                <th style="width: 30%" class="text-center">{{ t('Balance') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -75,7 +75,7 @@
             </tbody>
             <tfoot class="bg-light">
               <tr>
-                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Assets') }}</th>
+                <th colspan="2" class="text-center">{{ t('Total Assets') }}</th>
                 <th class="text-center text-success">{{ format_currency(assets_total) }}</th>
               </tr>
             </tfoot>
@@ -90,7 +90,7 @@
     <div class="card">
       <div class="card-header bg-gradient-danger">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-bar mr-2"></i>{{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('Assets and Liabilities') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -98,9 +98,9 @@
           <table class="table table-bordered mb-0">
             <thead class="bg-light">
               <tr>
-                <th width="20%">{{ t('Code') }}</th>
-                <th width="50%">{{ t('Name_2') }} {{ t('Account') }}</th>
-                <th width="30%" class="text-center">{{ t('Balance') }}</th>
+                <th style="width: 20%">{{ t('Code') }}</th>
+                <th style="width: 50%">{{ t('Name_2') }} {{ t('Account') }}</th>
+                <th style="width: 30%" class="text-center">{{ t('Balance') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -130,7 +130,7 @@
             </tbody>
             <tfoot class="bg-light">
               <tr>
-                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }}</th>
+                <th colspan="2" class="text-center">{{ t('Total Liabilities') }}</th>
                 <th class="text-center text-danger">{{ format_currency(liabilities_total) }}</th>
               </tr>
               <tr>
@@ -138,7 +138,7 @@
                 <th class="text-center text-info">{{ format_currency(equity_total) }}</th>
               </tr>
               <tr>
-                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}</th>
+                <th colspan="2" class="text-center">{{ t('Total Liabilities') }}</th>
                 <th class="text-center text-primary">{{ format_currency(liabilities_total + equity_total) }}</th>
               </tr>
             </tfoot>
@@ -155,7 +155,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-balance-scale mr-2"></i>{{ t('Summary') }} {{ t('التوازن') }}
+          <i class="fas fa-balance-scale mr-2"></i>{{ t('Summary Balance') }}
         </h5>
       </div>
       <div class="card-body">
@@ -163,13 +163,13 @@
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-success">{{ format_currency(assets_total) }}</h4>
-              <p class="mb-0">{{ t('Total_2') }} {{ t('Assets') }}</p>
+              <p class="mb-0">{{ t('Total Assets') }}</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-primary">{{ format_currency(liabilities_total + equity_total) }}</h4>
-              <p class="mb-0">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}</p>
+              <p class="mb-0">{{ t('Total Liabilities') }}</p>
             </div>
           </div>
           <div class="col-md-4">

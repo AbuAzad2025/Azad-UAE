@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('قيد') }} {{ t('رقم') }} {{ entry.entry_number }}{% endblock %}
-{% block page_title %}{{ t('Details') }} {{ t('القيد') }}{% endblock %}
+{% block title %}{{ t('Entry Number') }} {{ entry.entry_number }}{% endblock %}
+{% block page_title %}{{ t('Entry Details') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
@@ -24,7 +24,7 @@
   <div class="card-header bg-gradient-{{ 'success' if entry.is_balanced() else 'danger' }}">
     <h3 class="card-title text-white">
       <i class="fas fa-file-invoice mr-2"></i>
-      {{ t('قيد') }} {{ t('رقم') }}: {{ entry.entry_number }}
+        {{ t('Entry Number') }}: {{ entry.entry_number }}
     </h3>
     <div class="card-tools">
       {% if entry.is_reversed %}
@@ -39,7 +39,7 @@
     
     <div class="row mb-3">
       <div class="col-md-3">
-        <strong>{{ t('رقم') }} {{ t('القيد') }}:</strong>
+        <strong>{{ t('Entry Number') }}:</strong>
         <p>{{ entry.entry_number }}</p>
       </div>
       <div class="col-md-3">
@@ -100,18 +100,18 @@
 
     
     <h5 class="mt-4 mb-3">
-      <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('القيد') }}
+      <i class="fas fa-list mr-2"></i>{{ t('Entry Lines') }}
     </h5>
     <div class="table-responsive">
       <table class="table table-bordered table-striped">
         <thead class="bg-light">
           <tr>
-            <th width="5%">#</th>
-            <th width="15%">{{ t('Code_2') }} {{ t('Account') }}</th>
-            <th width="30%">{{ t('Name_2') }} {{ t('Account') }}</th>
-            <th width="25%">{{ t('Description_3') }}</th>
-            <th width="12%" class="text-center">{{ t('مدين') }}</th>
-            <th width="13%" class="text-center">{{ t('دائن') }}</th>
+            <th style="width: 5%">#</th>
+            <th style="width: 15%">{{ t('Account Code') }}</th>
+            <th style="width: 30%">{{ t('Account Name') }}</th>
+            <th style="width: 25%">{{ t('Description') }}</th>
+            <th style="width: 12%" class="text-center">{{ t('مدين') }}</th>
+            <th style="width: 13%" class="text-center">{{ t('دائن') }}</th>
           </tr>
         </thead>
         <tbody>

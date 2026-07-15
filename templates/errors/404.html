@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}404 - {{ t('الصفحة') }} غير {{ t('موجودة') }}{% endblock %}
+{% block title %}404 - {{ t('Page Not Found') }}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,9 +9,9 @@
       <div class="card shadow">
         <div class="card-body text-center p-5">
           <h1 class="display-4 text-warning mb-3">404</h1>
-          <h3 class="mb-4">{{ t('الصفحة') }} غير {{ t('موجودة') }}</h3>
+          <h3 class="mb-4">{{ t('Page Not Found') }}</h3>
           <p class="text-muted mb-4">
-            {{ t('عذراً،') }} {{ t('الصفحة') }} {{ t('التي') }} {{ t('تبحث') }} {{ t('عنها') }} غير {{ t('موجودة') }} أو تم {{ t('نقلها') }}.
+            {{ t('Page Not Found') }}
           </p>
           <div class="mt-4">
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">

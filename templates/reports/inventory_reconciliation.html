@@ -173,7 +173,7 @@
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
     <strong>{{ t('Quantity') }}:</strong> {{ t('مقارنة') }} بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
-    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('وBalance_3') }} {{ t('Account_2') }} GL 1140.
+    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('and Balance') }} {{ t('Account') }} GL 1140.
     {% if report.summary.has_unallocated_gl %}
     &nbsp;|&nbsp; <strong>GL غير {{ t('موزع') }} على {{ t('Warehouse_2') }}:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
     {% endif %}

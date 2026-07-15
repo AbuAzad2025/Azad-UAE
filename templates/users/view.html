@@ -24,14 +24,14 @@
           <div class="row">
             
             <div class="col-md-6">
-              <h4>{{ t('Info_3') }} {{ t('الأساسية') }}</h4>
+              <h4>{{ t('Basic Info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('Name_2') }} {{ t('User') }}</th>
+                  <th style="width: 40%">{{ t('User Name') }}</th>
                   <td>{{ user.username }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Name') }} {{ t('الكامل') }}</th>
+                  <th>{{ t('Full Name') }}</th>
                   <td>{{ user.full_name }}</td>
                 </tr>
                 <tr>
@@ -65,14 +65,14 @@
 
             
             <div class="col-md-6">
-              <h4>{{ t('Info_2') }} {{ t('Additional') }}</h4>
+              <h4>{{ t('Additional Info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('History') }} {{ t('Create_2') }}</th>
+                  <th style="width: 40%">{{ t('Created Date') }}</th>
                   <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Last') }} {{ t('ظهور') }}</th>
+                  <th>{{ t('Last Seen') }}</th>
                   <td>{{ user.last_seen.strftime('%Y-%m-%d %H:%M') if user.last_seen else '-' }}</td>
                 </tr>
                 <tr>

@@ -10,7 +10,7 @@
       <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للList') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('for List') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
@@ -226,7 +226,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-exclamation-triangle text-warning"></i> حد {{ t('Alert') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('بInventory') }} {{ t('Low_3') }}."></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('and Inventory') }} {{ t('Low_3') }}."></i>
             </label>
             <input type="number" name="min_stock_alert" class="form-control" step="0.001" min="0" value="{{ product.min_stock_alert or 0 }}" placeholder="0">
           </div>
@@ -273,7 +273,7 @@
 
       
       <hr>
-      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('حقوق') }} {{ t('الملكية') }} {{ t('وPartners') }}</h5>
+      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('حقوق') }} {{ t('الملكية') }} {{ t('with Partners') }}</h5>
       <div class="row">
         
         <div class="col-md-6">
@@ -344,7 +344,7 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Edit_2ات') }}
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Changes') }}
       </button>
       <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}

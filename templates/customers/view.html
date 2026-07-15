@@ -62,7 +62,7 @@
         {% endif %}
         {% endif %}
         <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> {{ t('Edit') }}</a>
-        <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> {{ t('كشف') }} {{ t('Account_2') }}</a>
+        <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> {{ t('كشف') }} {{ t('Account') }}</a>
         <button type="button" class="btn btn-danger btn-block" 
                 data-delete-item="{{customer.id}}" data-item-type="customers" data-item-name="{{customer.name|tojson}}" data-redirect-url="{{url_for('customers.index')|tojson}}">
           <i class="fas fa-trash"></i> {{ t('Delete') }}
