@@ -83,10 +83,10 @@ $(document).ready(function() {
       headers: {
         'X-CSRFToken': csrfToken
       },
-      success: function(response) {
+      success: function() {
         location.reload();
       },
-      error: function(xhr) {
+      error: function() {
         location.reload();
       }
     });
