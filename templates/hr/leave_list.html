@@ -9,19 +9,21 @@
   <div class="card">
     <div class="card-body">
       <form class="form-inline mb-3" method="GET">
-        <select name="state" class="form-control form-control-sm ml-2">
+        <label for="leave_state" class="sr-only">{{ t('Status') }}</label>
+        <select name="state" id="leave_state" class="form-control form-control-sm ml-2">
           <option value="">{{ t('All') }}</option>
           <option value="draft" {% if request.args.state == 'draft' %}selected{% endif %}>{{ t('مسودة') }}</option>
           <option value="approved" {% if request.args.state == 'approved' %}selected{% endif %}>{{ t('معتمدة') }}</option>
           <option value="refused" {% if request.args.state == 'refused' %}selected{% endif %}>{{ t('Rejected') }}</option>
         </select>
-        <select name="user_id" class="form-control form-control-sm ml-2">
+        <label for="leave_user_id" class="sr-only">{{ t('User') }}</label>
+        <select name="user_id" id="leave_user_id" class="form-control form-control-sm ml-2">
           <option value="">{{ t('All') }}</option>
           {% for u in users %}
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-sm btn-primary" aria-label="{{ t('Search') }} {{ t('Leaves') }}"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="leavesTable">
