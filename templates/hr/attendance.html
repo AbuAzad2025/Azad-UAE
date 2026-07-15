@@ -22,15 +22,18 @@
         </div>
       </div>
       <form class="form-inline mb-3" method="GET">
-        <select name="user_id" class="form-control form-control-sm ml-2">
+        <label for="attendance_user_id" class="sr-only">{{ t('User') }}</label>
+        <select name="user_id" id="attendance_user_id" class="form-control form-control-sm ml-2">
           <option value="">{{ t('All') }}</option>
           {% for u in users %}
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
         </select>
-        <input name="date_from" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_from }}">
-        <input name="date_to" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_to }}">
-        <button type="submit" class="btn btn-sm btn-primary" aria-label="{{ t('Search') }} {{ t('Attendance') }}"><i class="fas fa-search"></i></button>
+        <label for="attendance_date_from" class="sr-only">{{ t('History') }} {{ t('Start') }}</label>
+        <input name="date_from" id="attendance_date_from" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_from }}">
+        <label for="attendance_date_to" class="sr-only">{{ t('History') }} {{ t('End_2') }}</label>
+        <input name="date_to" id="attendance_date_to" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_to }}">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="attendanceTable">
