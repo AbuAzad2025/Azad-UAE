@@ -20,7 +20,8 @@ def auth_config():
 @pytest.fixture
 def auth_app(app_factory, auth_config):
     from routes.auth import auth_bp
-    return app_factory(auth_bp, config_overrides=auth_config)
+    from routes.public import public_bp
+    return app_factory(auth_bp, public_bp, config_overrides=auth_config)
 
 
 @pytest.fixture
