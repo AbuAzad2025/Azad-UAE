@@ -1,9 +1,15 @@
+import warnings
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
 import sys
 from unittest.mock import MagicMock, patch
+
+# Python 3.11+ MagicMock creates AsyncMock child mocks that emit
+# "coroutine 'AsyncMockMixin._execute_mock_call' was never awaited"
+# when the mock is used in non-async contexts (e.g. if current_user.can_see_costs()).
+warnings.filterwarnings("ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited")
 
 import pytest
 from flask import Flask, make_response

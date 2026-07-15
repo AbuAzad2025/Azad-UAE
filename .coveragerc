@@ -2,6 +2,7 @@
 source = .
 branch = True
 relative_files = True
+include = *.py
 omit =
     migrations/**
     utils/build_assets.py
