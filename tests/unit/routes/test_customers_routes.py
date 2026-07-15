@@ -294,8 +294,8 @@ class TestCustomersStatement:
         # tenant_get_or_404 returns 404 for cross-tenant access
         assert resp.status_code == 404
 
-    def test_export_excel(self, owner_client, test_factory):
-        client, user = owner_client
+    def test_export_excel(self, auth_client, test_factory):
+        client, user = auth_client
         
         # Create some customers
         for i in range(3):

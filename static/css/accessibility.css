@@ -448,7 +448,7 @@ textarea,
   height: auto !important;
   color: var(--color-text-regular) !important;
   background-color: var(--color-input-bg) !important;
-  border: 1.5px solid var(--color-border) !important;
+  border: 2px solid var(--color-border) !important;
   border-radius: 0.6rem !important;
   padding: 0.6rem 1rem !important;
   box-shadow: none !important;

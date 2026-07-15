@@ -93,7 +93,7 @@ body.en-lang { font-family: 'Inter', 'Tajawal', sans-serif; }
 .azad-nav-actions { display: flex; align-items: center; gap: 8px; }
 
 .btn-nav-ghost {
-  background: transparent; border: 1.5px solid var(--azad-accent-border);
+  background: transparent; border: 2px solid var(--azad-accent-border);
   color: var(--azad-accent-light); padding: 7px 18px;
   border-radius: var(--azad-radius-full); font-size: 0.82rem; font-weight: 600;
   text-decoration: none; transition: all 0.3s; white-space: nowrap;
@@ -115,7 +115,7 @@ body.en-lang { font-family: 'Inter', 'Tajawal', sans-serif; }
 }
 .nav-lang-btn:hover { background: rgba(212, 160, 23, 0.15); }
 .nav-hamburger {
-  background: none; border: 1.5px solid var(--azad-accent-border);
+  background: none; border: 2px solid var(--azad-accent-border);
   color: var(--azad-accent-light); padding: 8px 10px;
   border-radius: 10px; cursor: pointer; display: none;
   font-size: 1.1rem; transition: all 0.3s;
@@ -498,7 +498,7 @@ body.en-lang { font-family: 'Inter', 'Tajawal', sans-serif; }
 .azad-tier-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
 .azad-tier-btn {
   flex: 1; padding: 14px 12px;
-  border: 1.5px solid var(--azad-card-border);
+  border: 2px solid var(--azad-card-border);
   border-radius: 14px;
   background: var(--azad-card-bg);
   color: var(--azad-text-muted);
