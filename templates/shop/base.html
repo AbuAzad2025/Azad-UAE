@@ -19,7 +19,7 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" as="style">
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" as="style">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" integrity="sha384-Wn8XN5vULCukPAAEaxYTMow8YzD38hKD8JVzC1+o3+voPZxEdxS+m6qSBy2f5nR4" crossorigin="anonymous" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-palestine.css') }}">
    <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
   {% block extra_head %}{% endblock %}
