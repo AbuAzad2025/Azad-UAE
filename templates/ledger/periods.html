@@ -26,11 +26,11 @@
 
 
 
-    <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="{{ t('Year') }}" required></div>
+    <div class="col-md-2 mb-2"><label for="period_year" class="sr-only">{{ t('Year') }}</label><input type="number" name="year" id="period_year" class="form-control" placeholder="{{ t('Year') }}" required></div>
 
 
 
-    <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }}" required></div>
+    <div class="col-md-2 mb-2"><label for="period_month" class="sr-only">{{ t('Month') }}</label><input type="number" name="month" id="period_month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }}" required></div>
 
 
 
@@ -90,11 +90,11 @@
 
 
 
-        <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="{{ t('Year') }} ({{ t('Optional') }})"></div>
+        <div class="col-md-2 mb-2"><label for="depr_year" class="sr-only">{{ t('Year') }}</label><input type="number" name="year" id="depr_year" class="form-control" placeholder="{{ t('Year') }} ({{ t('Optional') }})"></div>
 
 
 
-        <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }} ({{ t('Optional') }})"></div>
+        <div class="col-md-2 mb-2"><label for="depr_month" class="sr-only">{{ t('Month') }}</label><input type="number" name="month" id="depr_month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }} ({{ t('Optional') }})"></div>
 
 
 

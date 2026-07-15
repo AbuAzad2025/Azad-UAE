@@ -40,7 +40,8 @@
               <td>{{ "%.2f"|format(p.margin) }} {{ tenant_currency_symbol }}</td>
               <td>{{ "%.1f"|format(p.margin_percent) }}%</td>
               <td>
-                <span class="badge badge-{{ 'success' if p.status == 'ممتاز' else 'info' if p.status == 'جيد' else 'warning' }}">
+                {% set badge_cls = 'success' if p.status == 'ممتاز' else 'info' if p.status == 'جيد' else 'warning' %}
+                <span class="badge badge-{{ badge_cls }}">
                   {{ p.status }}
                 </span>
               </td>

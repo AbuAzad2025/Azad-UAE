@@ -6,17 +6,12 @@ from itertools import cycle
 import sys
 from unittest.mock import MagicMock, patch
 
-# Python 3.11+ MagicMock creates AsyncMock child mocks that emit
-# "coroutine 'AsyncMockMixin._execute_mock_call' was never awaited"
-# when the mock is used in non-async contexts (e.g. if current_user.can_see_costs()).
 warnings.filterwarnings("ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited")
 
 import pytest
 from flask import Flask, make_response
+from flask_login import login_user, logout_user
 
-# Stub heavy optional deps before route package imports (pytest-cov loads routes early).
-# Prefer the genuinely-installed module so DataFrame-dependent code is exercised for real;
-# only fall back to a MagicMock when the dependency is actually missing.
 for _mod in ('numpy', 'pandas'):
     if _mod not in sys.modules:
         try:
@@ -24,15 +19,12 @@ for _mod in ('numpy', 'pandas'):
         except Exception:
             sys.modules[_mod] = MagicMock()
 
-# Python 3.14 + pytest-cov can import SQLAlchemy twice; tolerate duplicate inspect registration.
 try:
     import sqlalchemy.inspection as _sa_inspection
-
     _orig_inspects_factory = _sa_inspection._inspects
 
     def _safe_inspects(*types):
         _orig_decorator = _orig_inspects_factory(*types)
-
         def decorate(fn_or_cls):
             try:
                 return _orig_decorator(fn_or_cls)
@@ -40,126 +32,155 @@ try:
                 if "already registered" in str(exc):
                     return fn_or_cls
                 raise
-
         return decorate
 
     _sa_inspection._inspects = _safe_inspects
 except Exception:
     pass
-
-
 def pytest_configure(config):
-    """Pre-load SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
     if not config.pluginmanager.hasplugin('_cov'):
         return
     import importlib
-
     import sqlalchemy.orm.dependency as _dep
-
     if not hasattr(_dep, '_direction_to_processor'):
         importlib.reload(_dep)
-
-
-@pytest.fixture(autouse=True)
-def _sqlalchemy_app_context():
-    """Minimal Flask+SQLAlchemy context for model .query patches under --confcutdir."""
-    import os
-    db_uri = os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
-    app = Flask(__name__)
-    app.config.update(
-        TESTING=True,
-        SECRET_KEY="test-secret",
-        SQLALCHEMY_DATABASE_URI=db_uri,
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    )
-    try:
-        from extensions import db
-
-        db.init_app(app)
-    except Exception:
-        with app.app_context():
-            yield
-        return
-    with app.app_context():
-        yield
-
-
-@pytest.fixture
-def app_factory():
-    def _create_app(*blueprints, config_overrides=None):
-        import sys
-        import os
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        sys.path.insert(0, project_root)
-        from tests.conftest import TestConfig
-        from extensions import db
-        app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
-        app.config.from_object(TestConfig)
-        if config_overrides:
-            app.config.update(config_overrides)
-        db.init_app(app)
-
-        # Register t() translation function for templates
-        from utils.i18n import t
-        app.jinja_env.globals['t'] = t
-        # Register csrf_token as a no-op (WTF_CSRF_ENABLED=False in test config)
-        app.jinja_env.globals['csrf_token'] = lambda: ''
-        # Register current_user for templates (Flask-Login registers this via LoginManager.init_app)
-        from flask_login import current_user
-        app.jinja_env.globals['current_user'] = current_user
-
-        from routes.main import main_bp
-        for bp in blueprints:
-            if isinstance(bp, dict):
-                app.config.update(bp)
-                continue
+    from routes.cheques import cheques_bp
+    from routes.ledger import ledger_bp
+    from routes.reports import reports_bp
+    from routes.users import users_bp
+    from routes.tenants import tenants_bp
+    from routes.branches import branches_bp
+    from routes.suppliers import suppliers_bp
+    from routes.products import products_bp
+    from routes.warehouse import warehouse_bp
+    from routes.treasury import treasury_bp
+    from routes.payroll import payroll_bp
+    from routes.advanced_ledger import advanced_ledger_bp
+    from routes.admin_ledger import admin_ledger_bp
+    from routes.monitoring import monitoring_bp
+    from routes.api_docs import api_docs_bp
+    from routes.graphql import graphql_bp
+    from routes.api_analytics import api_analytics_bp
+    from routes.gamification import gamification_bp
+    from routes.ai_routes import ai_bp
+    from routes.whatsapp import whatsapp_bp
+    from routes.public import public_bp as public_pages_bp
+    from routes.owner_admin import owner_admin_bp as owner_control_bp
+    from routes.payment_vault import payment_vault_bp
+    from routes.shop import shop_bp
+    from routes.store import store_bp
+    from routes.language import language_bp
+    from routes.api import api_bp
+    from routes.crm import crm_bp
+    from routes.returns import returns_bp
+    from routes.projects import projects_bp
+    from routes.pos import pos_bp
+    from routes.printing import printing_bp
+    from routes.email_marketing import email_marketing_bp
+    from routes.partners import partners_bp
+    from routes.hr import hr_bp
+    from routes.tickets import tickets_bp
+    from routes.billing_webhooks import billing_webhook_bp as billing_webhooks_bp
+    from routes.api_enhanced import api_enhanced_bp
+    from routes.websocket import websocket_bp
+    
+    blueprints = [
+        auth_bp, customers_bp, sales_bp, purchases_bp, unified_inventory_bp,
+        payments_bp, expenses_bp, cheques_bp, ledger_bp, reports_bp,
+        users_bp, tenants_bp, branches_bp, suppliers_bp, products_bp,
+        warehouse_bp, treasury_bp, payroll_bp, advanced_ledger_bp,
+        admin_ledger_bp, monitoring_bp, api_docs_bp, graphql_bp,
+        api_analytics_bp, gamification_bp, ai_bp, whatsapp_bp,
+        public_pages_bp, owner_control_bp, payment_vault_bp, shop_bp,
+        store_bp, language_bp, api_bp, crm_bp, returns_bp, projects_bp,
+        pos_bp, printing_bp, email_marketing_bp, partners_bp, hr_bp,
+        tickets_bp, billing_webhooks_bp, api_enhanced_bp, websocket_bp
+    ]
+    
+    for bp in blueprints:
+        if bp and bp.name not in app.blueprints:
             app.register_blueprint(bp)
-        if 'main' not in app.blueprints:
-            app.register_blueprint(main_bp)
-        return app
-    return _create_app
 
-def _chain_query(**terminals):
-    q = MagicMock(name='query_chain')
-    q.return_value = q
-    for method in ('filter', 'filter_by', 'order_by', 'join', 'outerjoin', 'group_by', 'limit', 'offset'):
-        getattr(q, method).return_value = q
-    inner = q.filter.return_value
-    inner.first.return_value = terminals.get('first')
-    inner.scalar.return_value = terminals.get('scalar', 0)
-    inner.all.return_value = terminals.get('all', [])
-    inner.count.return_value = terminals.get('count', 0)
-    inner.exists.return_value.scalar.return_value = terminals.get('exists', True)
-    q.scalar.return_value = terminals.get('scalar', 0)
-    q.all.return_value = terminals.get('all', [])
-    pag = MagicMock(name='pagination')
-    pag.items = terminals.get('all', [])
-    pag.page = 1
-    pag.per_page = 20
-    pag.total = len(pag.items)
-    pag.pages = 1
-    q.order_by.return_value.paginate.return_value = pag
-    q.paginate.return_value = pag
-    return q
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
 
-
-def _anon_user():
-    user = MagicMock()
-    user.is_authenticated = False
+# ─── REAL AUTHENTICATION HELPERS ───
+def _create_test_user(db_session, tenant_id=1, username="testuser", email="test@example.com", 
+                       is_owner=False, is_admin=True, permissions=None):
+    """Create a real user in the test database."""
+    from models import User, Tenant, Role, Permission, Branch
+    
+    tenant = db_session.get(Tenant, tenant_id)
+    if not tenant:
+        tenant = Tenant(
+            id=tenant_id,
+            name=f"Test Tenant {tenant_id}",
+            name_ar="مستأجر اختبار",
+            slug=f"test-tenant-{tenant_id}",
+            email=f"tenant{tenant_id}@example.com",
+            country="AE",
+            subscription_plan="basic",
+            default_currency="AED",
+            base_currency="AED",
+        )
+        db_session.add(tenant)
+        db_session.flush()
+    
+    role = db_session.query(Role).filter_by(slug="super_admin" if is_admin else "manager").first()
+    if not role:
+        role = Role(name="Super Admin" if is_admin else "Manager", slug="super_admin" if is_admin else "manager", is_active=True)
+        db_session.add(role)
+        db_session.flush()
+    
+    # Default permissions for test users
+    default_perms = ['manage_customers', 'manage_sales', 'manage_purchases', 'manage_inventory', 
+                     'manage_payments', 'manage_expenses', 'view_reports', 'manage_products',
+                     'manage_warehouse', 'manage_suppliers', 'manage_branches', 'admin']
+    perm_codes = permissions if permissions else default_perms
+    
+    for perm_code in perm_codes:
+        perm = db_session.query(Permission).filter_by(code=perm_code).first()
+        if not perm:
+            perm = Permission(code=perm_code, name=perm_code, name_ar=perm_code, category="test")
+            db_session.add(perm)
+            db_session.flush()
+        # Check if permission is already assigned to role
+        if perm not in role.permissions:
+            role.permissions.append(perm)
+    
+    branch = db_session.query(Branch).filter_by(tenant_id=tenant_id, is_main=True).first()
+    if not branch:
+        branch = Branch(tenant_id=tenant_id, name="Main Branch", code="MAIN", is_active=True, is_main=True)
+        db_session.add(branch)
+        db_session.flush()
+    
+    user = User(
+        username=username,
+        email=email,
+        full_name="Test User",
+        tenant_id=tenant_id,
+        role_id=role.id,
+        branch_id=branch.id,
+        is_active=True,
+        is_owner=is_owner,
+    )
+    user.set_password("password123")
+    db_session.add(user)
+    db_session.flush()
     return user
 
+def login_user_via_client(client, username="testuser", password="password123"):
+    return client.post('/auth/login', data={
+        'username': username,
+        'password': password,
+    }, follow_redirects=True)
 
-@contextmanager
-def unauthenticated_client(client):
-    from flask import Response
-    login_manager = MagicMock()
-    login_manager.unauthorized.return_value = Response("unauthorized", status=401)
-    client.application.login_manager = login_manager
-    with client.application.app_context():
-        with patch("flask_login.utils._get_user", return_value=_anon_user()):
-            yield
+def logout_user_via_client(client):
+    return client.get('/auth/logout', follow_redirects=True)
 
-
+# Compatibility shims for older tests
 @pytest.fixture
 def mock_user():
     user = MagicMock()
@@ -177,33 +198,8 @@ def mock_user():
     user.is_super_admin.return_value = True
     user.is_seller.return_value = False
     user.can_see_costs.return_value = True
-    user.is_owner = False
-    role = MagicMock()
-    role.slug = "super_admin"
-    user.role = role
+    user.role.slug = "super_admin"
     return user
-
-
-@pytest.fixture
-def branch_manager_user(mock_user):
-    mock_user.branch_id = 2
-    mock_user.has_permission.return_value = True
-    role = MagicMock()
-    role.slug = "manager"
-    mock_user.role = role
-    mock_user.is_super_admin.return_value = False
-    return mock_user
-
-
-@pytest.fixture
-def tenant_owner_user(mock_user):
-    mock_user.is_owner = True
-    mock_user.tenant_id = 1
-    role = MagicMock()
-    role.slug = "super_admin"
-    mock_user.role = role
-    return mock_user
-
 
 def _base_auth_patches(mock_user, is_global_owner=True, is_admin_surface=True):
     return [
@@ -217,81 +213,38 @@ def _base_auth_patches(mock_user, is_global_owner=True, is_admin_surface=True):
         patch("services.logging_core.LoggingCore.log_audit"),
     ]
 
-
 @pytest.fixture
 def bypass_permission_auth(mock_user):
     patches = _base_auth_patches(mock_user) + [
         patch("utils.decorators.branch_scope_id", return_value=None),
         patch("utils.decorators.report_branch_scope_id", return_value=None),
     ]
-    for p in patches:
-        p.start()
+    for p in patches: p.start()
     yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
+    for p in reversed(patches): p.stop()
 
 @pytest.fixture
 def bypass_admin_auth(mock_user):
     patches = _base_auth_patches(mock_user)
-    for p in patches:
-        p.start()
+    for p in patches: p.start()
     yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
+    for p in reversed(patches): p.stop()
 
 @pytest.fixture
 def bypass_owner_auth(mock_user):
     mock_user.is_owner = True
     patches = _base_auth_patches(mock_user, is_global_owner=True, is_admin_surface=True)
-    for p in patches:
-        p.start()
+    for p in patches: p.start()
     yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
+    for p in reversed(patches): p.stop()
 
 @pytest.fixture
 def bypass_ai_access(mock_user):
     patches = [
         patch("flask_login.utils._get_user", return_value=mock_user),
         patch("routes.ai_routes.get_ai_access_state", return_value={
-            "allowed": True,
-            "global_enabled": True,
-            "tenant_enabled": True,
-            "tenant_id": 1,
-            "reason": None,
-            "is_platform_user": True,
-            "ai_level": "execute",
-        }),
-        # Also patch sub-module local imports that reference ai_routes namespace
-        patch("routes.ai_routes.chat.get_ai_access_state", return_value={
-            "allowed": True,
-            "global_enabled": True,
-            "tenant_enabled": True,
-            "tenant_id": 1,
-            "reason": None,
-            "is_platform_user": True,
-            "ai_level": "execute",
-        }),
-        patch("routes.ai_routes.shared.get_ai_access_state", return_value={
-            "allowed": True,
-            "global_enabled": True,
-            "tenant_enabled": True,
-            "tenant_id": 1,
-            "reason": None,
-            "is_platform_user": True,
-            "ai_level": "execute",
-        }),
-        patch("routes.ai_routes.assistant.get_ai_access_state", return_value={
-            "allowed": True,
-            "global_enabled": True,
-            "tenant_enabled": True,
-            "tenant_id": 1,
-            "reason": None,
-            "is_platform_user": True,
-            "ai_level": "execute",
+            "allowed": True, "global_enabled": True, "tenant_enabled": True,
+            "tenant_id": 1, "reason": None, "is_platform_user": True, "ai_level": "execute",
         }),
         patch("utils.auth_helpers.is_global_owner_user", return_value=True),
         patch("utils.decorators.is_global_owner_user", return_value=True),
@@ -299,227 +252,7 @@ def bypass_ai_access(mock_user):
         patch("extensions.limiter.limit", return_value=lambda f: f),
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("services.logging_core.LoggingCore.log_audit"),
-        patch("routes.ai_routes._get_conversation_context", return_value={}),
-        patch("routes.ai_routes._set_conversation_context"),
-        patch("routes.ai_routes._clear_conversation_context"),
-        # Sub-module level context patches (for shared.py local imports)
-        patch("routes.ai_routes.shared._get_conversation_context", return_value={}),
-        patch("routes.ai_routes.shared._set_conversation_context"),
-        patch("routes.ai_routes.shared._clear_conversation_context"),
     ]
-    for p in patches:
-        p.start()
+    for p in patches: p.start()
     yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
-
-@pytest.fixture
-def mock_ai_service():
-    patch_specs = [
-        ("recommend_price", patch("routes.ai_routes.AIService.recommend_price")),
-        ("check_stock_alert", patch("routes.ai_routes.AIService.check_stock_alert")),
-        ("analyze_customer_behavior", patch("routes.ai_routes.AIService.analyze_customer_behavior")),
-        ("chat_response", patch("routes.ai_routes.AIService.chat_response", return_value="mocked chat")),
-        ("get_exchange_rate_suggestion", patch("routes.ai_routes.AIService.get_exchange_rate_suggestion", return_value={"rate": 3.67})),
-        ("predict_sales_trend", patch("routes.ai_routes.AIService.predict_sales_trend", return_value={"forecast": []})),
-        ("analyze_profit_margins", patch("routes.ai_routes.AIService.analyze_profit_margins", return_value={"margins": []})),
-        ("detect_sales_patterns", patch("routes.ai_routes.AIService.detect_sales_patterns", return_value={"patterns": []})),
-        ("analyze_inventory_health", patch("routes.ai_routes.AIService.analyze_inventory_health", return_value={"health": "ok"})),
-        ("deep_business_analysis", patch("routes.ai_routes.AIService.deep_business_analysis", return_value={"analysis": "ok"})),
-        ("predict_cash_flow", patch("routes.ai_routes.AIService.predict_cash_flow", return_value={"flow": []})),
-        ("predict_customer_churn", patch("routes.ai_routes.AIService.predict_customer_churn", return_value={"churn": []})),
-        ("optimize_inventory_levels", patch("routes.ai_routes.AIService.optimize_inventory_levels", return_value={"tips": []})),
-        ("generate_business_insights", patch("routes.ai_routes.AIService.generate_business_insights", return_value=[])),
-        ("contextual_help", patch("routes.ai_routes.AIService.contextual_help", return_value={"help": "text"})),
-        ("smart_pricing_engine", patch("routes.ai_routes.AIService.smart_pricing_engine", return_value={"price": 99})),
-        ("ask_genius", patch("routes.ai_routes.AIService.ask_genius", return_value={"answer": "genius"})),
-        ("quick_calculate", patch("routes.ai_routes.AIService.quick_calculate", return_value={"success": True, "result": 42})),
-        ("understand_with_transformers", patch("routes.ai_routes.AIService.understand_with_transformers", return_value={"intent": "test"})),
-        ("get_neural_status", patch("routes.ai_routes.AIService.get_neural_status", return_value={"active": True})),
-    ]
-    with ExitStack() as stack:
-        mocks = {name: stack.enter_context(p) for name, p in patch_specs}
-        yield type("MockAIService", (), mocks)
-
-
-@pytest.fixture
-def ai_client(app_factory, bypass_ai_access):
-    from routes.ai_routes import ai_bp
-    app = app_factory(ai_bp)
-    from unittest.mock import MagicMock
-    stub = MagicMock(name="query_chain")
-    stub.return_value = stub
-    for method in (
-        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
-        "limit", "offset", "options", "select_from", "distinct", "having",
-    ):
-        getattr(stub, method).return_value = stub
-    stub.filter.return_value.scalar.return_value = 0
-    stub.filter.return_value.all.return_value = []
-    stub.filter.return_value.exists.return_value.scalar.return_value = False
-    stub.all.return_value = []
-    with patch("routes.ai_routes.db.session.query", return_value=stub), \
-         patch("routes.ai_routes.db.session.get", return_value=None), \
-         patch("routes.ai_routes.chat.db.session.query", return_value=stub), \
-         patch("routes.ai_routes.chat.db.session.get", return_value=None), \
-         patch("routes.ai_routes.chat.db.session.add"), \
-         patch("routes.ai_routes.chat.db.session.commit"):
-        yield app.test_client()
-
-
-@pytest.fixture
-def bypass_reports_auth(mock_user):
-    patches = [
-        patch("flask_login.utils._get_user", return_value=mock_user),
-        patch("utils.auth_helpers.is_global_owner_user", return_value=True),
-        patch("extensions.limiter.limit", return_value=lambda f: f),
-        patch("utils.tenanting.get_active_tenant_id", return_value=1),
-        patch("utils.tenanting.require_report_tenant_id"),
-        patch("utils.decorators.report_branch_scope_id", return_value=None),
-    ]
-    for p in patches:
-        p.start()
-    yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
-
-def _stub_query(**terminals):
-    from unittest.mock import MagicMock
-    q = MagicMock(name="query_chain")
-    q.return_value = q
-    for method in (
-        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
-        "limit", "offset", "options", "select_from", "distinct", "having",
-    ):
-        getattr(q, method).return_value = q
-    inner = q.filter.return_value
-    inner.first.return_value = terminals.get("first")
-    inner.scalar.return_value = terminals.get("scalar", 0)
-    inner.all.return_value = terminals.get("all", [])
-    inner.count.return_value = terminals.get("count", 0)
-    inner.exists.return_value.scalar.return_value = terminals.get("exists", False)
-    q.scalar.return_value = terminals.get("scalar", 0)
-    q.all.return_value = terminals.get("all", [])
-    return q
-
-
-@pytest.fixture
-def reports_client(app_factory, bypass_reports_auth):
-    from routes.reports import reports_bp
-    app = app_factory(reports_bp)
-    with patch("routes.reports.render_template", return_value="ok"), \
-         patch("routes.reports.db.session.query", return_value=_stub_query()), \
-         patch("routes.reports.tenant_query", return_value=_stub_query()):
-        yield app.test_client()
-
-
-@pytest.fixture
-def mock_store():
-    store = MagicMock()
-    store.id = 1
-    store.store_slug = "demo-store"
-    store.tenant_id = 1
-    store.name = "Demo Store"
-    store.is_active = True
-    store.is_enabled = True
-    store.min_order_amount = Decimal("0")
-    store.phone = "+971500000000"
-    store.whatsapp = "+971500000000"
-    store.brand_color_primary = "#1B7A4E"
-    store.brand_color_secondary = "#CE1126"
-    return store
-
-
-@pytest.fixture
-def bypass_shop_auth(mock_store):
-    tenant = MagicMock()
-    tenant.brand_color_primary = "#1B7A4E"
-    tenant.brand_color_secondary = "#CE1126"
-    tenant.is_active = True
-    tenant.is_suspended = False
-    patches = [
-        patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store),
-        patch("routes.shop.StoreService.stores_globally_enabled", return_value=True),
-        patch("routes.shop.StoreService.is_platform_locked", return_value=False),
-        patch("routes.shop.StoreService.get_cart", return_value={}),
-        patch("routes.shop.StoreService.save_cart"),
-        patch("routes.shop.StoreService.cart_totals", return_value={
-            "lines": [], "subtotal": Decimal("0"), "total": Decimal("0"), "tax": Decimal("0"),
-        }),
-        patch("routes.shop.StoreService.get_public_catalog", return_value={
-            "items": [], "total": 0, "pages": 1, "page": 1,
-        }),
-        patch("routes.shop.StoreService.online_stock_map", return_value={}),
-        patch("routes.shop.StoreService.get_recently_viewed_products", return_value=[]),
-        patch("routes.shop.StoreService.get_product_variants", return_value=[]),
-        patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None),
-        patch("routes.shop.ShopCustomerAuthService.login"),
-        patch("routes.shop.ShopCustomerAuthService.logout"),
-        patch("routes.shop.render_template", return_value="ok"),
-        patch("extensions.limiter.limit", return_value=lambda f: f),
-        patch("routes.shop.shop_lang", return_value="ar"),
-        patch("routes.shop.t", side_effect=lambda k, lang=None: k),
-        patch("routes.shop.db.session.get", return_value=tenant),
-        patch("routes.shop.db.session.add"),
-        patch("routes.shop.db.session.commit"),
-    ]
-    for p in patches:
-        p.start()
-    yield mock_store
-    for p in reversed(patches):
-        p.stop()
-
-
-@pytest.fixture
-def shop_client(app_factory, bypass_shop_auth):
-    from routes.shop import shop_bp
-    app = app_factory(shop_bp)
-    with app.test_client() as client:
-        with client.session_transaction() as sess:
-            sess["shop_lang_demo-store"] = "ar"
-        yield client
-
-
-
-@pytest.fixture
-def vault_owner_client(app_factory, bypass_owner_auth):
-    from routes.payment_vault import payment_vault_bp
-    app = app_factory(payment_vault_bp)
-    return app.test_client()
-
-@pytest.fixture
-def bypass_customers_auth(mock_user):
-    patches = [
-        patch("flask_login.utils._get_user", return_value=mock_user),
-        patch("utils.auth_helpers.is_global_owner_user", return_value=True),
-        patch("utils.decorators.is_global_owner_user", return_value=True),
-        patch("utils.decorators.is_admin_surface_user", return_value=True),
-        patch("extensions.limiter.limit", return_value=lambda f: f),
-        patch("utils.tenanting.get_active_tenant_id", return_value=1),
-        patch("utils.decorators.branch_scope_id", return_value=None),
-        patch("utils.decorators.report_branch_scope_id", return_value=None),
-        patch("routes.customers.LoggingCore.log_audit"),
-        # Short-circuit real template rendering (base.html uses many globals)
-        patch("routes.customers.render_template", return_value="ok"),
-        # Batch-patch internal functions to avoid MagicMock SQLAlchemy issues
-        patch("routes.customers._get_unpaid_sales", return_value=[]),
-        patch("routes.customers._customer_in_scope", return_value=True),
-        patch("routes.customers._get_customer_balance", return_value=Decimal("0")),
-        patch("routes.customers._scoped_customer_query"),
-        patch("routes.customers.tenant_get_or_404"),
-    ]
-    for p in patches:
-        p.start()
-    yield mock_user
-    for p in reversed(patches):
-        p.stop()
-
-
-@pytest.fixture
-def customers_client(app_factory, bypass_customers_auth):
-    from routes.customers import customers_bp
-    app = app_factory(customers_bp)
-    return app.test_client()
-
+    for p in reversed(patches): p.stop()

@@ -121,8 +121,8 @@
           <p>هل أنت متأكد من تعليق تينانت <strong>{{ tenant.name_ar or tenant.name }}</strong>؟</p>
           <p class="text-muted small">سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.</p>
           <div class="mb-3">
-            <label class="form-label fw-semibold">سبب التعليق (سيظهر للمستخدمين):</label>
-            <textarea name="reason" class="form-control" rows="3" placeholder="مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام..." required></textarea>
+            <label for="suspend_reason_{{ tenant.id }}" class="form-label fw-semibold">سبب التعليق (سيظهر للمستخدمين):</label>
+            <textarea name="reason" id="suspend_reason_{{ tenant.id }}" class="form-control" rows="3" placeholder="مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام..." required></textarea>
             <div class="form-text">هذا النص سيظهر للمستخدمين عند محاولتهم الدخول.</div>
           </div>
         </div>

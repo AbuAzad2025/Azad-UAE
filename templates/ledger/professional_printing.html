@@ -343,7 +343,8 @@
           <td><strong>{{ item.account.code }}</strong></td>
           <td>{{ item.account.full_name }}</td>
           <td>
-            <span class="badge badge-{{ 'success' if item.account.type == 'asset' else 'danger' if item.account.type == 'liability' else 'info' if item.account.type == 'equity' else 'warning' if item.account.type == 'revenue' else 'secondary' }}">
+            {% set badge_type = 'success' if item.account.type == 'asset' else ('danger' if item.account.type == 'liability' else ('info' if item.account.type == 'equity' else ('warning' if item.account.type == 'revenue' else 'secondary'))) %}
+            <span class="badge badge-{{ badge_type }}">
               {{ item.account.type_ar }}
             </span>
           </td>
@@ -353,8 +354,10 @@
           <td class="amount-{{ 'positive' if item.credit > 0 else 'zero' }}">
             {{ format_currency(item.credit) if item.credit > 0 else '-' }}
           </td>
-          <td class="amount-{{ 'positive' if item.account.get_balance() > 0 else 'negative' if item.account.get_balance() < 0 else 'zero' }}">
-            {{ format_currency(item.account.get_balance()) }}
+          {% set balance_val = item.account.get_balance() %}
+          {% set balance_cls = 'positive' if balance_val > 0 else ('negative' if balance_val < 0 else 'zero') %}
+          <td class="amount-{{ balance_cls }}">
+            {{ format_currency(balance_val) }}
           </td>
         </tr>
         {% endfor %}
@@ -442,7 +445,6 @@ function printPDF() {
   // {{ t('استخدام') }} jsPDF {{ t('for Create') }} PDF
   if (typeof jsPDF !== 'undefined') {
     const doc = new jsPDF('p', 'mm', 'a4');
-    const element = document.getElementById('printContent');
     
     // {{ t('Add') }} {{ t('النص') }}
     doc.setFontSize(20);

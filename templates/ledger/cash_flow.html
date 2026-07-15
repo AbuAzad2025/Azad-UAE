@@ -157,6 +157,7 @@
     </div>
   </div>
 </div>
+</div>
 
 
 <div class="card mt-4 no-print">
@@ -170,7 +171,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" integrity="sha384-9MhbyIRcBVQiiC7FSd7T38oJNj2Zh+EfxS7/vjhBi4OOT78NlHSnzM31EZRWR1LZ" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>
 const ctx = document.getElementById('cashFlowChart').getContext('2d');
 new Chart(ctx, {

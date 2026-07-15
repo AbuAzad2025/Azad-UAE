@@ -145,7 +145,8 @@
               <td>{{ user.email or '-' }}</td>
               <td>
                 {% if user.role %}
-                  <span class="badge badge-{{ 'danger' if user.role.name == 'Super Admin' else 'info' if user.role.name == 'Manager' else 'secondary' }}">
+                {% if user.role.name == 'Super Admin' %}{% set role_cls = 'danger' %}{% elif user.role.name == 'Manager' %}{% set role_cls = 'info' %}{% else %}{% set role_cls = 'secondary' %}{% endif %}
+                  <span class="badge badge-{{ role_cls }}">
                     {{ user.role.name }}
                   </span>
                 {% else %}

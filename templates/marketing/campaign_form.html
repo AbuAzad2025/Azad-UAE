@@ -7,11 +7,11 @@
     <div class="card-body">
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label>{{ t('Name') }}</label><input name="name" class="form-control" required></div>
+        <div class="form-group"><label for="campaign_name">{{ t('Name') }}</label><input name="name" id="campaign_name" class="form-control" required></div>
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label>{{ t('Menu') }} {{ t('البريدية') }}</label>
-              <select name="list_id" class="form-control">
+            <div class="form-group"><label for="campaign_list_id">{{ t('Menu') }} {{ t('البريدية') }}</label>
+              <select name="list_id" id="campaign_list_id" class="form-control">
                 <option value="">{{ t('اختر') }}</option>
                 {% for l in lists %}
                 <option value="{{ l.id }}">{{ l.name }}</option>
@@ -19,8 +19,8 @@
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>{{ t('القالب') }}</label>
-              <select name="template_id" class="form-control">
+            <div class="form-group"><label for="campaign_template_id">{{ t('القالب') }}</label>
+              <select name="template_id" id="campaign_template_id" class="form-control">
                 <option value="">{{ t('اختر') }}</option>
                 {% for t in templates %}
                 <option value="{{ t.id }}">{{ t.name }}</option>

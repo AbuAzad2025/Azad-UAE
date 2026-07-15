@@ -108,7 +108,8 @@
                 {% if trans.credit > 0 %}{{ format_currency(trans.credit) }}{% else %}-{% endif %}
               </td>
               <td class="text-center">
-                <strong class="{{ 'text-success' if trans.balance > 0 else 'text-danger' if trans.balance < 0 else '' }}">
+                {% set bal_cls = 'text-success' if trans.balance > 0 else ('text-danger' if trans.balance < 0 else '') %}
+                <strong class="{{ bal_cls }}">
                   {{ format_currency(trans.balance) }}
                 </strong>
               </td>
@@ -121,7 +122,8 @@
               <th class="text-center text-success">{{ format_currency(statement.total_debit) }}</th>
               <th class="text-center text-danger">{{ format_currency(statement.total_credit) }}</th>
               <th class="text-center">
-                <strong class="{{ 'text-success' if statement.closing_balance > 0 else 'text-danger' if statement.closing_balance < 0 else '' }}">
+                {% set close_bal_cls = 'text-success' if statement.closing_balance > 0 else ('text-danger' if statement.closing_balance < 0 else '') %}
+                <strong class="{{ close_bal_cls }}">
                   {{ format_currency(statement.closing_balance) }}
                 </strong>
               </th>

@@ -29,7 +29,8 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-3">
-          <div class="info-box bg-{{ 'success' if health.cpu.status == 'جيد' else 'warning' if health.cpu.status == 'تحذير' else 'danger' }}">
+          {% if health.cpu.status == 'جيد' %}{% set cpu_bg = 'success' %}{% elif health.cpu.status == 'تحذير' %}{% set cpu_bg = 'warning' %}{% else %}{% set cpu_bg = 'danger' %}{% endif %}
+          <div class="info-box bg-{{ cpu_bg }}">
             <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">استخدام المعالج</span>
@@ -42,7 +43,8 @@
         </div>
         
         <div class="col-md-3">
-          <div class="info-box bg-{{ 'success' if health.memory.status == 'جيد' else 'warning' if health.memory.status == 'تحذير' else 'danger' }}">
+          {% if health.memory.status == 'جيد' %}{% set mem_bg = 'success' %}{% elif health.memory.status == 'تحذير' %}{% set mem_bg = 'warning' %}{% else %}{% set mem_bg = 'danger' %}{% endif %}
+          <div class="info-box bg-{{ mem_bg }}">
             <span class="info-box-icon"><i class="fas fa-memory"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('الذاكرة') }}</span>
@@ -56,7 +58,8 @@
         </div>
         
         <div class="col-md-3">
-          <div class="info-box bg-{{ 'success' if health.disk.status == 'جيد' else 'warning' if health.disk.status == 'تحذير' else 'danger' }}">
+          {% if health.disk.status == 'جيد' %}{% set disk_bg = 'success' %}{% elif health.disk.status == 'تحذير' %}{% set disk_bg = 'warning' %}{% else %}{% set disk_bg = 'danger' %}{% endif %}
+          <div class="info-box bg-{{ disk_bg }}">
             <span class="info-box-icon"><i class="fas fa-hdd"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">القرص الصلب</span>
@@ -70,7 +73,8 @@
         </div>
         
         <div class="col-md-3">
-          <div class="info-box bg-{{ 'success' if health.database.status == 'جيد' else 'warning' if health.database.status == 'تحذير' else 'danger' }}">
+          {% if health.database.status == 'جيد' %}{% set db_bg = 'success' %}{% elif health.database.status == 'تحذير' %}{% set db_bg = 'warning' %}{% else %}{% set db_bg = 'danger' %}{% endif %}
+          <div class="info-box bg-{{ db_bg }}">
             <span class="info-box-icon"><i class="fas fa-database"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">قاعدة البيانات</span>

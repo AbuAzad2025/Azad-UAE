@@ -41,7 +41,8 @@
               <td>{{ "%.2f"|format(c.avg_sale) }} {{ tenant_currency_symbol }}</td>
               <td>{{ c.days_since_last }} {{ t('يوم') }}</td>
               <td>
-                <span class="badge badge-{{ 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' }}">
+                {% set badge_cls = 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' %}
+                <span class="badge badge-{{ badge_cls }}">
                   {{ c.status }}
                 </span>
               </td>

@@ -275,7 +275,7 @@
     {% endfor %}
   };
 
-  var modalEl = document.getElementById('errorDetailModal');
+  let modalEl = document.getElementById('errorDetailModal');
   if (!modalEl || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.modal) {
     console.error('Error audit modal requires Bootstrap 4 modal plugin.');
     return;
@@ -287,7 +287,7 @@
     document.body.appendChild(modalEl);
   }
 
-  var $modal = window.jQuery(modalEl);
+  let $modal = window.jQuery(modalEl);
 
   function esc(str) {
     var div = document.createElement('div');

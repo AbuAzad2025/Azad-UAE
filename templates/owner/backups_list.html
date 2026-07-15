@@ -167,12 +167,13 @@
           <div class="col-md-6 mb-3 mb-md-0">
             <form class="needs-validation" method="POST" action="{{ url_for('owner.backup_now') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-              <label class="font-weight-bold mb-2">
+              <label for="system_backup_desc" class="font-weight-bold mb-2">
                 <i class="fas fa-server text-danger mr-1"></i>
                 نسخة نظام كاملة (System)
               </label>
+              <label class="sr-only" for="system_backup_desc">{{ t('Description') }}</label>
               <div class="input-group">
-                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
+                <input type="text" name="description" id="system_backup_desc" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-danger" aria-label="إنشاء نسخة نظام كاملة">
                     <i class="fas fa-database mr-1"></i> System backup
@@ -218,8 +219,9 @@
                 <option value="{{ s.id }}">{{ s.store_slug }} (tenant {{ s.tenant_id }})</option>
                 {% endfor %}
               </select>
+              <label class="sr-only" for="scoped_backup_desc">{{ t('Description') }}</label>
               <div class="input-group">
-                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
+                <input type="text" name="description" id="scoped_backup_desc" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-success" aria-label="إنشاء نسخة احتياطية محددة النطاق">
                     <i class="fas fa-download mr-1"></i> إنشاء
@@ -453,8 +455,8 @@
                    placeholder="postgresql://user:pass@host:5432/new_db" required id="input_target_database_url">
           </div>
           <div class="form-group">
-            <label>اكتب للتأكيد: <code>RESTORE CONFIRM</code></label>
-            <input type="text" name="restore_confirm" class="form-control" required
+            <label for="restore_confirm_input">اكتب للتأكيد: <code>RESTORE CONFIRM</code></label>
+            <input type="text" name="restore_confirm" id="restore_confirm_input" class="form-control" required
                    placeholder="RESTORE CONFIRM">
           </div>
         </div>

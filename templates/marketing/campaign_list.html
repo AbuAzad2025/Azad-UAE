@@ -73,8 +73,8 @@
     <form method="POST" action="{{ url_for('email_marketing.create_list') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label>{{ t('Name') }}</label><input name="name" class="form-control" required></div>
-      <div class="form-group"><label>{{ t('Description') }}</label><textarea name="description" class="form-control"></textarea></div>
+      <div class="form-group"><label for="list_name">{{ t('Name') }}</label><input name="name" id="list_name" class="form-control" required></div>
+      <div class="form-group"><label for="list_description">{{ t('Description') }}</label><textarea name="description" id="list_description" class="form-control"></textarea></div>
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>
@@ -86,10 +86,10 @@
     <form method="POST" action="{{ url_for('email_marketing.create_template') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label>{{ t('Name') }}</label><input name="name" class="form-control" required></div>
-      <div class="form-group"><label>{{ t('الموضوع') }}</label><input name="subject" class="form-control" required></div>
-      <div class="form-group"><label>{{ t('Email_2') }} {{ t('المرسل') }}</label><input name="from_email" class="form-control" placeholder="noreply@example.com"></div>
-      <div class="form-group"><label>{{ t('محتوى') }} HTML</label><textarea name="body_html" class="form-control" rows="8" required></textarea></div>
+      <div class="form-group"><label for="tpl_name">{{ t('Name') }}</label><input name="name" id="tpl_name" class="form-control" required></div>
+      <div class="form-group"><label for="tpl_subject">{{ t('الموضوع') }}</label><input name="subject" id="tpl_subject" class="form-control" required></div>
+      <div class="form-group"><label for="tpl_from_email">{{ t('Email_2') }} {{ t('المرسل') }}</label><input name="from_email" id="tpl_from_email" class="form-control" placeholder="noreply@example.com"></div>
+      <div class="form-group"><label for="tpl_body_html">{{ t('محتوى') }} HTML</label><textarea name="body_html" id="tpl_body_html" class="form-control" rows="8" required></textarea></div>
     </div>
     <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>

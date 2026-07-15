@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}شركة أزاد للأنظمة الذكية - التكاملات والربط مع الأنظمة الخارجية{% endblock %}
 
@@ -63,37 +63,37 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="whatsapp_api_token">
                                         <i class="fas fa-key text-warning mr-1"></i>API Token / Access Key
                                     </label>
-                                    <input type="text" class="form-control" name="api_token" placeholder="أدخل API Token هنا" value="{{ integrations.whatsapp.config.api_token or '' }}">
+                                    <input type="text" class="form-control" name="api_token" id="whatsapp_api_token" placeholder="أدخل API Token هنا" value="{{ integrations.whatsapp.config.api_token or '' }}">
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="whatsapp_phone">
                                         <i class="fas fa-phone text-primary mr-1"></i>رقم WhatsApp Business
                                     </label>
-                                    <input type="text" class="form-control" name="phone_number" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}" pattern="^\+?[0-9\s\-]{8,20}$">
+                                    <input type="text" class="form-control" name="phone_number" id="whatsapp_phone" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}" pattern="^\+?[0-9\s\-]{8,20}$">
                                     <small class="form-text text-muted">
                                         📱 <strong>{{ t('مثال') }}</strong> +971501234567 (بالصيغة الدولية مع +)
                                     </small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="whatsapp_api_url">
                                         <i class="fas fa-server text-info mr-1"></i>API Endpoint URL
                                     </label>
-                                    <input type="text" class="form-control" name="api_url" placeholder="https://api.whatsapp.com/send" value="{{ integrations.whatsapp.config.api_url or '' }}">
+                                    <input type="text" class="form-control" name="api_url" id="whatsapp_api_url" placeholder="https://api.whatsapp.com/send" value="{{ integrations.whatsapp.config.api_url or '' }}">
                                     <small class="form-text text-muted">
                                         🌐 <strong>{{ t('مثال') }}</strong> https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json
                                     </small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="whatsapp_message_template">
                                         <i class="fas fa-comment-dots text-success mr-1"></i>قالب الرسالة الافتراضي
                                     </label>
-                                    <textarea class="form-control" name="message_template" rows="3" placeholder="مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!">{{ integrations.whatsapp.config.message_template or "مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!" }}</textarea>
+                                    <textarea class="form-control" name="message_template" id="whatsapp_message_template" rows="3" placeholder="مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!">{{ integrations.whatsapp.config.message_template or "مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!" }}</textarea>
                                     <small class="form-text text-muted">
                                         💬 <strong>{{ t('Available_Variables') }}</strong> {customer_name}, {invoice_number}, {amount}, {date}
                                     </small>
@@ -145,10 +145,10 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>
+                                            <label for="smtp_host">
                                                 <i class="fas fa-server text-primary mr-1"></i>SMTP Server
                                             </label>
-                                            <input type="text" class="form-control" name="smtp_host" placeholder="smtp.gmail.com" value="{{ integrations.email.config.smtp_host or '' }}">
+                                            <input type="text" class="form-control" name="smtp_host" id="smtp_host" placeholder="smtp.gmail.com" value="{{ integrations.email.config.smtp_host or '' }}">
                                             <small class="form-text text-muted">
                                                 🖥️ <strong>{{ t('أمثلة') }}</strong><br>
                                                 • Gmail: smtp.gmail.com<br>
@@ -160,10 +160,10 @@
                                     
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>
+                                            <label for="smtp_port">
                                                 <i class="fas fa-network-wired text-info mr-1"></i>SMTP Port
                                             </label>
-                                            <input type="number" class="form-control" name="smtp_port" placeholder="587" value="{{ integrations.email.config.smtp_port or '587' }}">
+                                            <input type="number" class="form-control" name="smtp_port" id="smtp_port" placeholder="587" value="{{ integrations.email.config.smtp_port or '587' }}">
                                             <small class="form-text text-muted">
                                                 🔌 <strong>{{ t('Default') }}</strong><br>
                                                 • TLS: 587<br>
@@ -176,10 +176,10 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>
+                                            <label for="smtp_user">
                                                 <i class="fas fa-user text-warning mr-1"></i>SMTP Username / Email
                                             </label>
-                                            <input type="email" class="form-control" name="smtp_user" placeholder="your-email@gmail.com" value="{{ integrations.email.config.smtp_user or '' }}">
+                                            <input type="email" class="form-control" name="smtp_user" id="smtp_user" placeholder="your-email@gmail.com" value="{{ integrations.email.config.smtp_user or '' }}">
                                             <small class="form-text text-muted">
                                                 📧 عادةً نفس البريد الإلكتروني الذي ترسل منه
                                             </small>
@@ -188,10 +188,10 @@
                                     
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>
+                                            <label for="smtp_password">
                                                 <i class="fas fa-lock text-danger mr-1"></i>SMTP Password / App Password
                                             </label>
-                                            <input type="password" class="form-control" name="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}" minlength="6">
+                                            <input type="password" class="form-control" name="smtp_password" id="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}" minlength="6">
                                             <small class="form-text text-muted">
                                                 🔐 <strong>Gmail:</strong> {{ t('استخدم') }}App Password (ليس كلمة المرور العادية)<br>
                                                 <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">إنشاء App Password</a>
@@ -216,12 +216,12 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="sender_name">
                                         <i class="fas fa-paper-plane text-info mr-1"></i>اسم المُرسل
                                     </label>
-                                    <input type="text" class="form-control" name="sender_name" placeholder="كراج الامارات" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
+                                    <input type="text" class="form-control" name="sender_name" id="sender_name" placeholder="كراج الامارات" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
                                     <small class="form-text text-muted">
-                                        ✉️ الاسم الذي سيظهر للمستلم (مثال: "كراج الامارات" <no-reply@garage.ae>)
+                                        ✉️ الاسم الذي سيظهر للمستلم (مثال: "كراج الامارات" &lt;no-reply&#64;garage.ae&gt;)
                                     </small>
                                 </div>
                                 
@@ -272,10 +272,10 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="redis_host">
                                         <i class="fas fa-server text-primary mr-1"></i>Redis Host
                                     </label>
-                                    <input type="text" class="form-control" name="redis_host" placeholder="localhost" value="{{ integrations.redis.config.redis_host or 'localhost' }}">
+                                    <input type="text" class="form-control" name="redis_host" id="redis_host" placeholder="localhost" value="{{ integrations.redis.config.redis_host or 'localhost' }}">
                                     <small class="form-text text-muted">
                                         🖥️ <strong>{{ t('Local') }}</strong> localhost أو 127.0.0.1<br>
                                         <strong>سحابي:</strong> redis-12345.c1.us-east-1.redislabs.com
@@ -283,19 +283,20 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="redis_port">
                                         <i class="fas fa-network-wired text-info mr-1"></i>Redis Port
                                     </label>
-                                    <input type="number" class="form-control" name="redis_port" placeholder="6379" value="{{ integrations.redis.config.redis_port or '6379' }}">
+                                    <input type="number" class="form-control" name="redis_port" id="redis_port" placeholder="6379" value="{{ integrations.redis.config.redis_port or '6379' }}">
                                     <small class="form-text text-muted">
                                         🔌 <strong>{{ t('Default') }}</strong> 6379
                                     </small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
-                                        <i class="fas fa-key text-warning mr-1"></i>Redis Password ({{ t('Optional') }}</label>
-                                    <input type="password" class="form-control" name="redis_password" placeholder="••••••••••" value="{{ integrations.redis.config.redis_password or '' }}" minlength="6">
+                                    <label for="redis_password">
+                                        <i class="fas fa-key text-warning mr-1"></i>Redis Password ({{ t('Optional') }})
+                                    </label>
+                                    <input type="password" class="form-control" name="redis_password" id="redis_password" placeholder="••••••••••" value="{{ integrations.redis.config.redis_password or '' }}" minlength="6">
                                     <small class="form-text text-muted">
                                         🔐 اتركه فارغاً إذا لم يكن Redis محمياً بكلمة مرور
                                     </small>
@@ -354,10 +355,10 @@
                                     </label>
                                     {% set provider = integrations.currency_api.config.api_provider or 'exchangerate' %}
                                     <select class="form-control" name="api_provider" aria-label="api provider">
-                                        <option value="exchangerate" {{ 'selected' if provider == 'exchangerate' }}>ExchangeRate-API ({{ t('Free') }}</option>
+                                        <option value="exchangerate" {{ 'selected' if provider == 'exchangerate' }}>ExchangeRate-API ({{ t('Free') }})</option>
                                         <option value="fixer" {{ 'selected' if provider == 'fixer' }}>Fixer.io</option>
                                         <option value="currencyapi" {{ 'selected' if provider == 'currencyapi' }}>CurrencyAPI</option>
-                                        <option value="custom" {{ 'selected' if provider == 'custom' }}>{{ t('مخصص') }}Custom)</option>
+                                        <option value="custom" {{ 'selected' if provider == 'custom' }}>{{ t('مخصص') }} (Custom)</option>
                                     </select>
                                     <small class="form-text text-muted">
                                         🌐 اختر مزود خدمة أسعار الصرف
@@ -365,10 +366,10 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>
+                                    <label for="currency_api_key">
                                         <i class="fas fa-key text-warning mr-1"></i>API Key
                                     </label>
-                                    <input type="text" class="form-control" name="api_key" placeholder="YOUR_API_KEY_HERE" value="{{ integrations.currency_api.config.api_key or '' }}">
+                                    <input type="text" class="form-control" name="api_key" id="currency_api_key" placeholder="YOUR_API_KEY_HERE" value="{{ integrations.currency_api.config.api_key or '' }}">
                                     <small class="form-text text-muted">
                                         🔑 <strong>احصل على API Key مجاناً:</strong><br>
                                         • <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">ExchangeRate-API</a> (1500 request/شهر مجاناً)<br>

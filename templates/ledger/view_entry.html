@@ -206,8 +206,8 @@
             <strong>{{ t('Warning') }}:</strong> {{ t('سيتم') }} {{ t('Create') }} {{ t('قيد') }} {{ t('New') }} {{ t('معاكس') }} {{ t('لهذا') }} {{ t('القيد') }}. هل أنت {{ t('متأكد_2') }}
           </div>
           <div class="form-group">
-            <label>{{ t('سبب') }} {{ t('العكس') }}:</label>
-            <textarea name="description" class="form-control" rows="3" 
+            <label for="reverse_reason">{{ t('سبب') }} {{ t('العكس') }}:</label>
+            <textarea name="description" id="reverse_reason" class="form-control" rows="3" 
                       placeholder="{{ t('Optional') }}: {{ t('اذكر') }} {{ t('سبب') }} {{ t('عكس') }} هذا {{ t('القيد') }}" maxlength="500"></textarea>
           </div>
         </div>

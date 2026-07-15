@@ -49,11 +49,11 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="company_name_ar">
                       <i class="fas fa-building text-primary"></i> اسم الشركة (عربي) 
                       <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" name="company_name_ar" 
+                    <input type="text" class="form-control" name="company_name_ar" id="company_name_ar" 
                            value="{{ settings.company_name_ar }}" required
                            placeholder="مثال: شركة أزاد للأنظمة الذكية" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
@@ -63,11 +63,11 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="company_name_en">
                       <i class="fas fa-building text-primary"></i> Company Name (English) 
                       <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" name="company_name_en" 
+                    <input type="text" class="form-control" name="company_name_en" id="company_name_en" 
                            value="{{ settings.company_name_en }}" required
                            placeholder="e.g: Azad Smart Systems" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
@@ -80,10 +80,10 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="address_ar">
                       <i class="fas fa-map-marker-alt text-success"></i> العنوان (عربي)
                     </label>
-                    <textarea class="form-control" name="address_ar" rows="2" 
+                    <textarea class="form-control" name="address_ar" id="address_ar" rows="2" 
                               placeholder="مثال: أبو ظبي - الإمارات العربية المتحدة" maxlength="255">{{ settings.address_ar }}</textarea>
                     <small class="form-text text-muted">
                       📍 عنوان الشركة الكامل بالعربية
@@ -92,10 +92,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="address_en">
                       <i class="fas fa-map-marker-alt text-success"></i> Address (English)
                     </label>
-                    <textarea class="form-control" name="address_en" rows="2"
+                    <textarea class="form-control" name="address_en" id="address_en" rows="2"
                               placeholder="e.g: Abu Dhabi - UAE" maxlength="255">{{ settings.address_en }}</textarea>
                     <small class="form-text text-muted">
                       📍 Complete company address in English
@@ -107,8 +107,8 @@
               <div class="row">
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label><i class="fas fa-phone text-info"></i> هاتف 1</label>
-                    <input type="text" class="form-control" name="phone_1" 
+                    <label for="phone_1"><i class="fas fa-phone text-info"></i> هاتف 1</label>
+                    <input type="text" class="form-control" name="phone_1" id="phone_1"
                            value="{{ settings.phone_1 }}"
                            placeholder="+971501234567" pattern="^\+?[0-9\s\-]{8,20}$">
                     <small class="form-text text-muted">
@@ -118,8 +118,8 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label><i class="fas fa-phone text-info"></i> هاتف 2</label>
-                    <input type="text" class="form-control" name="phone_2" 
+                    <label for="phone_2"><i class="fas fa-phone text-info"></i> هاتف 2</label>
+                    <input type="text" class="form-control" name="phone_2" id="phone_2"
                            value="{{ settings.phone_2 }}"
                            placeholder="+971501234568" pattern="^\+?[0-9\s\-]{8,20}$">
                     <small class="form-text text-muted">
@@ -129,8 +129,8 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label><i class="fas fa-envelope text-warning"></i> البريد</label>
-                    <input type="email" class="form-control" name="email" 
+                    <label for="email"><i class="fas fa-envelope text-warning"></i> البريد</label>
+                    <input type="email" class="form-control" name="email" id="email"
                            value="{{ settings.email }}"
                            placeholder="info@company.com">
                     <small class="form-text text-muted">
@@ -139,8 +139,8 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label><i class="fas fa-globe text-primary"></i> الموقع</label>
-                    <input type="text" class="form-control" name="website" 
+                    <label for="website"><i class="fas fa-globe text-primary"></i> الموقع</label>
+                    <input type="text" class="form-control" name="website" id="website"
                            value="{{ settings.website }}" 
                            placeholder="www.company.com">
                     <small class="form-text text-muted">
@@ -164,10 +164,10 @@
               <div class="row">
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label>
+                    <label for="tax_number">
                       <i class="fas fa-receipt text-danger"></i> الرقم الضريبي (TRN)
                     </label>
-                    <input type="text" class="form-control" name="tax_number" 
+                    <input type="text" class="form-control" name="tax_number" id="tax_number"
                            value="{{ settings.tax_number }}" placeholder="TRN-123456789" maxlength="20">
                     <small class="form-text text-muted">
                       📄 رقم التسجيل الضريبي - Tax Registration Number
@@ -176,10 +176,10 @@
                 </div>
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label>
+                    <label for="commercial_register">
                       <i class="fas fa-file-alt text-info"></i> السجل التجاري
                     </label>
-                    <input type="text" class="form-control" name="commercial_register" 
+                    <input type="text" class="form-control" name="commercial_register" id="commercial_register"
                            value="{{ settings.commercial_register }}"
                            placeholder="رقم السجل التجاري">
                     <small class="form-text text-muted">
@@ -189,10 +189,10 @@
                 </div>
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label>
+                    <label for="license_number">
                       <i class="fas fa-id-card text-success"></i> رقم الرخصة
                     </label>
-                    <input type="text" class="form-control" name="license_number" 
+                    <input type="text" class="form-control" name="license_number" id="license_number"
                            value="{{ settings.license_number }}"
                            placeholder="رقم الرخصة التجارية">
                     <small class="form-text text-muted">
@@ -216,10 +216,10 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="bank_name">
                       <i class="fas fa-university text-primary"></i> اسم البنك
                     </label>
-                    <input type="text" class="form-control" name="bank_name" 
+                    <input type="text" class="form-control" name="bank_name" id="bank_name"
                            value="{{ settings.bank_name }}"
                            placeholder="مثال: بنك الإمارات دبي الوطني" minlength="2" maxlength="100">
                     <small class="form-text text-muted">
@@ -229,10 +229,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="bank_account_number">
                       <i class="fas fa-hashtag text-info"></i> رقم الحساب
                     </label>
-                    <input type="text" class="form-control" name="bank_account_number" 
+                    <input type="text" class="form-control" name="bank_account_number" id="bank_account_number"
                            value="{{ settings.bank_account_number }}"
                            placeholder="123456789" maxlength="34">
                     <small class="form-text text-muted">
@@ -244,10 +244,10 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="iban">
                       <i class="fas fa-credit-card text-success"></i> IBAN
                     </label>
-                    <input type="text" class="form-control" name="iban" value="{{ settings.iban }}"
+                    <input type="text" class="form-control" name="iban" id="iban" value="{{ settings.iban }}"
                            placeholder="AE07 0331 2345 6789 0123 456" maxlength="34">
                     <small class="form-text text-muted">
                       💳 رقم الحساب البنكي الدولي - للتحويلات الدولية
@@ -256,10 +256,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>
+                    <label for="swift_code">
                       <i class="fas fa-code text-warning"></i> SWIFT Code
                     </label>
-                    <input type="text" class="form-control" name="swift_code" 
+                    <input type="text" class="form-control" name="swift_code" id="swift_code"
                            value="{{ settings.swift_code }}"
                            placeholder="EBILAEAD">
                     <small class="form-text text-muted">
@@ -278,20 +278,20 @@
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label>
+                <label for="payment_terms_ar">
                   <i class="fas fa-handshake text-primary"></i> شروط الدفع (عربي)
                 </label>
-                <textarea class="form-control" name="payment_terms_ar" rows="2" 
+                <textarea class="form-control" name="payment_terms_ar" id="payment_terms_ar" rows="2" 
                           placeholder="مثال: الدفع نقداً أو بالتحويل البنكي خلال 7 أيام">{{ settings.payment_terms_ar }}</textarea>
                 <small class="form-text text-muted">
                   📜 شروط الدفع التي ستظهر في ذيل الفاتورة
                 </small>
               </div>
               <div class="form-group">
-                <label>
+                <label for="payment_terms_en">
                   <i class="fas fa-handshake text-primary"></i> Payment Terms (English)
                 </label>
-                <textarea class="form-control" name="payment_terms_en" rows="2"
+                <textarea class="form-control" name="payment_terms_en" id="payment_terms_en" rows="2"
                           placeholder="e.g: Payment by cash or bank transfer within 7 days">{{ settings.payment_terms_en }}</textarea>
                 <small class="form-text text-muted">
                   📜 Payment terms for English invoices
@@ -301,20 +301,20 @@
               <hr class="my-4">
               
               <div class="form-group">
-                <label>
+                <label for="default_invoice_note_ar">
                   <i class="fas fa-sticky-note text-warning"></i> ملاحظة افتراضية للفواتير (عربي)
                 </label>
-                <textarea class="form-control" name="default_invoice_note_ar" rows="2"
+                <textarea class="form-control" name="default_invoice_note_ar" id="default_invoice_note_ar" rows="2"
                           placeholder="مثال: شكراً لتعاملكم معنا - نتطلع لخدمتكم مستقبلاً">{{ settings.default_invoice_note_ar }}</textarea>
                 <small class="form-text text-muted">
                   💬 ملاحظة اختيارية ستظهر تلقائياً في كل فاتورة جديدة
                 </small>
               </div>
               <div class="form-group">
-                <label>
+                <label for="default_receipt_note_ar">
                   <i class="fas fa-sticky-note text-success"></i> ملاحظة افتراضية لسندات القبض (عربي)
                 </label>
-                <textarea class="form-control" name="default_receipt_note_ar" rows="2"
+                <textarea class="form-control" name="default_receipt_note_ar" id="default_receipt_note_ar" rows="2"
                           placeholder="مثال: تم استلام المبلغ بالكامل - شكراً لكم">{{ settings.default_receipt_note_ar }}</textarea>
                 <small class="form-text text-muted">
                   💬 ملاحظة اختيارية ستظهر تلقائياً في كل سند قبض جديد
@@ -430,11 +430,11 @@
                 <small class="text-muted ml-4">نص خلفي شفاف يظهر خلف الفاتورة (مثل: نسخة أصلية، مدفوعة، الخ)</small>
               </div>
               
-              <div class="form-group" id="watermark-text-group" class="{% if settings.enable_watermark %}d-block{% else %}d-none{% endif %}">
-                <label>
+              <div class="form-group d{% if settings.enable_watermark %}-block{% else %}-none{% endif %}" id="watermark-text-group">
+                <label for="watermark_text">
                   <i class="fas fa-font text-warning"></i> نص العلامة المائية
                 </label>
-                <input type="text" class="form-control" name="watermark_text" 
+                <input type="text" class="form-control" name="watermark_text" id="watermark_text"
                        value="{{ settings.watermark_text }}"
                        placeholder="مثال: نسخة أصلية / ORIGINAL COPY / PAID">
                 <small class="form-text text-muted">
@@ -442,7 +442,7 @@
                 </small>
               </div>
               
-              <div class="form-group" id="watermark-image-group" class="{% if settings.enable_watermark %}d-block{% else %}d-none{% endif %}">
+              <div class="form-group d{% if settings.enable_watermark %}-block{% else %}-none{% endif %}" id="watermark-image-group">
                 <label>
                   <i class="fas fa-image text-warning"></i> أو رفع صورة للعلامة المائية (اختياري)
                 </label>

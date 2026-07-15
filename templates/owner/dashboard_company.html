@@ -166,7 +166,7 @@
 
         {% if logo_url %}
 
-        <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2 erp-logo-md"
+        <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2 erp-logo-md">
 
         {% endif %}
 
@@ -256,7 +256,7 @@
 
           <div class="col-md-3 mb-2">
 
-            <label class="d-block small">نسبة الضريبة (VAT)</label>
+            <label for="taxRateInput" class="d-block small">نسبة الضريبة (VAT)</label>
 
             <div class="input-group input-group-sm">
 
@@ -300,7 +300,7 @@
 
           <div class="col-md-3 mb-2">
 
-            <label class="d-block small">رابط الشعار</label>
+            <label for="logoUrlInput" class="d-block small">رابط الشعار</label>
 
             <div class="input-group input-group-sm">
 
@@ -356,7 +356,7 @@
 
 function updateTenantSetting(field, value) {
 
-  var btn = event && event.target ? $(event.target) : $('button:first');
+  let btn = event && event.target ? $(event.target) : $('button:first');
 
   btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
@@ -386,7 +386,7 @@ function updateTenantSetting(field, value) {
 
       if (field === 'prices_include_vat') {
 
-        var lbl = $('#pricesIncludeVatSwitch').next('label');
+        let lbl = $('#pricesIncludeVatSwitch').next('label');
 
         lbl.text($('#pricesIncludeVatSwitch').is(':checked') ? 'نعم' : 'لا');
 
@@ -404,7 +404,7 @@ function updateTenantSetting(field, value) {
 
   }).fail(function(xhr) {
 
-    var msg = 'خطأ في الاتصال';
+    let msg = 'خطأ في الاتصال';
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 
@@ -424,7 +424,7 @@ function updateTenantSetting(field, value) {
 
 function toggleWarehouseNegative() {
 
-  var btn = $('#warehouseNegSwitch');
+  let btn = $('#warehouseNegSwitch');
 
   $.ajax({
 
@@ -454,7 +454,7 @@ function toggleWarehouseNegative() {
 
   }).fail(function(xhr) {
 
-    var msg = 'خطأ';
+    let msg = 'خطأ';
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 

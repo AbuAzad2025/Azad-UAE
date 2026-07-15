@@ -88,7 +88,8 @@
 
               {% elif user.role %}
 
-                <span class="badge badge-{{ 'danger' if user.role.name == 'Super Admin' else 'info' if user.role.name == 'Manager' else 'secondary' }} badge-lg">
+                {% if user.role.name == 'Super Admin' %}{% set role_badge = 'danger' %}{% elif user.role.name == 'Manager' %}{% set role_badge = 'info' %}{% else %}{% set role_badge = 'secondary' %}{% endif %}
+                <span class="badge badge-{{ role_badge }} badge-lg">
 
                   {{ user.role.name }}
 
@@ -340,7 +341,8 @@
 
                   <td>
 
-                    <span class="badge badge-{{ 'success' if sale.status == 'confirmed' else 'warning' if sale.status == 'pending' else 'danger' }}">
+                    {% if sale.status == 'confirmed' %}{% set sale_badge = 'success' %}{% elif sale.status == 'pending' %}{% set sale_badge = 'warning' %}{% else %}{% set sale_badge = 'danger' %}{% endif %}
+                    <span class="badge badge-{{ sale_badge }}">
 
                       {{ sale.status }}
 
@@ -416,7 +418,8 @@
 
                     <td>
 
-                      <span class="badge badge-{{ 'success' if audit.action == 'create' else 'primary' if audit.action == 'update' else 'danger' }}">
+                      {% if audit.action == 'create' %}{% set audit_badge = 'success' %}{% elif audit.action == 'update' %}{% set audit_badge = 'primary' %}{% else %}{% set audit_badge = 'danger' %}{% endif %}
+                      <span class="badge badge-{{ audit_badge }}">
 
                         {{ audit.action }}
 

@@ -69,7 +69,7 @@
       border-left: 3px solid {{ settings.accent_color or '#3498db' }};
     }
     .info-item label { font-size: 9px; color: #7f8c8d; text-transform: uppercase; display: block; margin-bottom: 3px; }
-    .info-item value { font-size: 9px; font-weight: 600; color: #2c3e50; }
+    .info-item span { font-size: 9px; font-weight: 600; color: #2c3e50; }
     table { margin: 15px 0; }
     thead { background: {{ settings.header_color or '#2c3e50' }}; }
     th { padding: 8px; font-weight: 600; font-size: 8px; }
@@ -179,12 +179,12 @@
     <div class="info-grid">
       <div class="info-item">
         <label>{{ t('Customer') }}</label>
-        <value><strong>{{ sale.customer.name }}</strong></value>
+        <span><strong>{{ sale.customer.name }}</strong></span>
         {% if sale.customer.phone %}<br><small class="ic-2">{{ sale.customer.phone }}</small>{% endif %}
       </div>
       <div class="info-item">
         <label>{{ t('Date') }} / {{ t('User') }}</label>
-        <value>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</value>
+        <span>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</span>
         <br><small class="ic-2">{{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</small>
       </div>
     </div>

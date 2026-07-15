@@ -25,10 +25,12 @@
   extra_filters='',
 ) }}
 
+{% set subtitle = '{} — {}'.format(date_from or '...', date_to or '...') if date_from or date_to else '' %}
+{% set meta = company_name_ar if company_name_ar else '' %}
 {{ render_report_header(
   title=t('Trial Balance'),
-  subtitle='{} — {}'.format(date_from or '...', date_to or '...') if date_from or date_to else '',
-  meta=company_name_ar if company_name_ar else '',
+  subtitle=subtitle,
+  meta=meta,
 ) }}
 
 <div class="card">

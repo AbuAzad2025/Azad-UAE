@@ -42,15 +42,17 @@
       </div>
       <div class="card-footer">
         <nav>
+          {% set prev_page = page - 1 %}
+          {% set next_page = page + 1 %}
           <ul class="pagination pagination-sm m-0">{%- if page > 1 %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=page-1) }}">{{ t('السابق') }}</a>
+              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=prev_page) }}">{{ t('السابق') }}</a>
             </li>{%- endif %}
             <li class="page-item active">
               <span class="page-link">صفحة {{ page }} من {{ total_pages }}</span>
             </li>{%- if page < total_pages %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=page+1) }}">{{ t('التالي') }}</a>
+              <a class="page-link" href="{{ url_for('owner.browse_table', table_name=table_name, page=next_page) }}">{{ t('التالي') }}</a>
             </li>{%- endif %}
           </ul>
         </nav>
