@@ -21,16 +21,16 @@
     var amount = amountOverride || selectedAmount ||
       (document.getElementById('customAmount') ? document.getElementById('customAmount').value : '') ||
       (document.getElementById('cardAmount') ? document.getElementById('cardAmount').value : '') || '';
-    var packageLabel = selectedPackage || t('غير محددة بعد');
-    var orderRef = recordId ? ' ' + t('رقم المرجع') + ': #' + recordId + '.' : '';
+    var packageLabel = selectedPackage || t('not yet specified');
+    var orderRef = recordId ? ' ' + t('reference number') + ': #' + recordId + '.' : '';
 
     var messages = {
-      buy_code: t('مرحباً') + ' ' + cfg.brand + '، ' + t('أريد') + ' ' + t('Purchase') + ' ' + t('Code') + ' ' + t('المصدري') + ' ' + t('أو') + ' ' + t('تنفيذ') + ' ' + t('تخصيص') + ' ' + t('Specific_2') + ' ' + t('للنظام') + '.' + orderRef,
-      donation_help: t('مرحباً') + ' ' + cfg.brand + '، ' + t('أريد') + ' ' + t('التبرع') + ' ' + t('أو') + ' ' + t('رعاية') + ' ' + t('تطوير') + ' ' + t('ميزة') + ' ' + t('في') + ' ' + t('System') + '. ' + t('Amount') + ' ' + t('Expected') + ': ' + (amount || t('سأحدده معكم')) + ' ' + t('Dollar') + '.' + orderRef,
-      payment_help: t('مرحباً') + ' ' + cfg.brand + '، ' + t('أحتاج') + ' ' + t('مساعدة') + ' ' + t('في') + ' ' + t('إتمام') + ' ' + (currentTab === 'purchase' ? t('Purchase') + ' ' + t('System') : t('التبرع')) + '.' + orderRef,
-      refund_help: t('مرحباً') + ' ' + cfg.brand + '، ' + t('أريد') + ' ' + t('الاستفسار') + ' ' + t('عن') + ' ' + t('Status_2') + ' ' + t('Payment') + ' ' + t('أو') + ' ' + t('استرداد') + '.' + orderRef
+      buy_code: t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('Purchase') + ' ' + t('Source Code') + ' ' + t('or') + ' ' + t('implement') + ' ' + t('customization') + ' ' + t('Specific') + ' ' + t('for the system') + '.' + orderRef,
+      donation_help: t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('Donation') + ' ' + t('or') + ' ' + t('Sponsorship') + ' ' + t('development') + ' ' + t('feature') + ' ' + t('in') + ' ' + t('System') + '. ' + t('Amount') + ' ' + t('Expected') + ': ' + (amount || t('I will specify with you')) + ' ' + t('Dollar') + '.' + orderRef,
+      payment_help: t('Hello') + ' ' + cfg.brand + ', ' + t('I need') + ' ' + t('help') + ' ' + t('in') + ' ' + t('completing') + ' ' + (currentTab === 'purchase' ? t('Purchase') + ' ' + t('System') : t('Donation')) + '.' + orderRef,
+      refund_help: t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('inquiry') + ' ' + t('about') + ' ' + t('Status') + ' ' + t('Payment') + ' ' + t('or') + ' ' + t('refund') + '.' + orderRef
     };
-    messages.buy_system = t('مرحباً') + ' ' + cfg.brand + '، ' + t('أريد') + ' ' + t('Purchase') + ' ' + t('System') + (currentTab === 'purchase' ? ' ' + t('والباقة الحالية') + ': ' + packageLabel : '') + '. ' + t('Amount') + ' ' + t('Expected') + ': ' + (amount || t('سأحدده معكم')) + ' ' + t('Dollar') + '.' + orderRef;
+    messages.buy_system = t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('Purchase') + ' ' + t('System') + (currentTab === 'purchase' ? ' ' + t('current package') + ': ' + packageLabel : '') + '. ' + t('Amount') + ' ' + t('Expected') + ': ' + (amount || t('I will specify with you')) + ' ' + t('Dollar') + '.' + orderRef;
 
     return messages[kind] || messages.buy_system;
   }
@@ -38,14 +38,14 @@
   function buildSupportEmail(kind, amountOverride, recordId) {
     var message = buildSupportMessage(kind, amountOverride, recordId);
     var subjects = {
-      buy_system: t('طلب Purchase System'),
-      buy_code: t('طلب Purchase Code أو تخصيص'),
-      donation_help: t('استفسار تبرع أو رعاية'),
-      payment_help: t('مساعدة في إتمام Payment'),
-      refund_help: t('استفسار استرداد أو Status Payment')
+      buy_system: t('Purchase System Request'),
+      buy_code: t('Purchase Code or Customization Request'),
+      donation_help: t('Donation or Sponsorship Inquiry'),
+      payment_help: t('Help Completing Payment'),
+      refund_help: t('Refund or Payment Status Inquiry')
     };
-    var subject = (subjects[kind] || t('استفسار')) + ' - ' + cfg.brand;
-    var body = message + '\n\n' + t('بيانات التواصل') + ':\n' + t('واتساب') + ': ' + cfg.whatsappDisplay + '\n' + t('بريد') + ': ' + cfg.email;
+    var subject = (subjects[kind] || t('inquiry')) + ' - ' + cfg.brand;
+    var body = message + '\n\n' + t('Contact Information') + ':\n' + t('WhatsApp') + ': ' + cfg.whatsappDisplay + '\n' + t('Email') + ': ' + cfg.email;
     return { subject: subject, body: body };
   }
 
@@ -62,14 +62,14 @@
   function buildSupportStatusHtml(recordId, paymentAmount, label) {
     return '' +
       '<div class="sp-status-box">' +
-        '<p class="sp-status-box-label"><strong>' + t('Status الحالية') + ':</strong> ' + label + '</p>' +
-        '<p class="sp-status-box-label"><strong>' + t('المرجع') + ':</strong> #' + (recordId || '\u2014') + '</p>' +
+        '<p class="sp-status-box-label"><strong>' + t('Current Status') + ':</strong> ' + label + '</p>' +
+        '<p class="sp-status-box-label"><strong>' + t('Reference') + ':</strong> #' + (recordId || '\u2014') + '</p>' +
         '<p class="sp-status-box-value"><strong>' + t('Amount') + ':</strong> $' + (paymentAmount || '\u2014') + '</p>' +
       '</div>' +
       '<div class="sp-status-details">' +
-        '<div><i class="fas fa-check-circle sp-status-icon-success"></i> ' + t('عند النجاح ستصلك Details واضحة أو Address Payment مباشر') + '.</div>' +
-        '<div><i class="fas fa-hourglass-half sp-status-icon-warning"></i> ' + t('عند Review يدوية يمكنك المتابعة فوراً مع أزاد') + '.</div>' +
-        '<div><i class="fas fa-undo-alt sp-status-icon-info"></i> ' + t('لأي استرداد أو Reconciliation استخدم واتساب أو بريد الرسمي') + '.</div>' +
+        '<div><i class="fas fa-check-circle sp-status-icon-success"></i> ' + t('On success you will receive clear details or direct payment address') + '.</div>' +
+        '<div><i class="fas fa-hourglass-half sp-status-icon-warning"></i> ' + t('On manual review you can follow up immediately with Azad') + '.</div>' +
+        '<div><i class="fas fa-undo-alt sp-status-icon-info"></i> ' + t('For any refund or reconciliation use WhatsApp or official email') + '.</div>' +
       '</div>';
   }
 
@@ -87,17 +87,17 @@
         '<div class="sp-result-rtl">' +
           introHtml +
           '<div class="sp-result-bg">' +
-            '<p class="sp-status-box-label"><strong>' + t('التواصل الرسمي مع أزاد') + ':</strong></p>' +
+            '<p class="sp-status-box-label"><strong>' + t('Official contact with Azad') + ':</strong></p>' +
             '<p class="sp-status-box-label"><i class="fab fa-whatsapp sp-status-icon-success"></i> ' + cfg.whatsappDisplay + '</p>' +
             '<p class="sp-status-box-value"><i class="fas fa-envelope sp-text-primary"></i> ' + cfg.email + '</p>' +
           '</div>' +
         '</div>',
-      confirmButtonText: t('فتح واتساب أزاد'),
+      confirmButtonText: t('Open Azad WhatsApp'),
       confirmButtonColor: '#25D366',
       showDenyButton: true,
-      denyButtonText: t('إرسال بريد'),
+      denyButtonText: t('Send Email'),
       showCancelButton: true,
-      cancelButtonText: t('إغلاق')
+      cancelButtonText: t('Close')
     }).then(function (result) {
       if (result.isConfirmed) {
         window.openWhatsApp(kind, amountOverride, recordId);
@@ -210,14 +210,14 @@
     var result = await Swal.fire({
       title: title,
       html: '' +
-        '<input id="swal-name" class="swal2-input" placeholder="' + t('Name الكامل') + '">' +
-        '<input id="swal-email" class="swal2-input" placeholder="' + t('بريد إلكتروني') + '" type="email">' +
-        '<input id="swal-phone" class="swal2-input" placeholder="' + t('رقم Mobile') + '" type="tel">' +
-        '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? t('Name Company أو Note Additional (Optional)') : t('رسالة قصيرة (Optional)')) + '"></textarea>',
+        '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '">' +
+        '<input id="swal-email" class="swal2-input" placeholder="' + t('Email address') + '" type="email">' +
+        '<input id="swal-phone" class="swal2-input" placeholder="' + t('Mobile Number') + '" type="tel">' +
+        '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? t('Company name or additional note (optional)') : t('Short message (optional)')) + '"></textarea>',
       focusConfirm: false,
       showCancelButton: true,
       cancelButtonText: t('Cancel'),
-      confirmButtonText: t('متابعة'),
+      confirmButtonText: t('Continue'),
       preConfirm: function () {
         return {
           name: document.getElementById('swal-name').value.trim(),
@@ -229,7 +229,7 @@
     });
     if (!result.value) return null;
     if (currentTab === 'purchase' && (!result.value.name || !result.value.email)) {
-      Swal.fire({ icon: 'error', title: t('Error'), text: t('Name وبريد إلكتروني مطلوبان لشراء Plan'), confirmButtonColor: '#667eea' });
+      Swal.fire({ icon: 'error', title: t('Error'), text: t('Name and email required to purchase plan'), confirmButtonColor: '#667eea' });
       return null;
     }
     return result.value;
@@ -239,12 +239,12 @@
     var customAmount = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
     var paymentAmount = customAmount || selectedAmount;
     if (!paymentAmount || paymentAmount < 15) {
-      Swal.fire({ icon: 'error', title: t('Error'), text: t('الحد الأدنى للتبرع هو') + ' $15', confirmButtonColor: '#667eea' });
+      Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation amount is') + ' $15', confirmButtonColor: '#667eea' });
       return;
     }
     var cryptoType = document.getElementById('cryptoType') ? document.getElementById('cryptoType').value : 'btc';
 
-    Swal.fire({ title: t('جاري إنشاء Address Payment...'), html: '<i class="fas fa-spinner fa-spin fa-3x"></i>', showConfirmButton: false, allowOutsideClick: false });
+    Swal.fire({ title: t('Creating payment address...'), html: '<i class="fas fa-spinner fa-spin fa-3x"></i>', showConfirmButton: false, allowOutsideClick: false });
 
     var apiEndpoint = '';
     var requestData = {};
@@ -252,17 +252,17 @@
     if (currentTab === 'purchase') {
       if (!selectedPackage) {
         Swal.close();
-        Swal.fire({ icon: 'warning', title: t('Alert'), text: t('الرجاء اختيار باقة أولاً'), confirmButtonColor: '#667eea' });
+        Swal.fire({ icon: 'warning', title: t('Alert'), text: t('Please select a package first'), confirmButtonColor: '#667eea' });
         return;
       }
       var pcard = document.querySelector('.sp-package-card.active');
       var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
       if (!packageId) {
         Swal.close();
-        Swal.fire({ icon: 'error', title: t('Error'), text: t('لم يتم التعرف على Plan المحددة'), confirmButtonColor: '#667eea' });
+        Swal.fire({ icon: 'error', title: t('Error'), text: t('Selected plan not recognized'), confirmButtonColor: '#667eea' });
         return;
       }
-      var fv = await collectSupportContactData(t('بيانات شراء Plan'));
+      var fv = await collectSupportContactData(t('Plan Purchase Details'));
       if (!fv) { Swal.close(); return; }
       apiEndpoint = '/payment-vault/api/purchase';
       requestData = {
@@ -279,7 +279,7 @@
         payment_details: { crypto_type: cryptoType, amount: paymentAmount }
       };
     } else {
-      var fv2 = await collectSupportContactData(t('بيانات التبرع'));
+      var fv2 = await collectSupportContactData(t('Donation Details'));
       if (!fv2) { Swal.close(); return; }
       apiEndpoint = '/payment-vault/api/donation';
       requestData = {
@@ -304,35 +304,35 @@
       Swal.close();
       if (data.success) {
         var recordId = data.purchase_id || data.donation_id;
-        var recordType = data.purchase_id ? t('Purchase') : t('تبرع');
+        var recordType = data.purchase_id ? t('Purchase') : t('Donation');
         var payBtn = data.payment_url
-          ? '<a href="' + data.payment_url + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2"><i class="fas fa-external-link-alt"></i> ' + t('فتح صفحة Payment') + '</a>'
+          ? '<a href="' + data.payment_url + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2"><i class="fas fa-external-link-alt"></i> ' + t('Open Payment Page') + '</a>'
           : '';
         if (data.payment_address) {
           Swal.fire({
             icon: 'success',
-            title: t('تم إنشاء') + ' ' + recordType + ' ' + t('بنجاح'),
+            title: t('Created') + ' ' + recordType + ' ' + t('successfully'),
             html: '' +
               '<div class="sp-result-center">' +
                 '<p class="sp-result-title">' + data.message + '</p>' +
                 '<div class="sp-result-box">' +
-                  '<p><strong>' + t('رقم الطلب') + ':</strong> #' + recordId + '</p>' +
-                  '<p><strong>' + t('Amount المطلوب') + ':</strong> ' + (data.payment_amount || paymentAmount) + ' ' + (data.crypto_currency || cryptoType.toUpperCase()) + '</p>' +
+                  '<p><strong>' + t('Order Number') + ':</strong> #' + recordId + '</p>' +
+                  '<p><strong>' + t('Required Amount') + ':</strong> ' + (data.payment_amount || paymentAmount) + ' ' + (data.crypto_currency || cryptoType.toUpperCase()) + '</p>' +
                   '<hr>' +
-                  '<p><strong>' + t('Address Payment') + ':</strong></p>' +
+                  '<p><strong>' + t('Payment Address') + ':</strong></p>' +
                   '<p class="sp-result-address">' + data.payment_address + '</p>' +
-                  '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-outline-primary mt-2"><i class="fas fa-copy"></i> ' + t('نسخ Address') + '</button>' +
+                  '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-outline-primary mt-2"><i class="fas fa-copy"></i> ' + t('Copy Address') + '</button>' +
                   payBtn +
                 '</div>' +
-                '<p class="sp-result-hint"><i class="fas fa-info-circle"></i> ' + t('أرسل Amount إلى Address أعلاه وسيتم Confirm Status تلقائياً') + '.</p>' +
-                buildSupportStatusHtml(recordId, paymentAmount, t('بانتظار تحويلك إلى Address Payment')) +
+                '<p class="sp-result-hint"><i class="fas fa-info-circle"></i> ' + t('Send the amount to the address above and the status will be confirmed automatically') + '.</p>' +
+                buildSupportStatusHtml(recordId, paymentAmount, t('Waiting for your transfer to payment address')) +
               '</div>',
-            confirmButtonText: t('تم، سأدفع الآن'),
+            confirmButtonText: t('Done, I will pay now'),
             confirmButtonColor: '#28a745',
             showDenyButton: true,
-            denyButtonText: t('واتساب أزاد'),
+            denyButtonText: t('Azad WhatsApp'),
             showCancelButton: true,
-            cancelButtonText: t('راسلنا ببريد'),
+            cancelButtonText: t('Email us'),
             width: 650,
             allowOutsideClick: false
           }).then(function (r) {
@@ -342,21 +342,21 @@
         } else {
           Swal.fire({
             icon: 'success',
-            title: t('تم حفظ الطلب بنجاح'),
+            title: t('Order saved successfully'),
             html: '' +
               '<div class="sp-result-center">' +
                 '<p class="sp-result-amount">' + data.message + '</p>' +
                 '<div class="sp-result-box">' +
-                  '<p><strong>' + t('رقم الطلب') + ':</strong> #' + recordId + '</p>' +
+                  '<p><strong>' + t('Order Number') + ':</strong> #' + recordId + '</p>' +
                   '<p><strong>' + t('Amount') + ':</strong> $' + paymentAmount + '</p>' +
-                  '<p><strong>' + t('طريقة Payment') + ':</strong> ' + (data.payment_method_display || cryptoType.toUpperCase()) + '</p>' +
+                  '<p><strong>' + t('Payment Method') + ':</strong> ' + (data.payment_method_display || cryptoType.toUpperCase()) + '</p>' +
                 '</div>' +
-                buildSupportStatusHtml(recordId, paymentAmount, t('تم تسجيل الطلب بانتظار المتابعة أو التأكيد')) +
+                buildSupportStatusHtml(recordId, paymentAmount, t('Order registered pending follow-up or confirmation')) +
               '</div>',
-            confirmButtonText: t('واتساب أزاد'),
+            confirmButtonText: t('Azad WhatsApp'),
             confirmButtonColor: '#28a745',
             showDenyButton: true,
-            denyButtonText: t('راسلنا ببريد'),
+            denyButtonText: t('Email us'),
             allowOutsideClick: false
           }).then(function (r) {
             if (r.isConfirmed) window.openWhatsApp('payment_help', paymentAmount, recordId);
@@ -365,8 +365,8 @@
         }
       } else {
         showSupportAssistanceModal(
-          t('تعذر إنشاء الطلب'),
-          '<p>' + escapeHtml(data.error || t('حدث Error أثناء إنشاء الطلب')) + '.</p><p>' + t('يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع Company أزاد') + '.</p>',
+          t('Could not create order'),
+          '<p>' + escapeHtml(data.error || t('Error occurred while creating the order')) + '.</p><p>' + t('You can retry or complete the process directly with Azad Company') + '.</p>',
           'payment_help', paymentAmount
         );
       }
@@ -374,8 +374,8 @@
     .catch(function () {
       Swal.close();
       showSupportAssistanceModal(
-        t('تعذر الاتصال بالخادم'),
-        '<p>' + t('لم نتمكن من إنشاء') + ' ' + (currentTab === 'purchase' ? t('طلب شراء') : t('طلب تبرع')) + ' ' + t('الآن') + '.</p><p>' + t('يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ') + ': <strong>$' + paymentAmount + '</strong>.</p>',
+        t('Could not connect to server'),
+        '<p>' + t('We could not create') + ' ' + (currentTab === 'purchase' ? t('Purchase order') : t('Donation order')) + ' ' + t('now') + '.</p><p>' + t('You can follow up directly with Azad via WhatsApp or email for the same amount') + ': <strong>$' + paymentAmount + '</strong>.</p>',
         'payment_help', paymentAmount
       );
     });
@@ -385,7 +385,7 @@
   function copyAddress() {
     var addr = document.getElementById('walletAddress').textContent;
     navigator.clipboard.writeText(addr).then(function () {
-      Swal.fire({ icon: 'success', title: t('تم النسخ!'), text: t('تم نسخ Address إلى الحافظة'), timer: 2000, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: t('Copied!'), text: t('Address copied to clipboard'), timer: 2000, showConfirmButton: false });
     });
   }
   window.copyAddress = copyAddress;
@@ -394,20 +394,20 @@
     var ca = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
     var paymentAmount = ca || selectedAmount || 0;
     if (!paymentAmount || paymentAmount < 15) {
-      Swal.fire({ icon: 'error', title: t('Error'), text: t('الحد الأدنى للتبرع') + ' $15', confirmButtonColor: '#667eea' });
+      Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation') + ' $15', confirmButtonColor: '#667eea' });
       return;
     }
     var r = await Swal.fire({
-      title: t('بيانات Payment') + ' - PayPal',
+      title: t('Payment Details') + ' - PayPal',
       html: '' +
-        '<input id="swal-name" class="swal2-input" placeholder="' + t('Name الكامل') + '" required>' +
-        '<input id="swal-email" class="swal2-input" placeholder="' + t('بريد إلكتروني') + '" type="email" required>' +
-        '<input id="swal-phone" class="swal2-input" placeholder="' + t('رقم Mobile') + '" type="tel">' +
-        (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="' + t('Name Company') + ' (' + t('Optional') + ')">' : ''),
+        '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '" required>' +
+        '<input id="swal-email" class="swal2-input" placeholder="' + t('Email address') + '" type="email" required>' +
+        '<input id="swal-phone" class="swal2-input" placeholder="' + t('Mobile Number') + '" type="tel">' +
+        (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="' + t('Company Name') + ' (' + t('Optional') + ')">' : ''),
       focusConfirm: false,
       showCancelButton: true,
       cancelButtonText: t('Cancel'),
-      confirmButtonText: t('متابعة'),
+      confirmButtonText: t('Continue'),
       preConfirm: function () {
         return {
           name: document.getElementById('swal-name').value,
@@ -425,7 +425,7 @@
       var pcard = document.querySelector('.sp-package-card.active');
       var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
       if (!packageId) {
-        Swal.fire({ icon: 'error', title: t('Error'), text: t('الرجاء اختيار باقة') });
+        Swal.fire({ icon: 'error', title: t('Error'), text: t('Please select a package') });
         return;
       }
       requestData = {
@@ -456,26 +456,26 @@
         if (data.payment_address) {
           Swal.fire({
             icon: 'success',
-            title: t('بيانات Payment'),
+            title: t('Payment Details'),
             html: '' +
               '<div class="sp-result-center">' +
-                '<p class="sp-result-title"><i class="fab fa-paypal sp-result-paypal-icon"></i> <strong>' + t('Payment عبر PayPal') + '</strong></p>' +
-                '<p>' + t('رقم الطلب') + ': #' + (data.purchase_id || data.donation_id) + '</p>' +
+                '<p class="sp-result-title"><i class="fab fa-paypal sp-result-paypal-icon"></i> <strong>' + t('Payment via PayPal') + '</strong></p>' +
+                '<p>' + t('Order Number') + ': #' + (data.purchase_id || data.donation_id) + '</p>' +
                 '<div class="sp-result-box">' +
                   '<p><strong>' + t('Amount') + ':</strong> $' + paymentAmount + '</p>' +
-                  '<p class="sp-result-contact"><i class="fas fa-exchange-alt"></i> ' + t('يتم التحويل تلقائياً إلى Bitcoin') + '</p><hr>' +
+                  '<p class="sp-result-contact"><i class="fas fa-exchange-alt"></i> ' + t('Transfer is automatically sent to Bitcoin') + '</p><hr>' +
                   '<p class="sp-result-wallet">' + data.payment_address + '</p>' +
-                  '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-primary"><i class="fas fa-copy"></i> ' + t('نسخ') + '</button>' +
+                  '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-primary"><i class="fas fa-copy"></i> ' + t('Copy') + '</button>' +
                 '</div>' +
-                '<p class="sp-result-confirmed">\u2705 ' + t('تم حفظ طلبك بنجاح') + '</p>' +
-                buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('قيد انتظار إتمام Payment أو التواصل')) +
+                '<p class="sp-result-confirmed">\u2705 ' + t('Your order has been saved successfully') + '</p>' +
+                buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('Pending payment completion or contact')) +
               '</div>',
-            confirmButtonText: t('متابعة Payment'),
+            confirmButtonText: t('Follow up Payment'),
             confirmButtonColor: '#0070ba',
             showDenyButton: true,
-            denyButtonText: t('واتساب أزاد'),
+            denyButtonText: t('Azad WhatsApp'),
             showCancelButton: true,
-            cancelButtonText: t('راسلنا ببريد'),
+            cancelButtonText: t('Email us'),
             width: 600
           }).then(function (r2) {
             var rid = data.purchase_id || data.donation_id;
@@ -485,14 +485,14 @@
         } else {
           Swal.fire({
             icon: 'success',
-            title: t('تم حفظ الطلب'),
+            title: t('Order saved'),
             html: '' +
-              buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('بانتظار التنسيق مع فريق أزاد')) +
-              '<p class="sp-result-actions">' + t('يمكنك الآن اختيار واتساب أو بريد لإكمال Payment أو الاستفسار') + '.</p>',
-            confirmButtonText: t('واتساب أزاد'),
+              buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('Pending coordination with Azad team')) +
+              '<p class="sp-result-actions">' + t('You can now choose WhatsApp or email to complete payment or inquire') + '.</p>',
+            confirmButtonText: t('Azad WhatsApp'),
             confirmButtonColor: '#25D366',
             showDenyButton: true,
-            denyButtonText: t('راسلنا ببريد')
+            denyButtonText: t('Email us')
           }).then(function (r2) {
             var rid = data.purchase_id || data.donation_id;
             if (r2.isConfirmed) window.openWhatsApp('payment_help', paymentAmount, rid);
@@ -500,10 +500,10 @@
           });
         }
       } else {
-        showSupportAssistanceModal(t('تعذر إكمال طلب PayPal'), '<p>' + escapeHtml(data.error || t('تعذر حفظ طلب PayPal حالياً')) + '.</p><p>' + t('يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد') + '.</p>', 'payment_help', paymentAmount);
+        showSupportAssistanceModal(t('Could not complete PayPal order'), '<p>' + escapeHtml(data.error || t('Could not save PayPal order currently')) + '.</p><p>' + t('You can follow up directly with Azad via WhatsApp or email') + '.</p>', 'payment_help', paymentAmount);
       }
     } catch (e) {
-      showSupportAssistanceModal(t('فشل الاتصال أثناء PayPal'), '<p>' + t('تعذر التواصل مع الخادم أثناء تجهيز الطلب') + '.</p><p>' + t('استخدم واتساب أو بريد لإتمام الشراء أو التبرع بنفس التفاصيل') + '.</p>', 'payment_help', paymentAmount);
+      showSupportAssistanceModal(t('Connection failed during PayPal'), '<p>' + t('Could not connect to server while preparing the order') + '.</p><p>' + t('Use WhatsApp or email to complete the purchase or donation with the same details') + '.</p>', 'payment_help', paymentAmount);
     }
   }
   window.handlePayPalPayment = handlePayPalPayment;
@@ -529,20 +529,20 @@
         var ci = document.getElementById('cardAmount');
         var paymentAmount = parseFloat(ci ? ci.value : '') || selectedAmount || 0;
         if (!paymentAmount || paymentAmount < 15) {
-          Swal.fire({ icon: 'error', title: t('Error'), text: t('الحد الأدنى للتبرع') + ' $15', confirmButtonColor: '#667eea' });
+          Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation') + ' $15', confirmButtonColor: '#667eea' });
           return;
         }
         var r = await Swal.fire({
-          title: t('بيانات Payment'),
+          title: t('Payment Details'),
           html: '' +
-            '<input id="swal-name" class="swal2-input" placeholder="' + t('Name الكامل') + '" required>' +
-            '<input id="swal-email" class="swal2-input" placeholder="' + t('بريد إلكتروني') + '" type="email" required>' +
-            '<input id="swal-phone" class="swal2-input" placeholder="' + t('رقم Mobile') + '" type="tel">' +
-            (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="' + t('Name Company') + ' (' + t('Optional') + ')">' : ''),
+            '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '" required>' +
+            '<input id="swal-email" class="swal2-input" placeholder="' + t('Email address') + '" type="email" required>' +
+            '<input id="swal-phone" class="swal2-input" placeholder="' + t('Mobile Number') + '" type="tel">' +
+            (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="' + t('Company Name') + ' (' + t('Optional') + ')">' : ''),
           focusConfirm: false,
           showCancelButton: true,
           cancelButtonText: t('Cancel'),
-          confirmButtonText: t('متابعة'),
+          confirmButtonText: t('Continue'),
           preConfirm: function () {
             return {
               name: document.getElementById('swal-name').value,
@@ -560,7 +560,7 @@
           var pcard = document.querySelector('.sp-package-card.active');
           var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
           if (!packageId) {
-            Swal.fire({ icon: 'error', title: t('Error'), text: t('الرجاء اختيار باقة') });
+            Swal.fire({ icon: 'error', title: t('Error'), text: t('Please select a package') });
             return;
           }
           requestData = {
@@ -591,26 +591,26 @@
             if (data.payment_address) {
               Swal.fire({
                 icon: 'success',
-                title: t('تم إنشاء Address Payment!'),
+                title: t('Payment address created!'),
                 html: '' +
                   '<div class="sp-result-center">' +
-                    '<p class="sp-result-amount"><strong>' + t('رقم الطلب') + ': #' + (data.purchase_id || data.donation_id) + '</strong></p>' +
+                    '<p class="sp-result-amount"><strong>' + t('Order Number') + ': #' + (data.purchase_id || data.donation_id) + '</strong></p>' +
                     '<div class="sp-result-box">' +
-                      '<p><strong>' + t('Amount المطلوب') + ':</strong></p>' +
+                      '<p><strong>' + t('Required Amount') + ':</strong></p>' +
                       '<p class="sp-result-cta">' + (data.payment_amount || paymentAmount) + ' ' + (data.crypto_currency || 'BTC') + '</p><hr>' +
-                      '<p><strong>' + t('Address المحفوظة') + ':</strong></p>' +
+                      '<p><strong>' + t('Saved Address') + ':</strong></p>' +
                       '<p class="sp-result-mono">' + data.payment_address + '</p>' +
-                      '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-primary mt-2"><i class="fas fa-copy"></i> ' + t('نسخ Address') + '</button>' +
+                      '<button onclick="navigator.clipboard.writeText(\'' + data.payment_address + '\')" class="btn btn-primary mt-2"><i class="fas fa-copy"></i> ' + t('Copy Address') + '</button>' +
                     '</div>' +
-                    '<p class="sp-result-highlight"><i class="fas fa-check-circle"></i> ' + t('أرسل Amount المحدد إلى Address أعلاه') + '</p>' +
-                    buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('بانتظار إتمام Payment أو المتابعة مع أزاد')) +
+                    '<p class="sp-result-highlight"><i class="fas fa-check-circle"></i> ' + t('Send the specified amount to the address above') + '</p>' +
+                    buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('Pending payment completion or follow-up with Azad')) +
                   '</div>',
-                confirmButtonText: t('متابعة Payment'),
+                confirmButtonText: t('Follow up Payment'),
                 confirmButtonColor: '#28a745',
                 showDenyButton: true,
-                denyButtonText: t('واتساب أزاد'),
+                denyButtonText: t('Azad WhatsApp'),
                 showCancelButton: true,
-                cancelButtonText: t('راسلنا ببريد'),
+                cancelButtonText: t('Email us'),
                 width: 600,
                 allowOutsideClick: false
               }).then(function (r2) {
@@ -621,14 +621,14 @@
             } else {
               Swal.fire({
                 icon: 'success',
-                title: t('تم حفظ الطلب'),
+                title: t('Order saved'),
                 html: '' +
-                  buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('تم تسجيل الطلب بانتظار التأكيد أو متابعة يدوية')) +
-                  '<p class="sp-result-actions">' + t('يمكنك المتابعة مباشرة مع Company أزاد عبر واتساب أو بريد') + '.</p>',
-                confirmButtonText: t('واتساب أزاد'),
+                  buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, t('Order registered pending confirmation or manual follow-up')) +
+                  '<p class="sp-result-actions">' + t('You can follow up directly with Azad Company via WhatsApp or email') + '.</p>',
+                confirmButtonText: t('Azad WhatsApp'),
                 confirmButtonColor: '#25D366',
                 showDenyButton: true,
-                denyButtonText: t('راسلنا ببريد')
+                denyButtonText: t('Email us')
               }).then(function (r2) {
                 var rid = data.purchase_id || data.donation_id;
                 if (r2.isConfirmed) window.openWhatsApp('payment_help', paymentAmount, rid);
@@ -636,10 +636,10 @@
               });
             }
           } else {
-            showSupportAssistanceModal(t('تعذر تجهيز طلب Card'), '<p>' + escapeHtml(data.error || t('تعذر حفظ طلب Card حالياً')) + '.</p><p>' + t('يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو بريد') + '.</p>', 'payment_help', paymentAmount);
+            showSupportAssistanceModal(t('Could not prepare card order'), '<p>' + escapeHtml(data.error || t('Could not save card order currently')) + '.</p><p>' + t('You can complete the process directly with Azad via WhatsApp or email') + '.</p>', 'payment_help', paymentAmount);
           }
         } catch (e) {
-          showSupportAssistanceModal(t('فشل الاتصال أثناء Payment'), '<p>' + t('تعذر الوصول إلى الخادم أثناء معالجة الطلب') + '.</p><p>' + t('لا تقلق، يمكنك المتابعة الآن مباشرة مع Company أزاد') + '.</p>', 'payment_help', paymentAmount);
+          showSupportAssistanceModal(t('Connection failed during payment'), '<p>' + t('Could not reach server while processing the order') + '.</p><p>' + t("Don't worry, you can follow up directly with Azad Company") + '.</p>', 'payment_help', paymentAmount);
         }
       });
     }
