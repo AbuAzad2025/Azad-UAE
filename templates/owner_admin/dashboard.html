@@ -242,8 +242,8 @@
                     <input type="hidden" name="tenant_id" id="modalTenantId">
 
                     <div class="form-group">
-                        <label style="font-weight:600;font-size:0.85rem;">Package</label>
-                        <select name="package_id" class="form-control" required>
+                        <label for="package_id" style="font-weight:600;font-size:0.85rem;">Package</label>
+                        <select name="package_id" id="package_id" class="form-control" required>
                             {% for pkg in packages %}
                             <option value="{{ pkg.id }}">
                                 {{ pkg.icon }} {{ pkg.name_en }} — ${{ pkg.price }}/{{ pkg.currency }}
@@ -253,8 +253,8 @@
                     </div>
 
                     <div class="form-group" style="margin-bottom:0;">
-                        <label style="font-weight:600;font-size:0.85rem;">Duration</label>
-                        <select name="duration_type" class="form-control" required>
+                        <label for="duration_type" style="font-weight:600;font-size:0.85rem;">Duration</label>
+                        <select name="duration_type" id="duration_type" class="form-control" required>
                             <option value="monthly">Monthly (30 days)</option>
                             <option value="yearly">Yearly (365 days)</option>
                             <option value="lifetime">Lifetime (no expiry)</option>
@@ -276,8 +276,8 @@
 <script>
 $(function() {
     $('#activateModal').on('show.bs.modal', function(event) {
-        var btn = $(event.relatedTarget);
-        $('#modalTenantId').val(btn.data('tenant-id'));
+      let btn = $(event.relatedTarget);
+      $('#modalTenantId').val(btn.data('tenant-id'));
         $('#modalTenantName').text(btn.data('tenant-name'));
     });
 });
