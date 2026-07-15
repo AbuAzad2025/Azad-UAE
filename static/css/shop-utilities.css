@@ -72,12 +72,12 @@
 .ps-cart-drawer {
   position: fixed; top: 0; bottom: 0; z-index: 9999;
   width: 380px; max-width: 90vw;
-  background: var(--ps-cream); border-{{ 'left' if not is_rtl else 'left' if not is_rtl is undefined else 'right' }}: 1px solid var(--ps-border);
+  background: var(--ps-cream); border-inline-start: 1px solid var(--ps-border);
   box-shadow: -8px 0 32px rgba(0,0,0,0.12);
   display: flex; flex-direction: column;
-  transform: translateX({{ '100%' if not is_rtl else '-100%' }});
+  transform: translateX(100%);
   transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
-  {{ 'right' if not is_rtl else 'left' }}: 0;
+  right: 0;
 }
 html[dir="rtl"] .ps-cart-drawer {
   right: auto; left: 0;
@@ -164,7 +164,7 @@ html[dir="rtl"] .ps-cart-drawer {
 .ps-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ps-price { font-size: 1.1rem; font-weight: 800; color: var(--ps-green-dark); }
 .ps-stock-badge {
-  position: absolute; top: 10px; {{ 'right' if not is_rtl else 'left' }}: 10px;
+  position: absolute; top: 10px; inset-inline-end: 10px;
   padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
   z-index: 2; backdrop-filter: blur(8px);
 }
