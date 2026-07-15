@@ -18,7 +18,6 @@
             <img
               src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}"
               data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
-              onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}"
               alt="{{ _developer_title }}"
               loading="lazy"
               class="erp-footer-logo"
@@ -55,3 +54,8 @@
       </div>
     </div>
   </footer>
+  <script>
+  document.querySelectorAll('.erp-footer-logo[data-fallback]').forEach(function(img){
+    img.addEventListener('error',function(){if(this.dataset.fallback){this.src=this.dataset.fallback;}});
+  });
+  </script>
