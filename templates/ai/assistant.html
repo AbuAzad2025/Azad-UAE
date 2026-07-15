@@ -162,7 +162,7 @@
     <div class="bot-message">
       <div class="d-flex align-items-start">
         <div class="ml-3">
-<div class="avatar-circle erp-avatar-gradient"
+<div class="avatar-circle erp-avatar-gradient">
             <i class="fas fa-robot text-white fa-2x"></i>
           </div>
         </div>
@@ -209,7 +209,7 @@
     </div>
 
     <div class="input-group">
-      <input type="text" id="userMessage" class="form-control" placeholder="{{ t('اكتب') }} {{ t('سؤالك') }} أو {{ t('أمراً') }}..." autocomplete="off">
+      <input type="text" id="userMessage" class="form-control" placeholder="{{ t('اكتب') }} {{ t('سؤالك') }} أو {{ t('أمراً') }}..." autocomplete="off" aria-label="{{ t('Message') }} {{ t('Input') }}">
       <div class="input-group-append">
         <button class="btn btn-primary" id="sendBtn">
           <i class="fas fa-paper-plane ml-1"></i>{{ t('Submit') }}
@@ -256,19 +256,19 @@
 
 {% block extra_js %}
 <script>
-var chatHistory = [];
-var currentDialect = 'palestinian';
-var beginnersMode = false;
+  let chatHistory = [];
+  let currentDialect = 'palestinian';
+  let beginnersMode = false;
 
-function addMessage(sender, text, isBot) {
+  function addMessage(sender, text, isBot) {
   chatHistory.push({role: isBot ? 'bot' : 'user', content: text, timestamp: new Date()});
-  var cls = isBot ? 'bot-message' : 'user-message';
-  var avatar = isBot
-    ? '<div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div>'
-    : '<div class="avatar-circle" style="background:linear-gradient(135deg,#007A3D,#1B4D89)"><i class="fas fa-user text-white fa-2x"></i></div>';
-  var name = isBot ? '{{ t('Assistant') }} {{ t('Smart') }}' : '{{ current_user.username }}' || 'أنت';
-  var align = isBot ? 'ml-3' : 'mr-3';
-  $('#chatBox').append(
+    let cls = isBot ? 'bot-message' : 'user-message';
+    let avatar = isBot
+      ? '<div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div>'
+      : '<div class="avatar-circle" style="background:linear-gradient(135deg,#007A3D,#1B4D89)"><i class="fas fa-user text-white fa-2x"></i></div>';
+    let name = isBot ? '{{ t('Assistant') }} {{ t('Smart') }}' : '{{ current_user.username }}' || 'أنت';
+    let align = isBot ? 'ml-3' : 'mr-3';
+    $('#chatBox').append(
     '<div class="' + cls + '"><div class="d-flex align-items-start">' +
     (isBot ? avatar : '') +
     '<div class="' + align + '"><strong class="' + (isBot ? 'text-primary' : 'text-success') + '">' + name + '</strong>' +
@@ -297,7 +297,7 @@ $(document).ready(function() {
 });
 
 function sendMessage() {
-  var msg = $('#userMessage').val().trim();
+  let msg = $('#userMessage').val().trim();
   if (!msg) return;
   addMessage('user', msg, false);
   $('#userMessage').val('');
@@ -326,7 +326,9 @@ window.clearChat = function() {
 
 window.getSummary = function() {
   if (chatHistory.length === 0) { addMessage('bot', '📝 لا {{ t('توجد') }} {{ t('محادثة') }} بعد.', true); return; }
-  var q = chatHistory.filter(function(m) { return m.role === 'user'; }).length;
+  let q = chatHistory.filter(function (m) {
+    return m.role === 'user';
+  }).length;
   addMessage('bot', '📊 **{{ t('Summary') }} {{ t('المحادثة_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('الردود') }}: ' + chatHistory.filter(function(m) { return m.role === 'bot'; }).length, true);
 };
 
@@ -341,7 +343,11 @@ window.setDialect = function(d) {
   currentDialect = d;
   $('.btn-group .btn').removeClass('active');
   $('#' + d + 'Btn').addClass('active');
-  var msgs = {formal: '📖 {{ t('Language') }}: {{ t('فصحى') }}', palestinian: '🇵🇸 {{ t('اللهجة') }}: {{ t('Palestinian') }}', gulf: '🏝️ {{ t('اللهجة') }}: {{ t('Gulf') }}'};
+  let msgs = {
+    formal: '📖 {{ t('Language') }}: {{ t('فصحى') }}',
+    palestinian: '🇵🇸 {{ t('اللهجة') }}: {{ t('Palestinian') }}',
+    gulf: '🏝️ {{ t('اللهجة') }}: {{ t('Gulf') }}'
+  };
   addMessage('bot', msgs[d], true);
 };
 
@@ -363,8 +369,8 @@ window.switchAIMode = function(mode) {
   }
 };
 
-var savedMode = localStorage.getItem('ai_mode') || 'groq';
-switchAIMode(savedMode);
+  let savedMode = localStorage.getItem('ai_mode') || 'groq';
+  switchAIMode(savedMode);
 
 // Excel Upload
 function showExcelUploader() { $('#excelUploaderModal').css('display', 'flex'); }

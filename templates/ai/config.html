@@ -60,7 +60,7 @@
 
           <div class="form-group">
 
-            <label><i class="fas fa-key"></i> {{ t('مفتاح') }} Groq {{ t('New_2') }}</label>
+            <label for="groq_key"><i class="fas fa-key"></i> {{ t('مفتاح') }} Groq {{ t('New_2') }}</label>
 
             <div class="input-group">
 
@@ -160,7 +160,7 @@
 
           <div class="form-group">
 
-            <label><i class="fas fa-key"></i> {{ t('مفتاح') }} API</label>
+            <label for="other_key"><i class="fas fa-key"></i> {{ t('مفتاح') }} API</label>
 
             <div class="input-group">
 
@@ -514,7 +514,7 @@ $(document).ready(function() {
 
       },
 
-      error: function(xhr) {
+      error: function() {
 
         submitBtn.prop('disabled', false).html(originalText);
 
