@@ -25,14 +25,14 @@
     <form class="needs-validation row" method="GET" action="">
       <div class="col-md-4">
         <div class="form-group">
-          <label for="input_date_from">من {{ t('History') }}:</label>
-          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}" id="input_date_from" aria-label="من {{ t('History') }}">
+          <label for="input_date_from">{{ t('From Date') }}:</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}" id="input_date_from" aria-label="{{ t('From Date') }}">
         </div>
       </div>
       <div class="col-md-4">
         <div class="form-group">
-          <label for="input_date_to">إلى {{ t('History') }}:</label>
-          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}" id="input_date_to" aria-label="إلى {{ t('History') }}">
+          <label for="input_date_to">{{ t('To Date') }}:</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}" id="input_date_to" aria-label="{{ t('To Date') }}">
         </div>
       </div>
       <div class="col-md-4">
@@ -55,7 +55,7 @@
     </h3>
     <div class="card-tools">
       <small class="text-white">
-        من {{ date_from.strftime('%Y-%m-%d') }} إلى {{ date_to.strftime('%Y-%m-%d') }}
+        {{ t('From') }} {{ date_from.strftime('%Y-%m-%d') }} {{ t('To') }} {{ date_to.strftime('%Y-%m-%d') }}
       </small>
     </div>
   </div>
@@ -192,7 +192,7 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-percentage mr-2"></i>{{ t('نسب') }} {{ t('الأداء') }}
+          <i class="fas fa-percentage mr-2"></i>{{ t('Performance Ratios') }}
         </h5>
       </div>
       <div class="card-body">
@@ -206,7 +206,7 @@
                   -
                 {% endif %}
               </h5>
-              <p class="mb-0">{{ t('Rate') }} {{ t('Expenses') }} {{ t('للإيرادات') }}</p>
+              <p class="mb-0">{{ t('Expense Ratio to Revenue') }}</p>
             </div>
           </div>
           <div class="col-md-4">
@@ -218,7 +218,7 @@
                   -
                 {% endif %}
               </h5>
-              <p class="mb-0">{{ t('Margin') }} {{ t('Profit') }}</p>
+              <p class="mb-0">{{ t('Profit Margin') }}</p>
             </div>
           </div>
           <div class="col-md-4">
@@ -230,7 +230,7 @@
                   -
                 {% endif %}
               </h5>
-              <p class="mb-0">{{ t('Rate') }} {{ t('Revenue') }} {{ t('Expenses_3') }}</p>
+              <p class="mb-0">{{ t('Revenue to Expenses Ratio') }}</p>
             </div>
           </div>
         </div>
@@ -248,11 +248,11 @@
   </div>
   <div class="card-body">
     <ul class="mb-0">
-      <li>{{ t('List') }} {{ t('Income_2') }} {{ t('تعرض') }} {{ t('الأداء') }} {{ t('المالي') }} {{ t('للشركة') }} خلال {{ t('Period') }} {{ t('محددة') }}</li>
-      <li>{{ t('Revenue') }} {{ t('تظهر') }} {{ t('كقيم') }} {{ t('موجبة') }} ({{ t('دائنة') }})</li>
-      <li>{{ t('Expenses') }} {{ t('تظهر') }} {{ t('كقيم') }} {{ t('سالبة') }} ({{ t('مدينة') }})</li>
-      <li>{{ t('Net') }} {{ t('Income_2') }} = {{ t('Revenue') }} - {{ t('Expenses') }}</li>
-      <li>{{ t('Net') }} {{ t('Income_2') }} {{ t('الموجب') }} {{ t('يعني') }} {{ t('ربح،') }} {{ t('والسالب') }} {{ t('يعني') }} {{ t('Loss') }}</li>
+      <li>{{ t('Income statement shows financial performance during a specific period') }}</li>
+      <li>{{ t('Revenue appears as positive values (credit)') }}</li>
+      <li>{{ t('Expenses appear as negative values (debit)') }}</li>
+      <li>{{ t('Net Income = Revenue - Expenses') }}</li>
+      <li>{{ t('Positive net income means profit, negative means loss') }}</li>
     </ul>
   </div>
 </div>
