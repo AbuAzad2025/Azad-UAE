@@ -53,6 +53,7 @@ class ReasoningEngine:
             }
         """
         try:
+            context = context or {}
             # 1. فهم المشكلة
             problem_type, key_elements = self._analyze_problem(problem, context)
             
@@ -602,7 +603,7 @@ class ReasoningEngine:
         - الفرص والتهديدات
         - خطط النمو
         """
-        analysis = {
+        analysis: dict[str, Any] = {
             'question': business_question,
             'swot': {},
             'recommendations': [],

@@ -84,21 +84,6 @@ def _category_json(category):
     }
 
 
-def _tenant_category_or_404(category_id):
-    """Load an active product category scoped to the active tenant."""
-    tid = get_active_tenant_id(current_user)
-    if not tid:
-        abort(404)
-    category = ProductCategory.query.filter_by(
-        id=int(category_id),
-        tenant_id=int(tid),
-        is_active=True,
-    ).first()
-    if not category:
-        abort(404)
-    return category
-
-
 def _category_name_conflict(tenant_id, name, exclude_id=None):
     q = ProductCategory.query.filter(
         ProductCategory.tenant_id == tenant_id,

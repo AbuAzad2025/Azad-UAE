@@ -511,7 +511,7 @@ def write_data_directory(
         if t not in order:
             order.append(t)
 
-    meta = {
+    meta: Dict[str, Any] = {
         "backup_version": BACKUP_VERSION,
         "scope": scope,
         "tenant_id": tenant_id,

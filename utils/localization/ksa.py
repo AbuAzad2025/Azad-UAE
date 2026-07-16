@@ -21,7 +21,7 @@ class KSAStrategy(LocalizationStrategy):
     supports_qr = True
     zatca_phase = 2
 
-    def _resolve_vat_rate(self, sale=None, tax_rate: Decimal = None) -> Decimal:
+    def _resolve_vat_rate(self, sale=None, tax_rate: Decimal | None = None) -> Decimal:
         coerced = coerce_decimal(tax_rate)
         if coerced is not None:
             return coerced
@@ -49,7 +49,7 @@ class KSAStrategy(LocalizationStrategy):
         tax = (total - net).quantize(_TWO_PLACES, rounding=ROUND_HALF_UP)
         return net, tax
 
-    def calculate_tax(self, amount: Decimal, tax_rate: Decimal = None) -> dict:
+    def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         rate = self._resolve_vat_rate(tax_rate=tax_rate)
         amount = Decimal(str(amount))
         if rate <= 0:

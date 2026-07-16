@@ -56,7 +56,7 @@ class ShopCustomerAuthService:
         return digits
 
     @staticmethod
-    def register(tenant_id: int, name: str, email: str, phone: str, password: str, address: str = None) -> ShopCustomerAccount:
+    def register(tenant_id: int, name: str, email: str, phone: str, password: str, address: str | None = None) -> ShopCustomerAccount:
         tenant_id = int(tenant_id)
         name = (name or '').strip()
         if len(name) < 2:

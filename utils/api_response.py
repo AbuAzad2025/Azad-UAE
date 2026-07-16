@@ -17,8 +17,8 @@ from flask import jsonify
 
 def success_response(
     data: Any = None,
-    message: str = None,
-    meta: dict = None,
+    message: str | None = None,
+    meta: dict | None = None,
     status_code: int = 200
 ):
     """Return a standardized success API response."""
@@ -34,9 +34,9 @@ def success_response(
 
 def error_response(
     message: str,
-    errors: list = None,
+    errors: list | None = None,
     status_code: int = 400,
-    meta: dict = None
+    meta: dict | None = None
 ):
     """Return a standardized error API response."""
     response = {
@@ -54,7 +54,7 @@ def paginated_response(
     page: int,
     per_page: int,
     total: int,
-    message: str = None
+    message: str | None = None
 ):
     """Return a paginated success response with metadata."""
     return success_response(

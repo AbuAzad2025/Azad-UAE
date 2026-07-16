@@ -229,7 +229,7 @@ class MultiAgentCoordinator:
         
         self.task_history = []
     
-    def delegate_task(self, task: str, context: dict = None) -> dict:
+    def delegate_task(self, task: str, context: dict | None = None) -> dict:
         """
         توزيع المهمة على الوكيل المناسب
         
@@ -254,7 +254,7 @@ class MultiAgentCoordinator:
             agent_scores[agent_name] = score
         
         # اختيار الوكيل بأعلى ثقة
-        best_agent_name = max(agent_scores, key=agent_scores.get)
+        best_agent_name = max(agent_scores, key=lambda k: agent_scores[k])
         best_score = agent_scores[best_agent_name]
         
         if best_score < 0.3:
@@ -289,7 +289,7 @@ class MultiAgentCoordinator:
             'all_scores': agent_scores
         }
     
-    def collaborative_solve(self, complex_task: str, context: dict = None) -> dict:
+    def collaborative_solve(self, complex_task: str, context: dict | None = None) -> dict:
         """
         حل تعاوني بين وكلاء متعددين
         

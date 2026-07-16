@@ -14,7 +14,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from collections import defaultdict
-from typing import List
+from typing import Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class SelfReflectionEngine:
                 'improvements_needed': التحسينات المطلوبة
             }
         """
-        assessment = {
+        assessment: dict[str, Any] = {
             'timestamp': datetime.now().isoformat(),
             'overall_score': 0,
             'strengths': [],
@@ -80,14 +80,14 @@ class SelfReflectionEngine:
             recent_errors = self.errors_log[-50:]
             
             # تجميع الأخطاء المتشابهة
-            error_types = defaultdict(int)
+            error_types: dict[str, int] = defaultdict(int)
             for error in recent_errors:
                 error_type = error.get('type', 'unknown')
                 error_types[error_type] += 1
             
             # أكثر الأخطاء تكراراً
             if error_types:
-                most_common = max(error_types, key=error_types.get)
+                most_common = max(error_types, key=lambda k: error_types[k])
                 count = error_types[most_common]
                 
                 assessment['weaknesses'].append(f"خطأ متكرر: {most_common} ({count} مرة)")
@@ -107,7 +107,7 @@ class SelfReflectionEngine:
         
         return assessment
     
-    def log_performance(self, task: str, accuracy: float, details: dict = None):
+    def log_performance(self, task: str, accuracy: float, details: dict | None = None):
         """تسجيل الأداء"""
         entry = {
             'timestamp': datetime.now().isoformat(),
@@ -122,7 +122,7 @@ class SelfReflectionEngine:
         if len(self.performance_log) > 1000:
             self.performance_log = self.performance_log[-1000:]
     
-    def log_error(self, error_type: str, error_message: str, context: dict = None):
+    def log_error(self, error_type: str, error_message: str, context: dict | None = None):
         """تسجيل خطأ للتعلم منه"""
         entry = {
             'timestamp': datetime.now().isoformat(),

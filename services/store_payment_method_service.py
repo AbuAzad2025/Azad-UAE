@@ -133,7 +133,7 @@ class StorePaymentMethodService:
 
     @staticmethod
     def create_method(data: dict) -> StorePaymentMethod:
-        code = StorePaymentMethod.normalize_code(data.get('code'))
+        code = StorePaymentMethod.normalize_code(data.get('code') or '')
         if StorePaymentMethod.query.filter_by(code=code).first():
             raise ValueError('رمز طريقة الدفع مستخدم مسبقاً.')
 

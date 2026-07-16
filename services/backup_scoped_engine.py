@@ -393,9 +393,9 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
 
         app = create_app()
         with app.app_context():
-            from utils.system_init import ensure_core_data
+            from utils.system_init import _ensure_core_data
 
-            ensure_core_data()
+            _ensure_core_data()
         if prev:
             os.environ["DATABASE_URL"] = prev
     except Exception as exc:

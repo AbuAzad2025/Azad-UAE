@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Dict, List
+from typing import Dict, List, Optional
 from extensions import db
 from utils.db_safety import atomic_transaction
 
@@ -27,7 +27,7 @@ class GamificationService:
     }
     
     @staticmethod
-    def award_points(user_id: int, action: str, metadata: Dict = None) -> Dict:
+    def award_points(user_id: int, action: str, metadata: Optional[Dict] = None) -> Dict:
         from models import User
         
         user = db.session.get(User, user_id)

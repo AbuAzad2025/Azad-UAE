@@ -19,7 +19,7 @@ class PalestineStrategy(LocalizationStrategy):
     currency = 'ILS'
     supports_wps = True
 
-    def _resolve_vat_rate(self, sale=None, tax_rate: Decimal = None) -> Decimal:
+    def _resolve_vat_rate(self, sale=None, tax_rate: Decimal | None = None) -> Decimal:
         coerced = coerce_decimal(tax_rate)
         if coerced is not None:
             return coerced
@@ -36,7 +36,7 @@ class PalestineStrategy(LocalizationStrategy):
                 return amount
         return Decimal('0')
 
-    def convert_to_local_currency(self, amount, from_currency: str, to_currency: str = None):
+    def convert_to_local_currency(self, amount, from_currency: str, to_currency: str | None = None):
         target = (to_currency or self.currency).upper()
         source = (from_currency or self.currency).upper()
         if source not in _SUPPORTED_CURRENCIES and source != target:
@@ -48,7 +48,7 @@ class PalestineStrategy(LocalizationStrategy):
             _TWO_PLACES, rounding=ROUND_HALF_UP,
         )
 
-    def calculate_tax(self, amount: Decimal, tax_rate: Decimal = None) -> dict:
+    def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         rate = self._resolve_vat_rate(tax_rate=tax_rate)
         amount = Decimal(str(amount))
         if rate <= 0:

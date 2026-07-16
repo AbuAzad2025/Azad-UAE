@@ -21,7 +21,7 @@ class InputSanitizer:
     """منظف المدخلات ضد XSS"""
 
     ALLOWED_TAGS = ['b', 'i', 'u', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li']
-    ALLOWED_ATTRS = {}
+    ALLOWED_ATTRS: dict[str, list[str]] = {}
 
     @staticmethod
     def sanitize_html(text, allow_tags=False):

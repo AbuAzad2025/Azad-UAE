@@ -176,7 +176,7 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
     for row in raw_lines:
         if not isinstance(row, dict):
             raise ValueError("بيانات السلة غير صالحة.")
-        product_id = int(row.get("product_id"))
+        product_id = int(row.get("product_id") or 0)
         qty = Decimal(f"{row.get('quantity')}")
         if qty <= 0:
             raise ValueError("الكمية يجب أن تكون أكبر من صفر.")
@@ -205,7 +205,7 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
     return [merged[pid] for pid in order]
 
 
-def get_active_session(user=None, branch_id: int = None) -> PosSession | None:
+def get_active_session(user=None, branch_id: int | None = None) -> PosSession | None:
     tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         return None
@@ -218,14 +218,14 @@ def get_active_session(user=None, branch_id: int = None) -> PosSession | None:
     ).order_by(PosSession.id.desc()).first()
 
 
-def require_active_session(user=None, branch_id: int = None) -> PosSession:
+def require_active_session(user=None, branch_id: int | None = None) -> PosSession:
     session = get_active_session(user, branch_id)
     if not session:
         raise ValueError("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً.")
     return session
 
 
-def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal('0'), notes: str = None) -> PosSession:
+def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal('0'), notes: str | None = None) -> PosSession:
     tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         raise ValueError("لا توجد شركة نشطة.")
@@ -250,7 +250,7 @@ def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal(
     return session
 
 
-def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = None):
+def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str | None = None):
     from models import Sale
 
     tenant_id = session.tenant_id

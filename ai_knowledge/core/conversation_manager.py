@@ -12,7 +12,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class ConversationManager:
             'style': 'professional'  # افتراضي
         }
         
-        greeting = self._generate_greeting(user_info)
+        greeting = self._generate_greeting(user_info or {})
         
         return {
             'conversation_id': user_id,
@@ -156,7 +156,7 @@ class ConversationManager:
             intent = 'general_query'
         
         # استخراج الكيانات (entities)
-        entities = {}
+        entities: dict[str, Any] = {}
         
         # أرقام
         import re

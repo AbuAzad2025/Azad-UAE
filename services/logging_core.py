@@ -1332,6 +1332,7 @@ class LoggingCore:
 
     @classmethod
     def _resolve_table_name(cls, table_name: str) -> str | None:
+        from extensions import db
         from sqlalchemy import inspect
         if not table_name:
             return None
@@ -1363,9 +1364,9 @@ class LoggingCore:
                 if cls._is_sensitive_table(safe_table):
                     restricted_count += 1
                     continue
-                count = db.session.execute(
+                count: int = db.session.execute(
                     text(f'SELECT COUNT(*) FROM "{safe_table}"')
-                ).scalar()
+                ).scalar() or 0
                 db_stats[safe_table] = count
         except Exception:
             pass
@@ -1531,7 +1532,7 @@ class LoggingCore:
         error_retain_days: int = _ERROR_RETAIN_DAYS,
         audit_retain_days: int = _AUDIT_RETAIN_DAYS,
         login_retain_days: int = _LOGIN_RETAIN_DAYS,
-    ) -> dict[str, int]:
+    ) -> dict[str, Any]:
         """Delete old records from log tables to keep the database lean.
 
         Also checks disk usage and warns if space is low.
@@ -1540,7 +1541,7 @@ class LoggingCore:
         """
         from extensions import db
         from sqlalchemy import text
-        results: dict[str, int] = {}
+        results: dict[str, Any] = {}
 
         try:
             import shutil

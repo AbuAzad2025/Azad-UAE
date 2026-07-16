@@ -20,7 +20,7 @@
 
 import logging
 import numpy as np
-from typing import List, Dict, Tuple, Optional
+from typing import Any, List, Dict, Tuple, Optional
 import json
 from datetime import datetime
 
@@ -53,13 +53,13 @@ class TransformersBrain:
         self.vocabulary = self._build_vocabulary()
         
         # التضمين (Embeddings) - محاكاة
-        self.word_embeddings = {}
+        self.word_embeddings: dict[str, list[float]] = {}
         
         # الأوزان (محاكاة بسيطة)
-        self.attention_weights = {}
+        self.attention_weights: dict[str, float] = {}
         
         # ذاكرة السياق
-        self.context_memory = []
+        self.context_memory: list[dict[str, Any]] = []
         
         logger.info(f"🤖 Transformers Brain initialized - Vocab: {vocab_size}, Model: {d_model}, Heads: {n_heads}")
     
@@ -348,7 +348,7 @@ class TransformersBrain:
     
     def _extract_entities(self, text: str, tokens: List[str]) -> Dict[str, List[str]]:
         """استخراج الكيانات المسماة"""
-        entities = {
+        entities: dict[str, list[str]] = {
             'numbers': [],
             'accounting_terms': [],
             'tax_terms': [],

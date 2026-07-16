@@ -63,7 +63,7 @@ class MonitoringService:
                 count = db.session.execute(
                     text(f'SELECT COUNT(*) FROM "{safe_table}"')
                 ).scalar()
-                db_stats[safe_table] = count
+                db_stats[safe_table] = count or 0
         except Exception:
             pass
 
@@ -197,7 +197,7 @@ class MonitoringService:
             return {'error': str(e)}
 
     @staticmethod
-    def log_performance_metric(metric_name: str, value: float, tags: Dict = None):
+    def log_performance_metric(metric_name: str, value: float, tags: Optional[Dict] = None):
         try:
             basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
             logs_dir = os.path.join(basedir, 'logs')

@@ -40,7 +40,7 @@ class StoreOnlinePaymentService:
         return key
 
     @staticmethod
-    def create_payment_for_sale(sale, store, *, customer_email: str = None, crypto_currency: str = 'btc'):
+    def create_payment_for_sale(sale, store, *, customer_email: str | None = None, crypto_currency: str = 'btc'):
         amount_aed = float(Decimal(str(sale.amount_aed or 0)))
         if amount_aed < 1:
             raise ValueError('الحد الأدنى للدفع الإلكتروني 1 AED.')

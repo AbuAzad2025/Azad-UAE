@@ -3,7 +3,7 @@ agents_core.py - AI agent entry points.
 Imports from individual agent modules and adds enhanced AI capabilities.
 """
 import logging
-from typing import Optional
+from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 # Import base agents from their dedicated modules
@@ -55,8 +55,8 @@ def intelligent_response(message: str, user_id: Optional[int] = None, context: O
             return result.message
 
         # Fallback to local intelligence
-        result = intelligent_assistant.process(message, user_id, context)
-        response = result.get('response', 'عذراً، حدث خطأ')
+        local_result = intelligent_assistant.process(message, user_id, context)
+        response = local_result.get('response', 'عذراً، حدث خطأ')
         return response
     except Exception as e:
         try:
@@ -188,7 +188,7 @@ def ask_azad_enhanced(question: str, context: Optional[dict] = None, user_id: Op
     Enhanced ask_azad with LLM chain-of-thought and system knowledge.
     Uses Groq/Gemini for complex questions, falls back to local MasterBrain.
     """
-    result = {
+    result: dict[str, Any] = {
         "answer": "",
         "source": "local",
         "confidence": 0.5,

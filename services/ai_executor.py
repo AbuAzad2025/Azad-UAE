@@ -116,7 +116,7 @@ class AIExecutor:
     def create_product(self, name: str, sku: str = "",
                        regular_price: float = 0, cost_price: float = 0,
                        current_stock: float = 0, min_stock_alert: float = 0,
-                       unit: str = "piece", category_id: int = None,
+                       unit: str = "piece", category_id: int | None = None,
                        barcode: str = "") -> dict:
         self._require_tenant()
         from models import Product
@@ -333,7 +333,7 @@ class AIExecutor:
     # ── EXPENSE ───────────────────────────────────────────────
 
     def add_expense(self, description: str, amount: float,
-                    category_id: int = None, payment_method: str = "cash",
+                    category_id: int | None = None, payment_method: str = "cash",
                     notes: str = "") -> dict:
         self._require_tenant()
         from models import Expense, ExpenseCategory

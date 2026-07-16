@@ -16,7 +16,7 @@ import logging
 import json
 import os
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Any, Dict, List
 import requests
 from requests.adapters import HTTPAdapter
 try:
@@ -230,7 +230,7 @@ class ContinuousLearner:
         
         يتعلم من جميع المصادر تلقائياً
         """
-        results = {
+        results: dict[str, Any] = {
             'started_at': datetime.now().isoformat(),
             'sources_accessed': 0,
             'items_learned': 0,
@@ -279,12 +279,13 @@ def get_continuous_learner():
 
 def evaluate_and_learn(qa_tests: list, ai_service=None):
     """Run QA tests, evaluate by keyword heuristics, and learn from outcomes."""
+    DefaultAIService: Any = None
     try:
-        from services.ai_service import AIService as DefaultAI
+        from services.ai_service import AIService as DefaultAIService
     except ImportError:
-        DefaultAI = None
-    svc = ai_service or DefaultAI
-    results = []
+        DefaultAIService = None
+    svc = ai_service or DefaultAIService
+    results: List[Dict[str, Any]] = []
     if not svc:
         return results
     memory = None  # noqa: F841

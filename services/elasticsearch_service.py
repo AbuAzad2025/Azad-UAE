@@ -30,14 +30,14 @@ class ElasticsearchService:
             return {'success': False, 'error': str(e)}
     
     @staticmethod
-    def search_sales(query: str, filters: Dict = None, limit: int = 50) -> Dict:
+    def search_sales(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
         if not ElasticsearchService.is_enabled():
             return ElasticsearchService._fallback_search(query, filters, limit)
         
         try:
             from elasticsearch import Elasticsearch
             
-            es = Elasticsearch([os.environ.get('ELASTICSEARCH_URL')])
+            es = Elasticsearch([os.environ.get('ELASTICSEARCH_URL') or ''])
             
             body = {
                 'query': {
@@ -71,7 +71,7 @@ class ElasticsearchService:
             return ElasticsearchService._fallback_search(query, filters, limit)
     
     @staticmethod
-    def _fallback_search(query: str, filters: Dict = None, limit: int = 50) -> Dict:
+    def _fallback_search(query: str, filters: Optional[Dict] = None, limit: int = 50) -> Dict:
         from models import Sale
         from sqlalchemy import or_
         

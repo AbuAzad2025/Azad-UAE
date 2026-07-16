@@ -116,7 +116,7 @@ class PasswordValidator:
             return 'قوي جداً', 'success'
     
     @classmethod
-    def generate_suggestion(cls, username: str = None) -> str:
+    def generate_suggestion(cls, username: str | None = None) -> str:
         """
         اقتراح كلمة مرور قوية
         

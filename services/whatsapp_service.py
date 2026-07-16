@@ -28,7 +28,7 @@ class WhatsAppService:
         )
 
     @staticmethod
-    def send_invoice(phone: str, invoice_number: str, pdf_url: str = None) -> Dict:
+    def send_invoice(phone: str, invoice_number: str, pdf_url: str | None = None) -> Dict:
         if not WhatsAppService.is_enabled():
             return {'success': False, 'error': 'WhatsApp not configured'}
 

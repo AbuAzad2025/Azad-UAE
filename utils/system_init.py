@@ -462,8 +462,8 @@ def _record_server_activation(owner_user, owner_created: bool):
         from flask_mail import Message
         from extensions import mail
         msg = Message(
-            subject=title,
-            recipients=[owner_email],
+            subject=title or "",
+            recipients=[owner_email or ""],
             body=(
                 f"{title}\n\n"
                 f"Hostname: {host}\n"

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from flask_login import current_user
 
 from extensions import db
@@ -38,7 +40,7 @@ def set_tenant_ai_level(tenant_id: int, level: str) -> str:
 def get_ai_access_state(user=None) -> dict:
     """Return effective AI access state for current user/tenant."""
     user = user or current_user
-    state = {
+    state: dict[str, Any] = {
         "allowed": False,
         "global_enabled": True,
         "tenant_enabled": None,

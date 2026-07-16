@@ -52,7 +52,7 @@ class StoreCouponService:
 
     @staticmethod
     def create_coupon(tenant_id: int, data: dict) -> StoreCoupon:
-        code = StoreCoupon.normalize_code(data.get('code'))
+        code = StoreCoupon.normalize_code(data.get('code') or '')
         if len(code) < 3:
             raise ValueError('رمز الكوبون قصير جداً.')
         if StoreCouponService.get_by_code(tenant_id, code):

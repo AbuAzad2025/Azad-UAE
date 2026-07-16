@@ -43,7 +43,7 @@ class PosShift(db.Model):
     SHIFT_RECONCILED = "reconciled"
     SHIFT_CLOSED = "closed"
 
-    def reconcile(self, actual_cash: Decimal, notes: str = None):
+    def reconcile(self, actual_cash: Decimal, notes: str | None = None):
         self.actual_cash_counted = Decimal(str(actual_cash))
         self.system_sales_expected = Decimal(str(self.starting_cash or 0)) + Decimal(str(self.total_cash_sales or 0))
         self.discrepancy = self.actual_cash_counted - self.system_sales_expected

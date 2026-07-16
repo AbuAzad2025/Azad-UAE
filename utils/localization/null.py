@@ -12,7 +12,7 @@ class NullStrategy(LocalizationStrategy):
     default_vat_rate = Decimal('0')
     currency = 'AED'
 
-    def calculate_tax(self, amount: Decimal, tax_rate: Decimal = None) -> dict:
+    def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         return {
             'tax_amount': Decimal('0'),
             'net_amount': amount,

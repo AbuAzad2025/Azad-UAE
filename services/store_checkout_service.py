@@ -77,7 +77,7 @@ class StoreCheckoutService:
         return digits
 
     @staticmethod
-    def get_or_create_customer(tenant_id: int, name: str, phone: str, address: str = None, email: str = None) -> Customer:
+    def get_or_create_customer(tenant_id: int, name: str, phone: str, address: str | None = None, email: str | None = None) -> Customer:
         phone_norm = StoreCheckoutService.normalize_phone(phone)
         name = (name or '').strip()
         if len(name) < 2:
@@ -171,11 +171,11 @@ class StoreCheckoutService:
         customer_name: str,
         phone: str,
         address: str,
-        notes: str = None,
-        payment_method_code: str = None,
+        notes: str | None = None,
+        payment_method_code: str | None = None,
         shop_account=None,
-        coupon_code: str = None,
-        customer_email: str = None,
+        coupon_code: str | None = None,
+        customer_email: str | None = None,
     ) -> Sale:
         tenant_id = int(store.tenant_id)
         online_wh = db.session.get(Warehouse, store.warehouse_id)

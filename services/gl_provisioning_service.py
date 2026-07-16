@@ -4,8 +4,8 @@ Copies account templates from gl_account_registry into a tenant's chart,
 creates concept mappings, and handles industry-specific extensions.
 """
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Any, Optional
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models import Tenant
@@ -26,11 +26,7 @@ class ProvisionResult:
     created_mappings: int = 0
     skipped_accounts: int = 0
     skipped_mappings: int = 0
-    errors: list = None
-    def __post_init__(self):
-        if self.errors is None:
-            self.errors = []
-
+    errors: list[str] = field(default_factory=list)
 
 class GLProvisioningService:
     @staticmethod
@@ -141,7 +137,7 @@ class GLProvisioningService:
                     result.skipped_mappings += 1
                     continue
                 # Only provision mapping-owned concepts
-                concept_meta = GL_CONCEPT_REGISTRY.get(mapping.concept_code, {})
+                concept_meta: dict[str, Any] = GL_CONCEPT_REGISTRY.get(mapping.concept_code, {})
                 if concept_meta.get('resolution_mode', RESOLUTION_MODE_MAPPING) != RESOLUTION_MODE_MAPPING:
                     result.skipped_mappings += 1
                     continue
@@ -222,7 +218,7 @@ class GLProvisioningService:
         return missing
     @staticmethod
     def validate_tenant_chart(tenant_id: int) -> dict:
-        result = {
+        result: dict[str, Any] = {
             'tenant_id': tenant_id,
             'accounts_ok': False,
             'mappings_ok': False,

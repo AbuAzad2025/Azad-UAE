@@ -14,7 +14,7 @@ class NotificationService:
     """خدمة الإشعارات"""
     
     # مخزن الإشعارات في الذاكرة (يمكن استخدام Redis للإنتاج)
-    _notifications = []
+    _notifications: list[dict] = []
     
     @staticmethod
     def send_notification(title, message, notification_type='info', data=None):
@@ -100,10 +100,10 @@ class SecurityService:
     """خدمة الأمان والتنبيهات"""
     
     # قائمة سوداء للـ IPs المشبوهة
-    _blacklist = set()
-    
+    _blacklist: set = set()
+
     # سجل المحاولات الفاشلة
-    _failed_attempts = {}
+    _failed_attempts: dict = {}
     
     @staticmethod
     def detect_suspicious_activity(ip_address, user_agent, action):

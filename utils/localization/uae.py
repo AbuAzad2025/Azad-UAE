@@ -13,7 +13,7 @@ class UAEStrategy(LocalizationStrategy):
     currency = 'AED'
     supports_qr = True
 
-    def calculate_tax(self, amount: Decimal, tax_rate: Decimal = None) -> dict:
+    def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         rate = tax_rate if tax_rate is not None else self.default_vat_rate
         tax = (amount * rate / Decimal('100')).quantize(Decimal('0.01'))
         total = amount + tax

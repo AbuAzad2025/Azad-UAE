@@ -322,9 +322,9 @@ class Trainer:
         if count > 0:
             logger.info(f"Trainer: seeded {count} new Q&A pairs")
 
-    def learn_from_interaction(self, question: str, answer: str, user_id: int = None,
+    def learn_from_interaction(self, question: str, answer: str, user_id: int | None = None,
                                 success: bool = True, feedback: Optional[str] = None,
-                                tenant_id: int = None):
+                                tenant_id: int | None = None):
         """Learn from a real user interaction."""
         if not question or not answer:
             return
@@ -351,8 +351,8 @@ class Trainer:
         except Exception as e:
             logger.debug(f"Trainer: learning_system error (non-critical): {e}")
 
-    def train_from_feedback(self, question: str, correct_answer: str, user_id: int = None,
-                            tenant_id: int = None):
+    def train_from_feedback(self, question: str, correct_answer: str, user_id: int | None = None,
+                            tenant_id: int | None = None):
         """Train from explicit correction by user."""
         ql = self._get_ql()
         ql.learn(question, correct_answer, category='corrected', tenant_id=tenant_id)

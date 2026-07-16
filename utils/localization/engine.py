@@ -27,7 +27,7 @@ class LocalizationStrategy(ABC):
     zatca_phase: int = 0
 
     @abstractmethod
-    def calculate_tax(self, amount: Decimal, tax_rate: Decimal = None) -> dict:
+    def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         """
         Return dict with: tax_amount, net_amount, total_amount, rate_applied.
         """
@@ -39,11 +39,12 @@ class LocalizationStrategy(ABC):
         Return country-specific VAT return structure.
         """
 
-    @abstractmethod
     def generate_einvoice(self, sale) -> dict:
         """
         Return dict with: xml_payload, qr_base64, invoice_hash.
+        Subclasses should override this for country-specific e-invoice generation.
         """
+        raise NotImplementedError(f"E-invoice generation not supported for {self.country_code}")
 
     def get_wps_format(self, employees: list) -> dict:
         """

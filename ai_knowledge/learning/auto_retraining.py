@@ -3,12 +3,13 @@ import logging
 import json
 import os
 
+from ai_knowledge import get_knowledge_path
+
 logger = logging.getLogger(__name__)
 
 
 class AutoRetrainingScheduler:
-    
-    from ai_knowledge import get_knowledge_path
+
     TRAINING_LOG_FILE = get_knowledge_path('training_history.json')
     
     @staticmethod

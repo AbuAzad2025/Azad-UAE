@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import Any
 from flask import abort, flash, redirect, url_for, request
 from flask_login import current_user
 
@@ -274,7 +275,7 @@ def require_subscription_feature(feature_name: str):
 #   @enforce_resource_limit('invoices_monthly')
 # ---------------------------------------------------------------------
 
-_LIMIT_CHECKERS = {}
+_LIMIT_CHECKERS: dict[str, Any] = {}
 
 
 def _load_limit_checkers():

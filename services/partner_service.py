@@ -326,7 +326,7 @@ class PartnerService:
         partner_id: int,
         transaction_type: str,
         amount: Decimal,
-        currency: str = None,
+        currency: str | None = None,
         exchange_rate: Decimal = Decimal('1'),
         notes: str = '',
         created_by: Optional[int] = None,

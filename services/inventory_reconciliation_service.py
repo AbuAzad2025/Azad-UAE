@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date, datetime, time
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import func, text
 
@@ -265,7 +266,7 @@ class InventoryReconciliationService:
             acc_q = scope_gl_accounts(acc_q, tenant_id=tenant_id)
         inventory_account = acc_q.first()
 
-        warehouse_map = defaultdict(
+        warehouse_map: dict[str, dict[str, Any]] = defaultdict(
             lambda: {
                 "pwc_qty": Decimal("0"),
                 "pwc_value": Decimal("0"),

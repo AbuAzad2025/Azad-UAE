@@ -594,17 +594,18 @@ def restore_scoped_backup(
             )
             return outcome
 
-        scoped_verify = verify_scoped_restore(
-            target_database_url,
-            manifest,
-            expected_tenant_id=tgt_tid,
-            scope=scope,
-        )
-        outcome["scoped_verify"] = scoped_verify
-        if not scoped_verify.get("ok"):
-            outcome["errors"].extend(scoped_verify.get("errors") or [])
-        elif scoped_verify.get("warnings"):
-            outcome["warnings"].extend(scoped_verify["warnings"])
+        if tgt_tid is not None:
+            scoped_verify = verify_scoped_restore(
+                target_database_url,
+                manifest,
+                expected_tenant_id=tgt_tid,
+                scope=scope,
+            )
+            outcome["scoped_verify"] = scoped_verify
+            if not scoped_verify.get("ok"):
+                outcome["errors"].extend(scoped_verify.get("errors") or [])
+            elif scoped_verify.get("warnings"):
+                outcome["warnings"].extend(scoped_verify["warnings"])
 
         if restore_uploads and bundle.get("uploads.tar.gz"):
             dest = uploads_dest_root or backup_service_cls._BASEDIR

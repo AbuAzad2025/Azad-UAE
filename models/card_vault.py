@@ -9,7 +9,7 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     HAS_CRYPTO = False
-    Fernet = None
+    Fernet = None  # type: ignore[assignment,misc]
 
 
 class CardVault(db.Model):

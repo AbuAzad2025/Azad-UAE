@@ -13,15 +13,15 @@ from utils.ai_access import get_ai_access_state, ai_level_allows
 from datetime import datetime, timezone
 from utils.db_safety import atomic_transaction
 
-def _conversation_ctx(user_id: int, tenant_id: int = None):
+def _conversation_ctx(user_id: int, tenant_id: int | None = None):
     """Fetch persisted context wrapped in auto-save dict."""
     data = _get_conversation_context(user_id, tenant_id) or {}
     return _AutoSaveCtx(user_id, tenant_id, data)
 
-def _conversation_set(user_id: int, data: dict, tenant_id: int = None):
+def _conversation_set(user_id: int, data: dict, tenant_id: int | None = None):
     _set_conversation_context(user_id, data, tenant_id)
 
-def _conversation_clear(user_id: int, tenant_id: int = None):
+def _conversation_clear(user_id: int, tenant_id: int | None = None):
     _clear_conversation_context(user_id, tenant_id)
 
 # ========== مستمعات ذكية ==========

@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any
 from flask import session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -52,10 +53,7 @@ limiter = Limiter(
     storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://"),
 )
 babel = Babel()
-if COMPRESS_AVAILABLE:
-    compress = Compress()
-else:
-    compress = None
+compress: Any = Compress() if COMPRESS_AVAILABLE else None
 def init_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)

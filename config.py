@@ -3,6 +3,7 @@ import re
 import logging
 import socket
 from datetime import timedelta
+from typing import Any
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -93,7 +94,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ISOLATION_LEVEL = "REPEATABLE READ"
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    SQLALCHEMY_ENGINE_OPTIONS: dict[str, Any] = {
         "pool_pre_ping": True,
         "pool_recycle": 1800,
     }
@@ -221,9 +222,7 @@ class Config:
         if "|" in COMPANY_ADDRESS:
             _parts = [p.strip() for p in COMPANY_ADDRESS.split("|") if p.strip()]
             if _parts:
-                def _arabic_count(s: str) -> int:
-                    return len(re.findall(r"[\u0600-\u06FF]", s))
-                COMPANY_ADDRESS_EN = min(_parts, key=_arabic_count)
+                COMPANY_ADDRESS_EN = min(_parts, key=lambda s: len(re.findall(r"[\u0600-\u06FF]", s)))
             else:
                 COMPANY_ADDRESS_EN = COMPANY_ADDRESS
         else:

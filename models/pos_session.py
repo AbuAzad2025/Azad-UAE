@@ -41,7 +41,7 @@ class PosSession(db.Model):
     branch = db.relationship('Branch', foreign_keys=[branch_id])
     tenant = db.relationship('Tenant', backref='pos_sessions', foreign_keys=[tenant_id])
 
-    def close(self, closing_cash: Decimal, notes: str = None):
+    def close(self, closing_cash: Decimal, notes: str | None = None):
         self.closing_balance_cash = closing_cash
         self.expected_balance = Decimal(str(self.opening_balance_cash or 0)) + Decimal(str(self.total_cash_sales or 0))
         self.difference = closing_cash - self.expected_balance

@@ -101,6 +101,7 @@ def _resolve_dynamic_gl_account(
             branch_id=branch_id,
         )
 
+    assert mapping is not None
     return _validated_account(
         mapping=mapping,
         tenant_id=tenant_id,
@@ -237,7 +238,7 @@ def _validated_account(
                 issue="Branch override belongs to a different tenant.",
             )
 
-    account = mapping.gl_account
+    account: GLAccount | None = mapping.gl_account  # type: ignore[assignment]
     if account is None:
         raise GLMappingError(
             tenant_id=tenant_id,

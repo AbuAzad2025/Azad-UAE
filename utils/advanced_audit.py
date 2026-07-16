@@ -17,8 +17,8 @@ def generate_device_fingerprint() -> str:
     return hashlib.sha256(fingerprint_string.encode()).hexdigest()[:16]
 
 
-def log_sensitive_action(action: str, table_name: str = None, record_id: int = None, 
-                         changes: dict = None, severity: str = 'medium'):
+def log_sensitive_action(action: str, table_name: str | None = None, record_id: int | None = None,
+                         changes: dict | None = None, severity: str = 'medium'):
     from models import AuditLog
     
     try:
@@ -67,7 +67,7 @@ def track_login_attempt(username: str, success: bool, ip_address: str):
         db.session.flush()
 
 
-def get_security_events(user_id: int = None, days: int = 30):
+def get_security_events(user_id: int | None = None, days: int = 30):
     from models import AuditLog
     from datetime import timedelta
     

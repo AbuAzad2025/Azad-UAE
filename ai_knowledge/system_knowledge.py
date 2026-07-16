@@ -18,7 +18,7 @@ SYSTEM_INFO = {
 }
 
 # ===== ROLE SYSTEM =====
-ROLES = [
+ROLES: list[dict[str, Any]] = [
     {"slug": "owner", "level": 100, "name_en": "Owner", "name_ar": "مالك", "permissions": "all"},
     {"slug": "developer", "level": 95, "name_en": "Developer", "name_ar": "مطور", "permissions": "all"},
     {"slug": "super_admin", "level": 90, "name_en": "Super Admin", "name_ar": "مدير عام", "permissions": "all"},
@@ -38,7 +38,7 @@ ROLES = [
 ]
 
 # ===== PERMISSION CODES =====
-PERMISSIONS = {
+PERMISSIONS: dict[str, dict[str, Any]] = {
     "manage_sales": {"name": "Manage Sales", "name_ar": "إدارة المبيعات", "category": "sales"},
     "manage_purchases": {"name": "Manage Purchases", "name_ar": "إدارة المشتريات", "category": "purchases"},
     "manage_products": {"name": "Manage Products", "name_ar": "إدارة المنتجات", "category": "products"},
@@ -58,7 +58,7 @@ PERMISSIONS = {
 }
 
 # ===== COMPLETE MODELS REFERENCE =====
-MODELS = {
+MODELS: dict[str, dict[str, Any]] = {
     "Customer": {
         "table": "customers",
         "name_ar": "عميل",
@@ -495,7 +495,7 @@ ACCOUNTING = {
 }
 
 # ===== FEATURE REFERENCE =====
-FEATURES = {
+FEATURES: dict[str, dict[str, Any]] = {
     "Multi-tenancy": {
         "name_ar": "تعدد المنشآت",
         "description": "Each tenant has isolated data. Users belong to one tenant. Owner manages all tenants.",
@@ -620,11 +620,11 @@ def get_model_info(model_name: str) -> dict | None:
     for key, val in MODELS.items():
         if key.lower() == model_name.lower():
             return val
-        if val["table"].lower() == model_name.lower():  # type: ignore[index]
+        if val["table"].lower() == model_name.lower():
             return {**val, "_key": key}
     # Try partial match
     for key, val in MODELS.items():
-        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():  # type: ignore[index]
+        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():
             return {**val, "_key": key}
     return None
 
@@ -649,7 +649,7 @@ def search_knowledge(query: str) -> list[dict]:
 
     # Search models
     for name, info in MODELS.items():
-        if q in name.lower() or q in info["table"].lower() or q in info["name_ar"]:  # type: ignore[index]
+        if q in name.lower() or q in info["table"].lower() or q in info["name_ar"]:
             results.append({"type": "model", "name": name, "info": info})
 
     # Search permissions

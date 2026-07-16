@@ -1862,7 +1862,7 @@ class AIService:
     # ========================================================================
     
     @staticmethod
-    def think_deeply(problem: str, context: dict = None):
+    def think_deeply(problem: str, context: dict | None = None):
         """
         التفكير العميق في مشكلة - DeepSeek Style
         استخدام محرك التفكير المنطقي
@@ -1878,7 +1878,7 @@ class AIService:
             return {}
     
     @staticmethod
-    def delegate_to_expert(task: str, context: dict = None):
+    def delegate_to_expert(task: str, context: dict | None = None):
         """
         تفويض المهمة للخبير المناسب
         استخدام نظام الوكلاء المتعددين
@@ -1894,14 +1894,16 @@ class AIService:
             return {}
     
     @staticmethod
-    def generate_code(code_type: str, purpose: str, params: dict = None):
+    def generate_code(code_type: str, purpose: str, params: dict | None = None):
         """
         توليد كود تلقائياً
         SQL / Python / JavaScript
         """
         try:
             generator = AIService.get_code_generator()
-            
+
+            params = params or {}
+
             if code_type == 'sql':
                 code = generator.generate_sql_query(
                     params.get('intent', 'select'),
@@ -2102,7 +2104,7 @@ class AIService:
     # ========================================================================
     
     @staticmethod
-    def ask_genius(question: str, context: dict = None, user_id: int = None):
+    def ask_genius(question: str, context: dict | None = None, user_id: int | None = None):
         """
         اسأل العبقري - الواجهة الموحدة للعقل الخارق
         

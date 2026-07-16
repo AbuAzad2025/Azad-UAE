@@ -806,7 +806,7 @@ class BackupService:
 
             url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
             params = cls._parse_db_url(url)
-            if not params:
+            if not params or not url:
                 return None
 
             with create_engine(url).connect() as conn:
@@ -1501,7 +1501,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         scope = manifest.get("backup_scope") or "tenant"
         tid = manifest.get("tenant_id")
-        if doc.get("tenant_id") is not None and int(doc.get("tenant_id", -1)) != int(tid):
+        if doc.get("tenant_id") is not None and int(doc.get("tenant_id") or 0) != int(tid or 0):
             out["ok"] = False
             out["errors"].append("export tenant_id mismatch manifest")
 
@@ -1509,7 +1509,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         if len(tenants_rows) != 1:
             out["ok"] = False
             out["errors"].append(f"tenants row count expected 1 got {len(tenants_rows)}")
-        elif tenants_rows and int(tenants_rows[0].get("id", -1)) != int(tid):
+        elif tenants_rows and tenants_rows[0].get("id") is not None and int(tenants_rows[0].get("id") or 0) != int(tid or 0):
             out["ok"] = False
             out["errors"].append("tenants row id mismatch")
 
@@ -1520,7 +1520,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 continue
             for row in rows:
                 row_tid = row.get("tenant_id")
-                if row_tid is not None and int(row_tid) != int(tid):
+                if row_tid is not None and int(row_tid or 0) != int(tid or 0):
                     out["ok"] = False
                     out["errors"].append(f"cross-tenant row in {table}")
                     break
@@ -1591,7 +1591,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         scope = manifest.get("backup_scope") or "system"
         if scope in ("tenant", "branch", "store"):
             src_tid = manifest.get("tenant_id")
-            if target_tenant_id and int(target_tenant_id) != int(src_tid) and not remap:
+            if target_tenant_id and int(target_tenant_id) != int(src_tid or -1) and not remap:
                 return {
                     "ok": False,
                     "error": f"{scope} restore to a different tenant_id requires remap=True",

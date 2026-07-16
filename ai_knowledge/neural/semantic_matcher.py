@@ -263,7 +263,7 @@ class SemanticMatcher:
         total_docs = sum(len(examples) for examples in self.intents_db.values())
         
         # حساب عدد الوثائق التي تحتوي على كل كلمة
-        word_doc_count = Counter()
+        word_doc_count: Counter[str] = Counter()
         for intent, examples in self.intents_db.items():
             for example in examples:
                 words = set(self._tokenize(example))
@@ -310,7 +310,7 @@ class SemanticMatcher:
         
         return dot_product / (magnitude1 * magnitude2)
     
-    def find_best_intent(self, user_message: str, threshold: float = 0.3) -> Tuple[str, float, List[Tuple[str, float]]]:
+    def find_best_intent(self, user_message: str, threshold: float = 0.3) -> Tuple[str | None, float, List[Tuple[str, float]]]:
         """
         إيجاد أفضل نية (intent) للرسالة
         

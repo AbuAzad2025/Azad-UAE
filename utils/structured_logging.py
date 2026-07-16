@@ -57,9 +57,9 @@ def _resolve_id(value):
 
 def log_mutation(
     action: str,
-    entity_type: str = None,
-    entity_id: int = None,
-    details: dict = None,
+    entity_type: str | None = None,
+    entity_id: int | None = None,
+    details: dict | None = None,
     level: str = "info"
 ):
     """
@@ -94,7 +94,7 @@ def log_security_event(
     event_type: str,
     description: str,
     severity: str = "info",
-    extra: dict = None
+    extra: dict | None = None
 ):
     """Log security-related events (login attempts, permission denials, etc.)."""
     log_entry = {
@@ -114,9 +114,9 @@ def log_security_event(
 
 def log_data_access(
     entity_type: str,
-    entity_id: int = None,
+    entity_id: int | None = None,
     access_type: str = "read",
-    details: dict = None
+    details: dict | None = None
 ):
     """Log sensitive data access (for compliance auditing)."""
     log_entry = {

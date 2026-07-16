@@ -132,7 +132,7 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_SUSPENSE,
 )
 
-GL_CONCEPT_REGISTRY = {
+GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     GL_CONCEPT_AR: {'meaning': 'Accounts Receivable', 'legacy_code': '1130', 'required': True, 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_AP: {'meaning': 'Accounts Payable', 'legacy_code': '2110', 'required': True, 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_CASH: {'meaning': 'Cash', 'legacy_code': None, 'required': True, 'resolution_mode': RESOLUTION_MODE_LIQUIDITY},

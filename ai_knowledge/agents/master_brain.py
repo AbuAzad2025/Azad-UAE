@@ -26,7 +26,7 @@ import logging
 import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Callable
 import re
 
 logger = logging.getLogger(__name__)
@@ -327,7 +327,7 @@ class MasterBrain:
             reasoning_result = self._think_logically(question, intent, knowledge, context)
             
             # 4. استخدام النماذج العصبية (إذا لزم الأمر)
-            neural_result = self._use_neural_if_needed(intent, context)
+            neural_result = self._use_neural_if_needed(intent, context) or {}
             
             # 5. دمج كل المصادر
             answer = self._synthesize_answer(
@@ -625,7 +625,7 @@ class MasterBrain:
     
     def quick_calc(self, formula_name: str, **params) -> dict:
         """حسابات سريعة للصيغ الشائعة"""
-        formulas = {
+        formulas: dict[str, Callable[..., Any]] = {
             'gross_margin': lambda sales, cogs: ((sales - cogs) / sales * 100) if sales > 0 else 0,
             'net_margin': lambda revenue, expenses: ((revenue - expenses) / revenue * 100) if revenue > 0 else 0,
             'current_ratio': lambda current_assets, current_liabilities: current_assets / current_liabilities if current_liabilities > 0 else 0,

@@ -322,7 +322,7 @@ class StoreService:
         session.modified = True
 
     @staticmethod
-    def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None, page=1, per_page=24, sort=None, min_price=None, max_price=None, in_stock_only=False):
+    def get_public_catalog(tenant_id: int, *, category_id=None, search: str | None = None, page=1, per_page=24, sort=None, min_price=None, max_price=None, in_stock_only=False):
         """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
         tenant = db.session.get(Tenant, int(tenant_id))

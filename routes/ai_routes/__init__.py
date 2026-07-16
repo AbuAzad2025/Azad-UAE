@@ -11,7 +11,7 @@ from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from utils.tenanting import get_active_tenant_id, assign_tenant_id
 
-ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
+ai_bp: Blueprint = Blueprint('ai', __name__, url_prefix='/ai')
 
 # ── Request lifecycle hooks ──────────────────────────────────────
 

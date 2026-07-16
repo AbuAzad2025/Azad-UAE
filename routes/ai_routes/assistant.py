@@ -3,7 +3,7 @@
 import os
 import logging
 from datetime import datetime
-from flask import render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
 from utils.decorators import owner_required, permission_required
 from utils.tenanting import get_active_tenant_id, assign_tenant_id

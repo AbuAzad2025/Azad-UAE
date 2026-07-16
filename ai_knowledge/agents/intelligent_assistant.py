@@ -14,7 +14,7 @@
 - Context Engine: لفهم السياق
 """
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -118,6 +118,8 @@ class IntelligentAssistant:
                 }
 
             # ========== المرحلة 1: فهم النية والسياق ==========
+            assert user_id is not None
+            assert context is not None
             understanding = self._understand_message(message, user_id, context)
             
             if not understanding['success']:
@@ -203,7 +205,7 @@ class IntelligentAssistant:
         """استخراج الكيانات من الرسالة"""
         import re
         
-        entities = {
+        entities: dict[str, Any] = {
             'numbers': [],
             'dates': [],
             'names': [],
@@ -257,7 +259,7 @@ class IntelligentAssistant:
                     q = q.filter_by(tenant_id=tid)
                 return q
 
-            data = {}
+            data: dict[str, Any] = {}
 
             try:
                 data['system_stats'] = {
@@ -334,7 +336,7 @@ class IntelligentAssistant:
     def _analyze_and_reason(self, intent: str, data: Dict, _context: Dict) -> Dict:
         """التحليل والاستنتاج المنطقي"""
         try:
-            analysis = {
+            analysis: dict[str, Any] = {
                 'insights': [],
                 'warnings': [],
                 'recommendations': [],

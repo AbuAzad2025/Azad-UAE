@@ -10,7 +10,7 @@ class EInvoiceService:
     """خدمة توليد الفواتير الإلكترونية"""
 
     @staticmethod
-    def generate(sale, country_code: str = None) -> dict:
+    def generate(sale, country_code: str | None = None) -> dict:
         """
         توليد فاتورة إلكترونية لعملية البيع.
         """

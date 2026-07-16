@@ -14,7 +14,7 @@ from services.gl_tree_builder import GLTreeBuilder
 from utils.helpers import generate_number
 from utils.currency_utils import get_system_default_currency, resolve_default_currency, resolve_tenant_base_currency
 
-_JE_SEQ = {}
+_JE_SEQ: dict[str, int] = {}
 
 # مرجع الحسابات: استخدم هذه الرموز للقيود لضمان الاتساق
 # أصول: 1110 صندوق، 1120 بنك، 1130 ذمم مدينة، 1140 مخزون، 1150 شيكات تحت التحصيل، 1170 سلف موظفين
