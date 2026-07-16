@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-import pytest
 
 
 class TestPermissionModel:
@@ -34,7 +33,8 @@ class TestRoleModel:
 
 
 class TestUserModel:
-    def _user(self, **kwargs):
+    @staticmethod
+    def _user(**kwargs):
         from models.user import User, Role
 
         user = User(username='alice', email='alice@test.com')

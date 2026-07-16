@@ -82,13 +82,13 @@ def init_extensions(app):
         mail.init_app(app)
     babel.init_app(app, locale_selector=get_locale)
     app.logger.info("[OK] Extensions initialized")
-def get_or_create(session, model, defaults=None, **kwargs):
-    instance = session.query(model).filter_by(**kwargs).first()
+def get_or_create(db_session, model, defaults=None, **kwargs):
+    instance = db_session.query(model).filter_by(**kwargs).first()
     if instance:
         return instance, False
     params = dict((k, v) for k, v in kwargs.items())
     if defaults:
         params.update(defaults)
     instance = model(**params)
-    session.add(instance)
+    db_session.add(instance)
     return instance, True

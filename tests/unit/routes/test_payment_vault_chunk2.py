@@ -81,14 +81,14 @@ class TestReplayProtection:
 # =============================================================================
 
 class TestIdempotencyKey:
-    """Idempotency-Key cache behaviour."""
+    """Idempotency-Key cache behavior."""
 
-    def _reset_store(self):
+    @staticmethod
+    def _reset_store():
         from routes.payment_vault import _idempotency_store
         _idempotency_store.clear()
 
     def test_cache_miss_returns_none(self, app_factory, mocker):
-        from flask import request
         from routes.payment_vault import payment_vault_bp, _check_idempotency_key
 
         app = app_factory(payment_vault_bp)
@@ -100,7 +100,6 @@ class TestIdempotencyKey:
         assert result is None
 
     def test_cache_hit_returns_cached_response(self, app_factory, mocker):
-        from flask import request
         from routes.payment_vault import (
             payment_vault_bp, _check_idempotency_key, _save_idempotency_key,
         )
@@ -293,7 +292,7 @@ class TestWebhookSignatureValidation:
 # =============================================================================
 
 class TestPurchaseEndpointIdempotency:
-    """/api/purchase honours Idempotency-Key and X-API-Key."""
+    """/api/purchase honors Idempotency-Key and X-API-Key."""
 
     ENDPOINT = "/payment-vault/api/purchase"
     SAMPLE_DATA = {
@@ -366,7 +365,7 @@ class TestPurchaseEndpointIdempotency:
 
 
 class TestDonationEndpointSecurity:
-    """/api/donation honours Idempotency-Key and X-API-Key."""
+    """/api/donation honors Idempotency-Key and X-API-Key."""
 
     ENDPOINT = "/payment-vault/api/donation"
     SAMPLE_DATA = {"amount": 50, "payment_method": "crypto", "crypto_type": "btc"}

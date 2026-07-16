@@ -32,7 +32,7 @@ def svc():
 
 
 def _ok_post(payload=None, payment_id='np-100'):
-    def fake_post(url, json=None, headers=None, timeout=None):
+    def fake_post(url, json_data=None, headers=None, timeout=None):
         resp = MagicMock()
         resp.status_code = 201
         base = {
@@ -40,7 +40,7 @@ def _ok_post(payload=None, payment_id='np-100'):
             'pay_address': 'bc1qtest',
             'pay_amount': 0.001,
             'payment_url': f'https://pay.example/{payment_id}',
-            'order_id': json.get('order_id') if json else None,
+            'order_id': json_data.get('order_id') if json_data else None,
             'expires_at': '2026-12-31T00:00:00Z',
         }
         if payload:
@@ -115,9 +115,9 @@ class TestCreatePayment:
     def test_omits_optional_order_and_email(self, svc, mocker):
         captured = {}
 
-        def fake_post(url, json=None, headers=None, timeout=None):
-            captured.update(json or {})
-            return _ok_post()(url, json=json, headers=headers, timeout=timeout)
+        def fake_post(url, json_data=None, headers=None, timeout=None):
+            captured.update(json_data or {})
+            return _ok_post()(url, json=json_data, headers=headers, timeout=timeout)
 
         mocker.patch('services.nowpayments_service.requests.post', side_effect=fake_post)
         mocker.patch('services.nowpayments_service.get_nowpayments_ipn_url', return_value='https://ipn')
@@ -256,7 +256,8 @@ class TestVerifyIpn:
 
 
 class TestProcessPaymentCallback:
-    def _donation(self, db_session, payment_id=None):
+    @staticmethod
+    def _donation(db_session, payment_id=None):
         if payment_id is None:
             payment_id = f'np-cb-{uuid.uuid4().hex[:12]}'
         row = Donation(

@@ -63,7 +63,6 @@ def _seed_tenant(db):
     user = User(
         tenant_id=tenant.id, username=f"cashier_{uid}", email=f"cashier_{uid}@e2e.test",
         full_name="E2E Cashier", role_id=role.id, branch_id=branch.id,
-        is_active=True, is_owner=False,
     )
     user.set_password("test123")
     db.session.add(user)
@@ -288,7 +287,7 @@ def run_e2e_dry_run():
             _cleanup(db, ctx)
             db.session.commit()
 
-            print("\n" + "=" * 60)
+            print("\r\n" + "=" * 60)
             print("E2E DRY-RUN: ALL CHECKS PASSED")
             print("=" * 60)
             print(f"  Sale:      {sale.sale_number} (total={sale.total_amount} AED, VAT={sale.tax_amount})")
@@ -300,7 +299,7 @@ def run_e2e_dry_run():
 
         except Exception as exc:
             logger.exception("E2E dry-run failed")
-            print(f"\nE2E DRY-RUN FAILED: {exc}", file=sys.stderr)
+            print(f"\r\nE2E DRY-RUN FAILED: {exc}", file=sys.stderr)
             db.session.rollback()
             return 1
 

@@ -126,7 +126,7 @@ class TestConfigClassBranches:
         mock_sock.recv.return_value = b'+PONG\r\n'
         monkeypatch.setattr(
             'socket.create_connection',
-            lambda *a, **k: MagicMock(__enter__=lambda s: mock_sock, __exit__=lambda *a: None),
+            lambda *args, **k: MagicMock(__enter__=lambda s: mock_sock, __exit__=lambda *a: None),
         )
         importlib.reload(importlib.import_module('config'))
         import config as cfg
@@ -172,7 +172,8 @@ class TestEnsureRuntimeDirs:
 
 
 class TestAssertProductionSanity:
-    def _prod_cfg(self, **overrides):
+    @staticmethod
+    def _prod_cfg(**overrides):
         base = {
             'DEBUG': False,
             'APP_ENV': 'production',

@@ -91,7 +91,7 @@ class TestValidateJournalEntryBalance:
 
     def test_unexpected_error_is_reraised(self):
         target = MagicMock()
-        type(target).total_debit = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).total_debit = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
 
         with pytest.raises(RuntimeError, match='boom'):
             gl_auto_service.validate_journal_entry_balance(None, None, target)
@@ -166,7 +166,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         sale_handler = handlers[0]
         target = MagicMock()
-        type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
         with caplog.at_level('ERROR'):
             sale_handler(None, None, target)
 
@@ -176,7 +176,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         receipt_handler = handlers[4]
         target = MagicMock()
-        type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
         with caplog.at_level('ERROR'):
             receipt_handler(None, None, target)
 
@@ -186,7 +186,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         product_handler = handlers[-1]
         target = MagicMock()
-        type(target).current_stock = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).current_stock = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
         with caplog.at_level('ERROR'):
             product_handler(None, None, target)
 
@@ -196,7 +196,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         purchase_handler = handlers[1]
         target = MagicMock()
-        type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
         with caplog.at_level('ERROR'):
             purchase_handler(None, None, target)
 
@@ -206,7 +206,7 @@ class TestRegisterEventListeners:
             gl_auto_service.register_validation_event_listeners()
         payment_handler = handlers[5]
         target = MagicMock()
-        type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('boom')))
+        type(target).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('boom')))
         with caplog.at_level('ERROR'):
             payment_handler(None, None, target)
 

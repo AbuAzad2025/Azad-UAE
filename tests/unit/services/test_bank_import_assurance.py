@@ -4,9 +4,6 @@ from __future__ import annotations
 from datetime import date
 from unittest.mock import MagicMock
 
-import pytest
-
-
 class TestHashGeneration:
     """_generate_hash — deterministic dedup key."""
 

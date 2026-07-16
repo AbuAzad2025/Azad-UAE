@@ -16,8 +16,8 @@ class ProductForm(FlaskForm):
     merchant_price = DecimalField('سعر التاجر', validators=[Optional(), NumberRange(min=0)])
     partner_price = DecimalField('سعر الشريك', validators=[Optional(), NumberRange(min=0)])
     cost_price = DecimalField('سعر التكلفة', validators=[Optional(), NumberRange(min=0)])
-    current_stock = DecimalField('الكمية الحالية', default=Decimal('0'), validators=[Optional(), NumberRange(min=0)])
-    min_stock_alert = DecimalField('الحد الأدنى للتنبيه', default=Decimal('0'), validators=[Optional(), NumberRange(min=0)])
+    current_stock = DecimalField('الكمية الحالية', default=Decimal(), validators=[Optional(), NumberRange(min=0)])
+    min_stock_alert = DecimalField('الحد الأدنى للتنبيه', default=Decimal(), validators=[Optional(), NumberRange(min=0)])
     unit = SelectField('الوحدة', choices=[
         ('', 'بلا'),
         ('piece', 'قطعة'),

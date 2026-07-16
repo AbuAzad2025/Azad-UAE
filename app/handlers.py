@@ -39,8 +39,6 @@ def register_error_handlers(app):
     def handle_500(exc):
         LoggingCore.log_error(
             message=str(exc) or "Internal Server Error",
-            category="BACKEND",
-            level="ERROR",
             source="app.errorhandler.500",
             exception=exc,
         )
@@ -103,7 +101,6 @@ def register_error_handlers(app):
             return exc
         # Tenant isolation violation → 403 Forbidden
         if exc.__class__.__name__ == 'TenantIsolationError':
-            from utils.tenant_orm import TenantIsolationError
             LoggingCore.log_error(
                 message=str(exc),
                 category="SECURITY",
@@ -120,7 +117,6 @@ def register_error_handlers(app):
         LoggingCore.log_error(
             message=str(exc) or f"{type(exc).__name__} (no message)",
             category=category,
-            level="ERROR",
             source=source,
             exception=exc,
         )

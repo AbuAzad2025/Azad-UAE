@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from contextlib import ExitStack, contextmanager
 from decimal import Decimal
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -258,7 +257,8 @@ class TestPosWalkin:
 
 
 class TestPosCheckout:
-    def _checkout_payload(self, **extra):
+    @staticmethod
+    def _checkout_payload(**extra):
         base = {
             'quick_customer': True,
             'lines': [{'product_id': 1, 'quantity': 1}],
@@ -760,7 +760,8 @@ class TestPosFloors:
 
 
 class TestPosCustomerDisplay:
-    def _tenant_request(self, tenant_id=1):
+    @staticmethod
+    def _tenant_request(tenant_id=1):
         req = MagicMock()
         req.args.get = lambda key, **kwargs: tenant_id if key == 'tenant_id' else kwargs.get('default')
         return patch('routes.pos.request', req)

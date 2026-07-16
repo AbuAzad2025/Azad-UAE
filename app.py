@@ -46,15 +46,15 @@ if __name__ == '__main__':
                     return uri
                 user = creds.split(':', 1)[0]
                 return f"{scheme}://{user}:***@{tail}"
-            except Exception as e:
+            except Exception as exc:
                 try:
                     from services.logging_core import LoggingCore
                     LoggingCore.log_error(
-                        message=str(e) or "Failed to mask DB URI",
+                        message=str(exc) or "Failed to mask DB URI",
                         category="SYSTEM_INIT",
                         level="WARNING",
                         source="app._mask_db_uri",
-                        exception=e,
+                        exception=exc,
                     )
                 except Exception:
                     pass

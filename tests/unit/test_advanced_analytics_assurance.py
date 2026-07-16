@@ -1,7 +1,7 @@
 """Advanced financial analytics — ratios, trends, zero-data edge cases."""
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -52,7 +52,8 @@ class TestFinancialRatios:
 class TestBalanceByPrefix:
     """_calculate_balance_by_prefix — asset vs credit-normal aggregation."""
 
-    def _line(self, amount, account_type='asset'):
+    @staticmethod
+    def _line(amount, account_type='asset'):
         line = MagicMock()
         line.amount_aed = Decimal(str(amount))
         acct = MagicMock()

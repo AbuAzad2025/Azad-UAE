@@ -39,7 +39,8 @@ class TestStaticExists:
 
 
 class TestResolveBranding:
-    def _tenant(self, **kw):
+    @staticmethod
+    def _tenant(**kw):
         t = MagicMock()
         t.id = kw.get('id', 1)
         t.slug = kw.get('slug', 'acme')

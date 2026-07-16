@@ -27,7 +27,7 @@ class TestGetOrCreate:
         mocker.patch('services.document_sequence_service.DocumentSequence.query', mock_q)
         mock_session = mocker.patch('services.document_sequence_service.db.session')
 
-        from services.document_sequence_service import DocumentSequenceService, DocumentSequence
+        from services.document_sequence_service import DocumentSequenceService
         with app.app_context():
             seq = DocumentSequenceService.get_or_create(1, 'sale')
 

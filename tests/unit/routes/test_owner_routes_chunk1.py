@@ -7,7 +7,7 @@ Chunk 1 — routes/owner.py first 3 endpoints:
 
 from decimal import Decimal
 from itertools import cycle
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,7 +15,7 @@ from tests.unit.routes.test_owner_routes import _owner_route_patches
 
 
 def _make_dashboard_query(first_results=None, scalar_results=None):
-    """Chain-query mock modelling db.session.query().filter().first()/.scalar().
+    """Chain-query mock modeling db.session.query().filter().first()/.scalar().
 
     Models the query chains used by the dashboard route so that every
     ``db.session.query(...).filter(...)`` resolves to a self-referencing

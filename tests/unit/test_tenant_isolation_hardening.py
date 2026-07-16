@@ -22,7 +22,8 @@ def _tenant_test_request_context(app):
 class TestTenantIsolationHardening:
     """Test tenant isolation hardening in auth and tenanting"""
 
-    def _create_second_tenant(self, db_session, **overrides):
+    @staticmethod
+    def _create_second_tenant(db_session, **overrides):
         """Create an isolated second tenant (unique slug avoids cross-suite DB pollution)."""
         uid = uuid.uuid4().hex[:8]
         data = {
@@ -43,7 +44,8 @@ class TestTenantIsolationHardening:
         tenant_id = tenant2.id
         return db_session.get(Tenant, tenant_id)
 
-    def _ensure_tenant_active(self, db_session, tenant):
+    @staticmethod
+    def _ensure_tenant_active(db_session, tenant):
         """Persist active/switchable tenant state visible to db.session.get in tenanting."""
         from unittest.mock import MagicMock, NonCallableMock
 
@@ -51,13 +53,13 @@ class TestTenantIsolationHardening:
         db_session.commit()
 
         def _fetch():
-            row = db_session.get(Tenant, tenant_id)
-            if row is None or isinstance(row, (MagicMock, NonCallableMock)):
+            db_row = db_session.get(Tenant, tenant_id)
+            if db_row is None or isinstance(db_row, (MagicMock, NonCallableMock)):
                 db_session.expire_all()
-                row = db_session.get(Tenant, tenant_id)
-            if row is None or isinstance(row, (MagicMock, NonCallableMock)):
-                row = Tenant.query.filter_by(id=tenant_id).first()
-            return row
+                db_row = db_session.get(Tenant, tenant_id)
+            if db_row is None or isinstance(db_row, (MagicMock, NonCallableMock)):
+                db_row = Tenant.query.filter_by(id=tenant_id).first()
+            return db_row
 
         row = _fetch()
         assert row is not None, f"Tenant {tenant_id} not found in database"
@@ -66,7 +68,8 @@ class TestTenantIsolationHardening:
         db_session.commit()
         return _fetch()
 
-    def _create_test_user(self, db_session, tenant_id, branch_id=None, is_owner=False):
+    @staticmethod
+    def _create_test_user(db_session, tenant_id, branch_id=None, is_owner=False):
         """Create a test user for testing"""
         uid = uuid.uuid4().hex[:8]
         role = Role.query.filter_by(slug=f"test-role-{uid}").first()
@@ -427,7 +430,8 @@ class TestTenantIsolationHardening:
 class TestLoginRouteLevel:
     """Flask test-client tests for /auth/login and /tenants/switch routes."""
 
-    def _make_user(self, db_session, username, password, tenant_id, branch_id=None,
+    @staticmethod
+    def _make_user(db_session, username, password, tenant_id, branch_id=None,
                    is_owner=False, role_slug="manager"):
         import uuid
         from models.user import User, Role

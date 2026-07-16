@@ -251,7 +251,8 @@ class TestPurchaseDonationApiValidation:
 
 
 class TestPaymentVaultModel:
-    def _vault(self):
+    @staticmethod
+    def _vault():
         from models.payment_vault import PaymentVault
 
         vault = PaymentVault()
@@ -311,24 +312,24 @@ class TestPaymentVaultModel:
         assert vault.is_vault_accessible() is False
 
     def test_is_vault_accessible_auto_lock(self, mocker):
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         vault = self._vault()
         vault.is_locked = False
         vault.auto_lock_minutes = 5
-        vault.last_access = datetime.utcnow() - timedelta(minutes=10)
+        vault.last_access = datetime.now(timezone.utc) - timedelta(minutes=10)
         mock_session = mocker.patch('models.payment_vault.db.session')
         assert vault.is_vault_accessible() is False
         assert vault.is_locked is True
         mock_session.flush.assert_called()
 
     def test_is_vault_accessible_when_unlocked_and_fresh(self):
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         vault = self._vault()
         vault.is_locked = False
         vault.auto_lock_minutes = 30
-        vault.last_access = datetime.utcnow()
+        vault.last_access = datetime.now(timezone.utc)
         assert vault.is_vault_accessible() is True
 
     def test_payment_log_action(self, mocker):

@@ -1,4 +1,3 @@
-import io
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -154,7 +153,8 @@ class TestPublicDonate:
 
 
 class TestPublicDonateSubmit:
-    def _post_donation(self, public_client, data, lang="ar"):
+    @staticmethod
+    def _post_donation(public_client, data, lang="ar"):
         vault = _mock_vault()
         with public_client.session_transaction() as sess:
             sess["language"] = lang

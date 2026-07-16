@@ -310,7 +310,8 @@ class TestCreateCampaign:
 
 
 class TestSendCampaign:
-    def _ready_campaign(self, db_session, sample_tenant):
+    @staticmethod
+    def _ready_campaign(db_session, sample_tenant):
         lst = _email_list(db_session, sample_tenant.id)
         tpl = _template(db_session, sample_tenant.id)
         camp = _campaign(db_session, sample_tenant.id, lst, tpl)
@@ -331,7 +332,7 @@ class TestSendCampaign:
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
     def test_not_draft(self, tenant_user, db_session, sample_tenant):
-        camp = self._ready_campaign(db_session, sample_tenant)
+        camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         camp.status = 'sent'
         db_session.flush()
         with pytest.raises(ValueError, match='المسودة'):
@@ -362,7 +363,7 @@ class TestSendCampaign:
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
     def test_mail_not_configured(self, tenant_user, db_session, sample_tenant, app):
-        camp = self._ready_campaign(db_session, sample_tenant)
+        camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         app.extensions.pop('mail', None)
         with pytest.raises(ValueError, match='البريد'):
             EmailMarketingService.send_campaign(camp.id, tenant_user)
@@ -388,7 +389,7 @@ class TestSendCampaign:
         assert {ok.id, bad.id} == {log.subscriber_id for log in logs}
 
     def test_uses_template_from_email(self, tenant_user, db_session, sample_tenant, app, mocker):
-        camp = self._ready_campaign(db_session, sample_tenant)
+        camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         mail = MagicMock()
         app.extensions['mail'] = mail
         captured = {}
@@ -401,7 +402,7 @@ class TestSendCampaign:
         assert captured['sender'] == 'noreply@example.com'
 
     def test_commit_failure_raises(self, tenant_user, db_session, sample_tenant, app, mocker):
-        camp = self._ready_campaign(db_session, sample_tenant)
+        camp = TestSendCampaign._ready_campaign(db_session, sample_tenant)
         app.extensions['mail'] = MagicMock()
         mocker.patch.object(db.session, 'flush', side_effect=RuntimeError('send fail'))
         with pytest.raises(RuntimeError, match='send fail'):

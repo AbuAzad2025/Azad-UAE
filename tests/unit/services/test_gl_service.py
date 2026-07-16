@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from extensions import db
-from models import GLAccount, GLJournalEntry, GLJournalLine, Customer, Supplier
+from models import GLAccount, GLJournalLine
 from services.gl_account_resolver import GLMappingError
 from services.gl_service import GLService, GL_ACCOUNTS
 

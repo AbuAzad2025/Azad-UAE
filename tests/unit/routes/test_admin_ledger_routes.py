@@ -362,9 +362,9 @@ class TestAdminLedgerReports:
         liabilities = [_mock_account(code="2000", type="liability", id=20, balance=Decimal("-500"))]
         equity = [_mock_account(code="3000", type="equity", id=30, balance=Decimal("-500"))]
 
-        def filter_by(**kwargs):
+        def filter_by(**filter_kw):
             inner = MagicMock()
-            t = kwargs.get("type")
+            t = filter_kw.get("type")
             if t == "asset":
                 inner.order_by.return_value.all.return_value = assets
             elif t == "liability":
@@ -579,11 +579,11 @@ class TestAdminLedgerCoverageGaps:
         expenses = [_mock_account(code="5100", type="expense", balance=Decimal("0"))]
         q = MagicMock()
 
-        def filter_by(**kwargs):
+        def filter_by(**filter_kw):
             inner = MagicMock()
-            if kwargs.get("type") == "revenue":
+            if filter_kw.get("type") == "revenue":
                 inner.order_by.return_value.all.return_value = revenues
-            elif kwargs.get("type") == "expense":
+            elif filter_kw.get("type") == "expense":
                 inner.order_by.return_value.all.return_value = expenses
             return inner
 

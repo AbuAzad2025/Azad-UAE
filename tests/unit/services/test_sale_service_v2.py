@@ -53,7 +53,8 @@ class TestSaleServiceValidations:
 
 
 class TestSaleServiceCreate:
-    def _mock_warehouse(self):
+    @staticmethod
+    def _mock_warehouse():
         wh = MagicMock()
         wh.id = 1
         wh.branch_id = 1

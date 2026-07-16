@@ -311,14 +311,14 @@ class TestSafeFloatRouteIntegration:
     ENDPOINT = "/products"
 
     def test_create_uses_module_level_safe_float(self, product_client, mocker, mock_db):
-        PC = mocker.patch("routes.products.ProductCategory")
-        PC.query.filter.return_value.first.return_value = None
-        PC.return_value.id = 1
-        PC.return_value.name = "Test Cat"
-        PC.return_value.name_ar = "قطة"
-        PC.return_value.description = None
-        P = mocker.patch("routes.products.Product")
-        P.query.filter_by.return_value.count.return_value = 0
+        pc = mocker.patch("routes.products.ProductCategory")
+        pc.query.filter.return_value.first.return_value = None
+        pc.return_value.id = 1
+        pc.return_value.name = "Test Cat"
+        pc.return_value.name_ar = "قطة"
+        pc.return_value.description = None
+        product = mocker.patch("routes.products.Product")
+        product.query.filter_by.return_value.count.return_value = 0
 
         resp = product_client.post(
             "/products/categories/create",
@@ -334,7 +334,7 @@ class TestSafeFloatRouteIntegration:
 # =============================================================================
 
 class TestAjaxHeaderJsonResponses:
-    """Delete / cost-price endpoints should honour X-Requested-With header."""
+    """Delete / cost-price endpoints should honor X-Requested-With header."""
 
     ENDPOINT = "/products"
 
@@ -410,7 +410,7 @@ class TestOnlineWarehouseIsolation:
         )
         mocker.patch(
             "routes.products.StockService.get_product_stock",
-            side_effect=lambda pid, warehouse_id=None, user=None: {
+            side_effect=lambda pid, warehouse_id=None, usr=None: {
                 201: Decimal("5"),
                 101: Decimal("105"),
             }.get(warehouse_id, Decimal("0")),

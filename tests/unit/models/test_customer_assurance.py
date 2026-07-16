@@ -67,8 +67,8 @@ class TestCustomerBalance:
 
 class TestCustomerLabels:
     def test_get_display_name(self):
-        assert _customer_stub().get_display_name('ar') == 'علي'
-        assert _customer_stub(name_ar=None).get_display_name('ar') == 'Ali'
+        assert _customer_stub().get_display_name() == 'علي'
+        assert _customer_stub(name_ar=None).get_display_name() == 'Ali'
 
     def test_get_type_display(self):
         assert _customer_stub(customer_type='merchant').get_type_display() == 'تاجر'

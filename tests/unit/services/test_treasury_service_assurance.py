@@ -1,4 +1,4 @@
-"""Treasury service — liquidity position, cheque buckets, reconciliation."""
+"""Treasury service — liquidity position, check buckets, reconciliation."""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -90,7 +90,7 @@ class TestLiquidityPosition:
 
 
 class TestChequeMaturity:
-    """get_cheque_maturity — bucket boundaries and incoming/outgoing split."""
+    """get_check_maturity — bucket boundaries and incoming/outgoing split."""
 
     def test_buckets_incoming_cheques(self, mocker):
         today = date.today()

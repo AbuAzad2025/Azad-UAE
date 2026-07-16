@@ -6,7 +6,6 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import pytest
 
 
 def _payment_stub(**kwargs):
@@ -28,6 +27,7 @@ def _payment_stub(**kwargs):
         sale = kwargs.get('sale')
         sale_id = kwargs.get('sale_id')
 
+        confirmation_date = kwargs.get('confirmation_date')
         base_amount = Payment.base_amount
         get_method_display = Payment.get_method_display
         confirm_payment = Payment.confirm_payment

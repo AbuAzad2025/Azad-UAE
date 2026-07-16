@@ -23,7 +23,7 @@ def repair_accounting_data():
     Safe to run on startup:
     - Ensure a valid default merchant customer exists.
     - Link products missing `merchant_customer_id`.
-    - Backfill legacy cheque GL entries missing reference_type/reference_id.
+    - Backfill legacy check GL entries missing reference_type/reference_id.
     - Post an opening inventory migration adjustment only when a real diff exists.
     """
     from models import Cheque, Customer, Product
@@ -157,9 +157,7 @@ def repair_accounting_data():
             lines=lines,
             description="Initial inventory migration adjustment",
             reference_type="InventoryMigration",
-            reference_id=None,
             currency="AED",
-            exchange_rate=1.0,
             branch_id=branch.id if branch else None,
             tenant_id=int(tenant_id),
         )

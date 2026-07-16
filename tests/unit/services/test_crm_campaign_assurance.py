@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -30,13 +29,13 @@ class TestLeadConversion:
         mocker.patch('services.crm_lead_service.branch_scope_id_for', return_value=1)
         mocker.patch('services.crm_lead_service.get_active_tenant_id', return_value=1)
 
-        Customer = mocker.patch('services.crm_lead_service.Customer')
-        Customer.query.filter.return_value.first.return_value = None
+        customer = mocker.patch('services.crm_lead_service.Customer')
+        customer.query.filter.return_value.first.return_value = None
         mock_customer_instance = MagicMock()
         mock_customer_instance.id = 100
-        Customer.return_value = mock_customer_instance
+        customer.return_value = mock_customer_instance
 
-        CRMActivity = mocker.patch('services.crm_lead_service.CRMActivity')
+        crm_activity = mocker.patch('services.crm_lead_service.CRMActivity')
 
         from services.crm_lead_service import CRMLeadService
         result = CRMLeadService.convert_to_customer(1, mock_user)
@@ -45,7 +44,7 @@ class TestLeadConversion:
         assert mock_lead.customer_id == 100
         assert mock_lead.status == 'won'
         assert mock_lead.closed_at is not None
-        CRMActivity.assert_called_once()
+        crm_activity.assert_called_once()
 
     def test_conversion_blocks_duplicate_email(self, mocker, mock_db):
         mock_lead = MagicMock()
@@ -69,8 +68,8 @@ class TestLeadConversion:
         existing = MagicMock()
         existing.email = 'ahmed@test.com'
         existing.phone = '0502222222'
-        Customer = mocker.patch('services.crm_lead_service.Customer')
-        Customer.query.filter.return_value.first.return_value = existing
+        customer = mocker.patch('services.crm_lead_service.Customer')
+        customer.query.filter.return_value.first.return_value = existing
 
         from services.crm_lead_service import CRMLeadService
         with pytest.raises(ValueError, match='يوجد عميل مسجل بالفعل'):
@@ -94,8 +93,8 @@ class TestLeadConversion:
         existing = MagicMock()
         existing.email = 'other@test.com'
         existing.phone = '0501111111'
-        Customer = mocker.patch('services.crm_lead_service.Customer')
-        Customer.query.filter.return_value.first.return_value = existing
+        customer = mocker.patch('services.crm_lead_service.Customer')
+        customer.query.filter.return_value.first.return_value = existing
 
         from services.crm_lead_service import CRMLeadService
         with pytest.raises(ValueError, match='يوجد عميل مسجل بالفعل'):
@@ -152,11 +151,11 @@ class TestLeadConversion:
         mocker.patch('services.crm_lead_service.is_global_user', return_value=False)
         mocker.patch('services.crm_lead_service.branch_scope_id_for', return_value=1)
 
-        Customer = mocker.patch('services.crm_lead_service.Customer')
+        customer = mocker.patch('services.crm_lead_service.Customer')
         mock_customer = MagicMock()
         mock_customer.id = 101
-        Customer.return_value = mock_customer
-        Customer.query.filter.return_value.first.return_value = None
+        customer.return_value = mock_customer
+        customer.query.filter.return_value.first.return_value = None
 
         from services.crm_lead_service import CRMLeadService
         result = CRMLeadService.convert_to_customer(1, mock_user)
@@ -292,7 +291,8 @@ class TestBranchIsolation:
         result = CRMLeadService.get_lead(1, MagicMock())
         assert result.id == 1
 
-    def _make_mock_crm_lead(self, q):
+    @staticmethod
+    def _make_mock_crm_lead(q):
         m = MagicMock(name='CRMLead')
         m.query = q
         return m
@@ -301,7 +301,7 @@ class TestBranchIsolation:
         mock_q = MagicMock(name='query')
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value.all.return_value = []
-        mock_model = self._make_mock_crm_lead(mock_q)
+        mock_model = TestBranchIsolation._make_mock_crm_lead(mock_q)
         mocker.patch('services.crm_lead_service.CRMLead', mock_model)
         mocker.patch('services.crm_lead_service.get_active_tenant_id', return_value=1)
         mocker.patch('services.crm_lead_service.is_global_user', return_value=False)
@@ -316,7 +316,7 @@ class TestBranchIsolation:
         mock_q = MagicMock(name='query')
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value.all.return_value = []
-        mock_model = self._make_mock_crm_lead(mock_q)
+        mock_model = TestBranchIsolation._make_mock_crm_lead(mock_q)
         mocker.patch('services.crm_lead_service.CRMLead', mock_model)
         mocker.patch('services.crm_lead_service.get_active_tenant_id', return_value=1)
         mocker.patch('services.crm_lead_service.is_global_user', return_value=True)
@@ -330,7 +330,8 @@ class TestBranchIsolation:
 class TestKpiTracking:
     """KPI updates and goal achievement rating on conversion pipeline wins."""
 
-    def _patch_crm_lead(self, mocker, count_side_effect):
+    @staticmethod
+    def _patch_crm_lead(mocker, count_side_effect):
         mock_model = MagicMock(name='CRMLead')
         mock_q = MagicMock(name='query')
         mock_q.filter.return_value = mock_q
@@ -340,7 +341,7 @@ class TestKpiTracking:
         mocker.patch('services.crm_lead_service.get_active_tenant_id', return_value=1)
 
     def test_compute_kpi_returns_zeros(self, mocker):
-        self._patch_crm_lead(mocker, [0, 0])
+        TestKpiTracking._patch_crm_lead(mocker, [0, 0])
         from services.crm_lead_service import CRMLeadService
         kpi = CRMLeadService.compute_conversion_kpi(MagicMock())
         assert kpi['total_converted'] == 0
@@ -348,7 +349,7 @@ class TestKpiTracking:
         assert kpi['conversion_rate'] == 0.0
 
     def test_compute_kpi_with_conversions(self, mocker):
-        self._patch_crm_lead(mocker, [5, 10])
+        TestKpiTracking._patch_crm_lead(mocker, [5, 10])
         from services.crm_lead_service import CRMLeadService
         kpi = CRMLeadService.compute_conversion_kpi(MagicMock())
         assert kpi['total_converted'] == 5
@@ -356,7 +357,7 @@ class TestKpiTracking:
         assert kpi['conversion_rate'] == 50.0
 
     def test_goal_achievement_rating_meets_target(self, mocker):
-        self._patch_crm_lead(mocker, [5, 10])
+        TestKpiTracking._patch_crm_lead(mocker, [5, 10])
         from services.crm_lead_service import CRMLeadService
         rating = CRMLeadService.compute_goal_achievement_rating(MagicMock(), 5)
         assert rating['target'] == 5
@@ -364,14 +365,14 @@ class TestKpiTracking:
         assert rating['rating'] == 100.0
 
     def test_goal_achievement_rating_above_target(self, mocker):
-        self._patch_crm_lead(mocker, [8, 10])
+        TestKpiTracking._patch_crm_lead(mocker, [8, 10])
         from services.crm_lead_service import CRMLeadService
         rating = CRMLeadService.compute_goal_achievement_rating(MagicMock(), 5)
         assert rating['achieved'] == 8
         assert rating['rating'] == 160.0
 
     def test_goal_achievement_zero_target(self, mocker):
-        self._patch_crm_lead(mocker, [0, 0])
+        TestKpiTracking._patch_crm_lead(mocker, [0, 0])
         from services.crm_lead_service import CRMLeadService
         rating = CRMLeadService.compute_goal_achievement_rating(MagicMock(), 0)
         assert rating['rating'] == 100.0

@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 def _line(qty='2', price='50', discount='0', cost='30'):
@@ -129,7 +127,8 @@ class TestSaleCalculateTotals:
 
 
 class TestSalePaymentStatus:
-    def _payment(self, amount, confirmed=True, method='cash'):
+    @staticmethod
+    def _payment(amount, confirmed=True, method='cash'):
         p = MagicMock()
         p.payment_confirmed = confirmed
         p.payment_method = method
@@ -241,7 +240,7 @@ class TestSalePaymentStatus:
         from models.sale import Sale
 
         bad = MagicMock(payment_confirmed=False, payment_method='cheque')
-        type(bad).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('bad')))
+        type(bad).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('bad')))
         sale = Sale()
         sale.payments = [bad]
         assert sale.pending_cheques_amount == Decimal('0')
@@ -250,7 +249,7 @@ class TestSalePaymentStatus:
         from models.sale import Sale
 
         bad = MagicMock(payment_confirmed=True)
-        type(bad).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError('bad')))
+        type(bad).amount_aed = property(lambda _self: (_ for _ in ()).throw(RuntimeError('bad')))
         sale = Sale()
         sale.payments = [bad]
         assert sale.confirmed_payments_amount == Decimal('0')

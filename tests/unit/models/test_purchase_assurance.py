@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import pytest
-
-from models.purchase import Purchase, PurchaseLine
+from models.purchase import PurchaseLine
 
 
 class TestPurchaseModel:
@@ -138,7 +136,8 @@ class TestPurchaseGetPaidAmount:
 
 
 class TestPurchaseCalculateTotals:
-    def _purchase_with_line(self, sample_purchase, sample_product, db_session, **line_kwargs):
+    @staticmethod
+    def _purchase_with_line(sample_purchase, sample_product, db_session, **line_kwargs):
         line = PurchaseLine(
             tenant_id=sample_purchase.tenant_id,
             purchase_id=sample_purchase.id,

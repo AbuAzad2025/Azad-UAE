@@ -365,12 +365,12 @@ def export_scoped_database(
         child_specs = CHILD_VIA_PARENT
     elif scope == SCOPE_BRANCH:
         if not branch_id:
-            return tables_out, row_counts, included, ["branch_id required"]
+            return tables_out, row_counts, included, ["branch_id required"], []
         specs = list(BRANCH_DIRECT_FILTERS) + list(BRANCH_TENANT_MASTERS)
         child_specs = CHILD_VIA_PARENT
     elif scope == SCOPE_STORE:
         if not store_id:
-            return tables_out, row_counts, included, ["store_id required"]
+            return tables_out, row_counts, included, ["store_id required"], []
         specs = list(STORE_TABLE_FILTERS) + [
             (
                 "sales",
@@ -385,7 +385,7 @@ def export_scoped_database(
         ]
         child_specs = CHILD_VIA_PARENT
     else:
-        return tables_out, row_counts, included, [f"unknown scope {scope}"]
+        return tables_out, row_counts, included, [f"unknown scope {scope}"], []
 
     direct_tables = {t for t, _ in specs}
     for table, where_sql in specs:

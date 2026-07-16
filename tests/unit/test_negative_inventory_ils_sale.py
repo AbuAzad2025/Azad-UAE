@@ -290,8 +290,8 @@ class TestNegativeInventoryILSSale:
 
             assert len(entries) > 0, "No GL entries for sale"
 
-            def _line_account_code(line):
-                acc = db_session.get(GLAccount, line.account_id)
+            def _line_account_code(gl_line):
+                acc = db_session.get(GLAccount, gl_line.account_id)
                 return acc.code if acc else None
 
             # Separate revenue and COGS entries
@@ -362,7 +362,7 @@ class TestNegativeInventoryILSSale:
             assert sale_line.cost_price > 0, \
                 f"SaleLine.cost_price should be > 0: got {sale_line.cost_price}"
             
-            print(f"\n{'='*60}")
+            print(f"\r\n{'='*60}")
             print("TEST PASSED: Negative Inventory + ILS + VAT Sale")
             print(f"{'='*60}")
             print(f"Sale Number: {sale.sale_number}")

@@ -2,15 +2,13 @@ import warnings
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from decimal import Decimal
-from itertools import cycle
 import sys
 from unittest.mock import MagicMock, patch
 
 warnings.filterwarnings("ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited")
 
 import pytest
-from flask import Flask, make_response
-from flask_login import login_user, logout_user
+from flask import Flask
 
 for _mod in ('numpy', 'pandas'):
     if _mod not in sys.modules:
@@ -282,7 +280,8 @@ class TestFactory:
         self.db_session = db_session
         self.user = user
     
-    def _set_tenant_id_on_obj(self, obj, tenant_id):
+    @staticmethod
+    def _set_tenant_id_on_obj(obj, tenant_id):
         """Set tenant_id on an object, bypassing tenant isolation guard."""
         if hasattr(obj, 'tenant_id'):
             obj.tenant_id = tenant_id

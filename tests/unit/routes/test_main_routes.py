@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tests.unit.routes.conftest import _chain_query, app_factory, bypass_permission_auth, mock_user, unauthenticated_client
+from tests.unit.routes.conftest import _chain_query, app_factory, bypass_permission_auth, unauthenticated_client
 
 
 @contextmanager

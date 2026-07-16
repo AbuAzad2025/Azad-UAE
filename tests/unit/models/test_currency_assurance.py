@@ -3,10 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock
-
-import pytest
-
 
 def _currency_stub(**kwargs):
     from models.currency import Currency
@@ -53,11 +49,11 @@ class TestCurrency:
         assert 'AED' in repr(_currency_stub())
 
     def test_get_display_name_ar(self):
-        assert _currency_stub().get_display_name('ar') == 'درهم'
+        assert _currency_stub().get_display_name() == 'درهم'
 
     def test_get_display_name_en_fallback(self):
         c = _currency_stub(name_ar=None)
-        assert c.get_display_name('ar') == 'UAE Dirham'
+        assert c.get_display_name() == 'UAE Dirham'
 
     def test_to_dict(self):
         data = _currency_stub(is_base=True).to_dict()

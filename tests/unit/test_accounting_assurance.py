@@ -8,7 +8,7 @@ Tests:
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone, timedelta
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -82,7 +82,8 @@ class TestGLDoubleEntryBalance:
 class TestPartnerProfitAndLossDistribution:
     """Parametrized profit/loss distribution with scope-level P&L."""
 
-    def _make_partner(self, **kwargs):
+    @staticmethod
+    def _make_partner(**kwargs):
         p = MagicMock()
         attrs = dict(id=1, tenant_id=1, is_active=True, scope_type='company',
                      scope_id=None, share_percentage=Decimal('50'),
@@ -95,12 +96,13 @@ class TestPartnerProfitAndLossDistribution:
             setattr(p, k, v)
         return p
 
-    def _patch_partner_query(self, model_patch, partners):
-        P = model_patch('models.Partner', count=len(partners))
-        P.query.filter_by.return_value.all.return_value = partners
-        D = model_patch('models.PartnerProfitDistribution', count=0)
-        D.query.filter_by.return_value.first.return_value = None
-        return P
+    @staticmethod
+    def _patch_partner_query(model_patch, partners):
+        partner = model_patch('models.Partner', count=len(partners))
+        partner.query.filter_by.return_value.all.return_value = partners
+        debit_note = model_patch('models.PartnerProfitDistribution', count=0)
+        debit_note.query.filter_by.return_value.first.return_value = None
+        return partner
 
     def _run_dist(self, app, mocker, model_patch, partners, pnl):
         self._patch_partner_query(model_patch, partners)
@@ -138,8 +140,8 @@ class TestPartnerProfitAndLossDistribution:
             )
 
     def test_total_share_exceeds_100_raises(self, app, model_patch):
-        P = model_patch('models.Partner', count=2)
-        P.query.filter_by.return_value.all.return_value = [
+        partner = model_patch('models.Partner', count=2)
+        partner.query.filter_by.return_value.all.return_value = [
             self._make_partner(share_percentage=Decimal('60')),
             self._make_partner(share_percentage=Decimal('50'), id=2),
         ]
@@ -172,7 +174,8 @@ class TestPartnerProfitAndLossDistribution:
 class TestBankAutoMatchingAndSuspenseRouting:
     """Auto-match on clean hits; route orphans to Suspense."""
 
-    def _setup_match_mocks(self, mocker, stmt, gl_lines):
+    @staticmethod
+    def _setup_match_mocks(mocker, stmt, gl_lines):
         mocker.patch('services.bank_reconciliation_service.db.session.get', return_value=stmt)
         mock_q = MagicMock()
         mock_q.return_value = mock_q
@@ -220,14 +223,15 @@ class TestBankAutoMatchingAndSuspenseRouting:
         )
         assert result is None
 
-    def _setup_orphan_mocks(self, mocker, stmts):
-        BSL = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
-        BSL.query.filter.return_value.all.return_value = stmts
-        GLA = mocker.patch('services.bank_reconciliation_service.GLAccount')
-        GLA.query.filter_by.return_value.filter.return_value.first.return_value = MagicMock(code='2999')
+    @staticmethod
+    def _setup_orphan_mocks(mocker, stmts):
+        bsl = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
+        bsl.query.filter.return_value.all.return_value = stmts
+        gla = mocker.patch('services.bank_reconciliation_service.GLAccount')
+        gla.query.filter_by.return_value.filter.return_value.first.return_value = MagicMock(code='2999')
         mock_entry = MagicMock(id=99)
         mocker.patch('services.gl_posting.post_or_fail', return_value=mock_entry)
-        return BSL
+        return bsl
 
     def test_orphan_routed_to_suspense(self, app, mocker):
         stmt = MagicMock()
@@ -307,8 +311,8 @@ class TestBankAutoMatchingAndSuspenseRouting:
         stmt.reference = 'SUS-001'
         stmt.status = 'imported'
 
-        BSL = self._setup_orphan_mocks(mocker, [stmt])
-        BSL.query.get.return_value = stmt
+        bsl = self._setup_orphan_mocks(mocker, [stmt])
+        bsl.query.get.return_value = stmt
 
         from services.bank_reconciliation_service import BankReconciliationService
         BankReconciliationService.route_orphans_to_suspense(
@@ -318,8 +322,8 @@ class TestBankAutoMatchingAndSuspenseRouting:
         assert stmt.status == 'suggested_match'
 
     def test_no_orphans_returns_empty(self, app, mocker):
-        BSL = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
-        BSL.query.filter.return_value.all.return_value = []
+        bsl = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
+        bsl.query.filter.return_value.all.return_value = []
         from services.bank_reconciliation_service import BankReconciliationService
         results = BankReconciliationService.route_orphans_to_suspense(
             tenant_id=1, bank_account_id=100,

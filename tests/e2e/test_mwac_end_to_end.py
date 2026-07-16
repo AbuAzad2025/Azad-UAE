@@ -109,7 +109,7 @@ def main():
 
             # Refresh PWC
             db.session.refresh(pwc)
-            print(f"\nAfter Purchase (qty={purchase_qty} @ {new_unit_cost}):")
+            print(f"\r\nAfter Purchase (qty={purchase_qty} @ {new_unit_cost}):")
             print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
             # Verify WAC formula
@@ -181,7 +181,7 @@ def main():
             db.session.commit()
 
             expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal('0.001'))
-            print(f"\nAfter Sale (qty={sale_qty}):")
+            print(f"\r\nAfter Sale (qty={sale_qty}):")
             print(f"  COGS computed: {cogs_total}")
             print(f"  Expected COGS: {expected_cogs}")
 
@@ -206,12 +206,12 @@ def main():
             assert sale_history is not None, "Missing ProductCostHistory for sale"
             print(f"  ✅ ProductCostHistory record exists for sale")
 
-            print("\n=== ALL MWAC TESTS PASSED ===")
+            print("\r\n=== ALL MWAC TESTS PASSED ===")
             return 0
 
         finally:
             # Cleanup: delete test data
-            print("\n--- Cleanup ---")
+            print("\r\n--- Cleanup ---")
             for table, cond in [
                 ('stock_movements', "reference_id IN (SELECT id FROM sales WHERE sale_number LIKE 'TEST-MWAC%')"),
                 ('stock_movements', "reference_id IN (SELECT id FROM purchases WHERE purchase_number LIKE 'TEST-MWAC%')"),

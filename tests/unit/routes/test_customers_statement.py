@@ -4,8 +4,6 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 def _query_chain(items):
     q = MagicMock()
     q.filter_by.return_value = q

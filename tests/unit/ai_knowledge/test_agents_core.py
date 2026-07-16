@@ -18,7 +18,8 @@ class TestAgentsCore:
         monkeypatch.delenv('OPENAI_API_KEY', raising=False)
         import ai_knowledge.agents_core as core
         core._llm_available = None
-        assert _check_llm_availability() is False
+        with patch('dotenv.load_dotenv'):
+            assert _check_llm_availability() is False
 
     def test_build_system_prompt(self):
         prompt = _build_system_prompt('ما هي الصلاحيات؟', 'manager')

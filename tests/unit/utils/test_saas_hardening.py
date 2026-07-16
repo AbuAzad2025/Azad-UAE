@@ -14,7 +14,8 @@ from extensions import db
 class TestCrossTenantWriteBlock:
     """Verify the before_flush guard blocks cross-tenant INSERT/UPDATE."""
 
-    def _active_tenant_context(self, app, tenant_id):
+    @staticmethod
+    def _active_tenant_context(app, tenant_id):
         """Return a request context with a mocked active tenant."""
         import flask_login
         ctx = app.test_request_context()

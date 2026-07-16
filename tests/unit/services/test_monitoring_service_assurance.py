@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-import json
 import os
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from services.monitoring_service import MonitoringService
 

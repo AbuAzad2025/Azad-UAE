@@ -1,9 +1,6 @@
 """NOWPayments provider — config surface and webhook URL builder."""
 from __future__ import annotations
 
-import pytest
-
-
 class TestNowPaymentsProvider:
     def test_config_from_app(self, app):
         app.config.update(

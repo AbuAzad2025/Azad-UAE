@@ -1,12 +1,10 @@
 """Cheque model — status, archive, queries, tenant-scoped statistics."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
-
-import pytest
 
 import models.cheque as cheque_mod
 from models.cheque import Cheque
@@ -155,7 +153,8 @@ class TestChequeProperties:
 
 
 class TestChequeQueries:
-    def _fake_cheque_cls(self, query):
+    @staticmethod
+    def _fake_cheque_cls(query):
         return SimpleNamespace(
             query=query,
             due_date=_COL_DUE_DATE,

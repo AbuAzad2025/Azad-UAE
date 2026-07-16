@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from extensions import db
 from models.gl import GLJournalEntry, GLJournalLine
 from services.cheque_accounting_integration import ChequeAccountingIntegration
 from utils.gl_reference_types import GLRef

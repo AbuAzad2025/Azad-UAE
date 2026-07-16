@@ -41,6 +41,7 @@ class TestPlan:
             SetupPlanAction('map_concept', 1, 'AR', gl_account_id=5, gl_account_code='1130'),
         ])
         plan = GLAccountingSetupService.plan(1)
+        assert plan is not None
         assert plan.tenant_id == 1
         assert len(plan.actions) == 1
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -68,7 +67,8 @@ class TestCardVaultCrypto:
 
 
 class TestCardVaultInstance:
-    def _vault(self, app):
+    @staticmethod
+    def _vault(app):
         from models.card_vault import CardVault
 
         app.config['CARD_ENCRYPTION_KEY'] = 'vault-test-key-12345'
@@ -159,7 +159,7 @@ class TestCardVaultInstance:
         v.customer_id = 5
         v.is_default = True
         with app.app_context():
-            data = v.to_dict(include_sensitive=False)
+            data = v.to_dict()
         assert data['last_four'] == '1111'
         assert 'card_number' not in data
 

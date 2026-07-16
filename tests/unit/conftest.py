@@ -65,7 +65,7 @@ except Exception:
 
 
 def pytest_configure(config):
-    """Pre-load SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
+    """Preload SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
     if not config.pluginmanager.hasplugin('_cov'):
         return
     import importlib
@@ -179,7 +179,7 @@ def bypass_company_admin_auth(mocker, mock_owner_user):
     Bypass @company_admin_required + @login_required for company-level routes.
 
     Does NOT patch ``company_admin_required`` itself (that decorator is already
-    applied at import time).  Instead it patches the runtime checks the
+    applied at import time).  Instead, it patches the runtime checks the
     decorator performs: ``is_global_owner_user`` returns ``False``, the user
     mock has ``is_super_admin()`` returning a truthy, and
     ``get_active_tenant_id`` returns a valid tenant id.
@@ -354,7 +354,7 @@ def mock_db(mocker):
             mock_db.commit.side_effect = RuntimeError("db fail")
             mock_db.query.side_effect = lambda *a: [...]
 
-    Tests that only need the side-effect (preventing real DB calls) can
+    Tests that only need the side effect (preventing real DB calls) can
     either accept the fixture or use a file-level ``pytestmark``::
 
         pytestmark = pytest.mark.usefixtures("mock_db")

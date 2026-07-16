@@ -57,7 +57,7 @@ def ai_orm_listeners_enabled() -> bool:
     """
     explicit = os.environ.get("AI_ORM_LISTENERS_ENABLED")
     if explicit is not None:
-        return _bool(explicit, False)
+        return _bool(explicit)
     return False
 
 
@@ -66,7 +66,7 @@ class Config:
     
     FLASK_APP = os.environ.get("FLASK_APP", "app:create_app")
     APP_ENV = os.environ.get("APP_ENV", os.environ.get("FLASK_ENV", "production"))
-    DEBUG = _bool(os.environ.get("DEBUG"), False)
+    DEBUG = _bool(os.environ.get("DEBUG"))
 
     # SQLAlchemy AI/neural listeners (models/events.py) — off in production by default
     AI_ORM_LISTENERS_ENABLED = ai_orm_listeners_enabled()
@@ -146,7 +146,7 @@ class Config:
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
     CORS_SUPPORTS_CREDENTIALS = True
     
-    RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"), False)
+    RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"))
     RATELIMIT_DEFAULT = "100000 per hour"
     RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_LOGIN = "1000 per hour;100 per minute"
@@ -180,20 +180,20 @@ class Config:
     ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), True)
 
     # When False: exchange rates are not locked on posted documents.
-    ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK"), False)
+    ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK"))
 
     # When False: stock-to-GL reconciliation dashboards are hidden.
-    ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"), False)
+    ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"))
 
     # When False: treasury dashboard and liquidity reports are hidden.
     ENABLE_TREASURY = _bool(os.environ.get("ENABLE_TREASURY"), True)
 
     # When False: regional tax/invoice engines are disabled.
-    ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"), False)
+    ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"))
 
     # When False: load tests and regression suites are skipped in CI.
-    ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"), False)
-    ENABLE_FULL_REGRESSION = _bool(os.environ.get("ENABLE_FULL_REGRESSION"), False)
+    ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"))
+    ENABLE_FULL_REGRESSION = _bool(os.environ.get("ENABLE_FULL_REGRESSION"))
 
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")
@@ -258,7 +258,7 @@ class Config:
     
     CARD_ENCRYPTION_KEY = os.environ.get("CARD_ENCRYPTION_KEY", "")
     
-    ALLOW_CARD_DECRYPTION = _bool(os.environ.get("ALLOW_CARD_DECRYPTION"), False)
+    ALLOW_CARD_DECRYPTION = _bool(os.environ.get("ALLOW_CARD_DECRYPTION"))
     
     ITEMS_PER_PAGE = _int("ITEMS_PER_PAGE", 20)
     
@@ -302,7 +302,7 @@ class Config:
         if origin.strip()
     ]
     
-    WHATSAPP_ENABLED = _bool(os.environ.get("WHATSAPP_ENABLED"), False)
+    WHATSAPP_ENABLED = _bool(os.environ.get("WHATSAPP_ENABLED"))
     WHATSAPP_API_KEY = os.environ.get("WHATSAPP_API_KEY", "")
     WHATSAPP_PHONE_NUMBER = os.environ.get("WHATSAPP_PHONE_NUMBER", "")
 

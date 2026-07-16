@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -69,40 +69,40 @@ class TestAIExecutorGaps:
             ai_executor.create_product(name='', regular_price=10)
 
     def test_create_sale_customer_missing(self, ai_executor, mocker):
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.first.return_value = None
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='غير موجود'):
             ai_executor.create_sale('Ghost', [{'product_name': 'X', 'quantity': 1}])
 
     def test_create_sale_no_active_seller(self, ai_executor, mocker):
-        customer = MagicMock(id=1)
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.first.return_value = customer
-        User = mocker.patch('models.User')
-        User.query.filter_by.return_value.first.return_value = None
+        mock_customer = MagicMock(id=1)
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.first.return_value = mock_customer
+        user = mocker.patch('models.User')
+        user.query.filter_by.return_value.first.return_value = None
         ai_executor.user = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='مستخدم نشط'):
             ai_executor.create_sale('Acme', [{'product_name': 'X', 'quantity': 1}])
 
     def test_create_sale_product_missing(self, ai_executor, mocker):
-        customer = MagicMock(id=1)
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.first.return_value = customer
-        Product = mocker.patch('models.Product')
-        Product.query.filter_by.return_value.first.return_value = None
+        mock_customer = MagicMock(id=1)
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.first.return_value = mock_customer
+        product = mocker.patch('models.Product')
+        product.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='المنتج'):
             ai_executor.create_sale('Acme', [{'product_name': 'Missing', 'quantity': 1}])
 
     def test_create_sale_with_payment_data(self, ai_executor, mocker):
-        customer = MagicMock(id=1)
-        product = MagicMock(id=2)
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.first.return_value = customer
-        Product = mocker.patch('models.Product')
-        Product.query.filter_by.return_value.first.return_value = product
+        mock_customer = MagicMock(id=1)
+        mock_product = MagicMock(id=2)
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.first.return_value = mock_customer
+        product = mocker.patch('models.Product')
+        product.query.filter_by.return_value.first.return_value = mock_product
         sale = MagicMock(id=5, sale_number='S-1', total_amount=Decimal('100'))
         mocker.patch('services.sale_service.SaleService.create_sale', return_value=sale)
         result = ai_executor.create_sale(
@@ -111,8 +111,8 @@ class TestAIExecutorGaps:
         assert result['success'] is True
 
     def test_receive_payment_customer_missing(self, ai_executor, mocker):
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.first.return_value = None
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='غير موجود'):
             ai_executor.receive_payment('Missing', 100)
@@ -141,8 +141,8 @@ class TestAIExecutorGaps:
             ai_executor.add_expense('Rent', 0)
 
     def test_add_expense_no_category(self, ai_executor, mocker):
-        ExpenseCategory = mocker.patch('models.ExpenseCategory')
-        ExpenseCategory.query.filter_by.return_value.first.return_value = None
+        expense_category = mocker.patch('models.ExpenseCategory')
+        expense_category.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='تصنيف'):
             ai_executor.add_expense('Office', 50)
@@ -153,31 +153,31 @@ class TestAIExecutorGaps:
             ai_executor.create_employee('')
 
     def test_create_purchase_supplier_missing(self, ai_executor, mocker):
-        Supplier = mocker.patch('models.Supplier')
-        Supplier.query.filter_by.return_value.first.return_value = None
+        supplier = mocker.patch('models.Supplier')
+        supplier.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='المورد'):
             ai_executor.create_purchase('Ghost', [{'product_name': 'X'}])
 
     def test_create_purchase_no_warehouse(self, ai_executor, mocker):
-        supplier = MagicMock(id=1, name='V')
-        Supplier = mocker.patch('models.Supplier')
-        Supplier.query.filter_by.return_value.first.return_value = supplier
-        Warehouse = mocker.patch('models.Warehouse')
-        Warehouse.query.filter_by.return_value.first.return_value = None
+        mock_supplier = MagicMock(id=1, name='V')
+        supplier = mocker.patch('models.Supplier')
+        supplier.query.filter_by.return_value.first.return_value = mock_supplier
+        warehouse = mocker.patch('models.Warehouse')
+        warehouse.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='مستودع'):
             ai_executor.create_purchase('V', [{'product_name': 'X'}])
 
     def test_create_purchase_product_missing(self, ai_executor, mocker):
-        supplier = MagicMock(id=1, name='V')
-        warehouse = MagicMock(id=3)
-        Supplier = mocker.patch('models.Supplier')
-        Supplier.query.filter_by.return_value.first.return_value = supplier
-        Warehouse = mocker.patch('models.Warehouse')
-        Warehouse.query.filter_by.return_value.first.side_effect = [None, warehouse]
-        Product = mocker.patch('models.Product')
-        Product.query.filter_by.return_value.first.return_value = None
+        mock_supplier = MagicMock(id=1, name='V')
+        mock_warehouse = MagicMock(id=3)
+        supplier = mocker.patch('models.Supplier')
+        supplier.query.filter_by.return_value.first.return_value = mock_supplier
+        warehouse = mocker.patch('models.Warehouse')
+        warehouse.query.filter_by.return_value.first.side_effect = [None, mock_warehouse]
+        product = mocker.patch('models.Product')
+        product.query.filter_by.return_value.first.return_value = None
         from services.ai_executor import AIExecutorError
         with pytest.raises(AIExecutorError, match='المنتج'):
             ai_executor.create_purchase('V', [{'product_name': 'Missing'}])
@@ -185,14 +185,14 @@ class TestAIExecutorGaps:
     def test_profit_summary_with_cost_lines(self, ai_executor, mocker):
         mocker.patch('services.ai_executor.db.session')
         mocker.patch('services.ai_executor.db.session.query').return_value.filter.return_value.scalar.return_value = Decimal('1000')
-        Sale = mocker.patch('models.Sale')
-        Sale.query.filter.return_value.count.return_value = 1
+        sale = mocker.patch('models.Sale')
+        sale.query.filter.return_value.count.return_value = 1
         line = MagicMock(product_id=9, quantity=Decimal('2'))
-        SaleLine = mocker.patch('models.SaleLine')
-        SaleLine.query.join.return_value.filter.return_value.all.return_value = [line]
-        product = MagicMock(cost_price=Decimal('100'))
-        Product = mocker.patch('models.Product')
-        Product.query.get.return_value = product
+        sale_line = mocker.patch('models.SaleLine')
+        sale_line.query.join.return_value.filter.return_value.all.return_value = [line]
+        mock_product = MagicMock(cost_price=Decimal('100'))
+        product = mocker.patch('models.Product')
+        product.query.get.return_value = mock_product
         result = ai_executor.profit_summary()
         assert result['cost'] == pytest.approx(200.0)
 
@@ -392,7 +392,8 @@ class TestChequeServiceValidationGaps:
 
 
 class TestChequeServiceProcessGaps:
-    def _outgoing_cheque(self, **kw):
+    @staticmethod
+    def _outgoing_cheque(**kw):
         cheque = MagicMock(
             id=1, tenant_id=1, branch_id=1, cheque_type='outgoing',
             cheque_bank_number='OB1', amount=Decimal('500'), amount_aed=Decimal('500'),
@@ -453,8 +454,8 @@ class TestChequeServiceProcessGaps:
         mocker.patch('services.cheque_service._create_bounce_journal_entry')
         mocker.patch('models.payment.Payment')
         mocker.patch('models.payment.Receipt')
-        Supplier = mocker.patch('models.supplier.Supplier')
-        Supplier.query.filter_by.return_value.first.return_value = supplier
+        supplier_model = mocker.patch('models.supplier.Supplier')
+        supplier_model.query.filter_by.return_value.first.return_value = supplier
         from services.cheque_service import process_cheque_bounce
         process_cheque_bounce(cheque, 'returned')
 
@@ -502,13 +503,13 @@ class TestChequeServiceProcessGaps:
             id=8, tenant_id=1, status='pending', cheque_type='incoming', notes='',
             supplier_id=None, expense_id=None,
         )
-        receipt = MagicMock()
+        mock_receipt = MagicMock()
         mock_q = MagicMock()
-        mock_q.filter.return_value.all.return_value = [receipt]
+        mock_q.filter.return_value.all.return_value = [mock_receipt]
         mocker.patch('models.payment.Payment')
         mocker.patch('models.payment.Receipt')
-        Receipt = mocker.patch('models.payment.Receipt')
-        Receipt.query.filter_by.return_value = mock_q
+        receipt = mocker.patch('models.payment.Receipt')
+        receipt.query.filter_by.return_value = mock_q
         mocker.patch('services.cheque_service._create_cancel_journal_entry')
         from services.cheque_service import process_cheque_cancel
         process_cheque_cancel(cheque, reason='void')
@@ -554,7 +555,6 @@ class TestChequeServiceProcessGaps:
         assert any('branch row isolation' in e for e in result['errors'])
 
     def test_verify_skips_zero_expected_and_missing_jsonl(self, tmp_path):
-        import json
         from services.backup_scoped_engine import verify_scoped_isolation
         from services.backup_scope_config import SCOPE_TENANT
         data_dir = tmp_path / 'data'

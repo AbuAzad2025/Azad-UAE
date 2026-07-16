@@ -9,6 +9,7 @@ from utils.db_safety import atomic_transaction
 
 def _ensure_column(table_name: str, column_name: str, ddl: str) -> bool:
     inspector = inspect(db.engine)
+    assert inspector is not None, "SQLAlchemy inspector unavailable"
     existing = {column["name"] for column in inspector.get_columns(table_name)}
     if column_name in existing:
         return False

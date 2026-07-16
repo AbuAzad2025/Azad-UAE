@@ -6,7 +6,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
-from werkzeug.exceptions import NotFound
 
 from tests.unit.routes.conftest import _chain_query, app_factory, bypass_admin_auth, bypass_permission_auth, unauthenticated_client
 

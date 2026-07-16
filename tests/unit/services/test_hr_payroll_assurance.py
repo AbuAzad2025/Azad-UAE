@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -21,7 +20,7 @@ class TestNetSalaryComputation:
         (Decimal('4000'), Decimal('0'), Decimal('4500'), 0, None, Decimal('-500.00')),
         # 4 — Zero basic, allowances only
         (Decimal('0'), Decimal('2000'), Decimal('500'), 0, None, Decimal('1500.00')),
-        # 5 — Daily wage worker (2.5 days @ 200/day, 2 unpaid days)
+        # 5 — Daily wage-worker (2.5 days @ 200/day, 2 unpaid days)
         (Decimal('2.5'), Decimal('100'), Decimal('50'), 2, Decimal('200'), Decimal('150.00')),
         # 6 — Unpaid leave with daily_rate overrides
         (Decimal('0'), Decimal('5000'), Decimal('1000'), 5, Decimal('100'), Decimal('3500.00')),
@@ -262,7 +261,8 @@ class TestUnpaidLeaveDeduction:
 class TestPayrollBatchGLApproval:
     """Approved payroll batch posts balanced Dr Expense / Cr Payable GL lines."""
 
-    def _make_tx(self, basic, allowances, deductions, net, tx_id=1):
+    @staticmethod
+    def _make_tx(basic, allowances, deductions, net, tx_id=1):
         tx = MagicMock()
         tx.id = tx_id
         tx.status = 'draft'

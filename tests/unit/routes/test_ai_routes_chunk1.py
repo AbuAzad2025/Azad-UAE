@@ -8,9 +8,7 @@ Covers the first 3 JSON API endpoints in ``routes/ai_routes/``:
 
 All AI / LLM calls are mocked via ``mock_ai_service``.  No real API is hit.
 """
-import json
 
-import pytest
 
 
 # ===========================================================================
@@ -223,7 +221,7 @@ class TestCheckStock:
 
 
 class TestAnalyzeCustomer:
-    """GET /analyze-customer/<id> — AI customer-behaviour analysis."""
+    """GET /analyze-customer/<id> — AI customer-behavior analysis."""
 
     ANALYSIS = {
         "customer_name": "test-customer",

@@ -11,7 +11,8 @@ import pytest
 class TestSumHelpers:
     """sum_sales / sum_purchases / sum_receipts — centralized filters."""
 
-    def _scalar_chain(self, mocker, value):
+    @staticmethod
+    def _scalar_chain(mocker, value):
         q = MagicMock()
         q.filter.return_value = q
         q.scalar.return_value = value
@@ -194,7 +195,8 @@ class TestFinancialOverview:
 
 
 class TestSumFiltersExtended:
-    def _scalar_chain(self, mocker, value):
+    @staticmethod
+    def _scalar_chain(mocker, value):
         q = MagicMock()
         q.filter.return_value = q
         q.scalar.return_value = value

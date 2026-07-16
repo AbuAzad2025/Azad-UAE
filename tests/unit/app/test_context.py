@@ -33,7 +33,8 @@ def ctx_app():
 
 
 class TestContextProcessor:
-    def _ctx(self, app):
+    @staticmethod
+    def _ctx(app):
         funcs = [f for f in app.template_context_processors[None]]
         with app.app_context():
             for func in reversed(funcs):

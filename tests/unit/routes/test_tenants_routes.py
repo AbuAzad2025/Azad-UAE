@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tests.unit.routes.conftest import app_factory, bypass_admin_auth, mock_user, unauthenticated_client
+from tests.unit.routes.conftest import app_factory, bypass_admin_auth, unauthenticated_client
 
 
 @pytest.fixture

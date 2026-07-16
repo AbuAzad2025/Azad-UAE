@@ -23,7 +23,8 @@ def mock_app_context(mocker):
 class TestInventoryReconciliationTask:
     """run_inventory_reconciliation — single vs all tenants, mismatch logging."""
 
-    def _matched_report(self):
+    @staticmethod
+    def _matched_report():
         return {
             'summary': {
                 'all_matched_qty': True,
@@ -113,11 +114,11 @@ class TestCeleryReportAndMailTasks:
         assert 'Disabled' in result['error']
 
     def test_send_invoice_email_success(self, mocker, mock_app_context):
-        sale = MagicMock()
-        sale.sale_number = 'INV-001'
-        sale.customer.email = 'buyer@test.com'
-        Sale = mocker.patch('models.Sale')
-        Sale.query.get.return_value = sale
+        mock_sale = MagicMock()
+        mock_sale.sale_number = 'INV-001'
+        mock_sale.customer.email = 'buyer@test.com'
+        sale = mocker.patch('models.Sale')
+        sale.query.get.return_value = mock_sale
         mocker.patch('flask_mail.Message', return_value=MagicMock())
         mail = mocker.patch('extensions.mail')
         from services.celery_tasks import send_invoice_email
@@ -126,8 +127,8 @@ class TestCeleryReportAndMailTasks:
         mail.send.assert_called_once()
 
     def test_send_invoice_email_missing_customer(self, mocker, mock_app_context):
-        Sale = mocker.patch('models.Sale')
-        Sale.query.get.return_value = None
+        sale = mocker.patch('models.Sale')
+        sale.query.get.return_value = None
         from services.celery_tasks import send_invoice_email
         assert send_invoice_email(999) == {'success': False}
 
@@ -161,8 +162,8 @@ class TestCeleryMaintenanceTasks:
         c1.get_balance_aed.return_value = Decimal('2000')
         c2 = MagicMock(phone=None, name='B')
         c2.get_balance_aed.return_value = Decimal('5000')
-        Customer = mocker.patch('models.Customer')
-        Customer.query.filter_by.return_value.all.return_value = [c1, c2]
+        customer = mocker.patch('models.Customer')
+        customer.query.filter_by.return_value.all.return_value = [c1, c2]
         mocker.patch(
             'services.whatsapp_service.WhatsAppService.send_payment_reminder',
             return_value={'success': True},

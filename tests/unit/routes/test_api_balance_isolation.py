@@ -1,15 +1,13 @@
 ﻿"""Tests for API balance isolation - cross-tenant customer/supplier balance returns 0.0"""
-import pytest
 from unittest.mock import MagicMock, patch
-from flask import Flask
-from extensions import db
 from models import Customer, Supplier, Tenant
 
 
 class TestAPIBalanceIsolation:
     """Test that API balance helpers enforce tenant isolation."""
 
-    def _make_tenant(self, db_session, name="Test Tenant"):
+    @staticmethod
+    def _make_tenant(db_session, name="Test Tenant"):
         import uuid
         unique = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -25,7 +23,8 @@ class TestAPIBalanceIsolation:
         db_session.flush()
         return tenant
 
-    def _make_customer(self, db_session, tenant_id, name="Test Customer"):
+    @staticmethod
+    def _make_customer(db_session, tenant_id, name="Test Customer"):
         import uuid
         unique = str(uuid.uuid4())[:8]
         customer = Customer(
@@ -40,7 +39,8 @@ class TestAPIBalanceIsolation:
         db_session.flush()
         return customer
 
-    def _make_supplier(self, db_session, tenant_id, name="Test Supplier"):
+    @staticmethod
+    def _make_supplier(db_session, tenant_id, name="Test Supplier"):
         import uuid
         unique = str(uuid.uuid4())[:8]
         supplier = Supplier(

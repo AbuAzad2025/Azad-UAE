@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Response
 
-from tests.unit.routes.conftest import _chain_query, _stub_query, unauthenticated_client
+from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 
 
 def _doc_mock(branch_id=1, tenant_id=1, **extra):
@@ -70,7 +70,8 @@ def printing_client(app_factory, bypass_permission_auth):
 
 
 class TestGenericPrint:
-    def setup_mocks(self, printing_client, doc_type='purchase', doc=None):
+    @staticmethod
+    def setup_mocks(printing_client, doc_type='purchase', doc=None):
         if doc is None:
             doc = _doc_mock(purchase_number="PO-001")
         mocks = printing_client._printing_mocks
@@ -108,7 +109,8 @@ class TestGenericPrint:
 
 
 class TestPrintExpense:
-    def setup_mocks(self, printing_client, doc_type='expense', doc=None):
+    @staticmethod
+    def setup_mocks(printing_client, doc_type='expense', doc=None):
         if doc is None:
             doc = _doc_mock(expense_number="EX-001")
         mocks = printing_client._printing_mocks

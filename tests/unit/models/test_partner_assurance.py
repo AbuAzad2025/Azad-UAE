@@ -1,8 +1,6 @@
 """Partner model — scope labels and balance summary."""
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pytest
 
 
@@ -33,7 +31,6 @@ def _partner_stub(**kwargs):
 
 class TestPartnerProperties:
     def test_scope_label_company(self):
-        from models.partner import Partner
         assert _partner_stub(scope_type='company').scope_label == 'مستوى الشركة'
 
     def test_scope_label_branch(self):

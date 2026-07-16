@@ -985,7 +985,7 @@ class TestProductsExtendedCoverage:
                  patch("routes.products.Product", return_value=new_product):
                 resp = products_client.post(
                     "/products/import",
-                    data={"file": (BytesIO(b"a,b\n1,2"), "products.csv")},
+                    data={"file": (BytesIO(b"a,b\r\n1,2"), "products.csv")},
                     content_type="multipart/form-data",
                 )
         assert resp.status_code == 302

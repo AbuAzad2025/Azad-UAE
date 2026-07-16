@@ -15,7 +15,8 @@ from utils.performance import (
 
 
 class TestMeasureTime:
-    def _time_sequence(self, *values):
+    @staticmethod
+    def _time_sequence(*values):
         seq = list(values)
 
         def fake_time():

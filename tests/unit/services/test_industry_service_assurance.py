@@ -31,7 +31,8 @@ class TestIndustryValidation:
 class TestFieldDefinitions:
     """get_fields_for — per-sector active field mapping."""
 
-    def _mock_field_query(self, mocker, app, rows):
+    @staticmethod
+    def _mock_field_query(mocker, app, rows):
         with app.app_context():
             from models.industry_field_definition import IndustryFieldDefinition
 

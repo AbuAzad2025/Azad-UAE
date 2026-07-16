@@ -4,7 +4,6 @@ from __future__ import annotations
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 
 
 class TestProductCategory:
@@ -18,7 +17,8 @@ class TestProductCategory:
 
 
 class TestProductModel:
-    def _product(self, **kwargs):
+    @staticmethod
+    def _product(**kwargs):
         from models.product import Product
 
         p = Product(

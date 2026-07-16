@@ -255,24 +255,24 @@ def test_export_scoped_database_happy_path(patch_export_helpers, scope, tenant_i
 def test_export_scoped_database_unknown_scope(patch_export_helpers):
     conn = None
     result = export_scoped_database(conn, "unknown_scope", tenant_id=1)
-    assert len(result) == 4
-    _, _, _, skipped = result
+    assert len(result) == 5
+    _, _, _, skipped, _ = result
     assert "unknown" in str(skipped)
 
 
 def test_export_scoped_database_requires_branch_id(patch_export_helpers):
     conn = None
     result = export_scoped_database(conn, SCOPE_BRANCH, tenant_id=1)
-    assert len(result) == 4
-    _, _, _, skipped = result
+    assert len(result) == 5
+    _, _, _, skipped, _ = result
     assert "branch_id required" in str(skipped)
 
 
 def test_export_scoped_database_requires_store_id(patch_export_helpers):
     conn = None
     result = export_scoped_database(conn, SCOPE_STORE, tenant_id=1)
-    assert len(result) == 4
-    _, _, _, skipped = result
+    assert len(result) == 5
+    _, _, _, skipped, _ = result
     assert "store_id required" in str(skipped)
 
 
@@ -396,7 +396,7 @@ def test_export_branch_and_store_validation(mocker, mock_db_connection):
 def test_export_includes_roles_for_users(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(conn, table, where, params):
+    def fetch_rows(db_conn, table, where, params):
         if table == "users":
             return [{"id": 1, "role_id": 9, "tenant_id": 1}]
         if table == "tenants":
@@ -549,7 +549,7 @@ def test_path_from_urlish_static_prefix(tmp_path):
 def test_export_child_fetch_error(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(conn, table, where, params):
+    def fetch_rows(db_conn, table, where, params):
         if table == "gl_journal_entries":
             return [{"id": 3}]
         if table == "branches":
@@ -601,7 +601,7 @@ def test_export_fetch_rollback_failure_logged(mocker, mock_db_connection):
 def test_export_child_rollback_failure(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(conn, table, where, params):
+    def fetch_rows(db_conn, table, where, params):
         if table == "sales":
             return [{"id": 1}]
         if table == "tenants":

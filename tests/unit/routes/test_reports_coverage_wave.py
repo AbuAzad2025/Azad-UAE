@@ -16,7 +16,6 @@ from tests.unit.routes.test_reports_routes import (
     _entity_mock,
     _export_io,
     _send_file_response,
-    _supplier_payment_chain,
 )
 
 
@@ -349,7 +348,8 @@ class TestReceivablesWave:
 
 
 class TestInventoryWave:
-    def _warehouse_product_setup(self, *, admin=True, warehouse_in_list=False):
+    @staticmethod
+    def _warehouse_product_setup(*, admin=True, warehouse_in_list=False):
         warehouse = MagicMock()
         warehouse.id = 10
         warehouse.name = "Main WH"
@@ -386,7 +386,7 @@ class TestInventoryWave:
 
     def test_inventory_warehouse_branch_mismatch_403(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse, product = self._warehouse_product_setup()
+        warehouse, product = TestInventoryWave._warehouse_product_setup()
         warehouse.branch_id = 99
         wh_chain = MagicMock()
         wh_chain.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
@@ -408,7 +408,7 @@ class TestInventoryWave:
 
     def test_inventory_date_filters_and_stats(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse, product = self._warehouse_product_setup()
+        warehouse, product = TestInventoryWave._warehouse_product_setup()
         wh_inner = MagicMock()
         wh_inner.order_by.return_value.all.return_value = [warehouse]
         wh_chain = MagicMock()
@@ -452,7 +452,7 @@ class TestInventoryWave:
 
     def test_inventory_export_full_path(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse, product = self._warehouse_product_setup()
+        warehouse, product = TestInventoryWave._warehouse_product_setup()
         wh_chain = _chain_query_stub(all=[warehouse])
         product_chain = _chain_query_stub(all=[product])
 
@@ -485,7 +485,7 @@ class TestInventoryWave:
 
     def test_inventory_export_admin_warehouse_lookup(self, reports_client, mock_user):
         _configure_user(mock_user)
-        warehouse, product = self._warehouse_product_setup()
+        warehouse, product = TestInventoryWave._warehouse_product_setup()
         warehouse.branch_id = 2
         wh_chain = _chain_query_stub(all=[])
         product_chain = _chain_query_stub(all=[product])
@@ -1269,7 +1269,8 @@ def _payment_query_stub(*, direct_all=None, unalloc_all=None, fifo_total=Decimal
                 return direct_all
             return unalloc_all
 
-        def with_entities(self, *args, **kwargs):
+        @staticmethod
+        def with_entities(*args, **kwargs):
             sum_q = MagicMock()
             sum_q.scalar.return_value = fifo_total
             return sum_q

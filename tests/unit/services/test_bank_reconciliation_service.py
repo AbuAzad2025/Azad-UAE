@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from extensions import db
 from models import BankReconciliation, BankReconciliationItem, BankStatementLine, GLAccount, GLJournalEntry, GLJournalLine
 from services.bank_reconciliation_service import BankReconciliationService
 

@@ -81,7 +81,7 @@ class TestSetupLogging:
         mocker.patch.object(fmt, 'formatTime', return_value='ts')
         bad_stdout = MagicMock()
         type(bad_stdout).encoding = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError('no enc'))
+            lambda _self: (_ for _ in ()).throw(RuntimeError('no enc'))
         )
         mocker.patch('utils.logging_setup.sys.stdout', bad_stdout)
         assert 'ok' in fmt.format(record)

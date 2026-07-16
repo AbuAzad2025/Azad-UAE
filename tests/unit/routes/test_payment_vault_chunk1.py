@@ -1,7 +1,7 @@
 """tests/unit/test_payment_vault_chunk1.py — Payment-vault API-heavy write endpoints."""
 
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -64,10 +64,10 @@ def mock_purchase(mocker):
     pur.transaction_id = "tx_1"
     pur.to_dict.return_value = {"id": 1, "amount": 99.0}
     mocker.patch("routes.payment_vault.PackagePurchase")
-    from routes.payment_vault import PackagePurchase as PP
-    PP.query.get_or_404.return_value = pur
-    PP.query.filter_by.return_value.all.return_value = [pur]
-    PP.query.paginate.return_value = _make_pagination([pur], 1, 20, 1)
+    from routes.payment_vault import PackagePurchase as pp
+    pp.query.get_or_404.return_value = pur
+    pp.query.filter_by.return_value.all.return_value = [pur]
+    pp.query.paginate.return_value = _make_pagination([pur], 1, 20, 1)
     return pur
 
 

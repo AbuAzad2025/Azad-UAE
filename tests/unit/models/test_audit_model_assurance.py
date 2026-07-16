@@ -17,7 +17,7 @@ class TestAuditLogModel:
     def test_get_action_display_known_ar(self):
         log = AuditLog()
         log.action = 'update'
-        assert log.get_action_display('ar') == 'تعديل'
+        assert log.get_action_display() == 'تعديل'
         assert log.get_action_display('en') == 'Update'
 
     def test_get_action_display_unknown_falls_back(self):

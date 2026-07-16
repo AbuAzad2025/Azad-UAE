@@ -33,7 +33,6 @@ def register_backup_commands(app):
         """Run a manual backup."""
         from services.backup_service import BackupService
         result = BackupService.create_backup(
-            manual=True,
             description=f"CLI backup ({scope})",
             scope=scope,
             tenant_id=tenant_id,
@@ -58,13 +57,15 @@ def register_reset_platform_db_command(app):
 
         click.echo('Dropping all tables...')
         engine = db.engine
+        insp = sa_inspect(engine)
+        assert insp is not None, "SQLAlchemy inspector unavailable"
         with engine.begin() as conn:
-            for table in sa_inspect(engine).get_table_names():
+            for table in insp.get_table_names():
                 conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
 
         click.echo('Creating schema from squashed baseline migration (explicit, no db.create_all)...')
         from flask_migrate import upgrade
-        upgrade(revision='head')
+        upgrade()
 
         click.echo('Bootstrapping clean platform (owner + roles)...')
         from utils.system_init import ensure_clean_platform
@@ -90,9 +91,9 @@ def register_seed_demo_command(app):
             click.echo('Demo tenant exists — re-seeding with --force.')
 
         from app import create_app as _create_app
-        app = _create_app()
-        with app.app_context():
-            _do_seed_demo(app)
+        flask_app = _create_app()
+        with flask_app.app_context():
+            _do_seed_demo(flask_app)
 
 def _do_seed_demo(app):
     from extensions import db
@@ -123,47 +124,47 @@ def _do_seed_demo(app):
     with db.engine.begin() as _conn:
         PosOrderType.__table__.create(_conn, checkfirst=True)
 
-    SEQUENCE_CODES = ['sale', 'purchase', 'payment', 'receipt', 'gl_entry', 'cheque', 'invoice', 'return', 'expense']
+    sequence_codes = ['sale', 'purchase', 'payment', 'receipt', 'gl_entry', 'cheque', 'invoice', 'return', 'expense']
 
-    BRANCHES = [
+    branches = [
         {"name": "فرع دبي", "code": "DBX", "city": "دبي"},
         {"name": "فرع أبوظبي", "code": "AUH", "city": "أبوظبي"},
         {"name": "فرع الشارقة", "code": "SHJ", "city": "الشارقة"},
     ]
-    CATEGORIES = [
+    categories = [
         {"name": "إلكترونيات", "name_ar": "إلكترونيات"},
         {"name": "ملابس", "name_ar": "ملابس"},
         {"name": "مواد غذائية", "name_ar": "مواد غذائية"},
         {"name": "أدوات مكتبية", "name_ar": "أدوات مكتبية"},
         {"name": "منتجات العناية الشخصية", "name_ar": "منتجات العناية الشخصية"},
     ]
-    CUSTOMERS = [
+    customers = [
         {"name": "أحمد محمد", "name_ar": "أحمد محمد", "phone": "0501111111", "customer_type": "individual"},
         {"name": "شركة النور", "name_ar": "شركة النور", "phone": "0502222222", "customer_type": "company"},
         {"name": "فاطمة علي", "name_ar": "فاطمة علي", "phone": "0503333333", "customer_type": "individual"},
         {"name": "مؤسسة السلام", "name_ar": "مؤسسة السلام", "phone": "0504444444", "customer_type": "company"},
         {"name": "خالد سعيد", "name_ar": "خالد سعيد", "phone": "0505555555", "customer_type": "individual"},
     ]
-    SUPPLIERS = [
+    suppliers = [
         {"name": "المورد العالمي", "name_ar": "المورد العالمي", "phone": "0506666666", "company_name": "Global Supply Co"},
         {"name": "مؤسسة الخليج", "name_ar": "مؤسسة الخليج", "phone": "0507777777", "company_name": "Gulf Trading"},
         {"name": "شركة الاتحاد", "name_ar": "شركة الاتحاد", "phone": "0508888888", "company_name": "Al-Ittihad LLC"},
         {"name": "الشرق الأوسط للتجارة", "name_ar": "الشرق الأوسط للتجارة", "phone": "0509999999", "company_name": "Middle East Trade"},
         {"name": "مصنع الإمارات", "name_ar": "مصنع الإمارات", "phone": "0501010101", "company_name": "Emirates Factory"},
     ]
-    PARTNERS = [
+    partners = [
         {"name": "شريك تجاري ١", "partner_type": "business", "scope_type": "tenant", "share_percentage": 30},
         {"name": "شريك تجاري ٢", "partner_type": "investor", "scope_type": "tenant", "share_percentage": 25},
         {"name": "شريك تجاري ٣", "partner_type": "business", "scope_type": "branch", "share_percentage": 20},
         {"name": "شريك تجاري ٤", "partner_type": "silent", "scope_type": "tenant", "share_percentage": 15},
         {"name": "شريك تجاري ٥", "partner_type": "business", "scope_type": "branch", "share_percentage": 10},
     ]
-    DEMO_ROLES = [
+    demo_roles = [
         {"name": "محاسب", "slug": "demo_accountant"},
         {"name": "أمين صندوق", "slug": "demo_cashier"},
         {"name": "أمين مستودع", "slug": "demo_warehouse"},
     ]
-    BRANCH_EMPLOYEES = [
+    branch_employees = [
         ("demo_dbx1", "موظف دبي ١", "demo_cashier", "DBX"),
         ("demo_dbx2", "موظف دبي ٢", "demo_warehouse", "DBX"),
         ("demo_auh1", "موظف أبوظبي ١", "demo_cashier", "AUH"),
@@ -171,13 +172,13 @@ def _do_seed_demo(app):
         ("demo_shj1", "موظف الشارقة ١", "demo_cashier", "SHJ"),
         ("demo_shj2", "موظف الشارقة ٢", "demo_warehouse", "SHJ"),
     ]
-    GENERAL_EMPLOYEES = [
+    general_employees = [
         ("demo_accountant", "محاسب عام", "demo_accountant"),
         ("demo_cashier1", "أمين صندوق رئيسي", "demo_cashier"),
         ("demo_warehouse1", "أمين مستودع رئيسي", "demo_warehouse"),
         ("demo_manager", "مدير عام", "admin"),
     ]
-    PRODUCTS = [
+    products = [
         ("لابتوب ديل", 0, 2500, 2000, 15),
         ("جوال سامسونج", 0, 1500, 1200, 25),
         ("سماعات بلوتوث", 0, 200, 150, 50),
@@ -192,13 +193,13 @@ def _do_seed_demo(app):
         ("شامبو", 4, 35, 25, 80),
     ]
 
-    def _get_or_create_role(role_slug, role_name):
-        role = Role.query.filter_by(slug=role_slug).first()
-        if not role:
-            role = Role(name=role_name, slug=role_slug)
-            db.session.add(role)
+    def _get_or_create_role(slug, role_name):
+        role_obj = Role.query.filter_by(slug=slug).first()
+        if not role_obj:
+            role_obj = Role(name=role_name, slug=slug)
+            db.session.add(role_obj)
             db.session.flush()
-        return role
+        return role_obj
 
     # 1. Provision Demo Tenant
     demo_tenant = Tenant.query.filter_by(slug='demo').first()
@@ -210,6 +211,7 @@ def _do_seed_demo(app):
         # ON DELETE NO ACTION constraints (e.g. stock_movements -> warehouses).
         # This is a demo-reset utility, not production runtime.
         eng_meta = sa_inspect(db.engine)
+        assert eng_meta is not None, "SQLAlchemy inspector unavailable"
         tenant_tables = [
             t for t in eng_meta.get_table_names()
             if any(c["name"] == "tenant_id" for c in eng_meta.get_columns(t))
@@ -249,7 +251,7 @@ def _do_seed_demo(app):
     db.session.add(cashbox)
 
     provision_tenant_gl(tid)  # idempotent base + industry-extension seeding
-    for code in SEQUENCE_CODES:
+    for code in sequence_codes:
         DocumentSequenceService.get_or_create(tid, code)
 
     role = Role.query.filter_by(slug='admin').first()
@@ -258,7 +260,7 @@ def _do_seed_demo(app):
         db.session.add(role)
         db.session.flush()
 
-    demo_admin = User(username='demo_admin', email='demo@azad.com', tenant_id=tid, branch_id=branch.id, role_id=role.id, is_active=True, is_owner=False)
+    demo_admin = User(username='demo_admin', email='demo@azad.com', tenant_id=tid, branch_id=branch.id, role_id=role.id)
     demo_admin.set_password('Demo@2026')
     db.session.add(demo_admin)
     db.session.flush()
@@ -273,7 +275,7 @@ def _do_seed_demo(app):
 
     # 3. Additional branches
     branch_map = {"MAIN": (branch, warehouse)}
-    for bdata in BRANCHES:
+    for bdata in branches:
         br = Branch(name=bdata["name"], code=bdata["code"], tenant_id=tid, city=bdata.get("city"), is_main=False, is_active=True)
         db.session.add(br)
         db.session.flush()
@@ -286,24 +288,24 @@ def _do_seed_demo(app):
 
     # 4. Categories
     cat_objs = []
-    for cdata in CATEGORIES:
+    for cdata in categories:
         cat = ProductCategory(tenant_id=tid, name=cdata["name"], name_ar=cdata["name_ar"], is_active=True)
         db.session.add(cat)
         db.session.flush()
         cat_objs.append(cat)
 
     # 5. Customers
-    for cdata in CUSTOMERS:
+    for cdata in customers:
         cust = Customer(tenant_id=tid, name=cdata["name"], name_ar=cdata.get("name_ar"), phone=cdata.get("phone"), customer_type=cdata["customer_type"], balance=0, is_active=True)
         db.session.add(cust)
 
     # 6. Suppliers
-    for sdata in SUPPLIERS:
+    for sdata in suppliers:
         sup = Supplier(tenant_id=tid, name=sdata["name"], name_ar=sdata.get("name_ar"), phone=sdata.get("phone"), company_name=sdata.get("company_name"), is_active=True)
         db.session.add(sup)
 
     # 7. Partners
-    for pdata in PARTNERS:
+    for pdata in partners:
         scope_id = None
         if pdata["scope_type"] == "branch":
             non_main = Branch.query.filter_by(tenant_id=tid, is_main=False).first()
@@ -313,7 +315,7 @@ def _do_seed_demo(app):
 
     # 8. Roles
     role_map = {}
-    for rdata in DEMO_ROLES:
+    for rdata in demo_roles:
         r = _get_or_create_role(rdata["slug"], rdata["name"])
         role_map[rdata["slug"]] = r
     role_map["admin"] = Role.query.filter_by(slug='admin').first()
@@ -321,8 +323,8 @@ def _do_seed_demo(app):
     # 8b. Grant permissions to demo roles so permission-gated pages (e.g. /customers)
     # are actually accessible. The 'admin' slug is intentionally NOT granted
     # permissions by system_init, so we assign them here for the demo.
-    def _grant_perms(role, codes):
-        role.permissions = Permission.query.filter(Permission.code.in_(codes)).all()
+    def _grant_perms(role_obj, codes):
+        role_obj.permissions = Permission.query.filter(Permission.code.in_(codes)).all()
 
     _grant_perms(role_map["admin"], [p.code for p in Permission.query.all()])
     _grant_perms(role_map["demo_accountant"], [
@@ -340,15 +342,15 @@ def _do_seed_demo(app):
     db.session.flush()
 
     # 9. Branch employees
-    for username, full_name_ar, role_slug, br_code in BRANCH_EMPLOYEES:
+    for username, full_name_ar, role_slug, br_code in branch_employees:
         br, _ = branch_map.get(br_code, (None, None))
-        u = User(username=username, email=f"{username}@demo.azad.com", tenant_id=tid, branch_id=br.id if br else None, role_id=role_map[role_slug].id, full_name_ar=full_name_ar, is_active=True, is_owner=False)
+        u = User(username=username, email=f"{username}@demo.azad.com", tenant_id=tid, branch_id=br.id if br else None, role_id=role_map[role_slug].id, full_name_ar=full_name_ar)
         u.set_password('Demo@2026')
         db.session.add(u)
 
     # 10. General employees
-    for username, full_name_ar, role_slug in GENERAL_EMPLOYEES:
-        u = User(username=username, email=f"{username}@demo.azad.com", tenant_id=tid, branch_id=branch.id, role_id=role_map[role_slug].id, full_name_ar=full_name_ar, is_active=True, is_owner=False)
+    for username, full_name_ar, role_slug in general_employees:
+        u = User(username=username, email=f"{username}@demo.azad.com", tenant_id=tid, branch_id=branch.id, role_id=role_map[role_slug].id, full_name_ar=full_name_ar)
         u.set_password('Demo@2026')
         db.session.add(u)
 
@@ -357,13 +359,13 @@ def _do_seed_demo(app):
     # 11. Products
     from models.warehouse import ProductWarehouseStock
     from services.stock_service import StockService
-    all_branches = [("MAIN", branch, warehouse)] + [(b["code"], branch_map[b["code"]][0], branch_map[b["code"]][1]) for b in BRANCHES]
+    all_branches = [("MAIN", branch, warehouse)] + [(b["code"], branch_map[b["code"]][0], branch_map[b["code"]][1]) for b in branches]
     product_idx = 0
     for br_code, br, wh in all_branches:
         for i in range(3):
-            if product_idx >= len(PRODUCTS):
+            if product_idx >= len(products):
                 break
-            pdata = PRODUCTS[product_idx]
+            pdata = products[product_idx]
             name_ar_text, cat_idx, price, cost, stock = pdata
             sku = f"DEMO-{br_code}-{i+1:03d}"
             prod = Product(tenant_id=tid, name_ar=name_ar_text, name=name_ar_text, sku=sku, category_id=cat_objs[cat_idx].id, regular_price=price, cost_price=cost, current_stock=stock, has_serial_number=False, unit="قطعة", is_active=True)
@@ -433,7 +435,7 @@ def _do_seed_demo(app):
             }
         SaleService.create_sale(
             customer=cust, seller=seller, lines_data=lines_data,
-            warehouse_id=sale_wh_id, currency="ILS", tax_rate=0,
+            warehouse_id=sale_wh_id, currency="ILS",
             source="manual", payment_data=payment_data,
         )
 
@@ -454,7 +456,7 @@ def _do_seed_demo(app):
         lines_data = [{"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}]
         purchase = PurchaseService.create_purchase(
             user=seller, supplier_data={"supplier_id": sup.id}, lines_data=lines_data,
-            warehouse_id=pur_wh_id, currency="ILS", tax_rate=0,
+            warehouse_id=pur_wh_id, currency="ILS",
         )
         if paid and paid > 0:
             PaymentService.create_payment({

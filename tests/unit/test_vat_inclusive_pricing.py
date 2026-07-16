@@ -318,7 +318,7 @@ class TestSaleVatInclusiveTotals:
             f"Expected total_amount={gross}, got {sale.total_amount}"
 
     def test_sale_vat_exclusive_unchanged(self, db_session, vat_exclusive_tenant):
-        """When prices_include_vat=False, tax is added on top (standard behaviour)."""
+        """When prices_include_vat=False, tax is added on top (standard behavior)."""
         from models import Sale, SaleLine
 
         sale = Sale(

@@ -1,6 +1,6 @@
 """tests/unit/test_products_chunk1.py — Products JSON & batch operation endpoints."""
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -118,15 +118,15 @@ class TestCreateCategory:
 
     @pytest.fixture(autouse=True)
     def _patch_category(self, mocker):
-        PC = mocker.patch("routes.products.ProductCategory")
-        PC.query.filter.return_value.first.return_value = None
-        PC.return_value.id = 1
-        PC.return_value.name = "Test Category"
-        PC.return_value.name_ar = "تصنيف اختبار"
-        PC.return_value.description = "A test"
-        P = mocker.patch("routes.products.Product")
-        P.query.filter_by.return_value.count.return_value = 0
-        return PC
+        pc = mocker.patch("routes.products.ProductCategory")
+        pc.query.filter.return_value.first.return_value = None
+        pc.return_value.id = 1
+        pc.return_value.name = "Test Category"
+        pc.return_value.name_ar = "تصنيف اختبار"
+        pc.return_value.description = "A test"
+        product = mocker.patch("routes.products.Product")
+        product.query.filter_by.return_value.count.return_value = 0
+        return pc
 
     def test_json_happy_path(self, product_client, mock_db):
         resp = product_client.post(
@@ -145,8 +145,8 @@ class TestCreateCategory:
         assert body["success"] is False
 
     def test_json_duplicate_name_returns_400(self, product_client, mocker):
-        PC = mocker.patch("routes.products.ProductCategory")
-        PC.query.filter.return_value.first.return_value = MagicMock(name="existing")
+        pc = mocker.patch("routes.products.ProductCategory")
+        pc.query.filter.return_value.first.return_value = MagicMock(name="existing")
 
         resp = product_client.post(
             self.ENDPOINT, json={"name": "Existing"}
@@ -164,9 +164,9 @@ class TestCreateCategory:
         assert resp.status_code == 400
 
     def test_exception_during_create_returns_400(self, product_client, mocker, mock_db):
-        PC = mocker.patch("routes.products.ProductCategory")
-        PC.query.filter.return_value.first.return_value = None
-        PC.side_effect = Exception("DB fail")
+        pc = mocker.patch("routes.products.ProductCategory")
+        pc.query.filter.return_value.first.return_value = None
+        pc.side_effect = Exception("DB fail")
 
         resp = product_client.post(
             self.ENDPOINT, json={"name": "Cat"}

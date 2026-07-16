@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 
 
 def _supplier_stub(**kwargs):
@@ -29,6 +28,7 @@ def _supplier_stub(**kwargs):
         city = kwargs.get('city', 'Dubai')
         purchases = kwargs.get('purchases', MagicMock())
 
+        last_purchase_date = kwargs.get('last_purchase_date')
         total_purchases_base = Supplier.total_purchases_base
         total_paid_base = Supplier.total_paid_base
         get_balance_aed = Supplier.get_balance_aed

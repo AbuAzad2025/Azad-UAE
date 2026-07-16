@@ -1,6 +1,6 @@
 import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 
 def make_sync_logger_mock(name="logger"):

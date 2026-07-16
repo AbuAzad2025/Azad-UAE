@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from extensions import db
 from models import GLAccount, GLJournalEntry
-from models.gl import GLPeriod
 from services.gl_helpers import (
     assert_period_open,
     get_account,

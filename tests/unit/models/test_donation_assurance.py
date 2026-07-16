@@ -3,8 +3,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-import pytest
-
 from models.donation import Donation
 
 
@@ -71,7 +69,8 @@ class TestDonationInstance:
 
 
 class TestDonationAggregates:
-    def _seed(self, db_session, tenant_id, other_tenant_id=None):
+    @staticmethod
+    def _seed(db_session, tenant_id, other_tenant_id=None):
         rows = [
             Donation(
                 tenant_id=tenant_id,

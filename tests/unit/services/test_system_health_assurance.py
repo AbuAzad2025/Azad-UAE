@@ -99,9 +99,9 @@ class TestMonitoringService:
 
     def test_get_system_stats_context_skips_sensitive(self, mocker):
         row_sales = MagicMock()
-        row_sales.__getitem__ = lambda self, i: 'sales'
+        row_sales.__getitem__ = lambda _self, i: 'sales'
         row_users = MagicMock()
-        row_users.__getitem__ = lambda self, i: 'users'
+        row_users.__getitem__ = lambda _self, i: 'users'
         mocker.patch('services.monitoring_service.db.session').execute.return_value.fetchall.return_value = [
             row_sales, row_users,
         ]

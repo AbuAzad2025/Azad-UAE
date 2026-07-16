@@ -56,7 +56,8 @@ class TestDateBounds:
 class TestGLInventoryBalance:
     """_gl_inventory_balance — debit minus credit with filters."""
 
-    def _mock_scalars(self, mocker, debit, credit):
+    @staticmethod
+    def _mock_scalars(mocker, debit, credit):
         debit_q = MagicMock()
         debit_q.filter.return_value = debit_q
         debit_q.join.return_value = debit_q

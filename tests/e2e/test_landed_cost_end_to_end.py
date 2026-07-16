@@ -55,16 +55,13 @@ def main():
                     db.session.add(warehouse)
                     db.session.flush()
                 if not product:
-                    product = Product(tenant_id=tid, name="Test Product", current_stock=0, cost_price=Decimal('0'), regular_price=Decimal('100'))
+                    product = Product(tenant_id=tid, name="Test Product", regular_price=Decimal('100'))
                     db.session.add(product)
                     db.session.flush()
                 pwc = ProductWarehouseCost(
                     tenant_id=tid,
                     product_id=product.id,
                     warehouse_id=warehouse.id,
-                    total_quantity=Decimal('0'),
-                    total_value=Decimal('0'),
-                    average_cost=Decimal('0'),
                 )
                 db.session.add(pwc)
                 db.session.flush()
@@ -153,7 +150,7 @@ def main():
             db.session.flush()
             db.session.refresh(pwc)
 
-            print(f"\nAfter Purchase (qty={purchase_qty} @ FOB {fob_unit_cost}, landed={total_landed}):")
+            print(f"\r\nAfter Purchase (qty={purchase_qty} @ FOB {fob_unit_cost}, landed={total_landed}):")
             print(f"  landed_unit_cost = {pl.landed_unit_cost}")
             print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
@@ -207,7 +204,6 @@ def main():
                 quantity=sale_qty,
                 unit_price=Decimal('500'),
                 line_total=Decimal('500') * sale_qty,
-                cost_price=Decimal('0'),
             )
             db.session.add(sl)
             db.session.flush()
@@ -219,7 +215,7 @@ def main():
             expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
             # After WAC update, pwc.average_cost changed; recompute expected
             db.session.refresh(pwc)
-            print(f"\nAfter Sale (qty={sale_qty}):")
+            print(f"\r\nAfter Sale (qty={sale_qty}):")
             print(f"  COGS computed: {cogs}")
             print(f"  PWC qty={pwc.total_quantity} avg_cost={pwc.average_cost} value={pwc.total_value}")
 
@@ -235,11 +231,11 @@ def main():
             assert expected_payable == Decimal('2850'), f"AP mismatch: {expected_payable}"
             print("  ✅ GL math correct (inventory includes landed costs)")
 
-            print("\n=== ALL LANDED COST TESTS PASSED ===")
+            print("\r\n=== ALL LANDED COST TESTS PASSED ===")
             return 0
 
         finally:
-            print("\n--- Cleanup ---")
+            print("\r\n--- Cleanup ---")
             # Remove test records
             # Delete stock movements first (they reference Purchase/Sale)
             for ref_obj in [purchase, sale]:

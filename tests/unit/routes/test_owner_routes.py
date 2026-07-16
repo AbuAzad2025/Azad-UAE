@@ -1,5 +1,4 @@
 from contextlib import ExitStack, contextmanager
-from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -319,14 +318,14 @@ def _owner_route_patches(mock_db=None, **overrides):
         mock_db = MagicMock()
 
     def _session_get(model, pk):
-        model_name = getattr(model, "__name__", str(model))
-        if model_name == "User":
+        cls_name = getattr(model, "__name__", str(model))
+        if cls_name == "User":
             return _mock_user_entity(id=pk)
-        if model_name == "Role":
+        if cls_name == "Role":
             return role
-        if model_name == "Tenant":
+        if cls_name == "Tenant":
             return _mock_tenant(id=pk)
-        if model_name == "TenantStore":
+        if cls_name == "TenantStore":
             store = MagicMock()
             store.id = pk
             store.is_enabled = True
@@ -457,8 +456,8 @@ def _owner_route_patches(mock_db=None, **overrides):
         for model_name in ("Sale", "Payment", "Receipt", "User", "Customer", "Product", "Donation", "SaleLine", "Branch", "Tenant"):
             stack.enter_context(patch(f"models.{model_name}", _model_class() if model_name != "Tenant" else tenant_cls))
         stack.enter_context(patch("models.ProductWarehouseCost", _model_class()))
-        # ── Propagate ALL patched routes.owner attributes to sub-modules ──
-        # Sub-modules do `from routes.owner import X` at module load time,
+        # ── Propagate ALL patched routes.owner attributes to submodules ──
+        # Submodules do `from routes.owner import X` at module load time,
         # creating local references. Patching routes.owner.X doesn't affect
         # those local references. Explicitly overwrite them.
         import routes.owner as _own_mod
@@ -3611,8 +3610,8 @@ class TestOwnerHundredPercent:
         app = app_factory(owner_bp)
         settings = MagicMock()
         type(settings).default_currency = property(
-            lambda self: "AED",
-            lambda self, v: (_ for _ in ()).throw(RuntimeError("bad currency")),
+            lambda _self: "AED",
+            lambda _self, v: (_ for _ in ()).throw(RuntimeError("bad currency")),
         )
         settings_cls = _settings_class(settings)
         with _owner_route_patches(), \

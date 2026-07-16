@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import builtins
-import os
 from unittest.mock import MagicMock, patch
 
 import pytest

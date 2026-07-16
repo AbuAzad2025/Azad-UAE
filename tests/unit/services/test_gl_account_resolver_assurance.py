@@ -106,7 +106,8 @@ class TestFindActiveMapping:
 
 
 class TestRaiseMissingOrInactive:
-    def _inactive_mapping(self, db_session, sample_tenant, sample_branch, branch_id):
+    @staticmethod
+    def _inactive_mapping(db_session, sample_tenant, sample_branch, branch_id):
         from models.gl import GLAccount, GLAccountMapping
         from models._constants import GL_CONCEPT_CASH
 
@@ -155,7 +156,8 @@ class TestRaiseMissingOrInactive:
 
 
 class TestValidatedAccount:
-    def _mapping(self, **kwargs):
+    @staticmethod
+    def _mapping(**kwargs):
         defaults = dict(
             branch_id=None,
             branch=None,

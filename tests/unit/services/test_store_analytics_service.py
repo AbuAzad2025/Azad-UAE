@@ -4,9 +4,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-import pytest
-
-from extensions import db
 from models import Product, Sale, SaleLine
 from services.store_analytics_service import StoreAnalyticsService
 

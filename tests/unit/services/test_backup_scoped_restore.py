@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 import tarfile
 from io import BytesIO
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from services.backup_scope_config import SCOPE_BRANCH, SCOPE_STORE, SCOPE_TENANT
 from services.backup_scoped_restore import (
@@ -72,9 +69,9 @@ class TestDeleteTenantScopedData:
             result = MagicMock()
             if 'information_schema' in sql:
                 if 'tenant_id' in sql or params and params.get('t') == 'sales':
-                    result.__iter__ = lambda self: iter([('tenant_id',), ('branch_id',)])
+                    result.__iter__ = lambda _self: iter([('tenant_id',), ('branch_id',)])
                 else:
-                    result.__iter__ = lambda self: iter([('id',)])
+                    result.__iter__ = lambda _self: iter([('id',)])
             else:
                 result.rowcount = 1
             return result
@@ -95,7 +92,7 @@ class TestDeleteTenantScopedData:
             sql = str(stmt)
             if 'information_schema' in sql:
                 result = MagicMock()
-                result.__iter__ = lambda self: iter([('tenant_id',)])
+                result.__iter__ = lambda _self: iter([('tenant_id',)])
                 return result
             raise RuntimeError('delete failed')
 
@@ -106,7 +103,8 @@ class TestDeleteTenantScopedData:
 
 
 class TestImportScopedTablesExtended:
-    def _mock_engine(self, mocker, conn=None):
+    @staticmethod
+    def _mock_engine(mocker, conn=None):
         if conn is None:
             conn = MagicMock()
             conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)
@@ -120,7 +118,7 @@ class TestImportScopedTablesExtended:
         return conn
 
     def test_remap_skips_delete(self, mocker):
-        self._mock_engine(mocker)
+        TestImportScopedTablesExtended._mock_engine(mocker)
         tables = {
             'tenants': [{'id': 1, 'slug': 't'}],
             'roles': [{'id': 1, 'name': 'admin'}],
@@ -136,7 +134,7 @@ class TestImportScopedTablesExtended:
         assert 'extra_table' in result['inserted']
 
     def test_empty_table_rows_skipped(self, mocker):
-        self._mock_engine(mocker)
+        TestImportScopedTablesExtended._mock_engine(mocker)
         tables = {
             'tenants': [{'id': 1}],
             'roles': [{'id': 1}],
@@ -154,7 +152,7 @@ class TestImportScopedTablesExtended:
         conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)
         conn.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
         conn.execute.side_effect = RuntimeError('fail')
-        self._mock_engine(mocker, conn)
+        TestImportScopedTablesExtended._mock_engine(mocker, conn)
         mocker.patch('services.backup_scoped_restore.normalize_row_to_target', side_effect=lambda c, t, r: r)
         tables = {
             'tenants': [{'id': 1}],
@@ -180,7 +178,7 @@ class TestImportScopedTablesExtended:
             return MagicMock()
 
         conn.execute.side_effect = execute_side_effect
-        self._mock_engine(mocker, conn)
+        TestImportScopedTablesExtended._mock_engine(mocker, conn)
         mocker.patch('services.backup_scoped_restore.normalize_row_to_target', side_effect=lambda c, t, r: r)
         tables = {
             'tenants': [{'id': 1}],
@@ -197,7 +195,8 @@ class TestImportScopedTablesExtended:
 
 
 class TestVerifyScopedRestoreExtended:
-    def _mock_conn_engine(self, mocker, scalar_values):
+    @staticmethod
+    def _mock_conn_engine(mocker, scalar_values):
         conn = MagicMock()
         conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)
         conn.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
@@ -209,7 +208,7 @@ class TestVerifyScopedRestoreExtended:
         return conn
 
     def test_skips_zero_expected_or_missing_table(self, mocker):
-        self._mock_conn_engine(mocker, [0])
+        TestVerifyScopedRestoreExtended._mock_conn_engine(mocker, [0])
         mocker.patch('services.backup_scope_config.table_exists', side_effect=lambda c, t: t == 'tenants')
         mocker.patch('services.backup_scoped_restore._table_has_column', return_value=True)
         out = verify_scoped_restore(
@@ -220,7 +219,7 @@ class TestVerifyScopedRestoreExtended:
         assert out['ok'] is True
 
     def test_warning_on_non_core_shortfall(self, mocker):
-        self._mock_conn_engine(mocker, [1, 0, 0])
+        TestVerifyScopedRestoreExtended._mock_conn_engine(mocker, [1, 0, 0])
         mocker.patch('services.backup_scope_config.table_exists', return_value=True)
         mocker.patch('services.backup_scoped_restore._table_has_column', return_value=True)
         out = verify_scoped_restore(
@@ -231,7 +230,7 @@ class TestVerifyScopedRestoreExtended:
         assert any('warehouses' in w for w in out['warnings'])
 
     def test_orphan_tenant_fk_on_sales(self, mocker):
-        self._mock_conn_engine(mocker, [1, 3])
+        TestVerifyScopedRestoreExtended._mock_conn_engine(mocker, [1, 3])
         mocker.patch('services.backup_scope_config.table_exists', return_value=True)
         mocker.patch('services.backup_scoped_restore._table_has_column', return_value=True)
         out = verify_scoped_restore(
@@ -284,7 +283,8 @@ class TestVerifyScopedRestoreExtended:
 
 
 class TestRestoreScopedBackupFlow:
-    def _write_minimal_bundle(self, tmp_path, include_uploads=False):
+    @staticmethod
+    def _write_minimal_bundle(tmp_path, include_uploads=False):
         manifest = {
             'backup_scope': SCOPE_TENANT,
             'tenant_id': 7,
@@ -352,7 +352,7 @@ class TestRestoreScopedBackupFlow:
             'valid': True,
             'manifest': {'backup_scope': SCOPE_TENANT, 'tenant_id': 7},
         }
-        archive = self._write_minimal_bundle(tmp_path)
+        archive = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
         mock_cls._backup_path.return_value = archive
         mocker.patch(
             'services.backup_scoped_engine.ensure_target_schema',
@@ -376,7 +376,7 @@ class TestRestoreScopedBackupFlow:
                 'row_counts_per_table': {'tenants': 1, 'products': 1},
             },
         }
-        archive = self._write_minimal_bundle(tmp_path, include_uploads=True)
+        archive = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path, include_uploads=True)
         mock_cls._backup_path.return_value = archive
         mocker.patch(
             'services.backup_scoped_engine.ensure_target_schema',
@@ -410,7 +410,7 @@ class TestRestoreScopedBackupFlow:
             'valid': True,
             'manifest': {'backup_scope': SCOPE_TENANT, 'tenant_id': 7},
         }
-        mock_cls._backup_path.return_value = self._write_minimal_bundle(tmp_path)
+        mock_cls._backup_path.return_value = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
         mocker.patch(
             'services.backup_scoped_engine.ensure_target_schema',
             return_value=(True, None),
@@ -432,7 +432,7 @@ class TestRestoreScopedBackupFlow:
             'valid': True,
             'manifest': {'backup_scope': SCOPE_TENANT, 'tenant_id': 7},
         }
-        mock_cls._backup_path.return_value = self._write_minimal_bundle(tmp_path)
+        mock_cls._backup_path.return_value = TestRestoreScopedBackupFlow._write_minimal_bundle(tmp_path)
         mocker.patch(
             'services.backup_scoped_engine.ensure_target_schema',
             return_value=(True, None),

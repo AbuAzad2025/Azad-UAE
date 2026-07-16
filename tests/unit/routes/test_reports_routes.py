@@ -499,7 +499,8 @@ class TestReportsTenantIsolation:
 
 
 class TestReportsPartnersDeep:
-    def _partner_row(self):
+    @staticmethod
+    def _partner_row():
         row = MagicMock()
         row.product_name = "Widget"
         row.partner_name = "Partner A"
@@ -512,7 +513,7 @@ class TestReportsPartnersDeep:
 
     def test_partners_with_commission_entries(self, reports_client, mock_user):
         _configure_user(mock_user)
-        row = self._partner_row()
+        row = TestReportsPartnersDeep._partner_row()
         call_count = {"n": 0}
 
         def query_side(*args, **kwargs):
@@ -1510,7 +1511,8 @@ class TestReportsPartnersFallbackLoop:
 
 
 class TestReportsSupplierFragmentDeep:
-    def _supplier_entity(self):
+    @staticmethod
+    def _supplier_entity():
         entity = MagicMock()
         entity.id = 12
         entity.name = "SupplierX"
@@ -1540,7 +1542,7 @@ class TestReportsSupplierFragmentDeep:
         purchase_q.order_by.return_value = purchase_q
         purchase_q.all.return_value = [purchase]
         p_line = MagicMock(name="Widget", qty=Decimal("2"), total=Decimal("500"), last_date=purchase.purchase_date)
-        with patch("routes.reports.tenant_get_or_404", return_value=self._supplier_entity()), \
+        with patch("routes.reports.tenant_get_or_404", return_value=TestReportsSupplierFragmentDeep._supplier_entity()), \
              patch("routes.reports.report_branch_scope_id", return_value=None), \
              patch("routes.reports.db.session.query", return_value=_chain_query_stub(all=[p_line])), \
              patch("models.Purchase") as Purchase, \
@@ -1566,7 +1568,7 @@ class TestReportsSupplierFragmentDeep:
         purchase_q.filter.return_value = purchase_q
         purchase_q.order_by.return_value = purchase_q
         purchase_q.all.return_value = [purchase]
-        with patch("routes.reports.tenant_get_or_404", return_value=self._supplier_entity()), \
+        with patch("routes.reports.tenant_get_or_404", return_value=TestReportsSupplierFragmentDeep._supplier_entity()), \
              patch("routes.reports.report_branch_scope_id", return_value=None), \
              patch("routes.reports.db.session.query", return_value=_chain_query_stub(all=[])), \
              patch("models.Purchase") as Purchase, \

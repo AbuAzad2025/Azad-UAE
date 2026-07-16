@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from extensions import db
-from models import Project, Task, TaskStage, ProjectMember, Timesheet
+from models import Project, TaskStage
 from services.project_service import ProjectService
 
 

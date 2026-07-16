@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
-
-import pytest
 
 class TestCustomersIndex:
     def test_index_returns_200(self, auth_client):

@@ -319,12 +319,12 @@ class TestPosSessionModel:
         assert session.duration_minutes >= 29
 
     def test_duration_naive_datetimes(self):
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         from models.pos_session import PosSession
 
-        opened = datetime.utcnow() - timedelta(minutes=5)
+        opened = datetime.now(timezone.utc) - timedelta(minutes=5)
         session = PosSession(session_number='POS-3', opened_at=opened)
-        session.closed_at = datetime.utcnow()
+        session.closed_at = datetime.now(timezone.utc)
         assert session.duration_minutes >= 4
 
         from datetime import datetime, timezone

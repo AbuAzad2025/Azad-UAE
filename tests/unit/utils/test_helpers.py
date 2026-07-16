@@ -204,10 +204,11 @@ class TestTimeago:
         assert h.timeago(naive) != ''
 
     def test_exception_returns_str(self):
-        bad = MagicMock()
+        bad = MagicMock(spec=[])
         bad.tzinfo = timezone.utc
         bad.__sub__ = MagicMock(side_effect=TypeError('bad'))
-        assert h.timeago(bad) == str(bad)
+        bad.__str__ = MagicMock(return_value='bad datetime')
+        assert h.timeago(bad) == 'bad datetime'
 
 
 class TestCreateAuditLog:

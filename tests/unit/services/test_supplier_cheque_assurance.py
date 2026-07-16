@@ -1,6 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,7 @@ class TestSupplierAgeingBuckets:
 
     @staticmethod
     def _bucket(due_date, today=None):
-        """Compute ageing bucket for an invoice based on due_date vs today."""
+        """Compute aging bucket for an invoice based on due_date vs today."""
         today = today or date.today()
         overdue = (today - due_date).days
         if overdue <= 0:
@@ -75,16 +75,17 @@ class TestSupplierAgeingBuckets:
 # ---------------------------------------------------------------------------
 
 class TestChequeClearanceGL:
-    """Verify debit/credit routing on cheque clearance (incoming and outgoing)."""
+    """Verify debit/credit routing on check clearance (incoming and outgoing)."""
 
-    def _patch_db_queries(self, mocker):
+    @staticmethod
+    def _patch_db_queries(mocker):
         mocker.patch('services.cheque_service.gl_ensure_core_accounts')
         from models.payment import Payment, Receipt
         mocker.patch.object(Payment, 'query', new_callable=mocker.PropertyMock, return_value=mocker.MagicMock())
         mocker.patch.object(Receipt, 'query', new_callable=mocker.PropertyMock, return_value=mocker.MagicMock())
 
     def test_clear_incoming_creates_gl_lines(self, mocker, app):
-        """Verify cheque clearing creates GL lines under a valid app context."""
+        """Verify check clearing creates GL lines under a valid app context."""
         self._patch_db_queries(mocker)
         mock_gl = mocker.patch('services.cheque_service.gl_post_or_fail')
         mock_liquidity = mocker.patch('services.cheque_service.gl_get_default_liquidity_account', return_value='1120')
@@ -187,7 +188,8 @@ class TestChequeClearanceGL:
 class TestChequeBounceGL:
     """Verify bounce reverses entries, applies fees, locks state."""
 
-    def _patch_bounce_deps(self, mocker):
+    @staticmethod
+    def _patch_bounce_deps(mocker):
         mocker.patch('services.cheque_service.gl_ensure_core_accounts')
         from models.expense import Expense
         from models.payment import Payment, Receipt

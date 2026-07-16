@@ -18,13 +18,9 @@ from unittest.mock import MagicMock, patch
 import io
 import numpy as np
 import pandas as pd
-import pytest
 
-from tests.unit.routes.conftest import _chain_query
 from tests.unit.routes.test_advanced_ledger_routes import (
     _advanced_ledger_patches,
-    _accounts_query,
-    _mock_account,
     advanced_ledger_client,
 )
 
@@ -869,51 +865,52 @@ class TestConfigUploadWave:
 
 
 class TestExcelHelpersWave:
-    def _excel_env(self, df, mapping, warehouse, existing=None, new_product=None,
+    @staticmethod
+    def _excel_env(df, mapping, warehouse, existing=None, new_product=None,
                    wh_import=None):
         stack = ExitStack()
         stack.enter_context(patch('routes.ai_routes.assistant.pd.read_excel', return_value=df))
         stack.enter_context(patch('routes.ai_routes.assistant._intelligent_column_detector', return_value=mapping))
-        WH = stack.enter_context(patch('models.Warehouse'))
-        P = stack.enter_context(patch('models.Product'))
+        wh = stack.enter_context(patch('models.Warehouse'))
+        product = stack.enter_context(patch('models.Product'))
         stack.enter_context(patch('routes.ai_routes.assistant.db'))
         stack.enter_context(patch('routes.ai_routes.assistant.assign_tenant_id'))
-        SS = stack.enter_context(patch('routes.ai_routes.assistant.StockService'))
+        ss = stack.enter_context(patch('routes.ai_routes.assistant.StockService'))
         stack.enter_context(patch('routes.ai_routes.assistant._train_ai_from_excel'))
-        WH.query.filter_by.return_value.first.return_value = warehouse if wh_import is None else None
+        wh.query.filter_by.return_value.first.return_value = warehouse if wh_import is None else None
         if wh_import is not None:
-            WH.query.filter_by.return_value.first.side_effect = [warehouse, wh_import]
-        P.query.filter_by.return_value.first.return_value = existing
+            wh.query.filter_by.return_value.first.side_effect = [warehouse, wh_import]
+        product.query.filter_by.return_value.first.return_value = existing
         if new_product is not None:
-            P.return_value = new_product
-        return stack, SS
+            product.return_value = new_product
+        return stack, ss
 
     def test_create_with_quantity(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [5]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
-        stack, SS = self._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result['success'] is True
-        SS.add_opening_stock.assert_called()
+        ss.add_opening_stock.assert_called()
 
     def test_update_with_quantity(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [5]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
-        stack, SS = self._excel_env(df, mapping, _obj(name='W'),
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name='W'),
                                     existing=_obj(id=5), wh_import=_obj(id=2))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result['details']['updated'] == 1
-        SS.add_stock.assert_called()
+        ss.add_stock.assert_called()
 
     def test_quantity_nan(self, mock_user):
         from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': [10], 'qty': [np.nan]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price', 'quantity': 'qty'}
-        stack, SS = self._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name='W'), existing=None, new_product=_obj(id=3))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result['success'] is True
@@ -922,7 +919,7 @@ class TestExcelHelpersWave:
         from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': [np.nan], 'part': ['P'], 'price': [10]})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price'}
-        stack, SS = self._excel_env(df, mapping, _obj(name='W'))
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name='W'))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result['details']['created'] == 0
@@ -931,7 +928,7 @@ class TestExcelHelpersWave:
         from routes.ai_routes import _process_excel_intelligently
         df = pd.DataFrame({'name': ['A'], 'part': ['P'], 'price': ['not-a-number']})
         mapping = {'name': 'name', 'part_number': 'part', 'price': 'price'}
-        stack, SS = self._excel_env(df, mapping, _obj(name='W'))
+        stack, ss = TestExcelHelpersWave._excel_env(df, mapping, _obj(name='W'))
         with stack:
             result = _process_excel_intelligently(MagicMock(), 1, mock_user)
         assert result['success'] is True

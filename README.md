@@ -50,7 +50,7 @@ Azadexa — Intelligent ERP, Accounting & Commerce Platform
 
 ## System Surfaces
 
-The codebase registers a broad set of modules, including sales, POS, returns, customers, suppliers, purchases, products, warehouse, unified inventory, branches, payments, cheques, expenses, ledger, advanced ledger, admin ledger, payroll, reports, treasury, tenant store, public shop, payment vault, monitoring, analytics API, API docs, GraphQL, gamification, AI, users, tenants, language, WhatsApp, public pages, and owner control.
+The codebase registers a broad set of modules: sales, POS, returns, customers, suppliers, purchases, products, warehouse, unified inventory, branches, payments, checks, expenses, ledger, advanced ledger, admin ledger, payroll, reports, treasury, tenant store, public shop, payment vault, monitoring, analytics API, API docs, GraphQL, gamification, AI, users, tenants, language, WhatsApp, public pages, and owner control.
 
 See [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) for the code-derived module map.
 
@@ -88,7 +88,7 @@ See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md).
 
 Financial and stock operations are first-class system behavior.
 
-- Sales calculate subtotals, discounts, tax, currency/base amount, confirmed payments, pending cheques, returns, and balance due.
+- Sales calculate subtotals, discounts, tax, currency/base amount, confirmed payments, pending checks, returns, and balance due.
 - Purchases support supplier linkage, warehouse/branch context, landed-cost components, and base-currency amounts.
 - GL posting is mandatory for financial documents that require accounting impact.
 - Stock movements update per-warehouse stock and legacy product stock while preserving movement history.

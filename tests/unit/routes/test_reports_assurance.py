@@ -5,7 +5,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
-from werkzeug.exceptions import Forbidden
 
 
 @pytest.fixture

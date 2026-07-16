@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from flask import Flask, session
 
 
@@ -89,10 +88,10 @@ class TestGetOrCreate:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        Model = MagicMock()
+        model = MagicMock()
         instance = MagicMock()
-        Model.return_value = instance
-        result, created = get_or_create(mock_session, Model, defaults={'active': True}, name='new')
+        model.return_value = instance
+        result, created = get_or_create(mock_session, model, defaults={'active': True}, name='new')
         assert result is instance
         assert created is True
         mock_session.add.assert_called_once_with(instance)

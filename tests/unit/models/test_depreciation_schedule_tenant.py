@@ -1,5 +1,4 @@
 """Tests for FixedAsset and DepreciationSchedule tenant isolation"""
-import pytest
 from datetime import date
 from decimal import Decimal
 from models.fixed_asset import FixedAsset, DepreciationSchedule

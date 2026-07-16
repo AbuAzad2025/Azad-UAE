@@ -50,7 +50,7 @@ def create_app(config_class=Config):
             _generated = ''.join(secrets.choice(string.ascii_letters + string.digits + "@$!%*?&") for _ in range(20))
             app.config["OWNER_PASSWORD"] = _generated
             os.environ["OWNER_PASSWORD"] = _generated
-            print(f"\n{'='*60}\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\n{'='*60}\n")
+            print(f"\r\n{'='*60}\r\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\r\n{'='*60}\r\n")
 
     init_extensions(app)
 
@@ -69,7 +69,7 @@ def create_app(config_class=Config):
         return redirect(url_for('auth.login'))
 
     LoggingCore.setup(app)
-    LoggingCore.schedule_cleanup(app, interval_hours=24)
+    LoggingCore.schedule_cleanup(app)
 
     # System integrity check
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
@@ -82,7 +82,7 @@ def create_app(config_class=Config):
         try:
             from services.maintenance_service import run_default_tenant_maintenance_api
             with app.app_context():
-                result = run_default_tenant_maintenance_api(dry_run=False)
+                result = run_default_tenant_maintenance_api()
                 if result.get('action_needed'):
                     app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
                 else:
@@ -93,7 +93,7 @@ def create_app(config_class=Config):
             app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
 
     # Proxy Fix for Nginx/Cloudflare
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)
 
     from bootstrap.blueprints import register_blueprints
     register_blueprints(app)
@@ -179,6 +179,8 @@ def create_app(config_class=Config):
                     if _t and SaaSProvisioningService.is_demo_tenant(_t) and _bp in ("owner", "payment_vault"):
                         abort(404)
 
+        return None
+
     # Security Headers + Request ID
     @app.after_request
     def add_security_headers(response):
@@ -209,7 +211,7 @@ def create_app(config_class=Config):
         return response
 
     # Models Import (to ensure they are known to SQLAlchemy)
-    from models import User, Customer, ProductCategory  # noqa: F401 - side-effect imports for SQLAlchemy registry
+    from models import User, Customer, ProductCategory  # noqa: F401 - side effect imports for SQLAlchemy registry
 
     try:
         from models.events import register_all_listeners

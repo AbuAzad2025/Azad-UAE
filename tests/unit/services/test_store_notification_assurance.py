@@ -3,9 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
-
 def _sale_and_store():
     line = MagicMock()
     line.product = MagicMock()

@@ -3,7 +3,6 @@ from decimal import ROUND_HALF_UP, Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
-from werkzeug.exceptions import NotFound
 
 from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 

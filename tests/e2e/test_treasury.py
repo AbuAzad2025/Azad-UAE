@@ -1,6 +1,6 @@
 """
 Treasury Service QA Test — Phase 8
-Validates: liquidity position, cheque maturity buckets, bank reconciliation status,
+Validates: liquidity position, check maturity buckets, bank reconciliation status,
 branch filter enforcement, export route security, no double-counting.
 
 Run: python tests/e2e/test_treasury.py
@@ -37,7 +37,7 @@ def _assert_branch_filter_enforced(report_all, report_branch):
 
 
 def _assert_cheque_buckets_non_overlapping(report):
-    """Each cheque must appear in exactly one bucket per direction."""
+    """Each check must appear in exactly one bucket per direction."""
     for direction in ("incoming", "outgoing"):
         buckets = report["cheques"][direction]["buckets"]
         all_ids = set()

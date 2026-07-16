@@ -52,7 +52,8 @@ class TestRequirePermission:
 
 
 class TestQueryResolvers:
-    def _sale(self):
+    @staticmethod
+    def _sale():
         return SimpleNamespace(
             id=1, sale_number='S-1', customer_id=2,
             total_amount=Decimal('100'), amount_aed=Decimal('100'),

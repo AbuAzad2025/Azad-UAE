@@ -11,7 +11,8 @@ import pytest
 class TestDepreciationFormulas:
     """FixedAsset.calculate_monthly_depreciation — straight-line vs declining balance."""
 
-    def _asset(self, method='straight_line', **kwargs):
+    @staticmethod
+    def _asset(method='straight_line', **kwargs):
         from models.fixed_asset import FixedAsset
         asset = FixedAsset(
             tenant_id=1,
@@ -56,7 +57,8 @@ class TestDepreciationFormulas:
 class TestDepreciationRunMonthly:
     """DepreciationService.run_monthly — tenant filter, posted/skipped/errors."""
 
-    def _mock_assets_query(self, mocker, assets, tenant_id=None):
+    @staticmethod
+    def _mock_assets_query(mocker, assets, tenant_id=None):
         mock_q = MagicMock()
         mock_q.filter_by.return_value = mock_q
         mock_q.filter.return_value = mock_q
@@ -182,7 +184,8 @@ class TestDepreciationRunMonthly:
 
 
 class TestFixedAssetModelCoverage:
-    def _asset(self, **kwargs):
+    @staticmethod
+    def _asset(**kwargs):
         from models.fixed_asset import FixedAsset
 
         return FixedAsset(

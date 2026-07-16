@@ -81,7 +81,7 @@ class TestEnforceCompanyUserTenant:
 
     def test_assign_tenant_id_fallback(self):
         user = MagicMock(is_owner=False, tenant_id=None, branch_id=None, role=MagicMock(slug='manager'))
-        with patch('utils.tenanting.assign_tenant_id', side_effect=lambda u: setattr(u, 'tenant_id', 2) or u):
+        with patch('utils.tenanting.assign_tenant_id', side_effect=lambda u: (setattr(u, 'tenant_id', 2), u)[-1]):
             result = enforce_company_user_tenant(user)
         assert result.tenant_id == 2
 

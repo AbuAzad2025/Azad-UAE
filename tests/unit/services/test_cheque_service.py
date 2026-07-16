@@ -3,14 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy import event
 
-from extensions import db
 from models import Cheque, Payment, Receipt
-from services import cheque_service
 from services.cheque_service import (
     calculate_amount_aed,
     process_cheque_bounce,
@@ -601,7 +598,7 @@ class TestChequeEdgePaths:
     def test_overdue_listener_error_logged(self, mocker):
         handlers = []
 
-        def capture(model, event):
+        def capture(model, evt):
             def decorator(fn):
                 handlers.append(fn)
                 return fn
@@ -622,7 +619,7 @@ class TestChequeEdgePaths:
     def test_status_listener_error_logged(self, mocker):
         handlers = []
 
-        def capture(model, event):
+        def capture(model, evt):
             def decorator(fn):
                 handlers.append(fn)
                 return fn

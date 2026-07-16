@@ -4,13 +4,13 @@ import sys
 
 
 def _is_migration_command():
-    MIGRATION_COMMANDS = {
+    migration_commands = {
         "db", "migrate", "migration", "upgrade", "downgrade",
         "stamp", "history", "current", "heads", "branches",
         "revision", "merge",
     }
     argv = [str(a).lower() for a in sys.argv]
-    return any(arg in MIGRATION_COMMANDS for arg in argv)
+    return any(arg in migration_commands for arg in argv)
 
 
 def run_system_integrity_check(app):

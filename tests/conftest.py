@@ -174,7 +174,7 @@ def make_sync_current_app_mock(name="current_app"):
     """Patch-safe current_app stand-in with a named synchronous logger."""
     mock_app = MagicMock(name=name)
     mock_app.__name__ = name
-    mock_app.logger = make_sync_logger_mock("logger")
+    mock_app.logger = make_sync_logger_mock()
     return mock_app
 
 
@@ -728,8 +728,6 @@ def sample_user(db_session, sample_tenant, sample_role, sample_branch):
         tenant_id=sample_tenant.id,
         role_id=sample_role.id,
         branch_id=branch_id,
-        is_active=True,
-        is_owner=False,
     )
     user.set_password("password123")
     db_session.add(user)
@@ -764,7 +762,6 @@ def sample_owner(db_session):
         full_name="Platform Owner",
         tenant_id=tenant.id,
         role_id=role.id,
-        is_active=True,
         is_owner=True,
     )
     user.set_password("password123")
@@ -943,7 +940,6 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
         total_amount=Decimal("210.000"),
         amount=Decimal("210.000"),
         amount_aed=Decimal("210.000"),
-        paid_amount=Decimal("0"),
         balance_due=Decimal("210.000"),
         currency="AED",
     )
@@ -996,7 +992,6 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
         sku="SKU-STOCK-001",
         cost_price=Decimal("50.000"),
         regular_price=Decimal("100.000"),
-        current_stock=Decimal("0"),
     )
     db_session.add(p)
     db_session.commit()

@@ -192,7 +192,8 @@ class TestTrackLoginAttempt:
 
 
 class TestGetSecurityEvents:
-    def _build_query(self, rows):
+    @staticmethod
+    def _build_query(rows):
         query = MagicMock()
         query.filter.return_value = query
         query.filter_by.return_value = query

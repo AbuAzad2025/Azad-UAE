@@ -72,12 +72,12 @@ class TestSetupEnhancedLogging:
         assert set(handlers) == {'app', 'error', 'security', 'performance'}
         assert app.logger.handlers
 
-        teardown = None
-        for item in app.teardown_appcontext_funcs:
-            func = item[0] if isinstance(item, tuple) else item
-            if getattr(func, '__name__', '') == '_close_log_handlers':
-                teardown = func
-                break
+        teardown = next(
+            (item[0] if isinstance(item, tuple) else item
+             for item in app.teardown_appcontext_funcs
+             if getattr(item[0] if isinstance(item, tuple) else item, '__name__', '') == '_close_log_handlers'),
+            None,
+        )
         assert teardown is not None
         teardown(None)
 
@@ -92,10 +92,10 @@ class TestSetupEnhancedLogging:
         app.logger.addHandler(stale)
 
         def make_handler():
-            handler = MagicMock()
-            handler.level = logging.INFO
-            handler.close.side_effect = RuntimeError('close fail')
-            return handler
+            log_handler = MagicMock()
+            log_handler.level = logging.INFO
+            log_handler.close.side_effect = RuntimeError('close fail')
+            return log_handler
 
         with patch('utils.enhanced_logging.RotatingFileHandler', side_effect=lambda *a, **k: make_handler()), patch(
             'utils.enhanced_logging.logging.getLogger'
@@ -106,12 +106,12 @@ class TestSetupEnhancedLogging:
             handlers = setup_enhanced_logging(app)
 
         assert werkzeug.removeHandler.called
-        teardown = None
-        for item in app.teardown_appcontext_funcs:
-            func = item[0] if isinstance(item, tuple) else item
-            if getattr(func, '__name__', '') == '_close_log_handlers':
-                teardown = func
-                break
+        teardown = next(
+            (item[0] if isinstance(item, tuple) else item
+             for item in app.teardown_appcontext_funcs
+             if getattr(item[0] if isinstance(item, tuple) else item, '__name__', '') == '_close_log_handlers'),
+            None,
+        )
         assert teardown is not None
         teardown(None)
         for handler in handlers.values():

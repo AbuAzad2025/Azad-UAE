@@ -7,7 +7,8 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 class TestFrontendSecurityAudit:
-    def _read_js_files(self):
+    @staticmethod
+    def _read_js_files():
         js_dir = PROJECT_ROOT / 'static' / 'js'
         files = {}
         for path in js_dir.rglob('*.js'):
@@ -26,7 +27,7 @@ class TestFrontendSecurityAudit:
         issues = []
         price_pattern = re.compile(r'(?:price|cost|amount)\s*[=:]\s*[1-9]\d*\.?\d*')
         for path, text in js_files.items():
-            for line_num, line in enumerate(text.split('\n'), 1):
+            for line_num, line in enumerate(text.split('\r\n'), 1):
                 if price_pattern.search(line):
                     if 'data.' not in line and 'response.' not in line and 'result.' not in line:
                         issues.append(f'{path.name}:{line_num}: {line.strip()[:80]}')
@@ -49,7 +50,7 @@ class TestFrontendSecurityAudit:
         issues = []
         for path, text in js_files.items():
             if 'localStorage.setItem' in text:
-                lines = text.split('\n')
+                lines = text.split('\r\n')
                 for i, line in enumerate(lines, 1):
                     if 'localStorage.setItem' in line:
                         if any(kw in line for kw in ['password', 'token', 'secret', 'key', 'api']):
@@ -69,7 +70,7 @@ class TestFrontendSecurityAudit:
                 has_csrf = 'X-CSRFToken' in text or 'csrf-token' in text or 'csrf' in text.lower()
                 if not has_csrf:
                     # Check line by line for POST
-                    for i, line in enumerate(text.split('\n'), 1):
+                    for i, line in enumerate(text.split('\r\n'), 1):
                         if ('$.ajax' in line or 'fetch(' in line) and ('POST' in line or 'post' in line):
                             issues.append(f'{path.name}:{i}: POST AJAX without CSRF')
                             break

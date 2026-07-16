@@ -1,6 +1,5 @@
 """Comprehensive unit tests for routes/ai.py."""
 import io
-import json
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -224,7 +223,8 @@ class TestExchangeRate:
 
 
 class TestSearchMarketPrice:
-    def _product_chain(self, product=None):
+    @staticmethod
+    def _product_chain(product=None):
         chain = MagicMock()
         if product is None:
             chain.first_or_404.side_effect = NotFound()
@@ -278,7 +278,8 @@ class TestSearchMarketPrice:
 
 
 class TestFindCompatible:
-    def _product_chain(self, product=None):
+    @staticmethod
+    def _product_chain(product=None):
         chain = MagicMock()
         if product is None:
             chain.first_or_404.side_effect = NotFound()
