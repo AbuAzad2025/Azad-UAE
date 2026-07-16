@@ -19,11 +19,9 @@ def main():
     from models import (
         Tenant, Product, Warehouse, ProductWarehouseCost,
         ProductCostHistory, Purchase, PurchaseLine, Sale, SaleLine,
-        GLJournalEntry, Supplier, Customer, StockMovement
+        Supplier, Customer, StockMovement
     )
     from services.stock_service import StockService
-    from services.sale_service import SaleService
-    from services.purchase_service import PurchaseService
     from decimal import Decimal, ROUND_HALF_UP
     import sqlalchemy as sa
 

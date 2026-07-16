@@ -72,7 +72,7 @@ class IntegrationSettings(db.Model):
         if self.config_data:
             try:
                 return json.loads(self.config_data)
-            except:
+            except Exception:
                 return {}
         return {}
     

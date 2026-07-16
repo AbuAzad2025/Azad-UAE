@@ -1,7 +1,6 @@
 """
 Integration tests: Customers routes — real business logic via HTTP.
 """
-import pytest
 import uuid
 from decimal import Decimal
 from datetime import date, datetime, timedelta, timezone

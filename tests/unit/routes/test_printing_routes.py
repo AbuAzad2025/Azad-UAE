@@ -471,10 +471,10 @@ class TestPrintingCoverageGaps:
             import builtins
             real_import = builtins.__import__
 
-            def _import_shim(name, globals=None, locals=None, fromlist=(), level=0):
+            def _import_shim(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == "models" and fromlist and "Shipment" in fromlist:
                     raise ImportError("Shipment unavailable")
-                return real_import(name, globals, locals, fromlist, level)
+                return real_import(name, globals_dict, locals_dict, fromlist, level)
 
             with patch("builtins.__import__", side_effect=_import_shim):
                 resp = printing_client.get("/printing/packing-slip/22")

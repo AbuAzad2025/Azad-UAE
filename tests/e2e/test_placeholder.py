@@ -2,7 +2,6 @@
 
 Replace with real end-to-end browser/API integration tests when available.
 """
-import pytest
 
 
 def test_placeholder():

@@ -1,7 +1,6 @@
 """
 Integration tests: Supplier routes — purchases, payables, cheques, ageing.
 """
-import pytest
 import uuid
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta

@@ -1,7 +1,6 @@
 """
 Integration test: Tenant isolation — cross-tenant access must be blocked.
 """
-import pytest
 import uuid
 
 

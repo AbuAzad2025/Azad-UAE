@@ -1,7 +1,6 @@
 """
 Real route tests: Sales routes — HTTP client.get() / client.post() only.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

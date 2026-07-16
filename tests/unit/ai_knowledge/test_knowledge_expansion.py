@@ -4,13 +4,11 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
-
 from ai_knowledge.core.learning_system import AzadLearningSystem
 from ai_knowledge.expansion.global_knowledge import GlobalExpertiseUpdater, GlobalKnowledgeConnector
 from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander, knowledge_expander
 from ai_knowledge.expansion.knowledge_sources import KnowledgeSourceManager, get_learning_resources
-from ai_knowledge.knowledge_base import get_customs_info, get_module_help, get_tax_info, get_welcome_message, search_knowledge
+from ai_knowledge.knowledge_base import get_customs_info, get_tax_info, get_welcome_message, search_knowledge
 
 
 class TestGlobalKnowledge:

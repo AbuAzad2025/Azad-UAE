@@ -167,7 +167,7 @@ class SystemSettings(db.Model):
             try:
                 custom = json.loads(self.custom_settings)
                 return custom.get(key, default)
-            except:
+            except Exception:
                 return default
         return default
     
@@ -177,7 +177,7 @@ class SystemSettings(db.Model):
         if self.custom_settings:
             try:
                 custom = json.loads(self.custom_settings)
-            except:
+            except Exception:
                 pass
         custom[key] = value
         self.custom_settings = json.dumps(custom, ensure_ascii=False)

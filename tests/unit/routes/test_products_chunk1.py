@@ -9,10 +9,10 @@ import pytest
 # helpers
 # ---------------------------------------------------------------------------
 
-def _make_product(id, name, sku="SKU-001", price=100.0, stock=50.0,
+def _make_product(product_id, name, sku="SKU-001", price=100.0, stock=50.0,
                   unit="pcs", min_stock=5, barcode="BAR001"):
     p = MagicMock()
-    p.id = id
+    p.id = product_id
     p.name = name
     p.sku = sku
     p.barcode = barcode

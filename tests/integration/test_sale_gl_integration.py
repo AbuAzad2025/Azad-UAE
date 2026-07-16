@@ -1,7 +1,6 @@
 """
 Integration test: Sale creates balanced GL entries and records stock movements.
 """
-import pytest
 from decimal import Decimal
 import uuid
 

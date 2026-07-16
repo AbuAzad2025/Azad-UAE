@@ -107,11 +107,6 @@ package.json
 /check_*.py
 /*.txt
 !requirements.txt
-
-# Neural models (can be large)
-ai_knowledge/data/models/*.pkl
-ai_knowledge/data/models/*.joblib
-
 # Temporary files
 *.tmp
 *.temp

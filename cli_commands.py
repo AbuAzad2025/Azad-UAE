@@ -81,7 +81,6 @@ def register_seed_demo_command(app):
     @click.option('--force', is_flag=True, help='Re-seed even if demo tenant exists')
     def seed_demo(force):
         """Provision & populate a demo tenant with branches, warehouses, users, products, partners, customers, suppliers, sales, purchases, expenses, salary advances, POS sessions, and sale returns."""
-        from extensions import db
         from models.tenant import Tenant
 
         if Tenant.query.filter_by(slug='demo').first():
@@ -113,7 +112,6 @@ def _do_seed_demo(app):
     from models.product_return import ProductReturn, ProductReturnLine
     from models.pos_session import PosSession
     from models.sale import Sale
-    from models.purchase import Purchase
     from models.expense import Expense, ExpenseCategory
     from services.tenant_provisioning import validate_tenant_industry, provision_tenant_gl
     from services.document_sequence_service import DocumentSequenceService

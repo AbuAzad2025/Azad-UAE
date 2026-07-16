@@ -1,7 +1,6 @@
 """
 Integration tests: Expenses routes — real business logic via POST /expenses/create.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

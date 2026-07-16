@@ -169,7 +169,6 @@ class TestShopCustomerAuthGaps:
         mocker.patch('services.shop_customer_auth_service.db.session.flush', side_effect=RuntimeError('db'))
         with pytest.raises(RuntimeError, match='db'):
             call_fn(ShopCustomerAuthService, sample_tenant.id)
-        ShopCustomerAuthService  # noqa: B018 — keep import used
 
     def test_reset_password_short_new_password(self, sample_tenant):
         from services.shop_customer_auth_service import ShopCustomerAuthService
@@ -365,10 +364,10 @@ class TestLoggingCoreGaps:
         saved = sys.modules.pop(mod_name, None)
         real_import = builtins.__import__
 
-        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'colorama':
                 raise ImportError('blocked')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         try:
             with patch.object(builtins, '__import__', side_effect=blocked_import):

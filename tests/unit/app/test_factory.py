@@ -190,10 +190,10 @@ class TestFactoryRoutes:
         try:
             real_import = builtins.__import__
 
-            def blocked(name, globals=None, locals=None, fromlist=(), level=0):
+            def blocked(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == 'flask_compress':
                     raise ImportError('blocked for test')
-                return real_import(name, globals, locals, fromlist, level)
+                return real_import(name, globals_dict, locals_dict, fromlist, level)
 
             with patch('builtins.__import__', side_effect=blocked):
                 mod = importlib.import_module(mod_name)

@@ -238,7 +238,7 @@ class AnalyticsService:
                         dt = d.created_at.replace(tzinfo=None) if d.created_at.tzinfo else d.created_at
                         if month_start.replace(tzinfo=None) <= dt < month_end.replace(tzinfo=None):
                             month_purchases += float(d.amount_usd or 0)
-                    except:
+                    except Exception:
                         pass
 
             # حساب التبرعات
@@ -249,7 +249,7 @@ class AnalyticsService:
                         dt = d.created_at.replace(tzinfo=None) if d.created_at.tzinfo else d.created_at
                         if month_start.replace(tzinfo=None) <= dt < month_end.replace(tzinfo=None):
                             month_donations += float(d.amount_usd or 0)
-                    except:
+                    except Exception:
                         pass
 
             labels.append(month_label)

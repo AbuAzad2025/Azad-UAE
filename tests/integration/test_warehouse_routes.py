@@ -1,7 +1,6 @@
 """
 Integration tests: Warehouse routes — real business logic via POST /warehouse/add-stock.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

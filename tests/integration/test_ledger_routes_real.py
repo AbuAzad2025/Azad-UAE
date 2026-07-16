@@ -1,7 +1,6 @@
 """
 Real route tests: Ledger routes — HTTP client.get() only.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

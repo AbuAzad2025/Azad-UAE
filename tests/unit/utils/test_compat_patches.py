@@ -30,12 +30,12 @@ class TestCompatPatches:
             import builtins
             real_import = builtins.__import__
 
-            def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
                 if name == 'cachelib.serializers' or (
                     fromlist and 'cachelib.serializers' in str(fromlist)
                 ):
                     raise ImportError('blocked for test')
-                return real_import(name, globals, locals, fromlist, level)
+                return real_import(name, globals_dict, locals_dict, fromlist, level)
 
             with patch.object(builtins, '__import__', side_effect=blocked_import):
                 mod = importlib.import_module(mod_name)

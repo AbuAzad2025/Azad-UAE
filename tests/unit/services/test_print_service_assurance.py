@@ -74,10 +74,10 @@ class TestRenderPdf:
         import builtins
         real_import = builtins.__import__
 
-        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def fake_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'weasyprint':
                 raise ImportError('no weasyprint')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         mocker.patch('builtins.__import__', side_effect=fake_import)
         from services.print_service import PrintService

@@ -1,7 +1,6 @@
 """
 Integration tests: Sales routes — real business logic via POST /sales/create.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

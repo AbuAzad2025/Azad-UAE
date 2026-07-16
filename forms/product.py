@@ -1,3 +1,4 @@
+from decimal import Decimal
 from flask_wtf import FlaskForm
 from wtforms import StringField, DecimalField, SelectField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, Optional, NumberRange
@@ -15,8 +16,8 @@ class ProductForm(FlaskForm):
     merchant_price = DecimalField('سعر التاجر', validators=[Optional(), NumberRange(min=0)])
     partner_price = DecimalField('سعر الشريك', validators=[Optional(), NumberRange(min=0)])
     cost_price = DecimalField('سعر التكلفة', validators=[Optional(), NumberRange(min=0)])
-    current_stock = DecimalField('الكمية الحالية', default=0, validators=[Optional(), NumberRange(min=0)])
-    min_stock_alert = DecimalField('الحد الأدنى للتنبيه', default=0, validators=[Optional(), NumberRange(min=0)])
+    current_stock = DecimalField('الكمية الحالية', default=Decimal('0'), validators=[Optional(), NumberRange(min=0)])
+    min_stock_alert = DecimalField('الحد الأدنى للتنبيه', default=Decimal('0'), validators=[Optional(), NumberRange(min=0)])
     unit = SelectField('الوحدة', choices=[
         ('', 'بلا'),
         ('piece', 'قطعة'),
@@ -36,7 +37,7 @@ class ProductForm(FlaskForm):
         ('1', 'نعم'),
         ('0', 'لا')
     ], default='1', coerce=int, validators=[Optional()])
-    return_period_days = DecimalField('فترة الإرجاع (أيام)', default=30, validators=[Optional(), NumberRange(min=0)])
+    return_period_days = DecimalField('فترة الإرجاع (أيام)', default=Decimal('30'), validators=[Optional(), NumberRange(min=0)])
     description = TextAreaField('الوصف', validators=[Optional()])
     notes = TextAreaField('ملاحظات', validators=[Optional()])
     submit = SubmitField('حفظ')

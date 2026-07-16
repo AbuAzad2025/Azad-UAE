@@ -6,7 +6,6 @@ Run: pytest tests/integration/stress_test_tenant_scoping.py -v -s
 """
 import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
 from extensions import db
 
 

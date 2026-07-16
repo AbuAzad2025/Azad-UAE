@@ -4,13 +4,11 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
-import joblib
-import numpy as np
 import pytest
 from PIL import Image
 
@@ -83,8 +81,6 @@ class TestTrainer:
         trainer = Trainer()
         trainer.quick_learner = None
         with patch.dict('sys.modules', {'ai_knowledge.learning_engine': None}):
-            import importlib
-            import ai_knowledge.trainer as trainer_mod
             with patch('ai_knowledge.learning.quick_learner.quick_learner', MagicMock()) as ql:
                 assert trainer._get_ql() is ql
 

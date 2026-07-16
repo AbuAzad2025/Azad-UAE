@@ -266,7 +266,7 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
                 current_app.logger.error(f'Failed to create audit log: {e}')
             else:
                 print(f'Failed to create audit log: {e}')
-        except:
+        except Exception:
              pass
 
 

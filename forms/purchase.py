@@ -1,3 +1,4 @@
+from decimal import Decimal
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, DecimalField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, Optional, NumberRange, Email
@@ -13,8 +14,8 @@ class PurchaseForm(FlaskForm):
         ('EUR', 'يورو')
     ], default='AED', validators=[DataRequired()])  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = DecimalField('سعر الصرف (اختياري)', validators=[Optional(), NumberRange(min=0)])
-    discount_amount = DecimalField('الخصم', default=0, validators=[Optional(), NumberRange(min=0)])
-    tax_rate = DecimalField('الضريبة %', default=0, validators=[Optional(), NumberRange(min=0, max=100)])
+    discount_amount = DecimalField('الخصم', default=Decimal('0'), validators=[Optional(), NumberRange(min=0)])
+    tax_rate = DecimalField('الضريبة %', default=Decimal('0'), validators=[Optional(), NumberRange(min=0, max=100)])
     notes = TextAreaField('ملاحظات', validators=[Optional()])
     submit = SubmitField('حفظ')
 

@@ -1,10 +1,7 @@
 """Tests for analytics, generation, learning, and improvement modules."""
 from __future__ import annotations
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from ai_knowledge.analytics.analytics_predictions import (
     CashFlowAnalytics,

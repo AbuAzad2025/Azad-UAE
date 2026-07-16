@@ -2,12 +2,9 @@
 from __future__ import annotations
 
 import json
-import math
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from decimal import Decimal
-from types import SimpleNamespace
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

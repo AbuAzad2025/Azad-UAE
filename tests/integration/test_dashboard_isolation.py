@@ -4,7 +4,6 @@ Integration tests for dashboard isolation and feature injection across three pan
 2. Branch & Cashier Dashboard (dashboard)
 3. Super Admin Dashboard (owner dashboard)
 """
-import pytest
 from decimal import Decimal
 from datetime import datetime, timezone
 import uuid

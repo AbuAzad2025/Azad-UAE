@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from ai_knowledge.personality.azad_personality import AzadPersonality, azad_personality
 from ai_knowledge.personality.beginners_mode import (
     BEGINNERS_TUTORIALS,

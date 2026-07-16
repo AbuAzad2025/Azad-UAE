@@ -1,7 +1,6 @@
 """
 Integration tests: Payroll routes — real business logic via POST /payroll/process.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

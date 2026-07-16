@@ -50,7 +50,6 @@ class TestTrialBalance:
         assert 'ميزان' in html or 'Trial' in html or 'Balance' in html, \
             f'Expected trial balance page. HTML snippet: {html[500:1200]}'
 
-        from flask import session as sess
         found_debits = False
         found_credits = False
         for word in ['مدين', 'Debit', 'total_debit', 'debit']:

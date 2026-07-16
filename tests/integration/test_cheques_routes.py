@@ -1,7 +1,6 @@
 """
 Integration tests: Cheques routes — full lifecycle (create, deposit, clear, bounce, cancel, delete).
 """
-import pytest
 import uuid
 from decimal import Decimal
 from datetime import date, timedelta

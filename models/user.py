@@ -108,11 +108,43 @@ class User(UserMixin, db.Model):
     
     sales = db.relationship('Sale', back_populates='seller', lazy='dynamic', foreign_keys='Sale.seller_id')
     audit_logs = db.relationship('AuditLog', back_populates='user', lazy='dynamic')
-    
+
+    def __init__(
+        self,
+        username=None,
+        email=None,
+        password_hash=None,
+        full_name=None,
+        full_name_ar=None,
+        phone=None,
+        role_id=None,
+        tenant_id=None,
+        branch_id=None,
+        is_owner=False,
+        is_active=True,
+        email_verified=False,
+        **kwargs,
+    ):
+        super().__init__(
+            username=username,
+            email=email,
+            password_hash=password_hash,
+            full_name=full_name,
+            full_name_ar=full_name_ar,
+            phone=phone,
+            role_id=role_id,
+            tenant_id=tenant_id,
+            branch_id=branch_id,
+            is_owner=is_owner,
+            is_active=is_active,
+            email_verified=email_verified,
+            **kwargs,
+        )
+
     # Avoid circular imports - use strings for forward references
     # created_suppliers = db.relationship('Supplier', foreign_keys='Supplier.created_by', lazy='dynamic')
     # created_tenants = db.relationship('Tenant', foreign_keys='Tenant.created_by', lazy='dynamic')
-    
+
     def __repr__(self):
         return f'<User {self.username}>'
     

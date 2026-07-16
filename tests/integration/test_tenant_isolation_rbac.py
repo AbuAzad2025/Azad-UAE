@@ -63,8 +63,7 @@ class TestUserUniqueness:
 
 class TestTenantIsolation:
     def test_tenant_isolation_enforced_via_orm_scope(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer, Sale
-        from utils.tenant_orm import _inject_tenant_criteria
+        from models import Tenant, Branch, User, Role, Customer
         from services.gl_service import GLService
 
         tid1 = uuid.uuid4().hex[:4]

@@ -318,7 +318,7 @@ class TestHealthAndMetrics:
         product.query.count.return_value = 3
         product.query.filter.return_value.count.return_value = 0
 
-        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def fake_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'models':
                 pkg = type('models', (), {})()
                 pkg.Sale = sale
@@ -326,7 +326,7 @@ class TestHealthAndMetrics:
                 pkg.Product = product
                 return pkg
             import builtins
-            return builtins.__import__(name, globals, locals, fromlist, level)
+            return builtins.__import__(name, globals_dict, locals_dict, fromlist, level)
 
         mocker.patch('builtins.__import__', side_effect=fake_import)
         metrics = LoggingCore.get_app_metrics()

@@ -215,10 +215,10 @@ class TestCreateAuditLog:
         import builtins
         real_import = builtins.__import__
 
-        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def blocked_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'flask_login':
                 raise ImportError('blocked')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         monkeypatch.setattr(builtins, '__import__', blocked_import)
         with app.test_request_context('/'), \

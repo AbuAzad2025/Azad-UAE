@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from ai_knowledge.analytics import get_market_insights
 from ai_knowledge.knowledge import (
     COMPANY_INFO,

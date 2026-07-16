@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
-
 import pytest
 
 

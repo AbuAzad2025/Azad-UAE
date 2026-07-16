@@ -2,7 +2,6 @@
 Integration tests: POS routes — session management, checkout, discount, credit, drawer isolation.
 Tests use real HTTP JSON API endpoints, verifying DB state after each operation.
 """
-import json
 import uuid
 from decimal import Decimal
 from datetime import datetime, timezone

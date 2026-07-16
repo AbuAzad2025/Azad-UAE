@@ -1,7 +1,6 @@
 """Final coverage push for ai_knowledge modules below 85%."""
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch

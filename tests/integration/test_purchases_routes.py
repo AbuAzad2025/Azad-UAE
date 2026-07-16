@@ -1,7 +1,6 @@
 """
 Integration tests: Purchases routes — real business logic via POST /purchases/create.
 """
-import pytest
 import uuid
 from decimal import Decimal
 

@@ -521,10 +521,10 @@ class TestWave8ExtraPush:
         import builtins
         real_import = builtins.__import__
 
-        def block_g(name, globals=None, locals=None, fromlist=(), level=0):
+        def block_g(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'flask' and fromlist and 'g' in fromlist:
                 raise RuntimeError('no app context')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         with patch('builtins.__import__', side_effect=block_g), \
              patch('ai_knowledge.action_dispatcher.current_user', SimpleNamespace(is_authenticated=False)):

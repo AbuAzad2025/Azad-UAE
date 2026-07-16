@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 class TestApiDocsPublic:
     """Docs are public in testing/debug mode."""

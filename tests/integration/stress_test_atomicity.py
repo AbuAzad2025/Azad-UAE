@@ -152,6 +152,7 @@ class TestPurchaseDeleteAtomicity:
         from models import Purchase, PurchaseLine, Supplier
 
         purchase_id = sample_purchase.id
+        supplier_balance_before = Decimal('0')
         if sample_purchase.supplier:
             supplier_balance_before = Decimal(str(sample_purchase.supplier.get_balance_base() or "0"))
         purchase_count_before = Purchase.query.count()
@@ -165,8 +166,8 @@ class TestPurchaseDeleteAtomicity:
         assert PurchaseLine.query.count() == line_count_before, "PurchaseLines were deleted despite GL failure"
 
         if sample_purchase.supplier:
-            sample_purchase.supplier = Supplier.query.get(sample_purchase.supplier.id)
-            assert Decimal(str(sample_purchase.supplier.get_balance_base() or "0")) == supplier_balance_before, \
+            refreshed_supplier = Supplier.query.get(sample_purchase.supplier.id)
+            assert Decimal(str(refreshed_supplier.get_balance_base() or "0")) == supplier_balance_before, \
                 "Supplier balance was mutated despite rollback"
 
     def test_purchase_delete_rolls_back_on_supplier_failure(self, app, logged_in_client, sample_purchase):

@@ -1,7 +1,6 @@
 """Tests for reasoning_engine and conversation modules."""
 from __future__ import annotations
 
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest

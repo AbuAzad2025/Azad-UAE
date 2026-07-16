@@ -49,10 +49,10 @@ class TestCardPaymentImportFallback:
         import models.card_payment as cp
         real_import = builtins.__import__
 
-        def _mock(name, globals=None, locals=None, fromlist=(), level=0):
+        def _mock(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'cryptography.fernet':
                 raise ImportError('no cryptography')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         monkeypatch.setattr(builtins, '__import__', _mock)
         monkeypatch.setattr(cp, 'HAS_CRYPTO', None)

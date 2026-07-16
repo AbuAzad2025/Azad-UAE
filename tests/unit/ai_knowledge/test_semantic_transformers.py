@@ -1,8 +1,6 @@
 """Tests for semantic_matcher and transformers_brain."""
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 
 from ai_knowledge.neural.semantic_matcher import (

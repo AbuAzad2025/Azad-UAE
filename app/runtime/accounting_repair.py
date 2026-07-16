@@ -27,7 +27,7 @@ def repair_accounting_data():
     - Post an opening inventory migration adjustment only when a real diff exists.
     """
     from models import Cheque, Customer, Product
-    from models.gl import GLAccount, GLJournalEntry, GLJournalLine
+    from models.gl import GLJournalEntry, GLJournalLine
     from services.gl_service import GLService
     from services import gl_helpers
     from utils.tenanting import get_active_tenant_id
@@ -111,7 +111,6 @@ def repair_accounting_data():
     )
     inventory_diff = estimated_inventory - gl_inventory
 
-    posted_inventory_adjustment = Decimal("0")
     existing_migration = GLJournalEntry.query.filter_by(
         reference_type="InventoryMigration",
         tenant_id=int(tenant_id),

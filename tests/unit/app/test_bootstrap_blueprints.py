@@ -34,10 +34,10 @@ class TestImportBp:
     def test_import_bp_failure_logs_and_raises(self, flask_app):
         real_import = builtins.__import__
 
-        def selective_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def selective_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'routes.nonexistent_xyz':
                 raise ImportError('missing module')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         with patch('builtins.__import__', side_effect=selective_import), \
              patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')):
@@ -61,10 +61,10 @@ class TestImportBp:
     def test_import_bp_log_db_failure(self, flask_app):
         real_import = builtins.__import__
 
-        def selective_import(name, globals=None, locals=None, fromlist=(), level=0):
+        def selective_import(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
             if name == 'routes.broken_bp_xyz':
                 raise ImportError('missing module')
-            return real_import(name, globals, locals, fromlist, level)
+            return real_import(name, globals_dict, locals_dict, fromlist, level)
 
         with patch('builtins.__import__', side_effect=selective_import), \
              patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')):

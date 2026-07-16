@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 
 class TestConsolidatedNeuralNetwork:
     def test_semantic_matcher_import(self):
