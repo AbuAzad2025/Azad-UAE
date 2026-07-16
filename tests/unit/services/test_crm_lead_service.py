@@ -13,12 +13,14 @@ from utils.tenanting import set_active_tenant
 @pytest.fixture
 def scoped_user(db_session, sample_tenant, sample_branch):
     """A non-global user with branch scope enabled (role slug NOT in GLOBAL_ROLE_SLUGS)."""
-    role = Role(name="Seller", slug="seller", is_active=True)
+    import uuid
+    tag = uuid.uuid4().hex[:6]
+    role = Role(name=f"Seller_{tag}", slug=f"seller_{tag}", is_active=True)
     db_session.add(role)
     db_session.flush()
     u = User(
-        username=f"scoped_{sample_tenant.id}",
-        email=f"scoped_{sample_tenant.id}@test.com",
+        username=f"scoped_{sample_tenant.id}_{tag}",
+        email=f"scoped_{sample_tenant.id}_{tag}@test.com",
         tenant_id=sample_tenant.id,
         role_id=role.id,
         branch_id=sample_branch.id,
