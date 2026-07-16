@@ -296,9 +296,11 @@ class TestDashboardPermissions:
             role_id=role.id, is_owner=False,
         )
         assert not u.can_apply_discount()
-        assert not u.can_edit_price()        def test_dashboard_context_includes_permissions(self, db_session, app):
-            """Stats dict from main dashboard route must include can_apply_discount and can_edit_price."""
-            t = _make_tenant(db_session, 'PermDash', 'perm-dash')
+        assert not u.can_edit_price()
+
+    def test_dashboard_context_includes_permissions(self, db_session, app):
+        """Stats dict from main dashboard route must include can_apply_discount and can_edit_price."""
+        t = _make_tenant(db_session, 'PermDash', 'perm-dash')
         b = _make_branch(db_session, t.id)
         u = _make_user(db_session, t.id, b.id, role_slug='cashier')
         u.set_password('password123')
