@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from ai_knowledge.knowledge.automotive_ecu_knowledge import AutomotiveECUKnowledge, get_automotive_ecu_knowledge
 from ai_knowledge.knowledge.company_info import COMPANY_INFO, get_welcome_message
 from ai_knowledge.knowledge.customs import CUSTOMS_CLEARANCE, get_customs_advice

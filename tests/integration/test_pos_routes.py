@@ -151,7 +151,6 @@ class TestPOSSession:
         assert sale.total_amount == 75
         assert sale.warehouse_id == wh.id
 
-        from models import Payment
         payment = Payment.query.filter_by(sale_id=sale.id).first()
         assert payment is not None
         assert float(payment.amount) == 75.0

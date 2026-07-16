@@ -2,7 +2,6 @@
 Integration tests: Payments routes — real business logic via POST /payments/voucher/submit.
 """
 import uuid
-from decimal import Decimal
 
 
 class TestPaymentsVoucher:

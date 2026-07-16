@@ -41,7 +41,6 @@ class TestFullBusinessCycleTenantScoping:
 
     def _create_sale(self, data, user):
         from models import Sale, SaleLine, Customer, Product, Warehouse
-        from utils.tenanting import require_active_tenant_id
 
         # All records auto-scoped by apply_tenant_scope
         tid = data['tenant_id']
@@ -138,9 +137,6 @@ class TestFullBusinessCycleTenantScoping:
 
     def test_gl_entry_tenant_id(self, mocker):
         """Verify GL journal entries created from a sale inherit tenant_id."""
-        from models import GLJournalEntry, GLJournalLine
-        from services.gl_service import GLService
-
         # Mock the creation to inject known tenant_id
         mocker.patch(
             'services.gl_service.gl_helpers.resolve_tenant_id',

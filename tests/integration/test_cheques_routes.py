@@ -505,7 +505,7 @@ class TestChequesViewEdit:
 
 class TestChequesDelete:
     def test_archive_cheque_with_links_soft_deletes(self, app, db_session, client):
-        from models import Tenant, Branch, User, Role, Customer
+        from models import Tenant, Branch, User, Role
         from models.cheque import Cheque
         from services.gl_service import GLService
 

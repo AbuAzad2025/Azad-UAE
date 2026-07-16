@@ -1,9 +1,7 @@
 """
 Integration tests: Reports routes — real business logic via GET /ledger/trial-balance.
 """
-import pytest
 import uuid
-from decimal import Decimal
 
 
 class TestTrialBalance:
