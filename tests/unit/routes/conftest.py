@@ -44,6 +44,13 @@ def pytest_configure(config):
     import sqlalchemy.orm.dependency as _dep
     if not hasattr(_dep, '_direction_to_processor'):
         importlib.reload(_dep)
+    from routes.auth import auth_bp
+    from routes.customers import customers_bp
+    from routes.sales import sales_bp
+    from routes.purchases import purchases_bp
+    from routes.inventory import unified_inventory_bp
+    from routes.payments import payments_bp
+    from routes.expenses import expenses_bp
     from routes.cheques import cheques_bp
     from routes.ledger import ledger_bp
     from routes.reports import reports_bp
@@ -96,15 +103,6 @@ def pytest_configure(config):
         pos_bp, printing_bp, email_marketing_bp, partners_bp, hr_bp,
         tickets_bp, billing_webhooks_bp, api_enhanced_bp, websocket_bp
     ]
-    
-    for bp in blueprints:
-        if bp and bp.name not in app.blueprints:
-            app.register_blueprint(bp)
-
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.drop_all()
 
 # ─── REAL AUTHENTICATION HELPERS ───
 def _create_test_user(db_session, tenant_id=1, username="testuser", email="test@example.com", 
@@ -246,12 +244,30 @@ def bypass_ai_access(mock_user):
             "allowed": True, "global_enabled": True, "tenant_enabled": True,
             "tenant_id": 1, "reason": None, "is_platform_user": True, "ai_level": "execute",
         }),
+        patch("routes.ai_routes.chat.get_ai_access_state", return_value={
+            "allowed": True, "global_enabled": True, "tenant_enabled": True,
+            "tenant_id": 1, "reason": None, "is_platform_user": True, "ai_level": "execute",
+        }),
+        patch("routes.ai_routes.shared.get_ai_access_state", return_value={
+            "allowed": True, "global_enabled": True, "tenant_enabled": True,
+            "tenant_id": 1, "reason": None, "is_platform_user": True, "ai_level": "execute",
+        }),
+        patch("routes.ai_routes.assistant.get_ai_access_state", return_value={
+            "allowed": True, "global_enabled": True, "tenant_enabled": True,
+            "tenant_id": 1, "reason": None, "is_platform_user": True, "ai_level": "execute",
+        }),
         patch("utils.auth_helpers.is_global_owner_user", return_value=True),
         patch("utils.decorators.is_global_owner_user", return_value=True),
         patch("utils.decorators.is_admin_surface_user", return_value=True),
         patch("extensions.limiter.limit", return_value=lambda f: f),
         patch("utils.tenanting.get_active_tenant_id", return_value=1),
         patch("services.logging_core.LoggingCore.log_audit"),
+        patch("routes.ai_routes._get_conversation_context", return_value={}),
+        patch("routes.ai_routes._set_conversation_context"),
+        patch("routes.ai_routes._clear_conversation_context"),
+        patch("routes.ai_routes.shared._get_conversation_context", return_value={}),
+        patch("routes.ai_routes.shared._set_conversation_context"),
+        patch("routes.ai_routes.shared._clear_conversation_context"),
     ]
     for p in patches: p.start()
     yield mock_user
@@ -404,3 +420,305 @@ def test_factory(db_session, auth_client):
     """
     client, user = auth_client
     return TestFactory(db_session, user)
+
+
+# ─── CHAIN QUERY HELPERS ───
+def _chain_query(**terminals):
+    q = MagicMock(name='query_chain')
+    q.return_value = q
+    for method in ('filter', 'filter_by', 'order_by', 'join', 'outerjoin', 'group_by', 'limit', 'offset'):
+        getattr(q, method).return_value = q
+    inner = q.filter.return_value
+    inner.first.return_value = terminals.get('first')
+    inner.scalar.return_value = terminals.get('scalar', 0)
+    inner.all.return_value = terminals.get('all', [])
+    inner.count.return_value = terminals.get('count', 0)
+    inner.exists.return_value.scalar.return_value = terminals.get('exists', True)
+    q.scalar.return_value = terminals.get('scalar', 0)
+    q.all.return_value = terminals.get('all', [])
+    pag = MagicMock(name='pagination')
+    pag.items = terminals.get('all', [])
+    pag.page = 1
+    pag.per_page = 20
+    pag.total = len(pag.items)
+    pag.pages = 1
+    q.order_by.return_value.paginate.return_value = pag
+    q.paginate.return_value = pag
+    return q
+
+
+def _stub_query(**terminals):
+    q = MagicMock(name="query_chain")
+    q.return_value = q
+    for method in (
+        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
+        "limit", "offset", "options", "select_from", "distinct", "having",
+    ):
+        getattr(q, method).return_value = q
+    inner = q.filter.return_value
+    inner.first.return_value = terminals.get("first")
+    inner.scalar.return_value = terminals.get("scalar", 0)
+    inner.all.return_value = terminals.get("all", [])
+    inner.count.return_value = terminals.get("count", 0)
+    inner.exists.return_value.scalar.return_value = terminals.get("exists", False)
+    q.scalar.return_value = terminals.get("scalar", 0)
+    q.all.return_value = terminals.get("all", [])
+    return q
+
+
+def _anon_user():
+    user = MagicMock()
+    user.is_authenticated = False
+    return user
+
+
+@contextmanager
+def unauthenticated_client(client):
+    from flask import Response
+    login_manager = MagicMock()
+    login_manager.unauthorized.return_value = Response("unauthorized", status=401)
+    client.application.login_manager = login_manager
+    with client.application.app_context():
+        with patch("flask_login.utils._get_user", return_value=_anon_user()):
+            yield
+
+
+@pytest.fixture
+def branch_manager_user(mock_user):
+    mock_user.branch_id = 2
+    mock_user.has_permission.return_value = True
+    role = MagicMock()
+    role.slug = "manager"
+    mock_user.role = role
+    mock_user.is_super_admin.return_value = False
+    return mock_user
+
+
+@pytest.fixture
+def tenant_owner_user(mock_user):
+    mock_user.is_owner = True
+    mock_user.tenant_id = 1
+    role = MagicMock()
+    role.slug = "super_admin"
+    mock_user.role = role
+    return mock_user
+
+
+@pytest.fixture
+def mock_ai_service():
+    patch_specs = [
+        ("recommend_price", patch("routes.ai_routes.AIService.recommend_price")),
+        ("check_stock_alert", patch("routes.ai_routes.AIService.check_stock_alert")),
+        ("analyze_customer_behavior", patch("routes.ai_routes.AIService.analyze_customer_behavior")),
+        ("chat_response", patch("routes.ai_routes.AIService.chat_response", return_value="mocked chat")),
+        ("get_exchange_rate_suggestion", patch("routes.ai_routes.AIService.get_exchange_rate_suggestion", return_value={"rate": 3.67})),
+        ("predict_sales_trend", patch("routes.ai_routes.AIService.predict_sales_trend", return_value={"forecast": []})),
+        ("analyze_profit_margins", patch("routes.ai_routes.AIService.analyze_profit_margins", return_value={"margins": []})),
+        ("detect_sales_patterns", patch("routes.ai_routes.AIService.detect_sales_patterns", return_value={"patterns": []})),
+        ("analyze_inventory_health", patch("routes.ai_routes.AIService.analyze_inventory_health", return_value={"health": "ok"})),
+        ("deep_business_analysis", patch("routes.ai_routes.AIService.deep_business_analysis", return_value={"analysis": "ok"})),
+        ("predict_cash_flow", patch("routes.ai_routes.AIService.predict_cash_flow", return_value={"flow": []})),
+        ("predict_customer_churn", patch("routes.ai_routes.AIService.predict_customer_churn", return_value={"churn": []})),
+        ("optimize_inventory_levels", patch("routes.ai_routes.AIService.optimize_inventory_levels", return_value={"tips": []})),
+        ("generate_business_insights", patch("routes.ai_routes.AIService.generate_business_insights", return_value=[])),
+        ("contextual_help", patch("routes.ai_routes.AIService.contextual_help", return_value={"help": "text"})),
+        ("smart_pricing_engine", patch("routes.ai_routes.AIService.smart_pricing_engine", return_value={"price": 99})),
+        ("ask_genius", patch("routes.ai_routes.AIService.ask_genius", return_value={"answer": "genius"})),
+        ("quick_calculate", patch("routes.ai_routes.AIService.quick_calculate", return_value={"success": True, "result": 42})),
+        ("understand_with_transformers", patch("routes.ai_routes.AIService.understand_with_transformers", return_value={"intent": "test"})),
+        ("get_neural_status", patch("routes.ai_routes.AIService.get_neural_status", return_value={"active": True})),
+    ]
+    with ExitStack() as stack:
+        mocks = {name: stack.enter_context(p) for name, p in patch_specs}
+        yield type("MockAIService", (), mocks)
+
+
+@pytest.fixture
+def ai_client(app_factory, bypass_ai_access):
+    from routes.ai_routes import ai_bp
+    app = app_factory(ai_bp)
+    stub = MagicMock(name="query_chain")
+    stub.return_value = stub
+    for method in (
+        "filter", "filter_by", "order_by", "join", "outerjoin", "group_by",
+        "limit", "offset", "options", "select_from", "distinct", "having",
+    ):
+        getattr(stub, method).return_value = stub
+    stub.filter.return_value.scalar.return_value = 0
+    stub.filter.return_value.all.return_value = []
+    stub.filter.return_value.exists.return_value.scalar.return_value = False
+    stub.all.return_value = []
+    with patch("routes.ai_routes.db.session.query", return_value=stub), \
+         patch("routes.ai_routes.db.session.get", return_value=None), \
+         patch("routes.ai_routes.chat.db.session.query", return_value=stub), \
+         patch("routes.ai_routes.chat.db.session.get", return_value=None), \
+         patch("routes.ai_routes.chat.db.session.add"), \
+         patch("routes.ai_routes.chat.db.session.commit"):
+        yield app.test_client()
+
+
+@pytest.fixture
+def bypass_reports_auth(mock_user):
+    patches = [
+        patch("flask_login.utils._get_user", return_value=mock_user),
+        patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+        patch("extensions.limiter.limit", return_value=lambda f: f),
+        patch("utils.tenanting.get_active_tenant_id", return_value=1),
+        patch("utils.tenanting.require_report_tenant_id"),
+        patch("utils.decorators.report_branch_scope_id", return_value=None),
+    ]
+    for p in patches:
+        p.start()
+    yield mock_user
+    for p in reversed(patches):
+        p.stop()
+
+
+@pytest.fixture
+def reports_client(app_factory, bypass_reports_auth):
+    from routes.reports import reports_bp
+    app = app_factory(reports_bp)
+    with patch("routes.reports.render_template", return_value="ok"), \
+         patch("routes.reports.db.session.query", return_value=_stub_query()), \
+         patch("routes.reports.tenant_query", return_value=_stub_query()):
+        yield app.test_client()
+
+
+@pytest.fixture
+def mock_store():
+    store = MagicMock()
+    store.id = 1
+    store.store_slug = "demo-store"
+    store.tenant_id = 1
+    store.name = "Demo Store"
+    store.is_active = True
+    store.is_enabled = True
+    store.min_order_amount = Decimal("0")
+    store.phone = "+971500000000"
+    store.whatsapp = "+971500000000"
+    store.brand_color_primary = "#1B7A4E"
+    store.brand_color_secondary = "#CE1126"
+    return store
+
+
+@pytest.fixture
+def bypass_shop_auth(mock_store):
+    tenant = MagicMock()
+    tenant.brand_color_primary = "#1B7A4E"
+    tenant.brand_color_secondary = "#CE1126"
+    tenant.is_active = True
+    tenant.is_suspended = False
+    patches = [
+        patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store),
+        patch("routes.shop.StoreService.stores_globally_enabled", return_value=True),
+        patch("routes.shop.StoreService.is_platform_locked", return_value=False),
+        patch("routes.shop.StoreService.get_cart", return_value={}),
+        patch("routes.shop.StoreService.save_cart"),
+        patch("routes.shop.StoreService.cart_totals", return_value={
+            "lines": [], "subtotal": Decimal("0"), "total": Decimal("0"), "tax": Decimal("0"),
+        }),
+        patch("routes.shop.StoreService.get_public_catalog", return_value={
+            "items": [], "total": 0, "pages": 1, "page": 1,
+        }),
+        patch("routes.shop.StoreService.online_stock_map", return_value={}),
+        patch("routes.shop.StoreService.get_recently_viewed_products", return_value=[]),
+        patch("routes.shop.StoreService.get_product_variants", return_value=[]),
+        patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None),
+        patch("routes.shop.ShopCustomerAuthService.login"),
+        patch("routes.shop.ShopCustomerAuthService.logout"),
+        patch("routes.shop.render_template", return_value="ok"),
+        patch("extensions.limiter.limit", return_value=lambda f: f),
+        patch("routes.shop.shop_lang", return_value="ar"),
+        patch("routes.shop.t", side_effect=lambda k, lang=None: k),
+        patch("routes.shop.db.session.get", return_value=tenant),
+        patch("routes.shop.db.session.add"),
+        patch("routes.shop.db.session.commit"),
+    ]
+    for p in patches:
+        p.start()
+    yield mock_store
+    for p in reversed(patches):
+        p.stop()
+
+
+@pytest.fixture
+def shop_client(app_factory, bypass_shop_auth):
+    from routes.shop import shop_bp
+    app = app_factory(shop_bp)
+    with app.test_client() as client:
+        with client.session_transaction() as sess:
+            sess["shop_lang_demo-store"] = "ar"
+        yield client
+
+
+@pytest.fixture
+def vault_owner_client(app_factory, bypass_owner_auth):
+    from routes.payment_vault import payment_vault_bp
+    app = app_factory(payment_vault_bp)
+    return app.test_client()
+
+
+@pytest.fixture
+def bypass_customers_auth(mock_user):
+    patches = [
+        patch("flask_login.utils._get_user", return_value=mock_user),
+        patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+        patch("utils.decorators.is_global_owner_user", return_value=True),
+        patch("utils.decorators.is_admin_surface_user", return_value=True),
+        patch("extensions.limiter.limit", return_value=lambda f: f),
+        patch("utils.tenanting.get_active_tenant_id", return_value=1),
+        patch("utils.decorators.branch_scope_id", return_value=None),
+        patch("utils.decorators.report_branch_scope_id", return_value=None),
+        patch("routes.customers.LoggingCore.log_audit"),
+        patch("routes.customers.render_template", return_value="ok"),
+        patch("routes.customers._get_unpaid_sales", return_value=[]),
+        patch("routes.customers._customer_in_scope", return_value=True),
+        patch("routes.customers._get_customer_balance", return_value=Decimal("0")),
+        patch("routes.customers._scoped_customer_query"),
+        patch("routes.customers.tenant_get_or_404"),
+    ]
+    for p in patches:
+        p.start()
+    yield mock_user
+    for p in reversed(patches):
+        p.stop()
+
+
+@pytest.fixture
+def customers_client(app_factory, bypass_customers_auth):
+    from routes.customers import customers_bp
+    app = app_factory(customers_bp)
+    return app.test_client()
+
+
+@pytest.fixture
+def app_factory():
+    def _create_app(*blueprints, config_overrides=None):
+        import sys
+        import os
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        sys.path.insert(0, project_root)
+        from tests.conftest import TestConfig
+        from extensions import db
+        app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
+        app.config.from_object(TestConfig)
+        if config_overrides:
+            app.config.update(config_overrides)
+        db.init_app(app)
+
+        from utils.i18n import t
+        app.jinja_env.globals['t'] = t
+        app.jinja_env.globals['csrf_token'] = lambda: ''
+        from flask_login import current_user
+        app.jinja_env.globals['current_user'] = current_user
+
+        from routes.main import main_bp
+        for bp in blueprints:
+            if isinstance(bp, dict):
+                app.config.update(bp)
+                continue
+            app.register_blueprint(bp)
+        if 'main' not in app.blueprints:
+            app.register_blueprint(main_bp)
+        return app
+    return _create_app
