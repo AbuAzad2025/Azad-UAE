@@ -5,7 +5,7 @@ from extensions import db
 class PricingService:
 
     @staticmethod
-    def get_price(product, customer_type='regular', qty=1):
+    def get_price(product, customer_type='regular', qty=1) -> Decimal:
         from models import Product
         from models.product_price_tier import ProductPriceTier
         

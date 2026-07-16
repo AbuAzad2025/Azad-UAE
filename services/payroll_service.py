@@ -27,14 +27,14 @@ class PayrollService:
         tenant_id = getattr(branch, 'tenant_id', None)
         if tenant_id is None:
             raise ValueError('الفرع المحدد غير مرتبط بشركة نشطة.')
-        return int(tenant_id)
+        return int(tenant_id or 0)
 
     @staticmethod
     def _require_employee_tenant_id(employee):
         tenant_id = getattr(employee, 'tenant_id', None)
         if tenant_id is None:
             raise ValueError('الموظف غير مرتبط بشركة — لا يمكن إتمام العملية.')
-        return int(tenant_id)
+        return int(tenant_id or 0)
 
     @staticmethod
 

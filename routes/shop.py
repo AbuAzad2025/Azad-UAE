@@ -497,7 +497,7 @@ def account_order_detail(slug, order_id):
 
         pay_method=pay_method,
 
-        status_label=StoreOrderService.status_label(sale.status, ctx['lang']),
+        status_label=StoreOrderService.status_label(sale.status, str(ctx['lang'] or '')),
 
         noindex=True,
 
@@ -1383,7 +1383,7 @@ def order_invoice(slug, sale_id):
     if sale.customer_id != account.customer_id:
         abort(404)
     pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or 'cod')
-    ctx.update(status_label=StoreOrderService.status_label(sale.status, ctx['lang']), pay_method=pay_method)
+    ctx.update(status_label=StoreOrderService.status_label(sale.status, str(ctx['lang'] or '')), pay_method=pay_method)
     return render_template('shop/order_invoice.html', sale=sale, **ctx)
 
 
@@ -1401,7 +1401,7 @@ def order_track(slug):
         ).first()
         if not sale:
             flash(t('order_not_found', ctx['lang']), 'warning')
-    return render_template('shop/order_track.html', sale=sale, order_number=order_number, status_label=StoreOrderService.status_label(sale.status, ctx['lang']) if sale else None, **ctx)
+    return render_template('shop/order_track.html', sale=sale, order_number=order_number, status_label=StoreOrderService.status_label(sale.status, str(ctx['lang'] or '')) if sale else None, **ctx)
 
 
 @shop_bp.route('/<slug>/order/<token>')

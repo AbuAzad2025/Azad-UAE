@@ -29,7 +29,7 @@ class PredictiveMaintenanceService:
         last_sale_date = sales_history[0].sale.sale_date
         next_maintenance = last_sale_date + timedelta(days=avg_interval)
         
-        days_until = (next_maintenance - datetime.now()).days
+        days_until = (next_maintenance - datetime.now().date()).days
         
         confidence = min(len(sales_history) / 10.0, 1.0)
         

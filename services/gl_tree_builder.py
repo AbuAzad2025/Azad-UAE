@@ -1,4 +1,5 @@
 from extensions import db
+from typing import Any
 from utils.db_safety import atomic_transaction
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
@@ -359,7 +360,7 @@ class GLTreeBuilder:
         Returns:
             dict: نتائج التحقق
         """
-        validation = {
+        validation: dict[str, Any] = {
             'valid': True,
             'issues': [],
             'total_accounts': 0,

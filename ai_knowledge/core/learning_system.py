@@ -8,6 +8,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class AzadLearningSystem:
         # تحميل المعرفة المكتسبة
         self.learned_knowledge = self._load_learned_knowledge()
         self.interactions = self._load_interactions()
-        self.patterns = self._load_patterns()
+        self.patterns: dict[str, Any] = self._load_patterns()
         self.feedback_log = self._load_feedback()
         self.groq_training_log = []
 

@@ -1,4 +1,4 @@
-﻿"""Tests for API balance isolation - cross-tenant customer/supplier balance returns 0.0"""
+"""Tests for API balance isolation - cross-tenant customer/supplier balance returns 0.0"""
 from unittest.mock import MagicMock, patch
 from models import Customer, Supplier, Tenant
 

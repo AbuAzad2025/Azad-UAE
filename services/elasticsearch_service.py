@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class ElasticsearchService:
@@ -39,7 +39,7 @@ class ElasticsearchService:
             
             es = Elasticsearch([os.environ.get('ELASTICSEARCH_URL') or ''])
             
-            body = {
+            body: dict[str, Any] = {
                 'query': {
                     'multi_match': {
                         'query': query,

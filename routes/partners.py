@@ -241,7 +241,7 @@ def distribute():
             period_end = _parse_date(request.form.get('period_end'))
             with atomic_transaction('partner_distribute'):
                 dist_ids = PartnerService.create_distributions(
-                    tenant_id=tid,
+                    tenant_id=int(tid or 0),
                     period_start=period_start,
                     period_end=period_end,
                     created_by=current_user.id,
@@ -309,7 +309,7 @@ def add_transaction(id):  # noqa: A002
         with atomic_transaction('partner_add_transaction'):
             tx_id = PartnerService.add_transaction(
                 partner_id=id,
-                transaction_type=tx_type,
+                transaction_type=tx_type or '',
                 amount=amount,
                 notes=notes,
                 created_by=current_user.id,
@@ -337,5 +337,5 @@ def api_preview_pnl():
     scope = request.args.get('scope_type', 'company')
     scope_id = request.args.get('scope_id', type=int)
 
-    pnl = PartnerService.calculate_scope_profit(tid, start, end, scope, scope_id)
+    pnl = PartnerService.calculate_scope_profit(int(tid or 0), start, end, scope, scope_id)
     return jsonify(pnl)

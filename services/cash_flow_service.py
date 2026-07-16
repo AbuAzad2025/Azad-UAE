@@ -4,6 +4,7 @@
 
 from decimal import Decimal
 from datetime import datetime, date
+from typing import Any
 from sqlalchemy import func, and_, or_
 from extensions import db
 from models import (
@@ -35,13 +36,13 @@ class CashFlowService:
             period_end = datetime.strptime(period_end, '%Y-%m-%d').date()
         
         # 1. الأنشطة التشغيلية (Operating Activities)
-        operating = CashFlowService._get_operating_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
+        operating: dict[str, Any] = CashFlowService._get_operating_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 2. الأنشطة الاستثمارية (Investing Activities)
-        investing = CashFlowService._get_investing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
+        investing: dict[str, Any] = CashFlowService._get_investing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 3. الأنشطة التمويلية (Financing Activities)
-        financing = CashFlowService._get_financing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
+        financing: dict[str, Any] = CashFlowService._get_financing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 4. حساب النقدية
         from utils.gl_tenant import active_tenant_id

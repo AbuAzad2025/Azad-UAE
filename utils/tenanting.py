@@ -52,7 +52,7 @@ def get_active_tenant_id(user=None) -> int | None:
 
     if not is_platform_owner(user):
         tid = getattr(user, "tenant_id", None)
-        return int(tid) if tid else None
+        return int(tid or 0) if tid else None
 
     if has_request_context():
         raw = session.get(ACTIVE_TENANT_SESSION_KEY)
@@ -63,7 +63,7 @@ def get_active_tenant_id(user=None) -> int | None:
                 pass
 
     tid2 = getattr(user, "tenant_id", None)
-    return int(tid2) if tid2 else None
+    return int(tid2 or 0) if tid2 else None
 
 
 def require_active_tenant_id(user=None) -> int:
@@ -112,7 +112,7 @@ def assert_tenant_record(record, *, user=None, or_404: bool = True) -> bool:
             abort(403 if is_platform_owner(user) else 404)
         return False
 
-    if int(rec_tid) != int(tid):
+    if int(rec_tid or 0) != int(tid or 0):
         if or_404:
             abort(404)
         return False
@@ -192,7 +192,7 @@ def set_active_tenant(tenant_id, user=None):
         if user_tenant_id is None:
             raise ValueError("Normal users must have a tenant_id")
         try:
-            user_tenant_id = int(user_tenant_id)
+            user_tenant_id = int(user_tenant_id or 0)
         except (TypeError, ValueError):
             raise ValueError("Normal users must have a valid integer tenant_id")
         if tenant_id != user_tenant_id:

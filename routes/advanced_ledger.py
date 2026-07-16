@@ -95,8 +95,8 @@ def add_customs_tax():
                 is_percentage=bool(request.form.get('is_percentage')),
                 fixed_amount=Decimal(request.form.get('fixed_amount', 0)),
                 gl_account_id=gl_account_id,
-                effective_from=datetime.strptime(request.form.get('effective_from'), '%Y-%m-%d').date(),
-                effective_to=datetime.strptime(request.form.get('effective_to'), '%Y-%m-%d').date() if request.form.get('effective_to') else None,
+                effective_from=datetime.strptime(request.form.get('effective_from') or '', '%Y-%m-%d').date(),
+                effective_to=datetime.strptime(request.form.get('effective_to') or '', '%Y-%m-%d').date() if request.form.get('effective_to') else None,
                 description=request.form.get('description')
             )
             
@@ -205,11 +205,11 @@ def add_advanced_expense():
             expense = AdvancedExpense(
                 tenant_id=tid,
                 expense_number=f"EXP-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                expense_date=datetime.strptime(request.form.get('expense_date'), '%Y-%m-%d').date(),
+                expense_date=datetime.strptime(request.form.get('expense_date') or '', '%Y-%m-%d').date(),
                 description=request.form.get('description'),
                 description_ar=request.form.get('description_ar'),
-                category_id=int(request.form.get('category_id')),
-                supplier_id=int(request.form.get('supplier_id')) if request.form.get('supplier_id') else None,
+                category_id=int(request.form.get('category_id') or 0),
+                supplier_id=int(request.form.get('supplier_id') or 0) if request.form.get('supplier_id') else None,
                 amount=Decimal(request.form.get('amount', 0)),
                 currency=request.form.get('currency') or default_currency,
                 exchange_rate=Decimal(request.form.get('exchange_rate', 1)),
@@ -223,7 +223,7 @@ def add_advanced_expense():
                 customs_exempt=bool(request.form.get('customs_exempt')),
                 payment_method=request.form.get('payment_method'),
                 payment_status=request.form.get('payment_status', 'pending'),
-                due_date=datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date() if request.form.get('due_date') else None,
+                due_date=datetime.strptime(request.form.get('due_date') or '', '%Y-%m-%d').date() if request.form.get('due_date') else None,
                 requires_approval=bool(request.form.get('requires_approval')),
                 approval_status=request.form.get('approval_status', 'pending'),
                 has_receipt=bool(request.form.get('has_receipt')),

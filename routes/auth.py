@@ -152,7 +152,7 @@ def _resolve_effective_tenant(user, branch_obj):
     return None
 
 
-def _validate_branch_tenant_consistency(user, branch_obj):
+def _validate_branch_tenant_consistency(user, branch_obj: "Branch | None"):
     """Ensure branch belongs to user's tenant. Returns True if consistent or no validation needed."""
     if getattr(user, "tenant_id", None) is None or not branch_obj:
         return True
@@ -238,7 +238,7 @@ def _perform_login(user, remember, effective_tenant_id, branch_to_activate, acce
         LoggingCore.log_audit('login', 'users', user.id)
     from utils.safe_redirect import is_safe_redirect_url
     next_page = request.args.get('next')
-    if is_safe_redirect_url(next_page):
+    if next_page and is_safe_redirect_url(next_page):
         return redirect(next_page)
     return _post_login_redirect(user, access_mode)
 
@@ -296,7 +296,7 @@ def login():
         branch_obj = None
         if effective_branch_id:
             try:
-                branch_obj = db.session.get(Branch, int(effective_branch_id))
+                branch_obj = db.session.get(Branch, int(effective_branch_id or 0))
             except Exception:
                 branch_obj = None
 

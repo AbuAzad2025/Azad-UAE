@@ -1,7 +1,9 @@
 """AI assistant pages and Excel upload routes."""
-
 import os
+
 import logging
+from typing import cast
+
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
@@ -238,7 +240,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                         products_created += 1
                     
                 except Exception as e:
-                    errors.append(f'السطر {index + 2}: {str(e)}')
+                    errors.append(f'السطر {cast(int, index) + 2}: {str(e)}')
         
         _train_ai_from_excel(df, products_created, products_updated, user.id)
         

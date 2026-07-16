@@ -1,4 +1,5 @@
 from extensions import db
+from typing import Any
 from utils.db_safety import atomic_transaction
 from models.cheque import Cheque
 from models.gl import GLJournalEntry
@@ -112,7 +113,7 @@ class ChequeAccountingIntegration:
         """الحصول على ملخص محاسبي للشيك"""
         cheque = Cheque.query.get_or_404(cheque_id)
         
-        summary = {
+        summary: dict[str, Any] = {
             'cheque_info': {
                 'id': cheque.id,
                 'number': cheque.cheque_bank_number,
@@ -148,8 +149,9 @@ class ChequeAccountingIntegration:
         accounts_affected = set()
         tid = cheque.tenant_id or active_tenant_id()
         for entry_info in summary['journal_entries']:
+            entry_info_dict: dict[str, Any] = entry_info
             entry = scope_journal_entries(
-                GLJournalEntry.query.filter_by(entry_number=entry_info['entry_number']),
+                GLJournalEntry.query.filter_by(entry_number=entry_info_dict['entry_number']),
                 tenant_id=tid,
             ).first()
             if entry:

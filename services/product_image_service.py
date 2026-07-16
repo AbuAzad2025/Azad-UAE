@@ -9,10 +9,10 @@ class ProductImageService:
     @staticmethod
     def upload_image(product, file, image_type, caption_ar=None, caption_en=None):
         from models.product_image import ProductImage
-        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'products', str(product.tenant_id))
+        upload_dir: str = os.path.join(str(current_app.root_path), 'static', 'uploads', 'products', str(product.tenant_id))
         os.makedirs(upload_dir, exist_ok=True)
-        filename = f'{product.id}_{image_type}_{datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")}.{file.filename.rsplit(".", 1)[-1].lower()}'
-        filepath = os.path.join(upload_dir, filename)
+        filename: str = f'{product.id}_{image_type}_{datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")}.{str(file.filename or "").rsplit(".", 1)[-1].lower()}'
+        filepath: str = os.path.join(upload_dir, filename)
         file.save(filepath)
         image_url = f'/static/uploads/products/{product.tenant_id}/{filename}'
         image = ProductImage(

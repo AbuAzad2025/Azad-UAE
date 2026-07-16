@@ -51,7 +51,7 @@ LEGACY_NAME_RE = re.compile(
 class BackupService:
     """PostgreSQL + uploads backup; safe restore only to a different database URL."""
 
-    _BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    _BASEDIR = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
     BACKUP_DIR = os.path.join(_BASEDIR, "instance", "backups")
     BACKUP_PREFIX = "azad_backup_"
     LEGACY_MANUAL_PREFIX = "manual_backup_"
@@ -411,7 +411,7 @@ class BackupService:
         try:
             from flask import current_app
 
-            folder = current_app.config.get("UPLOAD_FOLDER")
+            folder = str(current_app.config.get("UPLOAD_FOLDER") or "")
             if folder:
                 abs_folder = (
                     folder
@@ -1526,12 +1526,12 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     break
                 if scope == "branch" and bid is not None and table != "branches":
                     rb = row.get("branch_id")
-                    if rb is not None and int(rb) != int(bid):
+                    if rb is not None and int(rb or 0) != int(bid):
                         out["ok"] = False
                         out["errors"].append(f"cross-branch row in {table}")
                         break
                 if scope == "store" and sid is not None and table == "tenant_stores":
-                    if int(row.get("id", -1)) != int(sid):
+                    if int(row.get("id", -1) or 0) != int(sid):
                         out["ok"] = False
                         out["errors"].append("tenant_stores id mismatch")
                         break
@@ -1540,7 +1540,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
         if scope == "branch" and bid is not None:
             br_rows = (doc.get("tables") or {}).get("branches") or []
-            if len(br_rows) != 1 or int(br_rows[0].get("id", -1)) != int(bid):
+            if len(br_rows) != 1 or int(br_rows[0].get("id", -1) or 0) != int(bid):
                 out["ok"] = False
                 out["errors"].append("branches isolation failed")
 
@@ -1621,7 +1621,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             if p.hostname:
                 masked_target = (
                     f"postgresql://{p.username or 'USER'}:***@"
-                    f"{cls._mask_db_host(p.hostname)}:{p.port or 5432}/{p.path.lstrip('/')}"
+                    f"{cls._mask_db_host(str(p.hostname or ''))}:{p.port or 5432}/{p.path.lstrip('/')}"
                 )
         except Exception as exc:
             logging.getLogger(__name__).debug("mask restore target url: %s", exc)

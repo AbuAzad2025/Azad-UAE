@@ -11,7 +11,10 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
 
 SCOPE_SYSTEM = "system"
 SCOPE_TENANT = "tenant"
@@ -154,7 +157,7 @@ def sanitize_slug(slug: Optional[str], fallback: str = "tenant") -> str:
     return (cleaned or fallback)[:48]
 
 
-def table_exists(conn, table: str) -> bool:
+def table_exists(conn: Connection, table: str) -> bool:
     from sqlalchemy import text
 
     return bool(
@@ -168,7 +171,7 @@ def table_exists(conn, table: str) -> bool:
     )
 
 
-def column_metadata(conn, table: str) -> List[Dict[str, Any]]:
+def column_metadata(conn: Connection, table: str) -> List[Dict[str, Any]]:
     """Return [{name, data_type, is_nullable, default}] for a target table."""
     from sqlalchemy import text
 
@@ -209,7 +212,7 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     return ""
 
 
-def normalize_row_to_target(conn, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
     """Make a backup row safe to INSERT into the *current* target schema.
 
     Handles schema drift in both directions:
@@ -291,11 +294,11 @@ def _merge_product_customer_dependencies(
     for product in tables_out.get("products") or []:
         mid = product.get("merchant_customer_id")
         if mid is not None:
-            needed.add(int(mid))
+            needed.add(int(mid or 0))
     for partner in tables_out.get("product_partners") or []:
         pid = partner.get("partner_customer_id")
         if pid is not None:
-            needed.add(int(pid))
+            needed.add(int(pid or 0))
     if not needed:
         return
     existing = {

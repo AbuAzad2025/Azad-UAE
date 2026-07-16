@@ -172,8 +172,8 @@ def process_payroll():
                 with atomic_transaction('payroll_process'):
                     PayrollService.process_payroll(
                         employee_id=employee_id,
-                        month=int(request.form.get('month')),
-                        year=int(request.form.get('year')),
+                        month=int(request.form.get('month') or 0),
+                        year=int(request.form.get('year') or 0),
                         days_worked=float(request.form.get('days_worked', 0)),
                         allowances=float(request.form.get('allowances', 0)),
                         deductions=float(request.form.get('deductions', 0)),

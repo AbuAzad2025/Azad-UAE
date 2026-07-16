@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 from flask import current_app
 from flask_login import current_user
 from extensions import db
@@ -53,7 +54,7 @@ class ArchiveService:
             current_app.logger.error(f'Hard delete failed: {e}')
             raise
 
-    ARCHIVE_MODEL_MAP = {
+    ARCHIVE_MODEL_MAP: dict[str, Any] = {
         "sales": None,
         "purchases": None,
         "payments": None,

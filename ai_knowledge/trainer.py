@@ -303,7 +303,7 @@ class Trainer:
         # Also seed from expertise JSON files
         try:
             import glob, json, os
-            training_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ai_training')
+            training_dir: str = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ai_training')
             for path in glob.glob(os.path.join(training_dir, 'GLOBAL', 'expertise', '*.json')):
                 with open(path, 'r', encoding='utf-8') as f:
                     data = json.load(f)

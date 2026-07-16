@@ -130,7 +130,7 @@ class ExchangeRateService:
                 val = raw.get(code.upper())
                 if val is not None:
                     try:
-                        result[code.upper()] = float(val)
+                        result[code.upper()] = float(val or 0)
                     except Exception:
                         pass
             if result:
@@ -160,7 +160,7 @@ class ExchangeRateService:
                 val = raw.get(code.upper())
                 if val is not None:
                     try:
-                        result[code.upper()] = float(val)
+                        result[code.upper()] = float(val or 0)
                     except Exception:
                         pass
             if result:
@@ -206,7 +206,7 @@ class ExchangeRateService:
                             val = nested.get(code.lower())
                     if val is not None:
                         try:
-                            result[code.upper()] = float(val)
+                            result[code.upper()] = float(val or 0)
                         except Exception:
                             pass
                 if result:

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Any
 
 from flask import Blueprint, render_template, request, jsonify, abort
 from flask_login import login_required, current_user
@@ -968,7 +969,7 @@ def receivables():
     
     all_sales = [sale for sale in all_sales if (sale.amount_aed or Decimal('0')) > (sale.paid_amount_aed or Decimal('0'))]
     
-    aging_data = {
+    aging_data: dict[str, Any] = {
         'current': {'sales': [], 'total': Decimal('0')},
         'days_30': {'sales': [], 'total': Decimal('0')},
         'days_60': {'sales': [], 'total': Decimal('0')},
@@ -1458,7 +1459,7 @@ def inventory_export():
             float(sold_qty),
             float(cost) if current_user.can_see_costs() else '',
             float(p.regular_price or 0),
-            float(total_cost_value) if current_user.can_see_costs() else '',
+            float(total_cost_value or 0) if current_user.can_see_costs() else '',
         ])
 
     base_name = f"inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -1573,7 +1574,7 @@ def entity_report_fragment(type, id):  # noqa: A002
         scoped_branch_id = report_branch_scope_id()
         tenant_id = get_active_tenant_id(current_user)
         
-        context = {
+        context: dict[str, Any] = {
             'entity': None,
             'type_label': '',
             'balance': 0,

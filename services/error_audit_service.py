@@ -226,7 +226,7 @@ class ErrorAuditService:
         if has_request_context():
             rid = getattr(g, "request_id", None)
             if rid:
-                return rid
+                return str(rid)
             rid = str(uuid.uuid4())
             g.request_id = rid
             return rid

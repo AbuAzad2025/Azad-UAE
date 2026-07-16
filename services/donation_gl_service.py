@@ -46,7 +46,7 @@ class DonationGLService:
             return False
 
         vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
-        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, tenant_id)
+        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, int(tenant_id or 0))
 
         try:
             rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction('USD', 'AED')

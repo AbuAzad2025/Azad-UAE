@@ -319,7 +319,7 @@ def download_backup(filename):
         _audit_owner_db_action('download_backup_denied', {'filename': filename})
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('owner.list_backups'))
-    backup_path = os.path.join(BackupService.BACKUP_DIR, safe)
+    backup_path: str = os.path.join(BackupService.BACKUP_DIR, safe)
 
     if not os.path.exists(backup_path):
         flash('❌ النسخة الاحتياطية غير موجودة!', 'danger')

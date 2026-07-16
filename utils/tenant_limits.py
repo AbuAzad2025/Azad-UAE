@@ -96,7 +96,7 @@ def check_limit(resource: str, *, model, tenant_id_field: str = "tenant_id",
     current_count = q.count()
 
     if current_count >= limit_val:
-        raise TenantLimitError(resource, limit_val, current_count)
+        raise TenantLimitError(resource, limit_val or 0, current_count)
 
 
 def check_monthly_limit(resource: str, *, model, date_field: str,
@@ -125,7 +125,7 @@ def check_monthly_limit(resource: str, *, model, date_field: str,
     current_count = q.count()
 
     if current_count >= limit_val:
-        raise TenantLimitError(f"{resource}_per_month", limit_val, current_count)
+        raise TenantLimitError(f"{resource}_per_month", limit_val or 0, current_count)
 
 
 def check_feature_enabled(feature_flag: str) -> bool:

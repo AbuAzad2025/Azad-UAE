@@ -14,10 +14,13 @@ import tarfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID
 
 from sqlalchemy import text
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
 
 from services.backup_scope_config import (
     SCOPE_BRANCH,
@@ -35,7 +38,7 @@ from services.backup_scope_config import (
 
 logger = logging.getLogger(__name__)
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
 
 # FK columns to remap per table (column -> referenced table for id_map lookup)
 TABLE_FK_REMAP: Dict[str, Dict[str, str]] = {
@@ -215,7 +218,7 @@ def write_checksums_file(work_dir: str, rel_paths: List[str]) -> str:
             h = hashlib.sha256()
             with open(full, "rb") as f:
                 for chunk in iter(lambda: f.read(65536), b""):
-                    h.update(chunk)
+                    h.update(bytes(chunk))
             lines.append(f"{h.hexdigest()}  {rel}")
     path = os.path.join(work_dir, "checksums.sha256")
     with open(path, "w", encoding="utf-8") as f:
@@ -276,8 +279,8 @@ def _remap_row(
 ) -> Dict[str, Any]:
     out = dict(row)
     pk = out.get("id")
-    if pk is not None and table in id_maps and int(pk) in id_maps[table]:
-        out["id"] = id_maps[table][int(pk)]
+    if pk is not None and table in id_maps and int(pk or 0) in id_maps[table]:
+        out["id"] = id_maps[table][int(pk or 0)]
 
     if force_tenant_id is not None and "tenant_id" in out:
         out["tenant_id"] = force_tenant_id
@@ -419,7 +422,7 @@ def restore_scoped_to_target(
 ) -> Dict[str, Any]:
     """Restore tenant/branch/store JSONL bundle into target DB (must differ from live URL)."""
     outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": [], "id_maps": {}}
-    scope = manifest.get("backup_scope")
+    scope = str(manifest.get("backup_scope") or "")
     if scope not in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE):
         outcome["errors"].append(f"restore_scoped only for scoped backups, got {scope}")
         return outcome
@@ -610,7 +613,7 @@ def restore_scoped_to_target(
 
 
 def _restore_scoped_table(
-    conn,
+    conn: Connection,
     *,
     table: str,
     rows: List[Dict[str, Any]],
@@ -712,7 +715,7 @@ def _restore_scoped_table(
 def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[str, Any]:
     """Post-restore or pre-restore archive checks for scope boundaries."""
     out: Dict[str, Any] = {"ok": True, "errors": []}
-    scope = manifest.get("backup_scope")
+    scope = str(manifest.get("backup_scope") or "")
     tid = manifest.get("tenant_id")
     bid = manifest.get("branch_id")
     sid = manifest.get("store_id")
@@ -729,13 +732,13 @@ def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[
     if scope == SCOPE_TENANT and tid is not None:
         for table, rows in tables.items():
             if table == "tenants":
-                if len(rows) != 1 or int(rows[0].get("id", -1)) != int(tid):
+                if len(rows) != 1 or int(rows[0].get("id", -1) or 0) != int(tid or 0):
                     out["ok"] = False
                     out["errors"].append("tenants row isolation failed")
                 continue
             for row in rows:
                 rt = row.get("tenant_id")
-                if rt is not None and int(rt) != int(tid):
+                if rt is not None and int(rt or 0) != int(tid or 0):
                     out["ok"] = False
                     out["errors"].append(f"cross-tenant in {table}")
                     return out
@@ -743,19 +746,19 @@ def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[
     if scope == SCOPE_BRANCH and bid is not None:
         for table, rows in tables.items():
             if table == "branches":
-                if len(rows) != 1 or int(rows[0].get("id", -1)) != int(bid):
+                if len(rows) != 1 or int(rows[0].get("id", -1) or 0) != int(bid or 0):
                     out["ok"] = False
                     out["errors"].append("branch row isolation failed")
             for row in rows:
                 rb = row.get("branch_id")
-                if rb is not None and int(rb) != int(bid):
+                if rb is not None and int(rb or 0) != int(bid or 0):
                     out["ok"] = False
                     out["errors"].append(f"cross-branch in {table}")
                     return out
 
     if scope == SCOPE_STORE and sid is not None:
         ts_rows = tables.get("tenant_stores") or []
-        if len(ts_rows) != 1 or int(ts_rows[0].get("id", -1)) != int(sid):
+        if len(ts_rows) != 1 or int(ts_rows[0].get("id", -1) or 0) != int(sid or 0):
             out["ok"] = False
             out["errors"].append("store row isolation failed")
 
@@ -767,7 +770,7 @@ def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[
         if jsonl_path and not os.path.isfile(jsonl_path):
             continue
         actual = len(tables.get(table) or [])
-        if actual != int(expected):
+        if actual != int(expected or 0):
             out["ok"] = False
             out["errors"].append(f"count {table}: {actual} vs {expected}")
     return out

@@ -26,8 +26,8 @@ class ShopCustomerAuthService:
         raw = session.get(ShopCustomerAuthService.session_key(tenant_id))
         if not raw:
             return None
-        account = db.session.get(ShopCustomerAccount, int(raw))
-        if not account or not account.is_active or int(account.tenant_id) != int(tenant_id):
+        account = db.session.get(ShopCustomerAccount, int(raw or 0))
+        if not account or not account.is_active or int(account.tenant_id or 0) != int(tenant_id):
             return None
         return account
 

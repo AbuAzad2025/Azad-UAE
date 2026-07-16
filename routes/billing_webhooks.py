@@ -25,7 +25,7 @@ def _reject_stale_timestamp(data: dict | None):
     if ts is None:
         return None
     try:
-        event_time = datetime.fromtimestamp(int(ts), tz=timezone.utc)
+        event_time = datetime.fromtimestamp(int(ts or 0), tz=timezone.utc)
         if (datetime.now(timezone.utc) - event_time).total_seconds() > _WEBHOOK_MAX_AGE:
             logger.warning("Billing webhook rejected: stale timestamp %s", ts)
             return jsonify({"error": "Stale event"}), 400

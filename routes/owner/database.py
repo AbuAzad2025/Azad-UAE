@@ -176,7 +176,7 @@ def truncate_table():
         flash('❌ يجب كتابة YES_DELETE_ALL للتأكيد', 'danger')
         return redirect(url_for('owner.database_tools'))
 
-    safe_table = _resolve_truncatable_table(table_name)
+    safe_table = _resolve_truncatable_table(str(table_name or ''))
     if not safe_table:
         current_app.logger.warning(
             'truncate_table rejected table=%r user_id=%s',

@@ -75,9 +75,9 @@ def warranty_create():
     try:
         claim = WarrantyClaim(
             tenant_id=tid,
-            sale_id=int(request.form.get('sale_id')),
+            sale_id=int(request.form.get('sale_id') or 0),
             sale_line_id=int(request.form.get('sale_line_id') or 0) or None,
-            product_id=int(request.form.get('product_id')),
+            product_id=int(request.form.get('product_id') or 0),
             claim_type=request.form.get('claim_type', 'repair'),
             description=request.form.get('description'),
             status='open',
@@ -117,7 +117,7 @@ def shipments_create():
             carrier_name=request.form.get('carrier_name'),
             tracking_number=request.form.get('tracking_number'),
             source_type='sale',
-            source_id=int(request.form.get('source_id')),
+            source_id=int(request.form.get('source_id') or 0),
             shipping_cost=float(request.form.get('shipping_cost', 0)),
             customs_duty=float(request.form.get('customs_duty', 0)),
             insurance=float(request.form.get('insurance', 0)),

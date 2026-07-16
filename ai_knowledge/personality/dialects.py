@@ -3,6 +3,8 @@
 دعم اللهجة الفلسطينية والخليجية
 """
 
+from typing import Any
+
 PALESTINIAN_DIALECT = {
     # كلمات شائعة
     'greetings': {
@@ -150,7 +152,7 @@ class DialectManager:
     """مدير اللهجات"""
     
     def __init__(self):
-        self.dialects = {
+        self.dialects: dict[str, Any] = {
             'palestinian': PALESTINIAN_DIALECT,
             'gulf': GULF_DIALECT,
             'formal': FORMAL_ARABIC

@@ -137,7 +137,7 @@ def dashboard():
 
                 def liquidity_balance(kind):
                     account_query = GLAccount.query.filter(
-                        GLAccount.tenant_id == int(tid),
+                        GLAccount.tenant_id == int(tid or 0),
                         GLAccount.is_active == True,
                         GLAccount.is_header == False,
                         GLAccount.liquidity_kind == kind,

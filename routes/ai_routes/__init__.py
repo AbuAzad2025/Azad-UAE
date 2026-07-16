@@ -43,7 +43,7 @@ def _enforce_ai_access_policy():
             'ai.system_add_customer': 'execute',
         }
         required_cap = endpoint_caps.get(request.endpoint or '', 'basic')
-        if not state.get('is_platform_user') and not ai_level_allows(state.get('ai_level'), required_cap):
+        if not state.get('is_platform_user') and not ai_level_allows(state.get('ai_level') or '', required_cap):
             msg = f"مستوى AI الحالي ({state.get('ai_level')}) لا يسمح بهذه العملية."
             wants_json = request.path.startswith('/ai/') and (
                 request.is_json or 'application/json' in (request.headers.get('Accept') or '')

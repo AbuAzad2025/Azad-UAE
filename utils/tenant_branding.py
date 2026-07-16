@@ -37,9 +37,9 @@ def _static_exists(rel: str) -> bool:
     rel = normalize_static_rel(rel)
     if not rel or rel.startswith("http"):
         return bool(rel)
-    root = os.path.join(
+    root = str(os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
-    )
+    ))
     return os.path.isfile(os.path.join(root, rel.replace("/", os.sep)))
 
 

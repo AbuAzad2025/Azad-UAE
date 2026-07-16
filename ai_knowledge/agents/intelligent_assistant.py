@@ -253,8 +253,8 @@ class IntelligentAssistant:
                 except Exception as exc:
                     logger.debug('Tenant resolution failed: %s', exc)
             
-            def _f(model):
-                q = model.query
+            def _f(model: type) -> Any:
+                q = db.session.query(model)
                 if tid is not None:
                     q = q.filter_by(tenant_id=tid)
                 return q

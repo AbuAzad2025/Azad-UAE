@@ -148,7 +148,7 @@ class CardPayment(db.Model):
                 return None
             if not current_app.config.get('ALLOW_CARD_DECRYPTION', False):
                 return None
-            raw = self._decrypt(self.encrypted_data)
+            raw: str = self._decrypt(self.encrypted_data)
             data = json.loads(raw)
             return {
                 'card_number': data.get('card_number'),

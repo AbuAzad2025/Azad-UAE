@@ -140,7 +140,7 @@ def order_type_settings():
                 ))
                 flash("تمت إضافة نوع الطلب.", "success")
             elif action == "edit":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
                 if not ot or ot.tenant_id != tid:
                     raise ValueError("نوع الطلب غير موجود.")
                 ot.name_ar = (request.form.get("name_ar") or "").strip() or ot.code
@@ -151,20 +151,20 @@ def order_type_settings():
                 ot.is_default = request.form.get("is_default") == "on"
                 flash("تم تحديث نوع الطلب.", "success")
             elif action == "toggle":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
                 if not ot or ot.tenant_id != tid:
                     raise ValueError("نوع الطلب غير موجود.")
                 ot.is_active = not ot.is_active
                 flash("تم تحديث حالة نوع الطلب.", "success")
             elif action == "set_default":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
                 if not ot or ot.tenant_id != tid:
                     raise ValueError("نوع الطلب غير موجود.")
                 for o in PosOrderType.for_tenant(tid, active_only=False):
                     o.is_default = (o.id == ot.id)
                 flash("تم تعيين النوع الافتراضي.", "success")
             elif action == "delete":
-                ot = db.session.get(PosOrderType, int(request.form.get("ot_id")))
+                ot = db.session.get(PosOrderType, int(request.form.get("ot_id") or 0))
                 if not ot or ot.tenant_id != tid:
                     raise ValueError("نوع الطلب غير موجود.")
                 if ot.is_default:
@@ -330,14 +330,14 @@ def api_checkout():
         except ValueError:
             return jsonify({"success": False, "error": "بيانات العميل غير صالحة."}), 400
     else:
-        customer = tenant_get(Customer, int(customer_id))
+        customer = tenant_get(Customer, int(customer_id or 0))
         if not customer or not customer.is_active:
             return jsonify({"success": False, "error": "العميل غير صالح أو غير نشط."}), 400
 
     warehouse_id = payload.get("warehouse_id")
     if warehouse_id:
         try:
-            warehouse = ensure_warehouse_access(int(warehouse_id), user=current_user)
+            warehouse = ensure_warehouse_access(int(warehouse_id or 0), user=current_user)
             warehouse_id = warehouse.id
         except ValueError:
             return jsonify({"success": False, "error": "بيانات المستودع غير صالحة."}), 400
@@ -557,7 +557,7 @@ def api_session_open():
     if not request.is_json:
         return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
     payload = request.get_json(silent=True) or {}
-    opening_balance = payload.get("opening_balance", 0) or 0
+    opening_balance = Decimal(payload.get("opening_balance", 0) or 0)
     notes = (payload.get("notes") or "").strip() or None
 
     existing = get_active_session(current_user)
@@ -596,7 +596,7 @@ def api_session_close():
     if not request.is_json:
         return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
     payload = request.get_json(silent=True) or {}
-    closing_cash = payload.get("closing_balance", 0) or 0
+    closing_cash = Decimal(payload.get("closing_balance", 0) or 0)
     notes = (payload.get("notes") or "").strip() or None
 
     try:
@@ -720,10 +720,10 @@ def api_shift_open():
             tid = get_active_tenant_id(current_user)
             number = generate_number(
                 prefix="SHF", model=PosShift, field_name="shift_number",
-                branch_code=session.branch_id, tenant_id=int(tid),
+                branch_code=session.branch_id, tenant_id=int(tid or 0),
             )
             shift = PosShift(
-                tenant_id=int(tid),
+                tenant_id=int(tid or 0),
                 session_id=session.id,
                 user_id=current_user.id,
                 shift_number=number,

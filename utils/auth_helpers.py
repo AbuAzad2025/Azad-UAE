@@ -77,9 +77,9 @@ def enforce_company_user_tenant(user, *, role=None, is_owner=None):
     if branch_id:
         from models import Branch
 
-        branch = db.session.get(Branch, int(branch_id))
+        branch = db.session.get(Branch, int(branch_id or 0))
         if branch and getattr(branch, 'tenant_id', None):
-            user.tenant_id = int(branch.tenant_id)
+            user.tenant_id = int(branch.tenant_id or 0)
             return user
     from utils.tenanting import assign_tenant_id
 

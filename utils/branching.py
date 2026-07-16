@@ -67,7 +67,7 @@ def report_branch_scope_id_for(user=None):
     if is_global_user(user) and not getattr(user, "is_owner", False):
         home_branch_id = getattr(user, "branch_id", None)
         if home_branch_id:
-            return int(home_branch_id)
+            return int(home_branch_id or 0)
     return None
 
 
@@ -153,16 +153,16 @@ def get_active_branch_id(user=None):
         if session_mode == "all":
             return None
         if session_branch_id and user_can_access_branch(session_branch_id, user):
-            return int(session_branch_id)
+            return int(session_branch_id or 0)
         if session_branch_id and has_request_context():
             session.pop(ACTIVE_BRANCH_SESSION_KEY, None)
             session[ACTIVE_BRANCH_MODE_SESSION_KEY] = "single"
         return None
 
     user_branch_id = getattr(user, "branch_id", None)
-    if user_branch_id and session_branch_id and int(session_branch_id) == int(user_branch_id):
-        return int(user_branch_id)
-    return int(user_branch_id) if user_branch_id else None
+    if user_branch_id and session_branch_id and int(session_branch_id or 0) == int(user_branch_id or 0):
+        return int(user_branch_id or 0)
+    return int(user_branch_id or 0) if user_branch_id else None
 
 
 def get_active_branch(user=None):
@@ -192,7 +192,7 @@ def set_active_branch(branch_id=None, *, user=None, allow_all=False):
     if not user_can_access_branch(branch_id, user):
         raise ValueError("الفرع المحدد غير مسموح لهذا المستخدم.")
 
-    session[ACTIVE_BRANCH_SESSION_KEY] = int(branch_id)
+    session[ACTIVE_BRANCH_SESSION_KEY] = int(branch_id or 0)
     session[ACTIVE_BRANCH_MODE_SESSION_KEY] = "single"
 
 

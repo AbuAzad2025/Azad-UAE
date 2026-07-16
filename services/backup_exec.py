@@ -90,7 +90,7 @@ def run_repo_python_script(
     timeout: int = 600,
 ) -> subprocess.CompletedProcess:
     """Run a .py file under the repo root (no shell)."""
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    root: str = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), ".."))
     script = os.path.normpath(os.path.join(root, script_rel_path.replace("/", os.sep)))
     if not script.endswith(".py") or not os.path.isfile(script):
         raise ValueError("script must be an existing .py under repo root")

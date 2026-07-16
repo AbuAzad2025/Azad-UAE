@@ -36,13 +36,13 @@ SLUG_TO_FOLDER: dict[str, str] = {
 
 
 def _repo_static_root() -> str:
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+    return str(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"))
 
 
 def static_assets_root() -> str:
     from flask import current_app
 
-    return os.path.join(current_app.root_path, "static", "assets")
+    return str(os.path.join(str(current_app.root_path), "static", "assets"))
 
 
 def discover_tenant_folders() -> list[str]:

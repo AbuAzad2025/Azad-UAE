@@ -1,4 +1,4 @@
-﻿"""Tests for tenant isolation hardening"""
+"""Tests for tenant isolation hardening"""
 import uuid
 
 import pytest

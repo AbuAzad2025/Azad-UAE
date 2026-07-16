@@ -91,7 +91,7 @@ class AzadPlatformFeeService:
             raise ValueError('Platform vault does not exist — cannot accrue platform fee.')
         fee = AzadPlatformFee(
             idempotency_key=key,
-            tenant_id=int(tenant_id),
+            tenant_id=int(tenant_id or 0),
             sale_id=int(sale.id),
             payment_id=getattr(payment, 'id', None),
             vault_id=vault.id,
@@ -106,7 +106,7 @@ class AzadPlatformFeeService:
         db.session.add(fee)
         db.session.flush()
 
-        GLService.ensure_core_accounts(tenant_id=int(tenant_id))
+        GLService.ensure_core_accounts(tenant_id=int(tenant_id or 0))
         post_or_fail(
             [
                 {
@@ -127,7 +127,7 @@ class AzadPlatformFeeService:
             reference_id=fee.id,
             exchange_rate=1.0,
             branch_id=getattr(sale, 'branch_id', None),
-            tenant_id=int(tenant_id),
+            tenant_id=int(tenant_id or 0),
         )
         fee.gl_posted = True
         current_app.logger.info('Azad platform fee accrued: sale=%s fee=%s', sale.sale_number, fee_amount)

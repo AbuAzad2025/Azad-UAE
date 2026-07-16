@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 from urllib.parse import urlparse, urljoin
 import time
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class KnowledgeExpander:
         os.makedirs(self.knowledge_dir, exist_ok=True)
         
         # تحميل مصادر المعرفة
-        self.sources = self._load_sources()
+        self.sources: dict[str, Any] = self._load_sources()
     
     def _load_sources(self):
         """تحميل مصادر المعرفة"""
@@ -69,7 +70,7 @@ class KnowledgeExpander:
                 }
             
             # جلب المحتوى
-            content = self._fetch_website_content(url)
+            content: dict[str, Any] = self._fetch_website_content(url)
             if not content['success']:
                 return content
             

@@ -126,7 +126,7 @@ def _get_request_id() -> str:
     if has_request_context():
         rid = getattr(g, "request_id", None)
         if rid:
-            return rid
+            return str(rid)
         rid = str(uuid.uuid4())
         g.request_id = rid
         return rid
@@ -164,7 +164,7 @@ def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _get_request_context():
-    ctx = {
+    ctx: dict[str, Any] = {
         "url": None,
         "method": None,
         "ip": None,
@@ -387,7 +387,7 @@ class LoggingCore:
         max_bytes = app.config.get("LOG_MAX_BYTES", 10 * 1024 * 1024)
         backup_count = app.config.get("LOG_BACKUP_COUNT", 5)
 
-        configs = [
+        configs: list[dict[str, Any]] = [
             {
                 "name": "app",
                 "file": os.path.join(_LOGS_DIR, "app.log"),
@@ -459,7 +459,7 @@ class LoggingCore:
         def _logging_after_request(response):
             start = getattr(g, "request_start_time", None)
             if start:
-                elapsed = time.time() - start
+                elapsed = time.time() - float(start or 0)
                 if elapsed > 1.0:
                     current_app.logger.warning(
                         "SLOW REQUEST: %s %s -> %d (%.0fms)",
@@ -1424,7 +1424,7 @@ class LoggingCore:
 
         Replaces services/monitoring_service.py → get_performance_metrics_data()
         """
-        basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+        basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
         perf_file = os.path.join(basedir, "logs", "performance.log")
         slow_queries: list[str] = []
 
@@ -1446,7 +1446,7 @@ class LoggingCore:
         Replaces services/monitoring_service.py → log_performance_metric()
         """
         try:
-            basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+            basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
             logs_dir = os.path.join(basedir, "logs")
             perf_file = os.path.join(logs_dir, "performance.log")
             os.makedirs(logs_dir, exist_ok=True)

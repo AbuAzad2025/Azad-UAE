@@ -54,7 +54,7 @@ class _MWACHelper:
     def calc(old_qty: Decimal, old_value: Decimal, change_qty: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal, Decimal]:
         new_qty = old_qty + change_qty
         new_value = old_value + (change_qty * unit_cost)
-        new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty != 0 else Decimal('0')
+        new_avg: Decimal = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty != 0 else Decimal('0')
         return new_qty, new_value, new_avg
 
 

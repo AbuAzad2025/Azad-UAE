@@ -310,7 +310,7 @@ def admin_order_detail(order_id):
     if sale.status == 'pending' and not StoreOrderService.is_fulfilled(sale):
         stock_issues = StoreOrderService.validate_stock_for_order(sale)
     from services.store_notification_service import StoreNotificationService
-    wa_admin = StoreNotificationService.whatsapp_admin_link(sale, store) if sale.status == 'pending' else None
+    wa_admin = StoreNotificationService.whatsapp_admin_link(sale, store) if (sale.status == 'pending' and store) else None
     return render_template(
         'store/admin_order_detail.html',
         store=store,
@@ -426,7 +426,7 @@ def admin_coupons():
                     })
                     flash('تم إنشاء الكوبون.', 'success')
                 elif action == 'toggle':
-                    coupon_id = request.form.get('coupon_id', type=int)
+                    coupon_id = int(request.form.get('coupon_id', 0) or 0)
                     enabled = request.form.get('enabled') == '1'
                     StoreCouponService.update_coupon(coupon_id, tenant_id, {'is_active': enabled})
                     flash('تم تحديث الكوبون.', 'success')

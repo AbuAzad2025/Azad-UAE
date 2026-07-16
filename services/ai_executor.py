@@ -561,9 +561,12 @@ _executor_cache: dict[int, AIExecutor] = {}
 
 def get_ai_executor(user=None) -> AIExecutor:
     uid = getattr(user or flask_user, "id", None)
-    if uid and uid in _executor_cache:
-        return _executor_cache[uid]
-    ex = AIExecutor(user=user)
     if uid:
-        _executor_cache[uid] = ex
+        uid_int = int(uid)
+        if uid_int in _executor_cache:
+            return _executor_cache[uid_int]
+        ex = AIExecutor(user=user)
+        _executor_cache[uid_int] = ex
+        return ex
+    ex = AIExecutor(user=user)
     return ex

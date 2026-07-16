@@ -206,7 +206,7 @@ def register_context_processors(app):
                     'suppliers': ('suppliers', 'Supplier', lambda: Supplier.query.filter(Supplier.tenant_id == _t.id, Supplier.is_active == True).count()),
                 }
                 for key, (_res_name, _model_name, _counter) in _res_map.items():
-                    max_val = getattr(_t, f'max_{key}', None)
+                    max_val: int = getattr(_t, f'max_{key}', None)
                     cur_val = _counter()
                     tenant_usage[key] = {'current': cur_val, 'max': max_val, 'percent': round((cur_val / max_val * 100) if max_val and max_val > 0 else 0)}
                 tenant_subscription = {

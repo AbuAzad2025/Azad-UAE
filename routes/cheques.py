@@ -282,8 +282,8 @@ def create():
             )
             
             # تحويل التواريخ
-            issue_date = datetime.strptime(request.form.get('issue_date'), '%Y-%m-%d').date()
-            due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+            issue_date = datetime.strptime(request.form.get('issue_date') or '', '%Y-%m-%d').date()
+            due_date = datetime.strptime(request.form.get('due_date') or '', '%Y-%m-%d').date()
             customer_id = request.form.get('customer_id', type=int) or None
             supplier_id = request.form.get('supplier_id', type=int) or None
             if customer_id and not _scoped_customers_query().filter(Customer.id == customer_id).first():
@@ -431,8 +431,8 @@ def edit(id):  # noqa: A002
                 )
                 cheque.exchange_rate = exchange_rate
                 
-                cheque.issue_date = datetime.strptime(request.form.get('issue_date'), '%Y-%m-%d').date()
-                cheque.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+                cheque.issue_date = datetime.strptime(request.form.get('issue_date') or '', '%Y-%m-%d').date()
+                cheque.due_date = datetime.strptime(request.form.get('due_date') or '', '%Y-%m-%d').date()
                 
                 cheque.drawer_name = request.form.get('drawer_name')
                 cheque.drawer_id_number = request.form.get('drawer_id_number')
@@ -486,7 +486,7 @@ def deposit_cheque(id):  # noqa: A002
         with atomic_transaction('cheque_deposit'):
             process_cheque_deposit(cheque, deposit_date)
             LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
-                            f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك')
+                            {'message': f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك'})
         
         flash(f'✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك', 'success')
     
@@ -536,7 +536,7 @@ def clear_cheque(id):  # noqa: A002
         
         with atomic_transaction('cheque_clear_log'):
             LoggingCore.log_audit('cheque_clear', 'cheques', id,
-                            f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}')
+                            {'message': f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}'})
         
         flash(f'✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}', 'success')
     
@@ -567,7 +567,7 @@ def bounce_cheque(id):  # noqa: A002
         with atomic_transaction('cheque_bounce'):
             process_cheque_bounce(cheque, full_reason)
             LoggingCore.log_audit('cheque_bounce', 'cheques', id,
-                            f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}')
+                            {'message': f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}'})
         
         flash(f'❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون', 'warning')
     

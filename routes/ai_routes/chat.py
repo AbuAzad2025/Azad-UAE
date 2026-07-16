@@ -17,6 +17,8 @@ from utils.db_safety import atomic_transaction
 
 import logging
 import json
+from typing import cast
+from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +185,7 @@ def chat():
 
     if prefer_stream:
         return Response(
-            stream_with_context(_stream_ai_response(message, context, ai_mode)),
+            stream_with_context(cast(Iterator[str], _stream_ai_response(message, context, ai_mode))),
             mimetype='text/event-stream',
             headers={
                 'Cache-Control': 'no-cache',

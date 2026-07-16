@@ -174,7 +174,7 @@ class SelfReflectionEngine:
         Returns:
             خطة عمل للتحسين
         """
-        suggestions = self.suggest_improvements()
+        suggestions: list[str] = self.suggest_improvements()
         
         plan = {
             'timestamp': datetime.now().isoformat(),

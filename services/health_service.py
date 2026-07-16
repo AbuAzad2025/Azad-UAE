@@ -3,6 +3,7 @@ Health Check Service - خدمة فحص صحة النظام
 مراقبة صحة النظام والخدمات المختلفة
 """
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import logging
 import os
@@ -200,7 +201,7 @@ class HealthCheckService:
             current_app.logger.debug('Could not query pg_database_size')
             db_size_mb = 0
 
-        health_data = {
+        health_data: dict[str, Any] = {
             'cpu': {
                 'percent': resources.get('cpu_percent', 0),
                 'status': 'جيد' if resources.get('cpu_percent', 0) < 70 else 'تحذير' if resources.get('cpu_percent', 0) < 90 else 'خطر'

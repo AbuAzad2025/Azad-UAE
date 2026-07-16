@@ -9,8 +9,12 @@ from decimal import Decimal
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
+from typing import TYPE_CHECKING
 
 from extensions import db
+
+if TYPE_CHECKING:
+    from models import Customer
 from ai_knowledge.knowledge import (
     COMPANY_INFO,
     get_automotive_ecu_knowledge,
@@ -453,7 +457,7 @@ class AIService:
         def _cached_analysis(cust_id):
             from models import Customer, Sale, Payment
             
-            customer = AIService._get_model(Customer, cust_id)
+            customer: Customer = AIService._get_model(Customer, cust_id)
             if not customer:
                 return None
             
@@ -832,7 +836,11 @@ class AIService:
             role_slug = current_user.role.slug if current_user and getattr(current_user, 'role', None) else None
             sys_ctx = search_knowledge(message)
             if sys_ctx:
-                system_context = '\n📘 **معلومات النظام:**\n' + sys_ctx[:2000]
+                ctx_text = '\n'.join(
+                    str(item.get('name') or item.get('code') or item.get('type') or item)
+                    for item in sys_ctx[:20]
+                )
+                system_context = '\n📘 **معلومات النظام:**\n' + ctx_text[:2000]
         except Exception:
             pass
         

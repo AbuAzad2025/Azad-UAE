@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import datetime, timezone
+from typing import Any
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
 from models.tenant import Tenant
@@ -159,7 +160,7 @@ class GLService:
     def _resolve_journal_line_account(line, tenant_id, branch_id=None, ensure_core=True, missing_ok=False):
         account_code = line.get('account_code') or line.get('account')
         raw_concept = line.get("concept_code")
-        concept_code = str(raw_concept or "").strip().upper() or None
+        concept_code = str(raw_concept or "").strip().upper()
 
         # ---- Determine resolution mode ----
         resolution_mode = None
@@ -642,7 +643,7 @@ class GLService:
         if not output_acc and not input_acc:
             return result
 
-        def _sum_side(account, side):
+        def _sum_side(account: Any, side: str):
             if not account:
                 return Decimal('0')
             q = db.session.query(func.coalesce(func.sum(getattr(GLJournalLine, side)), 0)).join(

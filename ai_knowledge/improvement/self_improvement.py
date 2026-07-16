@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 import secrets
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,12 @@ class AzadSelfImprovement:
         self.goals_file = get_knowledge_path('improvement_goals.json')
         
         # تحميل البيانات
-        self.improvement_data = self._load_improvement_data()
-        self.performance_metrics = self._load_performance_metrics()
-        self.improvement_goals = self._load_improvement_goals()
+        self.improvement_data: dict[str, Any] = self._load_improvement_data()
+        self.performance_metrics: dict[str, Any] = self._load_performance_metrics()
+        self.improvement_goals: dict[str, Any] = self._load_improvement_goals()
         
         # مجالات التحسين
-        self.improvement_areas = {
+        self.improvement_areas: dict[str, Any] = {
             'response_quality': {
                 'current_score': 7.5,
                 'target_score': 9.5,
@@ -152,7 +153,7 @@ class AzadSelfImprovement:
         strengths = []
         
         for area, config in self.improvement_areas.items():
-            if config['current_score'] >= 8.5:  # type: ignore[operator]
+            if config['current_score'] >= 8.5:
                 strengths.append({
                     'area': area,
                     'score': config['current_score'],

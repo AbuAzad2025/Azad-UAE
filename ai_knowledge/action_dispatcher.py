@@ -295,7 +295,7 @@ class ActionDispatcher:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== SALES / INVOICES =====
-        def _create_sale(args: dict) -> ActionResult:
+        def _create_sale(args: dict[str, Any]) -> ActionResult:
             from services.ai_executor import AIExecutor
             customer_name = args.get("customer_name", "").strip()
             product_name = args.get("product_name", "").strip()

@@ -4,6 +4,7 @@
 
 from decimal import Decimal
 from datetime import datetime, date, timedelta
+from typing import Any
 from sqlalchemy import func, and_
 from extensions import db
 from models import Customer, Supplier, Sale, Purchase, Payment, GLJournalLine, GLJournalEntry, GLAccount
@@ -51,7 +52,7 @@ class AgingAnalysisService:
         customers = tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
         
         for customer in customers:
-            aging = {
+            aging: dict[str, Any] = {
                 'customer': customer,
                 '0-30': Decimal('0'),
                 '31-60': Decimal('0'),
@@ -157,7 +158,7 @@ class AgingAnalysisService:
             as_of_date = datetime.strptime(as_of_date, '%Y-%m-%d').date()
         
         results = []
-        totals = {
+        totals: dict[str, Any] = {
             '0-30': Decimal('0'),
             '31-60': Decimal('0'),
             '61-90': Decimal('0'),
@@ -170,7 +171,7 @@ class AgingAnalysisService:
         suppliers = tenant_query(Supplier).filter_by(is_active=True).order_by(Supplier.name).all()
         
         for supplier in suppliers:
-            aging = {
+            aging: dict[str, Any] = {
                 'supplier': supplier,
                 '0-30': Decimal('0'),
                 '31-60': Decimal('0'),

@@ -13,6 +13,7 @@ when a system rate is needed. Do NOT call it directly from routes/forms.
 """
 
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from typing import Any
 import time
 
 try:
@@ -33,7 +34,7 @@ from utils.currency_utils import get_system_default_currency
 class CurrencyService:
     
     CACHE_TTL_SECONDS = 300  # 5 دقائق
-    _rates_cache: dict[str, float] = {}
+    _rates_cache: dict[str, Any] = {}
     
     # Fallback rates: value of 1 AED in target currency
     # Updated ILS: 1 AED ≈ 1.05 ILS (was 0.98, which implied 1 ILS = 1.02 AED — incorrect)

@@ -66,7 +66,7 @@ class InventoryReconciliationService:
         account_id: int,
         tenant_id: int | None,
         branch_id: int | None,
-        warehouse_id: int | None,
+        warehouse_id: str | None,
         date_from: str | None = None,
         date_to: str | None = None,
     ) -> Decimal:
@@ -130,7 +130,7 @@ class InventoryReconciliationService:
               AND sm.product_id = :pid
               AND sm.warehouse_id = :wid
         """
-        params = {"tid": tenant_id, "pid": product_id, "wid": warehouse_id}
+        params: dict[str, Any] = {"tid": tenant_id, "pid": product_id, "wid": warehouse_id}
         if branch_id is not None:
             sql += """
               AND EXISTS (

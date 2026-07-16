@@ -1,4 +1,6 @@
 from io import BytesIO
+from typing import Any, cast
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_file, abort, abort
 from flask_login import login_required, current_user
 from sqlalchemy import select
@@ -360,7 +362,7 @@ def import_products():
             filepath = None
             try:
                 import uuid
-                ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+                ext = os.path.splitext(secure_filename(file.filename or ''))[1].lower()
                 if ext not in ('.csv', '.xlsx', '.xls'):
                     flash('نوع الملف غير مدعوم. ندعم فقط ملفات Excel و CSV.', 'warning')
                     return redirect(request.url)
@@ -498,7 +500,7 @@ def import_products():
                             
                         except Exception as e:
                             error_count += 1
-                            errors.append(f"خطأ في السطر {index+2}: {str(e)}")
+                            errors.append(f"خطأ في السطر {cast(int, index) + 2}: {str(e)}")
                 
                 if success_count > 0:
                     flash(f'تم استيراد {success_count} منتج بنجاح.', 'success')
@@ -942,9 +944,9 @@ def edit(id):  # noqa: A002
             product.barcode = request.form.get('barcode')
             product.category_id = (form.category_id.data or None)
             product.regular_price = safe_float(request.form.get('regular_price'), default=0)
-            product.merchant_price = safe_float(request.form.get('merchant_price'), default=None)
+            product.merchant_price = cast(float, safe_float(request.form.get('merchant_price'), default=None))
             product.merchant_share = safe_float(request.form.get('merchant_share'), default=100.0)
-            product.partner_price = safe_float(request.form.get('partner_price'), default=None)
+            product.partner_price = cast(float, safe_float(request.form.get('partner_price'), default=None))
             product.min_stock_alert = safe_float(request.form.get('min_stock_alert'), default=0)
             unit_value = request.form.get('unit')
             if 'unit' in request.form:
@@ -987,7 +989,7 @@ def edit(id):  # noqa: A002
                         if not partner_customer:
                             raise ValueError('الشريك المحدد غير موجود.')
                         p_tid = getattr(partner_customer, 'tenant_id', None)
-                        if p_tid is not None and int(p_tid) != product_tid:
+                        if p_tid is not None and int(p_tid or 0) != product_tid:
                             raise ValueError('الشريك المحدد ينتمي لشركة أخرى.')
                         product.partner_shares.append(ProductPartner(
                             product_id=product.id,
@@ -1167,7 +1169,7 @@ def categories():
 def create_category():
     try:
         # دعم JSON و Form Data
-        data = request.get_json(silent=True) if request.is_json else request.form
+        data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
             return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
 
@@ -1233,7 +1235,7 @@ def get_category(id):  # noqa: A002
 def update_category(id):  # noqa: A002
     try:
         category = _tenant_category_or_404(id)
-        data = request.get_json(silent=True) if request.is_json else request.form
+        data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
             return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
 
@@ -1351,7 +1353,7 @@ def adjust_stock(id):  # noqa: A002
     try:
         adjustment_type = request.form.get('adjustment_type')
         try:
-            quantity = require_float(request.form.get('quantity', 0))
+            quantity = require_float(str(request.form.get('quantity', 0)))
         except ValueError:
             return jsonify({'success': False, 'message': 'الكمية غير صحيحة'}), 422
         reason = request.form.get('reason', 'adjustment')
@@ -1405,7 +1407,7 @@ def adjust_stock(id):  # noqa: A002
                 warehouse_id=warehouse.id if warehouse else None
             )
         
-        LoggingCore.log_audit('update', 'products', product.id, f'تعديل مخزون: {old_stock} → {new_stock}')
+        LoggingCore.log_audit('update', 'products', product.id, {'message': f'تعديل مخزون: {old_stock} → {new_stock}'})
         
         return jsonify({
             'success': True, 

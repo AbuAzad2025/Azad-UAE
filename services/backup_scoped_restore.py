@@ -7,7 +7,7 @@ import logging
 import os
 import tarfile
 import tempfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from services.backup_scope_config import (
     SCOPE_BRANCH,
@@ -17,6 +17,9 @@ from services.backup_scope_config import (
     normalize_row_to_target,
     read_data_directory,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +180,7 @@ def _apply_row_remap(
     return out
 
 
-def _delete_tenant_scoped_data(conn, tenant_id: int, branch_id: Optional[int] = None) -> None:
+def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: Optional[int] = None) -> None:
     from sqlalchemy import text
 
     from services.backup_scope_config import TABLE_EXPORT_ORDER, table_exists
@@ -219,7 +222,7 @@ def _delete_tenant_scoped_data(conn, tenant_id: int, branch_id: Optional[int] = 
 
 
 def _run_import(
-    conn,
+    conn: Connection,
     tables: Dict[str, List[Dict[str, Any]]],
     *,
     scope: str,
@@ -570,7 +573,7 @@ def restore_scoped_backup(
             remap=remap,
             new_branch_id=new_branch_id,
             new_store_id=new_store_id,
-            source_branch_id=int(src_bid) if src_bid is not None else None,
+            source_branch_id=int(src_bid or 0) if src_bid is not None else None,
             dry_run=dry_run,
         )
         outcome["import"] = import_result

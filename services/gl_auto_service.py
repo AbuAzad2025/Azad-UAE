@@ -1,10 +1,11 @@
 import logging
 from decimal import Decimal
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def validate_decimal_precision(value, max_digits=15, decimal_places=3):
+def validate_decimal_precision(value: Any, max_digits=15, decimal_places=3):
     if value is None:
         return True
     try:

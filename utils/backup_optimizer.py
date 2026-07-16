@@ -3,6 +3,7 @@ import shutil
 import gzip
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,8 @@ class BackupOptimizer:
     def compress_backup(backup_path: str) -> dict:
         try:
             with open(backup_path, 'rb') as f_in:
-                with gzip.open(f'{backup_path}.gz', 'wb') as f_out:
+                f_out: Any = gzip.open(f'{backup_path}.gz', 'wb')
+                with f_out:
                     shutil.copyfileobj(f_in, f_out)
             
             original_size = os.path.getsize(backup_path)

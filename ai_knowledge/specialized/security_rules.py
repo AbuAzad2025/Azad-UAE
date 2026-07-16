@@ -69,7 +69,7 @@ class SecurityRules:
         if SecurityRules.is_owner():
             return True, "صلاحيات كاملة"
         role = getattr(current_user, 'role', None)
-        slug = getattr(role, 'slug', None) if role else None
+        slug: str = getattr(role, 'slug', None) if role else None
         role_permissions = {
             'super_admin': ['view_all', 'edit_all', 'delete_all'],
             'manager': ['view_all', 'edit_limited'],

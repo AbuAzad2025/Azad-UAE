@@ -32,8 +32,8 @@ def get_reporting_url(to_email=None):
 
 REPORTING_URL = get_reporting_url()
 
-_BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-_INSTANCE_DIR = os.path.join(_BASEDIR, "instance")
+_BASEDIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+_INSTANCE_DIR: str = os.path.join(_BASEDIR, "instance")
 os.makedirs(_INSTANCE_DIR, exist_ok=True)
 
 HIDDEN_LOG_FILE = os.path.join(_INSTANCE_DIR, ".security_audit.log")

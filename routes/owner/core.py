@@ -503,7 +503,7 @@ def company_dashboard():
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    ctx = build_company_dashboard_context(tid, scoped_branch_id)
+    ctx = build_company_dashboard_context(int(tid or 0), scoped_branch_id)
     return render_template(
         'owner/dashboard_company.html',
         panel_mode='company',

@@ -106,7 +106,7 @@ class MonitoringService:
 
     @staticmethod
     def get_performance_metrics_data() -> Dict[str, Any]:
-        basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+        basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
         performance_file = os.path.join(basedir, 'logs', 'performance.log')
         slow_queries = []
 
@@ -199,7 +199,7 @@ class MonitoringService:
     @staticmethod
     def log_performance_metric(metric_name: str, value: float, tags: Optional[Dict] = None):
         try:
-            basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+            basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
             logs_dir = os.path.join(basedir, 'logs')
             metrics_file = os.path.join(logs_dir, 'performance.log')
 

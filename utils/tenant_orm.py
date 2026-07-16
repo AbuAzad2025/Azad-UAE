@@ -146,7 +146,7 @@ def _validate_instance_tenant(obj) -> bool:
         return is_platform_owner()
     if tid is None:
         return False
-    return int(rec_tid) == int(tid)
+    return int(rec_tid or 0) == int(tid or 0)
 
 
 def _patch_session_get():
@@ -227,7 +227,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         if obj_tid is None:
             if tid is not None:
                 obj.tenant_id = tid
-        elif tid is not None and int(obj_tid) != int(tid):
+        elif tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
                 f"Cross-tenant INSERT on {obj.__class__.__name__}: "
@@ -244,7 +244,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         obj_tid = getattr(obj, "tenant_id", None)
         if obj_tid is None:
             continue
-        if tid is not None and int(obj_tid) != int(tid):
+        if tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
                 f"Cross-tenant UPDATE on {obj.__class__.__name__}: "
@@ -261,7 +261,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         obj_tid = getattr(obj, "tenant_id", None)
         if obj_tid is None:
             continue
-        if tid is not None and int(obj_tid) != int(tid):
+        if tid is not None and int(obj_tid or 0) != int(tid or 0):
             _log_cross_tenant_warning(obj.__class__.__name__, obj_tid, tid)
             raise TenantIsolationError(
                 f"Cross-tenant DELETE on {obj.__class__.__name__}: "

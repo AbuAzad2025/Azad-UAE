@@ -2,11 +2,12 @@ import hashlib
 import gzip
 import os
 import shutil
+from typing import Any
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def _minify_js(text):
+def _minify_js(text: str) -> str | None:
     try:
         import jsmin
         return jsmin.jsmin(text)
@@ -14,10 +15,10 @@ def _minify_js(text):
         return None
 
 
-def _minify_css(text):
+def _minify_css(text: str) -> str | None:
     try:
-        import cssmin
-        return cssmin.cssmin(text)
+        from cssmin import cssmin as _cssmin_fn
+        return _cssmin_fn(text)
     except ImportError:
         try:
             import rcssmin
@@ -26,21 +27,22 @@ def _minify_css(text):
             return None
 
 
-def _minify(text, ext):
+def _minify(text: str, ext: str) -> str | None:
     if ext == '.js':
         return _minify_js(text)
     return _minify_css(text)
 
 
-def _gzip_file(src_path):
+def _gzip_file(src_path: str) -> str:
     gz_path = src_path + '.gz'
     with open(src_path, 'rb') as f_in:
-        with gzip.open(gz_path, 'wb', compresslevel=9) as f_out:
+        f_out: Any = gzip.open(gz_path, 'wb', compresslevel=9)
+        with f_out:
             shutil.copyfileobj(f_in, f_out)
     return gz_path
 
 
-def _process_file(src_path):
+def _process_file(src_path: str) -> dict[str, Any] | None:
     ext = os.path.splitext(src_path)[1].lower()
     if ext not in ('.js', '.css'):
         return None
@@ -56,10 +58,10 @@ def _process_file(src_path):
     min_path = os.path.join(dir_name, min_name)
     if minified_bytes is None:
         shutil.copy2(src_path, min_path)
-        final_content = original.encode('utf-8')
+        final_content: bytes = original.encode('utf-8')
     else:
         with open(min_path, 'w', encoding='utf-8') as f:
-            f.write(minified_bytes)
+            f.write(minified_bytes or "")
         final_content = minified_bytes.encode('utf-8') if isinstance(minified_bytes, str) else minified_bytes
     digest = hashlib.md5(final_content, usedforsecurity=False).hexdigest()[:12]
     hash_name = f"{stem}.{digest}.min{ext}"
@@ -79,11 +81,11 @@ def _process_file(src_path):
     }
 
 
-def _collect_files(base_dir, sub_dir, extensions):
+def _collect_files(base_dir: str, sub_dir: str, extensions: tuple[str, ...]) -> list[str]:
     target = os.path.join(base_dir, sub_dir)
     if not os.path.isdir(target):
         return []
-    result = []
+    result: list[str] = []
     for entry in os.listdir(target):
         if any(entry.endswith(e) for e in extensions):
             if entry.endswith('.min.js') or entry.endswith('.min.css'):
@@ -92,10 +94,10 @@ def _collect_files(base_dir, sub_dir, extensions):
     return sorted(result)
 
 
-def build_all(base_dir=None):
+def build_all(base_dir: str | None = None) -> list[dict[str, Any]]:
     if base_dir is None:
         base_dir = BASE
-    results = []
+    results: list[dict[str, Any]] = []
     js_files = _collect_files(base_dir, 'static/js', ('.js',))
     css_files = _collect_files(base_dir, 'static/css', ('.css',))
     all_files = js_files + css_files
@@ -103,7 +105,7 @@ def build_all(base_dir=None):
         info = _process_file(src)
         if info:
             results.append(info)
-            ext = os.path.splitext(info['file'])[1].upper()[1:]
+            ext = os.path.splitext(str(info['file']))[1].upper()[1:]
             print(f"  {ext} {info['file']}: {info['original']:>8}B -> {info['minified']:>8}B -> {info['gzipped']:>8}B.gz  [{info['hash']}]")
     total_orig = sum(r['original'] for r in results)
     total_gz = sum(r['gzipped'] for r in results)

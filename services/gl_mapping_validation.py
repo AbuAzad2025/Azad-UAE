@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from typing import Iterable
+from typing import Any, Iterable
 
 import sqlalchemy as sa
 
@@ -57,7 +57,7 @@ def _tenant_name(tenant: Tenant) -> str:
     return tenant.name or tenant.name_en or tenant.name_ar or f"Tenant {tenant.id}"
 
 
-def _concept_meta(concept_code: str) -> dict[str, object]:
+def _concept_meta(concept_code: str) -> dict[str, Any]:
     return GL_CONCEPT_REGISTRY.get(
         concept_code,
         {"legacy_code": None, "required": False},
@@ -859,7 +859,7 @@ class GLMappingValidationService:
     def _find_candidates(
         tenant: Tenant,
         concept_code: str,
-        rule: dict[str, object],
+        rule: dict[str, Any],
     ) -> list[tuple[GLAccount, str, str]]:
         """Search for postable GL account candidates for a concept.
 
@@ -951,6 +951,7 @@ class GLMappingValidationService:
                 defaults_by_concept[mapping.concept_code].append(mapping)
 
         for concept_code in sorted(REQUIRED_GL_CONCEPTS):
+            concept_code: str = concept_code
             if not _is_mapping_owned(concept_code):
                 continue
             default_mappings = defaults_by_concept.get(concept_code, [])

@@ -186,7 +186,7 @@ def create():
             )
 
             password = request.form.get('password')
-            is_valid, pwd_errors = PasswordValidator.validate(password)
+            is_valid, pwd_errors = PasswordValidator.validate(password or '')
             if not is_valid:
                 flash(ErrorMessages.weak_password(pwd_errors), 'danger')
                 return _create_form_context(roles, branches, form_values)

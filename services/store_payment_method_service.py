@@ -1,6 +1,8 @@
 """Platform store payment methods — shared across all tenant storefronts."""
 from __future__ import annotations
 
+from typing import Any
+
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models.store_payment_method import StorePaymentMethod
@@ -85,7 +87,7 @@ class StorePaymentMethodService:
                     is_builtin=bool(item.get('is_builtin', False)),
                     sort_order=int(item.get('sort_order', 100)),
                 )
-                cfg = item.get('config')
+                cfg: dict[str, Any] = item.get('config') or {}
                 if cfg:
                     row.set_config(cfg)
                 db.session.add(row)

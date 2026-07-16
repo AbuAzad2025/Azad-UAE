@@ -314,7 +314,7 @@ def save_uploaded_file(file, upload_folder='uploads', allowed_extensions=None):
     name, ext = os.path.splitext(filename)
     unique_filename = f'{name}_{uuid.uuid4().hex[:8]}{ext}'
     
-    full_upload_folder = os.path.join(current_app.static_folder, upload_folder)
+    full_upload_folder = os.path.join(str(current_app.static_folder), upload_folder)
     os.makedirs(full_upload_folder, exist_ok=True)
     
     filepath = os.path.join(full_upload_folder, unique_filename)

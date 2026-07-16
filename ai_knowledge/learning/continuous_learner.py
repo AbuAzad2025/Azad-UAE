@@ -47,7 +47,7 @@ class ContinuousLearner:
         self.learning_history = self._load_history()
         
         # المعرفة المتراكمة
-        self.accumulated_knowledge = {
+        self.accumulated_knowledge: dict[str, Any] = {
             'wikipedia': {},
             'obd_codes': {},
             'github': {},

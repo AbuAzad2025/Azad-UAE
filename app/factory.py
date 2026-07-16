@@ -25,7 +25,7 @@ except ImportError:
 def create_app(config_class=Config):
     config._init_env()
     # Flask app is inside app/ package; templates/static live at project root
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    project_root: str = os.path.abspath(os.path.join(str(os.path.dirname(__file__)), '..'))
     app = Flask(
         __name__,
         template_folder=os.path.join(project_root, 'templates'),
@@ -114,7 +114,7 @@ def create_app(config_class=Config):
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(
-            app.static_folder,
+            str(app.static_folder),
             'favicon.ico',
             mimetype='image/vnd.microsoft.icon',
         )
