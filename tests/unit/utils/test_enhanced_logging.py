@@ -112,6 +112,7 @@ class TestSetupEnhancedLogging:
             if getattr(func, '__name__', '') == '_close_log_handlers':
                 teardown = func
                 break
+        assert teardown is not None
         teardown(None)
         for handler in handlers.values():
             handler.close.assert_called()
