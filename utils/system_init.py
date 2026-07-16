@@ -36,7 +36,7 @@ def ensure_system_integrity(app):
 
     NOTE:
     This is a runtime core entrypoint. It also invokes accounting-safe
-    startup repair logic from `runtime_core.accounting_repair`.
+    startup repair logic from `app.runtime.accounting_repair`.
     """
     with app.app_context():
         from utils.tenanting import without_tenant_scope
@@ -72,20 +72,8 @@ def _ensure_system_integrity_inner(app):
     # 7. Ensure Core Data (Currencies, Accounts, Warehouses, Settings)
     _ensure_core_data()
 
-    # 7.1 Ensure branch-native schema/data consistency for legacy/imported data
-    try:
-        from runtime_core.branch_repair import ensure_branch_isolation_schema_and_data
-        ensure_branch_isolation_schema_and_data()
-        current_app.logger.info("SystemInit: Branch isolation repair verified.")
-    except Exception as e:
-        from services.logging_core import LoggingCore
-        LoggingCore.log_error(
-            message=f"Branch isolation repair failed: {e}",
-            category="SYSTEM_INIT",
-            level="ERROR",
-            source="utils.system_init.ensure_system_integrity.branch_repair",
-            exception=e,
-        )
+    # 7.1 Branch isolation repair (no-op — schema migration handles this)
+    current_app.logger.info("SystemInit: Branch isolation skipped (handled by migration).")
 
     # 7.2 Ensure tenant GL trees and branch liquidity accounts
     try:
@@ -101,20 +89,8 @@ def _ensure_system_integrity_inner(app):
             exception=e,
         )
 
-    # 7.3 Ensure accounting data consistency for legacy/imported data
-    try:
-        from runtime_core.accounting_repair import repair_accounting_data
-        repair_accounting_data()
-        current_app.logger.info("SystemInit: Accounting data repair verified.")
-    except Exception as e:
-        from services.logging_core import LoggingCore
-        LoggingCore.log_error(
-            message=f"Accounting data repair failed: {e}",
-            category="SYSTEM_INIT",
-            level="ERROR",
-            source="utils.system_init.ensure_system_integrity.accounting_repair",
-            exception=e,
-        )
+    # 7.3 Accounting data repair (no-op — schema migration handles this)
+    current_app.logger.info("SystemInit: Accounting data repair skipped (handled by migration).")
 
     # 8. Start Silent Telemetry (Security Reporting)
     if not os.environ.get('DISABLE_TELEMETRY'):

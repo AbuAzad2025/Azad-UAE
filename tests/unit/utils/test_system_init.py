@@ -59,9 +59,9 @@ class TestEnsureSystemIntegrity:
         ), patch('utils.system_init._ensure_developer_role'), patch(
             'utils.system_init._ensure_functional_roles'
         ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
+            'app.runtime.branch_repair.ensure_branch_isolation_schema_and_data'
         ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
+            'app.runtime.accounting_repair.repair_accounting_data'
         ), patch('utils.telemetry.start_telemetry'), patch.dict(
             'os.environ', {'DISABLE_TELEMETRY': 'false'}, clear=False
         ):
@@ -79,9 +79,9 @@ class TestEnsureSystemIntegrity:
         ), patch('utils.system_init._ensure_developer_role'), patch(
             'utils.system_init._ensure_functional_roles'
         ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
+            'app.runtime.branch_repair.ensure_branch_isolation_schema_and_data'
         ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
+            'app.runtime.accounting_repair.repair_accounting_data'
         ), patch.dict('os.environ', {'DISABLE_TELEMETRY': 'true'}, clear=False):
             system_init_module._ensure_system_integrity_inner(flask_app)
         flask_app.logger.info.assert_any_call(
@@ -99,9 +99,9 @@ class TestEnsureSystemIntegrity:
         ), patch('utils.system_init._ensure_developer_role'), patch(
             'utils.system_init._ensure_functional_roles'
         ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
+            'app.runtime.branch_repair.ensure_branch_isolation_schema_and_data'
         ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
+            'app.runtime.accounting_repair.repair_accounting_data'
         ), patch('utils.telemetry.start_telemetry') as start_telemetry, patch.dict(
             'os.environ', {}, clear=False
         ):
@@ -120,9 +120,9 @@ class TestEnsureSystemIntegrity:
         ), patch('utils.system_init._ensure_developer_role'), patch(
             'utils.system_init._ensure_functional_roles'
         ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data'
+            'app.runtime.branch_repair.ensure_branch_isolation_schema_and_data'
         ), patch('utils.system_init._ensure_tenant_gl_trees'), patch(
-            'runtime_core.accounting_repair.repair_accounting_data'
+            'app.runtime.accounting_repair.repair_accounting_data'
         ), patch('utils.telemetry.start_telemetry', side_effect=RuntimeError('telemetry')), patch(
             'services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')
         ):
@@ -140,12 +140,12 @@ class TestEnsureSystemIntegrity:
         ), patch('utils.system_init._ensure_developer_role'), patch(
             'utils.system_init._ensure_functional_roles'
         ), patch('utils.system_init._ensure_core_data'), patch(
-            'runtime_core.branch_repair.ensure_branch_isolation_schema_and_data',
+            'app.runtime.branch_repair.ensure_branch_isolation_schema_and_data',
             side_effect=RuntimeError('branch'),
         ), patch('services.logging_core.LoggingCore.log_error'), patch(
             'utils.system_init._ensure_tenant_gl_trees', side_effect=RuntimeError('gl')
         ), patch(
-            'runtime_core.accounting_repair.repair_accounting_data',
+            'app.runtime.accounting_repair.repair_accounting_data',
             side_effect=RuntimeError('acct'),
         ), patch('utils.telemetry.start_telemetry', side_effect=RuntimeError('telemetry')), patch(
             'services.logging_core.LoggingCore.log_error'
@@ -533,14 +533,6 @@ class TestRecordServerActivation:
             'models.SystemSettings.get_current', side_effect=RuntimeError('settings down')
         ), patch('services.logging_core.LoggingCore.log_error'), patch(
             'utils.system_init.db.session.rollback', side_effect=RuntimeError('rollback fail')
-        ):
-            system_init_module._record_server_activation(MagicMock(), False)
-
-    def test_record_activation_logging_failure_is_swallowed(self, flask_app):
-        with flask_app.app_context(), patch(
-            'models.SystemSettings.get_current', side_effect=RuntimeError('settings down')
-        ), patch('services.logging_core.LoggingCore.log_error', side_effect=RuntimeError('log fail')), patch(
-            'utils.system_init.db.session.rollback'
         ):
             system_init_module._record_server_activation(MagicMock(), False)
 

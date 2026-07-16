@@ -209,7 +209,7 @@ def create_app(config_class=Config):
         return response
 
     # Models Import (to ensure they are known to SQLAlchemy)
-    from models import User, Customer, ProductCategory
+    from models import User, Customer, ProductCategory  # noqa: F401 - side-effect imports for SQLAlchemy registry
 
     try:
         from models.events import register_all_listeners

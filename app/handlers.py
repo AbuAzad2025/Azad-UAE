@@ -1,5 +1,5 @@
 """Error handlers for AZADEXA ERP."""
-from flask import jsonify, render_template, request, current_app, flash, redirect, url_for
+from flask import jsonify, render_template, request, flash, redirect, url_for
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
 from sqlalchemy.exc import SQLAlchemyError

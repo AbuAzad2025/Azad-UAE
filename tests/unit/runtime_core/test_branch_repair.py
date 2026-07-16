@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 import models
 
-from runtime_core.branch_repair import (
+from app.runtime.branch_repair import (
     _ensure_column,
     _ensure_index,
     _first_non_null,
@@ -43,36 +43,36 @@ class TestHelpers:
         assert _first_non_null(None, None) is None
 
     def test_ensure_column_skips_existing(self, mocker):
-        mocker.patch('runtime_core.branch_repair.inspect', return_value=_inspector(['branch_id']))
+        mocker.patch('app.runtime.branch_repair.inspect', return_value=_inspector(['branch_id']))
         conn = MagicMock()
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
-        mocker.patch('runtime_core.branch_repair.db.engine.begin', return_value=ctx)
+        mocker.patch('app.runtime.branch_repair.db.engine.begin', return_value=ctx)
         assert _ensure_column('payments', 'branch_id', 'branch_id INTEGER') is False
 
     def test_ensure_column_adds_missing(self, mocker):
-        mocker.patch('runtime_core.branch_repair.inspect', return_value=_inspector([]))
+        mocker.patch('app.runtime.branch_repair.inspect', return_value=_inspector([]))
         conn = MagicMock()
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
-        mocker.patch('runtime_core.branch_repair.db.engine.begin', return_value=ctx)
+        mocker.patch('app.runtime.branch_repair.db.engine.begin', return_value=ctx)
         assert _ensure_column('payments', 'branch_id', 'branch_id INTEGER') is True
 
     def test_ensure_index(self, mocker):
         conn = MagicMock()
         ctx = MagicMock()
         ctx.__enter__.return_value = conn
-        mocker.patch('runtime_core.branch_repair.db.engine.begin', return_value=ctx)
+        mocker.patch('app.runtime.branch_repair.db.engine.begin', return_value=ctx)
         _ensure_index('ix_pay', 'payments', 'branch_id')
         conn.execute.assert_called_once()
 
 
 class TestEnsureBranchIsolation:
     def test_full_flow(self, app, mocker, restore_models):
-        mocker.patch('runtime_core.branch_repair._ensure_column', return_value=True)
-        mocker.patch('runtime_core.branch_repair._ensure_index')
+        mocker.patch('app.runtime.branch_repair._ensure_column', return_value=True)
+        mocker.patch('app.runtime.branch_repair._ensure_index')
         mocker.patch('utils.branching.GLOBAL_ROLE_SLUGS', set())
-        mock_db = mocker.patch('runtime_core.branch_repair.db')
+        mock_db = mocker.patch('app.runtime.branch_repair.db')
 
         main = MagicMock(id=10)
         Branch = MagicMock()
@@ -132,10 +132,10 @@ class TestEnsureBranchIsolation:
         assert sale.branch_id == 3
 
     def test_creates_main_branch_when_missing(self, app, mocker, restore_models):
-        mocker.patch('runtime_core.branch_repair._ensure_column', return_value=False)
-        mocker.patch('runtime_core.branch_repair._ensure_index')
+        mocker.patch('app.runtime.branch_repair._ensure_column', return_value=False)
+        mocker.patch('app.runtime.branch_repair._ensure_index')
         mocker.patch('utils.branching.GLOBAL_ROLE_SLUGS', set())
-        mocker.patch('runtime_core.branch_repair.db')
+        mocker.patch('app.runtime.branch_repair.db')
 
         Branch = MagicMock()
         Branch.query.filter_by.return_value.order_by.return_value.first.return_value = None
@@ -152,10 +152,10 @@ class TestEnsureBranchIsolation:
         assert result['main_branch_id'] == 1
 
     def test_gl_reference_type_branches(self, app, mocker, restore_models):
-        mocker.patch('runtime_core.branch_repair._ensure_column', return_value=False)
-        mocker.patch('runtime_core.branch_repair._ensure_index')
+        mocker.patch('app.runtime.branch_repair._ensure_column', return_value=False)
+        mocker.patch('app.runtime.branch_repair._ensure_index')
         mocker.patch('utils.branching.GLOBAL_ROLE_SLUGS', set())
-        mock_db = mocker.patch('runtime_core.branch_repair.db')
+        mock_db = mocker.patch('app.runtime.branch_repair.db')
         main = MagicMock(id=2)
         Branch = MagicMock()
         Branch.query.filter_by.return_value.order_by.return_value.first.return_value = main
