@@ -4,7 +4,6 @@ Tests use real HTTP JSON API endpoints, verifying DB state after each operation.
 """
 import uuid
 from decimal import Decimal
-from datetime import datetime, timezone
 
 
 class TestPOSSession:
