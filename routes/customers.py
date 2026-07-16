@@ -281,8 +281,8 @@ def create():
                 default_currency = get_system_default_currency()
 
             # Check tenant customer limit
+            from utils.tenant_limits import check_customers_limit, TenantLimitError
             try:
-                from utils.tenant_limits import check_customers_limit, TenantLimitError
                 check_customers_limit()
             except TenantLimitError as e:
                 flash(str(e), 'warning')
@@ -320,7 +320,7 @@ def create():
 @customers_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_customers')
-def view(id):
+def view(id):  # noqa: A002
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
@@ -345,7 +345,7 @@ def view(id):
 @customers_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_customers')
-def edit(id):
+def edit(id):  # noqa: A002
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
@@ -390,7 +390,7 @@ def edit(id):
 @customers_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_customers')
-def delete(id):
+def delete(id):  # noqa: A002
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
@@ -442,7 +442,7 @@ def delete(id):
 @customers_bp.route('/<int:id>/statement')
 @login_required
 @permission_required('manage_customers')
-def statement(id):
+def statement(id):  # noqa: A002
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
@@ -752,7 +752,7 @@ def api_search():
 @customers_bp.route('/<int:id>/balance')
 @login_required
 @permission_required('manage_payments')
-def customer_balance(id):
+def customer_balance(id):  # noqa: A002
     """رصيد العميل + فواتير غير المدفوعة - API موحد (مصدر واحد مع payments)."""
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
@@ -780,7 +780,7 @@ def customer_balance(id):
 @customers_bp.route('/<int:id>/sales')
 @login_required
 @permission_required('manage_customers')
-def customer_sales(id):
+def customer_sales(id):  # noqa: A002
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403

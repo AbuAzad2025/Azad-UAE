@@ -12,7 +12,7 @@
 """
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def {function_name}():
     {body}"""
         }
     
-    def generate_sql_query(self, intent: str, table: str, filters: dict = None) -> str:
+    def generate_sql_query(self, intent: str, table: str, filters: Optional[dict] = None) -> str:
         """
         توليد SQL query تلقائياً
         
@@ -95,7 +95,7 @@ def {function_name}():
             logger.error(f"SQL generation failed: {e}")
             return f"-- Error: {e}"
     
-    def generate_python_function(self, function_name: str, purpose: str, params: List[str] = None) -> str:
+    def generate_python_function(self, function_name: str, purpose: str, params: Optional[List[str]] = None) -> str:
         """
         توليد دالة Python
         
@@ -153,7 +153,7 @@ def {function_name}():
             logger.error(f"Python generation failed: {e}")
             return f"# Error: {e}"
     
-    def generate_report_query(self, report_type: str, date_range: dict = None) -> str:  # nosec B608
+    def generate_report_query(self, report_type: str, date_range: Optional[dict] = None) -> str:  # nosec B608
         """
         توليد query لتقرير محدد
         

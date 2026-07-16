@@ -140,6 +140,10 @@ def generic_webhook():
             "transaction_id": "manual-001"
         }
     """
+    from services.saas_provisioning_service import (
+        SaaSProvisioningService,
+        SaaSProvisioningError,
+    )
     try:
         secret = current_app.config.get("BILLING_WEBHOOK_SECRET") or current_app.config.get("SECRET_KEY")
         if secret:
@@ -173,11 +177,6 @@ def generic_webhook():
 
         if not tenant_id or not package_id:
             return jsonify({"error": "tenant_id and package_id required"}), 400
-
-        from services.saas_provisioning_service import (
-            SaaSProvisioningService,
-            SaaSProvisioningError,
-        )
 
         result = SaaSProvisioningService.activate_purchased_package(
             tenant_id=int(tenant_id),

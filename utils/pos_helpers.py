@@ -177,7 +177,7 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
         if not isinstance(row, dict):
             raise ValueError("بيانات السلة غير صالحة.")
         product_id = int(row.get("product_id"))
-        qty = Decimal(str(row.get("quantity")))
+        qty = Decimal(f"{row.get('quantity')}")
         if qty <= 0:
             raise ValueError("الكمية يجب أن تكون أكبر من صفر.")
         discount_percent = Decimal(str(row.get("discount_percent", 0) or 0))

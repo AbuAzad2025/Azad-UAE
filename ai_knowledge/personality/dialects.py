@@ -177,12 +177,12 @@ class DialectManager:
         
         # تحويل العبارات الشائعة
         if 'common_phrases' in dialect_dict:
-            for formal, dialectal in dialect_dict['common_phrases'].items():
+            for formal, dialectal in dialect_dict['common_phrases'].items():  # type: ignore[union-attr]
                 translated = translated.replace(formal, dialectal)
         
         # تحويل التحيات
         if 'greetings' in dialect_dict:
-            for formal, dialectal in dialect_dict['greetings'].items():
+            for formal, dialectal in dialect_dict['greetings'].items():  # type: ignore[union-attr]
                 translated = translated.replace(formal, dialectal)
         
         return translated
@@ -204,7 +204,7 @@ class DialectManager:
             dialect = self.current_dialect
         
         if dialect in self.dialects and 'responses' in self.dialects[dialect]:
-            return self.dialects[dialect]['responses'].get(word_type, word_type)
+            return self.dialects[dialect]['responses'].get(word_type, word_type)  # type: ignore[union-attr]
         
         return word_type
 

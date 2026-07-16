@@ -134,7 +134,7 @@ def security_alerts():
 
 @owner_bp.route('/security-alerts/<int:id>/resolve', methods=['POST'])
 @owner_required
-def resolve_alert(id):
+def resolve_alert(id):  # noqa: A002
     alert = SecurityAlert.query.get_or_404(id)
     try:
         with atomic_transaction('resolve_alert'):
@@ -223,7 +223,7 @@ def api_keys():
 
 @owner_bp.route('/api-keys/<int:id>/toggle', methods=['POST'])
 @owner_required
-def toggle_api_key(id):
+def toggle_api_key(id):  # noqa: A002
     key = APIKey.query.get_or_404(id)
     try:
         with atomic_transaction('toggle_api_key'):

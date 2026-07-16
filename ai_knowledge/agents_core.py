@@ -3,6 +3,7 @@ agents_core.py - AI agent entry points.
 Imports from individual agent modules and adds enhanced AI capabilities.
 """
 import logging
+from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Import base agents from their dedicated modules
@@ -20,7 +21,7 @@ from ai_knowledge.agents.master_brain import (
 # intelligent_response - dispatcher-aware wrapper
 # ============================================================================
 
-def intelligent_response(message: str, user_id: int = None, context: dict = None) -> str:
+def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
     """Get AI response - tries action dispatch first, then local intelligence."""
     try:
         from ai_knowledge.trainer import trainer
@@ -36,8 +37,8 @@ def intelligent_response(message: str, user_id: int = None, context: dict = None
                 if action_type == "help":
                     return action_dispatcher.format_help()
                 name = args.get("name", "")
-                from datetime import datetime
-                h = datetime.utcnow().hour
+                from datetime import datetime, timezone
+                h = datetime.now(timezone.utc).hour
                 greeting = "صباح الخير" if 5 <= h < 12 else "مساء الخير" if 12 <= h < 18 else "مساء النور"
                 return f"{greeting} {'👤 ' + name if name else ''}! 🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n{action_dispatcher.format_help()}"
             result = action_dispatcher.dispatch(action_type, args)
@@ -182,7 +183,7 @@ def _build_system_prompt(question: str, user_role: str = "user") -> str:
     return "\n".join(context_parts)
 
 
-def ask_azad_enhanced(question: str, context: dict = None, user_id: int = None) -> dict:
+def ask_azad_enhanced(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
     """
     Enhanced ask_azad with LLM chain-of-thought and system knowledge.
     Uses Groq/Gemini for complex questions, falls back to local MasterBrain.

@@ -74,7 +74,7 @@ class KnowledgeExpander:
                 return content
             
             # حفظ المحتوى
-            filename = f"website_{len(self.sources['websites']) + 1}.json"
+            filename = f"website_{len(self.sources.get('websites') or []) + 1}.json"
             filepath = os.path.join(self.knowledge_dir, filename)
             
             website_data = {
@@ -91,7 +91,7 @@ class KnowledgeExpander:
                 json.dump(website_data, f, ensure_ascii=False, indent=2)
             
             # إضافة للمصادر
-            self.sources['websites'].append({
+            self.sources['websites'].append({  # type: ignore[union-attr]
                 'url': url,
                 'filename': filename,
                 'category': category,
@@ -171,7 +171,7 @@ class KnowledgeExpander:
                 }
             
             # حفظ المستند
-            filename = f"document_{len(self.sources['documents']) + 1}.json"
+            filename = f"document_{len(self.sources.get('documents') or []) + 1}.json"
             filepath = os.path.join(self.knowledge_dir, filename)
             
             document_data = {
@@ -187,7 +187,7 @@ class KnowledgeExpander:
                 json.dump(document_data, f, ensure_ascii=False, indent=2)
             
             # إضافة للمصادر
-            self.sources['documents'].append({
+            self.sources['documents'].append({  # type: ignore[union-attr]
                 'filename': filename,
                 'title': title,
                 'category': category,
@@ -296,19 +296,19 @@ class KnowledgeExpander:
     def get_knowledge_summary(self):
         """ملخص المعرفة الموسعة"""
         try:
-            total_sources = len(self.sources.get('websites', [])) + len(self.sources.get('documents', []))
+            total_sources = len(self.sources.get('websites') or []) + len(self.sources.get('documents') or [])
             
             # فئات المعرفة
             categories = {}
             for source_type in ['websites', 'documents']:
-                for source in self.sources.get(source_type, []):
+                for source in self.sources.get(source_type) or []:
                     category = source.get('category', 'general')
                     categories[category] = categories.get(category, 0) + 1
             
             # أحدث المصادر
             recent_sources = []
             for source_type in ['websites', 'documents']:
-                for source in self.sources.get(source_type, []):
+                for source in self.sources.get(source_type) or []:
                     recent_sources.append({
                         'type': source_type[:-1],  # إزالة 's'
                         'title': source.get('title', source.get('url', 'غير محدد')),
@@ -322,8 +322,8 @@ class KnowledgeExpander:
                 'success': True,
                 'summary': {
                     'total_sources': total_sources,
-                    'websites_count': len(self.sources.get('websites', [])),
-                    'documents_count': len(self.sources.get('documents', [])),
+                    'websites_count': len(self.sources.get('websites') or []),
+                    'documents_count': len(self.sources.get('documents') or []),
                     'categories': categories,
                     'last_updated': self.sources.get('last_updated'),
                     'recent_sources': recent_sources[:5]
@@ -341,12 +341,12 @@ class KnowledgeExpander:
         try:
             if source_type == 'website':
                 websites = self.sources.get('websites', [])
-                if source_id < len(websites):
+                if websites is not None and source_id < len(websites):
                     website = websites[source_id]
                     return self.add_website(
-                        website['url'],
-                        website.get('category', 'general'),
-                        website.get('description', '')
+                        website['url'],  # type: ignore[index]
+                        website.get('category', 'general'),  # type: ignore[union-attr]
+                        website.get('description', '')  # type: ignore[union-attr]
                     )
             
             return {

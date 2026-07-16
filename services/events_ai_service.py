@@ -52,7 +52,7 @@ def _customer_analysis(mapper, connection, target):
         if target.balance and target.balance > Decimal('10000'):
             alerts.append('high_balance')
             logger.info(f"AI Priority: Customer {target.id} - High balance: {target.balance} AED")
-        if target.balance > target.credit_limit and target.credit_limit > 0:
+        if target.balance > target.credit_limit > 0:
             alerts.append('credit_limit_exceeded')
             logger.warning(f"AI Alert: Customer {target.id} exceeded credit limit!")
         if target.total_purchases > 100000 and target.customer_classification != 'vip':

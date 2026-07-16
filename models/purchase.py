@@ -126,7 +126,7 @@ class Purchase(db.Model):
             Payment.tenant_id == self.tenant_id,
             Payment.direction == 'outgoing',
             Payment.payment_confirmed == True,
-            Payment.purchase_id == None,
+            Payment.purchase_id.is_(None),
             func.date(Payment.payment_date) <= as_of_date
         )
         if self.branch_id is not None:

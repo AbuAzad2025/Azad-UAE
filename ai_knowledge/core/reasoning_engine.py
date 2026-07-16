@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ReasoningEngine:
             'technical': []
         }
     
-    def think(self, problem: str, context: dict = None) -> dict:
+    def think(self, problem: str, context: Optional[dict] = None) -> dict:
         """
         التفكير العميق في مشكلة
         
@@ -110,7 +110,7 @@ class ReasoningEngine:
                 'error': str(e)
             }
     
-    def _analyze_problem(self, problem: str, context: dict) -> Tuple[str, List[str]]:
+    def _analyze_problem(self, problem: str, _context: dict) -> Tuple[str, List[str]]:
         """تحليل نوع المشكلة واستخراج العناصر الرئيسية"""
         problem_lower = problem.lower()
         
@@ -146,7 +146,7 @@ class ReasoningEngine:
         
         return problem_type, key_elements
     
-    def _decompose_problem(self, problem: str, key_elements: List[str]) -> List[str]:
+    def _decompose_problem(self, problem: str, _key_elements: List[str]) -> List[str]:
         """تفكيك المشكلة إلى خطوات فرعية"""
         sub_problems = []
         
@@ -278,7 +278,7 @@ class ReasoningEngine:
             'notes': verification_notes
         }
     
-    def _generate_alternatives(self, problem: str, context: dict, main_solution: Any) -> List[dict]:
+    def _generate_alternatives(self, _problem: str, _context: dict, main_solution: Any) -> List[dict]:
         """توليد حلول بديلة"""
         alternatives = []
         
@@ -300,7 +300,7 @@ class ReasoningEngine:
         
         return alternatives
     
-    def chain_of_thought(self, question: str, data: dict = None) -> dict:
+    def chain_of_thought(self, question: str, data: Optional[dict] = None) -> dict:
         """
         Chain of Thought Reasoning (طريقة DeepSeek)
         

@@ -12,7 +12,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class ConversationManager:
             'simple': 'بسيط ومباشر'
         }
     
-    def start_conversation(self, user_id: int, user_info: dict = None) -> dict:
+    def start_conversation(self, user_id: int, user_info: Optional[dict] = None) -> dict:
         """بدء محادثة جديدة"""
         self.active_conversations[user_id] = {
             'user_id': user_id,
@@ -191,7 +191,7 @@ class ConversationManager:
         if len(conversation['context']['intent_history']) > 10:
             conversation['context']['intent_history'] = conversation['context']['intent_history'][-10:]
     
-    def _generate_response(self, user_id: int, message: str, intent: str, entities: dict) -> dict:
+    def _generate_response(self, user_id: int, _message: str, intent: str, _entities: dict) -> dict:
         """توليد الرد المناسب"""
         conversation = self.active_conversations[user_id]
         style = conversation.get('style', 'professional')
@@ -243,7 +243,7 @@ class ConversationManager:
             'style': style
         }
     
-    def _generate_suggestions(self, intent: str, entities: dict) -> List[str]:
+    def _generate_suggestions(self, intent: str, _entities: dict) -> List[str]:
         """توليد اقتراحات للمتابعة"""
         suggestions = []
         

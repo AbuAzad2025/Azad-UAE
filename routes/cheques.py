@@ -368,7 +368,7 @@ def create():
 @cheques_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_payments')
-def view(id):
+def view(id):  # noqa: A002
     """عرض تفاصيل الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -384,7 +384,7 @@ def view(id):
 @cheques_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_payments')
-def edit(id):
+def edit(id):  # noqa: A002
     """تعديل الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -473,7 +473,7 @@ def edit(id):
 @cheques_bp.route('/<int:id>/deposit', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def deposit_cheque(id):
+def deposit_cheque(id):  # noqa: A002
     """إيداع الشيك في البنك - الخطوة 1"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -502,7 +502,7 @@ def deposit_cheque(id):
 @cheques_bp.route('/<int:id>/clear', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def clear_cheque(id):
+def clear_cheque(id):  # noqa: A002
     """تأكيد صرف الشيك من البنك - الخطوة 2 - المحاسبة الفعلية"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -552,7 +552,7 @@ def clear_cheque(id):
 @cheques_bp.route('/<int:id>/bounce', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def bounce_cheque(id):
+def bounce_cheque(id):  # noqa: A002
     """رفض الشيك من البنك - إرجاع الدين"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -583,7 +583,7 @@ def bounce_cheque(id):
 @cheques_bp.route('/<int:id>/cancel', methods=['POST'])
 @login_required
 @admin_required
-def cancel(id):
+def cancel(id):  # noqa: A002
     """إلغاء الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -611,7 +611,7 @@ def cancel(id):
 @cheques_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @admin_required
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (أرشفة) الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
@@ -667,7 +667,7 @@ def delete(id):
 @cheques_bp.route('/<int:id>/restore', methods=['POST'])
 @login_required
 @admin_required
-def restore(id):
+def restore(id):  # noqa: A002
     """استعادة شيك من الأرشيف"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):

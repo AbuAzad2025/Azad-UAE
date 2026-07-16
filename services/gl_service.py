@@ -674,7 +674,7 @@ class GLService:
         from utils.gl_reference_types import ref_variants
 
         if not reference_type or reference_id is None:
-            return
+            return None
         variants = ref_variants(reference_type)
         query = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type.in_(variants),

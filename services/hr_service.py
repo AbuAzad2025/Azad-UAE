@@ -294,7 +294,7 @@ class PayrollEngine:
             rate = Decimal(str(daily_rate))
             if days_worked is not None:
                 earned = rate * Decimal(str(days_worked))
-            elif raw_basic > 0 and raw_basic <= Decimal('31'):
+            elif 0 < raw_basic <= Decimal('31'):
                 earned = rate * raw_basic
             else:
                 earned = raw_basic

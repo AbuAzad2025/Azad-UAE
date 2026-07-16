@@ -220,7 +220,7 @@ def create():
 @users_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_users')
-def view(id):
+def view(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
     if tid is not None:
@@ -234,7 +234,7 @@ def view(id):
 @login_required
 @permission_required('manage_users')
 @limiter.limit("10 per minute", methods=['POST'])
-def edit(id):
+def edit(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
     if tid is not None:
@@ -296,7 +296,7 @@ def edit(id):
 @users_bp.route('/<int:id>/toggle-active', methods=['POST'])
 @login_required
 @permission_required('manage_users')
-def toggle_active(id):
+def toggle_active(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
     if tid is not None:
@@ -317,7 +317,7 @@ def toggle_active(id):
 @users_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_users')
-def delete(id):
+def delete(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
     if tid is not None:

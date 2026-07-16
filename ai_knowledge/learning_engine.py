@@ -4,6 +4,7 @@ Re-exports from ai_knowledge.learning sub-package (single source of truth).
 """
 
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,10 @@ class QuickLearner:
             QuickLearner._klass = _QL
         return QuickLearner._klass()
 
-    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: int = None):
+    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: Optional[int] = None):
         return self._impl().learn(question, answer, category, tenant_id)
 
-    def get_answer(self, question: str, tenant_id: int = None):
+    def get_answer(self, question: str, tenant_id: Optional[int] = None):
         return self._impl().get_answer(question, tenant_id)
 
     def save_knowledge(self):

@@ -93,7 +93,7 @@ class IntelligentAssistant:
             self._context_engine = context_engine
         return self._context_engine
     
-    def process(self, message: str, user_id: int = None, context: dict = None) -> Dict:
+    def process(self, message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> Dict:
         """
         معالجة ذكية كاملة للرسالة
         
@@ -234,7 +234,7 @@ class IntelligentAssistant:
         
         return entities
     
-    def _collect_real_data(self, intent: str, entities: Dict, user_id: int) -> Dict:
+    def _collect_real_data(self, intent: str, entities: Dict, _user_id: int) -> Dict:
         """جمع البيانات الحقيقية من النظام"""
         try:
             from models import Sale, Customer, Product, Payment
@@ -331,7 +331,7 @@ class IntelligentAssistant:
             logger.error(f"Data collection failed: {e}")
             return {}
     
-    def _analyze_and_reason(self, intent: str, data: Dict, context: Dict) -> Dict:
+    def _analyze_and_reason(self, intent: str, data: Dict, _context: Dict) -> Dict:
         """التحليل والاستنتاج المنطقي"""
         try:
             analysis = {
@@ -414,7 +414,7 @@ class IntelligentAssistant:
             logger.error(f"Analysis failed: {e}")
             return {'insights': [], 'warnings': [], 'recommendations': []}
     
-    def _generate_dynamic_response(self, intent: str, analysis: Dict, entities: Dict, data: Dict) -> str:
+    def _generate_dynamic_response(self, intent: str, analysis: Dict, _entities: Dict, data: Dict) -> str:
         """توليد رد ديناميكي - ليس مسبق الحفظ"""
         try:
             # بناء الرد بناءً على البيانات الحقيقية
@@ -552,7 +552,7 @@ class IntelligentAssistant:
         except Exception as e:
             logger.error(f"Learning failed: {e}")
     
-    def _generate_help_response(self, message: str) -> Dict:
+    def _generate_help_response(self, _message: str) -> Dict:
         """رد المساعدة عند عدم الفهم"""
         return {
             'success': True,
@@ -574,7 +574,7 @@ intelligent_assistant = IntelligentAssistant()
 
 
 # دالة مساعدة
-def intelligent_response(message: str, user_id: int = None, context: dict = None) -> str:
+def intelligent_response(message: str, user_id: Optional[int] = None, context: Optional[dict] = None) -> str:
     """الحصول على رد ذكي"""
     result = intelligent_assistant.process(message, user_id, context)
     return result.get('response', 'عذراً، حدث خطأ')

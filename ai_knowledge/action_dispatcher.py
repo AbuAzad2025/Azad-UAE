@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Callable
 
@@ -104,7 +104,7 @@ def _log_ai_error(error_type: str, message: str, endpoint: str = "ai_chat",
             user_id=getattr(current_user, 'id', None),
             request_data=request_data or {},
             traceback="",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
         db.session.add(log)
         db.session.flush()
@@ -273,7 +273,7 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
-        def _check_stock(args: dict) -> ActionResult:
+        def _check_stock(_args: dict) -> ActionResult:
             try:
                 from models import Product
                 tid = _get_active_tenant_id()
@@ -326,7 +326,7 @@ class ActionDispatcher:
                 _log_ai_error("sale_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء الفاتورة: {str(e)[:100]}")
 
-        def _list_sales(args: dict) -> ActionResult:
+        def _list_sales(_args: dict) -> ActionResult:
             try:
                 from models import Sale
                 tid = _get_active_tenant_id()
@@ -382,7 +382,7 @@ class ActionDispatcher:
                 expense = Expense(
                     tenant_id=tid, description=description,
                     amount=amount, currency="AED", amount_aed=amount,
-                    expense_date=datetime.utcnow(),
+                    expense_date=datetime.now(timezone.utc),
                     payment_method=args.get("method", "cash"),
                     category_id=args.get("category_id"),
                     branch_id=args.get("branch_id"),
@@ -426,11 +426,10 @@ class ActionDispatcher:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
         # ===== REPORTS =====
-        def _sales_summary(args: dict) -> ActionResult:
+        def _sales_summary(_args: dict) -> ActionResult:
             try:
                 from models import Sale
                 tid = _get_active_tenant_id()
-                today = datetime.utcnow().date()
                 total = db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))\
                     .filter(Sale.tenant_id == tid, Sale.status == "active").scalar()
                 count = Sale.query.filter_by(
@@ -442,7 +441,7 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
-        def _profit_summary(args: dict) -> ActionResult:
+        def _profit_summary(_args: dict) -> ActionResult:
             try:
                 from models import Sale, SaleLine, Product
                 tid = _get_active_tenant_id()
@@ -623,11 +622,11 @@ class ActionDispatcher:
         # رصيد: اسم العميل or balance: customer name
         m = re.match(r'^(رصيد|balance)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
-            return ("customer_balance", {"name": m.group(2).strip()})
+            return "customer_balance", {"name": m.group(2).strip()}
 
         # عرض العملاء / show customers
         if re.search(r'^(عرض|ارني|شوف|show|list)\s*(كل\s*)?(العملاء|الزبائن|customers)', msg, re.IGNORECASE):
-            return ("list_customers", {})
+            return "list_customers", {}
 
         # ===== PRODUCT OPERATIONS =====
         # منتج: الاسم, السعر, الكمية
@@ -642,41 +641,43 @@ class ActionDispatcher:
 
         # عرض المنتجات / show products
         if re.search(r'^(عرض|ارني|شوف|show|list)\s*(كل\s*)?(المنتجات|products)', msg, re.IGNORECASE):
-            return ("list_products", {})
+            return "list_products", {}
 
         # فحص المخزون / stock check
         if re.search(r'(فحص|check|low\s*stock|المخزون|نقص|منخفض)', msg, re.IGNORECASE):
-            return ("check_stock", {})
+            return "check_stock", {}
 
         # ===== SALE OPERATIONS =====
         # فاتورة: اسم العميل, اسم المنتج, الكمية
         m = re.match(r'^(فاتورة|sale|invoice|بيع)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
+            qty_m = re.search(r'\d+', parts[2]) if len(parts) > 2 else None
             return ("create_sale", {
                 "customer_name": parts[0] if len(parts) > 0 else "",
                 "product_name": parts[1] if len(parts) > 1 else "",
-                "quantity": int(re.search(r'\d+', parts[2]).group()) if len(parts) > 2 and re.search(r'\d+', parts[2]) else 1,
+                "quantity": int(qty_m.group()) if qty_m else 1,
                 "payment_method": parts[3] if len(parts) > 3 else "cash",
             })
 
         # عرض الفواتير / show sales
         if re.search(r'^(عرض|ارني|شوف|show|list)\s*(كل\s*)?(الفواتير|المبيعات|sales|invoices)', msg, re.IGNORECASE):
-            return ("list_sales", {})
+            return "list_sales", {}
 
         # ملخص المبيعات / sales summary
         if re.search(r'(ملخص|تقرير|summary|report)\s*(المبيعات|المبيعات)', msg, re.IGNORECASE) or \
            re.search(r'(المبيعات|sales)\s*(ملخص|تقرير|summary|report)', msg, re.IGNORECASE):
-            return ("sales_summary", {})
+            return "sales_summary", {}
 
         # ===== PAYMENT OPERATIONS =====
         # استلام: اسم العميل, المبلغ
         m = re.match(r'^(استلام|قبض|payment|receive)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
+            amt_m = re.search(r'[\d.]+', parts[1]) if len(parts) > 1 else None
             return ("receive_payment", {
                 "customer_name": parts[0] if len(parts) > 0 else "",
-                "amount": float(re.search(r'[\d.]+', parts[1]).group()) if len(parts) > 1 and re.search(r'[\d.]+', parts[1]) else 0,
+                "amount": float(amt_m.group()) if amt_m else 0,
                 "method": parts[2] if len(parts) > 2 else "cash",
             })
 
@@ -685,9 +686,10 @@ class ActionDispatcher:
         m = re.match(r'^(مصروف|expense)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
+            amt_m = re.search(r'[\d.]+', parts[1]) if len(parts) > 1 else None
             return ("add_expense", {
                 "description": parts[0] if len(parts) > 0 else "",
-                "amount": float(re.search(r'[\d.]+', parts[1]).group()) if len(parts) > 1 and re.search(r'[\d.]+', parts[1]) else 0,
+                "amount": float(amt_m.group()) if amt_m else 0,
             })
 
         # ===== SUPPLIER OPERATIONS =====
@@ -706,10 +708,11 @@ class ActionDispatcher:
         m = re.match(r'^(موظف|employee)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
+            sal_m = re.search(r'[\d.]+', parts[2]) if len(parts) > 2 else None
             return ("create_employee", {
                 "name": parts[0] if len(parts) > 0 else "",
                 "phone": parts[1] if len(parts) > 1 else "",
-                "salary": float(re.search(r'[\d.]+', parts[2]).group()) if len(parts) > 2 and re.search(r'[\d.]+', parts[2]) else 0,
+                "salary": float(sal_m.group()) if sal_m else 0,
             })
 
         # ===== PURCHASE OPERATIONS =====
@@ -717,24 +720,25 @@ class ActionDispatcher:
         m = re.match(r'^(أمر\s*شراء|شراء|purchase|order)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
         if m:
             parts = [p.strip() for p in m.group(2).split(",")]
+            qty_m = re.search(r'\d+', parts[2]) if len(parts) > 2 else None
             return ("create_purchase", {
                 "supplier_name": parts[0] if len(parts) > 0 else "",
                 "product_name": parts[1] if len(parts) > 1 else "",
-                "quantity": int(re.search(r'\d+', parts[2]).group()) if len(parts) > 2 and re.search(r'\d+', parts[2]) else 1,
+                "quantity": int(qty_m.group()) if qty_m else 1,
             })
 
         # ===== PROFIT / REPORTS =====
         if re.search(r'(أرباح|ربح|profit|هامش|margin)', msg, re.IGNORECASE) and \
            re.search(r'(تقرير|ملخص|summary|report|تحليل|analysis)', msg, re.IGNORECASE):
-            return ("profit_summary", {})
+            return "profit_summary", {}
 
         # ===== GREETINGS =====
         if re.search(r'^(مرحبا|اهلا|hello|hi|السلام عليكم)', msg, re.IGNORECASE):
-            return ("greeting", {"name": getattr(current_user, 'full_name', "") or ""})
+            return "greeting", {"name": getattr(current_user, 'full_name', "") or ""}
 
         # ===== HELP =====
         if re.search(r'^(مساعدة|help|اوامر|commands|مساعدة|what can you do)', msg, re.IGNORECASE):
-            return ("help", {})
+            return "help", {}
 
         return None
 

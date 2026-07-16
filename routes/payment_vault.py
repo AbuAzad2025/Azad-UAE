@@ -1088,6 +1088,7 @@ def api_create_purchase():
         
         # تحويل إلى Bitcoin عبر NOWPayments (إلا إذا كان تحويل بنكي)
         payment_result = {'success': False}
+        crypto_currency = None
         
         if purchase.payment_method != 'bank':
             nowpayments = NOWPaymentsService()
@@ -1170,7 +1171,7 @@ def api_create_purchase():
             response_data.update({
                 'payment_address': payment_result.get('pay_address'),
                 'payment_amount': payment_result.get('pay_amount'),
-                'crypto_currency': crypto_currency.upper(),
+                'crypto_currency': crypto_currency.upper() if crypto_currency else None,
                 'payment_id': payment_result.get('payment_id'),
                 'payment_url': payment_result.get('invoice_url')
             })
@@ -1294,7 +1295,7 @@ def api_create_donation():
             response_data.update({
                 'payment_address': payment_result.get('pay_address'),
                 'payment_amount': payment_result.get('pay_amount'),
-                'crypto_currency': crypto_currency.upper(),
+                'crypto_currency': crypto_currency.upper() if crypto_currency else None,
                 'payment_id': payment_result.get('payment_id'),
                 'payment_url': payment_result.get('invoice_url')
             })
@@ -1353,7 +1354,7 @@ def view_purchases():
 
 @payment_vault_bp.route('/purchase/<int:id>')
 @owner_only
-def purchase_detail(id):
+def purchase_detail(id):  # noqa: A002
     """تفاصيل عملية شراء"""
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
@@ -1365,7 +1366,7 @@ def purchase_detail(id):
 
 @payment_vault_bp.route('/purchase/<int:id>/activate', methods=['POST'])
 @owner_only
-def activate_purchase(id):
+def activate_purchase(id):  # noqa: A002
     """تفعيل عملية شراء"""
     purchase = PackagePurchase.query.get_or_404(id)
     

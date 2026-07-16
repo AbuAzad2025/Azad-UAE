@@ -184,7 +184,7 @@ def add_account():
 @admin_ledger_bp.route('/accounts/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def edit_account(id):
+def edit_account(id):  # noqa: A002
     """تعديل حساب محاسبي"""
     account = _accounts().filter_by(id=id).first_or_404()
     
@@ -229,7 +229,7 @@ def edit_account(id):
 @admin_ledger_bp.route('/accounts/<int:id>/delete', methods=['POST'])
 @login_required
 @admin_required
-def delete_account(id):
+def delete_account(id):  # noqa: A002
     """حذف حساب محاسبي"""
     account = _accounts().filter_by(id=id).first_or_404()
     
@@ -281,7 +281,7 @@ def journals_management():
 @admin_ledger_bp.route('/journals/<int:id>/view')
 @login_required
 @admin_required
-def view_journal(id):
+def view_journal(id):  # noqa: A002
     """عرض تفاصيل قيد محاسبي"""
     entry = _entries().filter_by(id=id).first_or_404()
     return render_template('admin/ledger/view_journal.html', entry=entry)
@@ -289,7 +289,7 @@ def view_journal(id):
 @admin_ledger_bp.route('/journals/<int:id>/reverse', methods=['POST'])
 @login_required
 @admin_required
-def reverse_journal(id):
+def reverse_journal(id):  # noqa: A002
     """عكس قيد محاسبي"""
     entry = _entries().filter_by(id=id).first_or_404()
     

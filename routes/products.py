@@ -414,7 +414,7 @@ def import_products():
                 df.rename(columns=column_map, inplace=True)
                 
                 # Validate minimal columns
-                if not set(['name', 'price']).issubset(df.columns):
+                if not {'name', 'price'}.issubset(df.columns):
                     flash('الملف يفتقد للأعمدة المطلوبة: اسم المنتج وسعر البيع. تأكد من أن الملف يحتوي على هذه الأعمدة.', 'warning')
                     return redirect(request.url)
                 
@@ -762,8 +762,8 @@ def create():
                     warranty_days = 0
                 
                 # Check tenant product limit
+                from utils.tenant_limits import check_products_limit, TenantLimitError
                 try:
-                    from utils.tenant_limits import check_products_limit, TenantLimitError
                     check_products_limit()
                 except TenantLimitError as e:
                     flash(str(e), 'warning')
@@ -884,7 +884,7 @@ def create():
 @products_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_products')
-def view(id):
+def view(id):  # noqa: A002
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return render_template('errors/403.html'), 403
@@ -905,7 +905,7 @@ def view(id):
 @products_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_products')
-def edit(id):
+def edit(id):  # noqa: A002
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return render_template('errors/403.html'), 403
@@ -1073,7 +1073,7 @@ def edit(id):
 @products_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_products')
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (إلغاء تفعيل) المنتج - soft delete"""
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
@@ -1237,7 +1237,7 @@ def create_category():
 @products_bp.route('/categories/<int:id>', methods=['GET'])
 @login_required
 @permission_required('manage_products')
-def get_category(id):
+def get_category(id):  # noqa: A002
     category = _tenant_category_or_404(id)
     return jsonify({'success': True, 'category': _category_json(category)})
 
@@ -1245,7 +1245,7 @@ def get_category(id):
 @products_bp.route('/categories/<int:id>/update', methods=['POST', 'PUT'])
 @login_required
 @permission_required('manage_products')
-def update_category(id):
+def update_category(id):  # noqa: A002
     try:
         category = _tenant_category_or_404(id)
         data = request.get_json(silent=True) if request.is_json else request.form
@@ -1291,7 +1291,7 @@ def update_category(id):
 @products_bp.route('/categories/<int:id>/delete', methods=['POST', 'DELETE'])
 @login_required
 @permission_required('manage_products')
-def delete_category(id):
+def delete_category(id):  # noqa: A002
     try:
         category = _tenant_category_or_404(id)
         tid = get_active_tenant_id(current_user)
@@ -1358,7 +1358,7 @@ def _wants_json():
 @products_bp.route('/<int:id>/adjust-stock', methods=['POST'])
 @login_required
 @permission_required('manage_products')
-def adjust_stock(id):
+def adjust_stock(id):  # noqa: A002
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return jsonify({'success': False, 'message': 'المنتج خارج نطاق الفرع الحالي'}), 403
@@ -1436,7 +1436,7 @@ def adjust_stock(id):
 @products_bp.route('/<int:id>/print-label')
 @login_required
 @permission_required('view_products')
-def print_label(id):
+def print_label(id):  # noqa: A002
     from services.label_print_service import get_single_label_html
     tenant_id = get_active_tenant_id(current_user)
     product = tenant_get_or_404(Product, id, tenant_id)

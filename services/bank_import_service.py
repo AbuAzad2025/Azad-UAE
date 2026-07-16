@@ -12,7 +12,7 @@ class BankImportService:
         return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
     @staticmethod
-    def import_bank_statement(tenant_id, bank_account_id, user_id, filename, file_content, format='ofx'):
+    def import_bank_statement(tenant_id, bank_account_id, user_id, filename, file_content, fmt='ofx'):
         """
         Parse and import bank statement lines
         """

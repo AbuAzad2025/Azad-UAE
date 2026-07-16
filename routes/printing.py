@@ -34,7 +34,7 @@ def _check_branch_scope(doc):
     return False
 
 
-def _get_filename(entry, doc, doc_type, id):
+def _get_filename(entry, doc, doc_type, id):  # noqa: A002
     """Build a meaningful PDF filename from the registry entry and document."""
     attr = entry.get('filename_attr')
     if attr:
@@ -46,7 +46,7 @@ def _get_filename(entry, doc, doc_type, id):
 
 @printing_bp.route('/<doc_type>/<int:id>')
 @login_required
-def print_document(doc_type, id):
+def print_document(doc_type, id):  # noqa: A002
     """Generic print handler — dispatches to the correct template via PRINTABLE_DOCUMENTS registry."""
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
@@ -85,7 +85,7 @@ def print_document(doc_type, id):
 
 @printing_bp.route('/<doc_type>/<int:id>/pdf')
 @login_required
-def print_document_pdf(doc_type, id):
+def print_document_pdf(doc_type, id):  # noqa: A002
     """Generic PDF handler — renders a document as PDF download via the PRINTABLE_DOCUMENTS registry."""
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)

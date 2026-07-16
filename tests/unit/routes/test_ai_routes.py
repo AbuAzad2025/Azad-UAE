@@ -1693,13 +1693,6 @@ class TestProductTenantIsolation:
         assert resp.status_code == 404
 
 
-def _obj(**attrs):
-    o = MagicMock()
-    for k, v in attrs.items():
-        setattr(o, k, v)
-    return o
-
-
 def _run_action(message, user, ctx):
     from routes.ai_routes import _process_user_action
     with patch("routes.ai_routes.actions._conversation_ctx", return_value=ctx), \

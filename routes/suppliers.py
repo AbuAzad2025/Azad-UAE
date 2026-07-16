@@ -185,8 +185,8 @@ def create():
             initial_balance = request.form.get('initial_balance', type=float, default=0)
 
             # Check tenant supplier limit
+            from utils.tenant_limits import check_suppliers_limit, TenantLimitError
             try:
-                from utils.tenant_limits import check_suppliers_limit, TenantLimitError
                 check_suppliers_limit()
             except TenantLimitError as e:
                 flash(str(e), 'warning')
@@ -254,7 +254,7 @@ def create():
 @suppliers_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_suppliers')
-def view(id):
+def view(id):  # noqa: A002
     """عرض تفاصيل المورد"""
     supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
@@ -287,7 +287,7 @@ def view(id):
 @suppliers_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_suppliers')
-def edit(id):
+def edit(id):  # noqa: A002
     """تعديل المورد"""
     supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
@@ -346,7 +346,7 @@ def edit(id):
 @suppliers_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_suppliers')
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (إلغاء تفعيل) المورد"""
     supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
@@ -393,7 +393,7 @@ def delete(id):
 @suppliers_bp.route('/<int:id>/statement')
 @login_required
 @admin_required
-def statement(id):
+def statement(id):  # noqa: A002
     """كشف حساب المورد مع الرصيد الجاري والتصفية حسب التاريخ"""
     from datetime import datetime, date as date_type
 

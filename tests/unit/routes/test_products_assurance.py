@@ -46,16 +46,6 @@ def products_import_app(app_factory, bypass_product_auth, upload_dir):
     return app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
 
 
-@pytest.fixture
-def products_import_app(app_factory, bypass_product_auth, upload_dir):
-    from routes.products import products_bp
-
-    return app_factory(
-        products_bp,
-        config_overrides={"UPLOAD_FOLDER": upload_dir},
-    )
-
-
 # ---------------------------------------------------------------------------
 # Module-level helpers
 # ---------------------------------------------------------------------------

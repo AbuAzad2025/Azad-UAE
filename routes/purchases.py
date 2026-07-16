@@ -127,7 +127,7 @@ def create():
             flash(f'⚠️ {str(e)}', 'warning')
         except Exception as e:
             current_app.logger.error(f"Error in purchase creation: {str(e)}")
-            current_app.logger.error(f"Error type: {type(e)}")
+            current_app.logger.error(f"Error type: {type(e).__name__}")
             import traceback
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
@@ -155,7 +155,7 @@ def create():
 @purchases_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_purchases')
-def view(id):
+def view(id):  # noqa: A002
     purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
@@ -167,7 +167,7 @@ def view(id):
 @purchases_bp.route('/<int:id>/print')
 @login_required
 @permission_required('manage_purchases')
-def print_purchase(id):
+def print_purchase(id):  # noqa: A002
     purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
@@ -201,7 +201,7 @@ def print_purchase(id):
 @purchases_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_purchases')
-def edit(id):
+def edit(id):  # noqa: A002
     """تعديل فاتورة شراء - الملاحظات والخصم فقط"""
     purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
@@ -235,7 +235,7 @@ def edit(id):
 @purchases_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_purchases')
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (أرشفة) فاتورة شراء"""
     from services.archive_service import ArchiveService
     from models import Payment, Cheque, GLJournalEntry, PurchaseLine
@@ -322,7 +322,7 @@ def delete(id):
 @purchases_bp.route('/<int:id>/cancel', methods=['POST'])
 @login_required
 @permission_required('manage_purchases')
-def cancel(id):
+def cancel(id):  # noqa: A002
     """إلغاء فاتورة شراء مع عكس القيد المحاسبي والمخزون ورصيد المورد"""
     purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
@@ -346,7 +346,7 @@ def cancel(id):
 @purchases_bp.route('/<int:id>/return', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_purchases')
-def purchase_return(id):
+def purchase_return(id):  # noqa: A002
     """إنشاء مرتجع مشتريات"""
     purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
@@ -399,8 +399,8 @@ def purchase_return(id):
 @permission_required('manage_purchases')
 def api_calculate_purchase_totals():
     """API لحساب إجماليات فاتورة المشتريات - Backend Calculation"""
+    from flask import jsonify
     try:
-        from flask import jsonify
         
         data = request.get_json(force=True)
         if not data:

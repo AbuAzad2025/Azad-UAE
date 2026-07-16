@@ -259,7 +259,7 @@ class AzadPlatformFeeService:
         total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
         if total <= Decimal('0'):
             raise ValueError('Total payout amount is zero.')
-        txn_id = f'PLATFORM-SETTLE-{generate_number("SETT")}'
+        txn_id = f'PLATFORM-SETTLE-{generate_number("SETT", PaymentTransaction, "transaction_id")}'
         txn = PaymentTransaction(
             transaction_id=txn_id,
             amount_usd=float(total),

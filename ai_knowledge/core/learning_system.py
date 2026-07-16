@@ -28,6 +28,7 @@ class AzadLearningSystem:
         self.interactions = self._load_interactions()
         self.patterns = self._load_patterns()
         self.feedback_log = self._load_feedback()
+        self.groq_training_log = []
 
     @staticmethod
     def _default_knowledge():
@@ -572,9 +573,6 @@ class AzadLearningSystem:
                 'timestamp': learning_data['timestamp'],
                 'improvements': self._analyze_improvements(local_answer, groq_answer)
             }
-            
-            if not hasattr(self, 'groq_training_log'):
-                self.groq_training_log = []
             
             self.groq_training_log.append(comparison)
             

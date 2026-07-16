@@ -253,7 +253,7 @@ def create():
 @expenses_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_expenses')
-def view(id):
+def view(id):  # noqa: A002
     expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
@@ -263,7 +263,7 @@ def view(id):
 @expenses_bp.route('/<int:id>/print')
 @login_required
 @permission_required('manage_expenses')
-def print_expense(id):
+def print_expense(id):  # noqa: A002
     expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
@@ -279,7 +279,7 @@ def print_expense(id):
 @expenses_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_expenses')
-def edit(id):
+def edit(id):  # noqa: A002
     """تعديل مصروف"""
     expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
@@ -377,7 +377,7 @@ def edit(id):
 @expenses_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_expenses')
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (أرشفة) المصروف"""
     from models import Cheque, GLJournalEntry
     from services.archive_service import ArchiveService
@@ -431,7 +431,7 @@ def delete(id):
 @expenses_bp.route('/<int:id>/cancel', methods=['POST'])
 @login_required
 @permission_required('manage_expenses')
-def cancel(id):
+def cancel(id):  # noqa: A002
     """إلغاء مصروف — عكس القيد المحاسبي وتحديث حالة الشيك"""
     from models import Cheque, GLJournalEntry
     from utils.gl_tenant import reverse_document_gl
@@ -600,7 +600,7 @@ def archived():
 @expenses_bp.route('/<int:id>/archive', methods=['POST'])
 @login_required
 @permission_required('manage_expenses')
-def archive(id):
+def archive(id):  # noqa: A002
     """أرشفة مصروف"""
     from services.archive_service import ArchiveService
     
@@ -622,7 +622,7 @@ def archive(id):
 @expenses_bp.route('/<int:id>/restore', methods=['POST'])
 @login_required
 @permission_required('manage_expenses')
-def restore(id):
+def restore(id):  # noqa: A002
     """استعادة مصروف من الأرشيف"""
     from models import ArchivedRecord
     

@@ -1,6 +1,7 @@
 """Persist conversation context in DB instead of a global dict."""
 from datetime import datetime, timezone, timedelta
 import json
+from typing import Optional
 from extensions import db
 from models.ai import AiMemory
 
@@ -9,7 +10,7 @@ def _get_ctx_key(user_id: int) -> str:
     return f"conversation_context:{user_id}"
 
 
-def get_context(user_id: int, tenant_id: int = None):
+def get_context(user_id: int, tenant_id: Optional[int] = None):
     """Retrieve saved conversation context from DB."""
     mem = AiMemory.query.filter_by(
         key=_get_ctx_key(user_id),
@@ -38,7 +39,7 @@ def get_context(user_id: int, tenant_id: int = None):
         return None
 
 
-def set_context(user_id: int, data: dict, tenant_id: int = None):
+def set_context(user_id: int, data: dict, tenant_id: Optional[int] = None):
     """Persist conversation context in DB."""
     key = _get_ctx_key(user_id)
     mem = AiMemory.query.filter_by(
@@ -64,7 +65,7 @@ def set_context(user_id: int, data: dict, tenant_id: int = None):
     db.session.flush()
 
 
-def clear_context(user_id: int, tenant_id: int = None):
+def clear_context(user_id: int, tenant_id: Optional[int] = None):
     """Expire conversation context."""
     key = _get_ctx_key(user_id)
     mem = AiMemory.query.filter_by(

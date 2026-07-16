@@ -22,6 +22,8 @@ class CashFlowService:
         Args:
             period_start: تاريخ البداية (date أو string)
             period_end: تاريخ النهاية (date أو string)
+            branch_id: معرف الفرع
+            tenant_id: معرف المستأجر
         
         Returns:
             dict: قائمة التدفقات النقدية الكاملة

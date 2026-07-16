@@ -620,11 +620,11 @@ def get_model_info(model_name: str) -> dict | None:
     for key, val in MODELS.items():
         if key.lower() == model_name.lower():
             return val
-        if val["table"].lower() == model_name.lower():
+        if val["table"].lower() == model_name.lower():  # type: ignore[index]
             return {**val, "_key": key}
     # Try partial match
     for key, val in MODELS.items():
-        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():
+        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():  # type: ignore[index]
             return {**val, "_key": key}
     return None
 
@@ -649,7 +649,7 @@ def search_knowledge(query: str) -> list[dict]:
 
     # Search models
     for name, info in MODELS.items():
-        if q in name.lower() or q in info["table"].lower() or q in info["name_ar"]:
+        if q in name.lower() or q in info["table"].lower() or q in info["name_ar"]:  # type: ignore[index]
             results.append({"type": "model", "name": name, "info": info})
 
     # Search permissions

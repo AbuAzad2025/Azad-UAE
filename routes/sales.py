@@ -242,7 +242,7 @@ def create():
 @sales_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_sales')
-def view(id):
+def view(id):  # noqa: A002
     sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
@@ -260,7 +260,7 @@ def view(id):
 @sales_bp.route('/<int:id>/print')
 @login_required
 @permission_required('manage_sales')
-def print_invoice(id):
+def print_invoice(id):  # noqa: A002
     sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
@@ -349,7 +349,7 @@ def print_invoice(id):
 @sales_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_sales')
-def edit(id):
+def edit(id):  # noqa: A002
     """تعديل فاتورة - فقط الفواتير غير المدفوعة وغير الملغاة"""
     sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
@@ -395,7 +395,7 @@ def edit(id):
 @sales_bp.route('/<int:id>/cancel', methods=['POST'])
 @login_required
 @permission_required('manage_sales')
-def cancel(id):
+def cancel(id):  # noqa: A002
     if current_user.is_seller():
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.permission_denied('إلغاء الفواتير'), 'danger')
@@ -491,7 +491,7 @@ def archived():
 @sales_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_sales')
-def delete(id):
+def delete(id):  # noqa: A002
     """حذف (أرشفة) فاتورة مبيعات — يُسمح فقط للحذف المادي للفواتير غير المُرحلة (draft/pending)"""
     if not current_user.is_owner:
         from utils.error_messages import ErrorMessages
@@ -556,7 +556,7 @@ def delete(id):
 @sales_bp.route('/<int:id>/archive', methods=['POST'])
 @login_required
 @permission_required('manage_sales')
-def archive(id):
+def archive(id):  # noqa: A002
     """أرشفة فاتورة — يتطلب إلغاء كامل للفواتير المؤكدة/المنفذة مخزنياً"""
     from services.archive_service import ArchiveService
     from services.sale_service import SaleService
@@ -583,7 +583,7 @@ def archive(id):
 @sales_bp.route('/<int:id>/restore', methods=['POST'])
 @login_required
 @permission_required('manage_sales')
-def restore(id):
+def restore(id):  # noqa: A002
     """استعادة فاتورة من الأرشيف"""
     from models import ArchivedRecord
     

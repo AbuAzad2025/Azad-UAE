@@ -152,7 +152,7 @@ class AzadSelfImprovement:
         strengths = []
         
         for area, config in self.improvement_areas.items():
-            if config['current_score'] >= 8.5:
+            if config['current_score'] >= 8.5:  # type: ignore[operator]
                 strengths.append({
                     'area': area,
                     'score': config['current_score'],

@@ -418,7 +418,7 @@ def search_entities():
 @payments_bp.route('/payments/<int:id>')
 @login_required
 @permission_required('manage_payments')
-def view_payment(id):
+def view_payment(id):  # noqa: A002
     """عرض سند صرف - يستخدم نفس قالب سندات القبض"""
     from models import Payment
     payment = tenant_get_or_404(Payment, id)
@@ -431,7 +431,7 @@ def view_payment(id):
 @payments_bp.route('/payments/<int:id>/print')
 @login_required
 @permission_required('manage_payments')
-def print_payment(id):
+def print_payment(id):  # noqa: A002
     """طباعة سند صرف - يستخدم نفس قالب طباعة سندات القبض"""
     from models import Payment
     payment = tenant_get_or_404(Payment, id)
@@ -492,7 +492,7 @@ def print_payment(id):
 @payments_bp.route('/payments/<int:id>/archive', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def archive_payment(id):
+def archive_payment(id):  # noqa: A002
     """أرشفة سند صرف"""
     from models import Payment
     from services.archive_service import ArchiveService
@@ -518,7 +518,7 @@ def archive_payment(id):
 @payments_bp.route('/payments/<int:id>/restore', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def restore_payment(id):
+def restore_payment(id):  # noqa: A002
     """استعادة سند صرف من الأرشيف"""
     from models import ArchivedRecord, Payment
 
@@ -1037,7 +1037,7 @@ def create_receipt():
 @payments_bp.route('/receipts/<int:id>')
 @login_required
 @permission_required('manage_payments')
-def view_receipt(id):
+def view_receipt(id):  # noqa: A002
     receipt = tenant_get(Receipt, id, or_404=False)
     if not receipt:
         payment = tenant_get(Payment, id, or_404=False)
@@ -1062,7 +1062,7 @@ def view_receipt(id):
 @payments_bp.route('/receipts/<int:id>/print')
 @login_required
 @permission_required('manage_payments')
-def print_receipt(id):
+def print_receipt(id):  # noqa: A002
     receipt = tenant_get(Receipt, id, or_404=False)
     if receipt:
         if not assert_tenant_record(receipt):
@@ -1238,7 +1238,7 @@ def archived_receipts():
 @payments_bp.route('/receipts/<int:id>/archive', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def archive_receipt(id):
+def archive_receipt(id):  # noqa: A002
     """أرشفة سند قبض"""
     from services.archive_service import ArchiveService
 
@@ -1260,7 +1260,7 @@ def archive_receipt(id):
 @payments_bp.route('/receipts/<int:id>/restore', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def restore_receipt(id):
+def restore_receipt(id):  # noqa: A002
     """استعادة سند قبض من الأرشيف"""
     from models import ArchivedRecord
 
@@ -1288,7 +1288,7 @@ def restore_receipt(id):
 @payments_bp.route('/receipts/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def delete_receipt(id):
+def delete_receipt(id):  # noqa: A002
     """حذف أو أرشفة سند قبض"""
     from models import Receipt, Cheque
     from services.archive_service import ArchiveService
@@ -1371,7 +1371,7 @@ def delete_receipt(id):
 @payments_bp.route('/payments/<int:id>/delete', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def delete_payment(id):
+def delete_payment(id):  # noqa: A002
     """حذف أو أرشفة سند صرف"""
     from decimal import Decimal
     from models import Payment, Cheque

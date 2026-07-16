@@ -12,7 +12,7 @@ class QuickLearner:
     def __init__(self):
         pass
 
-    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: int = None):
+    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: Optional[int] = None):
         """تعلم معلومة جديدة وحفظها في قاعدة البيانات."""
         from extensions import db
         from models.ai import AiMemory
@@ -36,7 +36,7 @@ class QuickLearner:
         db.session.flush()
         return True
 
-    def get_answer(self, question: str, tenant_id: int = None) -> Optional[str]:
+    def get_answer(self, question: str, tenant_id: Optional[int] = None) -> Optional[str]:
         """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
         from extensions import db
         from models.ai import AiMemory

@@ -208,7 +208,7 @@ def process_payroll():
 @payroll_bp.route('/slip/<int:id>')
 @login_required
 @permission_required('manage_payroll')
-def salary_slip(id):
+def salary_slip(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     transaction_query = PayrollTransaction.query.filter_by(id=id)
     if tid is not None:
@@ -223,7 +223,7 @@ def salary_slip(id):
 @payroll_bp.route('/statement/<int:id>')
 @login_required
 @permission_required('manage_payroll')
-def statement(id):
+def statement(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     employee_query = Employee.query.filter_by(id=id)
     if tid is not None:

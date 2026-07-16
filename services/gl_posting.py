@@ -44,6 +44,16 @@ def post_or_fail(
     - Only then can be posted to GL
 
     Args:
+        lines: صفحات القيد المحاسبي
+        description: وصف القيد
+        reference_type: نوع المرجع
+        reference_id: رقم المرجع
+        date: تاريخ القيد
+        currency: العملة
+        exchange_rate: سعر الصرف
+        branch_id: معرف الفرع
+        user_id: معرف المستخدم
+        tenant_id: معرف المستأجر
         commit: If False (default), the caller owns the transaction boundary.
                 Use True for standalone calls (e.g. admin UI journal entry)
                 that are not wrapped in an outer atomic_transaction.

@@ -55,9 +55,9 @@ def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency=None, 
     if to_currency is None:
         to_currency = get_system_default_currency()
     return ExchangeRateService.resolve_exchange_rate_for_transaction(
-        transaction_date=transaction_date,
         from_currency=from_currency,
         to_currency=to_currency,
+        effective_date=transaction_date,
         tenant_id=tenant_id,
     )
 

@@ -629,7 +629,7 @@ def purchases():
     supplier_payments = {}
     pmt_query = tenant_query(Payment).filter(
         Payment.direction == 'outgoing',
-        Payment.supplier_id != None,
+        Payment.supplier_id.isnot(None),
         Payment.payment_confirmed == True
     )
     if tenant_id is not None:
@@ -1567,7 +1567,7 @@ def api_entity_search():
 @reports_bp.route('/entity_report_fragment/<type>/<id>')
 @login_required
 @permission_required('view_reports')
-def entity_report_fragment(type, id):
+def entity_report_fragment(type, id):  # noqa: A002
     try:
         from models import Receipt, Payment, PurchaseLine, Supplier
         scoped_branch_id = report_branch_scope_id()

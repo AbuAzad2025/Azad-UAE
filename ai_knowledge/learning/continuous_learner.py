@@ -19,7 +19,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+try:
+    from urllib3.util.retry import Retry
+except ImportError:
+    from requests.packages.urllib3.util.retry import Retry  # type: ignore[no-redef]
 from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
@@ -284,7 +287,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
     results = []
     if not svc:
         return results
-    memory = None
+    memory = None  # noqa: F841
     try:
         memory = svc.get_learning_system()
     except Exception as exc:

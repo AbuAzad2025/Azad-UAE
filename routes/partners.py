@@ -116,7 +116,7 @@ def create():
 @partners_bp.route('/<int:id>')
 @login_required
 @permission_required('view_reports')
-def view(id):
+def view(id):  # noqa: A002
     partner = tenant_query(Partner).filter_by(id=id).first_or_404()
     tid = _tenant_id()
 
@@ -146,7 +146,7 @@ def view(id):
 @partners_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_users')
-def edit(id):
+def edit(id):  # noqa: A002
     partner = tenant_query(Partner).filter_by(id=id).first_or_404()
     from models import Branch, Warehouse
     branches = tenant_query(Branch).all()
@@ -197,7 +197,7 @@ def edit(id):
 @partners_bp.route('/<int:id>/statement')
 @login_required
 @permission_required('view_reports')
-def statement(id):
+def statement(id):  # noqa: A002
     partner = tenant_query(Partner).filter_by(id=id).first_or_404()
 
     end_date = _parse_date(request.args.get('end_date'))
@@ -296,7 +296,7 @@ def pay_distribution(dist_id):
 @partners_bp.route('/<int:id>/tx', methods=['POST'])
 @login_required
 @permission_required('manage_payments')
-def add_transaction(id):
+def add_transaction(id):  # noqa: A002
     """إضافة حركة يدوية (مسحوبات / استثمار إضافي / تسوية)"""
     try:
         tx_type = request.form.get('transaction_type')

@@ -49,6 +49,7 @@ class GLTreeBuilder:
         Args:
             tenant_id: معرف المستأجر
             cleanup_extra: إذا كان True، سيتم إيقاف الحسابات غير الموجودة في الشجرة الأساسية
+            commit: إذا كان True، يتم حفظ التغييرات في قاعدة البيانات
         Returns:
             dict: تقرير بالتغييرات التي تمت
         """

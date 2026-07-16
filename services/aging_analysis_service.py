@@ -20,6 +20,8 @@ class AgingAnalysisService:
         
         Args:
             as_of_date: التاريخ المرجعي (default: اليوم)
+            branch_id: معرف الفرع
+            tenant_id: معرف المستأجر
         
         Returns:
             {
@@ -46,7 +48,7 @@ class AgingAnalysisService:
         }
         
         # جميع العملاء النشطين
-        customers = tenant_query(Customer, tenant_id=tid).filter_by(is_active=True).order_by(Customer.name).all()
+        customers = tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
         
         for customer in customers:
             aging = {
@@ -165,7 +167,7 @@ class AgingAnalysisService:
         }
         
         # جميع الموردين النشطين
-        suppliers = tenant_query(Supplier, tenant_id=tid).filter_by(is_active=True).order_by(Supplier.name).all()
+        suppliers = tenant_query(Supplier).filter_by(is_active=True).order_by(Supplier.name).all()
         
         for supplier in suppliers:
             aging = {

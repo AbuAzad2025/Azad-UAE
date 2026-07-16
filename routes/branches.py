@@ -43,8 +43,8 @@ def create():
             return redirect(url_for('branches.create'))
 
         # Check tenant branch limit
+        from utils.tenant_limits import check_branches_limit, TenantLimitError
         try:
-            from utils.tenant_limits import check_branches_limit, TenantLimitError
             check_branches_limit()
         except TenantLimitError as e:
             flash(str(e), 'warning')
@@ -77,7 +77,7 @@ def create():
 @branches_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def edit(id):
+def edit(id):  # noqa: A002
     branch = tenant_get_or_404(Branch, id)
 
     if request.method == 'POST':
@@ -103,7 +103,7 @@ def edit(id):
 @branches_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 @admin_required
-def delete(id):
+def delete(id):  # noqa: A002
     branch = tenant_get_or_404(Branch, id)
 
     # Check for related data before deletion

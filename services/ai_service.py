@@ -830,7 +830,7 @@ class AIService:
         try:
             from ai_knowledge.system_knowledge import search_knowledge
             role_slug = current_user.role.slug if current_user and getattr(current_user, 'role', None) else None
-            sys_ctx = search_knowledge(message, user_role=role_slug)
+            sys_ctx = search_knowledge(message)
             if sys_ctx:
                 system_context = '\n📘 **معلومات النظام:**\n' + sys_ctx[:2000]
         except Exception:
@@ -851,7 +851,7 @@ class AIService:
         # ========== المرحلة 3: مسار المعرفة المضمنة (للأسئلة المعرفية) ==========
         try:
             from ai_knowledge.agents_core import ask_azad_enhanced
-            fast_path = ask_azad_enhanced(message, current_user=current_user)
+            fast_path = ask_azad_enhanced(message, user_id=user_id)
             if fast_path and fast_path.get('answer') and fast_path.get('source') != 'local':
                 return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
         except Exception:

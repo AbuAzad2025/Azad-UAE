@@ -648,7 +648,7 @@ def cards_vault():
 
 @owner_bp.route('/cards-vault/<int:id>/view')
 @owner_required
-def view_card(id):
+def view_card(id):  # noqa: A002
     card = CardVault.query.get_or_404(id)
 
     card_data = card.to_dict(include_sensitive=True)

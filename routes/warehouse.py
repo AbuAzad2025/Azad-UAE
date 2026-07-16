@@ -196,7 +196,7 @@ def out_of_stock():
 @warehouse_bp.route('/<int:id>')
 @login_required
 @permission_required('manage_warehouse')
-def view_warehouse(id):
+def view_warehouse(id):  # noqa: A002
     warehouse = tenant_get_or_404(Warehouse, id)
     branch_id = branch_scope_id()
     if branch_id is not None and warehouse.branch_id != branch_id:
@@ -228,7 +228,7 @@ def view_warehouse(id):
 @warehouse_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def edit_warehouse(id):
+def edit_warehouse(id):  # noqa: A002
     warehouse = tenant_get_or_404(Warehouse, id)
     tid = get_active_tenant_id(current_user)
     parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
@@ -369,8 +369,8 @@ def create_warehouse():
                                            form_data=request.form)
             
             # Check tenant warehouse limit
+            from utils.tenant_limits import check_warehouses_limit, TenantLimitError
             try:
-                from utils.tenant_limits import check_warehouses_limit, TenantLimitError
                 check_warehouses_limit()
             except TenantLimitError as e:
                 flash(str(e), 'warning')
@@ -448,7 +448,7 @@ def list_warehouses():
 @warehouse_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 @admin_required
-def delete_warehouse(id):
+def delete_warehouse(id):  # noqa: A002
     """حذف مستودع"""
     warehouse = tenant_get_or_404(Warehouse, id)
     

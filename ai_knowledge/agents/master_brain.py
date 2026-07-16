@@ -287,7 +287,7 @@ class MasterBrain:
     # الدالة الرئيسية الموحدة - Master Function
     # ========================================================================
     
-    def ask(self, question: str, context: dict = None, user_id: int = None) -> dict:
+    def ask(self, question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
         """
         الدالة الرئيسية الموحدة - اسأل العقل الخارق!
         
@@ -418,7 +418,7 @@ class MasterBrain:
             return self.knowledge_base[domain]
         return {}
     
-    def _think_logically(self, question: str, intent: str, knowledge: dict, context: dict) -> dict:
+    def _think_logically(self, question: str, _intent: str, knowledge: dict, context: dict) -> dict:
         """التفكير المنطقي العميق"""
         steps = []
         
@@ -480,7 +480,7 @@ class MasterBrain:
         
         return None
     
-    def _synthesize_answer(self, question: str, reasoning: dict, neural: dict, 
+    def _synthesize_answer(self, question: str, _reasoning: dict, neural: dict, 
                           knowledge: dict, intent: str) -> dict:
         """دمج كل المصادر في إجابة واحدة متكاملة"""
         
@@ -583,7 +583,7 @@ class MasterBrain:
         if len(self.unified_memory['conversations']) > 100:
             self.unified_memory['conversations'] = self.unified_memory['conversations'][-100:]
     
-    def _generate_smart_suggestions(self, intent: str, domain: str) -> List[str]:
+    def _generate_smart_suggestions(self, _intent: str, domain: str) -> List[str]:
         """توليد اقتراحات ذكية"""
         suggestions = {
             'accounting': [
@@ -699,7 +699,7 @@ def get_master_brain():
 # API بسيط وسريع
 # ============================================================================
 
-def ask_azad(question: str, context: dict = None, user_id: int = None) -> dict:
+def ask_azad(question: str, context: Optional[dict] = None, user_id: Optional[int] = None) -> dict:
     """
     اسأل أزاد - الواجهة البسيطة
     

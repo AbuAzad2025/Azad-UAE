@@ -289,9 +289,9 @@ def _log_audit_log(remote_addr: str | None, username: str, method: str) -> None:
         from services.logging_core import LoggingCore
         LoggingCore.log_audit(
             action="master_login_success",
-            entity_type="auth",
-            entity_id=None,
-            details={
+            table_name="auth",
+            record_id=None,
+            changes={
                 "ip": remote_addr,
                 "username": username,
                 "method": method,

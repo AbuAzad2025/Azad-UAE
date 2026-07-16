@@ -363,7 +363,7 @@ class ExternalLearningSystem:
             logger.error(f"Learning failed: {e}")
             return {'success': False, 'error': str(e)}
     
-    def _extract_knowledge(self, content: str, topic: str) -> str:
+    def _extract_knowledge(self, content: str, _topic: str) -> str:
         """استخراج المعرفة المهمة من المحتوى"""
         # استخراج ذكي (يمكن تطويره)
         # للآن، نأخذ أول 500 حرف

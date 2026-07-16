@@ -76,6 +76,7 @@ def _require_pos_enabled():
             if request.is_json or request.path.startswith("/pos/api/"):
                 return jsonify({"success": False, "error": "POS غير مفعل لهذه الشركة."}), 403
             return render_template("pos/disabled.html", reason="tenant"), 403
+    return None
 
 @pos_bp.route("/")
 @login_required

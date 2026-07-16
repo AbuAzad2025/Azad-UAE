@@ -228,7 +228,7 @@ class BeginnersGuide:
         return "🎉 أحسنت! أصبحت محترفاً! الآن جرب باقي المميزات!"
     
     @staticmethod
-    def get_beginner_response(message, dialect='palestinian'):
+    def get_beginner_response(message, dialect='palestinian'):  # noqa: F841
         """رد مفصل للمبتدئين"""
         msg_lower = message.lower()
         

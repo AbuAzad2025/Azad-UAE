@@ -219,7 +219,9 @@ class AdvancedFinancialAnalytics:
         return trends
     
     @staticmethod
-    def get_comparative_analysis(periods=['current', 'last_month', 'last_year']):
+    def get_comparative_analysis(periods=None):
+        if periods is None:
+            periods = ['current', 'last_month', 'last_year']
         """تحليل مقارن"""
         today = date.today()
         
