@@ -1,4 +1,4 @@
-body { font-family: 'Inter', sans-serif; }
+body { font-family: Inter, sans-serif; }
 
 .ic-1 { margin-top: 18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
 .ic-2 { min-width:240px; }

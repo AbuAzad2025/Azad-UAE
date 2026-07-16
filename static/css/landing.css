@@ -25,14 +25,14 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { overflow-x: hidden; scroll-behavior: smooth; }
 body {
-  font-family: 'Tajawal', 'Inter', sans-serif;
+  font-family: Tajawal, Inter, sans-serif;
   background: var(--azad-gradient);
   color: var(--azad-text-primary);
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-body.en-lang { font-family: 'Inter', 'Tajawal', sans-serif; }
+body.en-lang { font-family: Inter, Tajawal, sans-serif; }
 
 .text-accent { color: var(--azad-accent) !important; }
 .text-cyan { color: var(--azad-cyan) !important; }
@@ -655,4 +655,4 @@ body.en-lang { font-family: 'Inter', 'Tajawal', sans-serif; }
   }
 }
 
-html[lang="ar"] body { font-family: 'Tajawal', 'Inter', sans-serif; }
+html[lang="ar"] body { font-family: Tajawal, Inter, sans-serif; }
