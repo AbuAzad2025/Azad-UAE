@@ -80,12 +80,32 @@ class TestLedgerManualEntry:
         assert entry.is_balanced(), f'Entry is not balanced: debit={entry.total_debit} credit={entry.total_credit}'
         assert entry.entry_type == 'manual'
 
-    def test_ledger_unauthorized_user_cannot_post(self, app, db_session, auth_client):
-        resp = auth_client.post('/ledger/manual-entry', data={
-            'description': 'Hack attempt',
-            'entry_date': '2026-06-23',
-            'line_0_account': '5100',
-            'line_0_debit': '100',
-            'line_0_credit': '0',
-        })
-        assert resp.status_code == 403
+    def test_ledger_unauthorized_user_cannot_post(self, app, db_session):
+        """User without manage_ledger permission gets 403."""
+        from models import User, Role, Permission
+        role = Role.query.filter_by(slug='cashier').first()
+        if not role:
+            role = Role(name='Cashier', slug='cashier', is_tenant_role=True)
+            db_session.add(role)
+            db_session.flush()
+        # Strip manage_ledger from cashier if present
+        perm = Permission.query.filter_by(code='manage_ledger').first()
+        if perm and perm in role.permissions:
+            role.permissions.remove(perm)
+            db_session.flush()
+        u = User(username='cashier1', email='cashier@test.com', role_id=role.id,
+                 tenant_id=1, is_active=True)
+        u.set_password('password123')
+        db_session.add(u)
+        db_session.commit()
+        with app.test_client() as client:
+            client.post('/auth/login', data={'username': 'cashier1', 'password': 'password123'},
+                        follow_redirects=True)
+            resp = client.post('/ledger/manual-entry', data={
+                'description': 'Hack attempt',
+                'entry_date': '2026-06-23',
+                'line_0_account': '5100',
+                'line_0_debit': '100',
+                'line_0_credit': '0',
+            })
+            assert resp.status_code == 403
