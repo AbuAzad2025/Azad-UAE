@@ -19,7 +19,7 @@ from utils.tenanting import get_active_tenant_id
 from services.logging_core import LoggingCore
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
-from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
+from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id, assert_tenant_record
 from utils.db_safety import atomic_transaction
 
 payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
@@ -1064,7 +1064,10 @@ def view_receipt(id):
 @permission_required('manage_payments')
 def print_receipt(id):
     receipt = tenant_get(Receipt, id, or_404=False)
-    if not receipt:
+    if receipt:
+        if not assert_tenant_record(receipt):
+            abort(404)
+    else:
         payment = tenant_get(Payment, id, or_404=False)
         if payment:
             return redirect(url_for('payments.print_payment', id=id))

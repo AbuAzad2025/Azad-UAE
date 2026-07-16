@@ -364,7 +364,6 @@ class TestTenantSettingsAPI:
 
     def test_update_tax_rate_unauthorized(self, db_session, app):
         """Cashier cannot update tenant settings."""
-        import werkzeug.exceptions
         t = _make_tenant(db_session, 'Unauth', 'unauth')
         b = _make_branch(db_session, t.id)
         u = _make_user(db_session, t.id, b.id, role_slug='cashier')
@@ -372,10 +371,10 @@ class TestTenantSettingsAPI:
         db_session.commit()
         with app.test_client() as client:
             client.post('/auth/login', data={'username': u.username, 'password': 'password123'}, follow_redirects=True)
-            with pytest.raises(werkzeug.exceptions.Forbidden):
-                client.post('/owner/api/update-tenant-settings', json={
-                    'field': 'default_tax_rate', 'value': '10.00',
-                })
+            resp = client.post('/owner/api/update-tenant-settings', json={
+                'field': 'default_tax_rate', 'value': '10.00',
+            })
+            assert resp.status_code == 403
 
 
 class TestWarehouseNegativeToggle:

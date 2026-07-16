@@ -825,9 +825,8 @@ class TestInvoicePrintEngineIsolation:
             with app.app_context():
                 from flask_login import login_user
                 login_user(u2)
-                from werkzeug.exceptions import NotFound
-                with pytest.raises(NotFound):
-                    client.get(f'/sales/{sale.id}/print')
+                resp = client.get(f'/sales/{sale.id}/print')
+                assert resp.status_code == 404
 
     def test_print_invoice_uses_dynamic_template_from_settings(self, app, db_session):
         from models import Tenant, Branch, Warehouse, Product, Customer, InvoiceSettings, Role, User
@@ -964,10 +963,9 @@ class TestVoucherPaymentIsolation:
         with app.test_client() as client:
             with app.app_context():
                 from flask_login import login_user
-                from werkzeug.exceptions import NotFound
                 login_user(u2)
-                with pytest.raises(NotFound):
-                    client.get(f'/payments/receipts/{receipt.id}/print')
+                resp = client.get(f'/payments/receipts/{receipt.id}/print')
+                assert resp.status_code == 404
 
     def test_payment_print_rejects_cross_branch(self, app, db_session):
         from models import Tenant, Branch, Supplier, Payment, Permission

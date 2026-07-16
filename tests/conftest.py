@@ -783,7 +783,7 @@ def auth_client(client, sample_user):
             'username': sample_user.username,
             'password': 'password123',
         }, follow_redirects=True)
-    return client, sample_user
+    return client
 
 
 @pytest.fixture
@@ -794,7 +794,7 @@ def owner_client(client, sample_owner):
             'username': sample_owner.username,
             'password': 'password123',
         }, follow_redirects=True)
-    return client, sample_owner
+    return client
 
 
 @pytest.fixture
