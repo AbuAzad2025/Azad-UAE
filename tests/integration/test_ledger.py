@@ -81,13 +81,11 @@ class TestLedgerManualEntry:
         assert entry.entry_type == 'manual'
 
     def test_ledger_unauthorized_user_cannot_post(self, app, db_session, auth_client):
-        from werkzeug.exceptions import Forbidden
-
-        with pytest.raises(Forbidden):
-            auth_client.post('/ledger/manual-entry', data={
-                'description': 'Hack attempt',
-                'entry_date': '2026-06-23',
-                'line_0_account': '5100',
-                'line_0_debit': '100',
-                'line_0_credit': '0',
-            })
+        resp = auth_client.post('/ledger/manual-entry', data={
+            'description': 'Hack attempt',
+            'entry_date': '2026-06-23',
+            'line_0_account': '5100',
+            'line_0_debit': '100',
+            'line_0_credit': '0',
+        })
+        assert resp.status_code == 403
