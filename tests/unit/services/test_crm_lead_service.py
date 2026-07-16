@@ -315,7 +315,7 @@ class TestSearchLeads:
         )
         db_session.add(other)
         db_session.flush()
-        results = CRMLeadService.search_leads({}, sample_user)
+        results = CRMLeadService.search_leads({}, scoped_user)
         ids = {r.id for r in results}
         assert crm_lead.id in ids
         assert other.id not in ids
@@ -407,10 +407,21 @@ class TestAddActivity:
         with pytest.raises(ValueError, match="غير موجود"):
             CRMLeadService.add_activity(999999, {"summary": "x"}, sample_user)
 
-    def test_add_activity_branch_scope_denied(self, scoped_user, crm_lead):
+    def test_add_activity_branch_scope_denied(self, scoped_user, crm_lead, db_session, sample_tenant):
         set_active_tenant(crm_lead.tenant_id, user=scoped_user)
         scoped_user.branch_id = crm_lead.branch_id
-        crm_lead.branch_id = crm_lead.branch_id + 500
+        # Create a real branch from a different tenant to avoid FK violation
+        from models import Branch
+        import uuid
+        other_branch = Branch(
+            tenant_id=sample_tenant.id,
+            name=f"Other-{uuid.uuid4().hex[:4]}",
+            code=f"OTH-{uuid.uuid4().hex[:4]}",
+            is_active=True,
+        )
+        db_session.add(other_branch)
+        db_session.flush()
+        crm_lead.branch_id = other_branch.id
         with pytest.raises(ValueError, match="فرع آخر"):
             CRMLeadService.add_activity(crm_lead.id, {"summary": "x"}, scoped_user)
 
