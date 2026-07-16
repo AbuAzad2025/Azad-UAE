@@ -82,24 +82,31 @@ class TestLedgerManualEntry:
 
     def test_ledger_unauthorized_user_cannot_post(self, app, db_session):
         """User without manage_ledger permission gets 403."""
-        from models import User, Role, Permission
-        role = Role.query.filter_by(slug='cashier').first()
-        if not role:
-            role = Role(name='Cashier', slug='cashier', is_tenant_role=True)
-            db_session.add(role)
-            db_session.flush()
-        # Strip manage_ledger from cashier if present
-        perm = Permission.query.filter_by(code='manage_ledger').first()
-        if perm and perm in role.permissions:
-            role.permissions.remove(perm)
-            db_session.flush()
-        u = User(username='cashier1', email='cashier@test.com', role_id=role.id,
-                 tenant_id=1, is_active=True)
+        from models import Tenant, Branch, User, Role
+        import uuid
+        tid = str(uuid.uuid4())[:8]
+        tenant = Tenant(
+            name=f'Unauth {tid}', name_ar=f'Unauth {tid}',
+            slug=f'unauth-{tid}', default_currency='AED', base_currency='AED',
+        )
+        db_session.add(tenant)
+        db_session.flush()
+        branch = Branch(tenant_id=tenant.id, name=f'Main {tid}', code=f'BR{tid[:4]}')
+        db_session.add(branch)
+        db_session.flush()
+        role = Role(name=f'Restricted {tid}', slug=f'restricted-{tid}', is_active=True)
+        db_session.add(role)
+        db_session.flush()
+        u = User(
+            username=f'no-perm-{tid}', email=f'noperm-{tid}@test.com',
+            tenant_id=tenant.id, role_id=role.id, branch_id=branch.id,
+            is_active=True,
+        )
         u.set_password('password123')
         db_session.add(u)
         db_session.commit()
         with app.test_client() as client:
-            client.post('/auth/login', data={'username': 'cashier1', 'password': 'password123'},
+            client.post('/auth/login', data={'username': f'no-perm-{tid}', 'password': 'password123'},
                         follow_redirects=True)
             resp = client.post('/ledger/manual-entry', data={
                 'description': 'Hack attempt',
