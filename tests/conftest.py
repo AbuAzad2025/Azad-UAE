@@ -502,7 +502,6 @@ def _restore_polluted_service_class_methods():
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
     """Force a clean DB + Flask session slate before and after every test."""
-    from unittest.mock import MagicMock, NonCallableMock
     from flask import session
 
     def _restore_real_db_session():
@@ -777,7 +776,6 @@ def sample_owner(db_session):
 @pytest.fixture
 def auth_client(client, sample_user):
     """A logged-in test client for tenant users via actual login."""
-    from flask import session
     with client:
         resp = client.post('/auth/login', data={
             'username': sample_user.username,
@@ -893,7 +891,6 @@ def sample_employee(db_session, sample_tenant):
 
 @pytest.fixture
 def sample_payroll_transaction(db_session, sample_tenant, sample_employee):
-    from datetime import datetime, timezone
     from decimal import Decimal
     from models import PayrollTransaction
     pt = PayrollTransaction(
@@ -991,7 +988,7 @@ def sample_product(db_session, sample_tenant, sample_warehouse):
 def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
     """Create a product with real stock via StockService."""
     from decimal import Decimal
-    from models import Product, ProductWarehouseStock
+    from models import Product
     from services.stock_service import StockService
     p = Product(
         tenant_id=sample_tenant.id,
