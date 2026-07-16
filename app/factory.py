@@ -1,29 +1,14 @@
 """Flask application factory for AZADEXA ERP."""
 import os
-import re
-import sys
 import uuid
-import click
-from datetime import datetime, timezone
 import time
-from decimal import Decimal
-from flask import Flask, render_template, request, g, redirect, url_for, flash, abort, jsonify, send_from_directory, current_app
-from flask_login import current_user, login_required
-from flask_wtf.csrf import CSRFError
-from werkzeug.exceptions import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.routing import BuildError
+
+from flask import Flask, request, g, redirect, url_for, flash, abort, send_from_directory
 
 import config
 from config import Config, ensure_runtime_dirs, assert_production_sanity
-from utils import compat_patches
-from extensions import (
-    db, migrate, login_manager, csrf, limiter, mail,
-    init_extensions
-)
+from extensions import db, init_extensions
 from services.logging_core import LoggingCore
-from utils.asset_compression import register_compression_cli
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.handlers import register_error_handlers
@@ -189,6 +174,7 @@ def create_app(config_class=Config):
 
                 if g.active_tenant_id is not None and not is_global_owner_user(_cu):
                     from services.saas_provisioning_service import SaaSProvisioningService
+                    from models.tenant import Tenant as _Tn
                     _t = db.session.get(_Tn, int(g.active_tenant_id)) if g.active_tenant_id else None
                     if _t and SaaSProvisioningService.is_demo_tenant(_t) and _bp in ("owner", "payment_vault"):
                         abort(404)

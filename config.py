@@ -389,6 +389,19 @@ def assert_production_sanity(cfg=None) -> None:
     logging.info("Production configuration check complete")
 
 
+class TestConfig(Config):
+    """Test configuration — uses an in-memory SQLite database."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+    WTF_CSRF_ENABLED = False
+    RATELIMIT_ENABLED = False
+    CACHE_TYPE = "null"
+    MAIL_SUPPRESS_SEND = True
+    SESSION_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SECURE = False
+
+
 # Suppress SQLAlchemy engine logs
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 

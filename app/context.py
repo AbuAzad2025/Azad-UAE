@@ -1,7 +1,7 @@
 """Context processors and template globals for AZADEXA ERP."""
 import re
 from datetime import datetime
-from flask import current_app, g
+from flask import current_app
 from flask_login import current_user
 from services.logging_core import LoggingCore
 from utils.currency_utils import get_system_default_currency, get_currency_symbol, get_currency_name_ar
@@ -194,7 +194,7 @@ def register_context_processors(app):
         tenant_subscription = {}
         wa_upgrade_link = ''
         try:
-            from models import Tenant as Tn
+            from models import Tenant as Tn, User, Branch, Warehouse, Product, Customer, Supplier
             _t = Tn.get_current()
             if _t:
                 _res_map = {
