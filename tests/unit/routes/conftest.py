@@ -48,7 +48,7 @@ def pytest_configure(config):
     from routes.customers import customers_bp
     from routes.sales import sales_bp
     from routes.purchases import purchases_bp
-    from routes.inventory import unified_inventory_bp
+    from routes.unified_inventory import uinv_bp as unified_inventory_bp
     from routes.payments import payments_bp
     from routes.expenses import expenses_bp
     from routes.cheques import cheques_bp
