@@ -80,8 +80,8 @@ $('#print_serials_btn').click(function() {
     const productName = $('#serial_product_name').text();
     const today = new Date();
     const purchaseDate = today.toISOString().slice(0,10);
-    const companyName = "{{ current_user.garage_name if current_user.garage_name else 'Garage System' }}";
-    const companyPhone = "{{ current_user.phone if current_user.phone else '' }}";
+    const companyName = window._GARAGE_NAME || 'Garage System';
+    const companyPhone = window._COMPANY_PHONE || '';
     let printContent = `
         <html>
         <head>
@@ -162,9 +162,7 @@ $(document).ready(function() {
   if (!$('#customer_id').hasClass('select2-hidden-accessible')) {
     $('#customer_id').select2({
       ajax: {
-        {% if current_user.has_permission('view_reports') %}
-        url: "{{ url_for('api.api_search') }}",
-        {% endif %}
+        url: window._API_SEARCH_URL || undefined,
         dataType: 'json',
         delay: 250,
         data: function(params) {
@@ -188,14 +186,14 @@ $(document).ready(function() {
       width: '100%'
     });
   }
-  {% if preselected_customer %}
-  (function() {
-    var customer = {{ {'id': preselected_customer.id, 'name': preselected_customer.name, 'phone': preselected_customer.phone or ''}|tojson }};
-    var label = customer.name + (customer.phone ? ' - ' + customer.phone : '');
-    var option = new Option(label, customer.id, true, true);
-    $('#customer_id').append(option).trigger('change');
-  })();
-  {% endif %}
+  if (window._PRESELECTED_CUSTOMER) {
+    (function() {
+      var customer = window._PRESELECTED_CUSTOMER;
+      var label = customer.name + (customer.phone ? ' - ' + customer.phone : '');
+      var option = new Option(label, customer.id, true, true);
+      $('#customer_id').append(option).trigger('change');
+    })();
+  }
 });
 function validateForm() {
   const lineCount = parseInt($('#line_count').val()) || 0;

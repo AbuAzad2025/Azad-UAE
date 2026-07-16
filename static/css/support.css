@@ -111,7 +111,7 @@ body {
 /* ── Quick Contact Strip ── */
 .sp-strip {
   background: linear-gradient(135deg, rgba(15,23,42,0.96) 0%, rgba(88,28,135,0.94) 100%);
-  color: white;
+  color: #fff;
   border-radius: 22px;
   padding: 22px;
   margin: 0 0 22px;
@@ -187,9 +187,9 @@ body {
   opacity: 0.96;
   text-decoration: none;
 }
-.sp-btn-whatsapp { background: #25D366; color: white; }
-.sp-btn-email    { background: #667eea; color: white; }
-.sp-btn-dark     { background: #111827; color: white; }
+.sp-btn-whatsapp { background: #25D366; color: #fff; }
+.sp-btn-email    { background: #667eea; color: #fff; }
+.sp-btn-dark     { background: #111827; color: #fff; }
 
 /* ── Tabs ── */
 .sp-tab-section-label {
@@ -211,7 +211,7 @@ body {
   font-weight: 700;
   border: 3px solid #e0e0e0;
   border-radius: 18px;
-  background: white;
+  background: #fff;
   cursor: pointer;
   transition: all 0.3s;
   min-width: 220px;
@@ -222,7 +222,7 @@ body {
 }
 .sp-tab-btn.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #fff;
   border-color: #667eea;
 }
 .sp-tab-btn-sub {
@@ -245,7 +245,7 @@ body {
   display: inline-block;
   padding: 9px 16px;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  color: #fff;
   border-radius: 30px;
   font-weight: 700;
   margin: 4px;
@@ -265,7 +265,7 @@ body {
   margin-bottom: 30px;
 }
 .sp-package-card {
-  background: white;
+  background: #fff;
   border-radius: 15px;
   padding: 30px;
   text-align: center;
@@ -290,7 +290,7 @@ body {
   top: 10px;
   left: 10px;
   background: #28a745;
-  color: white;
+  color: #fff;
   padding: 5px 15px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -360,7 +360,7 @@ body {
   margin-top: 25px;
 }
 .sp-benefit-card {
-  background: white;
+  background: #fff;
   padding: 15px;
   border-radius: 10px;
   border-right: 4px solid #28a745;
@@ -376,7 +376,7 @@ body {
   margin-top: 25px;
 }
 .sp-status-card {
-  background: white;
+  background: #fff;
   border-radius: 16px;
   padding: 18px;
   box-shadow: 0 10px 22px rgba(15,23,42,0.08);
@@ -410,7 +410,7 @@ body {
   margin-bottom: 30px;
 }
 .sp-payment-card {
-  background: white;
+  background: #fff;
   border-radius: 15px;
   padding: 30px;
   text-align: center;
@@ -446,7 +446,7 @@ body {
   top: 10px;
   left: 10px;
   background: #28a745;
-  color: white;
+  color: #fff;
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -476,7 +476,7 @@ body {
 .sp-payment-header {
   margin-bottom: 30px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #fff;
   border: none;
 }
 .sp-payment-header-title { margin: 0; font-size: 1.8rem; }
@@ -509,7 +509,7 @@ body {
   padding: 25px;
   border-radius: 15px;
   margin-bottom: 30px;
-  color: white;
+  color: #fff;
   text-align: center;
 }
 .sp-banner-card {
@@ -517,7 +517,7 @@ body {
   padding: 25px;
   border-radius: 15px;
   margin-bottom: 30px;
-  color: white;
+  color: #fff;
   text-align: center;
 }
 .sp-banner-paypal {
@@ -525,7 +525,7 @@ body {
   padding: 25px;
   border-radius: 15px;
   margin-bottom: 30px;
-  color: white;
+  color: #fff;
   text-align: center;
 }
 .sp-banner-bank {
@@ -533,7 +533,7 @@ body {
   padding: 25px;
   border-radius: 15px;
   margin-bottom: 30px;
-  color: white;
+  color: #fff;
   text-align: center;
 }
 
@@ -551,7 +551,7 @@ body {
 
 /* ── Form Elements ── */
 .sp-donation-form {
-  background: white;
+  background: #fff;
   border-radius: 15px;
   padding: 40px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -575,7 +575,7 @@ body {
   padding: 15px;
   border: 2px solid #dee2e6;
   border-radius: 10px;
-  background: white;
+  background: #fff;
   cursor: pointer;
   transition: all 0.3s;
   font-weight: 700;
@@ -605,7 +605,7 @@ body {
 .sp-amount-btn.active {
   border-color: #28a745;
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
+  color: #fff;
   transform: scale(1.05);
   box-shadow: 0 5px 20px rgba(40,167,69,0.3);
 }
@@ -614,7 +614,7 @@ body {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: white;
+  background: #fff;
   color: #28a745;
   width: 25px;
   height: 25px;
@@ -681,7 +681,7 @@ body {
 /* ── Crypto Info ── */
 .sp-crypto-info {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #fff;
   padding: 30px;
   border-radius: 15px;
   margin-top: 30px;
@@ -703,7 +703,7 @@ body {
   transform: translateY(-50%);
   background: rgba(255,255,255,0.3);
   border: none;
-  color: white;
+  color: #fff;
   padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
@@ -711,7 +711,7 @@ body {
 }
 .sp-copy-btn:hover { background: rgba(255,255,255,0.5); }
 .sp-qr-code {
-  background: white;
+  background: #fff;
   padding: 20px;
   border-radius: 10px;
   display: inline-block;
@@ -720,7 +720,7 @@ body {
 .sp-btn-donate {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  color: white;
+  color: #fff;
   padding: 15px 40px;
   font-size: 1.2rem;
   font-weight: 700;
@@ -741,7 +741,7 @@ body {
 .sp-btn-icon { font-size: 1.5rem; }
 .sp-btn-paypal {
   background: #0070ba;
-  color: white;
+  color: #fff;
   font-size: 1.3rem;
   padding: 20px 50px;
   border-radius: 50px;
@@ -752,7 +752,7 @@ body {
 }
 .sp-btn-whatsapp-lg {
   background: #25D366;
-  color: white;
+  color: #fff;
   font-size: 1.2rem;
   padding: 18px 40px;
   border-radius: 50px;
@@ -794,7 +794,7 @@ body {
   position: fixed;
   top: 20px;
   left: 20px;
-  background: white;
+  background: #fff;
   padding: 10px 20px;
   border-radius: 30px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -856,13 +856,13 @@ body {
 }
 .sp-step.active .sp-step-number {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #fff;
   transform: scale(1.2);
   box-shadow: 0 5px 15px rgba(102,126,234,0.4);
 }
 .sp-step.completed .sp-step-number {
   background: #28a745;
-  color: white;
+  color: #fff;
 }
 .sp-step.completed .sp-step-number::before {
   content: '✓';
@@ -901,7 +901,7 @@ body {
   text-decoration: none;
   transition: all 0.3s;
   text-align: center;
-  color: white;
+  color: #fff;
 }
 .sp-footer-icon-wa { background: #25D366; }
 .sp-footer-icon-email { background: #667eea; }
@@ -941,7 +941,7 @@ body {
 .sp-result-address {
   word-break: break-all;
   font-family: monospace;
-  background: white;
+  background: #fff;
   padding: 12px;
   border-radius: 8px;
 }
@@ -961,7 +961,7 @@ body {
 .sp-result-mono {
   word-break: break-all;
   font-family: monospace;
-  background: white;
+  background: #fff;
   padding: 10px;
   border-radius: 5px;
 }

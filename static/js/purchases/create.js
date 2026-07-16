@@ -1,8 +1,7 @@
 // Tenant currency config for unified display
 
-const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || window._FX_FALLBACK_BASE || 'AED';
-
-const TENANT_CURRENCY_SYMBOL = {{ tenant_currency_symbol|tojson }} || window._CURRENCY_SYMBOL || 'AED';
+const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || 'AED';
+const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || 'د.إ';
 
 
 
@@ -175,10 +174,7 @@ function addLine() {
     $productSelect.select2({
 
       ajax: {
-
-        {% if current_user.has_permission('view_reports') %}
-        url: "{{ url_for('api.api_search') }}",
-        {% endif %}
+        url: window._API_SEARCH_URL || undefined,
 
         dataType: 'json',
 
@@ -466,7 +462,7 @@ async function calculateTotals() {
 
     // إرسال للـ backend
 
-    const response = await fetch('{{ url_for("purchases.api_calculate_purchase_totals") }}', {
+    const response = await fetch(window._PURCHASE_CALC_URL, {
 
       method: 'POST',
 

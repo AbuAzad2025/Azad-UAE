@@ -14,7 +14,7 @@ body {
 
 .invoice {
   margin: 0 auto;
-  background: white;
+  background: #fff;
 }
 
 .logo {
@@ -29,7 +29,7 @@ table {
   font-size: 8px;
 }
 th { font-size: 9px; }
-thead { color: white; }
+thead { color: #fff; }
 th, td {
   padding: 6px 8px;
   text-align: right;
