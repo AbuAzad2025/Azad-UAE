@@ -5,9 +5,29 @@ from unittest.mock import MagicMock
 import pytest
 
 from extensions import db
-from models import CRMLead, CRMStage, CRMActivity, Customer
+from models import CRMLead, CRMStage, CRMActivity, Customer, User, Role
 from services.crm_lead_service import CRMLeadService
 from utils.tenanting import set_active_tenant
+
+
+@pytest.fixture
+def scoped_user(db_session, sample_tenant, sample_branch):
+    """A non-global user with branch scope enabled (role slug NOT in GLOBAL_ROLE_SLUGS)."""
+    role = Role(name="Seller", slug="seller", is_active=True)
+    db_session.add(role)
+    db_session.flush()
+    u = User(
+        username=f"scoped_{sample_tenant.id}",
+        email=f"scoped_{sample_tenant.id}@test.com",
+        tenant_id=sample_tenant.id,
+        role_id=role.id,
+        branch_id=sample_branch.id,
+        is_active=True,
+    )
+    u.set_password("password123")
+    db_session.add(u)
+    db_session.flush()
+    return u
 
 
 @pytest.fixture
@@ -109,10 +129,10 @@ class TestValidateTenant:
 
 
 class TestBranchScopeCheck:
-    def test_rejects_other_branch(self, sample_user):
-        sample_user.branch_id = 1
+    def test_rejects_other_branch(self, scoped_user):
+        scoped_user.branch_id = 1
         with pytest.raises(ValueError, match="فرع آخر"):
-            CRMLeadService._branch_scope_check(sample_user, branch_id=99)
+            CRMLeadService._branch_scope_check(scoped_user, branch_id=99)
 
     def test_global_user_skips_branch_check(self, sample_user):
         sample_user.is_owner = True
@@ -183,11 +203,11 @@ class TestCreateLead:
             with pytest.raises(ValueError, match="الفرع لا ينتمي"):
                 CRMLeadService.create_lead({"name": "Bad", "branch_id": foreign_branch.id}, sample_user)
 
-    def test_create_lead_wrong_branch_scope(self, sample_user, sample_tenant, sample_branch):
-        set_active_tenant(sample_tenant.id, user=sample_user)
-        sample_user.branch_id = sample_branch.id
+    def test_create_lead_wrong_branch_scope(self, scoped_user, sample_tenant, sample_branch):
+        set_active_tenant(sample_tenant.id, user=scoped_user)
+        scoped_user.branch_id = sample_branch.id
         with pytest.raises(ValueError, match="فرع آخر"):
-            CRMLeadService.create_lead({"name": "Scoped", "branch_id": sample_branch.id + 999}, sample_user)
+            CRMLeadService.create_lead({"name": "Scoped", "branch_id": sample_branch.id + 999}, scoped_user)
 
 
 class TestUpdateLead:
@@ -271,11 +291,11 @@ class TestSearchLeads:
         )
         assert any(r.id == crm_lead.id for r in results)
 
-    def test_search_branch_scoped(self, sample_user, crm_lead, db_session, sample_tenant, sample_branch, crm_stage):
+    def test_search_branch_scoped(self, scoped_user, crm_lead, db_session, sample_tenant, sample_branch, crm_stage):
         import uuid
         from models import Branch
-        set_active_tenant(sample_tenant.id, user=sample_user)
-        sample_user.branch_id = crm_lead.branch_id
+        set_active_tenant(sample_tenant.id, user=scoped_user)
+        scoped_user.branch_id = crm_lead.branch_id
         other_branch = Branch(
             tenant_id=sample_tenant.id,
             name="Second Branch",
@@ -385,12 +405,12 @@ class TestAddActivity:
         with pytest.raises(ValueError, match="غير موجود"):
             CRMLeadService.add_activity(999999, {"summary": "x"}, sample_user)
 
-    def test_add_activity_branch_scope_denied(self, sample_user, crm_lead):
-        set_active_tenant(crm_lead.tenant_id, user=sample_user)
-        sample_user.branch_id = crm_lead.branch_id
+    def test_add_activity_branch_scope_denied(self, scoped_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=scoped_user)
+        scoped_user.branch_id = crm_lead.branch_id
         crm_lead.branch_id = crm_lead.branch_id + 500
         with pytest.raises(ValueError, match="فرع آخر"):
-            CRMLeadService.add_activity(crm_lead.id, {"summary": "x"}, sample_user)
+            CRMLeadService.add_activity(crm_lead.id, {"summary": "x"}, scoped_user)
 
 
 class TestCreateLeadMockedRollback:
