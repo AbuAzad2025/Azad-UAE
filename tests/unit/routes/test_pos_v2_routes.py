@@ -762,7 +762,7 @@ class TestPosFloors:
 class TestPosCustomerDisplay:
     def _tenant_request(self, tenant_id=1):
         req = MagicMock()
-        req.args.get = lambda key, type_=int, default=None: tenant_id if key == 'tenant_id' else default
+        req.args.get = lambda key, **kwargs: tenant_id if key == 'tenant_id' else kwargs.get('default')
         return patch('routes.pos.request', req)
 
     def test_customer_display_page(self, pos_client):
@@ -773,7 +773,7 @@ class TestPosCustomerDisplay:
     def test_customer_display_stream_missing_tenant(self):
         from routes.pos import customer_display_stream
         req = MagicMock()
-        req.args.get = lambda key, type_=int, default=None: None
+        req.args.get = lambda key, **kwargs: None
         with patch('routes.pos.request', req):
             gen, headers = customer_display_stream(1)
         assert headers['Content-Type'] == 'text/event-stream'

@@ -7,19 +7,19 @@ import pytest
 
 class TestCustomersIndex:
     def test_index_returns_200(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         resp = client.get('/customers/')
         assert resp.status_code == 200
         # Real template rendering - check for actual content
         assert b"Customers" in resp.data or b"customers" in resp.data.lower()
 
     def test_index_with_search(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         resp = client.get('/customers/?search=Test&type=regular')
         assert resp.status_code == 200
 
     def test_index_pagination(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         # Create multiple customers for pagination test
         for i in range(25):
@@ -34,7 +34,7 @@ class TestCustomersIndex:
 
 class TestCustomersExport:
     def test_export_csv(self, owner_client):
-        client, user = owner_client
+        client = owner_client
         resp = client.get('/customers/export?format=csv')
         assert resp.status_code == 200
         assert resp.mimetype == 'text/csv'
@@ -44,14 +44,15 @@ class TestCustomersExport:
 
 class TestCustomersCrud:
     def test_create_get(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         resp = client.get('/customers/create')
         assert resp.status_code == 200
         # Check form renders
         assert b"name" in resp.data.lower() or b"Name" in resp.data
 
-    def test_create_post_success(self, auth_client, db_session, test_factory):
-        client, user = auth_client
+    def test_create_post_success(self, auth_client, db_session, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         resp = client.post('/customers/create', data={
             'name': 'New Real Customer',
@@ -70,7 +71,7 @@ class TestCustomersCrud:
         assert b"New Real Customer" in resp.data
 
     def test_create_post_validation_error(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         # Missing required fields
         resp = client.post('/customers/create', data={
             'name': '',
@@ -80,8 +81,9 @@ class TestCustomersCrud:
         # Should show validation errors
         assert b"required" in resp.data.lower() or b"error" in resp.data.lower()
 
-    def test_view_customer(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_view_customer(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         print(f"DEBUG: user={user.username}, role={user.role.slug if user.role else None}, branch_id={user.branch_id}, tenant_id={user.tenant_id}, is_owner={user.is_owner}")
         
         # Create a real customer
@@ -104,7 +106,7 @@ class TestCustomersCrud:
         assert b"View Test Customer" in resp.data
 
     def test_view_out_of_scope(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         # Create customer in different tenant (simulate out of scope)
         customer = test_factory.create_customer(name="Out of Scope", 
@@ -116,7 +118,7 @@ class TestCustomersCrud:
         assert resp.status_code == 404
 
     def test_edit_get(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Edit Test", 
                            email="edit@example.com", customer_type='regular', phone="0507777777")
@@ -126,7 +128,7 @@ class TestCustomersCrud:
         assert b"Edit Test" in resp.data
 
     def test_edit_post(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Original Name", 
                            email="orig@example.com", customer_type='regular', phone="0506666666")
@@ -148,7 +150,7 @@ class TestCustomersCrud:
         assert b"Updated Name" in resp.data
 
     def test_edit_post_validation_error(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Valid Name", 
                            email="valid@example.com", customer_type='regular', phone="0504444444")
@@ -165,7 +167,7 @@ class TestCustomersCrud:
         assert b"required" in resp.data.lower() or b"error" in resp.data.lower()
 
     def test_delete_post(self, auth_client, db_session, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         # Create customer with no related records (can be hard deleted)
         customer = test_factory.create_customer(name="Delete Me", 
@@ -182,8 +184,9 @@ class TestCustomersCrud:
         # Flash message contains the name, so check that DB deletion succeeded
         assert deleted is None
 
-    def test_delete_blocked_with_sales(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_delete_blocked_with_sales(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         # Create customer with a sale
         customer = test_factory.create_customer(name="Has Sales", 
@@ -206,7 +209,7 @@ class TestCustomersCrud:
 
 class TestCustomersApi:
     def test_api_search(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         # Create test customers
         for i in range(3):
@@ -220,7 +223,7 @@ class TestCustomersApi:
         assert len(data) >= 3
 
     def test_customer_balance(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Balance Test", 
                            email="balance@example.com", customer_type='regular', phone="0509998888")
@@ -231,7 +234,7 @@ class TestCustomersApi:
         assert 'balance' in data or 'balance_due' in data
 
     def test_customer_balance_forbidden(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Forbidden", 
                            email="forbidden@example.com", customer_type='regular', phone="0508887777",
@@ -241,8 +244,9 @@ class TestCustomersApi:
         # tenant_get_or_404 returns 404 for cross-tenant access
         assert resp.status_code == 404
 
-    def test_customer_sales(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_customer_sales(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         customer = test_factory.create_customer(name="Sales Customer", 
                            email="sales@example.com", customer_type='regular', phone="0507776666")
@@ -258,8 +262,9 @@ class TestCustomersApi:
 
 
 class TestCustomersStatement:
-    def test_statement_returns_200(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_statement_returns_200(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         customer = test_factory.create_customer(name="Statement Customer", 
                            email="stmt@example.com", customer_type='regular', phone="0501234567")
@@ -285,7 +290,7 @@ class TestCustomersStatement:
         assert b"S-STMT-001" in resp.data
 
     def test_statement_out_of_scope(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Out of Scope", 
                            email="oos@example.com", customer_type='regular', phone="0505555555",
@@ -296,7 +301,7 @@ class TestCustomersStatement:
         assert resp.status_code == 404
 
     def test_export_excel(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         # Create some customers
         for i in range(3):
@@ -312,7 +317,7 @@ class TestCustomersScopedHelpers:
     def test_customer_in_scope_false(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client, user = auth_client
+        client = auth_client
         # For super_admin users, branch_scope_id is None, so _customer_in_scope returns True
         # This test documents the current behavior
         customer = test_factory.create_customer(name="OOS", email="oos@test.com", 
@@ -325,17 +330,18 @@ class TestCustomersScopedHelpers:
     def test_customer_in_scope_true_same_tenant(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client, user = auth_client
+        client = auth_client
         customer = test_factory.create_customer(name="In Scope", email="inscope@test.com", 
                            customer_type='regular', phone="0502222222")
         
         assert _customer_in_scope(customer.id) is True
 
-    def test_attach_customer_branch_labels(self, auth_client, db_session, test_factory):
+    def test_attach_customer_branch_labels(self, auth_client, db_session, test_factory, sample_user):
         from routes.customers import _attach_customer_branch_labels
         from models import Branch
         
-        client, user = auth_client
+        client = auth_client
+        user = sample_user
         
         # Create branches
         branch1 = Branch(tenant_id=user.tenant_id, name="Branch 1", code="B1", is_active=True)
@@ -360,7 +366,7 @@ class TestCustomersScopedHelpers:
 
 class TestCustomersCoverageGaps:
     def test_create_currency_fallback(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         # This tests the currency fallback logic when resolve_default_currency fails
         # In real context, we just verify the form handles missing currency gracefully
         resp = client.post('/customers/create', data={
@@ -372,7 +378,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code == 200
 
     def test_create_tenant_limit_error(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         
         # Fill up to limit (this tests the error handling path)
         # Note: actual limit check depends on tenant_limits config
@@ -385,7 +391,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code in (200, 302)
 
     def test_create_db_exception(self, auth_client):
-        client, user = auth_client
+        client = auth_client
         
         # Test with potentially problematic data that causes constraint violation
         resp = client.post('/customers/create', data={
@@ -397,7 +403,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code in (200, 302)
 
     def test_view_out_of_scope(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="OOS View", email="oos@view.com", 
                            customer_type='regular', phone="0506666666",
@@ -408,7 +414,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code == 404
 
     def test_edit_out_of_scope(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="OOS Edit", email="oos@edit.com", 
                            customer_type='regular', phone="0507777777",
@@ -419,7 +425,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code == 404
 
     def test_edit_currency_fallback(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Currency Fallback", 
                            email="curr@test.com", customer_type='regular', phone="0508888888")
@@ -433,7 +439,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code == 200
 
     def test_edit_db_exception(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="Edit Error", 
                            email="editerr@test.com", customer_type='regular', phone="0501234567")
@@ -447,7 +453,7 @@ class TestCustomersCoverageGaps:
         assert resp.status_code in (200, 302)
 
     def test_delete_out_of_scope(self, auth_client, test_factory):
-        client, user = auth_client
+        client = auth_client
         
         customer = test_factory.create_customer(name="OOS Delete", email="oos@del.com", 
                            customer_type='regular', phone="0502345678",
@@ -457,9 +463,10 @@ class TestCustomersCoverageGaps:
         # tenant_get_or_404 returns 404 for cross-tenant access
         assert resp.status_code == 404
 
-    def test_view_with_branch_scope(self, auth_client, db_session, test_factory):
+    def test_view_with_branch_scope(self, auth_client, db_session, test_factory, sample_user):
         from models import Branch
-        client, user = auth_client
+        client = auth_client
+        user = sample_user
         
         # Create branch and customer
         branch = Branch(tenant_id=user.tenant_id, name="Test Branch", code="TB", 
@@ -483,15 +490,16 @@ class TestCustomersCoverageGaps:
     def test_customer_in_scope_without_branch(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client, user = auth_client
+        client = auth_client
         customer = test_factory.create_customer(name="No Branch", email="nobranch@test.com", 
                            customer_type='regular', phone="0504567890")
         
         # Without branch scope, should be in scope
         assert _customer_in_scope(customer.id) is True
 
-    def test_statement_full_flow(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_statement_full_flow(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         customer = test_factory.create_customer(name="Full Stmt Customer", 
                            email="fullstmt@test.com", customer_type='regular', phone="0505678901")
@@ -519,8 +527,9 @@ class TestCustomersCoverageGaps:
         assert b"Full Stmt Customer" in resp.data
         assert b"S-FULL-001" in resp.data
 
-    def test_statement_transaction_type_sale(self, auth_client, test_factory):
-        client, user = auth_client
+    def test_statement_transaction_type_sale(self, auth_client, test_factory, sample_user):
+        client = auth_client
+        user = sample_user
         
         customer = test_factory.create_customer(name="Sale Only Customer", 
                            email="saleonly@test.com", customer_type='regular', phone="0506789012")

@@ -339,7 +339,6 @@ class TestView:
         assert resp.status_code == 200
 
     def test_view_other_branch_forbidden(self, users_client, db_session, sample_tenant, users_manager):
-        from werkzeug.exceptions import Forbidden
         from models import Branch, Role, User
         branch = Branch(
             tenant_id=sample_tenant.id,
@@ -361,8 +360,8 @@ class TestView:
         target.set_password('x')
         db_session.add(target)
         db_session.commit()
-        with pytest.raises(Forbidden):
-            users_client.get(f'/users/{target.id}')
+        resp = users_client.get(f'/users/{target.id}')
+        assert resp.status_code == 403
 
 
 class TestEdit:

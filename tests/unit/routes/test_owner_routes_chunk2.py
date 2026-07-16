@@ -10,6 +10,26 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from tests.unit.routes.test_owner_routes import _owner_route_patches
+
+
+@pytest.fixture
+def owner_client(app_factory, bypass_owner_auth):
+    with _owner_route_patches():
+        from routes.owner import owner_bp
+
+        app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
+        yield app.test_client()
+
+
+@pytest.fixture
+def company_admin_client(app_factory, bypass_company_admin_auth):
+    with _owner_route_patches():
+        from routes.owner import owner_bp
+
+        app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
+        yield app.test_client()
+
 
 @pytest.fixture
 def mock_settings_db(mocker):
