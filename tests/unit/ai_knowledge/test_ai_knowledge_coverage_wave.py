@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
