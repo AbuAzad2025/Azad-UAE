@@ -10,7 +10,7 @@ class TestRegisterWebsocketEvents:
     def test_subscribe_joins_authenticated_user_room(self, app, mocker):
         handlers = {}
 
-        def fake_init(app_obj):
+        def fake_init(_app_obj):
             inst = MagicMock()
 
             def on(event):
@@ -38,7 +38,7 @@ class TestRegisterWebsocketEvents:
     def test_subscribe_skips_unauthenticated(self, app, mocker):
         handlers = {}
 
-        def fake_init(app_obj):
+        def fake_init(_app_obj):
             inst = MagicMock()
 
             def on(event):

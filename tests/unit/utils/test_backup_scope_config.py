@@ -3,8 +3,6 @@ tests/unit/test_backup_scope_config.py — Pure-logic tests for backup scope
 configuration and scoped database export (no Flask, no real DB).
 """
 from datetime import datetime, timezone
-from decimal import Decimal
-from uuid import UUID
 
 import pytest
 
@@ -243,7 +241,7 @@ def patch_export_helpers(mocker):
 ])
 def test_export_scoped_database_happy_path(patch_export_helpers, scope, tenant_id, kwargs):
     conn = None
-    tables, counts, included, skipped, unresolved = export_scoped_database(
+    tables, _counts, _included, _skipped, _unresolved = export_scoped_database(
         conn, scope, tenant_id=tenant_id, **kwargs
     )
     assert len(tables) > 0
@@ -284,7 +282,7 @@ def test_export_tenant_database_returns_4_tuple(patch_export_helpers):
     conn = None
     result = export_tenant_database(conn, 1)
     assert len(result) == 4
-    tables, counts, included, skipped = result
+    tables, _counts, _included, _skipped = result
     assert isinstance(tables, dict)
 
 
@@ -304,7 +302,7 @@ def test_write_read_directory_roundtrip(tmp_path):
     assert meta["tables"]["customers"]["row_count"] == 1
     assert meta["tables"]["products"]["row_count"] == 1
 
-    restored_tables, restored_meta = read_data_directory(str(tmp_path))
+    restored_tables, _restored_meta = read_data_directory(str(tmp_path))
     assert len(restored_tables["customers"]) == 1
     assert restored_tables["products"][0]["title"] == "Widget"
 
@@ -313,17 +311,16 @@ def test_read_data_directory_missing_meta_falls_back_to_jsonl_files(tmp_path):
     (tmp_path / "customers.jsonl").write_text(
         '{"id":1,"name":"A"}\n{"id":2,"name":"B"}\n', encoding="utf-8"
     )
-    tables, meta = read_data_directory(str(tmp_path))
+    tables, _meta = read_data_directory(str(tmp_path))
     assert len(tables.get("customers") or []) == 2
 
 
 def test_read_data_directory_empty_dir(tmp_path):
-    tables, meta = read_data_directory(str(tmp_path))
+    tables, _meta = read_data_directory(str(tmp_path))
     assert tables == {}
 
 
 import json
-import os
 from unittest.mock import MagicMock
 
 from services.backup_scope_config import (
@@ -372,7 +369,7 @@ def test_merge_exception_records_unresolved(mocker, mock_db_connection):
 
 
 def test_export_skips_missing_tables(mocker, mock_db_connection):
-    mocker.patch("services.backup_scope_config.table_exists", side_effect=lambda c, t: t == "tenants")
+    mocker.patch("services.backup_scope_config.table_exists", side_effect=lambda _c, t: t == "tenants")
     mocker.patch("services.backup_scope_config._fetch_rows", return_value=[{"id": 1}])
     mocker.patch("services.backup_scope_config._fetch_child_rows", return_value=[])
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
@@ -396,7 +393,7 @@ def test_export_branch_and_store_validation(mocker, mock_db_connection):
 def test_export_includes_roles_for_users(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(db_conn, table, where, params):
+    def fetch_rows(_db_conn, table, _where, _params):
         if table == "users":
             return [{"id": 1, "role_id": 9, "tenant_id": 1}]
         if table == "tenants":
@@ -441,7 +438,7 @@ def test_collect_tenant_upload_paths_wrapper(mocker, mock_db_connection, tmp_pat
         "services.backup_scope_config.collect_scoped_upload_paths",
         return_value=(["/a.png"], ["unresolved"]),
     )
-    paths, unresolved = collect_tenant_upload_paths(mock_db_connection(), 1, str(tmp_path))
+    paths, _unresolved = collect_tenant_upload_paths(mock_db_connection(), 1, str(tmp_path))
     assert paths == ["/a.png"]
 
 
@@ -459,13 +456,13 @@ def test_collect_scoped_upload_paths_resolves_and_unresolved(mocker, mock_db_con
     logo.write_bytes(b"png")
     base = str(tmp_path / "static")
 
-    def execute_router(stmt, bind=None):
+    def execute_router(stmt, _bind=None):
         sql = str(stmt)
         result = MagicMock()
         if "column_name" in sql:
-            result.__iter__ = lambda self: iter([("image_url",), ("logo_path",), ("watermark_image_path",)])
+            result.__iter__ = lambda _self: iter([("image_url",), ("logo_path",), ("watermark_image_path",)])
         else:
-            result.__iter__ = lambda self: iter([
+            result.__iter__ = lambda _self: iter([
                 ("/static/uploads/logo.png",),
                 ("http://bad.example/x.png",),
             ])
@@ -490,7 +487,7 @@ def test_path_from_urlish_backslash_and_traversal(tmp_path):
 def test_export_child_missing_table(mocker, mock_db_connection):
     mocker.patch(
         "services.backup_scope_config.table_exists",
-        side_effect=lambda c, t: t != "sale_lines",
+        side_effect=lambda _c, t: t != "sale_lines",
     )
     mocker.patch(
         "services.backup_scope_config._fetch_rows",
@@ -549,7 +546,7 @@ def test_path_from_urlish_static_prefix(tmp_path):
 def test_export_child_fetch_error(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(db_conn, table, where, params):
+    def fetch_rows(_db_conn, table, _where, _params):
         if table == "gl_journal_entries":
             return [{"id": 3}]
         if table == "branches":
@@ -601,7 +598,7 @@ def test_export_fetch_rollback_failure_logged(mocker, mock_db_connection):
 def test_export_child_rollback_failure(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def fetch_rows(db_conn, table, where, params):
+    def fetch_rows(_db_conn, table, _where, _params):
         if table == "sales":
             return [{"id": 1}]
         if table == "tenants":
@@ -647,14 +644,14 @@ def test_path_from_urlish_bare_filename(tmp_path):
 
 def test_collect_upload_products_table_missing(mocker, mock_db_connection, tmp_path):
     mocker.patch("services.backup_scope_config.table_exists", return_value=False)
-    paths, unresolved = collect_scoped_upload_paths(conn := mock_db_connection(), SCOPE_TENANT, 1, str(tmp_path))
+    paths, _unresolved = collect_scoped_upload_paths(_conn := mock_db_connection(), SCOPE_TENANT, 1, str(tmp_path))
     assert paths == []
 
 
 def test_export_child_missing_on_branch_scope(mocker, mock_db_connection):
     mocker.patch(
         "services.backup_scope_config.table_exists",
-        side_effect=lambda c, t: t != "sale_lines",
+        side_effect=lambda _c, t: t != "sale_lines",
     )
     mocker.patch(
         "services.backup_scope_config._fetch_rows",
@@ -698,11 +695,11 @@ def test_export_child_excluded_policy_continue(mocker, mock_db_connection):
 def test_collect_upload_path_error_branch_scope(mocker, mock_db_connection, tmp_path):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
 
-    def execute_router(stmt, bind=None):
+    def execute_router(stmt, _bind=None):
         sql = str(stmt)
         result = MagicMock()
         if "column_name" in sql:
-            result.__iter__ = lambda self: iter([("image_url",)])
+            result.__iter__ = lambda _self: iter([("image_url",)])
         else:
             raise RuntimeError("path fail")
         return result
@@ -710,7 +707,7 @@ def test_collect_upload_path_error_branch_scope(mocker, mock_db_connection, tmp_
     conn = mock_db_connection()
     conn.execute.side_effect = execute_router
     conn.rollback.side_effect = RuntimeError("rb fail")
-    paths, unresolved = collect_scoped_upload_paths(
+    paths, _unresolved = collect_scoped_upload_paths(
         conn, SCOPE_BRANCH, 1, str(tmp_path), branch_id=2,
     )
     assert paths == []
@@ -720,7 +717,7 @@ def test_export_via_real_fetch_rows(mocker, mock_db_connection):
     mocker.patch("services.backup_scope_config.table_exists", return_value=True)
     conn = mock_db_connection()
 
-    def execute_router(stmt, params=None):
+    def execute_router(stmt, _params=None):
         sql = str(stmt)
         result = MagicMock()
         if "information_schema" in sql:
@@ -742,6 +739,6 @@ def test_export_via_real_fetch_rows(mocker, mock_db_connection):
 
     conn.execute.side_effect = execute_router
     mocker.patch("services.backup_scope_config._merge_product_customer_dependencies")
-    tables, _, included, skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
+    tables, _, _included, _skipped, _ = export_scoped_database(conn, SCOPE_TENANT, tenant_id=1)
     assert "tenants" in tables
     assert tables["tenants"][0]["name"] == "T"

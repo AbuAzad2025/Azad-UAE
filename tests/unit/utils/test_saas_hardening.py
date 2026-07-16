@@ -17,10 +17,8 @@ class TestCrossTenantWriteBlock:
     @staticmethod
     def _active_tenant_context(app, tenant_id):
         """Return a request context with a mocked active tenant."""
-        import flask_login
         ctx = app.test_request_context()
         ctx.push()
-        from utils.tenanting import get_active_tenant_id
         with patch("utils.tenant_orm._active_tenant_for_orm", return_value=tenant_id):
             yield
         ctx.pop()
@@ -163,7 +161,6 @@ class TestDynamicResourceLimits:
         from decimal import Decimal
         from models import Sale
         from utils.decorators import enforce_resource_limit
-        from utils.tenant_limits import TenantLimitError
 
         sample_tenant.max_sales_per_month = 2
         db_session.flush()

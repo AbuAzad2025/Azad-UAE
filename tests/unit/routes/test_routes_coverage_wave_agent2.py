@@ -285,7 +285,7 @@ class TestProductWizardWave:
 class TestInvoiceWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'فاتورة'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -338,7 +338,7 @@ class TestInvoiceWizardWave:
 class TestReceiveWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'استلام'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -366,7 +366,7 @@ class TestReceiveWizardWave:
 class TestGiveWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'إعطاء'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -399,7 +399,7 @@ class TestGiveWizardWave:
 class TestExpenseWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'مصروف'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -429,7 +429,7 @@ class TestExpenseWizardWave:
 class TestSupplierWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'مورد'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -440,7 +440,7 @@ class TestSupplierWizardWave:
     def test_step_four_valid(self, mock_user):
         ctx = {'last_action': 'مورد', 'option': '1', 'step': 4,
                'data': {'name': 'S', 'phone': '1', 'address': 'A'}}
-        result = _run('5000', mock_user, ctx)
+        _result = _run('5000', mock_user, ctx)
         assert ctx['step'] == 5
 
     def test_step_four_invalid(self, mock_user):
@@ -481,7 +481,7 @@ class TestSupplierWizardWave:
 class TestPurchaseWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'مشتريات'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -541,7 +541,7 @@ class TestPurchaseWizardWave:
 class TestChequeWizardWave:
     def test_option_one_start(self, mock_user):
         ctx = {'last_action': 'شيك'}
-        result = _run('1', mock_user, ctx)
+        _result = _run('1', mock_user, ctx)
         assert ctx['option'] == '1'
 
     def test_back_exit(self, mock_user):
@@ -649,12 +649,12 @@ class TestWarehouseWizardWave:
 class TestUserWizardWave:
     def test_step_one_username(self, mock_user):
         ctx = {'last_action': 'مستخدم', 'option': '1', 'step': 1, 'data': {}}
-        result = _run('ahmed', mock_user, ctx)
+        _result = _run('ahmed', mock_user, ctx)
         assert ctx['step'] == 2
 
     def test_step_two_password(self, mock_user):
         ctx = {'last_action': 'مستخدم', 'option': '1', 'step': 2, 'data': {'username': 'ahmed'}}
-        result = _run('Pass@123', mock_user, ctx)
+        _result = _run('Pass@123', mock_user, ctx)
         assert ctx['step'] == 3
 
     def test_back_exit(self, mock_user):
@@ -671,7 +671,7 @@ class TestUserWizardWave:
     def test_step_three_valid_role(self, mock_user):
         ctx = {'last_action': 'مستخدم', 'option': '1', 'step': 3,
                'data': {'username': 'ahmed', 'password': 'p'}}
-        result = _run('admin', mock_user, ctx)
+        _result = _run('admin', mock_user, ctx)
         assert ctx['step'] == 4
 
     def test_step_four_create(self, mock_user):

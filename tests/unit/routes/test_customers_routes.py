@@ -140,7 +140,6 @@ class TestCustomersCrud:
         
         assert resp.status_code == 200
         # Verify update in DB
-        from models import Customer
         from extensions import db
         db.session.refresh(customer)
         assert customer.name == 'Updated Name'
@@ -190,14 +189,13 @@ class TestCustomersCrud:
                            email="sales@example.com", customer_type='regular', phone="0502222222")
         
         # Create a sale for this customer (need seller_id)
-        sale = test_factory.create_sale(customer, total_amount=105.00, sale_number="S-DEL-001",
+        _sale = test_factory.create_sale(customer, total_amount=105.00, sale_number="S-DEL-001",
                     subtotal=100, paid_amount=0, balance_due=105,
                     currency="AED", seller_id=user.id)
         
         resp = client.post(f'/customers/{customer.id}/delete', follow_redirects=True)
         assert resp.status_code == 200
         # Should NOT be deleted (soft delete or blocked)
-        from models import Customer
         from extensions import db
         db.session.refresh(customer)
         # Either soft deleted (is_active=False) or still exists
@@ -249,7 +247,7 @@ class TestCustomersApi:
                            email="sales@example.com", customer_type='regular', phone="0507776666")
         
         # Create a sale for this customer
-        sale = test_factory.create_sale(customer, total_amount=210.00, sale_number="S-API-001",
+        _sale = test_factory.create_sale(customer, total_amount=210.00, sale_number="S-API-001",
                     subtotal=200, paid_amount=50, balance_due=160,
                     currency="AED", seller_id=user.id)
         
@@ -271,7 +269,7 @@ class TestCustomersStatement:
                     sale_date=datetime(2025, 1, 15), subtotal=100, paid_amount=105, balance_due=0,
                     payment_status='paid', exchange_rate=1, notes='', currency="AED", seller_id=user.id)
         
-        payment = test_factory.create_payment(customer, sale=sale, amount=105.00,
+        _payment = test_factory.create_payment(customer, sale=sale, amount=105.00,
                            payment_number="P-STMT-001", payment_date=datetime(2025, 1, 15),
                            amount_aed=105, currency="AED", exchange_rate=1,
                            reference_number="REF-001", payment_method='cash', payment_confirmed=True,
@@ -314,7 +312,7 @@ class TestCustomersScopedHelpers:
     def test_customer_in_scope_false(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client = auth_client
+        _client = auth_client
         # For super_admin users, branch_scope_id is None, so _customer_in_scope returns True
         # This test documents the current behavior
         customer = test_factory.create_customer(name="OOS", email="oos@test.com", 
@@ -327,7 +325,7 @@ class TestCustomersScopedHelpers:
     def test_customer_in_scope_true_same_tenant(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client = auth_client
+        _client = auth_client
         customer = test_factory.create_customer(name="In Scope", email="inscope@test.com", 
                            customer_type='regular', phone="0502222222")
         
@@ -337,7 +335,7 @@ class TestCustomersScopedHelpers:
         from routes.customers import _attach_customer_branch_labels
         from models import Branch
         
-        client = auth_client
+        _client = auth_client
         user = sample_user
         
         # Create branches
@@ -476,7 +474,7 @@ class TestCustomersCoverageGaps:
                            phone="0503456789")
         
         # Create sale with branch
-        sale = test_factory.create_sale(customer, total_amount=105.00, sale_number="S-BR-001",
+        _sale = test_factory.create_sale(customer, total_amount=105.00, sale_number="S-BR-001",
                     subtotal=100, paid_amount=0, balance_due=105,
                     currency="AED", branch_id=branch.id, seller_id=user.id)
         
@@ -487,7 +485,7 @@ class TestCustomersCoverageGaps:
     def test_customer_in_scope_without_branch(self, auth_client, test_factory):
         from routes.customers import _customer_in_scope
         
-        client = auth_client
+        _client = auth_client
         customer = test_factory.create_customer(name="No Branch", email="nobranch@test.com", 
                            customer_type='regular', phone="0504567890")
         
@@ -506,13 +504,13 @@ class TestCustomersCoverageGaps:
                     sale_date=datetime(2025, 1, 15), subtotal=100, paid_amount=40, balance_due=65,
                     payment_status='partial', exchange_rate=1, notes='', currency="AED", seller_id=user.id)
         
-        payment = test_factory.create_payment(customer, sale=sale, amount=40.00,
+        _payment = test_factory.create_payment(customer, sale=sale, amount=40.00,
                            payment_number="P-FULL-001", payment_date=datetime(2025, 2, 1),
                            amount_aed=40, currency="AED", exchange_rate=1,
                            reference_number="REF-FULL", payment_method='cash', payment_confirmed=True,
                            direction='incoming')
         
-        receipt = test_factory.create_receipt(customer, amount=15.00,
+        _receipt = test_factory.create_receipt(customer, amount=15.00,
                            receipt_number="RCV-FULL-001", receipt_date=datetime(2025, 3, 1),
                            amount_aed=15, currency="AED", exchange_rate=1,
                            payment_method='cash', payment_confirmed=True, notes='')
@@ -531,7 +529,7 @@ class TestCustomersCoverageGaps:
         customer = test_factory.create_customer(name="Sale Only Customer", 
                            email="saleonly@test.com", customer_type='regular', phone="0506789012")
         
-        sale = test_factory.create_sale(customer, total_amount=50.00, sale_number="S-TYPE-001",
+        _sale = test_factory.create_sale(customer, total_amount=50.00, sale_number="S-TYPE-001",
                     sale_date=datetime(2025, 2, 1), subtotal=50, paid_amount=50, balance_due=0,
                     payment_status='paid', exchange_rate=1, notes='', currency="AED", seller_id=user.id)
         

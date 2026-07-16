@@ -240,7 +240,7 @@ class TestAdminLedgerAccounts:
         mocks["log_audit"].assert_called_with("create", "gl_accounts", 99)
 
     def test_add_account_post_exception(self, ledger_client):
-        with _ledger_patches() as mocks, \
+        with _ledger_patches() as _mocks, \
              patch("routes.admin_ledger.active_tenant_id", return_value=1), \
              patch("routes.admin_ledger.resolve_default_currency", return_value="AED"), \
              patch("routes.admin_ledger.GLAccount"), \
@@ -517,7 +517,7 @@ class TestAdminLedgerCoverageGaps:
     def test_edit_account_exception(self, ledger_client):
         account = _mock_account(code="3101", id=13)
         q = _accounts_query(edit_account=account)
-        with _ledger_patches(accounts_query=q) as mocks, \
+        with _ledger_patches(accounts_query=q) as _mocks, \
              patch("routes.admin_ledger.resolve_default_currency", return_value="AED"), \
              patch("utils.error_messages.ErrorMessages.unexpected_error", return_value="err"), \
              patch("utils.db_safety.db.session") as mock_safety_session:
@@ -532,7 +532,7 @@ class TestAdminLedgerCoverageGaps:
     def test_delete_account_exception(self, ledger_client):
         account = _mock_account(id=14)
         q = _accounts_query(edit_account=account)
-        with _ledger_patches(accounts_query=q, journal_lines_first=None) as mocks, \
+        with _ledger_patches(accounts_query=q, journal_lines_first=None) as _mocks, \
              patch("utils.db_safety.db.session") as mock_safety_session:
             mock_safety_session.commit.side_effect = RuntimeError("delete fail")
             resp = ledger_client.post("/admin/ledger/accounts/14/delete")

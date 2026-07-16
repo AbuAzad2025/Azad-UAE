@@ -212,7 +212,7 @@ def main():
             db.session.flush()
             db.session.refresh(pwc)
 
-            expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            _expected_cogs = (pwc.average_cost * sale_qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
             # After WAC update, pwc.average_cost changed; recompute expected
             db.session.refresh(pwc)
             print(f"\r\nAfter Sale (qty={sale_qty}):")

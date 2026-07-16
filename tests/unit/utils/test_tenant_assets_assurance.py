@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from utils.tenant_assets import (
-    FOLDER_TO_SLUG,
-    SLUG_TO_FOLDER,
     branding_for_tenant_slug,
     branding_paths_for_folder,
     discover_tenant_folders,

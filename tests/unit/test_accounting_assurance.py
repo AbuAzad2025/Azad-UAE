@@ -104,7 +104,7 @@ class TestPartnerProfitAndLossDistribution:
         debit_note.query.filter_by.return_value.first.return_value = None
         return partner
 
-    def _run_dist(self, app, mocker, model_patch, partners, pnl):
+    def _run_dist(self, _app, mocker, model_patch, partners, pnl):
         self._patch_partner_query(model_patch, partners)
         mocker.patch('services.partner_service.PartnerService.calculate_scope_profit', return_value=pnl)
         # Patch db session operations so create_distributions doesn't try to
@@ -118,14 +118,14 @@ class TestPartnerProfitAndLossDistribution:
         )
 
     def test_clean_profit_distribution(self, app, mocker, model_patch):
-        ids = self._run_dist(app, mocker, model_patch,
+        _ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner()],
             pnl={'revenue': 20000.0, 'cogs': 5000.0, 'expenses': 5000.0,
                  'gross_profit': 15000.0, 'net_profit': 10000.0},
         )
 
     def test_loss_sharing_distribution(self, app, mocker, model_patch):
-        ids = self._run_dist(app, mocker, model_patch,
+        _ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(loss_share_percentage=Decimal('50'))],
             pnl={'revenue': 5000.0, 'cogs': 8000.0, 'expenses': 2000.0,
                  'gross_profit': -3000.0, 'net_profit': -5000.0},
@@ -153,14 +153,14 @@ class TestPartnerProfitAndLossDistribution:
             )
 
     def test_distribution_scope_branch(self, app, mocker, model_patch):
-        ids = self._run_dist(app, mocker, model_patch,
+        _ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(scope_type='branch', scope_id=5, share_percentage=Decimal('30'))],
             pnl={'revenue': 15000.0, 'cogs': 5000.0, 'expenses': 2000.0,
                  'gross_profit': 10000.0, 'net_profit': 8000.0},
         )
 
     def test_distribution_scope_warehouse(self, app, mocker, model_patch):
-        ids = self._run_dist(app, mocker, model_patch,
+        _ids = self._run_dist(app, mocker, model_patch,
             partners=[self._make_partner(scope_type='warehouse', scope_id=10, share_percentage=Decimal('20'))],
             pnl={'revenue': 10000.0, 'cogs': 4000.0, 'expenses': 1000.0,
                  'gross_profit': 6000.0, 'net_profit': 5000.0},

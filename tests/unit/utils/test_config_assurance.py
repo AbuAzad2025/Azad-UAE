@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import importlib
 import logging
-import os
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -47,14 +46,14 @@ class TestRedisAvailable:
         import config as cfg
         mock_sock = MagicMock()
         mock_sock.recv.return_value = b'+PONG\r\n'
-        with patch('config.socket.create_connection', return_value=MagicMock(__enter__=lambda s: mock_sock, __exit__=lambda *a: None)):
+        with patch('config.socket.create_connection', return_value=MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None)):
             assert cfg._redis_available() is True
 
     def test_redis_ping_legacy_pong(self):
         import config as cfg
         mock_sock = MagicMock()
         mock_sock.recv.return_value = b'PONG'
-        with patch('config.socket.create_connection', return_value=MagicMock(__enter__=lambda s: mock_sock, __exit__=lambda *a: None)):
+        with patch('config.socket.create_connection', return_value=MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None)):
             assert cfg._redis_available() is True
 
     def test_redis_unavailable_on_error(self):
@@ -126,7 +125,7 @@ class TestConfigClassBranches:
         mock_sock.recv.return_value = b'+PONG\r\n'
         monkeypatch.setattr(
             'socket.create_connection',
-            lambda *args, **k: MagicMock(__enter__=lambda s: mock_sock, __exit__=lambda *a: None),
+            lambda *_args, **_k: MagicMock(__enter__=lambda _s: mock_sock, __exit__=lambda *_a: None),
         )
         importlib.reload(importlib.import_module('config'))
         import config as cfg
@@ -135,7 +134,7 @@ class TestConfigClassBranches:
     def test_cache_type_null_when_redis_unavailable(self, monkeypatch):
         monkeypatch.delenv('CACHE_TYPE', raising=False)
 
-        def _fail(*a, **k):
+        def _fail(*_a, **_k):
             raise OSError('down')
 
         monkeypatch.setattr('socket.create_connection', _fail)

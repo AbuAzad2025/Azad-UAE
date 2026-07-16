@@ -73,7 +73,7 @@ class TestLogSlowQueries:
     def test_registers_and_warns_on_slow_query(self):
         registered = {}
 
-        def fake_listens_for(target, identifier):
+        def fake_listens_for(_target, identifier):
             def decorator(fn):
                 registered[identifier] = fn
                 return fn
@@ -98,7 +98,7 @@ class TestLogSlowQueries:
     def test_fast_query_does_not_warn(self):
         registered = {}
 
-        def fake_listens_for(target, identifier):
+        def fake_listens_for(_target, identifier):
             def decorator(fn):
                 registered[identifier] = fn
                 return fn

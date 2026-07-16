@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 from utils.backup_optimizer import BackupOptimizer
 

@@ -1,10 +1,8 @@
 """Coverage Wave Agent-1: targeted tests for 7 remaining uncovered lines."""
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timezone
 from decimal import Decimal
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest

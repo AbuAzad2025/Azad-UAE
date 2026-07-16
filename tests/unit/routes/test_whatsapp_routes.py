@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from werkzeug.exceptions import NotFound
 
-from tests.unit.routes.conftest import _chain_query, app_factory, bypass_permission_auth, unauthenticated_client
+from tests.unit.routes.conftest import app_factory, bypass_permission_auth, unauthenticated_client
 
 
 def _sale_query(sale=None, not_found=False):

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from utils import gl_tenant as gt
 
@@ -44,7 +41,7 @@ class TestScopeJournalEntries:
         q = MagicMock()
         model = type('GLJournalEntry', (), {'tenant_id': _Col()})
         with patch('models.GLJournalEntry', model, create=True):
-            result = gt.scope_journal_entries(q, tenant_id=2)
+            _result = gt.scope_journal_entries(q, tenant_id=2)
         q.filter.assert_called_once()
 
     def test_returns_query_when_no_tenant(self):
@@ -123,12 +120,12 @@ class TestQueryHelpers:
         model = MagicMock()
         model.query = MagicMock()
         with patch('models.GLAccount', model), \
-             patch('utils.gl_tenant.scope_gl_accounts', return_value='scoped') as scope:
+             patch('utils.gl_tenant.scope_gl_accounts', return_value='scoped') as _scope:
             assert gt.gl_account_query(tenant_id=4) == 'scoped'
 
     def test_gl_entry_query(self):
         model = MagicMock()
         model.query = MagicMock()
         with patch('models.GLJournalEntry', model), \
-             patch('utils.gl_tenant.scope_journal_entries', return_value='scoped') as scope:
+             patch('utils.gl_tenant.scope_journal_entries', return_value='scoped') as _scope:
             assert gt.gl_entry_query(tenant_id=4) == 'scoped'

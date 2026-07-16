@@ -10,7 +10,7 @@ import pytest
 def _capture_handlers(mocker):
     handlers = {}
 
-    def listens_for(model, event):
+    def listens_for(model, _event):
         def decorator(fn):
             handlers.setdefault(model.__name__ if hasattr(model, '__name__') else str(model), []).append(fn)
             return fn
@@ -110,7 +110,7 @@ class TestSaleListeners:
 
     def test_sale_delete_logs_and_handles_error(self, mocker):
         handlers = _capture_handlers(mocker)
-        info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('log fail'))
+        _info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('log fail'))
         warn = mocker.patch('models.events.logger.warning')
         from models.events import register_sale_listeners
 
@@ -173,7 +173,7 @@ class TestPurchaseListeners:
 class TestPaymentListeners:
     def test_payment_supplier_and_failure(self, mocker):
         handlers = _capture_handlers(mocker)
-        info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('fail'))
+        _info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('fail'))
         warn = mocker.patch('models.events.logger.warning')
         from models.events import register_payment_listeners
 
@@ -255,7 +255,7 @@ class TestProductReturnAndExpenseListeners:
 
     def test_expense_active_and_failure(self, mocker):
         handlers = _capture_handlers(mocker)
-        info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('x'))
+        _info = mocker.patch('models.events.logger.info', side_effect=RuntimeError('x'))
         err = mocker.patch('models.events.logger.error')
         from models.events import register_expense_listeners
 

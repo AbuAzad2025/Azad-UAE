@@ -833,7 +833,7 @@ class TestMwacVatCompatibility:
         db_session.flush()
 
         # Purchase 10 units at 116 each (inclusive VAT = 100 + 16 tax)
-        purchase = PurchaseService.create_purchase(
+        _purchase = PurchaseService.create_purchase(
             user=sample_user_vat,
             supplier_data={"supplier_name": "MWAC Supplier"},
             lines_data=[{"product_id": product.id, "quantity": 10, "unit_cost": 116.00}],
@@ -875,7 +875,7 @@ class TestMwacVatCompatibility:
         db_session.add(product)
         db_session.flush()
 
-        purchase = PurchaseService.create_purchase(
+        _purchase = PurchaseService.create_purchase(
             user=sample_user_vat,
             supplier_data={"supplier_name": "MWAC Landed Supplier"},
             lines_data=[{"product_id": product.id, "quantity": 10, "unit_cost": 116.00}],

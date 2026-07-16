@@ -1,7 +1,5 @@
 from decimal import Decimal
 
-import pytest
-
 from utils.number_to_arabic import _to_words_under_1000, number_to_arabic_words
 
 

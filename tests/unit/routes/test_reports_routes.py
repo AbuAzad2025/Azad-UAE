@@ -516,7 +516,7 @@ class TestReportsPartnersDeep:
         row = TestReportsPartnersDeep._partner_row()
         call_count = {"n": 0}
 
-        def query_side(*args, **kwargs):
+        def query_side(*_args, **_kwargs):
             call_count["n"] += 1
             q = _chain_query_stub(scalar=True if call_count["n"] == 1 else 0, all=[row])
             return q
@@ -525,7 +525,7 @@ class TestReportsPartnersDeep:
         product.id = 1
         product.name = "Widget"
         product.is_active = True
-        product_partners = []
+        _product_partners = []
         partner = MagicMock()
         partner.customer_id = 2
         partner.percentage = Decimal("10")
@@ -789,7 +789,7 @@ def _supplier_payment_chain(*, direct_all=None, unalloc_all=None, fifo_scalar=De
     sum_q.scalar.return_value = fifo_scalar
     state = {"n": 0}
 
-    def filter_side(*args, **kwargs):
+    def filter_side(*_args, **_kwargs):
         state["n"] += 1
         if state["n"] == 1:
             return base
@@ -817,7 +817,7 @@ class TestPartnersCommissionPath:
         row.partner_id = 8
         calls = {"n": 0}
 
-        def query_factory(*args, **kwargs):
+        def query_factory(*_args, **_kwargs):
             calls["n"] += 1
             if calls["n"] == 1:
                 return _chain_query_stub(scalar=True)
@@ -894,7 +894,7 @@ class TestPurchasesPaymentAllocation:
         pay_q = _chain_query_stub(all=[pmt])
 
         def tq(model):
-            from models import Payment, Purchase
+            from models import Payment
             if model is Payment:
                 return pay_q
             return pq
@@ -1139,7 +1139,7 @@ class TestPartnersFullPipeline:
         supplier.tenant_id = 1
         query_calls = {"n": 0}
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             query_calls["n"] += 1
             if query_calls["n"] == 1:
                 return _chain_query_stub(scalar=True)
@@ -1262,7 +1262,7 @@ class TestEntityFragmentCustomerDeep:
         payment.notes = ""
         qc = {"n": 0}
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             qc["n"] += 1
             if qc["n"] <= 3:
                 return _chain_query_stub(scalar=Decimal("100"))
@@ -1296,7 +1296,7 @@ class TestEntityFragmentCustomerDeep:
         mp.total_sales = Decimal("400")
         mp.last_date = None
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             qc["n"] += 1
             if qc["n"] <= 3:
                 return _chain_query_stub(scalar=Decimal("0"))
@@ -1320,7 +1320,7 @@ class TestEntityFragmentCustomerDeep:
         entity.customer_type = "regular"
         scalars = iter([Decimal("10"), Decimal("500"), Decimal("0")])
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             return _chain_query_stub(scalar=next(scalars, Decimal("0")))
 
         with patch("routes.reports.tenant_get_or_404", return_value=entity), \
@@ -1352,7 +1352,7 @@ class TestPartnersHasEntriesPath:
         financial_q = _chain_query_stub(scalar=Decimal("25"))
         queries = [exists_q, rows_q]
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             if len(queries) > 0:
                 return queries.pop(0)
             return financial_q
@@ -1434,7 +1434,7 @@ class TestReportsPartnersFallbackLoop:
         financial_q = _chain_query_stub(scalar=Decimal("0"))
         call_idx = {"n": 0}
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             call_idx["n"] += 1
             if call_idx["n"] == 1:
                 return exists_q
@@ -1476,7 +1476,7 @@ class TestReportsPartnersFallbackLoop:
         financial_q = _chain_query_stub(scalar=Decimal("0"))
         call_idx = {"n": 0}
 
-        def session_query(*args, **kwargs):
+        def session_query(*_args, **_kwargs):
             call_idx["n"] += 1
             if call_idx["n"] == 1:
                 return exists_q
@@ -1485,7 +1485,7 @@ class TestReportsPartnersFallbackLoop:
         def tenant_query_side(model):
             name = getattr(model, "__name__", str(model))
             if name == "Product":
-                def product_query():
+                def _product_query():
                     q = MagicMock()
                     q.join.return_value = empty_products_q
                     q.filter.return_value = merchant_products_q

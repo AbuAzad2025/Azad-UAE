@@ -11,7 +11,7 @@ from utils.branching import ensure_warehouse_access, get_accessible_warehouses, 
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation

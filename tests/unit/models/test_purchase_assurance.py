@@ -137,7 +137,7 @@ class TestPurchaseGetPaidAmount:
 
 class TestPurchaseCalculateTotals:
     @staticmethod
-    def _purchase_with_line(sample_purchase, sample_product, db_session, **line_kwargs):
+    def _purchase_with_line(sample_purchase, sample_product, _db_session, **line_kwargs):
         line = PurchaseLine(
             tenant_id=sample_purchase.tenant_id,
             purchase_id=sample_purchase.id,

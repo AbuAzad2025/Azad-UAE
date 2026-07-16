@@ -52,7 +52,7 @@ class TestMainRedirect:
 def _dashboard_query_side_effect(can_profit=False):
     calls = {'n': 0}
 
-    def _query(*args, **kwargs):
+    def _query(*_args, **_kwargs):
         calls['n'] += 1
         q = MagicMock()
         q.filter.return_value = q
@@ -145,7 +145,7 @@ class TestMainDashboard:
         product_count_q = MagicMock()
         product_count_q.count.return_value = 12
 
-        def _query_side_effect(*args, **kwargs):
+        def _query_side_effect(*_args, **_kwargs):
             q = MagicMock()
             q.filter.return_value = q
             joined = MagicMock()
@@ -211,7 +211,7 @@ class TestMainProfile:
     def test_profile_update_email_success(self, main_client, bypass_permission_auth):
         with patch('utils.sanitizer.InputSanitizer.sanitize_email', return_value='new@test.com'), \
              patch('routes.main.User.query') as uq, \
-             patch('routes.main.db.session') as sess:
+             patch('routes.main.db.session') as _sess:
             uq.filter.return_value.first.return_value = None
             resp = main_client.post('/my-profile/update', data={'email': 'new@test.com'}, follow_redirects=False)
         assert resp.status_code == 302

@@ -44,7 +44,7 @@ def _mock_transaction(**kwargs):
     return txn
 
 
-def _mock_advance(**kwargs):
+def _mock_advance(**_kwargs):
     adv = MagicMock()
     adv.date = datetime(2026, 5, 1)
     adv.amount = Decimal('200')

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from contextlib import ExitStack, contextmanager
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest

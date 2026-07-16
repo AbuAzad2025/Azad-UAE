@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 
 class TestSystemDefaultCurrency:
     def test_get_system_default_currency(self, mocker):

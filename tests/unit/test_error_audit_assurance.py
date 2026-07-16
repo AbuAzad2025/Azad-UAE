@@ -1,10 +1,7 @@
 """Error audit — severity classification, dedup, sanitization, escalation."""
 from __future__ import annotations
 
-import json
 from unittest.mock import MagicMock
-
-import pytest
 
 
 class TestErrorAuditLogModel:

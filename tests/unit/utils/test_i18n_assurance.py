@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 
 class TestGettextWrappers:
     def test_underscore_calls_gettext(self, mocker):

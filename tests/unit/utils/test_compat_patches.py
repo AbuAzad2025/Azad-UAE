@@ -3,8 +3,6 @@ import pickle
 import sys
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 class TestCompatPatches:
     def test_dumps_serializes_value(self):

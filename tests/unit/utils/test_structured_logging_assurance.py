@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import json
-import logging
 from unittest.mock import MagicMock
-
-import pytest
 
 from utils.structured_logging import (
     log_data_access,

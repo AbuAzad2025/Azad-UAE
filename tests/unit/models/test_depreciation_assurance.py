@@ -58,7 +58,7 @@ class TestDepreciationRunMonthly:
     """DepreciationService.run_monthly — tenant filter, posted/skipped/errors."""
 
     @staticmethod
-    def _mock_assets_query(mocker, assets, tenant_id=None):
+    def _mock_assets_query(mocker, assets, _tenant_id=None):
         mock_q = MagicMock()
         mock_q.filter_by.return_value = mock_q
         mock_q.filter.return_value = mock_q

@@ -140,7 +140,7 @@ class TestWarehouseIndex:
         assert render.call_args[0][0] == "warehouse/index.html"
 
     def test_index_with_search(self, warehouse_client, warehouse_mocks):
-        with patch("routes.warehouse.render_template", return_value="index") as render:
+        with patch("routes.warehouse.render_template", return_value="index") as _render:
             resp = warehouse_client.get("/warehouse/?search=widget")
         assert resp.status_code == 200
         warehouse_mocks["visible_query"].filter.assert_called()
@@ -424,7 +424,7 @@ class TestWarehouseUploadImage:
 
 class TestWarehouseExtended:
     def test_index_category_filter(self, warehouse_client, warehouse_mocks):
-        with patch("routes.warehouse.render_template", return_value="idx") as render:
+        with patch("routes.warehouse.render_template", return_value="idx") as _render:
             resp = warehouse_client.get("/warehouse/?category=3&stock=low&page=2")
         assert resp.status_code == 200
         warehouse_mocks["visible_query"].filter_by.assert_called_with(category_id=3)
@@ -470,7 +470,7 @@ class TestWarehouseExtended:
     def test_create_post_online_warehouse_success(self, warehouse_admin_client, warehouse_mocks):
         wh_query = warehouse_mocks["warehouse_query"]
         wh_query.filter_by.return_value.first.return_value = None
-        with patch("routes.warehouse.Warehouse") as wh_cls, \
+        with patch("routes.warehouse.Warehouse") as _wh_cls, \
              patch("routes.warehouse.Warehouse.TYPE_ONLINE", "online"), \
              patch("routes.warehouse.Warehouse.WAREHOUSE_TYPES", ("physical", "online")), \
              patch("routes.warehouse.Warehouse.TYPE_PHYSICAL", "physical"), \

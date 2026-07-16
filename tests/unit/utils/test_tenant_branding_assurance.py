@@ -1,7 +1,6 @@
 """Tenant branding resolution — logos, warnings, print context."""
 from __future__ import annotations
 
-import os
 from unittest.mock import MagicMock
 
 import pytest

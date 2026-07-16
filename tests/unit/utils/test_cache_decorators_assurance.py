@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 
 class TestTenantCacheSalt:
     def test_returns_tenant_id_from_g(self, app):

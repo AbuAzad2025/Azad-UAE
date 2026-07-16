@@ -243,7 +243,7 @@ class TestConfig:
 _PYTEST_TEMP_INITIALIZED = False
 
 
-def pytest_configure(config):
+def pytest_configure(_config):
     """Ensure basetemp exists; clean only once per process (importlib may re-call)."""
     global _PYTEST_TEMP_INITIALIZED
     temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
@@ -315,7 +315,7 @@ _TEMPLATE_COVERAGE_TRACKER: set[str] = set()
 _SIGNAL_CONNECTED = False
 
 
-def _on_template_rendered(sender, template, context, **extra):
+def _on_template_rendered(_sender, template, _context, **_extra):
     name = getattr(template, "name", None)
     if name:
         _TEMPLATE_COVERAGE_TRACKER.add(name)
@@ -334,11 +334,11 @@ def _ensure_signal_connected():
         pass
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(_item):
     _ensure_signal_connected()
 
 
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(_session, _exitstatus):
     try:
         out_path = os.path.join(PROJECT_ROOT, "templates_rendered.json")
         with open(out_path, "w", encoding="utf-8") as f:
@@ -774,7 +774,7 @@ def sample_owner(db_session):
 def auth_client(client, sample_user):
     """A logged-in test client for tenant users via actual login."""
     with client:
-        resp = client.post('/auth/login', data={
+        _resp = client.post('/auth/login', data={
             'username': sample_user.username,
             'password': 'password123',
         }, follow_redirects=True)
@@ -785,7 +785,7 @@ def auth_client(client, sample_user):
 def owner_client(client, sample_owner):
     """A logged-in test client for platform owner via actual login."""
     with client:
-        resp = client.post('/auth/login', data={
+        _resp = client.post('/auth/login', data={
             'username': sample_owner.username,
             'password': 'password123',
         }, follow_redirects=True)

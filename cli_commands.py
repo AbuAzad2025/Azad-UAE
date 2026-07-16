@@ -95,7 +95,7 @@ def register_seed_demo_command(app):
         with flask_app.app_context():
             _do_seed_demo(flask_app)
 
-def _do_seed_demo(app):
+def _do_seed_demo(_app):
     from extensions import db
     from decimal import Decimal
     from sqlalchemy import inspect as sa_inspect, text
@@ -454,7 +454,7 @@ def _do_seed_demo(app):
             continue
         pur_wh_id = warehouse.id
         lines_data = [{"product_id": prod.id, "quantity": 1, "unit_cost": Decimal(str(amount))}]
-        purchase = PurchaseService.create_purchase(
+        _purchase = PurchaseService.create_purchase(
             user=seller, supplier_data={"supplier_id": sup.id}, lines_data=lines_data,
             warehouse_id=pur_wh_id, currency="ILS",
         )

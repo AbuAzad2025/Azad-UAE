@@ -20,7 +20,7 @@ class _Col:
     def __eq__(self, other):
         return self
 
-    def between(self, a, b):
+    def between(self, _a, _b):
         return self
 
 

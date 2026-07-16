@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from contextlib import ExitStack, contextmanager
-from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -50,7 +49,7 @@ def _gl_sum_query(credit=Decimal('150'), debit=Decimal('20')):
 
 
 def _ledger_query_side_effect(credit_val=Decimal('600'), debit_val=Decimal('100')):
-    def query_side(*args, **kwargs):
+    def query_side(*args, **_kwargs):
         q = _chain_query()
         is_credit = bool(args) and 'credit' in str(args[0]).lower()
         val = credit_val if is_credit else debit_val
@@ -61,7 +60,7 @@ def _ledger_query_side_effect(credit_val=Decimal('600'), debit_val=Decimal('100'
 
 
 def _scope_accounts_by_type(accounts_by_type):
-    def fake_scope(query, **kwargs):
+    def fake_scope(query, **_kwargs):
         m = MagicMock()
         query_text = str(query).lower()
         if 'revenue' in query_text or "code.like('4%')" in query_text.replace(' ', ''):

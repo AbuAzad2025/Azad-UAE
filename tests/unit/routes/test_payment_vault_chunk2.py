@@ -3,7 +3,6 @@ Idempotency-Key caching, X-API-Key scoping, and signature validation."""
 
 from datetime import datetime, timezone, timedelta
 from unittest.mock import MagicMock
-from decimal import Decimal
 
 import pytest
 
@@ -43,7 +42,7 @@ class TestReplayProtection:
         future = datetime.now(timezone.utc) + timedelta(hours=1)
         payload = {"timestamp": future.isoformat()}
         with app.app_context():
-            resp, code = _reject_stale_webhook_timestamp(payload)
+            _resp, code = _reject_stale_webhook_timestamp(payload)
         assert code == 401
 
     def test_numeric_timestamp_accepted(self, app_factory):
@@ -72,7 +71,7 @@ class TestReplayProtection:
         old = datetime.now(timezone.utc) - timedelta(minutes=10)
         payload = {"created_at": old.isoformat()}
         with app.app_context():
-            resp, code = _reject_stale_webhook_timestamp(payload)
+            _resp, code = _reject_stale_webhook_timestamp(payload)
         assert code == 401
 
 
@@ -306,7 +305,7 @@ class TestPurchaseEndpointIdempotency:
         mocker.patch("routes.payment_vault._validate_public_api_origin", return_value=None)
         mocker.patch("routes.payment_vault._validate_api_key", return_value=None)
         mocker.patch("routes.payment_vault._check_idempotency_key", return_value=None)
-        mock_pkg_cls = mocker.patch("routes.payment_vault.Package")
+        _mock_pkg_cls = mocker.patch("routes.payment_vault.Package")
         self.mock_pkg = MagicMock()
         self.mock_pkg.id = 1
         self.mock_pkg.is_active = True

@@ -27,10 +27,9 @@ class TenantLimitError(Exception):
                 from flask import current_app
                 link = current_app.config.get('DEVELOPER_WHATSAPP', '')
                 if not link:
-                    from extensions import db
-                    from models.setting import SystemSetting
-                    setting = db.session.query(SystemSetting).filter_by(key='developer_whatsapp').first()
-                    link = setting.value if setting else ''
+                    from models.system_settings import SystemSettings
+                    _settings = SystemSettings.get_current()
+                    link = _settings.get_custom_setting('developer_whatsapp') if _settings else ''
                 if link:
                     link = link.strip().replace(' ', '').lstrip('+')
                     if not link.startswith('https'):

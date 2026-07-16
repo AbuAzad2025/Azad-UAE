@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import tempfile
-from contextlib import ExitStack
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import MagicMock, patch
@@ -497,7 +496,7 @@ class TestEditAssurance:
         product.cost_price = Decimal("0")
         partner = MagicMock(id=1, tenant_id=1)
 
-        def _scoped_query(customer_type=None):
+        def _scoped_query(_customer_type=None):
             query = MagicMock()
             query.order_by.return_value.all.return_value = []
             query.filter.return_value.first.return_value = partner
@@ -530,7 +529,7 @@ class TestEditAssurance:
         product.cost_price = Decimal("0")
         partner = MagicMock(id=99, tenant_id=1)
 
-        def _scoped_query(customer_type=None):
+        def _scoped_query(_customer_type=None):
             query = MagicMock()
             query.order_by.return_value.all.return_value = []
             query.filter.return_value.first.return_value = partner
@@ -565,7 +564,7 @@ class TestEditAssurance:
         partner = MagicMock(id=8, tenant_id=1)
         wrong_partner = MagicMock(id=8, tenant_id=2)
 
-        def _scoped_query(customer_type=None):
+        def _scoped_query(_customer_type=None):
             query = MagicMock()
             query.order_by.return_value.all.return_value = []
             query.filter.return_value.first.return_value = partner
@@ -646,7 +645,7 @@ class TestEditAssurance:
         form = _mock_product_form(validate=True)
         product = _product()
 
-        def _scoped_query(customer_type=None):
+        def _scoped_query(_customer_type=None):
             query = MagicMock()
             query.order_by.return_value.all.return_value = []
             query.filter.return_value.first.return_value = None
@@ -926,7 +925,7 @@ class TestImportProductsDirect:
         existing = _product(name='Existing')
         existing.current_stock = 5.0
         df = _import_dataframe({'name': ['Existing'], 'price': [12.0], 'stock': [10.0]})
-        with patch('routes.products.StockService.adjust_stock') as adjust:
+        with patch('routes.products.StockService.adjust_stock') as _adjust:
             existing.id = 1
             existing.current_stock = 5.0
             resp = _run_import_post(
@@ -1061,7 +1060,7 @@ class TestProductsIndexAndEditGaps:
              patch('forms.product.ProductForm', return_value=form), \
              patch('routes.products._scoped_customers_query', return_value=merchant_q), \
              patch('routes.products._parse_product_partners', return_value=(None, 'bad partners')), \
-             patch('routes.products.render_template', return_value='edit') as render:
+             patch('routes.products.render_template', return_value='edit') as _render:
             resp = product_client.post(
                 f'/products/{product.id}/edit',
                 data={'name': 'X', 'regular_price': '10', 'merchant_customer_id': '9'},
@@ -1168,7 +1167,7 @@ class TestProductsRemainingCoverage:
         product.partner_shares.clear = MagicMock()
         product.partner_shares.append = MagicMock()
         partner = MagicMock(id=8, tenant_id=1)
-        tier_existing = MagicMock()
+        _tier_existing = MagicMock()
         tier_q = MagicMock()
         tier_q.filter_by.return_value.first.return_value = None
         session = MagicMock()
@@ -1209,7 +1208,7 @@ class TestProductsRemainingCoverage:
         with _products_patches(product=product), \
              patch('forms.product.ProductForm', return_value=form), \
              patch('routes.products._parse_product_partners', return_value=(None, 'bad partner')), \
-             patch('routes.products.render_template', return_value='edit') as render:
+             patch('routes.products.render_template', return_value='edit') as _render:
             resp = product_client.post(
                 f'/products/{product.id}/edit',
                 data={'name': 'X', 'regular_price': '10'},
@@ -1238,7 +1237,7 @@ class TestProductsRemainingCoverage:
         with _products_patches(product=product), \
              patch('forms.product.ProductForm', return_value=form), \
              patch('routes.products._parse_product_partners', return_value=([{'partner_customer_id': 1, 'percentage': 10}], None)), \
-             patch('routes.products.render_template', return_value='edit') as render:
+             patch('routes.products.render_template', return_value='edit') as _render:
             resp = product_client.post(
                 f'/products/{product.id}/edit',
                 data={'name': 'X', 'regular_price': '10'},

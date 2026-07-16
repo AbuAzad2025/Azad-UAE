@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import gzip
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from utils.asset_compression import AssetCompressor, register_compression_cli
 
@@ -129,7 +127,7 @@ class TestRegisterCompressionCli:
     def test_cli_handler_runs(self, mocker):
         app = MagicMock()
         register_compression_cli(app)
-        handler = app.cli.command.call_args[1].get('f') or app.cli.command.return_value
+        _handler = app.cli.command.call_args[1].get('f') or app.cli.command.return_value
         mocker.patch('utils.asset_compression.AssetCompressor.compress_all', return_value={'total_savings': 10.0})
         mocker.patch('utils.asset_compression.click.echo')
         from click.testing import CliRunner

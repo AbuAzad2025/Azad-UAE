@@ -139,7 +139,7 @@ def _ensure_session(db, ctx):
     return session.id
 
 
-def _process_sale(db, ctx, shift):
+def _process_sale(db, ctx, _shift):
     from services.sale_service import SaleService
 
     lines = [{
@@ -170,7 +170,7 @@ def _process_sale(db, ctx, shift):
     return sale
 
 
-def _verify_gl(db, ctx, sale):
+def _verify_gl(_db, ctx, sale):
     from models import GLJournalEntry
     from utils.gl_reference_types import GLRef
 
@@ -192,7 +192,7 @@ def _verify_gl(db, ctx, sale):
     return entries
 
 
-def _reconcile_and_close_shift(db, ctx, shift, sale):
+def _reconcile_and_close_shift(db, _ctx, shift, sale):
     from models.pos_shift import PosShift
 
     shift.total_sales = Decimal(str(sale.total_amount or 0))
@@ -212,7 +212,7 @@ def _reconcile_and_close_shift(db, ctx, shift, sale):
     db.session.flush()
 
 
-def _run_subscription_scheduler(db, ctx):
+def _run_subscription_scheduler(_db, _ctx):
     from utils.billing_scheduler import run_subscription_check
 
     result = run_subscription_check()
@@ -239,7 +239,7 @@ def _verify_tenant_limits(db, ctx):
     assert branch_count <= tenant.max_branches, "Branch count exceeds limit"
 
 
-def _cleanup(db, ctx):
+def _cleanup(db, _ctx):
     from models.pos_shift import PosShift
     from models import PosSession, Sale
 
@@ -253,7 +253,7 @@ def run_e2e_dry_run():
     """Execute the full E2E dry-run simulation."""
     app, db = _setup()
 
-    failures = []
+    _failures = []
 
     with app.app_context():
         try:

@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from utils.bootstrap_keys import (
     bootstrap_keys,
     ensure_card_encryption_key,

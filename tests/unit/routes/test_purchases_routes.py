@@ -152,7 +152,7 @@ class TestPurchasesBranchScope:
 
     def test_print_branch_mismatch_403(self, purchases_client):
         purchase = _mock_purchase(branch_id=5)
-        with _purchase_patches(purchase=purchase, branch_scope=2) as ctx:
+        with _purchase_patches(purchase=purchase, branch_scope=2) as _ctx:
             resp = purchases_client.get("/purchases/1/print")
         assert resp.status_code == 403
 
@@ -213,7 +213,7 @@ class TestPurchasesDelete:
              patch("models.Cheque") as cheque_model, \
              patch("models.warehouse.StockMovement") as stock_model, \
              patch("services.gl_service.GLService.reverse_entry"), \
-             patch("models.PurchaseLine") as line_model:
+             patch("models.PurchaseLine") as _line_model:
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
@@ -257,7 +257,7 @@ class TestPurchasesReturn:
         purchase = _mock_purchase()
         with _purchase_patches(purchase=purchase) as ctx, \
              patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine") as line_model:
+             patch("routes.purchases.PurchaseReturnLine") as _line_model:
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = purchases_client.get("/purchases/1/return")
         assert resp.status_code == 200
@@ -384,11 +384,11 @@ class TestPurchasesExtended:
     def test_delete_with_supplier_reverses_balance(self, purchases_client):
         purchase = _mock_purchase(supplier_id=5, amount_aed=Decimal("200"))
         supplier = MagicMock()
-        with _purchase_patches(purchase=purchase) as ctx, \
+        with _purchase_patches(purchase=purchase) as _ctx, \
              patch("models.Cheque") as cheque_model, \
              patch("models.warehouse.StockMovement") as stock_model, \
              patch("services.gl_service.GLService.reverse_entry"), \
-             patch("models.PurchaseLine") as line_model, \
+             patch("models.PurchaseLine") as _line_model, \
              patch("models.Supplier") as supplier_model:
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
@@ -399,7 +399,7 @@ class TestPurchasesExtended:
 
     def test_delete_exception_redirects_to_view(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)
-        with _purchase_patches(purchase=purchase) as ctx, \
+        with _purchase_patches(purchase=purchase) as _ctx, \
              patch("models.Cheque") as cheque_model, \
              patch("models.warehouse.StockMovement") as stock_model, \
              patch("services.gl_service.GLService.reverse_entry", side_effect=RuntimeError("gl fail")):
@@ -411,7 +411,7 @@ class TestPurchasesExtended:
 
     def test_cancel_branch_mismatch_403(self, purchases_client):
         purchase = _mock_purchase(branch_id=9)
-        with _purchase_patches(purchase=purchase, branch_scope=2) as ctx:
+        with _purchase_patches(purchase=purchase, branch_scope=2) as _ctx:
             resp = purchases_client.post("/purchases/1/cancel")
         assert resp.status_code == 403
 

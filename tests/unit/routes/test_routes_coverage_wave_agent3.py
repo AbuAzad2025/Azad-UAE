@@ -3,7 +3,7 @@
 Targets: routes/treasury.py lines 62-63 (export: unscoped user lacking
 branch access → 403).
 """
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

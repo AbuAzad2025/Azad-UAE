@@ -2,14 +2,9 @@
 import uuid
 
 import pytest
-from decimal import Decimal
-from datetime import date
-from models.fixed_asset import FixedAsset, DepreciationSchedule
-from models.gl import GLAccount
 from models.user import User, Role
 from models.branch import Branch
 from models.tenant import Tenant
-from extensions import db
 
 
 @pytest.fixture(autouse=True)
@@ -250,9 +245,6 @@ class TestTenantIsolationHardening:
 
     def test_bootstrap_owner_login_without_tenant(self, db_session, sample_tenant, sample_branch):
         """Test bootstrap owner (tenant_id=None) can log in without tenant/branch"""
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
-        from utils.branching import set_active_branch, get_active_branch_id
-
         # Create bootstrap owner (tenant_id=None)
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
         owner.tenant_id = None
@@ -294,7 +286,6 @@ class TestTenantIsolationHardening:
     def test_developer_with_null_tenant_and_assigned_branch_does_not_raise_or_create_invalid_tenant_session(self, db_session, sample_tenant, sample_branch):
         """Test developer with tenant_id=None and assigned branch does not raise ValueError or create invalid tenant session"""
         from utils.tenanting import set_active_tenant, get_active_tenant_id
-        from utils.branching import set_active_branch, get_active_branch_id
         from models import Role
 
         # Find existing developer role or use existing one
@@ -381,8 +372,6 @@ class TestTenantIsolationHardening:
 
     def test_tenant_session_cleared_on_invalid_input(self, db_session, sample_tenant):
         """Test tenant session cleared on invalid input"""
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
-
         # Set a valid tenant first (requires authenticated user)
         # This test is skipped because unauthenticated users cannot set tenant_id
         # The session clearing behavior is tested through the login flow
@@ -391,7 +380,6 @@ class TestTenantIsolationHardening:
     def test_tenant_switch_rejects_suspended_tenant(self, db_session, sample_tenant):
         """Test tenant switch route rejects suspended tenant safely"""
         from utils.tenanting import set_active_tenant, get_active_tenant_id
-        from flask import session
 
         # Create a platform owner user
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
@@ -579,7 +567,7 @@ class TestLoginRouteLevel:
         """Switch to suspended tenant via /tenants/switch â†’ never 500, preserves previous tenant."""
         import uuid
         from models.tenant import Tenant
-        from utils.tenanting import set_active_tenant, get_active_tenant_id
+        from utils.tenanting import set_active_tenant
 
         owner = self._make_user(
             db_session, "switchowner", "pass1234",

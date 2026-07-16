@@ -1,7 +1,5 @@
 import pytest
-from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timezone
-import uuid
+from decimal import Decimal
 
 from models import (
     Tenant, Branch, Warehouse, Product, Customer, User, Role,
@@ -9,7 +7,6 @@ from models import (
     StockMovement, ProductWarehouseStock, ProductWarehouseCost, Currency,
 )
 from services.sale_service import SaleService
-from services.stock_service import StockService
 from services.gl_service import GLService
 from services.gl_tree_builder import GLTreeBuilder
 from services.gl_accounting_setup import GLAccountingSetupService

@@ -1,8 +1,6 @@
 """Session security — rotate_session preserves auth keys."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 
 class TestRotateSession:
     def test_clears_and_restores_flask_login_keys(self, mocker):

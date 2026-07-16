@@ -30,8 +30,8 @@ class AgingAnalysisService:
                 'as_of_date': date
             }
         """
-        from utils.tenanting import active_tenant_id, tenant_query
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id, tenant_query
+        tid = tenant_id or get_active_tenant_id()
         if not as_of_date:
             as_of_date = date.today()
         elif isinstance(as_of_date, str):
@@ -149,8 +149,8 @@ class AgingAnalysisService:
         """
         تحليل عمر الذمم الدائنة (Accounts Payable)
         """
-        from utils.tenanting import active_tenant_id, tenant_query
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id, tenant_query
+        tid = tenant_id or get_active_tenant_id()
         if not as_of_date:
             as_of_date = date.today()
         elif isinstance(as_of_date, str):

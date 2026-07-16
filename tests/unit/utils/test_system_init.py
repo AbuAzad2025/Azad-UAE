@@ -169,7 +169,7 @@ class TestRoleAndPermissionBootstrap:
         session.add.assert_called()
 
     def test_ensure_owner_role_creates_and_assigns_permissions(self, flask_app):
-        role = MagicMock(slug='owner', permissions=[])
+        _role = MagicMock(slug='owner', permissions=[])
         perms = [MagicMock(code='admin')]
         role_query = MagicMock()
         role_query.filter_by.return_value.first.return_value = None
@@ -189,7 +189,7 @@ class TestRoleAndPermissionBootstrap:
         dev_role = MagicMock(slug='developer', permissions=[])
         perms = [MagicMock(code='admin'), MagicMock(code='manage_sales')]
 
-        def filter_by(**kwargs):
+        def filter_by(**_kwargs):
             query = MagicMock()
             slug = kwargs.get('slug')
             query.first.return_value = super_role if slug == 'super_admin' else dev_role
@@ -211,7 +211,7 @@ class TestRoleAndPermissionBootstrap:
     def test_ensure_super_admin_role_creates_missing_role(self, flask_app):
         perms = [MagicMock(code='admin')]
 
-        def filter_by(**kwargs):
+        def filter_by(**_kwargs):
             query = MagicMock()
             query.first.return_value = None
             return query
@@ -231,7 +231,7 @@ class TestRoleAndPermissionBootstrap:
     def test_ensure_developer_role_creates_missing_role(self, flask_app):
         perms = [MagicMock(code='admin')]
 
-        def filter_by(**kwargs):
+        def filter_by(**_kwargs):
             query = MagicMock()
             query.first.return_value = None
             return query
@@ -350,7 +350,7 @@ class TestOwnerUserBootstrap:
         with flask_app.app_context(), patch('utils.system_init.User', user_cls), patch(
             'utils.system_init.db.session'
         ) as session:
-            user, created = system_init_module._ensure_owner_user(role)
+            _user, created = system_init_module._ensure_owner_user(role)
         assert created is True
         session.add.assert_called_once_with(new_user)
         new_user.set_password.assert_called_once_with('secret')
@@ -360,7 +360,7 @@ class TestOwnerUserBootstrap:
         legacy = MagicMock(username='owner', is_owner=False, role=None)
         responses = iter([None, legacy])
 
-        def filter_by(**kwargs):
+        def filter_by(**_kwargs):
             query = MagicMock()
             query.first.return_value = next(responses)
             return query
@@ -408,7 +408,7 @@ class TestOwnerUserBootstrap:
         user_query.filter_by.return_value.first.return_value = owner
         with flask_app.app_context(), patch.object(
             system_init_module.User, 'query', user_query
-        ), patch('utils.system_init.db.session') as session:
+        ), patch('utils.system_init.db.session') as _session:
             user, created = system_init_module._ensure_owner_user(role)
         assert created is False
         assert user.role == role

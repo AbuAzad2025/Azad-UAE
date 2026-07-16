@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 GL_CONCEPT_AR = 'AR'
 GL_CONCEPT_AP = 'AP'
 GL_CONCEPT_CASH = 'CASH'

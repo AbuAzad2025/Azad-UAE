@@ -1,7 +1,5 @@
-import ast
 import re
 from pathlib import Path
-from collections import defaultdict
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
@@ -36,13 +34,13 @@ class TestFrontendSecurityAudit:
     def test_client_side_calculation_fallbacks_exist(self):
         js_files = self._read_js_files()
         has_backend_calc = False
-        has_client_fallback = False
-        for path, text in js_files.items():
+        _has_client_fallback = False
+        for _path, text in js_files.items():
             if 'calculateTotals' in text:
                 if 'fetch' in text or '$.ajax' in text or '/api/' in text:
                     has_backend_calc = True
                 if 'calculateTotalsClientSide' in text or 'ClientSide' in text:
-                    has_client_fallback = True
+                    _has_client_fallback = True
         assert has_backend_calc, 'No backend calculation found in JS'
 
     def test_no_sensitive_data_in_localstorage(self):

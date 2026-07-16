@@ -1,9 +1,9 @@
 """Celery async tasks — worker execution, retries, failure isolation."""
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -178,7 +178,7 @@ class TestAbandonedCartReminders:
     """send_abandoned_cart_reminders — first/second pass, rollback on failure."""
 
     def test_first_reminder_updates_cart(self, mocker):
-        now = datetime.now(timezone.utc)
+        _now = datetime.now(timezone.utc)
         cart = MagicMock(tenant_id=1, reminder_count=0)
         mock_q = MagicMock()
         mock_q.filter.return_value.all.side_effect = [[cart], []]
@@ -257,7 +257,7 @@ class TestCacheCleanupTask:
     """cleanup_old_cache — success and dead-letter style error capture."""
 
     def test_cache_clear_success(self, mocker):
-        cache = mocker.patch('extensions.cache')
+        _cache = mocker.patch('extensions.cache')
         from services.celery_tasks import cleanup_old_cache
         result = cleanup_old_cache()
         assert result == {'success': True, 'message': 'Cache cleared'}

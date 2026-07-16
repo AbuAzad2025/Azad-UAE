@@ -2,13 +2,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from extensions import db
 from models import GLJournalEntry
 from utils.gl_reference_types import (
     GLRef,
-    LEGACY_REF_MAP,
     delete_entries_by_ref,
     filter_entries_by_ref,
     normalize_ref_type,
