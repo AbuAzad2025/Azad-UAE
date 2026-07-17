@@ -146,7 +146,9 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
         errors.append("يرجى اختيار المستودع الذي سيتم تخزين المنتج فيه.")
     if initial_stock < 0:
         errors.append("المخزون الافتتاحي لا يمكن أن يكون سالباً.")
-    if initial_stock > 0 and cost_price <= 0:
+    has_positive_stock = initial_stock > 0
+    missing_cost = cost_price <= 0
+    if has_positive_stock and missing_cost:
         errors.append(
             "عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي."
         )

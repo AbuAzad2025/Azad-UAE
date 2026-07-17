@@ -1020,7 +1020,9 @@ class StockService:
             pwc.last_updated = datetime.now(timezone.utc)
 
             # Retrospective cost adjustment for negative stock
-            if old_qty < 0 and old_avg > 0:
+            had_negative_stock = old_qty < 0
+            had_positive_avg = old_avg > 0
+            if had_negative_stock and had_positive_avg:
                 StockService._post_retrospective_cost_adjustment(
                     tenant_id=tenant_id,
                     product_id=product_id,
