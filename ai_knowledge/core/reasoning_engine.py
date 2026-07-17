@@ -530,6 +530,8 @@ class ReasoningEngine:
         """
         problem_lower = technical_problem.lower()
 
+        diagnosis_steps = []
+
         possible_causes = [
             "فلتر وقود مسدود",
             "شمعات إشعال تالفة",
