@@ -112,6 +112,7 @@ class CardPayment(db.Model):
         _init_crypto()
         if not HAS_CRYPTO:
             raise RuntimeError("cryptography module not installed")
+        assert Fernet is not None
         key = current_app.config.get("CARD_ENCRYPTION_KEY")
         if not key:
             raise ValueError("CARD_ENCRYPTION_KEY not configured")
