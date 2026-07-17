@@ -11,7 +11,8 @@ Standard envelope:
     "meta": dict | null  # pagination, timestamps, etc.
 }
 """
-from typing import Any, Optional
+
+from typing import Any
 from flask import jsonify
 
 
@@ -19,7 +20,7 @@ def success_response(
     data: Any = None,
     message: str | None = None,
     meta: dict | None = None,
-    status_code: int = 200
+    status_code: int = 200,
 ):
     """Return a standardized success API response."""
     response = {
@@ -27,7 +28,7 @@ def success_response(
         "data": data,
         "message": message,
         "errors": None,
-        "meta": meta
+        "meta": meta,
     }
     return jsonify(response), status_code
 
@@ -36,7 +37,7 @@ def error_response(
     message: str,
     errors: list | None = None,
     status_code: int = 400,
-    meta: dict | None = None
+    meta: dict | None = None,
 ):
     """Return a standardized error API response."""
     response = {
@@ -44,17 +45,13 @@ def error_response(
         "data": None,
         "message": message,
         "errors": errors or [],
-        "meta": meta
+        "meta": meta,
     }
     return jsonify(response), status_code
 
 
 def paginated_response(
-    items: list,
-    page: int,
-    per_page: int,
-    total: int,
-    message: str | None = None
+    items: list, page: int, per_page: int, total: int, message: str | None = None
 ):
     """Return a paginated success response with metadata."""
     return success_response(
@@ -67,7 +64,7 @@ def paginated_response(
                 "total": total,
                 "pages": (total + per_page - 1) // per_page,
                 "has_next": page * per_page < total,
-                "has_prev": page > 1
+                "has_prev": page > 1,
             }
-        }
+        },
     )

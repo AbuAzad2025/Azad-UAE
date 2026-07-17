@@ -6,6 +6,7 @@ without querying mappings so existing legacy posting paths can remain active.
 When the flag is enabled, it resolves a GL concept to a tenant-owned, active,
 postable GLAccount or raises GLMappingError.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -18,19 +18,17 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 import traceback
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
 from urllib.parse import urlparse
 
-from flask import current_app, g, has_request_context, request, render_template
+from flask import current_app, g, has_request_context, request
 from flask_login import current_user
-from sqlalchemy import text, func
+from sqlalchemy import text
 from models.error_audit_log import ErrorAuditLog
-from io import StringIO, BytesIO
-import json
+from io import StringIO
 from extensions import db
 
 logger = logging.getLogger(__name__)
@@ -45,11 +43,27 @@ _DEDUP_WINDOW_MINUTES = 10
 # Sensitive field patterns (case-insensitive)
 _SECRET_KEYS = frozenset(
     {
-        "password", "password_hash", "password_confirmation",
-        "current_password", "new_password", "token", "access_token",
-        "refresh_token", "api_key", "api_secret", "secret", "secret_key",
-        "csrf_token", "auth_token", "session_token", "credit_card",
-        "cvv", "cvc", "card_number", "bank_account", "iban",
+        "password",
+        "password_hash",
+        "password_confirmation",
+        "current_password",
+        "new_password",
+        "token",
+        "access_token",
+        "refresh_token",
+        "api_key",
+        "api_secret",
+        "secret",
+        "secret_key",
+        "csrf_token",
+        "auth_token",
+        "session_token",
+        "credit_card",
+        "cvv",
+        "cvc",
+        "card_number",
+        "bank_account",
+        "iban",
     }
 )
 
@@ -64,24 +78,36 @@ class ErrorAuditService:
             query = query.filter_by(category=category)
         if level:
             query = query.filter_by(level=level)
-        if is_resolved == '1':
+        if is_resolved == "1":
             query = query.filter_by(is_resolved=True)
-        elif is_resolved == '0':
+        elif is_resolved == "0":
             query = query.filter_by(is_resolved=False)
         return query.order_by(ErrorAuditLog.created_at.desc())
 
     @staticmethod
     def get_dropdowns():
-        categories = [r[0] for r in db.session.query(ErrorAuditLog.category).distinct().order_by(ErrorAuditLog.category).all()]
-        levels = [r[0] for r in db.session.query(ErrorAuditLog.level).distinct().order_by(ErrorAuditLog.level).all()]
+        categories = [
+            r[0]
+            for r in db.session.query(ErrorAuditLog.category)
+            .distinct()
+            .order_by(ErrorAuditLog.category)
+            .all()
+        ]
+        levels = [
+            r[0]
+            for r in db.session.query(ErrorAuditLog.level)
+            .distinct()
+            .order_by(ErrorAuditLog.level)
+            .all()
+        ]
         return categories, levels
 
     @staticmethod
     def get_stats():
         return {
-            'total': ErrorAuditLog.query.count(),
-            'unresolved': ErrorAuditLog.query.filter_by(is_resolved=False).count(),
-            'critical': ErrorAuditLog.query.filter_by(level='CRITICAL').count(),
+            "total": ErrorAuditLog.query.count(),
+            "unresolved": ErrorAuditLog.query.filter_by(is_resolved=False).count(),
+            "critical": ErrorAuditLog.query.filter_by(level="CRITICAL").count(),
         }
 
     @staticmethod
@@ -89,9 +115,13 @@ class ErrorAuditService:
         query = ErrorAuditService.get_logs_query(category, level, is_resolved)
         logs = query.all()
 
-        if fmt == 'json':
+        if fmt == "json":
             data = [log.to_dict() for log in logs]
-            return json.dumps(data, ensure_ascii=False, indent=2, default=str), 'application/json', "error_audit_logs.json"
+            return (
+                json.dumps(data, ensure_ascii=False, indent=2, default=str),
+                "application/json",
+                "error_audit_logs.json",
+            )
 
         buf = StringIO()
         buf.write("=" * 80 + "\n")
@@ -105,9 +135,13 @@ class ErrorAuditService:
             buf.write(f"Level:      {log.level}\n")
             buf.write(f"Category:   {log.category}\n")
             buf.write(f"Source:     {log.source}\n")
-            buf.write(f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n")
+            buf.write(
+                f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n"
+            )
             buf.write(f"URL:        {log.url or '-'}\n")
-            buf.write(f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n")
+            buf.write(
+                f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n"
+            )
             buf.write(f"Resolved:   {'YES' if log.is_resolved else 'NO'}\n")
             buf.write(f"Message:\n  {log.message}\n")
             if log.stack_trace:
@@ -116,7 +150,12 @@ class ErrorAuditService:
                 buf.write(f"Request Data:\n  {log.request_data}\n")
             buf.write("-" * 80 + "\n\n")
 
-        return buf.getvalue().encode('utf-8'), 'text/plain; charset=utf-8', "error_audit_logs.txt"
+        return (
+            buf.getvalue().encode("utf-8"),
+            "text/plain; charset=utf-8",
+            "error_audit_logs.txt",
+        )
+
     # ── Public API ──────────────────────────────────────────────
 
     @staticmethod
@@ -141,7 +180,10 @@ class ErrorAuditService:
         try:
             logger.error(
                 "[ErrorAuditLog %s] %s | source=%s | id=%s",
-                category, message[:200], source, row_id,
+                category,
+                message[:200],
+                source,
+                row_id,
             )
         except Exception:
             pass
@@ -193,16 +235,14 @@ class ErrorAuditService:
     @staticmethod
     def mark_resolved(log_id: int, user_id: int, note: str = "") -> bool:
         try:
-            sql = text(
-                """
+            sql = text("""
                 UPDATE error_audit_logs
                 SET is_resolved = true,
                     resolved_at = :now,
                     resolved_by = :user_id,
                     resolution_note = :note
                 WHERE id = :log_id
-                """
-            )
+                """)
             with db.engine.connect() as conn:
                 conn.execute(
                     sql,
@@ -266,7 +306,9 @@ class ErrorAuditService:
             _url = _url or request.url[:_MAX_URL_LEN]
             _method = _method or request.method
             _ua = _ua or (request.headers.get("User-Agent", "")[:_MAX_UA_LEN])
-            _ip = _ip or (request.headers.get("X-Forwarded-For", request.remote_addr) or "")
+            _ip = _ip or (
+                request.headers.get("X-Forwarded-For", request.remote_addr) or ""
+            )
 
         # User / tenant
         user_id = None
@@ -330,8 +372,7 @@ class ErrorAuditService:
                 return dup_id
 
         # ── Fresh INSERT ───────────────────────────────────────
-        sql = text(
-            """
+        sql = text("""
             INSERT INTO error_audit_logs (
                 fingerprint, occurrence_count, first_seen_at, last_seen_at,
                 level, category, source, message, exception_type,
@@ -345,8 +386,7 @@ class ErrorAuditService:
                 :environment, :app_version, :user_id, :tenant_id, :request_data,
                 false, :now
             ) RETURNING id
-            """
-        )
+            """)
 
         params = {
             "fingerprint": fingerprint,
@@ -365,8 +405,11 @@ class ErrorAuditService:
             "app_version": (app_version or "")[:30],
             "user_id": user_id,
             "tenant_id": tenant_id,
-            "request_data": json.dumps(request_data, ensure_ascii=False, default=str)
-            if request_data else None,
+            "request_data": (
+                json.dumps(request_data, ensure_ascii=False, default=str)
+                if request_data
+                else None
+            ),
             "now": datetime.now(timezone.utc),
         }
 
@@ -379,6 +422,7 @@ class ErrorAuditService:
         except Exception as engine_exc:
             try:
                 import sys
+
                 sys.stderr.write(
                     f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | "
                     f"engine_error={engine_exc}\n"
@@ -405,17 +449,17 @@ class ErrorAuditService:
     def _find_duplicate(fingerprint: str) -> int | None:
         """Look for an existing unresolved record with same fingerprint within dedup window."""
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
-            sql = text(
-                """
+            cutoff = datetime.now(timezone.utc) - timedelta(
+                minutes=_DEDUP_WINDOW_MINUTES
+            )
+            sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp
                   AND is_resolved = false
                   AND last_seen_at > :cutoff
                 ORDER BY last_seen_at DESC
                 LIMIT 1
-                """
-            )
+                """)
             with db.engine.connect() as conn:
                 result = conn.execute(sql, {"fp": fingerprint, "cutoff": cutoff})
                 row = result.fetchone()
@@ -427,23 +471,23 @@ class ErrorAuditService:
     def _bump_duplicate(log_id: int, new_message: str, new_trace: str | None) -> bool:
         """Increment occurrence_count and update last_seen_at / message."""
         try:
-            sql = text(
-                """
+            sql = text("""
                 UPDATE error_audit_logs
                 SET occurrence_count = occurrence_count + 1,
                     last_seen_at = :now,
                     message = :message,
                     stack_trace = COALESCE(:stack_trace, stack_trace)
                 WHERE id = :log_id
-                """
-            )
+                """)
             with db.engine.connect() as conn:
                 conn.execute(
                     sql,
                     {
                         "now": datetime.now(timezone.utc),
                         "message": (new_message or "")[:_MAX_MESSAGE_LEN],
-                        "stack_trace": (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None,
+                        "stack_trace": (
+                            (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None
+                        ),
                         "log_id": log_id,
                     },
                 )
@@ -476,7 +520,11 @@ class ErrorAuditService:
                 continue
             if isinstance(value, list):
                 clean[key] = [
-                    ErrorAuditService._sanitize_dict(v) if isinstance(v, dict) else (None if type(v).__name__ == "Undefined" else v)
+                    (
+                        ErrorAuditService._sanitize_dict(v)
+                        if isinstance(v, dict)
+                        else (None if type(v).__name__ == "Undefined" else v)
+                    )
                     for v in value
                 ]
                 continue

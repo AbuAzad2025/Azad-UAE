@@ -1,4 +1,5 @@
 """Online store — tenant-bound catalog via online warehouse only (not POS)."""
+
 from __future__ import annotations
 
 import re
@@ -13,14 +14,16 @@ from utils.tenanting import require_active_tenant_id
 
 
 class StoreService:
-    SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
+    SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
     @staticmethod
     def resolve_tenant_id(user=None) -> int:
         return require_active_tenant_id(user)
 
     @staticmethod
-    def get_online_warehouse(tenant_id: int, *, create: bool = False) -> Warehouse | None:
+    def get_online_warehouse(
+        tenant_id: int, *, create: bool = False
+    ) -> Warehouse | None:
         query = Warehouse.query.filter_by(
             tenant_id=int(tenant_id),
             warehouse_type=Warehouse.TYPE_ONLINE,
@@ -40,7 +43,7 @@ class StoreService:
 
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            raise ValueError('الشركة غير موجودة.')
+            raise ValueError("الشركة غير موجودة.")
 
         branch = (
             Branch.query.filter_by(tenant_id=tenant_id, is_active=True)
@@ -49,21 +52,21 @@ class StoreService:
         )
 
         suffix = tenant_id
-        code = f'ONLINE-{suffix}'
-        name = f'Online Store WH {suffix}'
-        name_ar = f'مستودع المتجر الإلكتروني ({tenant.name_ar or tenant.name})'
+        code = f"ONLINE-{suffix}"
+        name = f"Online Store WH {suffix}"
+        name_ar = f"مستودع المتجر الإلكتروني ({tenant.name_ar or tenant.name})"
 
         if Warehouse.query.filter_by(tenant_id=tenant_id, code=code).first():
-            code = f'ONLINE-T{suffix}'
+            code = f"ONLINE-T{suffix}"
         if Warehouse.query.filter_by(tenant_id=tenant_id, name=name).first():
-            name = f'Online Store WH T{suffix}'
+            name = f"Online Store WH T{suffix}"
 
         warehouse = Warehouse(
             tenant_id=tenant_id,
             name=name,
             name_ar=name_ar,
             code=code,
-            location='Online / أونلاين',
+            location="Online / أونلاين",
             warehouse_type=Warehouse.TYPE_ONLINE,
             branch_id=branch.id if branch else None,
             is_main=False,
@@ -91,10 +94,10 @@ class StoreService:
 
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            raise ValueError('الشركة غير موجودة.')
+            raise ValueError("الشركة غير موجودة.")
 
         online_wh = StoreService.ensure_online_warehouse(tenant_id)
-        slug = StoreService.normalize_slug(tenant.slug or f'tenant-{tenant_id}')
+        slug = StoreService.normalize_slug(tenant.slug or f"tenant-{tenant_id}")
         slug = StoreService.ensure_unique_slug(slug, tenant_id=tenant_id)
 
         store = TenantStore(
@@ -110,10 +113,10 @@ class StoreService:
 
     @staticmethod
     def normalize_slug(value: str) -> str:
-        slug = (value or '').strip().lower()
-        slug = re.sub(r'[^a-z0-9]+', '-', slug)
-        slug = re.sub(r'-{2,}', '-', slug).strip('-')
-        return slug or 'store'
+        slug = (value or "").strip().lower()
+        slug = re.sub(r"[^a-z0-9]+", "-", slug)
+        slug = re.sub(r"-{2,}", "-", slug).strip("-")
+        return slug or "store"
 
     @staticmethod
     def ensure_unique_slug(slug: str, *, tenant_id: int | None = None) -> str:
@@ -126,14 +129,16 @@ class StoreService:
                 q = q.filter(TenantStore.tenant_id != int(tenant_id))
             if not q.first():
                 return candidate
-            candidate = f'{base}-{n}'
+            candidate = f"{base}-{n}"
             n += 1
 
     @staticmethod
     def validate_slug(slug: str) -> str:
         normalized = StoreService.normalize_slug(slug)
         if not StoreService.SLUG_RE.match(normalized):
-            raise ValueError('رابط المتجر يجب أن يحتوي على حروف إنجليزية صغيرة وأرقام وشرطات فقط.')
+            raise ValueError(
+                "رابط المتجر يجب أن يحتوي على حروف إنجليزية صغيرة وأرقام وشرطات فقط."
+            )
         return normalized
 
     @staticmethod
@@ -141,7 +146,9 @@ class StoreService:
         online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
         if not online_wh:
             return {}
-        return get_branch_stock_map(product_ids=product_ids, warehouse_ids=[online_wh.id])
+        return get_branch_stock_map(
+            product_ids=product_ids, warehouse_ids=[online_wh.id]
+        )
 
     @staticmethod
     def get_catalog_products(tenant_id: int, *, include_zero: bool = False):
@@ -158,13 +165,19 @@ class StoreService:
         stock_map = StoreService.online_stock_map(tenant_id, [p.id for p in products])
 
         if not include_zero:
-            products = [p for p in products if (stock_map.get(p.id) or Decimal('0')) > 0]
+            products = [
+                p for p in products if (stock_map.get(p.id) or Decimal("0")) > 0
+            ]
 
         return products, stock_map
 
     @staticmethod
-    def get_related_products(tenant_id: int, product_id: int, category_id: int, limit: int = 4):
-        products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
+    def get_related_products(
+        tenant_id: int, product_id: int, category_id: int, limit: int = 4
+    ):
+        products, stock_map = StoreService.get_catalog_products(
+            tenant_id, include_zero=False
+        )
         related = []
         for product in products:
             if product.id == product_id:
@@ -173,10 +186,10 @@ class StoreService:
                 continue
             if product.has_serial_number:
                 continue
-            qty = stock_map.get(product.id, Decimal('0'))
+            qty = stock_map.get(product.id, Decimal("0"))
             if qty <= 0:
                 continue
-            related.append({'product': product, 'quantity': qty})
+            related.append({"product": product, "quantity": qty})
             if len(related) >= limit:
                 break
         return related
@@ -196,13 +209,20 @@ class StoreService:
         if warehouse_id:
             q = q.filter(Warehouse.id != int(warehouse_id))
         if q.first():
-            raise ValueError('يوجد مستودع أونلاين نشط بالفعل لهذه الشركة. مسموح بواحد فقط.')
+            raise ValueError(
+                "يوجد مستودع أونلاين نشط بالفعل لهذه الشركة. مسموح بواحد فقط."
+            )
 
     @staticmethod
     def get_physical_warehouses(tenant_id: int, *, user=None):
-        warehouses = get_accessible_warehouses(user) if user else Warehouse.query.filter_by(is_active=True).all()
+        warehouses = (
+            get_accessible_warehouses(user)
+            if user
+            else Warehouse.query.filter_by(is_active=True).all()
+        )
         return [
-            wh for wh in warehouses
+            wh
+            for wh in warehouses
             if wh.tenant_id == int(tenant_id) and not wh.is_online
         ]
 
@@ -214,7 +234,7 @@ class StoreService:
     def stores_globally_enabled() -> bool:
         try:
             settings = SystemSettings.get_current()
-            return bool(getattr(settings, 'enable_ecommerce', False))
+            return bool(getattr(settings, "enable_ecommerce", False))
         except Exception:
             return False
 
@@ -225,19 +245,21 @@ class StoreService:
         db.session.flush()
 
     @staticmethod
-    def is_platform_locked(store: 'TenantStore | None') -> bool:
+    def is_platform_locked(store: "TenantStore | None") -> bool:
         """True when the platform owner has force-disabled this tenant store."""
-        return bool(store and getattr(store, 'platform_disabled', False))
+        return bool(store and getattr(store, "platform_disabled", False))
 
     @staticmethod
-    def effective_enabled(store: 'TenantStore | None') -> bool:
+    def effective_enabled(store: "TenantStore | None") -> bool:
         """Tenant store is effectively on only if enabled and not platform-locked."""
-        return bool(store and store.is_enabled and not StoreService.is_platform_locked(store))
+        return bool(
+            store and store.is_enabled and not StoreService.is_platform_locked(store)
+        )
 
     @staticmethod
-    def set_platform_disabled(store: 'TenantStore', disabled: bool):
+    def set_platform_disabled(store: "TenantStore", disabled: bool):
         """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
-        with atomic_transaction('set_platform_disabled'):
+        with atomic_transaction("set_platform_disabled"):
             store.platform_disabled = bool(disabled)
         return store
 
@@ -252,8 +274,8 @@ class StoreService:
 
     @staticmethod
     def get_store_by_host(host: str) -> TenantStore | None:
-        host = (host or '').split(':')[0].lower().strip()
-        if host.startswith('www.'):
+        host = (host or "").split(":")[0].lower().strip()
+        if host.startswith("www."):
             host = host[4:]
         if not host:
             return None
@@ -262,8 +284,8 @@ class StoreService:
         if store:
             return store
 
-        label = host.split('.')[0]
-        if label and label not in ('localhost', '127', '0'):
+        label = host.split(".")[0]
+        if label and label not in ("localhost", "127", "0"):
             store = TenantStore.query.filter_by(subdomain=label).first()
             if store:
                 return store
@@ -280,7 +302,7 @@ class StoreService:
                 q = q.filter(TenantStore.tenant_id != int(tenant_id))
             if not q.first():
                 return candidate
-            candidate = f'{base}-{n}'
+            candidate = f"{base}-{n}"
             n += 1
 
     @staticmethod
@@ -292,14 +314,18 @@ class StoreService:
         if not StoreService.stores_globally_enabled():
             return False
         tenant = db.session.get(Tenant, store.tenant_id)
-        if not tenant or not getattr(tenant, 'is_active', True) or getattr(tenant, 'is_suspended', False):
+        if (
+            not tenant
+            or not getattr(tenant, "is_active", True)
+            or getattr(tenant, "is_suspended", False)
+        ):
             return False
         online_wh = db.session.get(Warehouse, store.warehouse_id)
         return bool(online_wh and online_wh.is_active and online_wh.is_online)
 
     @staticmethod
     def cart_session_key(tenant_id: int) -> str:
-        return f'shop_cart_{int(tenant_id)}'
+        return f"shop_cart_{int(tenant_id)}"
 
     @staticmethod
     def get_cart(session, tenant_id: int) -> dict:
@@ -322,80 +348,132 @@ class StoreService:
         session.modified = True
 
     @staticmethod
-    def get_public_catalog(tenant_id: int, *, category_id=None, search: str | None = None, page=1, per_page=24, sort=None, min_price=None, max_price=None, in_stock_only=False):
+    def get_public_catalog(
+        tenant_id: int,
+        *,
+        category_id=None,
+        search: str | None = None,
+        page=1,
+        per_page=24,
+        sort=None,
+        min_price=None,
+        max_price=None,
+        in_stock_only=False,
+    ):
         """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
-        products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
+        products, stock_map = StoreService.get_catalog_products(
+            tenant_id, include_zero=False
+        )
         tenant = db.session.get(Tenant, int(tenant_id))
-        base_currency = (tenant.base_currency or 'ILS').upper() if tenant else 'ILS'
-        default_currency = (tenant.default_currency or 'AED').upper() if tenant else 'AED'
-        exchange_rate = Decimal('1')
+        base_currency = (tenant.base_currency or "ILS").upper() if tenant else "ILS"
+        default_currency = (
+            (tenant.default_currency or "AED").upper() if tenant else "AED"
+        )
+        exchange_rate = Decimal("1")
         if base_currency != default_currency:
             try:
                 from services.currency_service import CurrencyService
-                info = CurrencyService.get_exchange_rate_details(base_currency, default_currency)
-                rate_raw = info.get('rate') or info.get('rates', {}).get(default_currency)
+
+                info = CurrencyService.get_exchange_rate_details(
+                    base_currency, default_currency
+                )
+                rate_raw = info.get("rate") or info.get("rates", {}).get(
+                    default_currency
+                )
                 if rate_raw:
                     exchange_rate = Decimal(str(rate_raw))
             except Exception:
-                exchange_rate = Decimal('1')
+                exchange_rate = Decimal("1")
         items = []
-        q = (search or '').strip().lower()
+        q = (search or "").strip().lower()
         for product in products:
             if product.has_serial_number:
                 continue
             if category_id and product.category_id != int(category_id):
                 continue
             if q:
-                blob = f'{product.name} {product.name_ar or ""} {product.sku or ""}'.lower()
+                blob = f"{product.name} {product.name_ar or ''} {product.sku or ''}".lower()
                 if q not in blob:
                     continue
-            qty = stock_map.get(product.id, Decimal('0'))
+            qty = stock_map.get(product.id, Decimal("0"))
             if qty <= 0:
                 continue
-            display_price = (Decimal(str(product.regular_price or 0)) * exchange_rate).quantize(Decimal('0.01'))
-            items.append({'product': product, 'stock': qty, 'quantity': qty, 'display_price': display_price})
+            display_price = (
+                Decimal(str(product.regular_price or 0)) * exchange_rate
+            ).quantize(Decimal("0.01"))
+            items.append(
+                {
+                    "product": product,
+                    "stock": qty,
+                    "quantity": qty,
+                    "display_price": display_price,
+                }
+            )
         if min_price is not None:
-            items = [i for i in items if float(i['display_price']) >= float(min_price)]
+            items = [i for i in items if float(i["display_price"]) >= float(min_price)]
         if max_price is not None:
-            items = [i for i in items if float(i['display_price']) <= float(max_price)]
-        if sort == 'price_asc':
-            items.sort(key=lambda x: float(x['display_price']))
-        elif sort == 'price_desc':
-            items.sort(key=lambda x: float(x['display_price']), reverse=True)
-        elif sort == 'name_asc':
-            items.sort(key=lambda x: (x['product'].get_display_name('en') or '').lower())
-        elif sort == 'name_desc':
-            items.sort(key=lambda x: (x['product'].get_display_name('en') or '').lower(), reverse=True)
-        elif sort == 'newest':
-            items.sort(key=lambda x: x['product'].created_at or '', reverse=True)
+            items = [i for i in items if float(i["display_price"]) <= float(max_price)]
+        if sort == "price_asc":
+            items.sort(key=lambda x: float(x["display_price"]))
+        elif sort == "price_desc":
+            items.sort(key=lambda x: float(x["display_price"]), reverse=True)
+        elif sort == "name_asc":
+            items.sort(
+                key=lambda x: (x["product"].get_display_name("en") or "").lower()
+            )
+        elif sort == "name_desc":
+            items.sort(
+                key=lambda x: (x["product"].get_display_name("en") or "").lower(),
+                reverse=True,
+            )
+        elif sort == "newest":
+            items.sort(key=lambda x: x["product"].created_at or "", reverse=True)
         total = len(items)
         start = (page - 1) * per_page
         end = start + per_page
         page_items = items[start:end]
-        return {'items': page_items, 'total': total, 'page': page, 'per_page': per_page, 'pages': (total + per_page - 1) // per_page}
+        return {
+            "items": page_items,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": (total + per_page - 1) // per_page,
+        }
 
     @staticmethod
     def cart_totals(tenant_id: int, cart: dict) -> dict:
         lines = []
-        subtotal = Decimal('0')
-        stock_map = StoreService.online_stock_map(tenant_id, [int(k) for k in cart.keys()] if cart else None)
+        subtotal = Decimal("0")
+        stock_map = StoreService.online_stock_map(
+            tenant_id, [int(k) for k in cart.keys()] if cart else None
+        )
         for pid, qty_raw in cart.items():
-            product = Product.query.filter_by(id=int(pid), tenant_id=int(tenant_id), is_active=True).first()
+            product = Product.query.filter_by(
+                id=int(pid), tenant_id=int(tenant_id), is_active=True
+            ).first()
             if not product:
                 continue
             qty = Decimal(str(qty_raw))
-            max_q = stock_map.get(product.id, Decimal('0'))
+            max_q = stock_map.get(product.id, Decimal("0"))
             if qty > max_q:
                 qty = max_q
             if qty <= 0:
                 continue
             line_total = Decimal(str(product.regular_price or 0)) * qty
             subtotal += line_total
-            lines.append({'product': product, 'quantity': qty, 'line_total': line_total})
-        return {'lines': lines, 'subtotal': subtotal, 'count': sum(l['quantity'] for l in lines)}
+            lines.append(
+                {"product": product, "quantity": qty, "line_total": line_total}
+            )
+        return {
+            "lines": lines,
+            "subtotal": subtotal,
+            "count": sum(l["quantity"] for l in lines),
+        }
 
     @staticmethod
-    def get_recently_viewed_products(tenant_id: int, product_ids: list, exclude_id: int | None = None, limit: int = 6):
+    def get_recently_viewed_products(
+        tenant_id: int, product_ids: list, exclude_id: int | None = None, limit: int = 6
+    ):
         if not product_ids:
             return []
         ids = [pid for pid in product_ids if pid != exclude_id]
@@ -412,41 +490,68 @@ class StoreService:
     @staticmethod
     def get_product_variants(tenant_id: int, product_id: int):
         from models.shop_product_variant import ShopProductVariant
-        return ShopProductVariant.query.filter_by(
-            tenant_id=int(tenant_id),
-            product_id=int(product_id),
-            is_active=True,
-        ).order_by(ShopProductVariant.sort_order.asc()).all()
+
+        return (
+            ShopProductVariant.query.filter_by(
+                tenant_id=int(tenant_id),
+                product_id=int(product_id),
+                is_active=True,
+            )
+            .order_by(ShopProductVariant.sort_order.asc())
+            .all()
+        )
 
     @staticmethod
     def get_loyalty_points(account_id: int):
         from models.shop_loyalty import ShopLoyalty
+
         lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
         return lp.points if lp else 0
 
     @staticmethod
-    def earn_loyalty_points(tenant_id: int, account_id: int, sale_id: int, total_amount: Decimal):
+    def earn_loyalty_points(
+        tenant_id: int, account_id: int, sale_id: int, total_amount: Decimal
+    ):
         if not account_id:
             return
         from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
+
         points_earned = int(total_amount)
         lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
         if not lp:
-            lp = ShopLoyalty(tenant_id=int(tenant_id), account_id=int(account_id), points=0, points_earned=0, points_redeemed=0)
+            lp = ShopLoyalty(
+                tenant_id=int(tenant_id),
+                account_id=int(account_id),
+                points=0,
+                points_earned=0,
+                points_redeemed=0,
+            )
             db.session.add(lp)
         lp.points = (lp.points or 0) + points_earned
         lp.points_earned = (lp.points_earned or 0) + points_earned
-        txn = ShopLoyaltyTransaction(tenant_id=int(tenant_id), account_id=int(account_id), sale_id=sale_id, points=points_earned, reason='order')
+        txn = ShopLoyaltyTransaction(
+            tenant_id=int(tenant_id),
+            account_id=int(account_id),
+            sale_id=sale_id,
+            points=points_earned,
+            reason="order",
+        )
         db.session.add(txn)
 
     @staticmethod
     def redeem_loyalty_points(tenant_id: int, account_id: int, points: int):
         from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
+
         lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
         if not lp or (lp.points or 0) < points:
-            raise ValueError('Insufficient loyalty points')
+            raise ValueError("Insufficient loyalty points")
         lp.points = (lp.points or 0) - points
         lp.points_redeemed = (lp.points_redeemed or 0) + points
-        txn = ShopLoyaltyTransaction(tenant_id=int(tenant_id), account_id=int(account_id), points=-points, reason='redeem')
+        txn = ShopLoyaltyTransaction(
+            tenant_id=int(tenant_id),
+            account_id=int(account_id),
+            points=-points,
+            reason="redeem",
+        )
         db.session.add(txn)
-        return Decimal(points) / Decimal('100')
+        return Decimal(points) / Decimal("100")

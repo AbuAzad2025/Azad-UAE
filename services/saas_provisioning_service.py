@@ -1,6 +1,7 @@
 """
 SaaS Provisioning Service — activates a purchased package onto a tenant.
 """
+
 from __future__ import annotations
 
 import logging
@@ -76,7 +77,11 @@ class SaaSProvisioningService:
 
         logger.info(
             "Tenant %s activated with package %s (duration=%s, end=%s, trial=%s)",
-            tenant_id, package.slug, duration_type, subscription_end, is_trial,
+            tenant_id,
+            package.slug,
+            duration_type,
+            subscription_end,
+            is_trial,
         )
 
         return {
@@ -86,13 +91,20 @@ class SaaSProvisioningService:
             "subscription_plan": tenant.subscription_plan,
             "subscription_plan_duration": tenant.subscription_plan_duration,
             "is_trial": tenant.is_trial,
-            "subscription_start": tenant.subscription_start.isoformat() if tenant.subscription_start else None,
-            "subscription_end": tenant.subscription_end.isoformat() if tenant.subscription_end else None,
+            "subscription_start": (
+                tenant.subscription_start.isoformat()
+                if tenant.subscription_start
+                else None
+            ),
+            "subscription_end": (
+                tenant.subscription_end.isoformat() if tenant.subscription_end else None
+            ),
         }
 
     @staticmethod
     def activate_demo_tenant(tenant_id: int) -> dict:
         from models.package import Package
+
         demo = Package.query.filter_by(slug="demo", is_active=True).first()
         if not demo:
             raise SaaSProvisioningError(

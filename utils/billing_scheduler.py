@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime, timezone, timedelta
-from decimal import Decimal
 
 from extensions import db
 from utils.db_safety import atomic_transaction
@@ -51,9 +50,16 @@ def run_subscription_check() -> dict:
 
     logger.info(
         "Subscription check complete: %d reminded, %d suspended, %d active",
-        reminded, suspended, ok,
+        reminded,
+        suspended,
+        ok,
     )
-    return {"reminded": reminded, "suspended": suspended, "active": ok, "total": len(tenants)}
+    return {
+        "reminded": reminded,
+        "suspended": suspended,
+        "active": ok,
+        "total": len(tenants),
+    }
 
 
 def _suspend_tenant(tenant):
@@ -62,7 +68,9 @@ def _suspend_tenant(tenant):
         with atomic_transaction("subscription_auto_suspend"):
             tenant.is_active = False
             tenant.is_suspended = True
-            tenant.suspension_reason = f"Subscription expired on {tenant.subscription_end.isoformat()}"
+            tenant.suspension_reason = (
+                f"Subscription expired on {tenant.subscription_end.isoformat()}"
+            )
     except Exception as exc:
         logger.error("Failed to suspend tenant %s: %s", tenant.id, exc)
 
@@ -77,7 +85,9 @@ def _send_expiry_reminder(tenant):
         wa_number = _resolve_whatsapp_number()
 
         if not wa_number:
-            logger.warning("WhatsApp not configured — skipping reminder for tenant %s", tenant.id)
+            logger.warning(
+                "WhatsApp not configured — skipping reminder for tenant %s", tenant.id
+            )
             return
 
         message = (
@@ -86,9 +96,13 @@ def _send_expiry_reminder(tenant):
         )
         result = WhatsAppService.send_custom_message(wa_number, message)
         if result.get("success"):
-            logger.info("Expiry reminder sent for tenant %s (%s)", tenant.id, admin_email)
+            logger.info(
+                "Expiry reminder sent for tenant %s (%s)", tenant.id, admin_email
+            )
         else:
-            logger.warning("Reminder failed for tenant %s: %s", tenant.id, result.get("error"))
+            logger.warning(
+                "Reminder failed for tenant %s: %s", tenant.id, result.get("error")
+            )
     except Exception as exc:
         logger.error("Failed to send reminder for tenant %s: %s", tenant.id, exc)
 
@@ -117,6 +131,7 @@ def _resolve_whatsapp_number() -> str:
     raw = current_app.config.get("DEVELOPER_WHATSAPP", "")
     if not raw:
         from models.system_settings import SystemSettings
+
         try:
             settings = SystemSettings.get_current()
             raw = settings.get_custom_setting("developer_whatsapp") or ""

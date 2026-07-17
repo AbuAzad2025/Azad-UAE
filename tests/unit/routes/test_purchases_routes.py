@@ -41,24 +41,34 @@ def _purchase_patches(
     pag_items = pag_items if pag_items is not None else [purchase]
     query = _chain_query(all=pag_items, count=len(pag_items))
 
-    with patch("routes.purchases.tenant_query", return_value=query), \
-         patch("routes.purchases.tenant_get_or_404", return_value=purchase), \
-         patch("routes.purchases.render_template", return_value="ok") as render, \
-         patch("utils.decorators.branch_scope_id", return_value=branch_scope), \
-         patch("routes.purchases.db.session") as session, \
-         patch("routes.purchases.LoggingCore.log_audit") as log_audit, \
-         patch("routes.purchases.should_show_all_branch_columns", return_value=True), \
-         patch("routes.purchases.PurchaseService") as purchase_service, \
-         patch("routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}), \
-         patch("routes.purchases.get_accessible_warehouses", return_value=warehouses or []), \
-         patch("routes.purchases.ensure_warehouse_access"), \
-         patch("routes.purchases.resolve_default_currency", return_value="AED"), \
-         patch("routes.purchases.get_system_default_currency", return_value="AED"), \
-         patch("routes.purchases.get_active_tenant_id", return_value=1), \
-         patch("utils.branching.get_active_branch_id", return_value=None), \
-         patch("routes.purchases.get_active_branch_id", MagicMock(return_value=None), create=True), \
-         patch("utils.tax_settings.get_prices_include_vat", return_value=False), \
-         patch("routes.purchases.ROUND_HALF_UP", ROUND_HALF_UP, create=True):
+    with (
+        patch("routes.purchases.tenant_query", return_value=query),
+        patch("routes.purchases.tenant_get_or_404", return_value=purchase),
+        patch("routes.purchases.render_template", return_value="ok") as render,
+        patch("utils.decorators.branch_scope_id", return_value=branch_scope),
+        patch("routes.purchases.db.session") as session,
+        patch("routes.purchases.LoggingCore.log_audit") as log_audit,
+        patch("routes.purchases.should_show_all_branch_columns", return_value=True),
+        patch("routes.purchases.PurchaseService") as purchase_service,
+        patch(
+            "routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}
+        ),
+        patch(
+            "routes.purchases.get_accessible_warehouses", return_value=warehouses or []
+        ),
+        patch("routes.purchases.ensure_warehouse_access"),
+        patch("routes.purchases.resolve_default_currency", return_value="AED"),
+        patch("routes.purchases.get_system_default_currency", return_value="AED"),
+        patch("routes.purchases.get_active_tenant_id", return_value=1),
+        patch("utils.branching.get_active_branch_id", return_value=None),
+        patch(
+            "routes.purchases.get_active_branch_id",
+            MagicMock(return_value=None),
+            create=True,
+        ),
+        patch("utils.tax_settings.get_prices_include_vat", return_value=False),
+        patch("routes.purchases.ROUND_HALF_UP", ROUND_HALF_UP, create=True),
+    ):
         yield {
             "render": render,
             "session": session,
@@ -86,8 +96,10 @@ class TestPurchasesAuth:
 
     def test_index_forbidden_without_permission(self, purchases_client, mock_user):
         mock_user.has_permission.return_value = False
-        with patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("utils.decorators.is_global_owner_user", return_value=False):
+        with (
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+        ):
             resp = purchases_client.get("/purchases/")
         assert resp.status_code == 403
 
@@ -110,8 +122,10 @@ class TestPurchasesIndex:
 class TestPurchasesCreate:
     def test_create_get(self, purchases_client):
         wh = [MagicMock(id=1, name="Main")]
-        with _purchase_patches(warehouses=wh) as ctx, \
-             patch("models.Tenant.get_current", return_value=MagicMock()):
+        with (
+            _purchase_patches(warehouses=wh) as ctx,
+            patch("models.Tenant.get_current", return_value=MagicMock()),
+        ):
             resp = purchases_client.get("/purchases/create")
         assert resp.status_code == 200
         assert ctx["render"].call_args[0][0] == "purchases/create.html"
@@ -174,9 +188,17 @@ class TestPurchasesViewAndPrint:
     def test_print_success(self, purchases_client):
         purchase = _mock_purchase()
         company_ctx = (MagicMock(), MagicMock(), MagicMock())
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("models.invoice_settings.InvoiceSettings.company_print_context", return_value=company_ctx), \
-             patch("utils.tenant_branding.get_print_header_context", return_value={"logo": "x"}):
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch(
+                "models.invoice_settings.InvoiceSettings.company_print_context",
+                return_value=company_ctx,
+            ),
+            patch(
+                "utils.tenant_branding.get_print_header_context",
+                return_value={"logo": "x"},
+            ),
+        ):
             resp = purchases_client.get("/purchases/1/print")
         assert resp.status_code == 200
         assert ctx["render"].call_args[0][0] == "purchases/print.html"
@@ -209,11 +231,13 @@ class TestPurchasesEdit:
 class TestPurchasesDelete:
     def test_delete_success_no_links(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model, \
-             patch("services.gl_service.GLService.reverse_entry"), \
-             patch("models.PurchaseLine") as _line_model:
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+            patch("services.gl_service.GLService.reverse_entry"),
+            patch("models.PurchaseLine") as _line_model,
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
@@ -224,10 +248,12 @@ class TestPurchasesDelete:
     def test_delete_archives_when_paid(self, purchases_client):
         purchase = _mock_purchase(paid_amount=Decimal("50"))
         archive = MagicMock()
-        with _purchase_patches(purchase=purchase), \
-             patch("services.archive_service.ArchiveService", return_value=archive), \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model:
+        with (
+            _purchase_patches(purchase=purchase),
+            patch("services.archive_service.ArchiveService", return_value=archive),
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
@@ -247,7 +273,9 @@ class TestPurchasesCancel:
     def test_cancel_value_error(self, purchases_client):
         purchase = _mock_purchase()
         with _purchase_patches(purchase=purchase) as ctx:
-            ctx["purchase_service"].cancel_purchase.side_effect = ValueError("cannot cancel")
+            ctx["purchase_service"].cancel_purchase.side_effect = ValueError(
+                "cannot cancel"
+            )
             resp = purchases_client.post("/purchases/1/cancel")
         assert resp.status_code == 302
 
@@ -255,9 +283,11 @@ class TestPurchasesCancel:
 class TestPurchasesReturn:
     def test_return_get(self, purchases_client):
         purchase = _mock_purchase()
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine") as _line_model:
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch("routes.purchases.PurchaseReturn") as ret_model,
+            patch("routes.purchases.PurchaseReturnLine") as _line_model,
+        ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = purchases_client.get("/purchases/1/return")
         assert resp.status_code == 200
@@ -266,9 +296,11 @@ class TestPurchasesReturn:
     def test_return_post_success(self, purchases_client):
         purchase = _mock_purchase()
         result = MagicMock(return_number="PR-001")
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine"):
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch("routes.purchases.PurchaseReturn") as ret_model,
+            patch("routes.purchases.PurchaseReturnLine"),
+        ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
             ctx["purchase_service"].create_purchase_return.return_value = result
             resp = purchases_client.post(
@@ -298,9 +330,13 @@ class TestPurchasesApiCalculateTotals:
             "tax_rate": 5,
             "freight": 10,
         }
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
-            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        with (
+            _purchase_patches(),
+            patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
+        ):
+            resp = purchases_client.post(
+                "/purchases/api/calculate-totals", json=payload
+            )
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -313,9 +349,13 @@ class TestPurchasesApiCalculateTotals:
             "tax_rate": 5,
             "prices_include_vat": True,
         }
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
-            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        with (
+            _purchase_patches(),
+            patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
+        ):
+            resp = purchases_client.post(
+                "/purchases/api/calculate-totals", json=payload
+            )
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
@@ -341,7 +381,9 @@ class TestPurchasesExtended:
 
     def test_create_post_generic_exception(self, purchases_client):
         with _purchase_patches() as ctx, _atomic_transaction_mock():
-            ctx["purchase_service"].create_purchase.side_effect = RuntimeError("db down")
+            ctx["purchase_service"].create_purchase.side_effect = RuntimeError(
+                "db down"
+            )
             resp = purchases_client.post(
                 "/purchases/create",
                 data={"warehouse_id": "1", "line_count": "0"},
@@ -358,10 +400,12 @@ class TestPurchasesExtended:
     def test_delete_with_cheques_archives(self, purchases_client):
         purchase = _mock_purchase()
         archive = MagicMock()
-        with _purchase_patches(purchase=purchase), \
-             patch("services.archive_service.ArchiveService", return_value=archive), \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model:
+        with (
+            _purchase_patches(purchase=purchase),
+            patch("services.archive_service.ArchiveService", return_value=archive),
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 2
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
@@ -371,10 +415,12 @@ class TestPurchasesExtended:
     def test_delete_with_stock_archives(self, purchases_client):
         purchase = _mock_purchase()
         archive = MagicMock()
-        with _purchase_patches(purchase=purchase), \
-             patch("services.archive_service.ArchiveService", return_value=archive), \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model:
+        with (
+            _purchase_patches(purchase=purchase),
+            patch("services.archive_service.ArchiveService", return_value=archive),
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 3
             resp = purchases_client.post("/purchases/1/delete")
@@ -384,12 +430,14 @@ class TestPurchasesExtended:
     def test_delete_with_supplier_reverses_balance(self, purchases_client):
         purchase = _mock_purchase(supplier_id=5, amount_aed=Decimal("200"))
         supplier = MagicMock()
-        with _purchase_patches(purchase=purchase) as _ctx, \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model, \
-             patch("services.gl_service.GLService.reverse_entry"), \
-             patch("models.PurchaseLine") as _line_model, \
-             patch("models.Supplier") as supplier_model:
+        with (
+            _purchase_patches(purchase=purchase) as _ctx,
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+            patch("services.gl_service.GLService.reverse_entry"),
+            patch("models.PurchaseLine") as _line_model,
+            patch("models.Supplier") as supplier_model,
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             supplier_model.query.filter_by.return_value.first.return_value = supplier
@@ -399,10 +447,15 @@ class TestPurchasesExtended:
 
     def test_delete_exception_redirects_to_view(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)
-        with _purchase_patches(purchase=purchase) as _ctx, \
-             patch("models.Cheque") as cheque_model, \
-             patch("models.warehouse.StockMovement") as stock_model, \
-             patch("services.gl_service.GLService.reverse_entry", side_effect=RuntimeError("gl fail")):
+        with (
+            _purchase_patches(purchase=purchase) as _ctx,
+            patch("models.Cheque") as cheque_model,
+            patch("models.warehouse.StockMovement") as stock_model,
+            patch(
+                "services.gl_service.GLService.reverse_entry",
+                side_effect=RuntimeError("gl fail"),
+            ),
+        ):
             cheque_model.query.filter_by.return_value.count.return_value = 0
             stock_model.query.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
@@ -430,20 +483,26 @@ class TestPurchasesExtended:
 
     def test_return_post_empty_lines(self, purchases_client):
         purchase = _mock_purchase()
-        with _purchase_patches(purchase=purchase), \
-             patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine"):
+        with (
+            _purchase_patches(purchase=purchase),
+            patch("routes.purchases.PurchaseReturn") as ret_model,
+            patch("routes.purchases.PurchaseReturnLine"),
+        ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = purchases_client.post("/purchases/1/return", data={})
         assert resp.status_code == 302
 
     def test_return_post_exception(self, purchases_client):
         purchase = _mock_purchase()
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine"):
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch("routes.purchases.PurchaseReturn") as ret_model,
+            patch("routes.purchases.PurchaseReturnLine"),
+        ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError("fail")
+            ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError(
+                "fail"
+            )
             resp = purchases_client.post(
                 "/purchases/1/return",
                 data={"lines": "1", "reason": "damaged"},
@@ -455,9 +514,13 @@ class TestPurchasesExtended:
             "lines": [{"quantity": 0, "unit_cost": 10}],
             "tax_rate": 0,
         }
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
-            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        with (
+            _purchase_patches(),
+            patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
+        ):
+            resp = purchases_client.post(
+                "/purchases/api/calculate-totals", json=payload
+            )
         assert resp.status_code == 200
         assert resp.get_json()["line_count"] == 0
 
@@ -467,16 +530,25 @@ class TestPurchasesExtended:
             "tax_rate": 0,
             "prices_include_vat": True,
         }
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
-            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        with (
+            _purchase_patches(),
+            patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
+        ):
+            resp = purchases_client.post(
+                "/purchases/api/calculate-totals", json=payload
+            )
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["tax_amount"] == 0.0
 
     def test_api_calculate_totals_server_error(self, purchases_client):
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=RuntimeError("boom")):
+        with (
+            _purchase_patches(),
+            patch(
+                "utils.tax_settings.normalize_tax_rate",
+                side_effect=RuntimeError("boom"),
+            ),
+        ):
             resp = purchases_client.post(
                 "/purchases/api/calculate-totals",
                 json={"lines": [{"quantity": 1, "unit_cost": 1}]},
@@ -492,11 +564,15 @@ class TestPurchasesExtended:
 
     def test_return_post_value_error(self, purchases_client):
         purchase = _mock_purchase()
-        with _purchase_patches(purchase=purchase) as ctx, \
-             patch("routes.purchases.PurchaseReturn") as ret_model, \
-             patch("routes.purchases.PurchaseReturnLine"):
+        with (
+            _purchase_patches(purchase=purchase) as ctx,
+            patch("routes.purchases.PurchaseReturn") as ret_model,
+            patch("routes.purchases.PurchaseReturnLine"),
+        ):
             ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            ctx["purchase_service"].create_purchase_return.side_effect = ValueError("invalid qty")
+            ctx["purchase_service"].create_purchase_return.side_effect = ValueError(
+                "invalid qty"
+            )
             resp = purchases_client.post(
                 "/purchases/1/return",
                 data={"lines": "1", "reason": "damaged"},
@@ -508,8 +584,12 @@ class TestPurchasesExtended:
             "lines": [{"quantity": "bad", "unit_cost": 10}],
             "tax_rate": 0,
         }
-        with _purchase_patches(), \
-             patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x):
-            resp = purchases_client.post("/purchases/api/calculate-totals", json=payload)
+        with (
+            _purchase_patches(),
+            patch("utils.tax_settings.normalize_tax_rate", side_effect=lambda x: x),
+        ):
+            resp = purchases_client.post(
+                "/purchases/api/calculate-totals", json=payload
+            )
         assert resp.status_code == 200
         assert resp.get_json()["line_count"] == 0

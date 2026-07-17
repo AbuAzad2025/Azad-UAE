@@ -11,10 +11,10 @@ from .uae import UAEStrategy
 from .ksa import KSAStrategy
 
 __all__ = [
-    'get_strategy',
-    'LocalizationStrategy',
-    'NullStrategy',
-    'PalestineStrategy',
-    'UAEStrategy',
-    'KSAStrategy',
+    "get_strategy",
+    "LocalizationStrategy",
+    "NullStrategy",
+    "PalestineStrategy",
+    "UAEStrategy",
+    "KSAStrategy",
 ]

@@ -52,11 +52,17 @@ def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) 
 
 def bootstrap_keys(app, instance_dir: str | None = None) -> None:
     if instance_dir is None:
-        instance_dir = str(os.path.join(
-            os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
-            "instance",
-        ))
+        instance_dir = str(
+            os.path.join(
+                os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
+                "instance",
+            )
+        )
     current_secret = app.config.get("SECRET_KEY")
-    app.config["SECRET_KEY"] = ensure_secret_key(instance_dir, str(current_secret) if current_secret is not None else None)
+    app.config["SECRET_KEY"] = ensure_secret_key(
+        instance_dir, str(current_secret) if current_secret is not None else None
+    )
     current_card = app.config.get("CARD_ENCRYPTION_KEY")
-    app.config["CARD_ENCRYPTION_KEY"] = ensure_card_encryption_key(instance_dir, str(current_card) if current_card is not None else None)
+    app.config["CARD_ENCRYPTION_KEY"] = ensure_card_encryption_key(
+        instance_dir, str(current_card) if current_card is not None else None
+    )

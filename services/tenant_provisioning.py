@@ -11,6 +11,7 @@ Design goals (no destructive schema changes):
 
 No NOT NULL constraints are added at the database level.
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -21,17 +22,19 @@ from services.industry_service import (
 )
 
 
-def validate_tenant_industry(business_type: Optional[str], industry: Optional[str] = None):
+def validate_tenant_industry(
+    business_type: Optional[str], industry: Optional[str] = None
+):
     """Application-level enforcement for new tenant creation.
 
     Raises ValueError if a mandatory field is missing. Unknown (legacy) codes
     are tolerated so existing seeds (e.g. 'multi_branch_retail') keep working.
     """
-    bt = (business_type or '').strip()
+    bt = (business_type or "").strip()
     if not bt:
         raise ValueError("يجب تحديد نوع النشاط (business_type) عند إنشاء الشركة.")
     # Legacy/unknown codes are accepted; they simply map to neutral behaviour.
-    ind = (industry or '').strip() or None
+    ind = (industry or "").strip() or None
     return bt, ind
 
 
@@ -41,12 +44,12 @@ def resolve_tenant_industry(tenant) -> dict:
     Falls back to 'general' for business_type and 'retail' for industry so any
     code path (POS profile, GL extension, product fields) is always safe.
     """
-    bt = (getattr(tenant, 'business_type', None) or '').strip() or 'general'
-    ind = (getattr(tenant, 'industry', None) or '').strip() or 'retail'
+    bt = (getattr(tenant, "business_type", None) or "").strip() or "general"
+    ind = (getattr(tenant, "industry", None) or "").strip() or "retail"
     return {
-        'business_type': bt,
-        'industry': ind,
-        'is_known': bt in VALID_BUSINESS_TYPES,
+        "business_type": bt,
+        "industry": ind,
+        "is_known": bt in VALID_BUSINESS_TYPES,
     }
 
 
@@ -58,14 +61,15 @@ def provision_tenant_gl(tenant_id: int) -> dict:
     failures cannot occur.
     """
     from services.gl_provisioning_service import GLProvisioningService
+
     result = GLProvisioningService.provision_tenant(tenant_id)
     return {
-        'tenant_id': result.tenant_id,
-        'created_accounts': result.created_accounts,
-        'skipped_accounts': result.skipped_accounts,
-        'created_mappings': result.created_mappings,
-        'skipped_mappings': result.skipped_mappings,
-        'errors': result.errors,
+        "tenant_id": result.tenant_id,
+        "created_accounts": result.created_accounts,
+        "skipped_accounts": result.skipped_accounts,
+        "created_mappings": result.created_mappings,
+        "skipped_mappings": result.skipped_mappings,
+        "errors": result.errors,
     }
 
 
@@ -73,6 +77,6 @@ def build_pos_profile(tenant) -> dict:
     """POS runtime profile with safe industry fallback applied."""
     resolved = resolve_tenant_industry(tenant)
     profile = get_pos_profile(tenant)
-    profile['industry'] = resolved['industry']
-    profile['is_known_business_type'] = resolved['is_known']
+    profile["industry"] = resolved["industry"]
+    profile["is_known_business_type"] = resolved["is_known"]
     return profile

@@ -4,10 +4,10 @@ Tenant Limits / Quota Enforcement
 Centralized limit checks for multi-tenant SaaS.
 Usage in routes before db.session.add() / db.session.commit().
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+from datetime import datetime, timezone
 from flask_login import current_user
 from extensions import db
 from utils.tenanting import get_active_tenant_id
@@ -15,7 +15,8 @@ from utils.tenanting import get_active_tenant_id
 
 class TenantLimitError(Exception):
     """Raised when a tenant exceeds its plan limit."""
-    wa_upgrade_link: str = ''
+
+    wa_upgrade_link: str = ""
 
     def __init__(self, resource: str, limit: int, current: int):
         self.resource = resource
@@ -25,22 +26,28 @@ class TenantLimitError(Exception):
         if not TenantLimitError.wa_upgrade_link:
             try:
                 from flask import current_app
-                link = current_app.config.get('DEVELOPER_WHATSAPP', '')
+
+                link = current_app.config.get("DEVELOPER_WHATSAPP", "")
                 if not link:
                     from models.system_settings import SystemSettings
+
                     _settings = SystemSettings.get_current()
-                    link = _settings.get_custom_setting('developer_whatsapp') if _settings else ''
+                    link = (
+                        _settings.get_custom_setting("developer_whatsapp")
+                        if _settings
+                        else ""
+                    )
                 if link:
-                    link = link.strip().replace(' ', '').lstrip('+')
-                    if not link.startswith('https'):
-                        link = f'https://wa.me/{link}'
+                    link = link.strip().replace(" ", "").lstrip("+")
+                    if not link.startswith("https"):
+                        link = f"https://wa.me/{link}"
                     TenantLimitError.wa_upgrade_link = link
             except Exception:
                 pass
         if TenantLimitError.wa_upgrade_link:
             msg += (
                 f"\n\nيمكنك التواصل مع المطور للترقية إلى باقة أعلى عبر "
-                f"<a href=\"{TenantLimitError.wa_upgrade_link}\" target=\"_blank\" class=\"alert-link\">واتساب</a>."
+                f'<a href="{TenantLimitError.wa_upgrade_link}" target="_blank" class="alert-link">واتساب</a>.'
             )
         super().__init__(msg)
 
@@ -49,6 +56,7 @@ def _active_tenant():
     """Get current tenant for the logged-in user."""
     try:
         from models import Tenant
+
         tid = get_active_tenant_id(current_user)
         if tid:
             return db.session.get(Tenant, int(tid))
@@ -58,11 +66,19 @@ def _active_tenant():
 
 
 def _month_start():
-    return datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return datetime.now(timezone.utc).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
 
 
-def check_limit(resource: str, *, model, tenant_id_field: str = "tenant_id",
-                extra_filter=None, error_if_disabled: bool = False) -> None:
+def check_limit(
+    resource: str,
+    *,
+    model,
+    tenant_id_field: str = "tenant_id",
+    extra_filter=None,
+    error_if_disabled: bool = False,
+) -> None:
     """Generic limit checker.
 
     Args:
@@ -88,9 +104,7 @@ def check_limit(resource: str, *, model, tenant_id_field: str = "tenant_id",
         return  # unlimited / disabled
 
     tid = tenant.id
-    q = db.session.query(model).filter(
-        getattr(model, tenant_id_field) == tid
-    )
+    q = db.session.query(model).filter(getattr(model, tenant_id_field) == tid)
     if extra_filter:
         q = extra_filter(q)
     current_count = q.count()
@@ -99,9 +113,14 @@ def check_limit(resource: str, *, model, tenant_id_field: str = "tenant_id",
         raise TenantLimitError(resource, limit_val or 0, current_count)
 
 
-def check_monthly_limit(resource: str, *, model, date_field: str,
-                        tenant_id_field: str = "tenant_id",
-                        extra_filter=None) -> None:
+def check_monthly_limit(
+    resource: str,
+    *,
+    model,
+    date_field: str,
+    tenant_id_field: str = "tenant_id",
+    extra_filter=None,
+) -> None:
     """Check a per-month limit (e.g. max_invoices_per_month)."""
     tenant = _active_tenant()
     if not tenant:
@@ -118,7 +137,7 @@ def check_monthly_limit(resource: str, *, model, date_field: str,
     tid = tenant.id
     q = db.session.query(model).filter(
         getattr(model, tenant_id_field) == tid,
-        getattr(model, date_field) >= month_start
+        getattr(model, date_field) >= month_start,
     )
     if extra_filter:
         q = extra_filter(q)
@@ -148,49 +167,82 @@ def enforce_feature(feature_flag: str, feature_name_ar: str) -> None:
 
 # ── Convenience helpers ──────────────────────────────────────
 
+
 def check_users_limit() -> None:
     from models import User
-    check_limit("users", model=User, tenant_id_field="tenant_id",
-                extra_filter=lambda q: q.filter_by(is_active=True))
+
+    check_limit(
+        "users",
+        model=User,
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(is_active=True),
+    )
 
 
 def check_branches_limit() -> None:
     from models import Branch
+
     check_limit("branches", model=Branch, tenant_id_field="tenant_id")
 
 
 def check_warehouses_limit() -> None:
     from models import Warehouse
+
     check_limit("warehouses", model=Warehouse, tenant_id_field="tenant_id")
 
 
 def check_products_limit() -> None:
     from models import Product
-    check_limit("products", model=Product, tenant_id_field="tenant_id",
-                extra_filter=lambda q: q.filter_by(is_active=True))
+
+    check_limit(
+        "products",
+        model=Product,
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(is_active=True),
+    )
 
 
 def check_customers_limit() -> None:
     from models import Customer
-    check_limit("customers", model=Customer, tenant_id_field="tenant_id",
-                extra_filter=lambda q: q.filter_by(is_active=True))
+
+    check_limit(
+        "customers",
+        model=Customer,
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(is_active=True),
+    )
 
 
 def check_suppliers_limit() -> None:
     from models import Supplier
-    check_limit("suppliers", model=Supplier, tenant_id_field="tenant_id",
-                extra_filter=lambda q: q.filter_by(is_active=True))
+
+    check_limit(
+        "suppliers",
+        model=Supplier,
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(is_active=True),
+    )
 
 
 def check_sales_monthly_limit() -> None:
     from models import Sale
-    check_monthly_limit("sales", model=Sale, date_field="sale_date",
-                          tenant_id_field="tenant_id",
-                          extra_filter=lambda q: q.filter_by(status="confirmed"))
+
+    check_monthly_limit(
+        "sales",
+        model=Sale,
+        date_field="sale_date",
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(status="confirmed"),
+    )
 
 
 def check_invoices_monthly_limit() -> None:
     from models import Sale
-    check_monthly_limit("invoices", model=Sale, date_field="sale_date",
-                          tenant_id_field="tenant_id",
-                          extra_filter=lambda q: q.filter_by(status="confirmed"))
+
+    check_monthly_limit(
+        "invoices",
+        model=Sale,
+        date_field="sale_date",
+        tenant_id_field="tenant_id",
+        extra_filter=lambda q: q.filter_by(status="confirmed"),
+    )

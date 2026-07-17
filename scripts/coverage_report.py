@@ -10,6 +10,7 @@ a markdown summary with:
 
 Usage: python scripts/coverage_report.py
 """
+
 from __future__ import annotations
 
 import json
@@ -34,7 +35,9 @@ BACKEND_CATEGORIES = [
 ]
 
 _SCRIPT_RE = re.compile(r'<script[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
-_INCLUDE_RE = re.compile(r'{%-?\s*(?:include|extends|from)\s+["\']([^"\']+)["\']', re.IGNORECASE)
+_INCLUDE_RE = re.compile(
+    r'{%-?\s*(?:include|extends|from)\s+["\']([^"\']+)["\']', re.IGNORECASE
+)
 
 
 def _norm(p: str) -> str:
@@ -42,6 +45,7 @@ def _norm(p: str) -> str:
 
 
 # ── Backend coverage ──────────────────────────────────────────────────────
+
 
 def get_backend_coverage():
     """Return list of (key, label, files, total, covered, pct) tuples."""
@@ -95,6 +99,7 @@ def get_backend_coverage():
 
 
 # ── Frontend template coverage ────────────────────────────────────────────
+
 
 def _collect_rendered_templates() -> set[str]:
     rendered: set[str] = set()
@@ -157,6 +162,7 @@ def get_template_coverage():
 
 # ── Frontend JS coverage ──────────────────────────────────────────────────
 
+
 def get_js_coverage(rendered_templates: set[str]):
     js_dir = PROJECT_ROOT / "static" / "js"
     all_js: set[str] = set()
@@ -178,12 +184,13 @@ def get_js_coverage(rendered_templates: set[str]):
                 js_rel = m.split("/static/js/")[-1]
                 referenced.add(_norm(js_rel))
             elif m.startswith("static/js/"):
-                js_rel = m[len("static/js/"):]
+                js_rel = m[len("static/js/") :]
                 referenced.add(_norm(js_rel))
     return all_js, referenced
 
 
 # ── Report formatting ─────────────────────────────────────────────────────
+
 
 def _pct(pct: float) -> str:
     if pct >= 80:
@@ -249,7 +256,7 @@ def main():
         lines.append(f"| Backend (Python) | {_pct(overall_pct)} |")
         lines.append(f"| Frontend (Templates) | {_pct(tmpl_pct)} |")
         lines.append(f"| Frontend (JS reachability) | {_pct(js_pct)} |")
-        lines.append(f"| Frontend (JS test coverage) | 🔴 0.0% |")
+        lines.append("| Frontend (JS test coverage) | 🔴 0.0% |")
         lines.append(f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |")
         lines.append("")
     else:

@@ -1,11 +1,16 @@
 """POS catalog, customer resolution, checkout line helpers, and session management."""
+
 from __future__ import annotations
 
 from decimal import Decimal
 from extensions import db
 from models import Customer, PosSession, Product
 from services.stock_service import StockService
-from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map, get_active_branch_id
+from utils.branching import (
+    get_accessible_warehouse_ids,
+    get_branch_stock_map,
+    get_active_branch_id,
+)
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id, tenant_query
 
@@ -85,12 +90,16 @@ def search_pos_products(
 
     products = []
     if q:
-        exact = base.filter(
-            db.or_(
-                db.func.lower(Product.barcode) == q.lower(),
-                db.func.lower(Product.sku) == q.lower(),
+        exact = (
+            base.filter(
+                db.or_(
+                    db.func.lower(Product.barcode) == q.lower(),
+                    db.func.lower(Product.sku) == q.lower(),
+                )
             )
-        ).limit(5).all()
+            .limit(5)
+            .all()
+        )
         if exact:
             products = exact
         else:
@@ -145,7 +154,9 @@ def lookup_pos_product_exact(
     return product, stock_map
 
 
-def serialize_pos_product(product: Product, stock_map: dict, *, warehouse_id: int | None = None):
+def serialize_pos_product(
+    product: Product, stock_map: dict, *, warehouse_id: int | None = None
+):
     stock = float(stock_map.get(product.id, product.current_stock or 0))
     inactive = not product.is_active
     no_stock = stock <= 0
@@ -210,12 +221,16 @@ def get_active_session(user=None, branch_id: int | None = None) -> PosSession | 
     if not tenant_id:
         return None
     branch_id = branch_id or get_active_branch_id(user)
-    return PosSession.query.filter(
-        PosSession.tenant_id == int(tenant_id),
-        PosSession.branch_id == int(branch_id) if branch_id else True,
-        PosSession.user_id == user.id if user else True,
-        PosSession.status == 'open',
-    ).order_by(PosSession.id.desc()).first()
+    return (
+        PosSession.query.filter(
+            PosSession.tenant_id == int(tenant_id),
+            PosSession.branch_id == int(branch_id) if branch_id else True,
+            PosSession.user_id == user.id if user else True,
+            PosSession.status == "open",
+        )
+        .order_by(PosSession.id.desc())
+        .first()
+    )
 
 
 def require_active_session(user=None, branch_id: int | None = None) -> PosSession:
@@ -225,14 +240,19 @@ def require_active_session(user=None, branch_id: int | None = None) -> PosSessio
     return session
 
 
-def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal('0'), notes: str | None = None) -> PosSession:
+def create_pos_session(
+    user,
+    branch_id: int,
+    opening_balance: Decimal = Decimal("0"),
+    notes: str | None = None,
+) -> PosSession:
     tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         raise ValueError("لا توجد شركة نشطة.")
     number = generate_number(
-        prefix='POS-SES',
+        prefix="POS-SES",
         model=PosSession,
-        field_name='session_number',
+        field_name="session_number",
         branch_code=branch_id,
         tenant_id=int(tenant_id),
     )
@@ -243,14 +263,16 @@ def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal(
         session_number=number,
         opening_balance_cash=opening_balance,
         notes=notes,
-        status='open',
+        status="open",
     )
     db.session.add(session)
     db.session.flush()
     return session
 
 
-def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str | None = None):
+def close_pos_session(
+    session: PosSession, closing_cash: Decimal, notes: str | None = None
+):
     from models import Sale
 
     tenant_id = session.tenant_id
@@ -259,17 +281,17 @@ def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str | N
         Sale.pos_session_id == session.id,
     ).all()
 
-    total = Decimal('0')
-    cash_total = Decimal('0')
-    card_total = Decimal('0')
+    total = Decimal("0")
+    cash_total = Decimal("0")
+    card_total = Decimal("0")
     for sale in sales_in_session:
         total += Decimal(str(sale.total_amount or 0))
         for payment in sale.payments:
-            method = getattr(payment, 'payment_method', '')
+            method = getattr(payment, "payment_method", "")
             amt = Decimal(str(payment.amount or 0))
-            if method == 'cash':
+            if method == "cash":
                 cash_total += amt
-            elif method in ('card', 'bank_transfer', 'e_wallet'):
+            elif method in ("card", "bank_transfer", "e_wallet"):
                 card_total += amt
 
     session.total_sales = total
@@ -283,60 +305,78 @@ def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str | N
         from services.gl_service import GLService, GL_ACCOUNTS
         from services.gl_tree_builder import GLTreeBuilder
         from services import gl_helpers
+
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         diff_aed = Decimal(str(session.difference))
-        cash_parent_code = GL_ACCOUNTS.get('cash', '1110')
-        cash_acct_code = GLTreeBuilder._branch_account_code(cash_parent_code, session.branch_id)
+        cash_parent_code = GL_ACCOUNTS.get("cash", "1110")
+        cash_acct_code = GLTreeBuilder._branch_account_code(
+            cash_parent_code, session.branch_id
+        )
         # Verify branch-specific cash account exists and is postable
         cash_account = gl_helpers.get_account(cash_acct_code, tenant_id=tenant_id)
-        if cash_account is None or getattr(cash_account, 'is_header', False):
+        if cash_account is None or getattr(cash_account, "is_header", False):
             cash_acct_code = GLService.get_account_code_for_concept(
-                'CASH', tenant_id=tenant_id, branch_id=session.branch_id, fallback_key='cash'
+                "CASH",
+                tenant_id=tenant_id,
+                branch_id=session.branch_id,
+                fallback_key="cash",
             )
         diff_acct_code = GLService.get_account_code_for_concept(
-            'POS_CASH_DIFFERENCE', tenant_id=tenant_id, branch_id=session.branch_id, fallback_key='pos_cash_difference'
+            "POS_CASH_DIFFERENCE",
+            tenant_id=tenant_id,
+            branch_id=session.branch_id,
+            fallback_key="pos_cash_difference",
         )
         lines = []
         if diff_aed < 0:
             # Shortage: debit expense, credit cash
-            lines.append({
-                'account': diff_acct_code,
-                'concept_code': 'POS_CASH_DIFFERENCE',
-                'debit': abs(diff_aed),
-                'credit': 0,
-                'description': f'عجز كاشير POS — جلسة {session.session_number}',
-            })
-            lines.append({
-                'account': cash_acct_code,
-                'concept_code': 'CASH',
-                'debit': 0,
-                'credit': abs(diff_aed),
-                'description': f'تسوية عجز كاشير POS — جلسة {session.session_number}',
-            })
+            lines.append(
+                {
+                    "account": diff_acct_code,
+                    "concept_code": "POS_CASH_DIFFERENCE",
+                    "debit": abs(diff_aed),
+                    "credit": 0,
+                    "description": f"عجز كاشير POS — جلسة {session.session_number}",
+                }
+            )
+            lines.append(
+                {
+                    "account": cash_acct_code,
+                    "concept_code": "CASH",
+                    "debit": 0,
+                    "credit": abs(diff_aed),
+                    "description": f"تسوية عجز كاشير POS — جلسة {session.session_number}",
+                }
+            )
         else:
             # Overage: debit cash, credit income (credit to difference account)
-            lines.append({
-                'account': cash_acct_code,
-                'concept_code': 'CASH',
-                'debit': diff_aed,
-                'credit': 0,
-                'description': f'فائض كاشير POS — جلسة {session.session_number}',
-            })
-            lines.append({
-                'account': diff_acct_code,
-                'concept_code': 'POS_CASH_DIFFERENCE',
-                'debit': 0,
-                'credit': diff_aed,
-                'description': f'تسوية فائض كاشير POS — جلسة {session.session_number}',
-            })
+            lines.append(
+                {
+                    "account": cash_acct_code,
+                    "concept_code": "CASH",
+                    "debit": diff_aed,
+                    "credit": 0,
+                    "description": f"فائض كاشير POS — جلسة {session.session_number}",
+                }
+            )
+            lines.append(
+                {
+                    "account": diff_acct_code,
+                    "concept_code": "POS_CASH_DIFFERENCE",
+                    "debit": 0,
+                    "credit": diff_aed,
+                    "description": f"تسوية فائض كاشير POS — جلسة {session.session_number}",
+                }
+            )
         from utils.gl_reference_types import GLRef
+
         GLService.create_journal_entry(
             tenant_id=tenant_id,
             branch_id=session.branch_id,
             reference_type=GLRef.POS_CASH_DIFFERENCE,
             reference_id=session.id,
             date=session.closed_at,
-            description=f'تسوية جلسة POS {session.session_number} — رصيد مغلق: {closing_cash} | متوقع: {session.expected_balance} | فرق: {diff_aed}',
+            description=f"تسوية جلسة POS {session.session_number} — رصيد مغلق: {closing_cash} | متوقع: {session.expected_balance} | فرق: {diff_aed}",
             lines=lines,
             user_id=session.user_id,
         )

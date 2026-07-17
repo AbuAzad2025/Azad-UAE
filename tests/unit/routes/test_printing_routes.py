@@ -33,22 +33,36 @@ def _register_entry(printing_client, doc_type, model_cls, entry):
 
 @pytest.fixture
 def printing_client(app_factory, bypass_permission_auth):
-    with patch("routes.printing.PrintService.render_print", return_value="<html>print</html>") as render_print, \
-         patch("routes.printing.PrintService.render_pdf", return_value=b"fake-pdf") as render_pdf, \
-         patch("routes.printing.PrintService.audit_print") as audit_print, \
-         patch("routes.printing.PrintService.create_snapshot") as create_snapshot, \
-         patch("routes.printing.PrintService.bulk_print_documents", return_value="<html>bulk</html>") as bulk_print, \
-         patch("routes.printing.PrintService._get_model") as get_model, \
-         patch("routes.printing.branch_scope_id", return_value=None) as branch_scope, \
-         patch("routes.printing.render_template", return_value="403-page") as render_tpl, \
-         patch("routes.printing.db.session", MagicMock()) as session, \
-         patch("routes.printing.InvoiceSettings.get_active") as get_settings, \
-         patch("routes.printing.PrintHistory") as history_model, \
-         patch("routes.printing.send_file", return_value=Response(b"pdf", mimetype="application/pdf")) as send_file:
+    with (
+        patch(
+            "routes.printing.PrintService.render_print",
+            return_value="<html>print</html>",
+        ) as render_print,
+        patch(
+            "routes.printing.PrintService.render_pdf", return_value=b"fake-pdf"
+        ) as render_pdf,
+        patch("routes.printing.PrintService.audit_print") as audit_print,
+        patch("routes.printing.PrintService.create_snapshot") as create_snapshot,
+        patch(
+            "routes.printing.PrintService.bulk_print_documents",
+            return_value="<html>bulk</html>",
+        ) as bulk_print,
+        patch("routes.printing.PrintService._get_model") as get_model,
+        patch("routes.printing.branch_scope_id", return_value=None) as branch_scope,
+        patch("routes.printing.render_template", return_value="403-page") as render_tpl,
+        patch("routes.printing.db.session", MagicMock()) as session,
+        patch("routes.printing.InvoiceSettings.get_active") as get_settings,
+        patch("routes.printing.PrintHistory") as history_model,
+        patch(
+            "routes.printing.send_file",
+            return_value=Response(b"pdf", mimetype="application/pdf"),
+        ) as send_file,
+    ):
         settings = MagicMock()
         get_settings.return_value = settings
         history_model.query = _chain_query()
         from routes.printing import printing_bp
+
         app = app_factory(printing_bp)
         client = app.test_client()
         client._printing_mocks = {
@@ -71,7 +85,7 @@ def printing_client(app_factory, bypass_permission_auth):
 
 class TestGenericPrint:
     @staticmethod
-    def setup_mocks(printing_client, doc_type='purchase', doc=None):
+    def setup_mocks(printing_client, doc_type="purchase", doc=None):
         if doc is None:
             doc = _doc_mock(purchase_number="PO-001")
         mocks = printing_client._printing_mocks
@@ -85,7 +99,7 @@ class TestGenericPrint:
         assert resp.status_code == 404
 
     def test_print_document_returns_200(self, printing_client):
-        doc, _ = self.setup_mocks(printing_client, 'purchase')
+        doc, _ = self.setup_mocks(printing_client, "purchase")
         mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/purchase/1")
         assert resp.status_code == 200
@@ -94,7 +108,7 @@ class TestGenericPrint:
         mocks["render_print"].assert_called_once()
 
     def test_print_document_pdf_download(self, printing_client):
-        doc, _ = self.setup_mocks(printing_client, 'purchase')
+        doc, _ = self.setup_mocks(printing_client, "purchase")
         mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/purchase/1/pdf")
         assert resp.status_code == 200
@@ -110,7 +124,7 @@ class TestGenericPrint:
 
 class TestPrintExpense:
     @staticmethod
-    def setup_mocks(printing_client, doc_type='expense', doc=None):
+    def setup_mocks(printing_client, doc_type="expense", doc=None):
         if doc is None:
             doc = _doc_mock(expense_number="EX-001")
         mocks = printing_client._printing_mocks
@@ -119,14 +133,14 @@ class TestPrintExpense:
         mocks["get_model"].return_value = model_cls
 
     def test_print_expense_returns_200(self, printing_client):
-        self.setup_mocks(printing_client, 'expense')
+        self.setup_mocks(printing_client, "expense")
         mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/expense/2")
         assert resp.status_code == 200
         mocks["render_print"].assert_called_once()
 
     def test_expense_pdf_download(self, printing_client):
-        self.setup_mocks(printing_client, 'expense')
+        self.setup_mocks(printing_client, "expense")
         mocks = printing_client._printing_mocks
         resp = printing_client.get("/printing/expense/2/pdf")
         assert resp.status_code == 200
@@ -246,8 +260,12 @@ class TestPrintHistory:
     def test_print_history_returns_200(self, printing_client):
         record = MagicMock()
         record.id = 1
-        printing_client._printing_mocks["history_model"].query = _chain_query(all=[record])
-        with patch("routes.printing.render_template", return_value="history-page") as render:
+        printing_client._printing_mocks["history_model"].query = _chain_query(
+            all=[record]
+        )
+        with patch(
+            "routes.printing.render_template", return_value="history-page"
+        ) as render:
             resp = printing_client.get("/printing/history")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -366,7 +384,9 @@ class TestPrintApiHistory:
 
 class TestPrintSettings:
     def test_settings_get_returns_200(self, printing_client):
-        with patch("routes.printing.render_template", return_value="settings-page") as render:
+        with patch(
+            "routes.printing.render_template", return_value="settings-page"
+        ) as render:
             resp = printing_client.get("/printing/settings")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -374,15 +394,18 @@ class TestPrintSettings:
 
     def test_settings_post_saves_and_redirects(self, printing_client):
         settings = printing_client._printing_mocks["settings"]
-        resp = printing_client.post("/printing/settings", data={
-            "paper_size": "A4",
-            "orientation": "landscape",
-            "active_template": "modern",
-            "header_color": "#111111",
-            "accent_color": "#222222",
-            "show_logo": "on",
-            "enable_qr_code": "on",
-        })
+        resp = printing_client.post(
+            "/printing/settings",
+            data={
+                "paper_size": "A4",
+                "orientation": "landscape",
+                "active_template": "modern",
+                "header_color": "#111111",
+                "accent_color": "#222222",
+                "show_logo": "on",
+                "enable_qr_code": "on",
+            },
+        )
         assert resp.status_code in (302, 303)
         assert settings.paper_size == "A4"
         assert settings.orientation == "landscape"
@@ -471,9 +494,12 @@ class TestPrintingCoverageGaps:
         with patch("models.Sale") as sale_cls:
             sale_cls.query = sale_q
             import builtins
+
             real_import = builtins.__import__
 
-            def _import_shim(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
+            def _import_shim(
+                name, globals_dict=None, locals_dict=None, fromlist=(), level=0
+            ):
                 if name == "models" and fromlist and "Shipment" in fromlist:
                     raise ImportError("Shipment unavailable")
                 return real_import(name, globals_dict, locals_dict, fromlist, level)

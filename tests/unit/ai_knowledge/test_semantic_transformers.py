@@ -1,4 +1,5 @@
 """Tests for semantic_matcher and transformers_brain."""
+
 from __future__ import annotations
 
 import pytest
@@ -10,7 +11,10 @@ from ai_knowledge.neural.semantic_matcher import (
     semantic_matcher,
     understand_message,
 )
-from ai_knowledge.neural.transformers_brain import TransformersBrain, get_transformers_brain
+from ai_knowledge.neural.transformers_brain import (
+    TransformersBrain,
+    get_transformers_brain,
+)
 
 
 class TestSemanticMatcher:
@@ -19,16 +23,16 @@ class TestSemanticMatcher:
         return SemanticMatcher()
 
     def test_exact_invoice_intent(self, matcher):
-        result = matcher.smart_match('فاتورة جديدة')
-        assert result['intent'] == 'create_invoice'
+        result = matcher.smart_match("فاتورة جديدة")
+        assert result["intent"] == "create_invoice"
 
     def test_fuzzy_match_identical(self, matcher):
-        assert matcher.fuzzy_match('cat', 'cat') == 1.0
+        assert matcher.fuzzy_match("cat", "cat") == 1.0
 
     def test_module_helpers(self):
-        assert 'intent' in understand_message('فاتورة جديدة')
-        assert get_intent('فاتورة جديدة') is not None
-        assert get_confidence('فاتورة جديدة') >= 0.0
+        assert "intent" in understand_message("فاتورة جديدة")
+        assert get_intent("فاتورة جديدة") is not None
+        assert get_confidence("فاتورة جديدة") >= 0.0
 
     def test_singleton(self):
         assert semantic_matcher is not None
@@ -47,16 +51,16 @@ class TestTransformersBrain:
         assert len(brain.positional_encoding(0, brain.d_model)) == brain.d_model
 
     def test_understand_tax_question(self, brain):
-        result = brain.understand('كم الضريبة؟')
-        assert result['intent'] == 'question'
+        result = brain.understand("كم الضريبة؟")
+        assert result["intent"] == "question"
 
     def test_generate_response_tax(self, brain):
-        response = brain.generate_response('كم الضريبة؟')
+        response = brain.generate_response("كم الضريبة؟")
         assert isinstance(response, str) and len(response) > 0
 
     def test_context_trim(self, brain):
         for i in range(25):
-            brain.add_to_context(f'msg {i}')
+            brain.add_to_context(f"msg {i}")
         assert len(brain.context_memory) <= 20
 
     def test_context_summary(self, brain):
@@ -69,6 +73,7 @@ class TestTransformersBrain:
 
     def test_singleton(self):
         import ai_knowledge.neural.transformers_brain as mod
+
         mod._transformers_brain_instance = None
         b1 = get_transformers_brain()
         b2 = get_transformers_brain()

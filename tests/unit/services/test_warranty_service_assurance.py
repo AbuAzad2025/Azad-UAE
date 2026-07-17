@@ -1,11 +1,9 @@
 """Warranty service — expiration boundaries, claims, serial lifecycle."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from unittest.mock import MagicMock
-
-import pytest
 
 
 class TestCreateClaim:
@@ -16,12 +14,12 @@ class TestCreateClaim:
         product = MagicMock(id=7, warranty_days=365)
         sale = MagicMock(id=100, tenant_id=1, sale_date=sale_date)
         line = MagicMock(product=product, sale=sale)
-        mock_session = mocker.patch('services.warranty_service.db.session')
+        mock_session = mocker.patch("services.warranty_service.db.session")
 
         from services.warranty_service import WarrantyService
 
         with app.app_context():
-            claim = WarrantyService.create_claim(line, 'repair', 'Screen defect')
+            claim = WarrantyService.create_claim(line, "repair", "Screen defect")
 
         assert claim.product_id == 7
         assert claim.warranty_start_date == sale_date
@@ -33,12 +31,12 @@ class TestCreateClaim:
         product = MagicMock(id=1, warranty_days=0)
         sale = MagicMock(id=2, tenant_id=1, sale_date=sale_date)
         line = MagicMock(product=product, sale=sale)
-        mocker.patch('services.warranty_service.db.session')
+        mocker.patch("services.warranty_service.db.session")
 
         from services.warranty_service import WarrantyService
 
         with app.app_context():
-            claim = WarrantyService.create_claim(line, 'return', 'DOA')
+            claim = WarrantyService.create_claim(line, "return", "DOA")
         assert claim.warranty_end_date == sale_date
 
 
@@ -53,7 +51,10 @@ class TestWarrantyQueries:
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = [MagicMock()]
         mocker.patch.object(
-            WarrantyClaim, 'query', new_callable=mocker.PropertyMock, return_value=mock_q,
+            WarrantyClaim,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.warranty_service import WarrantyService
@@ -65,19 +66,22 @@ class TestWarrantyQueries:
     def test_expiring_within_window_excludes_resolved(self, mocker):
         from models.warranty_claim import WarrantyClaim
 
-        expiring = MagicMock(status='open')
+        expiring = MagicMock(status="open")
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = [expiring]
         mocker.patch.object(
-            WarrantyClaim, 'query', new_callable=mocker.PropertyMock, return_value=mock_q,
+            WarrantyClaim,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.warranty_service import WarrantyService
 
         rows = WarrantyService.get_expiring_warranties(days=30)
-        assert rows[0].status == 'open'
+        assert rows[0].status == "open"
         assert mock_q.filter.call_count == 1
 
     def test_expiring_boundary_days_parameter(self, mocker):
@@ -88,7 +92,10 @@ class TestWarrantyQueries:
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = []
         mocker.patch.object(
-            WarrantyClaim, 'query', new_callable=mocker.PropertyMock, return_value=mock_q,
+            WarrantyClaim,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.warranty_service import WarrantyService

@@ -2,6 +2,7 @@
 Structured JSON Logging for Azad ERP
 All mutations (create, update, delete) are logged with context.
 """
+
 import json
 import logging
 from datetime import datetime, timezone
@@ -49,7 +50,7 @@ def _resolve_id(value):
         except (ValueError, TypeError):
             return str(value)
     # Check if it looks like a SQLAlchemy model instance (has .id)
-    obj_id = getattr(value, 'id', None)
+    obj_id = getattr(value, "id", None)
     if obj_id is not None:
         return obj_id
     return str(value)
@@ -60,7 +61,7 @@ def log_mutation(
     entity_type: str | None = None,
     entity_id: int | None = None,
     details: dict | None = None,
-    level: str = "info"
+    level: str = "info",
 ):
     """
     Log a mutation event with full context.
@@ -79,7 +80,7 @@ def log_mutation(
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_type": "mutation",
         "action": action,
-        "entity_type": entity_type or '',
+        "entity_type": entity_type or "",
         "entity_id": resolved_id,
         "details": details or {},
         "user": _get_user_context(),
@@ -91,10 +92,7 @@ def log_mutation(
 
 
 def log_security_event(
-    event_type: str,
-    description: str,
-    severity: str = "info",
-    extra: dict | None = None
+    event_type: str, description: str, severity: str = "info", extra: dict | None = None
 ):
     """Log security-related events (login attempts, permission denials, etc.)."""
     log_entry = {
@@ -108,7 +106,9 @@ def log_security_event(
         "extra": extra or {},
     }
 
-    log_func = getattr(logger, severity if severity != "alert" else "warning", logger.info)
+    log_func = getattr(
+        logger, severity if severity != "alert" else "warning", logger.info
+    )
     log_func(json.dumps(log_entry, ensure_ascii=False, default=str))
 
 
@@ -116,7 +116,7 @@ def log_data_access(
     entity_type: str,
     entity_id: int | None = None,
     access_type: str = "read",
-    details: dict | None = None
+    details: dict | None = None,
 ):
     """Log sensitive data access (for compliance auditing)."""
     log_entry = {

@@ -3,10 +3,19 @@
 إدارة الشيكات الواردة والصادرة
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+    jsonify,
+    current_app,
+)
 from flask_login import login_required, current_user
 from extensions import db, limiter
-from models import Cheque, Customer, Supplier, Sale, Receipt, Expense
+from models import Cheque, Customer, Supplier, Sale, Receipt
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.cheque_service import (
@@ -25,10 +34,10 @@ from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
-cheques_bp = Blueprint('cheques', __name__, url_prefix='/cheques')
+cheques_bp = Blueprint("cheques", __name__, url_prefix="/cheques")
 
 
 def _scoped_cheques_query():
@@ -44,7 +53,7 @@ def _scoped_cheques_query():
 
 def _ensure_cheque_scope(cheque):
     tid = get_active_tenant_id(current_user)
-    if tid is not None and getattr(cheque, 'tenant_id', None) != tid:
+    if tid is not None and getattr(cheque, "tenant_id", None) != tid:
         return False
     scoped_branch_id = branch_scope_id()
     return scoped_branch_id is None or cheque.branch_id == scoped_branch_id
@@ -52,16 +61,17 @@ def _ensure_cheque_scope(cheque):
 
 def _get_cheque_or_404(cheque_id):
     from utils.tenanting import tenant_get_or_404
+
     return tenant_get_or_404(Cheque, cheque_id)
 
 
 def _resolve_transaction_rate(currency, user_rate=None):
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         currency,
-        'AED',
+        "AED",
         user_rate=user_rate,
     )
-    return Decimal(str(rate_info['rate']))
+    return Decimal(str(rate_info["rate"]))
 
 
 def _scoped_customers_query():
@@ -114,17 +124,17 @@ def _scoped_suppliers_query():
     return query.filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
 
 
-@cheques_bp.route('/')
+@cheques_bp.route("/")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def index():
     """قائمة كل الشيكات"""
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 25, type=int)
-    cheque_type = request.args.get('type', '', type=str)
-    status = request.args.get('status', '', type=str)
-    search = request.args.get('search', '', type=str)
-    
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 25, type=int)
+    cheque_type = request.args.get("type", "", type=str)
+    status = request.args.get("status", "", type=str)
+    search = request.args.get("search", "", type=str)
+
     tid = get_active_tenant_id(current_user)
     # تحديث حالة كل الشيكات
     scoped_branch_id = branch_scope_id()
@@ -139,128 +149,135 @@ def index():
         query = query.filter_by(status=status)
 
     if search:
-        search_filter = f'%{search}%'
+        search_filter = f"%{search}%"
         query = query.filter(
             db.or_(
                 Cheque.cheque_number.ilike(search_filter),
                 Cheque.cheque_bank_number.ilike(search_filter),
                 Cheque.bank_name.ilike(search_filter),
                 Cheque.drawer_name.ilike(search_filter),
-                Cheque.payee_name.ilike(search_filter)
+                Cheque.payee_name.ilike(search_filter),
             )
         )
 
     pagination = query.order_by(Cheque.due_date).paginate(
-        page=page,
-        per_page=per_page,
-        error_out=False
+        page=page, per_page=per_page, error_out=False
     )
 
     stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
-    
-    return render_template('cheques/index.html',
-                         cheques=pagination.items,
-                         pagination=pagination,
-                         stats=stats,
-                         show_branch_columns=should_show_all_branch_columns(current_user))
+
+    return render_template(
+        "cheques/index.html",
+        cheques=pagination.items,
+        pagination=pagination,
+        stats=stats,
+        show_branch_columns=should_show_all_branch_columns(current_user),
+    )
 
 
-@cheques_bp.route('/incoming')
+@cheques_bp.route("/incoming")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def incoming():
     """الشيكات الواردة"""
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status', '', type=str)
-    
+    page = request.args.get("page", 1, type=int)
+    status = request.args.get("status", "", type=str)
+
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
     Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
 
-    query = _scoped_cheques_query().filter_by(cheque_type='incoming')
+    query = _scoped_cheques_query().filter_by(cheque_type="incoming")
 
     if status:
         query = query.filter_by(status=status)
 
     pagination = query.order_by(Cheque.due_date).paginate(
-        page=page,
-        per_page=25,
-        error_out=False
+        page=page, per_page=25, error_out=False
     )
 
     stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
 
-    return render_template('cheques/incoming.html',
-                         cheques=pagination.items,
-                         pagination=pagination,
-                         stats=stats)
+    return render_template(
+        "cheques/incoming.html",
+        cheques=pagination.items,
+        pagination=pagination,
+        stats=stats,
+    )
 
 
-@cheques_bp.route('/outgoing')
+@cheques_bp.route("/outgoing")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def outgoing():
     """الشيكات الصادرة"""
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status', '', type=str)
-    
+    page = request.args.get("page", 1, type=int)
+    status = request.args.get("status", "", type=str)
+
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
     Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
 
-    query = _scoped_cheques_query().filter_by(cheque_type='outgoing')
+    query = _scoped_cheques_query().filter_by(cheque_type="outgoing")
 
     if status:
         query = query.filter_by(status=status)
 
     pagination = query.order_by(Cheque.due_date).paginate(
-        page=page,
-        per_page=25,
-        error_out=False
+        page=page, per_page=25, error_out=False
     )
 
     stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
 
-    return render_template('cheques/outgoing.html',
-                         cheques=pagination.items,
-                         pagination=pagination,
-                         stats=stats)
+    return render_template(
+        "cheques/outgoing.html",
+        cheques=pagination.items,
+        pagination=pagination,
+        stats=stats,
+    )
 
 
-@cheques_bp.route('/create', methods=['GET', 'POST'])
+@cheques_bp.route("/create", methods=["GET", "POST"])
 @login_required
-@permission_required('manage_payments')
-@limiter.limit("10 per minute", methods=['POST'])
+@permission_required("manage_payments")
+@limiter.limit("10 per minute", methods=["POST"])
 def create():
     """إضافة شيك جديد"""
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            cheque_branch_id = branch_scope_id() or getattr(current_user, 'branch_id', None)
-            cheque_number = generate_number('CHQ', Cheque, 'cheque_number', branch_id=cheque_branch_id)
-            
-            cheque_type = (request.form.get('cheque_type') or '').strip()
+            cheque_branch_id = branch_scope_id() or getattr(
+                current_user, "branch_id", None
+            )
+            cheque_number = generate_number(
+                "CHQ", Cheque, "cheque_number", branch_id=cheque_branch_id
+            )
+
+            cheque_type = (request.form.get("cheque_type") or "").strip()
             if not cheque_type:
-                flash('⚠️ يرجى اختيار نوع الشيك.', 'warning')
+                flash("⚠️ يرجى اختيار نوع الشيك.", "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 try:
-                    from models import Tenant
                     _dc = resolve_default_currency()
                 except Exception:
                     _dc = get_system_default_currency()
                 exchange_rates = CurrencyService.get_all_rates(_dc)
-                return render_template('cheques/create.html',
-                                     customers=customers,
-                                     suppliers=suppliers,
-                                     exchange_rates=exchange_rates)
-            amount = Decimal(str(request.form.get('amount')))
+                return render_template(
+                    "cheques/create.html",
+                    customers=customers,
+                    suppliers=suppliers,
+                    exchange_rates=exchange_rates,
+                )
+            amount = Decimal(str(request.form.get("amount")))
             try:
-                from models import Tenant
                 default_currency = resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
-                sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
+
+                sys.stderr.write(
+                    f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n"
+                )
                 traceback.print_exc()
                 try:
                     LoggingCore.log_error(
@@ -268,149 +285,175 @@ def create():
                         category="CHEQUES",
                         source="routes.cheques.create_cheque.get_default_currency",
                         level="WARNING",
-                        exception=e
+                        exception=e,
                     )
                 except Exception:
                     pass
                 default_currency = get_system_default_currency()
-            currency = request.form.get('currency') or default_currency
-            
+            currency = request.form.get("currency") or default_currency
+
             # حساب سعر الصرف
             exchange_rate = _resolve_transaction_rate(
                 currency,
-                request.form.get('exchange_rate', type=float),
+                request.form.get("exchange_rate", type=float),
             )
-            
+
             # تحويل التواريخ
-            issue_date = datetime.strptime(request.form.get('issue_date') or '', '%Y-%m-%d').date()
-            due_date = datetime.strptime(request.form.get('due_date') or '', '%Y-%m-%d').date()
-            customer_id = request.form.get('customer_id', type=int) or None
-            supplier_id = request.form.get('supplier_id', type=int) or None
-            if customer_id and not _scoped_customers_query().filter(Customer.id == customer_id).first():
-                flash('⚠️ العميل المحدد خارج نطاق الفرع الحالي.', 'warning')
+            issue_date = datetime.strptime(
+                request.form.get("issue_date") or "", "%Y-%m-%d"
+            ).date()
+            due_date = datetime.strptime(
+                request.form.get("due_date") or "", "%Y-%m-%d"
+            ).date()
+            customer_id = request.form.get("customer_id", type=int) or None
+            supplier_id = request.form.get("supplier_id", type=int) or None
+            if (
+                customer_id
+                and not _scoped_customers_query()
+                .filter(Customer.id == customer_id)
+                .first()
+            ):
+                flash("⚠️ العميل المحدد خارج نطاق الفرع الحالي.", "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
-                return render_template('cheques/create.html',
-                                     customers=customers,
-                                     suppliers=suppliers,
-                                     exchange_rates=exchange_rates)
-            if supplier_id and not _scoped_suppliers_query().filter(Supplier.id == supplier_id).first():
-                flash('⚠️ المورد المحدد خارج نطاق الفرع الحالي.', 'warning')
+                return render_template(
+                    "cheques/create.html",
+                    customers=customers,
+                    suppliers=suppliers,
+                    exchange_rates=exchange_rates,
+                )
+            if (
+                supplier_id
+                and not _scoped_suppliers_query()
+                .filter(Supplier.id == supplier_id)
+                .first()
+            ):
+                flash("⚠️ المورد المحدد خارج نطاق الفرع الحالي.", "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
-                return render_template('cheques/create.html',
-                                     customers=customers,
-                                     suppliers=suppliers,
-                                     exchange_rates=exchange_rates)
-            
+                return render_template(
+                    "cheques/create.html",
+                    customers=customers,
+                    suppliers=suppliers,
+                    exchange_rates=exchange_rates,
+                )
+
             cheque = Cheque(
-                tenant_id=getattr(current_user, 'tenant_id', None),
+                tenant_id=getattr(current_user, "tenant_id", None),
                 cheque_number=cheque_number,
-                cheque_bank_number=request.form.get('cheque_bank_number'),
+                cheque_bank_number=request.form.get("cheque_bank_number"),
                 cheque_type=cheque_type,
-                bank_name=request.form.get('bank_name'),
-                bank_branch=request.form.get('bank_branch'),
-                account_number=request.form.get('account_number'),
+                bank_name=request.form.get("bank_name"),
+                bank_branch=request.form.get("bank_branch"),
+                account_number=request.form.get("account_number"),
                 amount=amount,
                 currency=currency,
                 exchange_rate=exchange_rate,
                 issue_date=issue_date,
                 due_date=due_date,
-                drawer_name=request.form.get('drawer_name'),
-                drawer_id_number=request.form.get('drawer_id_number'),
-                payee_name=request.form.get('payee_name'),
+                drawer_name=request.form.get("drawer_name"),
+                drawer_id_number=request.form.get("drawer_id_number"),
+                payee_name=request.form.get("payee_name"),
                 customer_id=customer_id,
                 supplier_id=supplier_id,
-                notes=request.form.get('notes'),
+                notes=request.form.get("notes"),
                 user_id=current_user.id,
                 branch_id=cheque_branch_id,
             )
-            
+
             calculate_amount_aed(cheque)
             cheque.update_status_based_on_date()
-            
-            with atomic_transaction('cheque_create'):
+
+            with atomic_transaction("cheque_create"):
                 db.session.add(cheque)
                 db.session.flush()
-                if cheque.cheque_type == 'incoming':
+                if cheque.cheque_type == "incoming":
                     process_cheque_receive(cheque)
-                elif cheque.cheque_type == 'outgoing':
+                elif cheque.cheque_type == "outgoing":
                     process_cheque_issue(cheque)
-                LoggingCore.log_audit('create', 'cheques', cheque.id)
-            
-            flash(f'✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح', 'success')
-            return redirect(url_for('cheques.view', id=cheque.id))
-        
+                LoggingCore.log_audit("create", "cheques", cheque.id)
+
+            flash(f"✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح", "success")
+            return redirect(url_for("cheques.view", id=cheque.id))
+
         except Exception as e:
-            pass
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
             import uuid as _uuid
-            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), 'danger')
-    
+
+            flash(
+                ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger"
+            )
+
     try:
-        from models import Tenant
         default_currency = resolve_default_currency()
     except Exception:
         default_currency = get_system_default_currency()
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
     exchange_rates = CurrencyService.get_all_rates(default_currency)
-    
-    return render_template('cheques/create.html',
-                         customers=customers,
-                         suppliers=suppliers,
-                         exchange_rates=exchange_rates)
+
+    return render_template(
+        "cheques/create.html",
+        customers=customers,
+        suppliers=suppliers,
+        exchange_rates=exchange_rates,
+    )
 
 
-@cheques_bp.route('/<int:id>')
+@cheques_bp.route("/<int:id>")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def view(id):  # noqa: A002
     """عرض تفاصيل الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
     cheque.update_status_based_on_date()
-    
+
     # إضافة today للـ template
-    today = datetime.now().strftime('%Y-%m-%d')
-    
-    return render_template('cheques/view.html', cheque=cheque, today=today)
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    return render_template("cheques/view.html", cheque=cheque, today=today)
 
 
-@cheques_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@cheques_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def edit(id):  # noqa: A002
     """تعديل الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     # لا يمكن تعديل شيك تم صرفه أو ملغي
-    if cheque.status in ['cleared', 'cancelled', 'bounced']:
-        flash('⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات.', 'danger')
-        return redirect(url_for('cheques.view', id=id))
-    
-    if request.method == 'POST':
+    if cheque.status in ["cleared", "cancelled", "bounced"]:
+        flash(
+            "⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات.",
+            "danger",
+        )
+        return redirect(url_for("cheques.view", id=id))
+
+    if request.method == "POST":
         try:
-            with atomic_transaction('cheque_update'):
-                cheque.cheque_bank_number = request.form.get('cheque_bank_number')
-                cheque.bank_name = request.form.get('bank_name')
-                cheque.bank_branch = request.form.get('bank_branch')
-                cheque.account_number = request.form.get('account_number')
-                
-                cheque.amount = Decimal(str(request.form.get('amount')))
+            with atomic_transaction("cheque_update"):
+                cheque.cheque_bank_number = request.form.get("cheque_bank_number")
+                cheque.bank_name = request.form.get("bank_name")
+                cheque.bank_branch = request.form.get("bank_branch")
+                cheque.account_number = request.form.get("account_number")
+
+                cheque.amount = Decimal(str(request.form.get("amount")))
                 try:
-                    from models import Tenant
                     default_currency = resolve_default_currency()
                 except Exception as e:
                     import sys
                     import traceback
-                    sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
+
+                    sys.stderr.write(
+                        f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n"
+                    )
                     traceback.print_exc()
                     try:
                         LoggingCore.log_error(
@@ -418,277 +461,340 @@ def edit(id):  # noqa: A002
                             category="CHEQUES",
                             source="routes.cheques.create_cheque.get_default_currency",
                             level="WARNING",
-                            exception=e
+                            exception=e,
                         )
                     except Exception:
                         pass
                     default_currency = get_system_default_currency()
-                cheque.currency = request.form.get('currency') or default_currency
-                
+                cheque.currency = request.form.get("currency") or default_currency
+
                 exchange_rate = _resolve_transaction_rate(
                     cheque.currency,
-                    request.form.get('exchange_rate', type=float),
+                    request.form.get("exchange_rate", type=float),
                 )
                 cheque.exchange_rate = exchange_rate
-                
-                cheque.issue_date = datetime.strptime(request.form.get('issue_date') or '', '%Y-%m-%d').date()
-                cheque.due_date = datetime.strptime(request.form.get('due_date') or '', '%Y-%m-%d').date()
-                
-                cheque.drawer_name = request.form.get('drawer_name')
-                cheque.drawer_id_number = request.form.get('drawer_id_number')
-                cheque.payee_name = request.form.get('payee_name')
-                cheque.notes = request.form.get('notes')
-                
+
+                cheque.issue_date = datetime.strptime(
+                    request.form.get("issue_date") or "", "%Y-%m-%d"
+                ).date()
+                cheque.due_date = datetime.strptime(
+                    request.form.get("due_date") or "", "%Y-%m-%d"
+                ).date()
+
+                cheque.drawer_name = request.form.get("drawer_name")
+                cheque.drawer_id_number = request.form.get("drawer_id_number")
+                cheque.payee_name = request.form.get("payee_name")
+                cheque.notes = request.form.get("notes")
+
                 calculate_amount_aed(cheque)
                 cheque.update_status_based_on_date()
-                
-                LoggingCore.log_audit('update', 'cheques', id)
-            
-            flash('✅ تم تحديث الشيك بنجاح', 'success')
-            return redirect(url_for('cheques.view', id=id))
-        
+
+                LoggingCore.log_audit("update", "cheques", id)
+
+            flash("✅ تم تحديث الشيك بنجاح", "success")
+            return redirect(url_for("cheques.view", id=id))
+
         except Exception as e:
-            pass
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
             import uuid as _uuid
-            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), 'danger')
-    
+
+            flash(
+                ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger"
+            )
+
     try:
-        from models import Tenant
         default_currency = resolve_default_currency()
     except Exception:
         default_currency = get_system_default_currency()
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
     exchange_rates = CurrencyService.get_all_rates(default_currency)
-    
-    return render_template('cheques/edit.html',
-                         cheque=cheque,
-                         customers=customers,
-                         suppliers=suppliers,
-                         exchange_rates=exchange_rates)
+
+    return render_template(
+        "cheques/edit.html",
+        cheque=cheque,
+        customers=customers,
+        suppliers=suppliers,
+        exchange_rates=exchange_rates,
+    )
 
 
-@cheques_bp.route('/<int:id>/deposit', methods=['POST'])
+@cheques_bp.route("/<int:id>/deposit", methods=["POST"])
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def deposit_cheque(id):  # noqa: A002
     """إيداع الشيك في البنك - الخطوة 1"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     try:
-        deposit_date_str = request.form.get('deposit_date')
-        deposit_date = datetime.strptime(deposit_date_str, '%Y-%m-%d').date() if deposit_date_str else None
-        
-        with atomic_transaction('cheque_deposit'):
+        deposit_date_str = request.form.get("deposit_date")
+        deposit_date = (
+            datetime.strptime(deposit_date_str, "%Y-%m-%d").date()
+            if deposit_date_str
+            else None
+        )
+
+        with atomic_transaction("cheque_deposit"):
             process_cheque_deposit(cheque, deposit_date)
-            LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
-                            {'message': f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك'})
-        
-        flash(f'✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك', 'success')
-    
+            LoggingCore.log_audit(
+                "cheque_deposit",
+                "cheques",
+                id,
+                {"message": f"إيداع شيك رقم {cheque.cheque_bank_number} في البنك"},
+            )
+
+        flash(f"✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك", "success")
+
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f'❌ خطأ: {str(e)}', 'error')
+        flash(f"❌ خطأ: {str(e)}", "error")
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-    
-    return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+
+    return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/<int:id>/clear', methods=['POST'])
+@cheques_bp.route("/<int:id>/clear", methods=["POST"])
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def clear_cheque(id):  # noqa: A002
     """تأكيد صرف الشيك من البنك - الخطوة 2 - المحاسبة الفعلية"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     try:
-        clearance_date_str = request.form.get('clearance_date')
-        clearance_date = datetime.strptime(clearance_date_str, '%Y-%m-%d').date() if clearance_date_str else None
-        
+        clearance_date_str = request.form.get("clearance_date")
+        clearance_date = (
+            datetime.strptime(clearance_date_str, "%Y-%m-%d").date()
+            if clearance_date_str
+            else None
+        )
+
         # سعر الصرف وقت الصرف (اختياري)
-        clearance_exchange_rate = request.form.get('clearance_exchange_rate', type=float)
-        
+        clearance_exchange_rate = request.form.get(
+            "clearance_exchange_rate", type=float
+        )
+
         try:
-            from models import Tenant
             default_currency = resolve_default_currency()
         except Exception:
             default_currency = get_system_default_currency()
-        
+
         # تأكيد الصرف - هنا تحدث المحاسبة!
-        with atomic_transaction('cheque_clear'):
+        with atomic_transaction("cheque_clear"):
             process_cheque_clear(cheque, clearance_date, clearance_exchange_rate)
-        
+
         # رسالة مفصلة عند وجود فرق عملة
-        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal('0.01'):
+        if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal(
+            "0.01"
+        ):
             if cheque.currency_gain_loss > 0:
-                gain_loss_msg = f' - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} {default_currency}'
+                gain_loss_msg = f" - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} {default_currency}"
             else:
-                gain_loss_msg = f' - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} {default_currency}'
+                gain_loss_msg = f" - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} {default_currency}"
         else:
-            gain_loss_msg = ''
-        
-        with atomic_transaction('cheque_clear_log'):
-            LoggingCore.log_audit('cheque_clear', 'cheques', id,
-                            {'message': f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}'})
-        
-        flash(f'✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}', 'success')
-    
+            gain_loss_msg = ""
+
+        with atomic_transaction("cheque_clear_log"):
+            LoggingCore.log_audit(
+                "cheque_clear",
+                "cheques",
+                id,
+                {
+                    "message": f"تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}"
+                },
+            )
+
+        flash(
+            f"✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}",
+            "success",
+        )
+
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f'❌ خطأ: {str(e)}', 'error')
+        flash(f"❌ خطأ: {str(e)}", "error")
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-    
-    return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+
+    return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/<int:id>/bounce', methods=['POST'])
+@cheques_bp.route("/<int:id>/bounce", methods=["POST"])
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def bounce_cheque(id):  # noqa: A002
     """رفض الشيك من البنك - إرجاع الدين"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     try:
-        reason = request.form.get('bounce_reason', 'غير محدد')
-        details = request.form.get('bounce_details', '')
+        reason = request.form.get("bounce_reason", "غير محدد")
+        details = request.form.get("bounce_details", "")
         full_reason = f"{reason}. {details}" if details else reason
-        
+
         # رفض الشيك - إرجاع الدين
-        with atomic_transaction('cheque_bounce'):
+        with atomic_transaction("cheque_bounce"):
             process_cheque_bounce(cheque, full_reason)
-            LoggingCore.log_audit('cheque_bounce', 'cheques', id,
-                            {'message': f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}'})
-        
-        flash(f'❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون', 'warning')
-    
+            LoggingCore.log_audit(
+                "cheque_bounce",
+                "cheques",
+                id,
+                {"message": f"رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}"},
+            )
+
+        flash(
+            f"❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون",
+            "warning",
+        )
+
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f'❌ خطأ: {str(e)}', 'error')
+        flash(f"❌ خطأ: {str(e)}", "error")
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-    
-    return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+
+    return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/<int:id>/cancel', methods=['POST'])
+@cheques_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @admin_required
 def cancel(id):  # noqa: A002
     """إلغاء الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
-    if cheque.status == 'cleared':
-        flash('⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه.', 'danger')
-        return redirect(url_for('cheques.view', id=id))
-    
+    if cheque.status == "cleared":
+        flash(
+            "⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه.",
+            "danger",
+        )
+        return redirect(url_for("cheques.view", id=id))
+
     try:
-        reason = request.form.get('cancel_reason')
-        
-        with atomic_transaction('cheque_cancel'):
+        reason = request.form.get("cancel_reason")
+
+        with atomic_transaction("cheque_cancel"):
             process_cheque_cancel(cheque, reason)
-            LoggingCore.log_audit('cancel', 'cheques', id)
-        
-        flash(f'✅ تم إلغاء الشيك {cheque.cheque_bank_number}', 'success')
-    
+            LoggingCore.log_audit("cancel", "cheques", id)
+
+        flash(f"✅ تم إلغاء الشيك {cheque.cheque_bank_number}", "success")
+
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-    
-    return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+
+    return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/<int:id>/delete', methods=['POST'])
+@cheques_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
 def delete(id):  # noqa: A002
     """حذف (أرشفة) الشيك"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     # التحقق من الارتباطات
     has_links = False
-    
+
     # 1. حالة الشيك (إذا لم يكن معلقاً، فهو جزء من التاريخ)
-    if cheque.status in ['cleared', 'deposited', 'bounced', 'cancelled', 'under_collection']:
+    if cheque.status in [
+        "cleared",
+        "deposited",
+        "bounced",
+        "cancelled",
+        "under_collection",
+    ]:
         has_links = True
-        
+
     # 2. ارتباطات بكيانات أخرى
-    if cheque.receipt_id or cheque.payment_id or cheque.sale_id or cheque.purchase_id or cheque.expense_id:
+    if (
+        cheque.receipt_id
+        or cheque.payment_id
+        or cheque.sale_id
+        or cheque.purchase_id
+        or cheque.expense_id
+    ):
         has_links = True
-        
+
     try:
         if has_links:
             # أرشفة (Soft Delete)
-            reason = request.form.get('delete_reason', 'أرشفة بسبب وجود ارتباطات')
-            
+            reason = request.form.get("delete_reason", "أرشفة بسبب وجود ارتباطات")
+
             # عكس القيد المحاسبي إذا كان نشطاً (يتم داخل دالة archive)
-            with atomic_transaction('cheque_archive'):
+            with atomic_transaction("cheque_archive"):
                 cheque.archive(reason)
-                LoggingCore.log_audit('archive', 'cheques', id)
-            flash(f'✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)', 'warning')
-            
+                LoggingCore.log_audit("archive", "cheques", id)
+            flash(
+                f"✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)",
+                "warning",
+            )
+
         else:
-            with atomic_transaction('cheque_delete_hard'):
+            with atomic_transaction("cheque_delete_hard"):
                 # حذف القيود المحاسبية المرتبطة
                 from models import GLJournalEntry
-                
-                ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
+
+                ref_types = [
+                    "cheque_receive",
+                    "cheque_issue",
+                    "cheque_cancel",
+                    "cheque_clear",
+                    "cheque_bounce",
+                    "Cheque",
+                ]
                 gl_query = GLJournalEntry.query.filter(
                     GLJournalEntry.reference_type.in_(ref_types),
                     GLJournalEntry.reference_id == cheque.id,
                     GLJournalEntry.tenant_id == cheque.tenant_id,
                 )
                 gl_query.delete(synchronize_session=False)
-                
+
                 # حذف الشيك
                 db.session.delete(cheque)
-                LoggingCore.log_audit('delete', 'cheques', id)
-            flash(f'✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً', 'success')
-            
-        return redirect(url_for('cheques.index'))
-    
+                LoggingCore.log_audit("delete", "cheques", id)
+            flash(f"✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً", "success")
+
+        return redirect(url_for("cheques.index"))
+
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-        return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/<int:id>/restore', methods=['POST'])
+@cheques_bp.route("/<int:id>/restore", methods=["POST"])
 @login_required
 @admin_required
 def restore(id):  # noqa: A002
     """استعادة شيك من الأرشيف"""
     cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
-        return render_template('errors/403.html'), 403
+        return render_template("errors/403.html"), 403
 
     try:
-        with atomic_transaction('cheque_restore'):
+        with atomic_transaction("cheque_restore"):
             cheque.restore()
-            LoggingCore.log_audit('restore', 'cheques', id)
-        
-        flash(f'✅ تم استعادة الشيك {cheque.cheque_bank_number}', 'success')
-    
+            LoggingCore.log_audit("restore", "cheques", id)
+
+        flash(f"✅ تم استعادة الشيك {cheque.cheque_bank_number}", "success")
+
     except Exception as e:
-        flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
-    
-    return redirect(url_for('cheques.view', id=id))
+        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+
+    return redirect(url_for("cheques.view", id=id))
 
 
-@cheques_bp.route('/alerts')
+@cheques_bp.route("/alerts")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def alerts():
     """تنبيهات الشيكات"""
     tid = get_active_tenant_id(current_user)
@@ -697,40 +803,42 @@ def alerts():
 
     due_soon = Cheque.get_due_soon_cheques(tenant_id=tid, branch_id=scoped_branch_id)
     overdue = Cheque.get_overdue_cheques(tenant_id=tid, branch_id=scoped_branch_id)
-    bounced = _scoped_cheques_query().filter_by(status='bounced')
+    bounced = _scoped_cheques_query().filter_by(status="bounced")
     bounced = bounced.all()
 
     stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
-    
-    return render_template('cheques/alerts.html',
-                         due_soon=due_soon,
-                         overdue=overdue,
-                         bounced=bounced,
-                         stats=stats,
-                         show_branch_columns=should_show_all_branch_columns(current_user))
+
+    return render_template(
+        "cheques/alerts.html",
+        due_soon=due_soon,
+        overdue=overdue,
+        bounced=bounced,
+        stats=stats,
+        show_branch_columns=should_show_all_branch_columns(current_user),
+    )
 
 
-@cheques_bp.route('/archived')
+@cheques_bp.route("/archived")
 @login_required
 @admin_required
 def archived():
     """الشيكات المؤرشفة"""
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get("page", 1, type=int)
 
     query = _scoped_cheques_query().filter_by(is_active=False)
 
-    pagination = query.order_by(
-        Cheque.archived_at.desc()
-    ).paginate(page=page, per_page=25, error_out=False)
-    
-    return render_template('cheques/archived.html',
-                         cheques=pagination.items,
-                         pagination=pagination)
+    pagination = query.order_by(Cheque.archived_at.desc()).paginate(
+        page=page, per_page=25, error_out=False
+    )
+
+    return render_template(
+        "cheques/archived.html", cheques=pagination.items, pagination=pagination
+    )
 
 
-@cheques_bp.route('/api/stats')
+@cheques_bp.route("/api/stats")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def api_stats():
     """API للإحصائيات"""
     tid = get_active_tenant_id(current_user)
@@ -740,9 +848,9 @@ def api_stats():
     return jsonify(stats)
 
 
-@cheques_bp.route('/api/alerts')
+@cheques_bp.route("/api/alerts")
 @login_required
-@permission_required('manage_payments')
+@permission_required("manage_payments")
 def api_alerts():
     """API للتنبيهات"""
     tid = get_active_tenant_id(current_user)
@@ -752,10 +860,11 @@ def api_alerts():
     due_soon = Cheque.get_due_soon_cheques(tenant_id=tid, branch_id=scoped_branch_id)
     overdue = Cheque.get_overdue_cheques(tenant_id=tid, branch_id=scoped_branch_id)
 
-    return jsonify({
-        'due_soon': len(due_soon),
-        'overdue': len(overdue),
-        'cheques_due_soon': [c.to_dict() for c in due_soon[:5]],
-        'cheques_overdue': [c.to_dict() for c in overdue[:5]],
-    })
-
+    return jsonify(
+        {
+            "due_soon": len(due_soon),
+            "overdue": len(overdue),
+            "cheques_due_soon": [c.to_dict() for c in due_soon[:5]],
+            "cheques_overdue": [c.to_dict() for c in overdue[:5]],
+        }
+    )

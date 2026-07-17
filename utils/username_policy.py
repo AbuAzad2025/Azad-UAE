@@ -84,7 +84,9 @@ def parse_company_username(username: str) -> tuple[str, str] | None:
     return prefix.upper(), local.lower()
 
 
-def validate_username_for_user(username: str, *, is_owner: bool = False, tenant=None) -> str | None:
+def validate_username_for_user(
+    username: str, *, is_owner: bool = False, tenant=None
+) -> str | None:
     """
     Return error message in Arabic or None if valid.
     """

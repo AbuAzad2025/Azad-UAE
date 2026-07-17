@@ -1,6 +1,7 @@
 """
 Mandatory GL posting — no financial document commits without a balanced journal entry.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -87,19 +88,20 @@ def post_or_fail(
             tenant_id=tenant_id,
             currency=currency,
             exchange_rate=exchange_rate,
-            entry_type='auto',
+            entry_type="auto",
         )
 
         # Validate the entry (sets status to 'validated' or 'error')
         from services.advanced_journal_manager import AdvancedJournalEntryManager
+
         validated_entry = AdvancedJournalEntryManager.validate_entry(
             entry_id=entry.id,
             validated_by=user_id,
             tenant_id=tenant_id,
-            commit=False  # Don't commit yet, we'll commit after posting
+            commit=False,  # Don't commit yet, we'll commit after posting
         )
 
-        if validated_entry.status == 'error':
+        if validated_entry.status == "error":
             raise GlPostingError(
                 f'Validation failed for entry "{description}": {validated_entry.validation_errors}'
             )
@@ -118,25 +120,27 @@ def post_or_fail(
 
 
 _CURRENCY_TOLERANCE = {
-    'JOD': Decimal('0.00001'),
-    'BHD': Decimal('0.00001'),
-    'KWD': Decimal('0.00001'),
-    'OMR': Decimal('0.00001'),
-    'QAR': Decimal('0.00001'),
-    'ILS': Decimal('0.001'),
-    'AED': Decimal('0.001'),
-    'USD': Decimal('0.001'),
-    'EUR': Decimal('0.001'),
+    "JOD": Decimal("0.00001"),
+    "BHD": Decimal("0.00001"),
+    "KWD": Decimal("0.00001"),
+    "OMR": Decimal("0.00001"),
+    "QAR": Decimal("0.00001"),
+    "ILS": Decimal("0.001"),
+    "AED": Decimal("0.001"),
+    "USD": Decimal("0.001"),
+    "EUR": Decimal("0.001"),
 }
-_DEFAULT_TOLERANCE = Decimal('0.001')
+_DEFAULT_TOLERANCE = Decimal("0.001")
 
 
 def assert_balanced_lines(lines, *, currency=None, tolerance=None):
     if tolerance is None:
-        tolerance = _CURRENCY_TOLERANCE.get((currency or '').upper(), _DEFAULT_TOLERANCE)
-    total_debit = sum(Decimal(str(l.get('debit', 0) or 0)) for l in lines)
-    total_credit = sum(Decimal(str(l.get('credit', 0) or 0)) for l in lines)
+        tolerance = _CURRENCY_TOLERANCE.get(
+            (currency or "").upper(), _DEFAULT_TOLERANCE
+        )
+    total_debit = sum(Decimal(str(l.get("debit", 0) or 0)) for l in lines)
+    total_credit = sum(Decimal(str(l.get("credit", 0) or 0)) for l in lines)
     if abs(total_debit - total_credit) > tolerance:
         raise UnbalancedJournalEntryError(
-            f'القيد غير متوازن: مدين={total_debit} دائن={total_credit}'
+            f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"
         )

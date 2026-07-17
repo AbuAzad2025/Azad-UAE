@@ -1,55 +1,61 @@
 """Online store order lifecycle — confirm, cancel, fulfillment."""
+
 from __future__ import annotations
 
-from decimal import Decimal
 
 from flask import current_app
 
 from extensions import db
-from utils.db_safety import atomic_transaction
 from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from utils.constants import normalize_payment_method_code
 
 STATUS_LABELS_AR = {
-    'pending': 'بانتظار التأكيد',
-    'confirmed': 'مؤكد',
-    'processing': 'قيد التجهيز',
-    'shipped': 'تم الشحن',
-    'delivered': 'تم التوصيل',
-    'cancelled': 'ملغى',
+    "pending": "بانتظار التأكيد",
+    "confirmed": "مؤكد",
+    "processing": "قيد التجهيز",
+    "shipped": "تم الشحن",
+    "delivered": "تم التوصيل",
+    "cancelled": "ملغى",
 }
 
 STATUS_LABELS_EN = {
-    'pending': 'Pending',
-    'confirmed': 'Confirmed',
-    'processing': 'Processing',
-    'shipped': 'Shipped',
-    'delivered': 'Delivered',
-    'cancelled': 'Cancelled',
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
 }
 
 CHECKOUT_PAYMENT_MAP = {
-    'cod': 'cash',
-    'bank_transfer': 'bank_transfer',
-    'card': 'card',
-    'e_wallet': 'e_wallet',
-    'online_pay': 'card',
+    "cod": "cash",
+    "bank_transfer": "bank_transfer",
+    "card": "card",
+    "e_wallet": "e_wallet",
+    "online_pay": "card",
 }
 
 
 class StoreOrderService:
-    STORE_ORDER_STATUSES = ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')
+    STORE_ORDER_STATUSES = (
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+    )
 
     @staticmethod
-    def status_label(status: str, lang: str = 'ar') -> str:
-        labels = STATUS_LABELS_EN if lang == 'en' else STATUS_LABELS_AR
-        return labels.get(status or '', status or '—')
+    def status_label(status: str, lang: str = "ar") -> str:
+        labels = STATUS_LABELS_EN if lang == "en" else STATUS_LABELS_AR
+        return labels.get(status or "", status or "—")
 
     @staticmethod
     def is_online_order(sale: Sale) -> bool:
-        return getattr(sale, 'source', None) == 'online_store'
+        return getattr(sale, "source", None) == "online_store"
 
     @staticmethod
     def is_fulfilled(sale: Sale) -> bool:
@@ -60,7 +66,7 @@ class StoreOrderService:
         return Sale.query.filter_by(
             id=int(order_id),
             tenant_id=int(tenant_id),
-            source='online_store',
+            source="online_store",
         ).first()
 
     @staticmethod
@@ -69,7 +75,7 @@ class StoreOrderService:
             Sale.query.filter_by(
                 tenant_id=int(tenant_id),
                 customer_id=int(customer_id),
-                source='online_store',
+                source="online_store",
             )
             .order_by(Sale.sale_date.desc())
             .limit(limit)
@@ -78,47 +84,52 @@ class StoreOrderService:
 
     @staticmethod
     def order_counts(tenant_id: int) -> dict:
-        base = Sale.query.filter_by(tenant_id=int(tenant_id), source='online_store')
+        base = Sale.query.filter_by(tenant_id=int(tenant_id), source="online_store")
         return {
-            'pending': base.filter_by(status='pending').count(),
-            'confirmed': base.filter_by(status='confirmed').count(),
-            'cancelled': base.filter_by(status='cancelled').count(),
-            'total': base.count(),
+            "pending": base.filter_by(status="pending").count(),
+            "confirmed": base.filter_by(status="confirmed").count(),
+            "cancelled": base.filter_by(status="cancelled").count(),
+            "total": base.count(),
         }
 
     @staticmethod
     def confirm_order(sale: Sale, *, mark_paid: bool = False) -> Sale:
         if not StoreOrderService.is_online_order(sale):
-            raise ValueError('هذا ليس طلب متجر إلكتروني.')
-        if sale.status == 'cancelled':
-            raise ValueError('لا يمكن تأكيد طلب ملغى.')
-        if sale.status == 'confirmed' and StoreOrderService.is_fulfilled(sale):
-            raise ValueError('الطلب مؤكد مسبقاً.')
+            raise ValueError("هذا ليس طلب متجر إلكتروني.")
+        if sale.status == "cancelled":
+            raise ValueError("لا يمكن تأكيد طلب ملغى.")
+        if sale.status == "confirmed" and StoreOrderService.is_fulfilled(sale):
+            raise ValueError("الطلب مؤكد مسبقاً.")
 
         if not StoreOrderService.is_fulfilled(sale):
             SaleService.fulfill_sale(sale)
 
-        sale.status = 'confirmed'
+        sale.status = "confirmed"
 
-        if mark_paid and (sale.payment_status or 'unpaid') != 'paid':
-            checkout_code = (sale.checkout_payment_method or 'cod').strip().lower()
+        if mark_paid and (sale.payment_status or "unpaid") != "paid":
+            checkout_code = (sale.checkout_payment_method or "cod").strip().lower()
             internal_method = CHECKOUT_PAYMENT_MAP.get(
                 checkout_code,
                 normalize_payment_method_code(checkout_code),
             )
-            if internal_method == 'cod':
-                internal_method = 'cash'
-            amount_to_pay = sale.balance_due if sale.balance_due and sale.balance_due > 0 else sale.total_amount
+            if internal_method == "cod":
+                internal_method = "cash"
+            amount_to_pay = (
+                sale.balance_due
+                if sale.balance_due and sale.balance_due > 0
+                else sale.total_amount
+            )
             payment = SaleService.create_payment_for_sale(
                 sale=sale,
                 amount=amount_to_pay,
                 payment_method=internal_method,
                 currency=sale.currency,
                 exchange_rate=sale.exchange_rate,
-                notes='دفع طلب متجر — تأكيد من لوحة المتجر',
+                notes="دفع طلب متجر — تأكيد من لوحة المتجر",
             )
-            if checkout_code == 'online_pay':
+            if checkout_code == "online_pay":
                 from services.azad_platform_fee_service import AzadPlatformFeeService
+
                 AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
             sale.recalculate_payment_status()
 
@@ -129,7 +140,7 @@ class StoreOrderService:
 
         StoreOrderService._award_loyalty_points(sale)
 
-        current_app.logger.info('Store order confirmed: %s', sale.sale_number)
+        current_app.logger.info("Store order confirmed: %s", sale.sale_number)
         return sale
 
     @staticmethod
@@ -142,18 +153,18 @@ class StoreOrderService:
 
         existing = ShopLoyaltyTransaction.query.filter_by(
             sale_id=sale.id,
-            reason='order',
+            reason="order",
         ).first()
         if existing:
             return
 
         account = ShopCustomerAccount.query.filter_by(
-            customer_id=sale.customer_id,
-            tenant_id=sale.tenant_id
+            customer_id=sale.customer_id, tenant_id=sale.tenant_id
         ).first()
         if not account:
             return
         from decimal import Decimal
+
         total = Decimal(str(sale.total_amount or 0))
         if total > 0:
             StoreService.earn_loyalty_points(sale.tenant_id, account.id, sale.id, total)
@@ -164,18 +175,16 @@ class StoreOrderService:
             return
         from models.shop_customer_account import ShopCustomerAccount
         from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
-        from decimal import Decimal
 
         txn = ShopLoyaltyTransaction.query.filter_by(
             sale_id=sale.id,
-            reason='order',
+            reason="order",
         ).first()
         if not txn:
             return
 
         account = ShopCustomerAccount.query.filter_by(
-            customer_id=sale.customer_id,
-            tenant_id=sale.tenant_id
+            customer_id=sale.customer_id, tenant_id=sale.tenant_id
         ).first()
         if not account:
             return
@@ -191,23 +200,24 @@ class StoreOrderService:
             account_id=account.id,
             sale_id=sale.id,
             points=-abs(int(txn.points or 0)),
-            reason='cancel',
+            reason="cancel",
         )
         db.session.add(reversal)
 
     @staticmethod
     def cancel_order(sale: Sale) -> Sale:
         if not StoreOrderService.is_online_order(sale):
-            raise ValueError('هذا ليس طلب متجر إلكتروني.')
-        if sale.status == 'cancelled':
-            raise ValueError('الطلب ملغى بالفعل.')
+            raise ValueError("هذا ليس طلب متجر إلكتروني.")
+        if sale.status == "cancelled":
+            raise ValueError("الطلب ملغى بالفعل.")
 
         StoreOrderService._reverse_loyalty_points(sale)
 
-        if sale.status == 'confirmed' or StoreOrderService.is_fulfilled(sale):
+        if sale.status == "confirmed" or StoreOrderService.is_fulfilled(sale):
             SaleService.cancel_sale(sale)
             if sale.coupon_code:
                 from services.store_coupon_service import StoreCouponService
+
                 StoreCouponService.release_use(sale.coupon_code, sale.tenant_id)
             try:
                 db.session.flush()
@@ -215,16 +225,19 @@ class StoreOrderService:
                 raise
             return sale
 
-        sale.status = 'cancelled'
+        sale.status = "cancelled"
         if sale.coupon_code:
             from services.store_coupon_service import StoreCouponService
+
             StoreCouponService.release_use(sale.coupon_code, sale.tenant_id)
         try:
             db.session.flush()
         except Exception:
             raise
 
-        current_app.logger.info('Store order cancelled (unfulfilled): %s', sale.sale_number)
+        current_app.logger.info(
+            "Store order cancelled (unfulfilled): %s", sale.sale_number
+        )
         return sale
 
     @staticmethod
@@ -238,5 +251,5 @@ class StoreOrderService:
             )
             if not available:
                 name = line.product.name if line.product else str(line.product_id)
-                issues.append(f'{name}: {msg}')
+                issues.append(f"{name}: {msg}")
         return issues

@@ -1,4 +1,5 @@
 """GL posting for completed Azad donations — owner vault integration."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -18,50 +19,73 @@ from utils.gl_reference_types import GLRef
 class DonationGLService:
     @staticmethod
     def _vault_accounts(vault: PaymentVault | None, tenant_id: int) -> tuple[str, str]:
-        debit = (getattr(vault, 'donation_debit_account', None) or '1120').strip()
-        credit = (getattr(vault, 'donation_credit_account', None) or '4200').strip()
-        debit_account = GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
-        if debit in ('1110', '1120') or getattr(debit_account, 'is_header', False):
-            liquidity_kind = 'cash' if debit == '1110' else 'bank'
-            debit = GLService.get_default_liquidity_account(liquidity_kind, tenant_id=tenant_id)
+        debit = (getattr(vault, "donation_debit_account", None) or "1120").strip()
+        credit = (getattr(vault, "donation_credit_account", None) or "4200").strip()
+        debit_account = (
+            GLAccount.query.filter_by(code=debit, tenant_id=tenant_id)
+            .order_by(GLAccount.id.asc())
+            .first()
+        )
+        if debit in ("1110", "1120") or getattr(debit_account, "is_header", False):
+            liquidity_kind = "cash" if debit == "1110" else "bank"
+            debit = GLService.get_default_liquidity_account(
+                liquidity_kind, tenant_id=tenant_id
+            )
         return debit, credit
 
     @staticmethod
     def post_completed_donation(donation: Donation) -> bool:
-        if getattr(donation, 'gl_posted', False):
+        if getattr(donation, "gl_posted", False):
             return True
-        if donation.status != 'completed':
+        if donation.status != "completed":
             return False
 
         amount_usd = Decimal(str(donation.amount_usd or 0))
         if amount_usd <= 0:
             return False
 
-        tenant_id = getattr(donation, 'tenant_id', None)
+        tenant_id = getattr(donation, "tenant_id", None)
         if tenant_id is None:
             current_app.logger.info(
-                'Skipping tenant GL posting for Azad/platform donation #%s; platform ledger is not tenant-scoped.',
-                getattr(donation, 'id', None),
+                "Skipping tenant GL posting for Azad/platform donation #%s; platform ledger is not tenant-scoped.",
+                getattr(donation, "id", None),
             )
             return False
 
-        vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
-        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, int(tenant_id or 0))
+        vault = (
+            PaymentVault.get_tenant_vault(tenant_id)
+            or PaymentVault.get_platform_vault()
+        )
+        debit_acct, credit_acct = DonationGLService._vault_accounts(
+            vault, int(tenant_id or 0)
+        )
 
         try:
-            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction('USD', 'AED')
-            rate = Decimal(str(rate_info['rate']))
+            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                "USD", "AED"
+            )
+            rate = Decimal(str(rate_info["rate"]))
         except Exception:
-            rate = Decimal('3.67')
-        amount_aed = (amount_usd * rate).quantize(Decimal('0.001'))
+            rate = Decimal("3.67")
+        amount_aed = (amount_usd * rate).quantize(Decimal("0.001"))
 
-        method_label = donation.payment_method or 'donation'
-        donor = donation.donor_name or donation.customer_name or 'متبرع'
-        desc = f'تبرع Azad #{donation.id} — {donor} ({method_label})'
+        method_label = donation.payment_method or "donation"
+        donor = donation.donor_name or donation.customer_name or "متبرع"
+        desc = f"تبرع Azad #{donation.id} — {donor} ({method_label})"
 
         lines = [
-            {'account': debit_acct, 'concept_code': 'BANK', 'debit': amount_aed, 'description': desc},
-            {'account': credit_acct, 'concept_code': 'DONATION_REVENUE', 'credit': amount_aed, 'description': desc},
+            {
+                "account": debit_acct,
+                "concept_code": "BANK",
+                "debit": amount_aed,
+                "description": desc,
+            },
+            {
+                "account": credit_acct,
+                "concept_code": "DONATION_REVENUE",
+                "credit": amount_aed,
+                "description": desc,
+            },
         ]
 
         try:
@@ -75,8 +99,10 @@ class DonationGLService:
             )
             donation.gl_posted = True
             db.session.flush()
-            current_app.logger.info(f'Donation GL posted: #{donation.id} AED {amount_aed}')
+            current_app.logger.info(
+                f"Donation GL posted: #{donation.id} AED {amount_aed}"
+            )
             return True
         except Exception as exc:
-            current_app.logger.error(f'Donation GL failed #{donation.id}: {exc}')
+            current_app.logger.error(f"Donation GL failed #{donation.id}: {exc}")
             raise

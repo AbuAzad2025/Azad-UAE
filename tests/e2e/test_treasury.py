@@ -8,6 +8,7 @@ Run: python tests/e2e/test_treasury.py
 
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from decimal import Decimal
@@ -19,9 +20,7 @@ def _assert_no_double_counting(report):
     total = Decimal(str(report["liquidity"]["total_balance"]))
     summed = sum(Decimal(str(a["balance_aed"])) for a in accounts)
     if abs(total - summed) > Decimal("0.01"):
-        raise AssertionError(
-            f"Liquidity double-counting: total={total} sum={summed}"
-        )
+        raise AssertionError(f"Liquidity double-counting: total={total} sum={summed}")
     print("  [PASS] No double-counting: total == sum of accounts")
 
 
@@ -75,13 +74,12 @@ def _assert_export_route_security():
     """Export route must contain branch security checks."""
     from routes.treasury import treasury_export
     import inspect
+
     source = inspect.getsource(treasury_export)
     required = ["report_branch_scope_id", "user_can_access_branch"]
     for r in required:
         if r not in source:
-            raise AssertionError(
-                f"treasury_export missing security check: {r}"
-            )
+            raise AssertionError(f"treasury_export missing security check: {r}")
     print("  [PASS] Export route applies branch security checks")
 
 
@@ -98,6 +96,7 @@ def _assert_gl_balances_sensible(report):
 
 def main():
     from app import create_app
+
     app = create_app()
     with app.app_context():
         from services.treasury_service import TreasuryService
@@ -165,4 +164,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

@@ -3,6 +3,7 @@ Backup scope definitions — system / tenant / branch / store.
 
 Scoped exports use SQL filters only (no cross-tenant rows).
 """
+
 from __future__ import annotations
 
 import json
@@ -75,19 +76,19 @@ TABLE_EXPORT_ORDER: Tuple[str, ...] = (
 
 # (table, WHERE with bind params)
 TENANT_TABLE_FILTERS: Tuple[Tuple[str, str], ...] = tuple(
-    (t, f"tenant_id = :tid")
-    if t != "tenants"
-    else (t, "id = :tid")
+    (t, "tenant_id = :tid") if t != "tenants" else (t, "id = :tid")
     for t in TABLE_EXPORT_ORDER
     if t not in SCOPED_BACKUP_EXCLUDED_TABLES
 )
 # users: exclude platform owners
 TENANT_TABLE_FILTERS = tuple(
-    (t, w)
-    if t != "users"
-    else (
-        "users",
-        "tenant_id = :tid AND COALESCE(is_owner, false) = false",
+    (
+        (t, w)
+        if t != "users"
+        else (
+            "users",
+            "tenant_id = :tid AND COALESCE(is_owner, false) = false",
+        )
     )
     for t, w in TENANT_TABLE_FILTERS
 )
@@ -103,7 +104,10 @@ CHILD_VIA_PARENT: Tuple[Tuple[str, str, str, str], ...] = (
 BRANCH_DIRECT_FILTERS: Tuple[Tuple[str, str], ...] = (
     ("tenants", "id = :tid"),
     ("branches", "id = :bid AND tenant_id = :tid"),
-    ("users", "tenant_id = :tid AND branch_id = :bid AND COALESCE(is_owner, false) = false"),
+    (
+        "users",
+        "tenant_id = :tid AND branch_id = :bid AND COALESCE(is_owner, false) = false",
+    ),
     ("warehouses", "tenant_id = :tid AND branch_id = :bid"),
     ("sales", "tenant_id = :tid AND branch_id = :bid"),
     ("purchases", "tenant_id = :tid AND branch_id = :bid"),
@@ -197,7 +201,10 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     dt = (data_type or "").lower()
     if "boolean" in dt:
         return False
-    if any(k in dt for k in ("int", "numeric", "decimal", "money", "real", "double", "float")):
+    if any(
+        k in dt
+        for k in ("int", "numeric", "decimal", "money", "real", "double", "float")
+    ):
         return 0
     if "json" in dt:
         return {}
@@ -212,7 +219,9 @@ def _default_for_type(data_type: Optional[str]) -> Any:
     return ""
 
 
-def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_row_to_target(
+    conn: Connection, table: str, row: Dict[str, Any]
+) -> Dict[str, Any]:
     """Make a backup row safe to INSERT into the *current* target schema.
 
     Handles schema drift in both directions:
@@ -230,7 +239,9 @@ def normalize_row_to_target(conn: Connection, table: str, row: Dict[str, Any]) -
     for c in cols:
         if c["name"] in out:
             continue
-        if c["is_nullable"] == "NO" and (c["default"] is None or str(c["default"]).upper() == "NULL"):
+        if c["is_nullable"] == "NO" and (
+            c["default"] is None or str(c["default"]).upper() == "NULL"
+        ):
             out[c["name"]] = _default_for_type(c["data_type"])
     return out
 
@@ -244,7 +255,9 @@ def _serialize_row(item: Dict[str, Any]) -> Dict[str, Any]:
     return item
 
 
-def _fetch_rows(conn, table: str, where_sql: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _fetch_rows(
+    conn, table: str, where_sql: str, params: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     from sqlalchemy import text
 
     result = conn.execute(text(f'SELECT * FROM "{table}" WHERE {where_sql}'), params)
@@ -270,9 +283,7 @@ def _fetch_child_rows(
         return []
     placeholders = ", ".join(f":p{i}" for i in range(len(parent_ids)))
     params = {f"p{i}": pid for i, pid in enumerate(parent_ids)}
-    sql = (
-        f'SELECT * FROM "{child_table}" WHERE "{child_fk}" IN ({placeholders})'
-    )
+    sql = f'SELECT * FROM "{child_table}" WHERE "{child_fk}" IN ({placeholders})'
     result = conn.execute(text(sql), params)
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
@@ -315,7 +326,7 @@ def _merge_product_customer_dependencies(
     try:
         result = conn.execute(
             text(
-                f'SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})'
+                f"SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})"
             ),
             params,
         )
@@ -346,7 +357,9 @@ def export_scoped_database(
     tenant_id: int,
     branch_id: Optional[int] = None,
     store_id: Optional[int] = None,
-) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str], List[str]]:
+) -> Tuple[
+    Dict[str, List[Dict[str, Any]]], Dict[str, int], List[str], List[str], List[str]
+]:
     """
     Export scoped rows.
     Returns tables, row_counts, included, skipped, unresolved_references.
@@ -419,7 +432,9 @@ def export_scoped_database(
             skipped.append(f"{child_table}:missing")
             continue
         parent_rows = tables_out.get(parent_table) or []
-        parent_ids = [r.get(parent_pk) for r in parent_rows if r.get(parent_pk) is not None]
+        parent_ids = [
+            r.get(parent_pk) for r in parent_rows if r.get(parent_pk) is not None
+        ]
         try:
             rows = _fetch_child_rows(
                 conn, child_table, parent_table, parent_pk, child_fk, parent_ids
@@ -452,7 +467,9 @@ def export_scoped_database(
             conn, tables_out, row_counts, included, tenant_id, unresolved
         )
 
-    if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE) and table_exists(conn, "roles"):
+    if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE) and table_exists(
+        conn, "roles"
+    ):
         role_ids = {
             u.get("role_id")
             for u in (tables_out.get("users") or [])
@@ -465,7 +482,7 @@ def export_scoped_database(
             params = {f"r{i}": rid for i, rid in enumerate(role_ids)}
             try:
                 result = conn.execute(
-                    text(f'SELECT * FROM roles WHERE id IN ({placeholders})'),
+                    text(f"SELECT * FROM roles WHERE id IN ({placeholders})"),
                     params,
                 )
                 rows = [
@@ -536,7 +553,9 @@ def write_data_directory(
     return meta
 
 
-def read_data_directory(data_dir: str) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, Any]]:
+def read_data_directory(
+    data_dir: str,
+) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, Any]]:
     meta_path = os.path.join(data_dir, "schema_meta.json")
     meta: Dict[str, Any] = {}
     if os.path.isfile(meta_path):
@@ -645,7 +664,9 @@ def collect_scoped_upload_paths(
         add_column("products", "image_url", "tenant_id = :tid", bind)
         if table_exists(conn, "invoice_settings"):
             add_column("invoice_settings", "logo_path", "tenant_id = :tid", bind)
-            add_column("invoice_settings", "watermark_image_path", "tenant_id = :tid", bind)
+            add_column(
+                "invoice_settings", "watermark_image_path", "tenant_id = :tid", bind
+            )
         if table_exists(conn, "tenant_stores"):
             w = "tenant_id = :tid"
             if store_id:
@@ -660,12 +681,12 @@ def collect_tenant_upload_paths(
     tenant_id: int,
     base_dir: str,
 ) -> Tuple[List[str], List[str]]:
-    return collect_scoped_upload_paths(
-        conn, SCOPE_TENANT, tenant_id, base_dir
-    )
+    return collect_scoped_upload_paths(conn, SCOPE_TENANT, tenant_id, base_dir)
 
 
-def build_tenant_uploads_archive(file_paths: List[str], dest_path: str, base_dir: str) -> Dict[str, Any]:
+def build_tenant_uploads_archive(
+    file_paths: List[str], dest_path: str, base_dir: str
+) -> Dict[str, Any]:
     import tarfile
 
     packed = 0

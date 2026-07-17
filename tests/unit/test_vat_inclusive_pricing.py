@@ -34,6 +34,7 @@ def _vat_app_context(app):
 def _vat_product(db_session, sample_tenant):
     """Ensure a product with id=1 exists for tests that reference product_id=1."""
     from models import Product
+
     existing = db_session.get(Product, 1)
     if existing is None:
         p = Product(
@@ -52,6 +53,7 @@ def _vat_product(db_session, sample_tenant):
 # ──────────────────────────────────────────────────────────────
 # Fixtures
 # ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def vat_exclusive_tenant(db_session, sample_tenant):
@@ -95,6 +97,7 @@ def vat_exclusive_branch(db_session, sample_branch):
 def sample_product_vat(db_session, sample_tenant):
     """Product for VAT pricing tests."""
     from models import Product
+
     p = Product(
         tenant_id=sample_tenant.id,
         name="VAT Test Product",
@@ -111,13 +114,14 @@ def sample_product_vat(db_session, sample_tenant):
 def sample_warehouse_vat(db_session, sample_tenant, sample_branch):
     """Warehouse for VAT pricing tests."""
     from models import Warehouse
+
     w = Warehouse(
         tenant_id=sample_tenant.id,
         branch_id=sample_branch.id,
         name="VAT Warehouse",
         name_ar="مستودع VAT",
         is_active=True,
-            allow_negative_inventory=True,
+        allow_negative_inventory=True,
     )
     db_session.add(w)
     db_session.commit()
@@ -128,6 +132,7 @@ def sample_warehouse_vat(db_session, sample_tenant, sample_branch):
 def sample_customer_vat(db_session, sample_tenant):
     """Customer for VAT pricing tests."""
     from models import Customer
+
     c = Customer(
         tenant_id=sample_tenant.id,
         name="VAT Customer",
@@ -142,6 +147,7 @@ def sample_customer_vat(db_session, sample_tenant):
 def sample_supplier_vat(db_session, sample_tenant):
     """Supplier for VAT pricing tests."""
     from models import Supplier
+
     s = Supplier(
         tenant_id=sample_tenant.id,
         name="VAT Supplier",
@@ -157,6 +163,7 @@ def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
     """User for VAT pricing tests."""
     from models import User
     import uuid
+
     unique = str(uuid.uuid4())[:8]
     u = User(
         username=f"vat-user-{unique}",
@@ -177,10 +184,13 @@ def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
 # 1. Sale.calculate_totals — VAT-inclusive pricing
 # ──────────────────────────────────────────────────────────────
 
+
 class TestSaleVatInclusiveTotals:
     """Ensure Sale.calculate_totals correctly extracts VAT when prices_include_vat=True."""
 
-    def test_sale_vat_inclusive_extraction(self, db_session, vat_inclusive_tenant, sample_product_vat):
+    def test_sale_vat_inclusive_extraction(
+        self, db_session, vat_inclusive_tenant, sample_product_vat
+    ):
         """When prices_include_vat=True, tax_amount must be extracted from subtotal."""
         from models import Sale, SaleLine
 
@@ -218,12 +228,15 @@ class TestSaleVatInclusiveTotals:
         db_session.commit()
 
         # 116 / 1.16 = 100 taxable, 16 tax
-        assert sale.taxable_amount == Decimal("100.00"), \
+        assert sale.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {sale.taxable_amount}"
-        assert sale.tax_amount == Decimal("16.00"), \
+        )
+        assert sale.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {sale.tax_amount}"
-        assert sale.total_amount == Decimal("116.00"), \
+        )
+        assert sale.total_amount == Decimal("116.00"), (
             f"Expected total_amount=116.00 (unchanged), got {sale.total_amount}"
+        )
 
     def test_sale_vat_inclusive_with_discount(self, db_session, vat_inclusive_tenant):
         """VAT-inclusive with discount: tax is extracted from (subtotal - discount)."""
@@ -262,13 +275,19 @@ class TestSaleVatInclusiveTotals:
         db_session.commit()
 
         gross = Decimal("116.00") - Decimal("11.60")  # 104.40
-        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        expected_tax = (gross - expected_taxable).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        expected_taxable = (gross / Decimal("1.16")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        expected_tax = (gross - expected_taxable).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
-        assert sale.taxable_amount == expected_taxable, \
+        assert sale.taxable_amount == expected_taxable, (
             f"Expected taxable_amount={expected_taxable}, got {sale.taxable_amount}"
-        assert sale.tax_amount == expected_tax, \
+        )
+        assert sale.tax_amount == expected_tax, (
             f"Expected tax_amount={expected_tax}, got {sale.tax_amount}"
+        )
 
     def test_sale_vat_inclusive_with_shipping(self, db_session, vat_inclusive_tenant):
         """VAT-inclusive with shipping: shipping is also inclusive."""
@@ -307,15 +326,22 @@ class TestSaleVatInclusiveTotals:
         db_session.commit()
 
         gross = Decimal("100.00") + Decimal("23.20")  # 123.20
-        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        expected_tax = (gross - expected_taxable).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        expected_taxable = (gross / Decimal("1.16")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        expected_tax = (gross - expected_taxable).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
-        assert sale.taxable_amount == expected_taxable, \
+        assert sale.taxable_amount == expected_taxable, (
             f"Expected taxable_amount={expected_taxable}, got {sale.taxable_amount}"
-        assert sale.tax_amount == expected_tax, \
+        )
+        assert sale.tax_amount == expected_tax, (
             f"Expected tax_amount={expected_tax}, got {sale.tax_amount}"
-        assert sale.total_amount == gross, \
+        )
+        assert sale.total_amount == gross, (
             f"Expected total_amount={gross}, got {sale.total_amount}"
+        )
 
     def test_sale_vat_exclusive_unchanged(self, db_session, vat_exclusive_tenant):
         """When prices_include_vat=False, tax is added on top (standard behavior)."""
@@ -353,17 +379,21 @@ class TestSaleVatInclusiveTotals:
         sale.calculate_totals()
         db_session.commit()
 
-        assert sale.taxable_amount == Decimal("100.00"), \
+        assert sale.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {sale.taxable_amount}"
-        assert sale.tax_amount == Decimal("16.00"), \
+        )
+        assert sale.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {sale.tax_amount}"
-        assert sale.total_amount == Decimal("116.00"), \
+        )
+        assert sale.total_amount == Decimal("116.00"), (
             f"Expected total_amount=116.00, got {sale.total_amount}"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 2. Purchase.calculate_totals — VAT-inclusive pricing
 # ──────────────────────────────────────────────────────────────
+
 
 class TestPurchaseVatInclusiveTotals:
     """Ensure Purchase.calculate_totals correctly extracts VAT when prices_include_vat=True."""
@@ -403,14 +433,19 @@ class TestPurchaseVatInclusiveTotals:
         purchase.calculate_totals()
         db_session.commit()
 
-        assert purchase.taxable_amount == Decimal("100.00"), \
+        assert purchase.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {purchase.taxable_amount}"
-        assert purchase.tax_amount == Decimal("16.00"), \
+        )
+        assert purchase.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {purchase.tax_amount}"
-        assert purchase.total_amount == Decimal("116.00"), \
+        )
+        assert purchase.total_amount == Decimal("116.00"), (
             f"Expected total_amount=116.00, got {purchase.total_amount}"
+        )
 
-    def test_purchase_vat_inclusive_with_landed_cost(self, db_session, vat_inclusive_tenant):
+    def test_purchase_vat_inclusive_with_landed_cost(
+        self, db_session, vat_inclusive_tenant
+    ):
         """Landed costs are added to total_amount but NOT to taxable_amount."""
         from models import Purchase, PurchaseLine
 
@@ -447,18 +482,22 @@ class TestPurchaseVatInclusiveTotals:
         purchase.calculate_totals()
         db_session.commit()
 
-        assert purchase.taxable_amount == Decimal("100.00"), \
+        assert purchase.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {purchase.taxable_amount}"
-        assert purchase.tax_amount == Decimal("16.00"), \
+        )
+        assert purchase.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {purchase.tax_amount}"
+        )
         expected_total = Decimal("116.00") + Decimal("15.00")  # subtotal + landed
-        assert purchase.total_amount == expected_total, \
+        assert purchase.total_amount == expected_total, (
             f"Expected total_amount={expected_total}, got {purchase.total_amount}"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 3. PurchaseLine.inventory_unit_cost — VAT-free for inventory
 # ──────────────────────────────────────────────────────────────
+
 
 class TestPurchaseLineInventoryUnitCost:
     """Ensure inventory cost excludes recoverable VAT when prices_include_vat=True."""
@@ -494,8 +533,9 @@ class TestPurchaseLineInventoryUnitCost:
 
         # 116 / 1.16 = 100
         expected = Decimal("100.00")
-        assert line.inventory_unit_cost == expected, \
+        assert line.inventory_unit_cost == expected, (
             f"Expected inventory_unit_cost={expected}, got {line.inventory_unit_cost}"
+        )
 
     def test_inventory_unit_cost_vat_exclusive(self, db_session, vat_exclusive_tenant):
         """When purchase uses exclusive VAT, inventory_unit_cost equals unit_cost."""
@@ -526,10 +566,13 @@ class TestPurchaseLineInventoryUnitCost:
         db_session.add(line)
         db_session.commit()
 
-        assert line.inventory_unit_cost == Decimal("100.00"), \
+        assert line.inventory_unit_cost == Decimal("100.00"), (
             f"Expected inventory_unit_cost=100.00, got {line.inventory_unit_cost}"
+        )
 
-    def test_landed_inventory_unit_cost_vat_inclusive(self, db_session, vat_inclusive_tenant):
+    def test_landed_inventory_unit_cost_vat_inclusive(
+        self, db_session, vat_inclusive_tenant
+    ):
         """Landed cost is added AFTER VAT exclusion."""
         from models import Purchase, PurchaseLine
 
@@ -560,24 +603,36 @@ class TestPurchaseLineInventoryUnitCost:
         db_session.commit()
 
         # inventory_unit_cost = 116 / 1.16 = 100
-        assert line.inventory_unit_cost == Decimal("100.00"), \
+        assert line.inventory_unit_cost == Decimal("100.00"), (
             f"Expected inventory_unit_cost=100.00, got {line.inventory_unit_cost}"
+        )
         # landed_inventory_unit_cost = 100 + (20/2) = 110
-        assert line.landed_inventory_unit_cost == Decimal("110.00"), \
+        assert line.landed_inventory_unit_cost == Decimal("110.00"), (
             f"Expected landed_inventory_unit_cost=110.00, got {line.landed_inventory_unit_cost}"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 4. GL Sale Posting — Revenue must be VAT-exclusive
 # ──────────────────────────────────────────────────────────────
 
+
 class TestSaleGlVatExclusive:
     """When prices_include_vat=True, GL revenue lines must be VAT-exclusive."""
 
-    def test_gl_revenue_vat_exclusive(self, db_session, vat_inclusive_tenant, sample_customer_vat, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_gl_revenue_vat_exclusive(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_customer_vat,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """Sale GL: revenue credit = taxable_amount, not subtotal."""
         from decimal import Decimal
-        from models import Sale, SaleLine, Product
+        from models import Product
         from services.sale_service import SaleService
 
         product = Product(
@@ -600,15 +655,29 @@ class TestSaleGlVatExclusive:
         )
         db_session.commit()
 
-        assert sale.prices_include_vat is True, "Sale should inherit prices_include_vat from tenant"
-        assert sale.taxable_amount == Decimal("100.00"), \
+        assert sale.prices_include_vat is True, (
+            "Sale should inherit prices_include_vat from tenant"
+        )
+        assert sale.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {sale.taxable_amount}"
-        assert sale.tax_amount == Decimal("16.00"), \
+        )
+        assert sale.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {sale.tax_amount}"
-        assert sale.total_amount == Decimal("116.00"), \
+        )
+        assert sale.total_amount == Decimal("116.00"), (
             f"Expected total_amount=116.00, got {sale.total_amount}"
+        )
 
-    def test_gl_revenue_with_discount_vat_exclusive(self, db_session, vat_inclusive_tenant, sample_customer_vat, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_gl_revenue_with_discount_vat_exclusive(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_customer_vat,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """Sale GL with discount: discount_debit must also be VAT-exclusive."""
         from decimal import Decimal
         from models import Product
@@ -636,20 +705,32 @@ class TestSaleGlVatExclusive:
         db_session.commit()
 
         # Discount should be VAT-exclusive in GL: 11.60 / 1.16 = 10.00
-        assert sale.discount_amount == Decimal("11.60"), \
+        assert sale.discount_amount == Decimal("11.60"), (
             f"Expected discount_amount=11.60, got {sale.discount_amount}"
-        assert sale.taxable_amount == Decimal("90.00"), \
+        )
+        assert sale.taxable_amount == Decimal("90.00"), (
             f"Expected taxable_amount=90.00, got {sale.taxable_amount}"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 5. GL Purchase Posting — Inventory debit = taxable_amount
 # ──────────────────────────────────────────────────────────────
 
+
 class TestPurchaseGlVatExclusive:
     """When prices_include_vat=True, GL inventory debit must equal taxable_amount."""
 
-    def test_gl_inventory_debit_equals_taxable_amount(self, db_session, vat_inclusive_tenant, sample_supplier_vat, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_gl_inventory_debit_equals_taxable_amount(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_supplier_vat,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """Purchase GL: inventory_debit = taxable_amount (VAT-excluded), not subtotal."""
         from decimal import Decimal
         from models import Product
@@ -676,14 +757,26 @@ class TestPurchaseGlVatExclusive:
         db_session.commit()
 
         assert purchase.prices_include_vat is True
-        assert purchase.taxable_amount == Decimal("100.00"), \
+        assert purchase.taxable_amount == Decimal("100.00"), (
             f"Expected taxable_amount=100.00, got {purchase.taxable_amount}"
-        assert purchase.tax_amount == Decimal("16.00"), \
+        )
+        assert purchase.tax_amount == Decimal("16.00"), (
             f"Expected tax_amount=16.00, got {purchase.tax_amount}"
-        assert purchase.total_amount == Decimal("116.00"), \
+        )
+        assert purchase.total_amount == Decimal("116.00"), (
             f"Expected total_amount=116.00, got {purchase.total_amount}"
+        )
 
-    def test_gl_inventory_with_landed_cost(self, db_session, vat_inclusive_tenant, sample_supplier_vat, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_gl_inventory_with_landed_cost(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_supplier_vat,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """Landed costs are capitalized into inventory (added to VAT-excluded base)."""
         from decimal import Decimal
         from models import Product
@@ -719,10 +812,20 @@ class TestPurchaseGlVatExclusive:
 # 6. Purchase Return — Inventory credit VAT-exclusive
 # ──────────────────────────────────────────────────────────────
 
+
 class TestPurchaseReturnVatExclusive:
     """Purchase return inventory credit must be VAT-exclusive when original was inclusive."""
 
-    def test_return_inventory_credit_vat_exclusive(self, db_session, vat_inclusive_tenant, sample_supplier_vat, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_return_inventory_credit_vat_exclusive(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_supplier_vat,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """Return inventory_credit = subtotal_return / (1 + tax_rate/100)."""
         from decimal import Decimal
         from models import Product
@@ -741,7 +844,9 @@ class TestPurchaseReturnVatExclusive:
         purchase = PurchaseService.create_purchase(
             user=sample_user_vat,
             supplier_data={"supplier_id": sample_supplier_vat.id},
-            lines_data=[{"product_id": product.id, "quantity": 10, "unit_cost": 116.00}],
+            lines_data=[
+                {"product_id": product.id, "quantity": 10, "unit_cost": 116.00}
+            ],
             warehouse_id=sample_warehouse_vat.id,
             tax_rate=16.00,
             currency="AED",
@@ -749,34 +854,47 @@ class TestPurchaseReturnVatExclusive:
         db_session.commit()
 
         # Return 2 units
-        lines_data = [{"purchase_line_id": purchase.lines[0].id, "product_id": product.id, "quantity": 2, "unit_cost": 116.00}]
-        ret = PurchaseService.create_purchase_return(purchase, sample_user_vat, lines_data)
+        lines_data = [
+            {
+                "purchase_line_id": purchase.lines[0].id,
+                "product_id": product.id,
+                "quantity": 2,
+                "unit_cost": 116.00,
+            }
+        ]
+        ret = PurchaseService.create_purchase_return(
+            purchase, sample_user_vat, lines_data
+        )
         db_session.commit()
 
         assert ret is not None
         # Return subtotal = 2 * 116 = 232
         # inventory_credit should be VAT-exclusive: 232 / 1.16 = 200
-        assert ret.subtotal == Decimal("232.00"), \
+        assert ret.subtotal == Decimal("232.00"), (
             f"Expected return subtotal=232.00, got {ret.subtotal}"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 7. Branch-level override & Tenant fallback
 # ──────────────────────────────────────────────────────────────
 
+
 class TestPricesIncludeVatResolution:
     """Ensure branch-level setting overrides tenant, and NULL falls back to tenant."""
 
-    def test_branch_override_tenant(self, db_session, vat_exclusive_tenant, vat_inclusive_branch):
+    def test_branch_override_tenant(
+        self, db_session, vat_exclusive_tenant, vat_inclusive_branch
+    ):
         """Branch prices_include_vat=True overrides tenant prices_include_vat=False."""
         from utils.tax_settings import get_prices_include_vat
 
         result = get_prices_include_vat(
-            tenant_id=vat_exclusive_tenant.id,
-            branch_id=vat_inclusive_branch.id
+            tenant_id=vat_exclusive_tenant.id, branch_id=vat_inclusive_branch.id
         )
-        assert result is True, \
+        assert result is True, (
             "Branch should override tenant when branch.prices_include_vat is explicitly set"
+        )
 
     def test_tenant_fallback_when_branch_null(self, db_session, vat_inclusive_tenant):
         """When branch.prices_include_vat is NULL, fall back to tenant setting."""
@@ -794,29 +912,39 @@ class TestPricesIncludeVatResolution:
         db_session.commit()
 
         result = get_prices_include_vat(
-            tenant_id=vat_inclusive_tenant.id,
-            branch_id=branch.id
+            tenant_id=vat_inclusive_tenant.id, branch_id=branch.id
         )
-        assert result is True, \
+        assert result is True, (
             "Should fall back to tenant when branch.prices_include_vat is NULL"
+        )
 
     def test_tenant_default_false(self, db_session, vat_exclusive_tenant):
         """When tenant has prices_include_vat=False and no branch, return False."""
         from utils.tax_settings import get_prices_include_vat
 
         result = get_prices_include_vat(tenant_id=vat_exclusive_tenant.id)
-        assert result is False, \
+        assert result is False, (
             "Tenant with prices_include_vat=False should return False"
+        )
 
 
 # ──────────────────────────────────────────────────────────────
 # 8. MWAC compatibility — Inventory cost must never include VAT
 # ──────────────────────────────────────────────────────────────
 
+
 class TestMwacVatCompatibility:
     """MWAC must use VAT-excluded cost when prices_include_vat=True."""
 
-    def test_mwac_cost_is_vat_free(self, db_session, vat_inclusive_tenant, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_mwac_cost_is_vat_free(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """After purchase with inclusive VAT, MWAC average cost must be VAT-free."""
         from decimal import Decimal
         from models import Product, ProductWarehouseCost
@@ -836,7 +964,9 @@ class TestMwacVatCompatibility:
         _purchase = PurchaseService.create_purchase(
             user=sample_user_vat,
             supplier_data={"supplier_name": "MWAC Supplier"},
-            lines_data=[{"product_id": product.id, "quantity": 10, "unit_cost": 116.00}],
+            lines_data=[
+                {"product_id": product.id, "quantity": 10, "unit_cost": 116.00}
+            ],
             warehouse_id=sample_warehouse_vat.id,
             tax_rate=16.00,
             currency="AED",
@@ -850,16 +980,29 @@ class TestMwacVatCompatibility:
             warehouse_id=sample_warehouse_vat.id,
         ).first()
 
-        assert pwc is not None, "ProductWarehouseCost record should exist after purchase"
+        assert pwc is not None, (
+            "ProductWarehouseCost record should exist after purchase"
+        )
         # Average cost must be VAT-free: 100.00 per unit
-        assert pwc.average_cost == Decimal("100.00"), \
+        assert pwc.average_cost == Decimal("100.00"), (
             f"MWAC average cost must be VAT-free (100.00), got {pwc.average_cost}"
-        assert pwc.total_quantity == Decimal("10.00"), \
+        )
+        assert pwc.total_quantity == Decimal("10.00"), (
             f"Expected quantity=10, got {pwc.total_quantity}"
-        assert pwc.total_value == Decimal("1000.00"), \
+        )
+        assert pwc.total_value == Decimal("1000.00"), (
             f"Expected total_value=1000.00, got {pwc.total_value}"
+        )
 
-    def test_mwac_with_landed_cost(self, db_session, vat_inclusive_tenant, sample_user_vat, sample_branch, sample_warehouse_vat, sample_gl_accounts):
+    def test_mwac_with_landed_cost(
+        self,
+        db_session,
+        vat_inclusive_tenant,
+        sample_user_vat,
+        sample_branch,
+        sample_warehouse_vat,
+        sample_gl_accounts,
+    ):
         """MWAC includes landed costs but still excludes VAT."""
         from decimal import Decimal
         from models import Product, ProductWarehouseCost
@@ -878,7 +1021,9 @@ class TestMwacVatCompatibility:
         _purchase = PurchaseService.create_purchase(
             user=sample_user_vat,
             supplier_data={"supplier_name": "MWAC Landed Supplier"},
-            lines_data=[{"product_id": product.id, "quantity": 10, "unit_cost": 116.00}],
+            lines_data=[
+                {"product_id": product.id, "quantity": 10, "unit_cost": 116.00}
+            ],
             warehouse_id=sample_warehouse_vat.id,
             tax_rate=16.00,
             freight=50.00,
@@ -896,5 +1041,6 @@ class TestMwacVatCompatibility:
         # VAT-free base = 100 per unit * 10 = 1000
         # Landed = 50 distributed over 10 = 5 per unit
         # Average cost = 105.00
-        assert pwc.average_cost == Decimal("105.00"), \
+        assert pwc.average_cost == Decimal("105.00"), (
             f"MWAC average cost must include landed but exclude VAT (105.00), got {pwc.average_cost}"
+        )

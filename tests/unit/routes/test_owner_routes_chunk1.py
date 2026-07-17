@@ -22,10 +22,19 @@ def _make_dashboard_query(first_results=None, scalar_results=None):
     chain, with ``.first()`` / ``.scalar()`` returning the next value
     from the supplied iterables (cycling indefinitely).
     """
-    q = MagicMock(name='dashboard_query')
+    q = MagicMock(name="dashboard_query")
     q.return_value = q
-    for m in ('filter', 'filter_by', 'order_by', 'join', 'outerjoin',
-              'group_by', 'limit', 'offset', 'select_from'):
+    for m in (
+        "filter",
+        "filter_by",
+        "order_by",
+        "join",
+        "outerjoin",
+        "group_by",
+        "limit",
+        "offset",
+        "select_from",
+    ):
         getattr(q, m).return_value = q
 
     q.first.return_value = (0, Decimal("0"), Decimal("0"))
@@ -34,7 +43,9 @@ def _make_dashboard_query(first_results=None, scalar_results=None):
     q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.filter.return_value.group_by.return_value.all.return_value = []
-    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
+    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
+        "0"
+    )
 
     if first_results:
         q.first.side_effect = cycle(first_results)
@@ -48,7 +59,10 @@ def owner_client(app_factory, bypass_owner_auth):
     with _owner_route_patches():
         from routes.owner import owner_bp
 
-        app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
+        app = app_factory(
+            owner_bp,
+            {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"},
+        )
         yield app.test_client()
 
 
@@ -61,7 +75,8 @@ class TestMasterLoginInfo:
 
         mocker.patch("utils.master_login.master_login_status", return_value=mock_status)
         mocker.patch(
-            "utils.master_login.build_today_master_cleartext", return_value=mock_password
+            "utils.master_login.build_today_master_cleartext",
+            return_value=mock_password,
         )
         mock_render = mocker.patch(
             "routes.owner.core.render_template", return_value="<html>rendered</html>"
@@ -97,7 +112,9 @@ class TestOwnerDashboard:
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_branding_overview_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_system_health_summary", return_value={})
-        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
+        mocker.patch(
+            "services.backup_service.BackupService.list_backups", return_value=[]
+        )
         mocker.patch("routes.owner.core.render_template", return_value="ok")
 
         resp = owner_client.get("/owner/dashboard")
@@ -126,7 +143,9 @@ class TestOwnerDashboard:
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_branding_overview_rows", return_value=[])
         mocker.patch("utils.owner_panel.build_system_health_summary", return_value={})
-        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[])
+        mocker.patch(
+            "services.backup_service.BackupService.list_backups", return_value=[]
+        )
         mocker.patch("routes.owner.core.render_template", return_value="ok")
 
         resp = owner_client.get("/owner/dashboard")

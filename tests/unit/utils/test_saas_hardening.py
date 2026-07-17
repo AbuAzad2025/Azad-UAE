@@ -1,5 +1,6 @@
 """SaaS isolation & limits verification — write-path guard, subscription
 expiry (402), resource-limit enforcement (403)."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -23,7 +24,9 @@ class TestCrossTenantWriteBlock:
             yield
         ctx.pop()
 
-    def test_cross_tenant_insert_raises_isolation_error(self, app, db_session, sample_tenant):
+    def test_cross_tenant_insert_raises_isolation_error(
+        self, app, db_session, sample_tenant
+    ):
         from models import Product
         from models.tenant import Tenant
         from utils.tenant_orm import TenantIsolationError
@@ -40,19 +43,23 @@ class TestCrossTenantWriteBlock:
         db_session.refresh(other)
 
         with app.test_request_context():
-            with patch("utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id):
+            with patch(
+                "utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id
+            ):
                 product = Product(
                     name="Cross-tenant",
                     sku=f"X-{uuid.uuid4().hex[:8]}",
                     tenant_id=other.id,
-                    regular_price=Decimal('100.00'),
+                    regular_price=Decimal("100.00"),
                 )
                 db_session.add(product)
                 with pytest.raises(TenantIsolationError, match="Cross-tenant INSERT"):
                     db_session.flush()
                 db_session.rollback()
 
-    def test_cross_tenant_update_raises_isolation_error(self, app, db_session, sample_tenant, sample_product):
+    def test_cross_tenant_update_raises_isolation_error(
+        self, app, db_session, sample_tenant, sample_product
+    ):
         from models.tenant import Tenant
         from utils.tenant_orm import TenantIsolationError
         import uuid
@@ -71,7 +78,9 @@ class TestCrossTenantWriteBlock:
         db_session.commit()
 
         with app.test_request_context():
-            with patch("utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id):
+            with patch(
+                "utils.tenant_orm._active_tenant_for_orm", return_value=sample_tenant.id
+            ):
                 sample_product.name = "Hacked name"
                 db_session.add(sample_product)
                 with pytest.raises(TenantIsolationError, match="Cross-tenant UPDATE"):
@@ -82,15 +91,21 @@ class TestCrossTenantWriteBlock:
 class TestSubscriptionExpiryEnforcement:
     """Verify expired subscription returns HTTP 402."""
 
-    def test_expired_subscription_blocks_request(self, app, client, sample_tenant, sample_user):
+    def test_expired_subscription_blocks_request(
+        self, app, client, sample_tenant, sample_user
+    ):
         sample_tenant.subscription_end = datetime.now(timezone.utc) - timedelta(days=1)
         sample_tenant.subscription_plan_duration = "monthly"
         db.session.flush()
 
-        resp = client.post("/auth/login", data={
-            "username": sample_user.username,
-            "password": "password123",
-        }, follow_redirects=True)
+        resp = client.post(
+            "/auth/login",
+            data={
+                "username": sample_user.username,
+                "password": "password123",
+            },
+            follow_redirects=True,
+        )
 
         resp = client.get("/sales/", follow_redirects=False)
         assert resp.status_code == 402
@@ -100,10 +115,14 @@ class TestSubscriptionExpiryEnforcement:
         sample_tenant.subscription_plan_duration = "lifetime"
         db.session.flush()
 
-        client.post("/auth/login", data={
-            "username": sample_user.username,
-            "password": "password123",
-        }, follow_redirects=True)
+        client.post(
+            "/auth/login",
+            data={
+                "username": sample_user.username,
+                "password": "password123",
+            },
+            follow_redirects=True,
+        )
 
         resp = client.get("/sales/", follow_redirects=False)
         assert resp.status_code != 402
@@ -112,10 +131,17 @@ class TestSubscriptionExpiryEnforcement:
 class TestDynamicResourceLimits:
     """Verify max_sales_per_month enforcement via the route-level decorator."""
 
-    def test_monthly_sales_limit_blocks_at_cap(self, app, db_session, sample_tenant,
-                                                sample_customer, sample_user,
-                                                sample_product_with_stock, sample_warehouse,
-                                                sample_gl_accounts):
+    def test_monthly_sales_limit_blocks_at_cap(
+        self,
+        app,
+        db_session,
+        sample_tenant,
+        sample_customer,
+        sample_user,
+        sample_product_with_stock,
+        sample_warehouse,
+        sample_gl_accounts,
+    ):
         from datetime import datetime, timezone
         from decimal import Decimal
         from models import Sale
@@ -125,6 +151,7 @@ class TestDynamicResourceLimits:
 
         def _create_confirmed_sale():
             import uuid
+
             s = Sale(
                 tenant_id=sample_tenant.id,
                 sale_number=f"SLS-{uuid.uuid4().hex[:8]}",
@@ -146,17 +173,26 @@ class TestDynamicResourceLimits:
         _create_confirmed_sale()
 
         with app.test_request_context():
-            with patch("utils.tenant_limits.get_active_tenant_id", return_value=sample_tenant.id), \
-                 patch("utils.tenant_limits.current_user") as mock_user:
+            with (
+                patch(
+                    "utils.tenant_limits.get_active_tenant_id",
+                    return_value=sample_tenant.id,
+                ),
+                patch("utils.tenant_limits.current_user") as mock_user,
+            ):
                 mock_user.is_authenticated = True
 
-                from utils.tenant_limits import check_sales_monthly_limit, TenantLimitError
+                from utils.tenant_limits import (
+                    check_sales_monthly_limit,
+                    TenantLimitError,
+                )
 
                 with pytest.raises(TenantLimitError):
                     check_sales_monthly_limit()
 
-    def test_enforce_resource_limit_decorator_returns_403(self, app, db_session,
-                                                          sample_tenant, sample_user):
+    def test_enforce_resource_limit_decorator_returns_403(
+        self, app, db_session, sample_tenant, sample_user
+    ):
         from datetime import datetime, timezone
         from decimal import Decimal
         from models import Sale
@@ -166,6 +202,7 @@ class TestDynamicResourceLimits:
         db_session.flush()
 
         import uuid
+
         for _ in range(2):
             s = Sale(
                 tenant_id=sample_tenant.id,
@@ -188,9 +225,15 @@ class TestDynamicResourceLimits:
             return "ok"
 
         with app.test_request_context():
-            with patch("utils.tenant_limits.get_active_tenant_id", return_value=sample_tenant.id), \
-                 patch("utils.tenant_limits.current_user") as mock_user:
+            with (
+                patch(
+                    "utils.tenant_limits.get_active_tenant_id",
+                    return_value=sample_tenant.id,
+                ),
+                patch("utils.tenant_limits.current_user") as mock_user,
+            ):
                 mock_user.is_authenticated = True
                 from werkzeug.exceptions import Forbidden
+
                 with pytest.raises(Forbidden):
                     _dummy()

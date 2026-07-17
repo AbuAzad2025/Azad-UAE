@@ -33,14 +33,24 @@ def _seed_tenant(db):
     uid = uuid.uuid4().hex[:8]
 
     tenant = Tenant(
-        name=f"E2E {uid}", name_ar=f"E2E {uid}", slug=f"e2e-{uid}",
-        default_currency="AED", base_currency="AED",
-        enable_tax=True, default_tax_rate=Decimal("5.00"),
-        enable_pos=True, is_active=True, is_suspended=False,
-        subscription_plan="pro", subscription_plan_duration="monthly",
+        name=f"E2E {uid}",
+        name_ar=f"E2E {uid}",
+        slug=f"e2e-{uid}",
+        default_currency="AED",
+        base_currency="AED",
+        enable_tax=True,
+        default_tax_rate=Decimal("5.00"),
+        enable_pos=True,
+        is_active=True,
+        is_suspended=False,
+        subscription_plan="pro",
+        subscription_plan_duration="monthly",
         subscription_end=datetime.now(timezone.utc) + timedelta(days=2),
-        max_users=10, max_branches=5, max_products=1000,
-        max_customers=500, max_suppliers=200,
+        max_users=10,
+        max_branches=5,
+        max_products=1000,
+        max_customers=500,
+        max_suppliers=200,
     )
     db.session.add(tenant)
     db.session.flush()
@@ -50,7 +60,9 @@ def _seed_tenant(db):
     db.session.flush()
 
     wh = Warehouse(
-        tenant_id=tenant.id, name=f"WH {uid}", branch_id=branch.id,
+        tenant_id=tenant.id,
+        name=f"WH {uid}",
+        branch_id=branch.id,
         allow_negative_inventory=True,
     )
     db.session.add(wh)
@@ -61,8 +73,12 @@ def _seed_tenant(db):
     db.session.flush()
 
     user = User(
-        tenant_id=tenant.id, username=f"cashier_{uid}", email=f"cashier_{uid}@e2e.test",
-        full_name="E2E Cashier", role_id=role.id, branch_id=branch.id,
+        tenant_id=tenant.id,
+        username=f"cashier_{uid}",
+        email=f"cashier_{uid}@e2e.test",
+        full_name="E2E Cashier",
+        role_id=role.id,
+        branch_id=branch.id,
     )
     user.set_password("test123")
     db.session.add(user)
@@ -73,16 +89,23 @@ def _seed_tenant(db):
     db.session.flush()
 
     product = Product(
-        tenant_id=tenant.id, name=f"Item {uid}", name_ar=f"منتج {uid}",
-        sku=f"SKU-{uid}", cost_price=Decimal("50"), regular_price=Decimal("100"),
-        current_stock=Decimal("100"), is_active=True,
+        tenant_id=tenant.id,
+        name=f"Item {uid}",
+        name_ar=f"منتج {uid}",
+        sku=f"SKU-{uid}",
+        cost_price=Decimal("50"),
+        regular_price=Decimal("100"),
+        current_stock=Decimal("100"),
+        is_active=True,
     )
     db.session.add(product)
     db.session.flush()
 
     settings = SystemSettings.query.first()
     if not settings:
-        settings = SystemSettings(enable_pos=True, enable_tax=True, default_tax_rate=Decimal("5.00"))
+        settings = SystemSettings(
+            enable_pos=True, enable_tax=True, default_tax_rate=Decimal("5.00")
+        )
         db.session.add(settings)
     else:
         settings.enable_pos = True
@@ -90,8 +113,12 @@ def _seed_tenant(db):
     db.session.flush()
 
     return {
-        "tenant": tenant, "branch": branch, "warehouse": wh,
-        "user": user, "customer": customer, "product": product,
+        "tenant": tenant,
+        "branch": branch,
+        "warehouse": wh,
+        "user": user,
+        "customer": customer,
+        "product": product,
     }
 
 
@@ -101,13 +128,19 @@ def _open_pos_shift(db, ctx):
 
     tid = ctx["tenant"].id
     number = generate_number(
-        prefix="SHF", model=PosShift, field_name="shift_number",
-        branch_code=ctx["branch"].id, tenant_id=tid,
+        prefix="SHF",
+        model=PosShift,
+        field_name="shift_number",
+        branch_code=ctx["branch"].id,
+        tenant_id=tid,
     )
     shift = PosShift(
-        tenant_id=tid, session_id=_ensure_session(db, ctx),
-        user_id=ctx["user"].id, shift_number=number,
-        starting_cash=Decimal("500"), status=PosShift.SHIFT_OPEN,
+        tenant_id=tid,
+        session_id=_ensure_session(db, ctx),
+        user_id=ctx["user"].id,
+        shift_number=number,
+        starting_cash=Decimal("500"),
+        status=PosShift.SHIFT_OPEN,
     )
     db.session.add(shift)
     db.session.flush()
@@ -120,18 +153,26 @@ def _ensure_session(db, ctx):
 
     tid = ctx["tenant"].id
     existing = PosSession.query.filter_by(
-        tenant_id=tid, user_id=ctx["user"].id, status="open",
+        tenant_id=tid,
+        user_id=ctx["user"].id,
+        status="open",
     ).first()
     if existing:
         return existing.id
 
     number = generate_number(
-        prefix="POS-SES", model=PosSession, field_name="session_number",
-        branch_code=ctx["branch"].id, tenant_id=tid,
+        prefix="POS-SES",
+        model=PosSession,
+        field_name="session_number",
+        branch_code=ctx["branch"].id,
+        tenant_id=tid,
     )
     session = PosSession(
-        tenant_id=tid, branch_id=ctx["branch"].id, user_id=ctx["user"].id,
-        session_number=number, opening_balance_cash=Decimal("500"),
+        tenant_id=tid,
+        branch_id=ctx["branch"].id,
+        user_id=ctx["user"].id,
+        session_number=number,
+        opening_balance_cash=Decimal("500"),
         status="open",
     )
     db.session.add(session)
@@ -142,13 +183,15 @@ def _ensure_session(db, ctx):
 def _process_sale(db, ctx, _shift):
     from services.sale_service import SaleService
 
-    lines = [{
-        "product": ctx["product"],
-        "quantity": 2,
-        "discount_percent": 0,
-        "unit_price": 100.00,
-        "serials": [],
-    }]
+    lines = [
+        {
+            "product": ctx["product"],
+            "quantity": 2,
+            "discount_percent": 0,
+            "unit_price": 100.00,
+            "serials": [],
+        }
+    ]
 
     payment_data = {
         "amount": Decimal("210"),
@@ -175,7 +218,9 @@ def _verify_gl(_db, ctx, sale):
     from utils.gl_reference_types import GLRef
 
     entries = GLJournalEntry.query.filter_by(
-        reference_type=GLRef.SALE, reference_id=sale.id, tenant_id=ctx["tenant"].id,
+        reference_type=GLRef.SALE,
+        reference_id=sale.id,
+        tenant_id=ctx["tenant"].id,
     ).all()
 
     assert entries, "No GL journal entries found for the sale"
@@ -187,7 +232,9 @@ def _verify_gl(_db, ctx, sale):
         assert diff <= Decimal("0.001"), (
             f"Unbalanced entry {entry.entry_number}: debit={total_debit} credit={total_credit} diff={diff}"
         )
-        assert entry.status == "posted", f"Entry {entry.entry_number} status is {entry.status}, expected posted"
+        assert entry.status == "posted", (
+            f"Entry {entry.entry_number} status is {entry.status}, expected posted"
+        )
 
     return entries
 
@@ -204,7 +251,9 @@ def _reconcile_and_close_shift(db, _ctx, shift, sale):
     actual = expected
     shift.reconcile(actual, notes="E2E reconciliation")
     assert shift.status == PosShift.SHIFT_RECONCILED
-    assert shift.discrepancy == Decimal("0"), f"Expected zero discrepancy, got {shift.discrepancy}"
+    assert shift.discrepancy == Decimal("0"), (
+        f"Expected zero discrepancy, got {shift.discrepancy}"
+    )
 
     shift.close()
     assert shift.status == PosShift.SHIFT_CLOSED
@@ -264,19 +313,32 @@ def run_e2e_dry_run():
             shift = _open_pos_shift(db, ctx)
             db.session.commit()
             assert shift.status == "open"
-            logger.info("Step 2: POS shift opened — %s (starting_cash=%s)", shift.shift_number, shift.starting_cash)
+            logger.info(
+                "Step 2: POS shift opened — %s (starting_cash=%s)",
+                shift.shift_number,
+                shift.starting_cash,
+            )
 
             sale = _process_sale(db, ctx, shift)
             db.session.commit()
             assert sale.sale_number
-            logger.info("Step 3: Sale processed — %s (total=%s, tax=%s)", sale.sale_number, sale.total_amount, sale.tax_amount)
+            logger.info(
+                "Step 3: Sale processed — %s (total=%s, tax=%s)",
+                sale.sale_number,
+                sale.total_amount,
+                sale.tax_amount,
+            )
 
             entries = _verify_gl(db, ctx, sale)
-            logger.info("Step 4: GL verified — %d balanced posted entries", len(entries))
+            logger.info(
+                "Step 4: GL verified — %d balanced posted entries", len(entries)
+            )
 
             _reconcile_and_close_shift(db, ctx, shift, sale)
             db.session.commit()
-            logger.info("Step 5: Shift reconciled & closed — discrepancy=%s", shift.discrepancy)
+            logger.info(
+                "Step 5: Shift reconciled & closed — discrepancy=%s", shift.discrepancy
+            )
 
             result = _run_subscription_scheduler(db, ctx)
             logger.info("Step 6: Subscription scheduler — %s", result)
@@ -290,10 +352,16 @@ def run_e2e_dry_run():
             print("\r\n" + "=" * 60)
             print("E2E DRY-RUN: ALL CHECKS PASSED")
             print("=" * 60)
-            print(f"  Sale:      {sale.sale_number} (total={sale.total_amount} AED, VAT={sale.tax_amount})")
+            print(
+                f"  Sale:      {sale.sale_number} (total={sale.total_amount} AED, VAT={sale.tax_amount})"
+            )
             print(f"  GL entries: {len(entries)} (all balanced, all posted)")
-            print(f"  Shift:      {shift.shift_number} (discrepancy={shift.discrepancy})")
-            print(f"  Scheduler:  reminded={result['reminded']}, suspended={result['suspended']}")
+            print(
+                f"  Shift:      {shift.shift_number} (discrepancy={shift.discrepancy})"
+            )
+            print(
+                f"  Scheduler:  reminded={result['reminded']}, suspended={result['suspended']}"
+            )
             print("=" * 60)
             return 0
 

@@ -8,10 +8,14 @@ def _import_bp(app, module_path, var_name):
     except Exception as exc:
         import sys
         import traceback
-        sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n")
+
+        sys.stderr.write(
+            f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n"
+        )
         traceback.print_exc()
         try:
             from services.logging_core import LoggingCore
+
             with app.app_context():
                 LoggingCore.log_error(
                     message=str(exc),
@@ -28,18 +32,25 @@ def _import_bp(app, module_path, var_name):
 def _make_ai_fallback(ai_import_error):
     from flask import Blueprint, flash, redirect, url_for
     from flask_login import login_required
+
     ai_bp = Blueprint("ai", __name__, url_prefix="/ai")
 
     @ai_bp.route("/assistant")
     @login_required
     def assistant_page():
-        flash(f"AI Module failed to load on server start. Please check logs. Error: {ai_import_error}", "error")
+        flash(
+            f"AI Module failed to load on server start. Please check logs. Error: {ai_import_error}",
+            "error",
+        )
         return redirect(url_for("main.dashboard"))
 
     @ai_bp.route("/config")
     @login_required
     def config():
-        flash(f"AI Module failed to load on server start. Please check logs. Error: {ai_import_error}", "error")
+        flash(
+            f"AI Module failed to load on server start. Please check logs. Error: {ai_import_error}",
+            "error",
+        )
         return redirect(url_for("main.dashboard"))
 
     @ai_bp.route("/chat", methods=["POST"])
@@ -78,16 +89,23 @@ def _make_ai_fallback(ai_import_error):
     def catch_all(path):
         try:
             from flask import session
+
             if not session.get("ai_unavailable_notified"):
-                flash("المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning")
+                flash(
+                    "المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning"
+                )
                 session["ai_unavailable_notified"] = True
         except Exception as e:
             import sys
             import traceback
-            sys.stderr.write(f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n")
+
+            sys.stderr.write(
+                f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n"
+            )
             traceback.print_exc()
             try:
                 from services.logging_core import LoggingCore
+
                 LoggingCore.log_error(
                     message=str(e),
                     category="SYSTEM_INIT",
@@ -133,6 +151,7 @@ def register_blueprints(app):
         except Exception as e:
             ai_import_error = str(e)
             import traceback
+
             traceback.print_exc()
             ai_bp = _make_ai_fallback(ai_import_error)
 
@@ -160,7 +179,9 @@ def register_blueprints(app):
     hr_bp = _import_bp(app, "routes.hr", "hr_bp")
     email_marketing_bp = _import_bp(app, "routes.email_marketing", "email_marketing_bp")
     printing_bp = _import_bp(app, "routes.printing", "printing_bp")
-    billing_webhook_bp = _import_bp(app, "routes.billing_webhooks", "billing_webhook_bp")
+    billing_webhook_bp = _import_bp(
+        app, "routes.billing_webhooks", "billing_webhook_bp"
+    )
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)

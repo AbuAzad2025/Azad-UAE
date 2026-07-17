@@ -1,20 +1,23 @@
 """
 API Documentation using OpenAPI/Swagger
 """
+
 import os
 import copy
 
 from flask import Blueprint, jsonify, render_template_string, current_app, abort
 from flask_login import current_user
 
-api_docs_bp = Blueprint('api_docs', __name__, url_prefix='/api-docs')
+api_docs_bp = Blueprint("api_docs", __name__, url_prefix="/api-docs")
 
 
 def _api_docs_public() -> bool:
-    app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
-    debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
-    enable_swagger = (os.environ.get('ENABLE_SWAGGER_UI') or 'false').strip().lower() in ('1', 'true', 'yes', 'y')
-    return debug or (app_env != 'production' and enable_swagger)
+    app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
+    debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
+    enable_swagger = (
+        os.environ.get("ENABLE_SWAGGER_UI") or "false"
+    ).strip().lower() in ("1", "true", "yes", "y")
+    return debug or (app_env != "production" and enable_swagger)
 
 
 @api_docs_bp.before_request
@@ -35,22 +38,13 @@ OPENAPI_SPEC = {
         "contact": {
             "name": "Azad Smart Systems",
             "email": "dev@example.com",
-            "url": "https://azadsystems.com"
+            "url": "https://azadsystems.com",
         },
-        "license": {
-            "name": "Proprietary",
-            "url": "https://azadsystems.com/license"
-        }
+        "license": {"name": "Proprietary", "url": "https://azadsystems.com/license"},
     },
     "servers": [
-        {
-            "url": "http://localhost:5000/api",
-            "description": "Development server"
-        },
-        {
-            "url": "https://api.yourdomain.com/api",
-            "description": "Production server"
-        }
+        {"url": "http://localhost:5000/api", "description": "Development server"},
+        {"url": "https://api.yourdomain.com/api", "description": "Production server"},
     ],
     "tags": [
         {"name": "General", "description": "General system endpoints"},
@@ -63,25 +57,21 @@ OPENAPI_SPEC = {
         {"name": "Purchases", "description": "Purchase operations"},
         {"name": "Payments", "description": "Payment processing"},
         {"name": "Reports", "description": "Reporting and analytics"},
-        {"name": "Search", "description": "Universal search"}
+        {"name": "Search", "description": "Universal search"},
     ],
     "paths": {
         "/health": {
             "get": {
                 "tags": ["General"],
                 "summary": "Check API health",
-                "responses": {
-                    "200": {"description": "API is running"}
-                }
+                "responses": {"200": {"description": "API is running"}},
             }
         },
         "/version": {
             "get": {
                 "tags": ["General"],
                 "summary": "Get API version",
-                "responses": {
-                    "200": {"description": "Version information"}
-                }
+                "responses": {"200": {"description": "Version information"}},
             }
         },
         "/search": {
@@ -96,17 +86,17 @@ OPENAPI_SPEC = {
                         "required": True,
                         "schema": {
                             "type": "string",
-                            "enum": ["customers", "suppliers", "products"]
+                            "enum": ["customers", "suppliers", "products"],
                         },
-                        "description": "Type of entity to search"
+                        "description": "Type of entity to search",
                     },
                     {
                         "name": "q",
                         "in": "query",
                         "required": True,
                         "schema": {"type": "string"},
-                        "description": "Search query"
-                    }
+                        "description": "Search query",
+                    },
                 ],
                 "responses": {
                     "200": {
@@ -122,25 +112,23 @@ OPENAPI_SPEC = {
                                                 "type": "object",
                                                 "properties": {
                                                     "id": {"type": "integer"},
-                                                    "text": {"type": "string"}
-                                                }
-                                            }
+                                                    "text": {"type": "string"},
+                                                },
+                                            },
                                         }
-                                    }
+                                    },
                                 }
                             }
-                        }
+                        },
                     }
-                }
+                },
             }
         },
         "/products": {
             "get": {
                 "tags": ["Products"],
                 "summary": "List products",
-                "responses": {
-                    "200": {"description": "List of products"}
-                }
+                "responses": {"200": {"description": "List of products"}},
             }
         },
         "/products/{id}/info": {
@@ -152,31 +140,23 @@ OPENAPI_SPEC = {
                         "name": "id",
                         "in": "path",
                         "required": True,
-                        "schema": {"type": "integer"}
+                        "schema": {"type": "integer"},
                     }
                 ],
-                "responses": {
-                    "200": {"description": "Product details"}
-                }
+                "responses": {"200": {"description": "Product details"}},
             }
         },
         "/warehouses": {
             "get": {
                 "tags": ["Warehouses"],
                 "summary": "List accessible warehouses",
-                "responses": {
-                    "200": {"description": "List of warehouses"}
-                }
+                "responses": {"200": {"description": "List of warehouses"}},
             }
-        }
+        },
     },
     "components": {
         "securitySchemes": {
-            "sessionAuth": {
-                "type": "apiKey",
-                "in": "cookie",
-                "name": "session"
-            }
+            "sessionAuth": {"type": "apiKey", "in": "cookie", "name": "session"}
         },
         "schemas": {
             "Customer": {
@@ -187,13 +167,13 @@ OPENAPI_SPEC = {
                     "name_ar": {"type": "string"},
                     "customer_type": {
                         "type": "string",
-                        "enum": ["regular", "merchant", "partner"]
+                        "enum": ["regular", "merchant", "partner"],
                     },
                     "phone": {"type": "string"},
                     "email": {"type": "string", "format": "email"},
                     "balance": {"type": "number"},
-                    "is_active": {"type": "boolean"}
-                }
+                    "is_active": {"type": "boolean"},
+                },
             },
             "Product": {
                 "type": "object",
@@ -207,25 +187,23 @@ OPENAPI_SPEC = {
                     "partner_price": {"type": "number"},
                     "cost_price": {"type": "number"},
                     "quantity_in_stock": {"type": "integer"},
-                    "is_active": {"type": "boolean"}
-                }
+                    "is_active": {"type": "boolean"},
+                },
             },
             "Error": {
                 "type": "object",
                 "properties": {
                     "error": {"type": "string"},
-                    "message": {"type": "string"}
-                }
-            }
-        }
+                    "message": {"type": "string"},
+                },
+            },
+        },
     },
-    "security": [
-        {"sessionAuth": []}
-    ]
+    "security": [{"sessionAuth": []}],
 }
 
 
-@api_docs_bp.route('/openapi.json')
+@api_docs_bp.route("/openapi.json")
 def openapi_spec():
     """Return OpenAPI specification as JSON"""
     spec = copy.deepcopy(OPENAPI_SPEC)
@@ -243,7 +221,7 @@ def openapi_spec():
     return jsonify(spec)
 
 
-@api_docs_bp.route('/')
+@api_docs_bp.route("/")
 def swagger_ui():
     """Swagger UI for API documentation"""
     html = """
@@ -290,7 +268,7 @@ def swagger_ui():
     return render_template_string(html)
 
 
-@api_docs_bp.route('/redoc')
+@api_docs_bp.route("/redoc")
 def redoc():
     """ReDoc alternative documentation"""
     html = """
@@ -311,4 +289,3 @@ def redoc():
     </html>
     """
     return render_template_string(html)
-

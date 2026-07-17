@@ -4,7 +4,6 @@ Dispatches to country-specific strategy based on Tenant.vat_country.
 """
 
 from decimal import Decimal
-from extensions import db
 
 
 class TaxService:
@@ -19,7 +18,7 @@ class TaxService:
         if tenant_id is None:
             tenant_id = get_active_tenant_id()
         tenant = Tenant.query.get(tenant_id) if tenant_id else None
-        country = (getattr(tenant, 'vat_country', None) or 'AE').strip().upper()
+        country = (getattr(tenant, "vat_country", None) or "AE").strip().upper()
         return get_strategy(country)
 
     @classmethod
@@ -32,11 +31,11 @@ class TaxService:
         tax_rate = Decimal(str(sale.tax_rate or 0))
         result = strategy.calculate_tax(amount, tax_rate)
         return {
-            'strategy': strategy.country_code,
-            'tax_amount': result['tax_amount'],
-            'net_amount': result['net_amount'],
-            'total_amount': result['total_amount'],
-            'rate_applied': result['rate_applied'],
+            "strategy": strategy.country_code,
+            "tax_amount": result["tax_amount"],
+            "net_amount": result["net_amount"],
+            "total_amount": result["total_amount"],
+            "rate_applied": result["rate_applied"],
         }
 
     @classmethod
@@ -49,11 +48,11 @@ class TaxService:
         tax_rate = Decimal(str(purchase.tax_rate or 0))
         result = strategy.calculate_tax(amount, tax_rate)
         return {
-            'strategy': strategy.country_code,
-            'tax_amount': result['tax_amount'],
-            'net_amount': result['net_amount'],
-            'total_amount': result['total_amount'],
-            'rate_applied': result['rate_applied'],
+            "strategy": strategy.country_code,
+            "tax_amount": result["tax_amount"],
+            "net_amount": result["net_amount"],
+            "total_amount": result["total_amount"],
+            "rate_applied": result["rate_applied"],
         }
 
     @classmethod
@@ -70,12 +69,12 @@ class TaxService:
                 date_to=date_to or None,
                 tenant_id=tenant_id,
             )
-            output_vat = Decimal(str(gl_report.get('vat_output', 0)))
-            input_vat = Decimal(str(gl_report.get('vat_input', 0)))
+            output_vat = Decimal(str(gl_report.get("vat_output", 0)))
+            input_vat = Decimal(str(gl_report.get("vat_input", 0)))
         except Exception:
-            output_vat = Decimal('0')
-            input_vat = Decimal('0')
+            output_vat = Decimal("0")
+            input_vat = Decimal("0")
 
         result = strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
-        result['source'] = 'gl'
+        result["source"] = "gl"
         return result

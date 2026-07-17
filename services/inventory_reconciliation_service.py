@@ -5,6 +5,7 @@ Compares three sources:
 2. GLJournalLine for account 1140 (inventory asset) — ledger balance
 3. stock_movements — physical movement trail (quantity audit)
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -21,7 +22,6 @@ from models import (
     GLJournalLine,
     Product,
     ProductWarehouseCost,
-    StockMovement,
     Warehouse,
 )
 from services.gl_service import GL_ACCOUNTS
@@ -49,7 +49,9 @@ class InventoryReconciliationService:
         try:
             if len(text_value) == 10:
                 parsed_date = date.fromisoformat(text_value)
-                return datetime.combine(parsed_date, time.max if end_of_day else time.min)
+                return datetime.combine(
+                    parsed_date, time.max if end_of_day else time.min
+                )
             return datetime.fromisoformat(text_value)
         except ValueError:
             return None
@@ -130,7 +132,11 @@ class InventoryReconciliationService:
               AND sm.product_id = :pid
               AND sm.warehouse_id = :wid
         """
-        params: dict[str, Any] = {"tid": tenant_id, "pid": product_id, "wid": warehouse_id}
+        params: dict[str, Any] = {
+            "tid": tenant_id,
+            "pid": product_id,
+            "wid": warehouse_id,
+        }
         if branch_id is not None:
             sql += """
               AND EXISTS (
@@ -187,8 +193,8 @@ class InventoryReconciliationService:
         total_movement_qty = Decimal("0")
 
         for pwc in pwc_records:
-            product = db.session.get(Product,pwc.product_id)
-            warehouse = db.session.get(Warehouse,pwc.warehouse_id)
+            product = db.session.get(Product, pwc.product_id)
+            warehouse = db.session.get(Warehouse, pwc.warehouse_id)
 
             movement_qty = cls._movement_net_qty(
                 pwc.tenant_id,
@@ -208,7 +214,9 @@ class InventoryReconciliationService:
                     "product_id": pwc.product_id,
                     "product_name": product.name if product else f"#{pwc.product_id}",
                     "warehouse_id": pwc.warehouse_id,
-                    "warehouse_name": warehouse.name if warehouse else f"#{pwc.warehouse_id}",
+                    "warehouse_name": (
+                        warehouse.name if warehouse else f"#{pwc.warehouse_id}"
+                    ),
                     "pwc_qty": float(pwc.total_quantity or 0),
                     "movement_qty": float(movement_qty),
                     "qty_diff": float(qty_diff),
@@ -352,8 +360,8 @@ class InventoryReconciliationService:
         # Overall totals from scoped ledger balance (no double-counting)
         total_gl_value = scope_gl_value
         total_pwc_value = sum(Decimal(str(r["pwc_value"])) for r in wh_rows)
-        total_pwc_qty = sum(Decimal(str(r["pwc_qty"])) for r in wh_rows)
-        total_movement_qty = sum(Decimal(str(r["movement_qty"])) for r in wh_rows)
+        sum(Decimal(str(r["pwc_qty"])) for r in wh_rows)
+        sum(Decimal(str(r["movement_qty"])) for r in wh_rows)
         overall_value_diff = total_pwc_value - total_gl_value
         has_unallocated_gl = abs(unallocated_gl_value) > RECON_TOLERANCE
 

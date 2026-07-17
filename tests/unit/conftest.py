@@ -2,6 +2,7 @@
 tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
 Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
+
 # Re-export DB fixtures from parent conftest for --confcutdir=tests/unit runs.
 from tests.conftest import (  # noqa: F401
     _reset_rate_limiter,
@@ -66,13 +67,13 @@ except Exception:
 
 def pytest_configure(config):
     """Preload SQLAlchemy ORM under pytest-cov to avoid partial module state on Python 3.14."""
-    if not config.pluginmanager.hasplugin('_cov'):
+    if not config.pluginmanager.hasplugin("_cov"):
         return
     import importlib
 
     import sqlalchemy.orm.dependency as _dep
 
-    if not hasattr(_dep, '_direction_to_processor'):
+    if not hasattr(_dep, "_direction_to_processor"):
         importlib.reload(_dep)
 
 
@@ -80,34 +81,44 @@ def pytest_configure(config):
 # App & client factories
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def app_factory():
     def _create_app(blueprint, config_overrides=None):
         import sys
         import os
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
-        app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
+
+        app = Flask(__name__, template_folder=os.path.join(project_root, "templates"))
         app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
         from flask_login import current_user
-        app.jinja_env.globals['current_user'] = current_user
+
+        app.jinja_env.globals["current_user"] = current_user
         from utils.i18n import t
-        app.jinja_env.globals['t'] = t
-        app.jinja_env.globals['csrf_token'] = lambda: ''
+
+        app.jinja_env.globals["t"] = t
+        app.jinja_env.globals["csrf_token"] = lambda: ""
         app.register_blueprint(blueprint)
         from routes.main import main_bp
-        if 'main' not in app.blueprints:
+
+        if "main" not in app.blueprints:
             app.register_blueprint(main_bp)
         return app
+
     return _create_app
 
 
 # ---------------------------------------------------------------------------
 # Generic authenticated user (route tests under tests/unit/routes/)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_user():
@@ -135,6 +146,7 @@ def mock_user():
 # ---------------------------------------------------------------------------
 # Auth bypass fixtures  (/owner/* routes)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_owner_user(mocker):
@@ -165,6 +177,7 @@ def bypass_owner_auth(mocker, mock_owner_user):
 @pytest.fixture
 def mock_owner_client(app_factory, bypass_owner_auth):
     from routes.owner import owner_bp
+
     app = app_factory(owner_bp)
     return app.test_client()
 
@@ -172,6 +185,7 @@ def mock_owner_client(app_factory, bypass_owner_auth):
 # ---------------------------------------------------------------------------
 # Company-admin client  (for @company_admin_required endpoints)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def bypass_company_admin_auth(mocker, mock_owner_user):
@@ -194,6 +208,7 @@ def bypass_company_admin_auth(mocker, mock_owner_user):
 @pytest.fixture
 def mock_company_admin_client(app_factory, bypass_company_admin_auth):
     from routes.owner import owner_bp
+
     app = app_factory(owner_bp)
     return app.test_client()
 
@@ -202,9 +217,11 @@ def mock_company_admin_client(app_factory, bypass_company_admin_auth):
 # Payment-vault owner client  (/payment-vault/* routes)
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
+
     app = app_factory(payment_vault_bp)
     return app.test_client()
 
@@ -212,6 +229,7 @@ def mock_vault_owner_client(app_factory, bypass_owner_auth):
 # ---------------------------------------------------------------------------
 # Product client  (/products/* routes)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def bypass_product_auth(mocker):
@@ -233,6 +251,7 @@ def bypass_product_auth(mocker):
 @pytest.fixture
 def product_client(app_factory, bypass_product_auth):
     from routes.products import products_bp
+
     app = app_factory(products_bp)
     return app.test_client()
 
@@ -240,6 +259,7 @@ def product_client(app_factory, bypass_product_auth):
 # ---------------------------------------------------------------------------
 # AI route fixtures  (/ai/* routes)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def bypass_ai_access(mocker):
@@ -269,15 +289,18 @@ def bypass_ai_access(mocker):
     user.has_permission.return_value = True
 
     mocker.patch("flask_login.utils._get_user", return_value=user)
-    mocker.patch("routes.ai_routes.get_ai_access_state", return_value={
-        "allowed": True,
-        "global_enabled": True,
-        "tenant_enabled": True,
-        "tenant_id": 1,
-        "reason": None,
-        "is_platform_user": True,
-        "ai_level": "execute",
-    })
+    mocker.patch(
+        "routes.ai_routes.get_ai_access_state",
+        return_value={
+            "allowed": True,
+            "global_enabled": True,
+            "tenant_enabled": True,
+            "tenant_id": 1,
+            "reason": None,
+            "is_platform_user": True,
+            "ai_level": "execute",
+        },
+    )
     mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=True)
     mocker.patch("extensions.limiter.limit", return_value=lambda f: f)
     mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
@@ -295,8 +318,10 @@ def model_patch(mocker):
         Partner = model_patch("models.Partner", count=len(partners))
         Partner.query.filter_by.return_value.all.return_value = partners
     """
+
     def _patch(model_path: str, _count: int = 0):
         return mocker.patch(model_path)
+
     return _patch
 
 
@@ -318,6 +343,7 @@ def mock_db_connection(mocker):
     Supports ``scalar``, ``rows``, and ``keys`` keyword arguments
     to pre-configure ``conn.execute().scalar()`` or iterator results.
     """
+
     def _make(scalar=None, rows=None, keys=None):
         conn = mocker.MagicMock()
         conn.execute.return_value.scalar.return_value = scalar
@@ -329,6 +355,7 @@ def mock_db_connection(mocker):
                 result.keys.return_value = keys
             conn.execute.return_value = result
         return conn
+
     return _make
 
 
@@ -359,7 +386,7 @@ def mock_db(mocker):
 
         pytestmark = pytest.mark.usefixtures("mock_db")
     """
-    mock = mocker.MagicMock(name='global_mock_db')
+    mock = mocker.MagicMock(name="global_mock_db")
     # Session-level methods (configured explicitly so property resolution
     # doesn't fall through to ``__getattr__`` which would break patching).
     mock.add = mocker.MagicMock()
@@ -381,11 +408,11 @@ def mock_db(mocker):
     # ── Global patching ──────────────────────────────────────────────────
     # Patch ``extensions.db.session`` (the root reference) so every import
     # of ``db`` from ``extensions`` picks up the mocked session.
-    mocker.patch('extensions.db.session', mock)
+    mocker.patch("extensions.db.session", mock)
     # Explicit per-module patches for modules that were imported before the
     # fixture ran and thus hold a local ``db`` reference in their namespace.
-    mocker.patch('services.crm_lead_service.db.session', mock)
-    mocker.patch('routes.payment_vault.db.session', mock)
+    mocker.patch("services.crm_lead_service.db.session", mock)
+    mocker.patch("routes.payment_vault.db.session", mock)
 
     return mock
 
@@ -410,18 +437,25 @@ def mock_ai_service(mocker):
     """
     recommend_price = mocker.patch("routes.ai_routes.AIService.recommend_price")
     check_stock = mocker.patch("routes.ai_routes.AIService.check_stock_alert")
-    analyze_customer = mocker.patch("routes.ai_routes.AIService.analyze_customer_behavior")
+    analyze_customer = mocker.patch(
+        "routes.ai_routes.AIService.analyze_customer_behavior"
+    )
 
-    return type("MockAIService", (), {
-        "recommend_price": recommend_price,
-        "check_stock_alert": check_stock,
-        "analyze_customer_behavior": analyze_customer,
-    })
+    return type(
+        "MockAIService",
+        (),
+        {
+            "recommend_price": recommend_price,
+            "check_stock_alert": check_stock,
+            "analyze_customer_behavior": analyze_customer,
+        },
+    )
 
 
 @pytest.fixture
 def ai_client(app_factory, bypass_ai_access):
     """Test client with the ``ai`` blueprint registered."""
     from routes.ai_routes import ai_bp
+
     app = app_factory(ai_bp)
     return app.test_client()

@@ -6,13 +6,14 @@ Priority for tenant document logo:
   → tenant.logo_dark_url → static/assets/tenants/{slug}/ (disk)
   → Azad platform logo (last resort)
 """
+
 from __future__ import annotations
 
 import os
 import re
 from typing import Any
 
-from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON, tenant_asset_rel
+from utils.static_asset_paths import AZAD_LOGO, AZAD_FAVICON
 from utils.cache_decorators import cached_query
 
 _WINDOWS_ABS = re.compile(r"^[A-Za-z]:[\\/]")
@@ -37,9 +38,11 @@ def _static_exists(rel: str) -> bool:
     rel = normalize_static_rel(rel)
     if not rel or rel.startswith("http"):
         return bool(rel)
-    root = str(os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
-    ))
+    root = str(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+        )
+    )
     return os.path.isfile(os.path.join(root, rel.replace("/", os.sep)))
 
 
@@ -53,15 +56,18 @@ def _first_existing(*candidates: str | None) -> str:
     return ""
 
 
-@cached_query(timeout=300, key_prefix='tenant_branding')
+@cached_query(timeout=300, key_prefix="tenant_branding")
 def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     from extensions import db
     from models.invoice_settings import InvoiceSettings
     from models.tenant import Tenant
     from utils.tenant_assets import branding_for_tenant_slug
 
-    tenant = db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
+    tenant = (
+        db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
+    )
     from utils.tenanting import without_tenant_scope
+
     with without_tenant_scope():
         settings = (
             InvoiceSettings.get_active(tenant.id)
@@ -193,7 +199,12 @@ def branding_path_warnings(branding: dict[str, Any] | None) -> list[str]:
                 warns.append(f"{key}: file missing ({rel})")
     slug = (branding.get("tenant_slug") or "").strip()
     logo = normalize_static_rel(branding.get("logo_url") or "")
-    if slug and logo and f"assets/tenants/{slug}" not in logo and "uploads/" not in logo:
+    if (
+        slug
+        and logo
+        and f"assets/tenants/{slug}" not in logo
+        and "uploads/" not in logo
+    ):
         if "azad" in logo.lower() and slug not in ("azad",):
             warns.append("logo may be platform default, not tenant asset")
     return warns

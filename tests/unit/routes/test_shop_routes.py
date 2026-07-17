@@ -1,9 +1,7 @@
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
 from werkzeug.exceptions import NotFound
-
 
 SLUG = "demo-store"
 BASE = f"/s/{SLUG}"
@@ -53,11 +51,13 @@ def _catalog_items(product=None):
 class TestShopStoreResolution:
     def test_store_slug_not_found_returns_404(self, shop_client):
         with patch("routes.shop.StoreService.get_store_by_slug", return_value=None):
-            resp = shop_client.get(f"/s/unknown-store/")
+            resp = shop_client.get("/s/unknown-store/")
         assert resp.status_code == 404
 
     def test_stores_globally_disabled_returns_503(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 503
 
@@ -68,7 +68,9 @@ class TestShopStoreResolution:
 
     def test_tenant_disabled_store_returns_503(self, shop_client, mock_store):
         mock_store.is_enabled = False
-        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
+        with patch(
+            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
+        ):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 503
 
@@ -92,7 +94,10 @@ class TestShopLangAndOffline:
 
 class TestShopWishlist:
     def test_wishlist_add_requires_login(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/add/10",
                 json={},
@@ -105,9 +110,14 @@ class TestShopWishlist:
         wl_query = MagicMock()
         wl_query.filter_by.return_value.first.return_value = None
         wl_query.filter_by.return_value.count.return_value = 1
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.ShopWishlist.query", wl_query), \
-             patch("routes.shop.db.session"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.ShopWishlist.query", wl_query),
+            patch("routes.shop.db.session"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/add/10",
                 json={},
@@ -118,13 +128,21 @@ class TestShopWishlist:
 
     def test_wishlist_add_redirect_when_not_json(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.ShopWishlist.query"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.ShopWishlist.query"),
+        ):
             resp = shop_client.post(f"{BASE}/wishlist/add/10")
         assert resp.status_code in (302, 303)
 
     def test_wishlist_remove_requires_login(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/remove/10",
                 json={},
@@ -135,9 +153,14 @@ class TestShopWishlist:
     def test_wishlist_remove_json_success(self, shop_client):
         account = _mock_account()
         wl_query = MagicMock()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.ShopWishlist.query", wl_query), \
-             patch("routes.shop.db.session"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.ShopWishlist.query", wl_query),
+            patch("routes.shop.db.session"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/remove/10",
                 json={},
@@ -147,7 +170,10 @@ class TestShopWishlist:
         assert resp.get_json()["wishlisted"] is False
 
     def test_wishlist_view_redirects_when_anonymous(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/wishlist")
         assert resp.status_code in (302, 303)
 
@@ -155,76 +181,129 @@ class TestShopWishlist:
         account = _mock_account()
         wl_query = MagicMock()
         wl_query.filter_by.return_value.order_by.return_value.all.return_value = []
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.ShopWishlist.query", wl_query):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.ShopWishlist.query", wl_query),
+        ):
             resp = shop_client.get(f"{BASE}/wishlist")
         assert resp.status_code == 200
 
 
 class TestShopAccountAuth:
     def test_account_login_get(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/login")
         assert resp.status_code == 200
 
     def test_account_login_post_success(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None), \
-             patch("routes.shop.ShopCustomerAuthService.authenticate", return_value=account), \
-             patch("routes.shop.ShopCustomerAuthService.login"), \
-             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"):
-            resp = shop_client.post(f"{BASE}/account/login", data={
-                "email": "shop@test.com",
-                "password": "secret",
-            })
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=None,
+            ),
+            patch(
+                "routes.shop.ShopCustomerAuthService.authenticate", return_value=account
+            ),
+            patch("routes.shop.ShopCustomerAuthService.login"),
+            patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/login",
+                data={
+                    "email": "shop@test.com",
+                    "password": "secret",
+                },
+            )
         assert resp.status_code in (302, 303)
 
     def test_account_login_post_invalid_credentials(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None), \
-             patch("routes.shop.ShopCustomerAuthService.authenticate", side_effect=ValueError("bad creds")):
-            resp = shop_client.post(f"{BASE}/account/login", data={
-                "email": "bad@test.com",
-                "password": "wrong",
-            })
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=None,
+            ),
+            patch(
+                "routes.shop.ShopCustomerAuthService.authenticate",
+                side_effect=ValueError("bad creds"),
+            ),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/login",
+                data={
+                    "email": "bad@test.com",
+                    "password": "wrong",
+                },
+            )
         assert resp.status_code == 200
 
     def test_account_login_redirects_when_already_logged_in(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
+        ):
             resp = shop_client.get(f"{BASE}/account/login")
         assert resp.status_code in (302, 303)
 
     def test_account_register_get(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/register")
         assert resp.status_code == 200
 
     def test_account_register_post_success(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None), \
-             patch("routes.shop.ShopCustomerAuthService.register", return_value=account), \
-             patch("routes.shop.ShopCustomerAuthService.login"):
-            resp = shop_client.post(f"{BASE}/account/register", data={
-                "name": "Shop User",
-                "email": "shop@test.com",
-                "phone": "+971500000001",
-                "password": "secret123",
-            })
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=None,
+            ),
+            patch("routes.shop.ShopCustomerAuthService.register", return_value=account),
+            patch("routes.shop.ShopCustomerAuthService.login"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/register",
+                data={
+                    "name": "Shop User",
+                    "email": "shop@test.com",
+                    "phone": "+971500000001",
+                    "password": "secret123",
+                },
+            )
         assert resp.status_code in (302, 303)
 
     def test_account_register_honeypot_returns_400(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
-            resp = shop_client.post(f"{BASE}/account/register", data={
-                "name": "Bot",
-                "email": "bot@test.com",
-                "website": "http://spam.example",
-            })
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/register",
+                data={
+                    "name": "Bot",
+                    "email": "bot@test.com",
+                    "website": "http://spam.example",
+                },
+            )
         assert resp.status_code == 400
 
     def test_account_logout_clears_cart(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.logout") as logout, \
-             patch("routes.shop.StoreService.save_cart") as save_cart:
+        with (
+            patch("routes.shop.ShopCustomerAuthService.logout") as logout,
+            patch("routes.shop.StoreService.save_cart") as save_cart,
+        ):
             resp = shop_client.post(f"{BASE}/account/logout")
         logout.assert_called_once()
         save_cart.assert_called_once()
@@ -233,7 +312,10 @@ class TestShopAccountAuth:
 
 class TestShopAccountOrders:
     def test_account_orders_redirects_anonymous(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/orders")
         assert resp.status_code in (302, 303)
 
@@ -243,16 +325,28 @@ class TestShopAccountOrders:
         sale.id = 100
         pm = MagicMock()
         pm.code = "cod"
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.StoreOrderService.list_for_customer", return_value=[sale]), \
-             patch("routes.shop.StorePaymentMethodService.list_all", return_value=[pm]):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch(
+                "routes.shop.StoreOrderService.list_for_customer", return_value=[sale]
+            ),
+            patch("routes.shop.StorePaymentMethodService.list_all", return_value=[pm]),
+        ):
             resp = shop_client.get(f"{BASE}/account/orders")
         assert resp.status_code == 200
 
     def test_account_order_detail_not_found(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.StoreOrderService.get_tenant_order", return_value=None):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.StoreOrderService.get_tenant_order", return_value=None),
+        ):
             resp = shop_client.get(f"{BASE}/account/orders/999")
         assert resp.status_code == 404
 
@@ -260,8 +354,13 @@ class TestShopAccountOrders:
         account = _mock_account(customer_id=20)
         sale = MagicMock()
         sale.customer_id = 99
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.StoreOrderService.get_tenant_order", return_value=sale):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.StoreOrderService.get_tenant_order", return_value=sale),
+        ):
             resp = shop_client.get(f"{BASE}/account/orders/100")
         assert resp.status_code == 404
 
@@ -272,10 +371,17 @@ class TestShopAccountOrders:
         sale.checkout_payment_method = "cod"
         sale.status = "confirmed"
         pm = MagicMock()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.StoreOrderService.get_tenant_order", return_value=sale), \
-             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm), \
-             patch("routes.shop.StoreOrderService.status_label", return_value="Confirmed"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.StoreOrderService.get_tenant_order", return_value=sale),
+            patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
+            patch(
+                "routes.shop.StoreOrderService.status_label", return_value="Confirmed"
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/account/orders/100")
         assert resp.status_code == 200
 
@@ -284,16 +390,26 @@ class TestShopCatalogAndSearch:
     def test_catalog_get(self, shop_client):
         cat_query = MagicMock()
         cat_query.filter_by.return_value.order_by.return_value.all.return_value = []
-        with patch("routes.shop.StoreService.get_public_catalog", return_value=_catalog_items()), \
-             patch("routes.shop.ProductCategory.query", cat_query):
+        with (
+            patch(
+                "routes.shop.StoreService.get_public_catalog",
+                return_value=_catalog_items(),
+            ),
+            patch("routes.shop.ProductCategory.query", cat_query),
+        ):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 200
 
     def test_catalog_with_utm_params(self, shop_client):
         cat_query = MagicMock()
         cat_query.filter_by.return_value.order_by.return_value.all.return_value = []
-        with patch("routes.shop.StoreService.get_public_catalog", return_value=_catalog_items()), \
-             patch("routes.shop.ProductCategory.query", cat_query):
+        with (
+            patch(
+                "routes.shop.StoreService.get_public_catalog",
+                return_value=_catalog_items(),
+            ),
+            patch("routes.shop.ProductCategory.query", cat_query),
+        ):
             resp = shop_client.get(f"{BASE}/?utm_source=google&utm_campaign=sale")
         assert resp.status_code == 200
 
@@ -305,7 +421,10 @@ class TestShopCatalogAndSearch:
 
     def test_api_search_returns_results(self, shop_client):
         product = _mock_product()
-        with patch("routes.shop.StoreService.get_public_catalog", return_value=_catalog_items(product)):
+        with patch(
+            "routes.shop.StoreService.get_public_catalog",
+            return_value=_catalog_items(product),
+        ):
             resp = shop_client.get(f"{BASE}/api/search?q=test")
         assert resp.status_code == 200
         data = resp.get_json()
@@ -320,13 +439,23 @@ class TestShopProduct:
         pq.filter_by.return_value.first_or_404.return_value = product
         rq = MagicMock()
         rq.filter_by.return_value.order_by.return_value.all.return_value = []
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.get_related_products", return_value=[]), \
-             patch("routes.shop.StoreService.get_recently_viewed_products", return_value=[]), \
-             patch("routes.shop.StoreService.get_product_variants", return_value=[]), \
-             patch("routes.shop.ShopCustomerAuthService.whatsapp_order_url", return_value="https://wa.me/"), \
-             patch("routes.shop.ShopReview.query", rq):
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.get_related_products", return_value=[]),
+            patch(
+                "routes.shop.StoreService.get_recently_viewed_products", return_value=[]
+            ),
+            patch("routes.shop.StoreService.get_product_variants", return_value=[]),
+            patch(
+                "routes.shop.ShopCustomerAuthService.whatsapp_order_url",
+                return_value="https://wa.me/",
+            ),
+            patch("routes.shop.ShopReview.query", rq),
+        ):
             resp = shop_client.get(f"{BASE}/p/10")
         assert resp.status_code == 200
 
@@ -341,8 +470,13 @@ class TestShopProduct:
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first_or_404.return_value = product
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("0")}):
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("0")},
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/p/10")
         assert resp.status_code == 404
 
@@ -361,21 +495,34 @@ class TestShopProduct:
         assert len(resp.get_json()["reviews"]) == 1
 
     def test_add_review_requires_login(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "5"})
         assert resp.status_code in (302, 303)
 
     def test_add_review_invalid_rating(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=account,
+        ):
             resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "9"})
         assert resp.status_code in (302, 303)
 
     def test_add_review_success(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.db.session"):
-            resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "5", "comment": "Nice"})
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.db.session"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/p/10/review/add", data={"rating": "5", "comment": "Nice"}
+            )
         assert resp.status_code in (302, 303)
 
 
@@ -388,9 +535,13 @@ class TestShopStockAlertAndNewsletter:
     def test_stock_alert_creates_subscription(self, shop_client):
         alert_q = MagicMock()
         alert_q.filter_by.return_value.first.return_value = None
-        with patch("models.shop_stock_alert.ShopStockAlert.query", alert_q), \
-             patch("routes.shop.db.session"):
-            resp = shop_client.post(f"{BASE}/stock-alert/10", data={"email": "a@test.com"})
+        with (
+            patch("models.shop_stock_alert.ShopStockAlert.query", alert_q),
+            patch("routes.shop.db.session"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/stock-alert/10", data={"email": "a@test.com"}
+            )
         assert resp.status_code in (302, 303)
 
     def test_newsletter_invalid_email(self, shop_client):
@@ -401,16 +552,22 @@ class TestShopStockAlertAndNewsletter:
     def test_newsletter_subscribe_success(self, shop_client):
         nl_q = MagicMock()
         nl_q.filter_by.return_value.first.return_value = None
-        with patch("models.shop_newsletter.ShopNewsletter.query", nl_q), \
-             patch("routes.shop.db.session"):
-            resp = shop_client.post(f"{BASE}/newsletter/subscribe", data={"email": "sub@test.com"})
+        with (
+            patch("models.shop_newsletter.ShopNewsletter.query", nl_q),
+            patch("routes.shop.db.session"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/newsletter/subscribe", data={"email": "sub@test.com"}
+            )
         assert resp.status_code in (302, 303)
 
 
 class TestShopCart:
     def test_cart_view(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+        ):
             resp = shop_client.get(f"{BASE}/cart")
         assert resp.status_code == 200
 
@@ -418,23 +575,35 @@ class TestShopCart:
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("10")}), \
-             patch("routes.shop.StoreService.get_cart", return_value={}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
-            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"})
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("10")},
+            ),
+            patch("routes.shop.StoreService.get_cart", return_value={}),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"}
+            )
         assert resp.status_code in (302, 303)
 
     def test_cart_add_ajax_success(self, shop_client):
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("10")}), \
-             patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("10")},
+            ),
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/cart/add",
                 data={"product_id": "10", "quantity": "1"},
@@ -446,30 +615,46 @@ class TestShopCart:
     def test_cart_add_invalid_product(self, shop_client):
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = None
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"):
-            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "99", "quantity": "1"})
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/cart/add", data={"product_id": "99", "quantity": "1"}
+            )
         assert resp.status_code in (302, 303)
 
     def test_cart_add_closed_store_503(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10"})
         assert resp.status_code == 503
 
     def test_cart_update(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 2}), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 2}),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
             resp = shop_client.post(f"{BASE}/cart/update", data={"qty_10": "1"})
         assert resp.status_code in (302, 303)
 
     def test_cart_update_ajax(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/cart/update",
                 data={"qty_10": "1"},
@@ -479,16 +664,20 @@ class TestShopCart:
         assert resp.get_json()["success"] is True
 
     def test_cart_remove(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
             resp = shop_client.post(f"{BASE}/cart/remove/10")
         assert resp.status_code in (302, 303)
 
     def test_cart_remove_ajax(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop._track_cart_activity"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={}),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop._track_cart_activity"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/cart/remove/10",
                 headers={"X-Requested-With": "XMLHttpRequest"},
@@ -496,7 +685,9 @@ class TestShopCart:
         assert resp.status_code == 200
 
     def test_cart_count_json(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 2, "11": 1}):
+        with patch(
+            "routes.shop.StoreService.get_cart", return_value={"10": 2, "11": 1}
+        ):
             resp = shop_client.get(f"{BASE}/cart/count")
         assert resp.status_code == 200
         assert resp.get_json()["count"] == 3
@@ -504,108 +695,174 @@ class TestShopCart:
 
 class TestShopCheckout:
     def test_checkout_get_empty_cart_redirects(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals(lines=[])):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={}),
+            patch(
+                "routes.shop.StoreService.cart_totals",
+                return_value=_cart_totals(lines=[]),
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code in (302, 303)
 
     def test_checkout_get_with_items(self, shop_client):
         pm = MagicMock()
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[pm]), \
-             patch("routes.shop.StorePaymentMethodService.format_checkout_instructions", return_value="Pay COD"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[pm],
+            ),
+            patch(
+                "routes.shop.StorePaymentMethodService.format_checkout_instructions",
+                return_value="Pay COD",
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code == 200
 
     def test_checkout_post_success(self, shop_client):
         sale = MagicMock()
         sale.id = 500
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[]), \
-             patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale), \
-             patch("routes.shop.StoreCheckoutService.make_order_token", return_value="tok-abc"), \
-             patch("routes.shop.StoreService.save_cart"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "Dubai",
-                "payment_method": "cod",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[],
+            ),
+            patch(
+                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
+            ),
+            patch(
+                "routes.shop.StoreCheckoutService.make_order_token",
+                return_value="tok-abc",
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "Dubai",
+                    "payment_method": "cod",
+                },
+            )
         assert resp.status_code in (302, 303)
 
     def test_checkout_post_honeypot_returns_400(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "website": "http://spam.example",
-                "address": "Dubai",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "website": "http://spam.example",
+                    "address": "Dubai",
+                },
+            )
         assert resp.status_code == 400
 
     def test_checkout_post_missing_address_shows_error(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[]), \
-             patch("routes.shop.db.session.rollback"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "",
-                "payment_method": "cod",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[],
+            ),
+            patch("routes.shop.db.session.rollback"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "",
+                    "payment_method": "cod",
+                },
+            )
         assert resp.status_code == 200
 
     def test_checkout_post_online_payment_redirect(self, shop_client):
         sale = MagicMock()
         sale.id = 501
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale), \
-             patch("services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale", return_value={
-                 "payment_url": "https://pay.example/checkout",
-             }), \
-             patch("routes.shop.StoreService.save_cart"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "Dubai",
-                "payment_method": "online_pay",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
+            ),
+            patch(
+                "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
+                return_value={
+                    "payment_url": "https://pay.example/checkout",
+                },
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "Dubai",
+                    "payment_method": "online_pay",
+                },
+            )
         assert resp.status_code in (302, 303)
 
     def test_checkout_post_online_payment_init_failure(self, shop_client):
         sale = MagicMock()
         sale.id = 502
         sale.notes = ""
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale), \
-             patch("services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale", side_effect=ValueError("gateway down")), \
-             patch("routes.shop.StoreCheckoutService.make_order_token", return_value="tok-fail"), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop.db.session.commit"), \
-             patch("routes.shop.db.session.rollback"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "Dubai",
-                "payment_method": "online_pay",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
+            ),
+            patch(
+                "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
+                side_effect=ValueError("gateway down"),
+            ),
+            patch(
+                "routes.shop.StoreCheckoutService.make_order_token",
+                return_value="tok-fail",
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+            patch("routes.shop.db.session.commit"),
+            patch("routes.shop.db.session.rollback"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "Dubai",
+                    "payment_method": "online_pay",
+                },
+            )
         assert resp.status_code in (302, 303)
 
 
 class TestShopStaticPages:
     def test_return_policy_renders(self, shop_client, mock_store):
         mock_store.return_policy.return_value = "30-day returns"
-        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
+        with patch(
+            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
+        ):
             resp = shop_client.get(f"{BASE}/return-policy")
         assert resp.status_code == 200
 
     def test_return_policy_missing_404(self, shop_client, mock_store):
         mock_store.return_policy.return_value = ""
-        with patch("routes.shop.StoreService.get_store_by_slug", return_value=mock_store):
+        with patch(
+            "routes.shop.StoreService.get_store_by_slug", return_value=mock_store
+        ):
             resp = shop_client.get(f"{BASE}/return-policy")
         assert resp.status_code == 404
 
@@ -613,22 +870,40 @@ class TestShopStaticPages:
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first_or_404.return_value = product
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("3")}), \
-             patch("routes.shop.ShopCustomerAuthService.whatsapp_order_url", return_value="https://wa.me/"):
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("3")},
+            ),
+            patch(
+                "routes.shop.ShopCustomerAuthService.whatsapp_order_url",
+                return_value="https://wa.me/",
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/quick-view/10")
         assert resp.status_code == 200
 
     def test_sitemap_xml(self, shop_client):
         product = _mock_product()
-        with patch("routes.shop.StoreService.is_store_publicly_available", return_value=True), \
-             patch("routes.shop.StoreService.get_public_catalog", return_value=_catalog_items(product)):
+        with (
+            patch(
+                "routes.shop.StoreService.is_store_publicly_available",
+                return_value=True,
+            ),
+            patch(
+                "routes.shop.StoreService.get_public_catalog",
+                return_value=_catalog_items(product),
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/sitemap.xml")
         assert resp.status_code == 200
         assert b"urlset" in resp.data
 
     def test_sitemap_not_public_404(self, shop_client):
-        with patch("routes.shop.StoreService.is_store_publicly_available", return_value=False):
+        with patch(
+            "routes.shop.StoreService.is_store_publicly_available", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/sitemap.xml")
         assert resp.status_code == 404
 
@@ -640,16 +915,26 @@ class TestShopStaticPages:
 
 class TestShopPasswordReset:
     def test_forgot_password_get(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/forgot-password")
         assert resp.status_code == 200
 
     def test_forgot_password_post(self, shop_client):
         account = MagicMock()
         account.password_reset_token = "reset-tok"
-        with patch("routes.shop.ShopCustomerAuthService.request_password_reset", return_value=account), \
-             patch("routes.shop.ShopCustomerAuthService.send_password_reset_email"):
-            resp = shop_client.post(f"{BASE}/account/forgot-password", data={"email": "shop@test.com"})
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.request_password_reset",
+                return_value=account,
+            ),
+            patch("routes.shop.ShopCustomerAuthService.send_password_reset_email"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/forgot-password", data={"email": "shop@test.com"}
+            )
         assert resp.status_code in (302, 303)
 
     def test_reset_password_get(self, shop_client):
@@ -658,15 +943,21 @@ class TestShopPasswordReset:
 
     def test_reset_password_post_success(self, shop_client):
         with patch("routes.shop.ShopCustomerAuthService.reset_password"):
-            resp = shop_client.post(f"{BASE}/account/reset-password/some-token", data={
-                "password": "newsecret123",
-            })
+            resp = shop_client.post(
+                f"{BASE}/account/reset-password/some-token",
+                data={
+                    "password": "newsecret123",
+                },
+            )
         assert resp.status_code in (302, 303)
 
 
 class TestShopSavedPayments:
     def test_saved_payments_redirects_anonymous(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/payments")
         assert resp.status_code in (302, 303)
 
@@ -674,24 +965,42 @@ class TestShopSavedPayments:
         account = _mock_account()
         pay_q = MagicMock()
         pay_q.filter_by.return_value.all.return_value = []
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("models.shop_saved_payment.ShopSavedPayment.query", pay_q):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("models.shop_saved_payment.ShopSavedPayment.query", pay_q),
+        ):
             resp = shop_client.get(f"{BASE}/account/payments")
         assert resp.status_code == 200
 
     def test_save_payment_unauthorized(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
-            resp = shop_client.post(f"{BASE}/account/payments/save", data={"method_code": "cod"})
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/payments/save", data={"method_code": "cod"}
+            )
         assert resp.status_code == 401
 
     def test_save_payment_success(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.db.session"):
-            resp = shop_client.post(f"{BASE}/account/payments/save", data={
-                "method_code": "cod",
-                "label": "Cash",
-            })
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.db.session"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/payments/save",
+                data={
+                    "method_code": "cod",
+                    "label": "Cash",
+                },
+            )
         assert resp.status_code in (302, 303)
 
     def test_delete_saved_payment_success(self, shop_client):
@@ -699,16 +1008,24 @@ class TestShopSavedPayments:
         pm = MagicMock()
         pay_q = MagicMock()
         pay_q.filter_by.return_value.first_or_404.return_value = pm
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("models.shop_saved_payment.ShopSavedPayment.query", pay_q), \
-             patch("routes.shop.db.session"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("models.shop_saved_payment.ShopSavedPayment.query", pay_q),
+            patch("routes.shop.db.session"),
+        ):
             resp = shop_client.post(f"{BASE}/account/payments/delete/1")
         assert resp.status_code in (302, 303)
 
 
 class TestShopReorderInvoiceTrack:
     def test_reorder_requires_login(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code in (302, 303)
 
@@ -724,17 +1041,28 @@ class TestShopReorderInvoiceTrack:
         sq.filter_by.return_value.first_or_404.return_value = sale
         sl_q = MagicMock()
         sl_q.filter_by.return_value.all.return_value = [line]
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.Sale.query", sq), \
-             patch("routes.shop.SaleLine.query", sl_q), \
-             patch("routes.shop.StoreService.get_cart", return_value={}), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.save_cart"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.Sale.query", sq),
+            patch("routes.shop.SaleLine.query", sl_q),
+            patch("routes.shop.StoreService.get_cart", return_value={}),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+        ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code in (302, 303)
 
     def test_order_invoice_requires_login(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/order/50/invoice")
         assert resp.status_code in (302, 303)
 
@@ -748,10 +1076,17 @@ class TestShopReorderInvoiceTrack:
         sq = MagicMock()
         sq.filter_by.return_value.first_or_404.return_value = sale
         pm = MagicMock()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.Sale.query", sq), \
-             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm), \
-             patch("routes.shop.StoreOrderService.status_label", return_value="Confirmed"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.Sale.query", sq),
+            patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
+            patch(
+                "routes.shop.StoreOrderService.status_label", return_value="Confirmed"
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/order/50/invoice")
         assert resp.status_code == 200
 
@@ -765,8 +1100,10 @@ class TestShopReorderInvoiceTrack:
         sale.status = "shipped"
         sq = MagicMock()
         sq.filter_by.return_value.first.return_value = sale
-        with patch("routes.shop.Sale.query", sq), \
-             patch("routes.shop.StoreOrderService.status_label", return_value="Shipped"):
+        with (
+            patch("routes.shop.Sale.query", sq),
+            patch("routes.shop.StoreOrderService.status_label", return_value="Shipped"),
+        ):
             resp = shop_client.get(f"{BASE}/track?order=ORD-001")
         assert resp.status_code == 200
 
@@ -786,25 +1123,35 @@ class TestShopOrderConfirmation:
         sq = MagicMock()
         sq.filter_by.return_value.first_or_404.return_value = sale
         pm = MagicMock()
-        with patch("routes.shop.StoreCheckoutService.load_order_token", return_value={
-            "sale_id": 600,
-            "tenant_id": 1,
-        }), \
-             patch("routes.shop.Sale.query", sq), \
-             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm):
+        with (
+            patch(
+                "routes.shop.StoreCheckoutService.load_order_token",
+                return_value={
+                    "sale_id": 600,
+                    "tenant_id": 1,
+                },
+            ),
+            patch("routes.shop.Sale.query", sq),
+            patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
+        ):
             resp = shop_client.get(f"{BASE}/order/valid-token")
         assert resp.status_code == 200
 
     def test_order_confirmation_wrong_tenant_404(self, shop_client):
-        with patch("routes.shop.StoreCheckoutService.load_order_token", return_value={
-            "sale_id": 600,
-            "tenant_id": 999,
-        }):
+        with patch(
+            "routes.shop.StoreCheckoutService.load_order_token",
+            return_value={
+                "sale_id": 600,
+                "tenant_id": 999,
+            },
+        ):
             resp = shop_client.get(f"{BASE}/order/wrong-tenant-token")
         assert resp.status_code == 404
 
     def test_order_confirmation_invalid_token_404(self, shop_client):
-        with patch("routes.shop.StoreCheckoutService.load_order_token", return_value=None):
+        with patch(
+            "routes.shop.StoreCheckoutService.load_order_token", return_value=None
+        ):
             resp = shop_client.get(f"{BASE}/order/bad-token")
         assert resp.status_code == 404
 
@@ -812,7 +1159,10 @@ class TestShopOrderConfirmation:
 class TestShopRoutesExtended:
     def test_login_redirect_safe_next(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=account,
+        ):
             resp = shop_client.get(f"{BASE}/account/login?next=/s/{SLUG}/cart")
         assert resp.status_code in (302, 303)
 
@@ -827,8 +1177,13 @@ class TestShopRoutesExtended:
 
     def test_wishlist_remove_non_json_redirect(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.db.session"):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.db.session"),
+        ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/remove/10",
                 headers={"Referer": f"{BASE}/wishlist"},
@@ -836,13 +1191,18 @@ class TestShopRoutesExtended:
         assert resp.status_code in (302, 303)
 
     def test_account_register_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/account/register")
         assert resp.status_code == 503
 
     def test_account_register_already_logged_in(self, shop_client):
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=account,
+        ):
             resp = shop_client.get(f"{BASE}/account/register")
         assert resp.status_code in (302, 303)
 
@@ -850,7 +1210,10 @@ class TestShopRoutesExtended:
         resp = shop_client.post(
             f"{BASE}/cart/add",
             data={"product_id": "", "quantity": "0"},
-            headers={"X-Requested-With": "XMLHttpRequest", "Content-Type": "application/json"},
+            headers={
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/json",
+            },
         )
         assert resp.status_code == 400
 
@@ -879,8 +1242,13 @@ class TestShopRoutesExtended:
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
-        with patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("0")}):
+        with (
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("0")},
+            ),
+        ):
             resp = shop_client.post(
                 f"{BASE}/cart/add",
                 data={"product_id": "10", "quantity": "1"},
@@ -895,78 +1263,132 @@ class TestShopRoutesExtended:
         account = _mock_account()
         ac_q = MagicMock()
         ac_q.filter_by.return_value.first.return_value = None
-        with patch("routes.shop._require_open_store", return_value=None), \
-             patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.get_cart", return_value={}), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("models.shop_abandoned_cart.ShopAbandonedCart.query", ac_q), \
-             patch("routes.shop.db.session"):
-            resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"})
+        with (
+            patch("routes.shop._require_open_store", return_value=None),
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.get_cart", return_value={}),
+            patch("routes.shop.StoreService.save_cart"),
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("models.shop_abandoned_cart.ShopAbandonedCart.query", ac_q),
+            patch("routes.shop.db.session"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/cart/add", data={"product_id": "10", "quantity": "1"}
+            )
         assert resp.status_code in (302, 303)
 
     def test_cart_update_closed_store_503(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.post(f"{BASE}/cart/update", data={"qty_10": "2"})
         assert resp.status_code == 503
 
     def test_cart_update_skips_missing_fields(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.save_cart"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+        ):
             resp = shop_client.post(f"{BASE}/cart/update", data={})
         assert resp.status_code in (302, 303)
 
     def test_cart_update_invalid_qty_skipped(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("5")}), \
-             patch("routes.shop.StoreService.save_cart"):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("5")},
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+        ):
             resp = shop_client.post(f"{BASE}/cart/update", data={"qty_10": "bad"})
         assert resp.status_code in (302, 303)
 
     def test_checkout_no_payment_methods_warning(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[]):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[],
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code == 200
 
     def test_checkout_generic_exception_ar(self, shop_client):
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[MagicMock()]), \
-             patch("routes.shop.StoreCheckoutService.create_web_order", side_effect=RuntimeError("boom")), \
-             patch("routes.shop.db.session.rollback"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "Dubai",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[MagicMock()],
+            ),
+            patch(
+                "routes.shop.StoreCheckoutService.create_web_order",
+                side_effect=RuntimeError("boom"),
+            ),
+            patch("routes.shop.db.session.rollback"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "Dubai",
+                },
+            )
         assert resp.status_code == 200
 
     def test_checkout_online_payment_commit_failure(self, shop_client):
         sale = MagicMock()
         sale.id = 777
         sale.notes = ""
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StoreCheckoutService.create_web_order", return_value=sale), \
-             patch("services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale", side_effect=ValueError("gateway")), \
-             patch("routes.shop.StoreCheckoutService.make_order_token", return_value="tok"), \
-             patch("routes.shop.StoreService.save_cart"), \
-             patch("routes.shop.db.session.commit", side_effect=RuntimeError("commit fail")), \
-             patch("routes.shop.db.session.rollback"):
-            resp = shop_client.post(f"{BASE}/checkout", data={
-                "customer_name": "Ali",
-                "phone": "+971500000001",
-                "address": "Dubai",
-                "payment_method": "online_pay",
-            })
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StoreCheckoutService.create_web_order", return_value=sale
+            ),
+            patch(
+                "services.store_online_payment_service.StoreOnlinePaymentService.create_payment_for_sale",
+                side_effect=ValueError("gateway"),
+            ),
+            patch(
+                "routes.shop.StoreCheckoutService.make_order_token", return_value="tok"
+            ),
+            patch("routes.shop.StoreService.save_cart"),
+            patch(
+                "routes.shop.db.session.commit", side_effect=RuntimeError("commit fail")
+            ),
+            patch("routes.shop.db.session.rollback"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/checkout",
+                data={
+                    "customer_name": "Ali",
+                    "phone": "+971500000001",
+                    "address": "Dubai",
+                    "payment_method": "online_pay",
+                },
+            )
         assert resp.status_code == 200
 
     def test_product_detail_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/p/10")
         assert resp.status_code == 503
 
@@ -977,8 +1399,13 @@ class TestShopRoutesExtended:
         sale.customer_id = 99
         sq = MagicMock()
         sq.filter_by.return_value.first_or_404.return_value = sale
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.Sale.query", sq):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.Sale.query", sq),
+        ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code == 404
 
@@ -991,14 +1418,22 @@ class TestShopRoutesExtended:
         sq.filter_by.return_value.first_or_404.return_value = sale
         sl_q = MagicMock()
         sl_q.filter_by.return_value.all.return_value = []
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.Sale.query", sq), \
-             patch("routes.shop.SaleLine.query", sl_q):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.Sale.query", sq),
+            patch("routes.shop.SaleLine.query", sl_q),
+        ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code in (302, 303)
 
     def test_delete_saved_payment_unauthorized_json(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.post(f"{BASE}/account/payments/delete/1")
         assert resp.status_code == 401
 
@@ -1009,8 +1444,13 @@ class TestShopRoutesExtended:
         sale.customer_id = 99
         sq = MagicMock()
         sq.filter_by.return_value.first_or_404.return_value = sale
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account), \
-             patch("routes.shop.Sale.query", sq):
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.Sale.query", sq),
+        ):
             resp = shop_client.get(f"{BASE}/order/50/invoice")
         assert resp.status_code == 404
 
@@ -1018,45 +1458,64 @@ class TestShopRoutesExtended:
 class TestShopInternalHelpers:
     def test_require_shop_customer_redirects_anonymous(self, shop_client, mock_store):
         from routes.shop import _require_shop_customer
+
         with shop_client.application.test_request_context(f"{BASE}/cart"):
             result = _require_shop_customer(mock_store)
         assert result is not None
 
     def test_require_shop_customer_allows_logged_in(self, shop_client, mock_store):
         from routes.shop import _require_shop_customer
+
         account = _mock_account()
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=account):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=account,
+        ):
             assert _require_shop_customer(mock_store) is None
 
 
 class TestShopRoutesMoreCoverage:
     def test_wishlist_view_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/wishlist")
         assert resp.status_code == 503
 
     def test_account_login_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/account/login")
         assert resp.status_code == 503
 
     def test_account_register_value_error(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.register", side_effect=ValueError("bad data")):
-            resp = shop_client.post(f"{BASE}/account/register", data={
-                "name": "X",
-                "email": "bad",
-                "phone": "05012345678",
-                "password": "secret12",
-            })
+        with patch(
+            "routes.shop.ShopCustomerAuthService.register",
+            side_effect=ValueError("bad data"),
+        ):
+            resp = shop_client.post(
+                f"{BASE}/account/register",
+                data={
+                    "name": "X",
+                    "email": "bad",
+                    "phone": "05012345678",
+                    "password": "secret12",
+                },
+            )
         assert resp.status_code == 200
 
     def test_account_orders_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/account/orders")
         assert resp.status_code == 503
 
     def test_account_order_detail_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/account/orders/10")
         assert resp.status_code == 503
 
@@ -1069,7 +1528,10 @@ class TestShopRoutesMoreCoverage:
         assert resp.status_code in (302, 303)
 
     def test_account_order_detail_anonymous_redirect(self, shop_client):
-        with patch("routes.shop.ShopCustomerAuthService.get_logged_in_account", return_value=None):
+        with patch(
+            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+            return_value=None,
+        ):
             resp = shop_client.get(f"{BASE}/account/orders/10")
         assert resp.status_code in (302, 303)
 
@@ -1077,9 +1539,14 @@ class TestShopRoutesMoreCoverage:
         product = _mock_product()
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
-        with patch("routes.shop._require_open_store", return_value=None), \
-             patch("routes.shop.Product.query", pq), \
-             patch("routes.shop.StoreService.online_stock_map", return_value={10: Decimal("0")}):
+        with (
+            patch("routes.shop._require_open_store", return_value=None),
+            patch("routes.shop.Product.query", pq),
+            patch(
+                "routes.shop.StoreService.online_stock_map",
+                return_value={10: Decimal("0")},
+            ),
+        ):
             resp = shop_client.post(
                 f"{BASE}/cart/add",
                 data={"product_id": "10", "quantity": "1"},
@@ -1088,14 +1555,21 @@ class TestShopRoutesMoreCoverage:
         assert resp.status_code in (302, 303)
 
     def test_checkout_closed_store(self, shop_client, mock_store):
-        with patch("routes.shop.StoreService.stores_globally_enabled", return_value=False):
+        with patch(
+            "routes.shop.StoreService.stores_globally_enabled", return_value=False
+        ):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code == 503
 
     def test_checkout_min_order_warning(self, shop_client, mock_store):
         mock_store.min_order_amount = Decimal("500")
-        with patch("routes.shop.StoreService.get_cart", return_value={"10": 1}), \
-             patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()), \
-             patch("routes.shop.StorePaymentMethodService.list_for_checkout", return_value=[MagicMock()]):
+        with (
+            patch("routes.shop.StoreService.get_cart", return_value={"10": 1}),
+            patch("routes.shop.StoreService.cart_totals", return_value=_cart_totals()),
+            patch(
+                "routes.shop.StorePaymentMethodService.list_for_checkout",
+                return_value=[MagicMock()],
+            ),
+        ):
             resp = shop_client.get(f"{BASE}/checkout")
         assert resp.status_code == 200

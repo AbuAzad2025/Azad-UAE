@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
-
 _ONES = {
     0: "صفر",
     1: "واحد",
@@ -149,7 +148,9 @@ def number_to_arabic_words(amount: float | Decimal | int, currency: str = "AED")
     Example:
     1500.75 -> "ألف و خمسمائة درهم إماراتي و خمسة و سبعون فلس فقط لا غير"
     """
-    amount_decimal = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    amount_decimal = Decimal(str(amount)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
     if amount_decimal < 0:
         return ""
     major = int(amount_decimal)

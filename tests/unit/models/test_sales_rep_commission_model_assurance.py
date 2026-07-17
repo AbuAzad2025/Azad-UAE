@@ -1,8 +1,8 @@
 """SalesRepCommission model — schema, constraints, repr."""
+
 from __future__ import annotations
 
 from decimal import Decimal
-
 
 
 class TestSalesRepCommissionModel:
@@ -36,25 +36,27 @@ class TestSalesRepCommissionModel:
             tenant_id=1,
             sale_id=10,
             sales_rep_id=3,
-            commission_rate=Decimal('5.00'),
-            commission_amount=Decimal('25.500'),
+            commission_rate=Decimal("5.00"),
+            commission_amount=Decimal("25.500"),
         )
         text = repr(row)
-        assert 'S#10' in text
-        assert 'rep=3' in text
+        assert "S#10" in text
+        assert "rep=3" in text
 
     def test_commission_rate_precision_metadata(self, db_session):
         from models.sales_rep_commission import SalesRepCommission
 
         rate_col = SalesRepCommission.__table__.c.commission_rate
         amount_col = SalesRepCommission.__table__.c.commission_amount
-        assert str(rate_col.type.precision) == '5'
-        assert str(amount_col.type.precision) == '15'
+        assert str(rate_col.type.precision) == "5"
+        assert str(amount_col.type.precision) == "15"
 
     def test_foreign_keys_to_sale_and_rep(self, db_session):
         from models.sales_rep_commission import SalesRepCommission
 
-        fk_targets = {fk.column.table.name for fk in SalesRepCommission.__table__.foreign_keys}
-        assert 'sales' in fk_targets
-        assert 'users' in fk_targets
-        assert 'tenants' in fk_targets
+        fk_targets = {
+            fk.column.table.name for fk in SalesRepCommission.__table__.foreign_keys
+        }
+        assert "sales" in fk_targets
+        assert "users" in fk_targets
+        assert "tenants" in fk_targets

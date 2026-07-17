@@ -4,13 +4,21 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
 
-def _make_product(product_id, name, sku="SKU-001", price=100.0, stock=50.0,
-                  unit="pcs", min_stock=5, barcode="BAR001"):
+
+def _make_product(
+    product_id,
+    name,
+    sku="SKU-001",
+    price=100.0,
+    stock=50.0,
+    unit="pcs",
+    min_stock=5,
+    barcode="BAR001",
+):
     p = MagicMock()
     p.id = product_id
     p.name = name
@@ -26,6 +34,7 @@ def _make_product(product_id, name, sku="SKU-001", price=100.0, stock=50.0,
 # =============================================================================
 #  /api/search
 # =============================================================================
+
 
 class TestApiSearch:
     ENDPOINT = "/products/api/search"
@@ -113,6 +122,7 @@ class TestApiSearch:
 #  /categories/create
 # =============================================================================
 
+
 class TestCreateCategory:
     ENDPOINT = "/products/categories/create"
 
@@ -148,9 +158,7 @@ class TestCreateCategory:
         pc = mocker.patch("routes.products.ProductCategory")
         pc.query.filter.return_value.first.return_value = MagicMock(name="existing")
 
-        resp = product_client.post(
-            self.ENDPOINT, json={"name": "Existing"}
-        )
+        resp = product_client.post(self.ENDPOINT, json={"name": "Existing"})
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["success"] is False
@@ -168,9 +176,7 @@ class TestCreateCategory:
         pc.query.filter.return_value.first.return_value = None
         pc.side_effect = Exception("DB fail")
 
-        resp = product_client.post(
-            self.ENDPOINT, json={"name": "Cat"}
-        )
+        resp = product_client.post(self.ENDPOINT, json={"name": "Cat"})
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["success"] is False
@@ -179,6 +185,7 @@ class TestCreateCategory:
 # =============================================================================
 #  /<id>/adjust-stock
 # =============================================================================
+
 
 class TestAdjustStock:
     ENDPOINT = "/products"
@@ -232,14 +239,22 @@ class TestAdjustStock:
     def test_invalid_quantity_returns_422(self, product_client):
         resp = product_client.post(
             f"{self.ENDPOINT}/1/adjust-stock",
-            data={"adjustment_type": "add", "quantity": "not-a-number", "warehouse_id": "1"},
+            data={
+                "adjustment_type": "add",
+                "quantity": "not-a-number",
+                "warehouse_id": "1",
+            },
         )
         assert resp.status_code == 422
 
     def test_subtract_below_zero_returns_400(self, product_client):
         resp = product_client.post(
             f"{self.ENDPOINT}/1/adjust-stock",
-            data={"adjustment_type": "subtract", "quantity": "999", "warehouse_id": "1"},
+            data={
+                "adjustment_type": "subtract",
+                "quantity": "999",
+                "warehouse_id": "1",
+            },
         )
         assert resp.status_code == 400
 

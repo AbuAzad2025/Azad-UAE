@@ -11,26 +11,28 @@ socketio = None
 
 def _socketio_cors_origins(app: Flask):
     """Production: CORS_ORIGINS from config only. Dev: localhost / 127.0.0.1."""
-    debug = bool(app.config.get('DEBUG'))
-    app_env = (app.config.get('APP_ENV') or 'production').strip().lower()
-    is_prod = not debug and app_env == 'production'
+    debug = bool(app.config.get("DEBUG"))
+    app_env = (app.config.get("APP_ENV") or "production").strip().lower()
+    is_prod = not debug and app_env == "production"
 
     if is_prod:
         origins = [
-            origin.strip().rstrip('/')
-            for origin in (app.config.get('CORS_ORIGINS') or [])
+            origin.strip().rstrip("/")
+            for origin in (app.config.get("CORS_ORIGINS") or [])
             if origin and origin.strip()
         ]
         if not origins:
-            logger.warning('[WebSocket] CORS_ORIGINS empty in production; cross-origin Socket.IO disabled')
+            logger.warning(
+                "[WebSocket] CORS_ORIGINS empty in production; cross-origin Socket.IO disabled"
+            )
         return origins
 
-    port = int(app.config.get('PORT', 5000))
+    port = int(app.config.get("PORT", 5000))
     return [
-        f'http://localhost:{port}',
-        f'http://127.0.0.1:{port}',
-        'http://localhost:5000',
-        'http://127.0.0.1:5000',
+        f"http://localhost:{port}",
+        f"http://127.0.0.1:{port}",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
     ]
 
 
@@ -41,51 +43,51 @@ def init_socketio(app: Flask):
     socketio = SocketIO(
         app,
         cors_allowed_origins=cors_origins,
-        async_mode='threading',
+        async_mode="threading",
         logger=False,
-        engineio_logger=False
+        engineio_logger=False,
     )
-    
-    @socketio.on('connect')
+
+    @socketio.on("connect")
     def handle_connect():
         if current_user.is_authenticated:
-            join_room(f'user_{current_user.id}')
-            emit('connected', {'status': 'connected'})
+            join_room(f"user_{current_user.id}")
+            emit("connected", {"status": "connected"})
             logger.info(f"User {current_user.id} connected via WebSocket")
-    
-    @socketio.on('disconnect')
+
+    @socketio.on("disconnect")
     def handle_disconnect():
         if current_user.is_authenticated:
-            leave_room(f'user_{current_user.id}')
+            leave_room(f"user_{current_user.id}")
             logger.info(f"User {current_user.id} disconnected")
-    
-    @socketio.on('ping')
+
+    @socketio.on("ping")
     def handle_ping(data=None):
-        emit('pong', {'timestamp': datetime.now().isoformat()})
-    
+        emit("pong", {"timestamp": datetime.now().isoformat()})
+
     logger.info("[OK] WebSocket initialized")
     return socketio
 
 
 def broadcast_sale_created(sale_data):
     if socketio:
-        socketio.emit('sale_created', sale_data)
+        socketio.emit("sale_created", sale_data)
 
 
 def broadcast_payment_received(payment_data):
     if socketio:
-        socketio.emit('payment_received', payment_data)
+        socketio.emit("payment_received", payment_data)
 
 
-def notify_user(user_id, message, notification_type='info'):
+def notify_user(user_id, message, notification_type="info"):
     if socketio:
-        socketio.emit('notification', {
-            'message': message,
-            'type': notification_type
-        }, room=f'user_{user_id}')
+        socketio.emit(
+            "notification",
+            {"message": message, "type": notification_type},
+            room=f"user_{user_id}",
+        )
 
 
 def broadcast_stock_alert(product_data):
     if socketio:
-        socketio.emit('stock_alert', product_data)
-
+        socketio.emit("stock_alert", product_data)

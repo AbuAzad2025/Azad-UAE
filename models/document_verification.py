@@ -3,6 +3,7 @@ Document Verification — unique hash + public token for QR-barcode traceability
 Each document gets one immutable verification record, tenant-scoped,
 with pre-generation collision check (The Spell).
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -25,7 +26,13 @@ class DocumentVerification(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
 
     __table_args__ = (
-        db.Index("ix_docver_tenant_doc", "tenant_id", "document_type", "document_id", unique=True),
+        db.Index(
+            "ix_docver_tenant_doc",
+            "tenant_id",
+            "document_type",
+            "document_id",
+            unique=True,
+        ),
     )
 
     @staticmethod

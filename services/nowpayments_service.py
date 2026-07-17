@@ -26,12 +26,12 @@ class NOWPaymentsService:
     def create_payment(
         self,
         amount,
-        currency='USD',
-        crypto_currency='btc',
+        currency="USD",
+        crypto_currency="btc",
         order_id=None,
         customer_email=None,
         description=None,
-        transaction_type='donation',
+        transaction_type="donation",
         package=None,
         customer_name=None,
         customer_phone=None,
@@ -42,25 +42,26 @@ class NOWPaymentsService:
         try:
             if amount < 1:
                 return {
-                    'success': False,
-                    'error': 'الحد الأدنى للتبرع هو $1',
+                    "success": False,
+                    "error": "الحد الأدنى للتبرع هو $1",
                 }
 
             data = {
-                'price_amount': float(amount),
-                'price_currency': currency.lower(),
-                'pay_currency': crypto_currency.lower(),
-                'order_description': description or f"تبرع لمشروع Azad Systems - ${amount}",
-                'ipn_callback_url': get_nowpayments_ipn_url(),
+                "price_amount": float(amount),
+                "price_currency": currency.lower(),
+                "pay_currency": crypto_currency.lower(),
+                "order_description": description
+                or f"تبرع لمشروع Azad Systems - ${amount}",
+                "ipn_callback_url": get_nowpayments_ipn_url(),
             }
             if order_id:
-                data['order_id'] = order_id
+                data["order_id"] = order_id
             if customer_email:
-                data['customer_email'] = customer_email
+                data["customer_email"] = customer_email
 
             headers = {
-                'x-api-key': self.api_key,
-                'Content-Type': 'application/json',
+                "x-api-key": self.api_key,
+                "Content-Type": "application/json",
             }
 
             response = requests.post(
@@ -75,18 +76,24 @@ class NOWPaymentsService:
 
                 donation = Donation(
                     amount_usd=Decimal(str(amount)),
-                    payment_method='crypto',
+                    payment_method="crypto",
                     crypto_type=crypto_currency,
-                    wallet_address=payment_data.get('pay_address'),
-                    transaction_hash=payment_data.get('payment_id'),
-                    status='pending',
-                    gateway_name='nowpayments',
-                    gateway_transaction_id=payment_data.get('payment_id'),
-                    gateway_status='pending',
+                    wallet_address=payment_data.get("pay_address"),
+                    transaction_hash=payment_data.get("payment_id"),
+                    status="pending",
+                    gateway_name="nowpayments",
+                    gateway_transaction_id=payment_data.get("payment_id"),
+                    gateway_status="pending",
                     transaction_type=transaction_type,
                     package=package,
-                    customer_name=customer_name if transaction_type == 'purchase' else donor_name,
-                    customer_email=customer_email if transaction_type == 'purchase' else donor_email,
+                    customer_name=(
+                        customer_name if transaction_type == "purchase" else donor_name
+                    ),
+                    customer_email=(
+                        customer_email
+                        if transaction_type == "purchase"
+                        else donor_email
+                    ),
                     customer_phone=customer_phone,
                     donor_name=donor_name,
                     donor_email=donor_email,
@@ -94,47 +101,47 @@ class NOWPaymentsService:
                 )
 
                 db.session.add(donation)
-                with atomic_transaction('nowpayments_create_payment'):
+                with atomic_transaction("nowpayments_create_payment"):
                     db.session.flush()
 
                 return {
-                    'success': True,
-                    'payment_id': payment_data.get('payment_id'),
-                    'payment_address': payment_data.get('pay_address'),
-                    'payment_amount': payment_data.get('pay_amount'),
-                    'payment_url': payment_data.get('payment_url'),
-                    'order_id': payment_data.get('order_id'),
-                    'expires_at': payment_data.get('expires_at'),
+                    "success": True,
+                    "payment_id": payment_data.get("payment_id"),
+                    "payment_address": payment_data.get("pay_address"),
+                    "payment_amount": payment_data.get("pay_amount"),
+                    "payment_url": payment_data.get("payment_url"),
+                    "order_id": payment_data.get("order_id"),
+                    "expires_at": payment_data.get("expires_at"),
                 }
 
             current_app.logger.warning(
-                'NOWPayments create_payment failed: status=%s body=%s',
+                "NOWPayments create_payment failed: status=%s body=%s",
                 response.status_code,
                 response.text[:500],
             )
             return {
-                'success': False,
-                'error': 'تعذر إنشاء دفعة NOWPayments حالياً',
+                "success": False,
+                "error": "تعذر إنشاء دفعة NOWPayments حالياً",
             }
 
         except requests.exceptions.RequestException:
-            current_app.logger.exception('NOWPayments create_payment request failed')
+            current_app.logger.exception("NOWPayments create_payment request failed")
             return {
-                'success': False,
-                'error': 'تعذر الاتصال بخدمة NOWPayments حالياً',
+                "success": False,
+                "error": "تعذر الاتصال بخدمة NOWPayments حالياً",
             }
         except Exception:
-            current_app.logger.exception('NOWPayments create_payment failed')
+            current_app.logger.exception("NOWPayments create_payment failed")
             return {
-                'success': False,
-                'error': 'تعذر إنشاء دفعة NOWPayments حالياً',
+                "success": False,
+                "error": "تعذر إنشاء دفعة NOWPayments حالياً",
             }
 
     def get_payment_status(self, payment_id):
         try:
             headers = {
-                'x-api-key': self.api_key,
-                'Content-Type': 'application/json',
+                "x-api-key": self.api_key,
+                "Content-Type": "application/json",
             }
 
             response = requests.get(
@@ -145,24 +152,24 @@ class NOWPaymentsService:
 
             if response.status_code == 200:
                 return {
-                    'success': True,
-                    'data': response.json(),
+                    "success": True,
+                    "data": response.json(),
                 }
 
             current_app.logger.warning(
-                'NOWPayments get_payment_status failed: status=%s',
+                "NOWPayments get_payment_status failed: status=%s",
                 response.status_code,
             )
             return {
-                'success': False,
-                'error': 'تعذر جلب حالة الدفعة حالياً',
+                "success": False,
+                "error": "تعذر جلب حالة الدفعة حالياً",
             }
 
         except Exception:
-            current_app.logger.exception('NOWPayments get_payment_status failed')
+            current_app.logger.exception("NOWPayments get_payment_status failed")
             return {
-                'success': False,
-                'error': 'تعذر جلب حالة الدفعة حالياً',
+                "success": False,
+                "error": "تعذر جلب حالة الدفعة حالياً",
             }
 
     def get_available_currencies(self):
@@ -174,32 +181,32 @@ class NOWPaymentsService:
 
             if response.status_code == 200:
                 return {
-                    'success': True,
-                    'currencies': response.json(),
+                    "success": True,
+                    "currencies": response.json(),
                 }
 
             current_app.logger.warning(
-                'NOWPayments get_available_currencies failed: status=%s',
+                "NOWPayments get_available_currencies failed: status=%s",
                 response.status_code,
             )
             return {
-                'success': False,
-                'error': 'تعذر جلب العملات المتاحة حالياً',
+                "success": False,
+                "error": "تعذر جلب العملات المتاحة حالياً",
             }
 
         except Exception:
-            current_app.logger.exception('NOWPayments get_available_currencies failed')
+            current_app.logger.exception("NOWPayments get_available_currencies failed")
             return {
-                'success': False,
-                'error': 'تعذر جلب العملات المتاحة حالياً',
+                "success": False,
+                "error": "تعذر جلب العملات المتاحة حالياً",
             }
 
-    def get_estimated_amount(self, amount, from_currency='usd', to_currency='btc'):
+    def get_estimated_amount(self, amount, from_currency="usd", to_currency="btc"):
         try:
             params = {
-                'amount': amount,
-                'currency_from': from_currency,
-                'currency_to': to_currency,
+                "amount": amount,
+                "currency_from": from_currency,
+                "currency_to": to_currency,
             }
 
             response = requests.get(
@@ -210,31 +217,31 @@ class NOWPaymentsService:
 
             if response.status_code == 200:
                 return {
-                    'success': True,
-                    'data': response.json(),
+                    "success": True,
+                    "data": response.json(),
                 }
 
             current_app.logger.warning(
-                'NOWPayments get_estimated_amount failed: status=%s',
+                "NOWPayments get_estimated_amount failed: status=%s",
                 response.status_code,
             )
             return {
-                'success': False,
-                'error': 'تعذر تقدير المبلغ حالياً',
+                "success": False,
+                "error": "تعذر تقدير المبلغ حالياً",
             }
 
         except Exception:
-            current_app.logger.exception('NOWPayments get_estimated_amount failed')
+            current_app.logger.exception("NOWPayments get_estimated_amount failed")
             return {
-                'success': False,
-                'error': 'تعذر تقدير المبلغ حالياً',
+                "success": False,
+                "error": "تعذر تقدير المبلغ حالياً",
             }
 
     def verify_ipn(self, request_data, signature):
         try:
             expected_signature = hmac.new(
-                self.ipn_secret.encode('utf-8'),
-                json.dumps(request_data, sort_keys=True).encode('utf-8'),
+                self.ipn_secret.encode("utf-8"),
+                json.dumps(request_data, sort_keys=True).encode("utf-8"),
                 hashlib.sha256,
             ).hexdigest()
 
@@ -245,8 +252,8 @@ class NOWPaymentsService:
 
     def process_payment_callback(self, payment_data):
         try:
-            payment_id = payment_data.get('payment_id')
-            status = payment_data.get('payment_status')
+            payment_id = payment_data.get("payment_id")
+            status = payment_data.get("payment_status")
 
             if not payment_id:
                 return False
@@ -257,7 +264,7 @@ class NOWPaymentsService:
                         Donation.transaction_hash == payment_id,
                         Donation.gateway_transaction_id == payment_id,
                     ),
-                    Donation.status == 'pending',
+                    Donation.status == "pending",
                 )
                 .order_by(Donation.id.desc())
                 .first()
@@ -266,15 +273,15 @@ class NOWPaymentsService:
             if not donation:
                 return False
 
-            if status == 'finished':
-                donation.status = 'completed'
+            if status == "finished":
+                donation.status = "completed"
                 donation.completed_at = datetime.utcnow()
-            elif status == 'failed':
-                donation.status = 'failed'
-            elif status == 'refunded':
-                donation.status = 'refunded'
+            elif status == "failed":
+                donation.status = "failed"
+            elif status == "refunded":
+                donation.status = "refunded"
 
-            with atomic_transaction('nowpayments_process_callback'):
+            with atomic_transaction("nowpayments_process_callback"):
                 db.session.flush()
 
             return True

@@ -594,37 +594,35 @@ RECENT_UPDATES_OCT_2025 = """
 
 # دليل سريع لكل الوحدات
 ALL_MODULES = {
-    'sales': SALES_MODULE,
-    'customers': CUSTOMERS_MODULE,
-    'products': PRODUCTS_MODULE,
-    'payments': PAYMENTS_MODULE,
-    'reports': REPORTS_MODULE,
-    'warehouse': WAREHOUSE_MODULE,
-    'gl': GL_MODULE,
-    'permissions': PERMISSIONS_SYSTEM,
-    'currency': CURRENCY_SYSTEM,
-    'shortcuts': KEYBOARD_SHORTCUTS,
-    'features': FEATURES_GUIDE,
-    'troubleshooting': TROUBLESHOOTING,
-    'owner': OWNER_MODE,
-    'recent_updates': RECENT_UPDATES_OCT_2025,  # ✅ التحديثات الأخيرة أكتوبر 2025
+    "sales": SALES_MODULE,
+    "customers": CUSTOMERS_MODULE,
+    "products": PRODUCTS_MODULE,
+    "payments": PAYMENTS_MODULE,
+    "reports": REPORTS_MODULE,
+    "warehouse": WAREHOUSE_MODULE,
+    "gl": GL_MODULE,
+    "permissions": PERMISSIONS_SYSTEM,
+    "currency": CURRENCY_SYSTEM,
+    "shortcuts": KEYBOARD_SHORTCUTS,
+    "features": FEATURES_GUIDE,
+    "troubleshooting": TROUBLESHOOTING,
+    "owner": OWNER_MODE,
+    "recent_updates": RECENT_UPDATES_OCT_2025,  # ✅ التحديثات الأخيرة أكتوبر 2025
 }
+
 
 def get_module_help(module_name):
     """الحصول على مساعدة وحدة معينة"""
     return ALL_MODULES.get(module_name.lower(), "الوحدة غير موجودة")
 
+
 def search_knowledge(query):
     """البحث في قاعدة المعرفة"""
     query = query.lower()
     results = []
-    
+
     for module, content in ALL_MODULES.items():
         if query in content.lower():
-            results.append({
-                'module': module,
-                'content': content[:500] + '...'
-            })
-    
-    return results
+            results.append({"module": module, "content": content[:500] + "..."})
 
+    return results

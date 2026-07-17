@@ -6,16 +6,17 @@
 import os
 
 COMPANY_INFO = {
-    'name_ar': 'شركة أزاد للأنظمة الذكية',
-    'name_en': 'Azad Smart Systems',
-    'developer': 'م. أحمد غنام',
-    'location': 'رام الله - فلسطين',
-    'website': os.environ.get('COMPANY_WEBSITE', 'https://azadsystems.com'),
-    'phone': '+971500000000',
-    'whatsapp': '+971500000000',
-    'email': os.environ.get('COMPANY_EMAIL', 'company@example.com'),
-    'slogan': 'الذكاء الاصطناعي في خدمة أعمالك'
+    "name_ar": "شركة أزاد للأنظمة الذكية",
+    "name_en": "Azad Smart Systems",
+    "developer": "م. أحمد غنام",
+    "location": "رام الله - فلسطين",
+    "website": os.environ.get("COMPANY_WEBSITE", "https://azadsystems.com"),
+    "phone": "+971500000000",
+    "whatsapp": "+971500000000",
+    "email": os.environ.get("COMPANY_EMAIL", "company@example.com"),
+    "slogan": "الذكاء الاصطناعي في خدمة أعمالك",
 }
+
 
 def get_welcome_message():
     """رسالة الترحيب الكاملة"""
@@ -34,11 +35,11 @@ def get_welcome_message():
 ✅ التنبؤات والتحليل المالي
 
 📍 **معلومات الشركة:**
-• الموقع: {COMPANY_INFO['location']} 🇵🇸
-• المطور: {COMPANY_INFO['developer']}
-• الموقع الإلكتروني: {COMPANY_INFO['website']}
-• واتساب: {COMPANY_INFO['whatsapp']}
-• البريد: {COMPANY_INFO['email']}
+• الموقع: {COMPANY_INFO["location"]} 🇵🇸
+• المطور: {COMPANY_INFO["developer"]}
+• الموقع الإلكتروني: {COMPANY_INFO["website"]}
+• واتساب: {COMPANY_INFO["whatsapp"]}
+• البريد: {COMPANY_INFO["email"]}
 
 💡 **خبرتي تشمل:**
 • الأنظمة الضريبية (فلسطين 16%، الإمارات 5%، إسرائيل 17%)

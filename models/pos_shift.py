@@ -10,18 +10,34 @@ class PosShift(db.Model):
     __tablename__ = "pos_shifts"
 
     __table_args__ = (
-        db.UniqueConstraint("tenant_id", "shift_number", name="uq_pos_shifts_tenant_shift_number"),
+        db.UniqueConstraint(
+            "tenant_id", "shift_number", name="uq_pos_shifts_tenant_shift_number"
+        ),
         db.Index("idx_pos_shift_session_status", "session_id", "status"),
         db.Index("idx_pos_shift_user_status", "user_id", "status"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("pos_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+    )
     shift_number = db.Column(db.String(50), nullable=False, index=True)
 
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    opened_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     closed_at = db.Column(db.DateTime, nullable=True)
 
     starting_cash = db.Column(db.Numeric(15, 3), default=Decimal("0"), nullable=False)
@@ -36,8 +52,14 @@ class PosShift(db.Model):
     status = db.Column(db.String(20), default="open", nullable=False, index=True)
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     SHIFT_OPEN = "open"
     SHIFT_RECONCILED = "reconciled"
@@ -45,7 +67,9 @@ class PosShift(db.Model):
 
     def reconcile(self, actual_cash: Decimal, notes: str | None = None):
         self.actual_cash_counted = Decimal(str(actual_cash))
-        self.system_sales_expected = Decimal(str(self.starting_cash or 0)) + Decimal(str(self.total_cash_sales or 0))
+        self.system_sales_expected = Decimal(str(self.starting_cash or 0)) + Decimal(
+            str(self.total_cash_sales or 0)
+        )
         self.discrepancy = self.actual_cash_counted - self.system_sales_expected
         self.status = self.SHIFT_RECONCILED
         if notes:
@@ -75,8 +99,14 @@ class PosShift(db.Model):
             "closed_at": self.closed_at.isoformat() if self.closed_at else None,
             "starting_cash": float(self.starting_cash or 0),
             "system_sales_expected": float(self.system_sales_expected or 0),
-            "actual_cash_counted": float(self.actual_cash_counted) if self.actual_cash_counted is not None else None,
-            "discrepancy": float(self.discrepancy) if self.discrepancy is not None else None,
+            "actual_cash_counted": (
+                float(self.actual_cash_counted)
+                if self.actual_cash_counted is not None
+                else None
+            ),
+            "discrepancy": (
+                float(self.discrepancy) if self.discrepancy is not None else None
+            ),
             "total_sales": float(self.total_sales or 0),
             "total_cash_sales": float(self.total_cash_sales or 0),
             "total_card_sales": float(self.total_card_sales or 0),

@@ -16,10 +16,10 @@ def _import_dataframe(data):
     import importlib
     import sys
 
-    for mod in ('pandas', 'numpy'):
+    for mod in ("pandas", "numpy"):
         if isinstance(sys.modules.get(mod), MagicMock):
             sys.modules.pop(mod, None)
-    pd = importlib.import_module('pandas')
+    pd = importlib.import_module("pandas")
     return pd.DataFrame(data)
 
 
@@ -28,7 +28,9 @@ def _assert_import_index_redirect(resp):
     assert urlparse(resp.location).path.rstrip("/") == "/products"
 
 
-def _product(pid=1, name="Widget", sku="SKU-1", barcode="BC-1", min_alert=5, current_stock=10):
+def _product(
+    pid=1, name="Widget", sku="SKU-1", barcode="BC-1", min_alert=5, current_stock=10
+):
     product = MagicMock()
     product.id = pid
     product.name = name
@@ -110,7 +112,14 @@ def _product_class_mock(product_query_mock=None):
     product_query_mock.filter_by.return_value.count.return_value = 0
     cls = MagicMock()
     cls.query = product_query_mock
-    for attr in ("name", "sku", "barcode", "current_stock", "min_stock_alert", "tenant_id"):
+    for attr in (
+        "name",
+        "sku",
+        "barcode",
+        "current_stock",
+        "min_stock_alert",
+        "tenant_id",
+    ):
         setattr(cls, attr, _orm_column())
 
     def _construct(*_args, **kwargs):
@@ -132,7 +141,9 @@ def _products_patches(
     product=None,
     categories=None,
 ):
-    products = products if products is not None else [_product(1), _product(2, name="Other")]
+    products = (
+        products if products is not None else [_product(1), _product(2, name="Other")]
+    )
     product = product or products[0]
     categories = categories if categories is not None else [_category()]
     visible_query = visible_query or _chain_query(all=products, count=len(products))
@@ -140,7 +151,9 @@ def _products_patches(
     category_query = MagicMock()
     category_query.filter_by.return_value.all.return_value = categories
     category_query.filter.return_value.first.return_value = None
-    category_query.filter_by.return_value.order_by.return_value.all.return_value = categories
+    category_query.filter_by.return_value.order_by.return_value.all.return_value = (
+        categories
+    )
 
     warehouse_query = MagicMock()
     warehouse_query.filter_by.return_value.first.return_value = _warehouse()
@@ -149,32 +162,77 @@ def _products_patches(
     session_query = _chain_query(all=[])
 
     with ExitStack() as stack:
-        stack.enter_context(patch("routes.products.StockService.get_visible_products_query", return_value=visible_query))
-        stack.enter_context(patch("routes.products.StockService.get_product_stock", return_value=10.0))
+        stack.enter_context(
+            patch(
+                "routes.products.StockService.get_visible_products_query",
+                return_value=visible_query,
+            )
+        )
+        stack.enter_context(
+            patch("routes.products.StockService.get_product_stock", return_value=10.0)
+        )
         stack.enter_context(patch("routes.products.StockService.adjust_stock"))
         stack.enter_context(patch("routes.products.StockService.add_opening_stock"))
-        stack.enter_context(patch("routes.products.tenant_query", return_value=customer_query))
-        stack.enter_context(patch("routes.products.tenant_get_or_404", return_value=product))
+        stack.enter_context(
+            patch("routes.products.tenant_query", return_value=customer_query)
+        )
+        stack.enter_context(
+            patch("routes.products.tenant_get_or_404", return_value=product)
+        )
         stack.enter_context(patch("routes.products.render_template", return_value="ok"))
         session = stack.enter_context(patch("routes.products.db.session"))
-        stack.enter_context(patch("routes.products.db.session.query", return_value=session_query))
-        stack.enter_context(patch.object(products_mod, "ProductCategory", MagicMock(query=category_query)))
-        stack.enter_context(patch("routes.products.branch_scope_id", return_value=branch_scope))
-        stack.enter_context(patch("routes.products.get_accessible_warehouses", return_value=[_warehouse()]))
-        stack.enter_context(patch("routes.products.get_accessible_warehouse_ids", return_value=[1]))
-        stack.enter_context(patch("routes.products.ensure_warehouse_access", return_value=_warehouse()))
+        stack.enter_context(
+            patch("routes.products.db.session.query", return_value=session_query)
+        )
+        stack.enter_context(
+            patch.object(
+                products_mod, "ProductCategory", MagicMock(query=category_query)
+            )
+        )
+        stack.enter_context(
+            patch("routes.products.branch_scope_id", return_value=branch_scope)
+        )
+        stack.enter_context(
+            patch(
+                "routes.products.get_accessible_warehouses", return_value=[_warehouse()]
+            )
+        )
+        stack.enter_context(
+            patch("routes.products.get_accessible_warehouse_ids", return_value=[1])
+        )
+        stack.enter_context(
+            patch("routes.products.ensure_warehouse_access", return_value=_warehouse())
+        )
         stack.enter_context(patch("routes.products.assign_tenant_id"))
         stack.enter_context(patch("routes.products.LoggingCore.log_audit"))
-        stack.enter_context(patch("routes.products.get_branch_stock_map", return_value={1: 10.0, 2: 3.0}))
-        stack.enter_context(patch("routes.products.should_show_all_branch_columns", return_value=False))
-        stack.enter_context(patch("routes.products.get_active_tenant_id", return_value=1))
-        stack.enter_context(patch("utils.tenanting.get_active_tenant_id", return_value=1))
-        stack.enter_context(patch("routes.products.generate_sku", return_value="AUTO-SKU"))
-        stack.enter_context(patch("routes.products.generate_barcode", return_value="AUTO-BC"))
-        stack.enter_context(patch("routes.products.save_uploaded_file", return_value="products/img.png"))
+        stack.enter_context(
+            patch(
+                "routes.products.get_branch_stock_map", return_value={1: 10.0, 2: 3.0}
+            )
+        )
+        stack.enter_context(
+            patch("routes.products.should_show_all_branch_columns", return_value=False)
+        )
+        stack.enter_context(
+            patch("routes.products.get_active_tenant_id", return_value=1)
+        )
+        stack.enter_context(
+            patch("utils.tenanting.get_active_tenant_id", return_value=1)
+        )
+        stack.enter_context(
+            patch("routes.products.generate_sku", return_value="AUTO-SKU")
+        )
+        stack.enter_context(
+            patch("routes.products.generate_barcode", return_value="AUTO-BC")
+        )
+        stack.enter_context(
+            patch("routes.products.save_uploaded_file", return_value="products/img.png")
+        )
         product_cls, product_query_mock = _product_class_mock()
         stack.enter_context(patch.object(products_mod, "Product", product_cls))
-        stack.enter_context(patch("routes.products.db.or_", return_value=MagicMock(name="sql_or")))
+        stack.enter_context(
+            patch("routes.products.db.or_", return_value=MagicMock(name="sql_or"))
+        )
         stack.enter_context(patch("utils.tenant_limits.check_products_limit"))
         yield {
             "visible_query": visible_query,
@@ -209,7 +267,15 @@ def products_import_app(app_factory, bypass_product_auth, upload_dir):
     return app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
 
 
-def _run_import_post(app, df, *, update_existing=False, existing_product=None, warehouse_query=None, os_remove_side_effect=None):
+def _run_import_post(
+    app,
+    df,
+    *,
+    update_existing=False,
+    existing_product=None,
+    warehouse_query=None,
+    os_remove_side_effect=None,
+):
     from contextlib import ExitStack
     from routes.products import import_products
 
@@ -220,10 +286,14 @@ def _run_import_post(app, df, *, update_existing=False, existing_product=None, w
 
     with app.test_request_context("/products/import", method="POST"):
         with ExitStack() as stack:
-            read_mock = stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
+            read_mock = stack.enter_context(
+                patch("routes.products._read_import_dataframe", return_value=df)
+            )
             stack.enter_context(patch("models.Warehouse.query", wh_query))
             if os_remove_side_effect is not None:
-                stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
+                stack.enter_context(
+                    patch("os.remove", side_effect=os_remove_side_effect)
+                )
             else:
                 stack.enter_context(patch("os.remove"))
             stack.enter_context(patch("os.path.exists", return_value=True))
@@ -248,48 +318,60 @@ class TestProductsAuth:
 
     def test_forbidden_without_manage_products(self, products_client, mock_user):
         mock_user.has_permission.return_value = False
-        with patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("utils.decorators.is_global_owner_user", return_value=False):
+        with (
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+        ):
             resp = products_client.get("/products/")
         assert resp.status_code == 403
 
     def test_view_scope_403_when_out_of_scope(self, products_client):
-        with _products_patches() as ctx, \
-             patch("routes.products._ensure_product_scope", return_value=False), \
-             patch("routes.products.render_template", return_value="denied") as render:
+        with (
+            _products_patches() as ctx,
+            patch("routes.products._ensure_product_scope", return_value=False),
+            patch("routes.products.render_template", return_value="denied") as render,
+        ):
             resp = products_client.get("/products/1")
         assert resp.status_code == 403
         assert render.call_args[0][0] == "errors/403.html"
 
 
 class TestHelperFunctions:
-    @pytest.mark.parametrize("value,expected", [
-        ("10.5", 10.5),
-        ("", 0.0),
-        (None, 0.0),
-        ("bad", 0.0),
-    ])
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("10.5", 10.5),
+            ("", 0.0),
+            (None, 0.0),
+            ("bad", 0.0),
+        ],
+    )
     def test_safe_float(self, value, expected):
         from routes.products import safe_float
+
         assert safe_float(value) == expected
 
     def test_safe_float_custom_default(self):
         from routes.products import safe_float
+
         assert safe_float("", default=99.0) == 99.0
 
     @pytest.mark.parametrize("value,expected", [("5", 5.0), ("0", 0.0)])
     def test_require_float_valid(self, value, expected):
         from routes.products import require_float
+
         assert require_float(value) == expected
 
     @pytest.mark.parametrize("value", ["", None, "x"])
     def test_require_float_invalid(self, value):
         from routes.products import require_float
+
         with pytest.raises(ValueError):
             require_float(value)
 
     def test_parse_product_partners_empty(self):
         from routes.products import _parse_product_partners
+
         form = MagicMock()
         form.getlist.side_effect = lambda key: []
         partners, err = _parse_product_partners(form)
@@ -298,6 +380,7 @@ class TestHelperFunctions:
 
     def test_parse_product_partners_incomplete_row(self):
         from routes.products import _parse_product_partners
+
         form = MagicMock()
         form.getlist.side_effect = lambda key: {
             "partner_customer_id[]": ["1"],
@@ -309,6 +392,7 @@ class TestHelperFunctions:
 
     def test_parse_product_partners_duplicate(self, products_client):
         from routes.products import _parse_product_partners
+
         partner = MagicMock()
         partner.id = 5
         with _products_patches() as ctx:
@@ -324,6 +408,7 @@ class TestHelperFunctions:
 
     def test_parse_product_partners_total_over_100(self, products_client):
         from routes.products import _parse_product_partners
+
         partner = MagicMock()
         partner.id = 5
         with _products_patches() as ctx:
@@ -353,7 +438,10 @@ class TestImportTemplate:
 
 class TestImportProducts:
     def test_import_get_renders(self, products_client):
-        with _products_patches(), patch("routes.products.render_template", return_value="import") as render:
+        with (
+            _products_patches(),
+            patch("routes.products.render_template", return_value="import") as render,
+        ):
             resp = products_client.get("/products/import")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "products/import.html"
@@ -383,7 +471,10 @@ class TestImportProducts:
 
     def test_import_post_missing_columns(self, products_client, upload_dir):
         df = _import_dataframe({"foo": [1]})
-        with _products_patches(), patch("models.Warehouse.query", _warehouse_query_mock()):
+        with (
+            _products_patches(),
+            patch("models.Warehouse.query", _warehouse_query_mock()),
+        ):
             with patch("routes.products._read_import_dataframe", return_value=df):
                 resp = products_client.post(
                     "/products/import",
@@ -393,11 +484,13 @@ class TestImportProducts:
         assert resp.status_code == 302
 
     def test_import_post_success_new_product(self, products_import_app):
-        df = _import_dataframe({
-            "name": ["New Product"],
-            "price": [25.0],
-            "stock": [5.0],
-        })
+        df = _import_dataframe(
+            {
+                "name": ["New Product"],
+                "price": [25.0],
+                "stock": [5.0],
+            }
+        )
         resp = _run_import_post(products_import_app, df)
         _assert_import_index_redirect(resp)
 
@@ -406,8 +499,10 @@ class TestImportProducts:
         existing = _product(name="Dup")
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = existing
-            with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("routes.products._read_import_dataframe", return_value=df):
+            with (
+                patch("models.Warehouse.query", _warehouse_query_mock()),
+                patch("routes.products._read_import_dataframe", return_value=df),
+            ):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -421,8 +516,10 @@ class TestImportProducts:
         existing.current_stock = 10
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = existing
-            with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("routes.products._read_import_dataframe", return_value=df):
+            with (
+                patch("models.Warehouse.query", _warehouse_query_mock()),
+                patch("routes.products._read_import_dataframe", return_value=df),
+            ):
                 resp = products_client.post(
                     "/products/import",
                     data={
@@ -436,7 +533,10 @@ class TestImportProducts:
 
 class TestImportGrid:
     def test_import_grid_success(self, products_client):
-        with _products_patches() as ctx, patch("models.Warehouse.query", _warehouse_query_mock()):
+        with (
+            _products_patches() as ctx,
+            patch("models.Warehouse.query", _warehouse_query_mock()),
+        ):
             resp = products_client.post(
                 "/products/import-grid",
                 data={
@@ -453,7 +553,10 @@ class TestImportGrid:
         ctx["session"].commit.assert_called()
 
     def test_import_grid_skips_empty_names(self, products_client):
-        with _products_patches(), patch("models.Warehouse.query", _warehouse_query_mock()):
+        with (
+            _products_patches(),
+            patch("models.Warehouse.query", _warehouse_query_mock()),
+        ):
             resp = products_client.post(
                 "/products/import-grid",
                 data={"name[]": ["", "  "], "price[]": ["1", "2"]},
@@ -465,8 +568,12 @@ class TestProductsIndex:
     def test_index_non_scoped_paginate(self, products_client):
         items = [_product(1), _product(2)]
         query = _chain_query(all=items, count=2)
-        with _products_patches(products=items, visible_query=query, branch_scope=None) as ctx, \
-             patch("routes.products.render_template", return_value="index") as render:
+        with (
+            _products_patches(
+                products=items, visible_query=query, branch_scope=None
+            ) as ctx,
+            patch("routes.products.render_template", return_value="index") as render,
+        ):
             resp = products_client.get("/products/?page=1&per_page=10")
         assert resp.status_code == 200
         assert render.call_args[1]["products"] == items
@@ -474,9 +581,16 @@ class TestProductsIndex:
     def test_index_branch_scoped_pagination(self, products_client):
         items = [_product(i, current_stock=i * 5) for i in range(1, 6)]
         query = _chain_query(all=items)
-        with _products_patches(products=items, visible_query=query, branch_scope=2) as ctx, \
-             patch("routes.products.render_template", return_value="index") as render, \
-             patch("routes.products.get_branch_stock_map", return_value={i: float(i) for i in range(1, 6)}):
+        with (
+            _products_patches(
+                products=items, visible_query=query, branch_scope=2
+            ) as ctx,
+            patch("routes.products.render_template", return_value="index") as render,
+            patch(
+                "routes.products.get_branch_stock_map",
+                return_value={i: float(i) for i in range(1, 6)},
+            ),
+        ):
             resp = products_client.get("/products/?page=2&per_page=2")
         assert resp.status_code == 200
         pagination = render.call_args[1]["pagination"]
@@ -511,9 +625,13 @@ class TestProductsIndex:
             _product(2, current_stock=10),
         ]
         query = _chain_query(all=items)
-        with _products_patches(products=items, visible_query=query, branch_scope=1), \
-             patch("routes.products.get_branch_stock_map", return_value={1: 0.0, 2: 5.0}), \
-             patch("routes.products.render_template", return_value="index") as render:
+        with (
+            _products_patches(products=items, visible_query=query, branch_scope=1),
+            patch(
+                "routes.products.get_branch_stock_map", return_value={1: 0.0, 2: 5.0}
+            ),
+            patch("routes.products.render_template", return_value="index") as render,
+        ):
             resp = products_client.get("/products/?stock=out")
         assert resp.status_code == 200
         page_products = render.call_args[1]["products"]
@@ -525,10 +643,12 @@ class TestProductsIndex:
         session_rows = [(1, "WH", "مستودع", "Branch", "B1")]
         session_query = MagicMock()
         session_query.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = session_rows
-        with _products_patches(products=items, visible_query=query), \
-             patch("routes.products.should_show_all_branch_columns", return_value=True), \
-             patch("routes.products.db.session.query", return_value=session_query), \
-             patch("routes.products.render_template", return_value="index"):
+        with (
+            _products_patches(products=items, visible_query=query),
+            patch("routes.products.should_show_all_branch_columns", return_value=True),
+            patch("routes.products.db.session.query", return_value=session_query),
+            patch("routes.products.render_template", return_value="index"),
+        ):
             resp = products_client.get("/products/")
         assert resp.status_code == 200
 
@@ -536,9 +656,11 @@ class TestProductsIndex:
 class TestProductsCreate:
     def test_create_get(self, products_client):
         form = _mock_product_form()
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.render_template", return_value="create") as render:
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.render_template", return_value="create") as render,
+        ):
             resp = products_client.get("/products/create")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "products/create.html"
@@ -551,9 +673,11 @@ class TestProductsCreate:
 
     def test_create_post_missing_warehouse(self, products_client):
         form = _mock_product_form(validate=True)
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.render_template", return_value="create") as render:
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.render_template", return_value="create") as render,
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={"name": "New", "regular_price": "10", "warehouse_id": ""},
@@ -563,10 +687,14 @@ class TestProductsCreate:
 
     def test_create_post_invalid_warehouse(self, products_client):
         form = _mock_product_form(validate=True)
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.ensure_warehouse_access", side_effect=ValueError("bad")), \
-             patch("routes.products.render_template", return_value="create") as render:
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch(
+                "routes.products.ensure_warehouse_access", side_effect=ValueError("bad")
+            ),
+            patch("routes.products.render_template", return_value="create") as render,
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={"name": "New", "regular_price": "10", "warehouse_id": "99"},
@@ -577,9 +705,14 @@ class TestProductsCreate:
         from utils.tenant_limits import TenantLimitError
 
         form = _mock_product_form(validate=True)
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("utils.tenant_limits.check_products_limit", side_effect=TenantLimitError("products", 10, 10)):
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch(
+                "utils.tenant_limits.check_products_limit",
+                side_effect=TenantLimitError("products", 10, 10),
+            ),
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={"name": "New", "regular_price": "10", "warehouse_id": "1"},
@@ -599,11 +732,13 @@ class TestProductsCreate:
         session = MagicMock()
         session.flush.side_effect = lambda: setattr(added_product, "id", 99)
 
-        with _products_patches() as ctx, \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.Product", return_value=added_product), \
-             patch("routes.products.db.session", session), \
-             patch("routes.products.LoggingCore.log_audit") as log_audit:
+        with (
+            _products_patches() as ctx,
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.Product", return_value=added_product),
+            patch("routes.products.db.session", session),
+            patch("routes.products.LoggingCore.log_audit") as log_audit,
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={
@@ -624,8 +759,10 @@ class TestProductsCreate:
 class TestProductsViewEditDelete:
     def test_view_success(self, products_client):
         product = _product()
-        with _products_patches(product=product) as ctx, \
-             patch("routes.products.render_template", return_value="view") as render:
+        with (
+            _products_patches(product=product) as ctx,
+            patch("routes.products.render_template", return_value="view") as render,
+        ):
             resp = products_client.get("/products/1")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "products/view.html"
@@ -643,9 +780,11 @@ class TestProductsViewEditDelete:
     def test_edit_get(self, products_client):
         form = _mock_product_form()
         product = _product()
-        with _products_patches(product=product), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.render_template", return_value="edit") as render:
+        with (
+            _products_patches(product=product),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.render_template", return_value="edit") as render,
+        ):
             resp = products_client.get("/products/1/edit")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "products/edit.html"
@@ -653,9 +792,11 @@ class TestProductsViewEditDelete:
     def test_edit_post_negative_stock(self, products_client):
         form = _mock_product_form(validate=True)
         product = _product()
-        with _products_patches(product=product), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.render_template", return_value="edit") as render:
+        with (
+            _products_patches(product=product),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.render_template", return_value="edit") as render,
+        ):
             resp = products_client.post(
                 "/products/1/edit",
                 data={"name": "X", "current_stock": "-1", "regular_price": "10"},
@@ -666,11 +807,13 @@ class TestProductsViewEditDelete:
         form = _mock_product_form(validate=True)
         product = _product()
         mock_user.can_see_costs.return_value = False
-        with _products_patches(product=product) as ctx, \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=10.0), \
-             patch("routes.products.LoggingCore.log_audit") as log_audit, \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product) as ctx,
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=10.0),
+            patch("routes.products.LoggingCore.log_audit") as log_audit,
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = products_client.post(
                 "/products/1/edit",
@@ -688,8 +831,10 @@ class TestProductsViewEditDelete:
 
     def test_delete_with_stock_blocked(self, products_client):
         product = _product()
-        with _products_patches(product=product), \
-             patch("routes.products.StockService.get_product_stock", return_value=5.0):
+        with (
+            _products_patches(product=product),
+            patch("routes.products.StockService.get_product_stock", return_value=5.0),
+        ):
             resp = products_client.post("/products/1/delete")
         assert resp.status_code == 302
         assert resp.location.endswith("/products/1")
@@ -700,11 +845,13 @@ class TestProductsViewEditDelete:
         pl = MagicMock()
         sl.query.filter_by.return_value.filter.return_value.count.return_value = 2
         pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
-        with _products_patches(product=product) as ctx, \
-             patch("routes.products.StockService.get_product_stock", return_value=0.0), \
-             patch("models.SaleLine", sl), \
-             patch("models.PurchaseLine", pl), \
-             patch("routes.products.LoggingCore.log_audit") as log_audit:
+        with (
+            _products_patches(product=product) as ctx,
+            patch("routes.products.StockService.get_product_stock", return_value=0.0),
+            patch("models.SaleLine", sl),
+            patch("models.PurchaseLine", pl),
+            patch("routes.products.LoggingCore.log_audit") as log_audit,
+        ):
             resp = products_client.post("/products/1/delete")
         assert resp.status_code == 302
         assert product.is_active is False
@@ -716,11 +863,13 @@ class TestProductsViewEditDelete:
         pl = MagicMock()
         sl.query.filter_by.return_value.filter.return_value.count.return_value = 0
         pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
-        with _products_patches(product=product) as ctx, \
-             patch("routes.products.StockService.get_product_stock", return_value=0.0), \
-             patch("models.SaleLine", sl), \
-             patch("models.PurchaseLine", pl), \
-             patch("routes.products.LoggingCore.log_audit") as log_audit:
+        with (
+            _products_patches(product=product) as ctx,
+            patch("routes.products.StockService.get_product_stock", return_value=0.0),
+            patch("models.SaleLine", sl),
+            patch("models.PurchaseLine", pl),
+            patch("routes.products.LoggingCore.log_audit") as log_audit,
+        ):
             resp = products_client.post("/products/1/delete")
         assert resp.status_code == 302
         ctx["session"].delete.assert_called_with(product)
@@ -749,8 +898,10 @@ class TestApiSearch:
     def test_api_search_with_warehouse_id(self, products_client):
         items = [_product()]
         query = _chain_query(all=items)
-        with _products_patches(products=items, visible_query=query), \
-             patch("routes.products.get_branch_stock_map", return_value={1: 42.0}):
+        with (
+            _products_patches(products=items, visible_query=query),
+            patch("routes.products.get_branch_stock_map", return_value={1: 42.0}),
+        ):
             resp = products_client.get("/products/api/search?q=a&warehouse_id=1")
         assert resp.status_code == 200
         assert resp.get_json()[0]["stock"] == 42.0
@@ -760,10 +911,14 @@ class TestCategories:
     def test_categories_list(self, products_client):
         cats = [_category(1), _category(2, name="B")]
         category_query = MagicMock()
-        category_query.filter_by.return_value.order_by.return_value.all.return_value = cats
-        with _products_patches(categories=cats), \
-             patch("routes.products.ProductCategory.query", category_query), \
-             patch("routes.products.render_template", return_value="cats") as render:
+        category_query.filter_by.return_value.order_by.return_value.all.return_value = (
+            cats
+        )
+        with (
+            _products_patches(categories=cats),
+            patch("routes.products.ProductCategory.query", category_query),
+            patch("routes.products.render_template", return_value="cats") as render,
+        ):
             resp = products_client.get("/products/categories")
         assert resp.status_code == 200
         assert render.call_args[0][0] == "products/categories.html"
@@ -803,7 +958,10 @@ class TestCategories:
         pc_class = MagicMock()
         pc_class.query.filter.return_value.first.return_value = None
         pc_class.return_value = new_cat
-        with _products_patches() as ctx, patch("routes.products.ProductCategory", pc_class):
+        with (
+            _products_patches() as ctx,
+            patch("routes.products.ProductCategory", pc_class),
+        ):
             resp = products_client.post(
                 "/products/categories/create",
                 json={"name": "JSON Cat"},
@@ -812,13 +970,14 @@ class TestCategories:
         body = resp.get_json()
         assert body["success"] is True
 
-
     def test_update_category_json_success(self, products_client):
         cat = _category(5, name="Old")
         cat.tenant_id = 1
-        with _products_patches(categories=[cat]), \
-             patch("routes.products._tenant_category_or_404", return_value=cat), \
-             patch("routes.products._category_name_taken", return_value=False):
+        with (
+            _products_patches(categories=[cat]),
+            patch("routes.products._tenant_category_or_404", return_value=cat),
+            patch("routes.products._category_name_taken", return_value=False),
+        ):
             resp = products_client.post(
                 "/products/categories/5/update",
                 json={"name": "New Name", "name_ar": "جديد"},
@@ -829,8 +988,10 @@ class TestCategories:
     def test_delete_category_blocked_with_products(self, products_client):
         cat = _category(6, name="Used")
         cat.tenant_id = 1
-        with _products_patches(categories=[cat]) as ctx, \
-             patch("routes.products._tenant_category_or_404", return_value=cat):
+        with (
+            _products_patches(categories=[cat]) as ctx,
+            patch("routes.products._tenant_category_or_404", return_value=cat),
+        ):
             ctx["product_query"].filter_by.return_value.count.return_value = 3
             resp = products_client.post("/products/categories/6/delete", json={})
         assert resp.status_code == 400
@@ -841,8 +1002,10 @@ class TestCategories:
     def test_delete_category_json_success(self, products_client):
         cat = _category(7, name="Empty")
         cat.tenant_id = 1
-        with _products_patches(categories=[cat]) as ctx, \
-             patch("routes.products._tenant_category_or_404", return_value=cat):
+        with (
+            _products_patches(categories=[cat]) as ctx,
+            patch("routes.products._tenant_category_or_404", return_value=cat),
+        ):
             ctx["product_query"].filter_by.return_value.count.return_value = 0
             resp = products_client.post("/products/categories/7/delete", json={})
         assert resp.status_code == 200
@@ -865,7 +1028,11 @@ class TestAdjustStock:
         with _products_patches():
             resp = products_client.post(
                 "/products/1/adjust-stock",
-                data={"adjustment_type": "subtract", "quantity": "3", "warehouse_id": "1"},
+                data={
+                    "adjustment_type": "subtract",
+                    "quantity": "3",
+                    "warehouse_id": "1",
+                },
             )
         assert resp.status_code == 200
         assert resp.get_json()["new_stock"] == 7.0
@@ -888,19 +1055,30 @@ class TestAdjustStock:
         assert resp.status_code == 422
 
     def test_adjust_stock_subtract_insufficient(self, products_client):
-        with _products_patches(), \
-             patch("routes.products._get_alternative_warehouses", return_value=[]):
+        with (
+            _products_patches(),
+            patch("routes.products._get_alternative_warehouses", return_value=[]),
+        ):
             resp = products_client.post(
                 "/products/1/adjust-stock",
-                data={"adjustment_type": "subtract", "quantity": "999", "warehouse_id": "1"},
+                data={
+                    "adjustment_type": "subtract",
+                    "quantity": "999",
+                    "warehouse_id": "1",
+                },
             )
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["insufficient"] is True
 
     def test_adjust_stock_branch_requires_warehouse(self, products_client):
-        with _products_patches(branch_scope=2), \
-             patch("routes.products.get_accessible_warehouses", return_value=[_warehouse(1), _warehouse(2)]):
+        with (
+            _products_patches(branch_scope=2),
+            patch(
+                "routes.products.get_accessible_warehouses",
+                return_value=[_warehouse(1), _warehouse(2)],
+            ),
+        ):
             resp = products_client.post(
                 "/products/1/adjust-stock",
                 data={"adjustment_type": "add", "quantity": "1"},
@@ -908,7 +1086,10 @@ class TestAdjustStock:
         assert resp.status_code == 400
 
     def test_adjust_stock_scope_403(self, products_client):
-        with _products_patches(), patch("routes.products._ensure_product_scope", return_value=False):
+        with (
+            _products_patches(),
+            patch("routes.products._ensure_product_scope", return_value=False),
+        ):
             resp = products_client.post(
                 "/products/1/adjust-stock",
                 data={"adjustment_type": "add", "quantity": "1", "warehouse_id": "1"},
@@ -923,8 +1104,13 @@ class TestPrintLabels:
         product = _product()
         app = app_factory(products_bp)
         client = app.test_client()
-        with patch("routes.products.tenant_get_or_404", return_value=product), \
-             patch("services.label_print_service.get_single_label_html", return_value="<html>label</html>") as label:
+        with (
+            patch("routes.products.tenant_get_or_404", return_value=product),
+            patch(
+                "services.label_print_service.get_single_label_html",
+                return_value="<html>label</html>",
+            ) as label,
+        ):
             resp = client.get("/products/1/print-label")
         assert resp.status_code == 200
         assert b"label" in resp.data
@@ -935,7 +1121,10 @@ class TestPrintLabels:
 
         app = app_factory(products_bp)
         client = app.test_client()
-        with patch("services.label_print_service.get_product_labels_html", return_value="<html>labels</html>") as labels:
+        with patch(
+            "services.label_print_service.get_product_labels_html",
+            return_value="<html>labels</html>",
+        ) as labels:
             resp = client.post("/products/print-labels", json={"product_ids": [1, 2]})
         assert resp.status_code == 200
         labels.assert_called_once()
@@ -946,10 +1135,14 @@ class TestPrintLabels:
         assert resp.status_code == 302
         _assert_import_index_redirect(resp)
 
-    def test_print_labels_forbidden_without_view_products(self, products_client, mock_user):
+    def test_print_labels_forbidden_without_view_products(
+        self, products_client, mock_user
+    ):
         mock_user.has_permission.side_effect = lambda perm: perm != "view_products"
-        with patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("utils.decorators.is_global_owner_user", return_value=False):
+        with (
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+        ):
             resp = products_client.get("/products/1/print-label")
         assert resp.status_code == 403
 
@@ -961,28 +1154,43 @@ class TestProductsExtendedCoverage:
             _product(2, min_alert=5, current_stock=20),
         ]
         query = _chain_query(all=items)
-        with _products_patches(products=items, visible_query=query, branch_scope=1), \
-             patch("routes.products.get_branch_stock_map", return_value={1: 3.0, 2: 20.0}), \
-             patch("routes.products.render_template", return_value="index") as render:
+        with (
+            _products_patches(products=items, visible_query=query, branch_scope=1),
+            patch(
+                "routes.products.get_branch_stock_map", return_value={1: 3.0, 2: 20.0}
+            ),
+            patch("routes.products.render_template", return_value="index") as render,
+        ):
             resp = products_client.get("/products/?stock=low")
         assert resp.status_code == 200
         page_products = render.call_args[1]["products"]
         assert len(page_products) == 1
 
     def test_import_csv_file(self, products_client, upload_dir):
-        df = _import_dataframe({"name": ["Csv Product"], "price": [9.0], "warranty": ["30"], "category": ["Tools"]})
+        df = _import_dataframe(
+            {
+                "name": ["Csv Product"],
+                "price": [9.0],
+                "warranty": ["30"],
+                "category": ["Tools"],
+            }
+        )
         new_cat = _category(5, name="Tools")
         pc_class = MagicMock()
-        pc_class.query.filter_by.return_value.filter.return_value.first.return_value = None
+        pc_class.query.filter_by.return_value.filter.return_value.first.return_value = (
+            None
+        )
         pc_class.return_value = new_cat
         new_product = MagicMock()
         new_product.id = 88
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = None
-            with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("routes.products._read_import_dataframe", return_value=df), \
-                 patch("routes.products.ProductCategory", pc_class), \
-                 patch("routes.products.Product", return_value=new_product):
+            with (
+                patch("models.Warehouse.query", _warehouse_query_mock()),
+                patch("routes.products._read_import_dataframe", return_value=df),
+                patch("routes.products.ProductCategory", pc_class),
+                patch("routes.products.Product", return_value=new_product),
+            ):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"a,b\r\n1,2"), "products.csv")},
@@ -994,8 +1202,10 @@ class TestProductsExtendedCoverage:
         df = _import_dataframe({"name": ["Bad Row"], "price": ["not-a-number"]})
         with _products_patches() as ctx:
             ctx["product_query"].filter.return_value.first.return_value = None
-            with patch("models.Warehouse.query", _warehouse_query_mock()), \
-                 patch("routes.products._read_import_dataframe", return_value=df):
+            with (
+                patch("models.Warehouse.query", _warehouse_query_mock()),
+                patch("routes.products._read_import_dataframe", return_value=df),
+            ):
                 resp = products_client.post(
                     "/products/import",
                     data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -1004,9 +1214,11 @@ class TestProductsExtendedCoverage:
         assert resp.status_code == 302
 
     def test_import_grid_row_error(self, products_client):
-        with _products_patches(), \
-             patch("models.Warehouse.query", _warehouse_query_mock()), \
-             patch("routes.products.Product", side_effect=RuntimeError("boom")):
+        with (
+            _products_patches(),
+            patch("models.Warehouse.query", _warehouse_query_mock()),
+            patch("routes.products.Product", side_effect=RuntimeError("boom")),
+        ):
             resp = products_client.post(
                 "/products/import-grid",
                 data={"name[]": ["Broken"], "price[]": ["1"]},
@@ -1026,13 +1238,15 @@ class TestProductsExtendedCoverage:
         customer_query = _chain_query(all=[])
         customer_query.filter.return_value.first.side_effect = [merchant, partner]
 
-        with _products_patches() as ctx, \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.Product", return_value=added), \
-             patch("routes.products.db.session", session), \
-             patch("routes.products.tenant_query", return_value=customer_query), \
-             patch("routes.products.ProductPartner") as pp_cls, \
-             patch("models.ProductPriceTier") as tier_cls:
+        with (
+            _products_patches() as ctx,
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.Product", return_value=added),
+            patch("routes.products.db.session", session),
+            patch("routes.products.tenant_query", return_value=customer_query),
+            patch("routes.products.ProductPartner") as pp_cls,
+            patch("models.ProductPriceTier") as tier_cls,
+        ):
             pp_cls.return_value = MagicMock()
             tier_cls.return_value = MagicMock()
             resp = products_client.post(
@@ -1061,10 +1275,12 @@ class TestProductsExtendedCoverage:
         form = _mock_product_form(validate=True)
         customer_query = _chain_query(all=[])
         customer_query.filter.return_value.first.return_value = None
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.tenant_query", return_value=customer_query), \
-             patch("routes.products.render_template", return_value="create") as render:
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.tenant_query", return_value=customer_query),
+            patch("routes.products.render_template", return_value="create") as render,
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={
@@ -1080,11 +1296,13 @@ class TestProductsExtendedCoverage:
         form = _mock_product_form(validate=True)
         session = MagicMock()
         session.commit.side_effect = RuntimeError("db fail")
-        with _products_patches(), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.Product", return_value=_product()), \
-             patch("routes.products.db.session", session), \
-             patch("routes.products.render_template", return_value="create"):
+        with (
+            _products_patches(),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.Product", return_value=_product()),
+            patch("routes.products.db.session", session),
+            patch("routes.products.render_template", return_value="create"),
+        ):
             resp = products_client.post(
                 "/products/create",
                 data={"name": "X", "regular_price": "10", "warehouse_id": "1"},
@@ -1095,15 +1313,22 @@ class TestProductsExtendedCoverage:
         form = _mock_product_form(validate=True)
         product = _product()
         mock_user.can_see_costs.return_value = True
-        with _products_patches(product=product), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=5.0), \
-             patch("routes.products.render_template", return_value="edit") as render, \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=5.0),
+            patch("routes.products.render_template", return_value="edit") as render,
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = products_client.post(
                 "/products/1/edit",
-                data={"name": "X", "regular_price": "10", "cost_price": "99", "current_stock": "5"},
+                data={
+                    "name": "X",
+                    "regular_price": "10",
+                    "cost_price": "99",
+                    "current_stock": "5",
+                },
             )
         assert resp.status_code == 200
 
@@ -1111,11 +1336,13 @@ class TestProductsExtendedCoverage:
         form = _mock_product_form(validate=True)
         product = _product()
         mock_user.can_see_costs.return_value = False
-        with _products_patches(product=product, branch_scope=2), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=5.0), \
-             patch("routes.products.render_template", return_value="edit") as render, \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product, branch_scope=2),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=5.0),
+            patch("routes.products.render_template", return_value="edit") as render,
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = products_client.post(
                 "/products/1/edit",
@@ -1128,11 +1355,13 @@ class TestProductsExtendedCoverage:
         product = _product()
         mock_user.can_see_costs.return_value = False
         adjust = MagicMock()
-        with _products_patches(product=product, branch_scope=2), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=5.0), \
-             patch("routes.products.StockService.adjust_stock", adjust), \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product, branch_scope=2),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=5.0),
+            patch("routes.products.StockService.adjust_stock", adjust),
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = products_client.post(
                 "/products/1/edit",
@@ -1153,10 +1382,12 @@ class TestProductsExtendedCoverage:
         existing_tier = MagicMock()
         existing_tier.price = 80
         existing_tier.is_active = True
-        with _products_patches(product=product), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=10.0), \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=10.0),
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = existing_tier
             resp = products_client.post(
                 "/products/1/edit",
@@ -1178,10 +1409,12 @@ class TestProductsExtendedCoverage:
         product = _product()
         product.extra_fields = {"color": "red"}
         mock_user.can_see_costs.return_value = False
-        with _products_patches(product=product), \
-             patch("forms.product.ProductForm", return_value=form), \
-             patch("routes.products.StockService.get_product_stock", return_value=10.0), \
-             patch("models.ProductPriceTier") as tier_model:
+        with (
+            _products_patches(product=product),
+            patch("forms.product.ProductForm", return_value=form),
+            patch("routes.products.StockService.get_product_stock", return_value=10.0),
+            patch("models.ProductPriceTier") as tier_model,
+        ):
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = products_client.post(
                 "/products/1/edit",
@@ -1198,8 +1431,10 @@ class TestProductsExtendedCoverage:
 
     def test_delete_json_with_stock_error(self, products_client):
         product = _product()
-        with _products_patches(product=product), \
-             patch("routes.products.StockService.get_product_stock", return_value=3.0):
+        with (
+            _products_patches(product=product),
+            patch("routes.products.StockService.get_product_stock", return_value=3.0),
+        ):
             resp = products_client.post(
                 "/products/1/delete",
                 headers={"X-Requested-With": "XMLHttpRequest"},
@@ -1215,11 +1450,13 @@ class TestProductsExtendedCoverage:
         pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
         session = MagicMock()
         session.commit.side_effect = RuntimeError("delete fail")
-        with _products_patches(product=product), \
-             patch("routes.products.StockService.get_product_stock", return_value=0.0), \
-             patch("routes.products.db.session", session), \
-             patch("models.SaleLine", sl), \
-             patch("models.PurchaseLine", pl):
+        with (
+            _products_patches(product=product),
+            patch("routes.products.StockService.get_product_stock", return_value=0.0),
+            patch("routes.products.db.session", session),
+            patch("models.SaleLine", sl),
+            patch("models.PurchaseLine", pl),
+        ):
             resp = products_client.post("/products/1/delete", follow_redirects=False)
         assert resp.status_code == 302
 
@@ -1231,11 +1468,13 @@ class TestProductsExtendedCoverage:
         pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
         session = MagicMock()
         session.commit.side_effect = RuntimeError("fail")
-        with _products_patches(product=product), \
-             patch("routes.products.StockService.get_product_stock", return_value=0.0), \
-             patch("routes.products.db.session", session), \
-             patch("models.SaleLine", sl), \
-             patch("models.PurchaseLine", pl):
+        with (
+            _products_patches(product=product),
+            patch("routes.products.StockService.get_product_stock", return_value=0.0),
+            patch("routes.products.db.session", session),
+            patch("models.SaleLine", sl),
+            patch("models.PurchaseLine", pl),
+        ):
             resp = products_client.post(
                 "/products/1/delete",
                 content_type="application/json",
@@ -1247,9 +1486,11 @@ class TestProductsExtendedCoverage:
         session.commit.side_effect = RuntimeError("db")
         pc_class = MagicMock()
         pc_class.query.filter.return_value.first.return_value = None
-        with _products_patches(), \
-             patch("routes.products.db.session", session), \
-             patch("routes.products.ProductCategory", pc_class):
+        with (
+            _products_patches(),
+            patch("routes.products.db.session", session),
+            patch("routes.products.ProductCategory", pc_class),
+        ):
             resp = products_client.post(
                 "/products/categories/create",
                 data={"name": "Fail Cat"},
@@ -1258,9 +1499,11 @@ class TestProductsExtendedCoverage:
 
     def test_adjust_stock_branch_single_warehouse(self, products_client):
         wh = _warehouse(3)
-        with _products_patches(branch_scope=2), \
-             patch("routes.products.get_accessible_warehouses", return_value=[wh]), \
-             patch("routes.products.StockService.get_product_stock", return_value=4.0):
+        with (
+            _products_patches(branch_scope=2),
+            patch("routes.products.get_accessible_warehouses", return_value=[wh]),
+            patch("routes.products.StockService.get_product_stock", return_value=4.0),
+        ):
             resp = products_client.post(
                 "/products/1/adjust-stock",
                 data={"adjustment_type": "add", "quantity": "1"},
@@ -1277,11 +1520,20 @@ class TestProductsExtendedCoverage:
         assert resp.status_code == 400
 
     def test_adjust_stock_subtract_alternatives_exception(self, products_client):
-        with _products_patches(), \
-             patch("routes.products._get_alternative_warehouses", side_effect=RuntimeError("alt fail")):
+        with (
+            _products_patches(),
+            patch(
+                "routes.products._get_alternative_warehouses",
+                side_effect=RuntimeError("alt fail"),
+            ),
+        ):
             resp = products_client.post(
                 "/products/1/adjust-stock",
-                data={"adjustment_type": "subtract", "quantity": "999", "warehouse_id": "1"},
+                data={
+                    "adjustment_type": "subtract",
+                    "quantity": "999",
+                    "warehouse_id": "1",
+                },
             )
         assert resp.status_code == 400
         assert resp.get_json()["alternative_locations"] == []
@@ -1304,9 +1556,11 @@ class TestProductsExtendedCoverage:
 
         app = app_factory(products_bp)
         wh = _warehouse(2, name="Alt")
-        with app.app_context(), \
-             patch("routes.products.get_accessible_warehouses", return_value=[wh]), \
-             patch("routes.products.StockService.get_product_stock", return_value=12.0):
+        with (
+            app.app_context(),
+            patch("routes.products.get_accessible_warehouses", return_value=[wh]),
+            patch("routes.products.StockService.get_product_stock", return_value=12.0),
+        ):
             result = _get_alternative_warehouses(1, 1)
         assert result[0]["warehouse_id"] == 2
         assert result[0]["available_stock"] == 12.0
@@ -1342,9 +1596,14 @@ class TestProductsExtendedCoverage:
         product = _product()
         app = app_factory(products_bp)
         client = app.test_client()
-        with patch("routes.products.tenant_get_or_404", return_value=product), \
-             patch("utils.decorators.report_branch_scope_id", return_value=3), \
-             patch("services.label_print_service.get_single_label_html", return_value="html") as label:
+        with (
+            patch("routes.products.tenant_get_or_404", return_value=product),
+            patch("utils.decorators.report_branch_scope_id", return_value=3),
+            patch(
+                "services.label_print_service.get_single_label_html",
+                return_value="html",
+            ) as label,
+        ):
             resp = client.get("/products/1/print-label")
         assert resp.status_code == 200
         assert label.call_args[1]["branch_id"] == 3
@@ -1354,18 +1613,26 @@ class TestProductsExtendedCoverage:
 
         app = app_factory(products_bp)
         client = app.test_client()
-        with patch("services.label_print_service.get_product_labels_html", return_value="batch") as labels:
-            resp = client.post("/products/print-labels", data={"product_ids": ["1", "2"]})
+        with patch(
+            "services.label_print_service.get_product_labels_html", return_value="batch"
+        ) as labels:
+            resp = client.post(
+                "/products/print-labels", data={"product_ids": ["1", "2"]}
+            )
         assert resp.status_code == 200
         labels.assert_called_once()
 
-    def test_scoped_customers_query_with_branch(self, app_factory, bypass_permission_auth):
+    def test_scoped_customers_query_with_branch(
+        self, app_factory, bypass_permission_auth
+    ):
         from routes.products import _scoped_customers_query, products_bp
 
         app = app_factory(products_bp)
         query = _chain_query(all=[])
-        with app.app_context(), \
-             patch("routes.products.branch_scope_id", return_value=5), \
-             patch("routes.products.tenant_query", return_value=query):
+        with (
+            app.app_context(),
+            patch("routes.products.branch_scope_id", return_value=5),
+            patch("routes.products.tenant_query", return_value=query),
+        ):
             result = _scoped_customers_query("merchant")
         assert result is query

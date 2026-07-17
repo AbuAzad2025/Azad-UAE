@@ -1,97 +1,98 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from extensions import db
-from models import EmailList, EmailCampaign, EmailTemplate, EmailSubscriber
 from services.email_marketing_service import EmailMarketingService
 from utils.decorators import permission_required
-from utils.tenanting import get_active_tenant_id
 
-email_marketing_bp = Blueprint('email_marketing', __name__, url_prefix='/marketing')
+email_marketing_bp = Blueprint("email_marketing", __name__, url_prefix="/marketing")
 
 
-@email_marketing_bp.route('/')
+@email_marketing_bp.route("/")
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def campaigns():
     campaigns = EmailMarketingService.list_campaigns(current_user)
-    return render_template('marketing/campaign_list.html', campaigns=campaigns)
+    return render_template("marketing/campaign_list.html", campaigns=campaigns)
 
 
-@email_marketing_bp.route('/campaigns/create', methods=['GET', 'POST'])
+@email_marketing_bp.route("/campaigns/create", methods=["GET", "POST"])
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def create_campaign():
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             EmailMarketingService.create_campaign(request.form, current_user)
-            flash('تم إنشاء الحملة', 'success')
-            return redirect(url_for('email_marketing.campaigns'))
+            flash("تم إنشاء الحملة", "success")
+            return redirect(url_for("email_marketing.campaigns"))
         except Exception as e:
-            flash(f'حدث خطأ: {e}', 'danger')
+            flash(f"حدث خطأ: {e}", "danger")
     lists = EmailMarketingService.list_lists(current_user)
     templates = EmailMarketingService.list_templates(current_user)
-    return render_template('marketing/campaign_form.html', lists=lists, templates=templates)
+    return render_template(
+        "marketing/campaign_form.html", lists=lists, templates=templates
+    )
 
 
-@email_marketing_bp.route('/campaigns/<int:campaign_id>')
+@email_marketing_bp.route("/campaigns/<int:campaign_id>")
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def campaign_detail(campaign_id):
     try:
         stats = EmailMarketingService.get_campaign_stats(campaign_id, current_user)
     except ValueError as e:
-        flash(str(e), 'danger')
-        return redirect(url_for('email_marketing.campaigns'))
-    return render_template('marketing/stats.html', stats=stats)
+        flash(str(e), "danger")
+        return redirect(url_for("email_marketing.campaigns"))
+    return render_template("marketing/stats.html", stats=stats)
 
 
-@email_marketing_bp.route('/campaigns/<int:campaign_id>/send', methods=['POST'])
+@email_marketing_bp.route("/campaigns/<int:campaign_id>/send", methods=["POST"])
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def send_campaign(campaign_id):
     try:
         EmailMarketingService.send_campaign(campaign_id, current_user)
-        flash('تم إرسال الحملة', 'success')
+        flash("تم إرسال الحملة", "success")
     except ValueError as e:
-        flash(str(e), 'danger')
-    return redirect(url_for('email_marketing.campaign_detail', campaign_id=campaign_id))
+        flash(str(e), "danger")
+    return redirect(url_for("email_marketing.campaign_detail", campaign_id=campaign_id))
 
 
-@email_marketing_bp.route('/lists')
+@email_marketing_bp.route("/lists")
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def lists():
     lists = EmailMarketingService.list_lists(current_user)
-    return render_template('marketing/campaign_form.html', lists=lists, tab='lists')
+    return render_template("marketing/campaign_form.html", lists=lists, tab="lists")
 
 
-@email_marketing_bp.route('/lists/create', methods=['POST'])
+@email_marketing_bp.route("/lists/create", methods=["POST"])
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def create_list():
     try:
         EmailMarketingService.create_list(request.form, current_user)
-        flash('تم إنشاء القائمة', 'success')
+        flash("تم إنشاء القائمة", "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), 'danger')
-    return redirect(url_for('email_marketing.lists'))
+        flash(str(e), "danger")
+    return redirect(url_for("email_marketing.lists"))
 
 
-@email_marketing_bp.route('/templates')
+@email_marketing_bp.route("/templates")
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def templates():
     templates = EmailMarketingService.list_templates(current_user)
-    return render_template('marketing/campaign_form.html', templates=templates, tab='templates')
+    return render_template(
+        "marketing/campaign_form.html", templates=templates, tab="templates"
+    )
 
 
-@email_marketing_bp.route('/templates/create', methods=['POST'])
+@email_marketing_bp.route("/templates/create", methods=["POST"])
 @login_required
-@permission_required('marketing.manage')
+@permission_required("marketing.manage")
 def create_template():
     try:
         EmailMarketingService.create_template(request.form, current_user)
-        flash('تم إنشاء القالب', 'success')
+        flash("تم إنشاء القالب", "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), 'danger')
-    return redirect(url_for('email_marketing.templates'))
+        flash(str(e), "danger")
+    return redirect(url_for("email_marketing.templates"))

@@ -2,6 +2,7 @@
 Unified Input Validation Layer
 Centralized validation to ensure data integrity across all endpoints.
 """
+
 from typing import Optional, Tuple
 from datetime import datetime
 import re
@@ -9,10 +10,10 @@ import re
 
 class ValidationError(Exception):
     """Raised when input validation fails."""
-    pass
 
 
 # ==================== Numeric Validators ====================
+
 
 def validate_positive_amount(value, field_name: str = "amount") -> float:
     """Validate that a value is a positive number."""
@@ -53,15 +54,20 @@ def validate_percentage(value, field_name: str = "percentage") -> float:
 
 # ==================== String Validators ====================
 
-def validate_required_string(value: Optional[str], field_name: str, max_length: int = 255) -> str:
+
+def validate_required_string(
+    value: Optional[str], field_name: str, max_length: int = 255
+) -> str:
     """Validate a required string field."""
     if not value or not str(value).strip():
         raise ValidationError(f"{field_name} is required")
     text = str(value).strip()
     if len(text) > max_length:
-        raise ValidationError(f"{field_name} exceeds maximum length of {max_length} characters")
+        raise ValidationError(
+            f"{field_name} exceeds maximum length of {max_length} characters"
+        )
     # Prevent control characters
-    if any(ord(c) < 32 and c not in '\t\n\r' for c in text):
+    if any(ord(c) < 32 and c not in "\t\n\r" for c in text):
         raise ValidationError(f"{field_name} contains invalid characters")
     return text
 
@@ -73,7 +79,7 @@ def validate_email(value: Optional[str]) -> Optional[str]:
     email = str(value).strip().lower()
     if len(email) > 254:
         raise ValidationError("Email exceeds maximum length")
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     if not re.match(pattern, email):
         raise ValidationError("Invalid email format")
     return email
@@ -83,7 +89,7 @@ def validate_phone(value: Optional[str]) -> Optional[str]:
     """Validate phone number format if provided."""
     if not value:
         return None
-    phone = re.sub(r'[^\d+]', '', str(value))
+    phone = re.sub(r"[^\d+]", "", str(value))
     if len(phone) < 7 or len(phone) > 20:
         raise ValidationError("Phone number must be 7-20 digits")
     return phone
@@ -91,20 +97,23 @@ def validate_phone(value: Optional[str]) -> Optional[str]:
 
 # ==================== Date Validators ====================
 
-def validate_date_range(date_from: Optional[str], date_to: Optional[str]) -> Tuple[Optional[datetime], Optional[datetime]]:
+
+def validate_date_range(
+    date_from: Optional[str], date_to: Optional[str]
+) -> Tuple[Optional[datetime], Optional[datetime]]:
     """Validate a date range."""
     from_date = None
     to_date = None
 
     if date_from:
         try:
-            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            from_date = datetime.strptime(date_from, "%Y-%m-%d")
         except ValueError:
             raise ValidationError("Invalid from_date format. Use YYYY-MM-DD")
 
     if date_to:
         try:
-            to_date = datetime.strptime(date_to, '%Y-%m-%d')
+            to_date = datetime.strptime(date_to, "%Y-%m-%d")
         except ValueError:
             raise ValidationError("Invalid to_date format. Use YYYY-MM-DD")
 
@@ -115,6 +124,7 @@ def validate_date_range(date_from: Optional[str], date_to: Optional[str]) -> Tup
 
 
 # ==================== ID Validators ====================
+
 
 def validate_id(value, field_name: str = "id") -> int:
     """Validate a database ID."""
@@ -131,14 +141,17 @@ def validate_id(value, field_name: str = "id") -> int:
 
 def validate_optional_id(value, field_name: str = "id") -> Optional[int]:
     """Validate an optional database ID."""
-    if value is None or value == '':
+    if value is None or value == "":
         return None
     return validate_id(value, field_name)
 
 
 # ==================== Collection Validators ====================
 
-def validate_pagination(page: int, per_page: int, max_per_page: int = 100) -> Tuple[int, int]:
+
+def validate_pagination(
+    page: int, per_page: int, max_per_page: int = 100
+) -> Tuple[int, int]:
     """Validate and normalize pagination parameters."""
     if page < 1:
         page = 1

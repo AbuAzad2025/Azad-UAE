@@ -1,4 +1,5 @@
 """Reports routes — tenant-scoped helpers and index access."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -11,12 +12,13 @@ import pytest
 def reports_client(app_factory, mocker):
     user = MagicMock(is_authenticated=True, tenant_id=1, id=1)
     user.has_permission.return_value = True
-    mocker.patch('flask_login.utils._get_user', return_value=user)
-    mocker.patch('extensions.limiter.limit', return_value=lambda f: f)
-    mocker.patch('utils.tenanting.get_active_tenant_id', return_value=1)
-    mocker.patch('utils.decorators.report_branch_scope_id', return_value=None)
-    mocker.patch('utils.auth_helpers.is_global_owner_user', return_value=False)
+    mocker.patch("flask_login.utils._get_user", return_value=user)
+    mocker.patch("extensions.limiter.limit", return_value=lambda f: f)
+    mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
+    mocker.patch("utils.decorators.report_branch_scope_id", return_value=None)
+    mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
     from routes.reports import reports_bp
+
     app = app_factory(reports_bp)
     return app.test_client()
 
@@ -25,48 +27,56 @@ class TestReportHelpers:
     def test_get_confirmed_sale_paid_aed(self, app, mocker):
         q = MagicMock()
         q.filter.return_value = q
-        q.scalar.return_value = Decimal('150.50')
-        mocker.patch('routes.reports.db.session.query', return_value=q)
-        mocker.patch('utils.cache_decorators.cache.get', return_value=None)
-        mocker.patch('utils.cache_decorators.cache.set')
+        q.scalar.return_value = Decimal("150.50")
+        mocker.patch("routes.reports.db.session.query", return_value=q)
+        mocker.patch("utils.cache_decorators.cache.get", return_value=None)
+        mocker.patch("utils.cache_decorators.cache.set")
         from routes.reports import get_confirmed_sale_paid_aed
+
         with app.app_context():
-            assert get_confirmed_sale_paid_aed(1, tenant_id=1, branch_id=2) == Decimal('150.50')
+            assert get_confirmed_sale_paid_aed(1, tenant_id=1, branch_id=2) == Decimal(
+                "150.50"
+            )
 
     def test_get_confirmed_supplier_paid_aed(self, app, mocker):
         q = MagicMock()
         q.filter.return_value = q
-        q.scalar.return_value = Decimal('80')
-        mocker.patch('routes.reports.db.session.query', return_value=q)
-        mocker.patch('utils.cache_decorators.cache.get', return_value=None)
-        mocker.patch('utils.cache_decorators.cache.set')
+        q.scalar.return_value = Decimal("80")
+        mocker.patch("routes.reports.db.session.query", return_value=q)
+        mocker.patch("utils.cache_decorators.cache.get", return_value=None)
+        mocker.patch("utils.cache_decorators.cache.set")
         from routes.reports import get_confirmed_supplier_paid_aed
+
         with app.app_context():
-            assert get_confirmed_supplier_paid_aed(3, purchase_id=9, tenant_id=1) == Decimal('80')
+            assert get_confirmed_supplier_paid_aed(
+                3, purchase_id=9, tenant_id=1
+            ) == Decimal("80")
 
     def test_scoped_customer_query_all_branches(self, mocker):
-        mocker.patch('routes.reports.report_branch_scope_id', return_value=None)
-        mocker.patch('routes.reports.tenant_query', return_value='customers')
+        mocker.patch("routes.reports.report_branch_scope_id", return_value=None)
+        mocker.patch("routes.reports.tenant_query", return_value="customers")
         from routes.reports import _scoped_customer_query
-        assert _scoped_customer_query() == 'customers'
+
+        assert _scoped_customer_query() == "customers"
 
     def test_scoped_supplier_query_branch_scoped(self, mocker):
-        mocker.patch('routes.reports.report_branch_scope_id', return_value=5)
+        mocker.patch("routes.reports.report_branch_scope_id", return_value=5)
         supplier_q = MagicMock()
-        mocker.patch('routes.reports.tenant_query', return_value=supplier_q)
+        mocker.patch("routes.reports.tenant_query", return_value=supplier_q)
         from routes.reports import _scoped_supplier_query
+
         _scoped_supplier_query()
         supplier_q.filter.assert_called()
-
 
     def test_get_confirmed_supplier_paid_aed_branch(self, app, mocker):
         q = MagicMock()
         q.filter.return_value = q
-        q.scalar.return_value = Decimal('80')
-        mocker.patch('routes.reports.db.session.query', return_value=q)
-        mocker.patch('utils.cache_decorators.cache.get', return_value=None)
-        mocker.patch('utils.cache_decorators.cache.set')
+        q.scalar.return_value = Decimal("80")
+        mocker.patch("routes.reports.db.session.query", return_value=q)
+        mocker.patch("utils.cache_decorators.cache.get", return_value=None)
+        mocker.patch("utils.cache_decorators.cache.set")
         from routes.reports import get_confirmed_supplier_paid_aed
+
         with app.app_context():
             get_confirmed_supplier_paid_aed(3, tenant_id=1, branch_id=4)
         assert q.filter.call_count >= 2
@@ -74,70 +84,79 @@ class TestReportHelpers:
     def test_get_confirmed_sale_paid_aed_branch(self, app, mocker):
         q = MagicMock()
         q.filter.return_value = q
-        q.scalar.return_value = Decimal('25')
-        mocker.patch('routes.reports.db.session.query', return_value=q)
-        mocker.patch('utils.cache_decorators.cache.get', return_value=None)
-        mocker.patch('utils.cache_decorators.cache.set')
+        q.scalar.return_value = Decimal("25")
+        mocker.patch("routes.reports.db.session.query", return_value=q)
+        mocker.patch("utils.cache_decorators.cache.get", return_value=None)
+        mocker.patch("utils.cache_decorators.cache.set")
         from routes.reports import get_confirmed_sale_paid_aed
+
         with app.app_context():
-            assert get_confirmed_sale_paid_aed(9, tenant_id=1, branch_id=2) == Decimal('25')
+            assert get_confirmed_sale_paid_aed(9, tenant_id=1, branch_id=2) == Decimal(
+                "25"
+            )
 
     def test_scoped_customer_query_branch_scoped(self, mocker):
-        mocker.patch('routes.reports.report_branch_scope_id', return_value=3)
+        mocker.patch("routes.reports.report_branch_scope_id", return_value=3)
         customer_q = MagicMock()
-        mocker.patch('routes.reports.tenant_query', return_value=customer_q)
+        mocker.patch("routes.reports.tenant_query", return_value=customer_q)
         from routes.reports import _scoped_customer_query
+
         _scoped_customer_query()
         customer_q.filter.assert_called_once()
 
 
 class TestReportsRoutes:
     def test_index_renders(self, reports_client, mocker):
-        mocker.patch('routes.reports.render_template', return_value='ok')
-        resp = reports_client.get('/reports/')
+        mocker.patch("routes.reports.render_template", return_value="ok")
+        resp = reports_client.get("/reports/")
         assert resp.status_code == 200
 
     def test_api_model_fields(self, reports_client, mocker):
-        mocker.patch('routes.reports.tenant_get_or_404', return_value=MagicMock())
-        resp = reports_client.get('/reports/api/model-fields/customer/1')
+        mocker.patch("routes.reports.tenant_get_or_404", return_value=MagicMock())
+        resp = reports_client.get("/reports/api/model-fields/customer/1")
         assert resp.status_code in (200, 404, 500)
 
     def test_enforce_report_tenant_for_non_owner(self, app_factory, mocker):
         from werkzeug.exceptions import Forbidden
+
         user = MagicMock(is_authenticated=True, tenant_id=None, id=1)
-        mocker.patch('flask_login.utils._get_user', return_value=user)
-        mocker.patch('utils.auth_helpers.is_global_owner_user', return_value=False)
-        mocker.patch('routes.reports.require_report_tenant_id', side_effect=Forbidden())
+        mocker.patch("flask_login.utils._get_user", return_value=user)
+        mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
+        mocker.patch("routes.reports.require_report_tenant_id", side_effect=Forbidden())
         from routes.reports import reports_bp
+
         app = app_factory(reports_bp)
         client = app.test_client()
-        with patch('routes.reports.render_template', return_value='x'):
-            resp = client.get('/reports/sales')
+        with patch("routes.reports.render_template", return_value="x"):
+            resp = client.get("/reports/sales")
         assert resp.status_code == 403
 
     def test_partners_report_renders(self, reports_client, mocker):
-        mocker.patch('routes.reports.render_template', return_value='ok')
-        mocker.patch('routes.reports.tenant_query', return_value=MagicMock())
-        mocker.patch('routes.reports.db.session.query', return_value=MagicMock(
-            exists=MagicMock(return_value=MagicMock()),
-            scalar=MagicMock(return_value=False),
-        ))
-        resp = reports_client.get('/reports/partners')
+        mocker.patch("routes.reports.render_template", return_value="ok")
+        mocker.patch("routes.reports.tenant_query", return_value=MagicMock())
+        mocker.patch(
+            "routes.reports.db.session.query",
+            return_value=MagicMock(
+                exists=MagicMock(return_value=MagicMock()),
+                scalar=MagicMock(return_value=False),
+            ),
+        )
+        resp = reports_client.get("/reports/partners")
         assert resp.status_code == 200
 
     def test_inventory_reconciliation_page(self, reports_client, mocker):
-        mocker.patch('routes.reports.render_template', return_value='ok')
+        mocker.patch("routes.reports.render_template", return_value="ok")
         wh_q = MagicMock()
         wh_q.filter_by.return_value = wh_q
         wh_q.filter.return_value = wh_q
         wh_q.order_by.return_value = wh_q
         wh_q.all.return_value = []
-        mocker.patch('models.Warehouse.query', wh_q)
-        mocker.patch('utils.branching.get_accessible_branches', return_value=[])
-        mocker.patch('utils.branching.user_can_access_branch', return_value=True)
+        mocker.patch("models.Warehouse.query", wh_q)
+        mocker.patch("utils.branching.get_accessible_branches", return_value=[])
+        mocker.patch("utils.branching.user_can_access_branch", return_value=True)
         mocker.patch(
-            'services.inventory_reconciliation_service.InventoryReconciliationService.build_warehouse_summary',
-            return_value={'warehouse_summary': [], 'summary': {}},
+            "services.inventory_reconciliation_service.InventoryReconciliationService.build_warehouse_summary",
+            return_value={"warehouse_summary": [], "summary": {}},
         )
-        resp = reports_client.get('/reports/inventory-reconciliation?branch_id=1')
+        resp = reports_client.get("/reports/inventory-reconciliation?branch_id=1")
         assert resp.status_code == 200

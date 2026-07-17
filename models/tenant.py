@@ -13,7 +13,8 @@ class Tenant(db.Model):
     """
     معلومات الكراج/الشركة المستأجرة للنظام
     """
-    __tablename__ = 'tenants'
+
+    __tablename__ = "tenants"
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -22,14 +23,16 @@ class Tenant(db.Model):
     name_en = db.Column(db.String(200))
     slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
 
-    business_type = db.Column(db.String(50), default='general')  # retail, wholesale, services, etc.
+    business_type = db.Column(
+        db.String(50), default="general"
+    )  # retail, wholesale, services, etc.
     industry = db.Column(db.String(100))  # automotive, heavy_equipment, etc.
 
     # Contact Info - معلومات التواصل
     address_ar = db.Column(db.Text)
     address_en = db.Column(db.Text)
     city = db.Column(db.String(100))
-    country = db.Column(db.String(100), default='PS')
+    country = db.Column(db.String(100), default="PS")
 
     phone_1 = db.Column(db.String(50))
     phone_2 = db.Column(db.String(50))
@@ -47,12 +50,16 @@ class Tenant(db.Model):
     logo_url = db.Column(db.String(500))
     logo_dark_url = db.Column(db.String(500))
     favicon_url = db.Column(db.String(500))
-    brand_color_primary = db.Column(db.String(20), default='#007A3D')
-    brand_color_secondary = db.Column(db.String(20), default='#D4AF37')
+    brand_color_primary = db.Column(db.String(20), default="#007A3D")
+    brand_color_secondary = db.Column(db.String(20), default="#D4AF37")
 
     # Subscription - الاشتراك
-    subscription_plan = db.Column(db.String(50), default='basic')  # basic, pro, enterprise
-    subscription_plan_duration = db.Column(db.String(20), default='monthly')  # monthly, annual, lifetime
+    subscription_plan = db.Column(
+        db.String(50), default="basic"
+    )  # basic, pro, enterprise
+    subscription_plan_duration = db.Column(
+        db.String(20), default="monthly"
+    )  # monthly, annual, lifetime
     subscription_start = db.Column(db.DateTime)
     subscription_end = db.Column(db.DateTime)
     is_trial = db.Column(db.Boolean, default=False)
@@ -85,20 +92,22 @@ class Tenant(db.Model):
     enable_auto_backup = db.Column(db.Boolean, default=True)
 
     # Preferences - التفضيلات
-    default_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
-    default_language = db.Column(db.String(10), default='ar')
-    timezone = db.Column(db.String(50), default='Asia/Hebron')
-    date_format = db.Column(db.String(20), default='%Y-%m-%d')
-    time_format = db.Column(db.String(20), default='%H:%M')
+    default_currency = db.Column(
+        db.String(3), default=context_aware_default_currency
+    )  # TODO: use Config.DEFAULT_CURRENCY
+    default_language = db.Column(db.String(10), default="ar")
+    timezone = db.Column(db.String(50), default="Asia/Hebron")
+    date_format = db.Column(db.String(20), default="%Y-%m-%d")
+    time_format = db.Column(db.String(20), default="%H:%M")
 
     # Financial Settings - إعدادات مالية
     fiscal_year_start = db.Column(db.Integer, default=1)  # Month: 1-12
     enable_tax = db.Column(db.Boolean, default=True)
-    default_tax_rate = db.Column(db.Numeric(5, 2), default=Decimal('5.00'))
-    vat_country = db.Column(db.String(2), default='PS')  # PS, IL, AE
+    default_tax_rate = db.Column(db.Numeric(5, 2), default=Decimal("5.00"))
+    vat_country = db.Column(db.String(2), default="PS")  # PS, IL, AE
 
     # Dynamic Base Currency - العملة الأساسية الديناميكية للمستأجر
-    base_currency = db.Column(db.String(3), default='ILS')  # ILS, AED, USD, JOD, etc.
+    base_currency = db.Column(db.String(3), default="ILS")  # ILS, AED, USD, JOD, etc.
 
     # Pricing Method - هل الأسعار تشمل الضريبة؟
     prices_include_vat = db.Column(db.Boolean, default=False, nullable=False)
@@ -106,12 +115,14 @@ class Tenant(db.Model):
     @property
     def get_base_currency(self):
         """Return the tenant's base currency. Falls back to default_currency if base_currency is not set."""
-        return (self.base_currency or self.default_currency or 'ILS').strip().upper()
+        return (self.base_currency or self.default_currency or "ILS").strip().upper()
 
     def get_currency_for_display(self):
         """Return the currency symbol for the tenant's base currency."""
         from utils.currency_utils import get_currency_symbol
+
         return get_currency_symbol(self.get_base_currency)
+
     vat_number = db.Column(db.String(100))
 
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
@@ -119,24 +130,35 @@ class Tenant(db.Model):
     suspension_reason = db.Column(db.Text)
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
-                          onupdate=lambda: datetime.now(timezone.utc))
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_by = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=True, index=True
+    )
 
-    created_by_user = db.relationship('User', foreign_keys=[created_by])
+    created_by_user = db.relationship("User", foreign_keys=[created_by])
 
-    def business_type_label(self, lang='ar'):
+    def business_type_label(self, lang="ar"):
         from services.industry_service import BUSINESS_TYPE_LABELS
-        code = self.business_type or 'general'
+
+        code = self.business_type or "general"
         labels = BUSINESS_TYPE_LABELS.get(code)
         if not labels:
             return code
         ar, en = labels
-        return f'{ar} / {en}' if lang == 'both' else ar
+        return f"{ar} / {en}" if lang == "both" else ar
 
     def __repr__(self):
-        return f'<Tenant {self.name}>'
+        return f"<Tenant {self.name}>"
 
     @staticmethod
     def get_current():
@@ -144,10 +166,13 @@ class Tenant(db.Model):
         try:
             from flask_login import current_user
             from utils.tenanting import get_active_tenant_id, is_platform_owner
+
             if current_user and getattr(current_user, "is_authenticated", False):
                 active_tid = get_active_tenant_id(current_user)
                 if active_tid:
-                    tenant = Tenant.query.filter_by(id=int(active_tid), is_active=True).first()
+                    tenant = Tenant.query.filter_by(
+                        id=int(active_tid), is_active=True
+                    ).first()
                     if tenant:
                         return tenant
                 if not is_platform_owner(current_user):
@@ -160,8 +185,9 @@ class Tenant(db.Model):
 
         import logging
         from flask import has_request_context, request
+
         logger = logging.getLogger("azad.security")
-        ip = request.remote_addr if has_request_context() else 'unknown'
+        ip = request.remote_addr if has_request_context() else "unknown"
         logger.warning(
             "Tenant.get_current() returned None — unauthenticated or no active tenant resolved (ip=%s)",
             ip,
@@ -170,7 +196,7 @@ class Tenant(db.Model):
 
     @property
     def is_lifetime(self):
-        return self.subscription_plan_duration == 'lifetime'
+        return self.subscription_plan_duration == "lifetime"
 
     def is_subscription_active(self):
         if self.is_lifetime:
@@ -187,26 +213,29 @@ class Tenant(db.Model):
             return max(0, delta.days)
         return 9999
 
-    def get_subscription_duration_display(self, lang='ar'):
-        labels = {'monthly': 'شهري', 'annual': 'سنوي', 'lifetime': 'مدى الحياة'}
-        if lang == 'en':
-            labels = {'monthly': 'Monthly', 'annual': 'Annual', 'lifetime': 'Lifetime'}
-        return labels.get(self.subscription_plan_duration, self.subscription_plan_duration)
+    def get_subscription_duration_display(self, lang="ar"):
+        labels = {"monthly": "شهري", "annual": "سنوي", "lifetime": "مدى الحياة"}
+        if lang == "en":
+            labels = {"monthly": "Monthly", "annual": "Annual", "lifetime": "Lifetime"}
+        return labels.get(
+            self.subscription_plan_duration, self.subscription_plan_duration
+        )
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'name_ar': self.name_ar,
-            'slug': self.slug,
-            'business_type': self.business_type,
-            'country': self.country,
-            'default_currency': self.default_currency,
-            'is_active': self.is_active,
-            'subscription_plan': self.subscription_plan,
-            'subscription_plan_duration': self.subscription_plan_duration,
-            'subscription_end': self.subscription_end.isoformat() if self.subscription_end else None,
-            'enable_auto_backup': self.enable_auto_backup,
-            'is_trial': self.is_trial,
+            "id": self.id,
+            "name": self.name,
+            "name_ar": self.name_ar,
+            "slug": self.slug,
+            "business_type": self.business_type,
+            "country": self.country,
+            "default_currency": self.default_currency,
+            "is_active": self.is_active,
+            "subscription_plan": self.subscription_plan,
+            "subscription_plan_duration": self.subscription_plan_duration,
+            "subscription_end": (
+                self.subscription_end.isoformat() if self.subscription_end else None
+            ),
+            "enable_auto_backup": self.enable_auto_backup,
+            "is_trial": self.is_trial,
         }
-

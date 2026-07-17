@@ -5,17 +5,25 @@ from wtforms.validators import DataRequired, Optional, NumberRange, Email
 
 
 class PurchaseForm(FlaskForm):
-    supplier_name = StringField('اسم المورد', validators=[DataRequired()])
-    supplier_phone = StringField('هاتف المورد', validators=[Optional()])
-    supplier_email = StringField('بريد المورد', validators=[Optional(), Email()])
-    currency = SelectField('العملة', choices=[
-        ('AED', 'درهم'),
-        ('USD', 'دولار'),
-        ('EUR', 'يورو')
-    ], default='AED', validators=[DataRequired()])  # TODO: use Config.DEFAULT_CURRENCY
-    exchange_rate = DecimalField('سعر الصرف (اختياري)', validators=[Optional(), NumberRange(min=0)])
-    discount_amount = DecimalField('الخصم', default=Decimal(), validators=[Optional(), NumberRange(min=0)])
-    tax_rate = DecimalField('الضريبة %', default=Decimal(), validators=[Optional(), NumberRange(min=0, max=100)])
-    notes = TextAreaField('ملاحظات', validators=[Optional()])
-    submit = SubmitField('حفظ')
-
+    supplier_name = StringField("اسم المورد", validators=[DataRequired()])
+    supplier_phone = StringField("هاتف المورد", validators=[Optional()])
+    supplier_email = StringField("بريد المورد", validators=[Optional(), Email()])
+    currency = SelectField(
+        "العملة",
+        choices=[("AED", "درهم"), ("USD", "دولار"), ("EUR", "يورو")],
+        default="AED",
+        validators=[DataRequired()],
+    )  # TODO: use Config.DEFAULT_CURRENCY
+    exchange_rate = DecimalField(
+        "سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)]
+    )
+    discount_amount = DecimalField(
+        "الخصم", default=Decimal(), validators=[Optional(), NumberRange(min=0)]
+    )
+    tax_rate = DecimalField(
+        "الضريبة %",
+        default=Decimal(),
+        validators=[Optional(), NumberRange(min=0, max=100)],
+    )
+    notes = TextAreaField("ملاحظات", validators=[Optional()])
+    submit = SubmitField("حفظ")

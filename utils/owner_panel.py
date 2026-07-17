@@ -1,10 +1,11 @@
 """
 Owner / company admin panel data builders — display-only, no schema changes.
 """
+
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import func
@@ -58,7 +59,12 @@ def build_platform_overview(backups: list | None = None) -> dict:
 
     backups = backups if backups is not None else BackupService.list_backups()
     tenant_count = db.session.query(func.count(Tenant.id)).scalar() or 0
-    active_tenant_count = db.session.query(func.count(Tenant.id)).filter(Tenant.is_active == True).scalar() or 0
+    active_tenant_count = (
+        db.session.query(func.count(Tenant.id))
+        .filter(Tenant.is_active == True)
+        .scalar()
+        or 0
+    )
     suspended_tenant_count = tenant_count - active_tenant_count
 
     user_counts = dict(
@@ -100,7 +106,12 @@ def build_platform_overview(backups: list | None = None) -> dict:
     sys_backup = _system_backup_status(backups)
     warnings: list[str] = []
 
-    recent_active = Tenant.query.filter(Tenant.is_active == True).order_by(Tenant.id.desc()).limit(200).all()
+    recent_active = (
+        Tenant.query.filter(Tenant.is_active == True)
+        .order_by(Tenant.id.desc())
+        .limit(200)
+        .all()
+    )
     for t in recent_active:
         uc = int(user_counts.get(t.id) or 0)
         if uc == 0 and (t.slug or "").lower() != "nasrallah":
@@ -108,11 +119,15 @@ def build_platform_overview(backups: list | None = None) -> dict:
         if t.id not in backup_by_tenant:
             warnings.append(f"Tenant {t.slug or t.id}: no tenant backup")
 
-    nasrallah = next((t for t in recent_active if (t.slug or "").lower() == "nasrallah"), None)
+    nasrallah = next(
+        (t for t in recent_active if (t.slug or "").lower() == "nasrallah"), None
+    )
     if nasrallah:
         n_users = int(user_counts.get(nasrallah.id) or 0)
         if n_users == 0:
-            warnings.append("Nasrallah: active tenant with zero users (expected until manager created)")
+            warnings.append(
+                "Nasrallah: active tenant with zero users (expected until manager created)"
+            )
 
     return {
         "tenant_count": tenant_count,
@@ -130,7 +145,9 @@ def build_platform_overview(backups: list | None = None) -> dict:
     }
 
 
-def build_tenant_management_rows(backups: list | None = None, overview: dict | None = None, limit: int | None = 200) -> list[dict]:
+def build_tenant_management_rows(
+    backups: list | None = None, overview: dict | None = None, limit: int | None = 200
+) -> list[dict]:
     from services.backup_service import BackupService
 
     backups = backups if backups is not None else BackupService.list_backups()
@@ -217,7 +234,9 @@ def build_system_health_summary() -> dict:
     return summary
 
 
-def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None) -> dict:
+def build_company_dashboard_context(
+    tenant_id: int, branch_id: int | None = None
+) -> dict:
     """KPIs and readiness for tenant company admin (single tenant only)."""
     tenant = db.session.get(Tenant, int(tenant_id))
     if not tenant:
@@ -251,10 +270,14 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
     prod_q = Product.query.filter_by(tenant_id=tenant_id, is_active=True)
     cust_q = Customer.query.filter_by(tenant_id=tenant_id, is_active=True)
     if branch_id is not None:
-        cust_q = cust_q.join(Sale, Customer.id == Sale.customer_id).filter(
-            Sale.branch_id == branch_id,
-            Sale.tenant_id == tenant_id,
-        ).distinct()
+        cust_q = (
+            cust_q.join(Sale, Customer.id == Sale.customer_id)
+            .filter(
+                Sale.branch_id == branch_id,
+                Sale.tenant_id == tenant_id,
+            )
+            .distinct()
+        )
 
     users_count = User.query.filter(
         User.tenant_id == tenant_id,
@@ -269,25 +292,30 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
     tenant_backups = [
         b
         for b in all_backups
-        if b.get("backup_scope") == "tenant" and int(b.get("tenant_id") or -1) == int(tenant_id)
+        if b.get("backup_scope") == "tenant"
+        and int(b.get("tenant_id") or -1) == int(tenant_id)
     ]
 
     # COGS (cost of goods sold) for the month
-    cogs_q = db.session.query(
-        func.coalesce(func.sum(SaleLine.cost_price * SaleLine.quantity), 0)
-    ).select_from(SaleLine).join(
-        Sale, SaleLine.sale_id == Sale.id
-    ).filter(
-        func.date(Sale.sale_date) >= month_start,
-        Sale.status == 'confirmed',
-        Sale.tenant_id == tenant_id,
+    cogs_q = (
+        db.session.query(
+            func.coalesce(func.sum(SaleLine.cost_price * SaleLine.quantity), 0)
+        )
+        .select_from(SaleLine)
+        .join(Sale, SaleLine.sale_id == Sale.id)
+        .filter(
+            func.date(Sale.sale_date) >= month_start,
+            Sale.status == "confirmed",
+            Sale.tenant_id == tenant_id,
+        )
     )
     if branch_id is not None:
         cogs_q = cogs_q.filter(Sale.branch_id == branch_id)
-    month_cogs = float(cogs_q.scalar() or Decimal('0'))
+    month_cogs = float(cogs_q.scalar() or Decimal("0"))
 
     try:
         from models.partner_commission import PartnerCommissionEntry
+
         comm_q = db.session.query(
             func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0)
         ).filter(
@@ -296,11 +324,13 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
         )
         if branch_id is not None:
             comm_q = comm_q.filter(PartnerCommissionEntry.branch_id == branch_id)
-        month_commissions = float(comm_q.scalar() or Decimal('0'))
+        month_commissions = float(comm_q.scalar() or Decimal("0"))
     except Exception:
         month_commissions = 0.0
 
-    warehouses = Warehouse.query.filter_by(tenant_id=tenant_id).order_by(Warehouse.name).all()
+    warehouses = (
+        Warehouse.query.filter_by(tenant_id=tenant_id).order_by(Warehouse.name).all()
+    )
 
     return {
         "tenant": tenant,
@@ -325,7 +355,9 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
 
 
 def tenants_without_users_allowlist() -> set[str]:
-    raw = (os.environ.get("OWNER_PANEL_ALLOW_TENANTS_WITHOUT_USERS") or "nasrallah").strip()
+    raw = (
+        os.environ.get("OWNER_PANEL_ALLOW_TENANTS_WITHOUT_USERS") or "nasrallah"
+    ).strip()
     return {s.strip().lower() for s in raw.split(",") if s.strip()}
 
 

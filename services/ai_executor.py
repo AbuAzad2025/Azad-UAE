@@ -2,17 +2,15 @@
 AI Executor — real CRUD operations using the proper ERP service layer.
 Called by AIService._execute_ai_action (Groq path) and by enhanced ActionDispatcher handlers.
 """
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any
 
-from flask import current_app
 from flask_login import current_user as flask_user
 from extensions import db
-from utils.db_safety import atomic_transaction
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -31,7 +29,9 @@ class AIExecutor:
 
     def __init__(self, user=None):
         try:
-            self.user = user or (flask_user if flask_user and flask_user.is_authenticated else None)
+            self.user = user or (
+                flask_user if flask_user and flask_user.is_authenticated else None
+            )
         except RuntimeError:
             self.user = user
         self.tenant_id = get_active_tenant_id(self.user)
@@ -50,10 +50,15 @@ class AIExecutor:
 
     # ── CUSTOMER ───────────────────────────────────────────────
 
-    def create_customer(self, name: str, phone: str = "",
-                        email: str = "", address: str = "",
-                        customer_type: str = "regular",
-                        credit_limit: float = 0) -> dict:
+    def create_customer(
+        self,
+        name: str,
+        phone: str = "",
+        email: str = "",
+        address: str = "",
+        customer_type: str = "regular",
+        credit_limit: float = 0,
+    ) -> dict:
         self._require_tenant()
         from models import Customer
 
@@ -76,7 +81,11 @@ class AIExecutor:
             "success": True,
             "id": customer.id,
             "message": f'تم إنشاء العميل "{name}" بنجاح',
-            "customer": customer.to_dict() if hasattr(customer, "to_dict") else {"id": customer.id, "name": name},
+            "customer": (
+                customer.to_dict()
+                if hasattr(customer, "to_dict")
+                else {"id": customer.id, "name": name}
+            ),
         }
 
     def list_customers(self, search: str = "", limit: int = 20) -> dict:
@@ -90,8 +99,15 @@ class AIExecutor:
 
         return {
             "success": True,
-            "customers": [{"id": c.id, "name": c.name, "phone": c.phone,
-                           "balance": float(c.balance or 0)} for c in customers],
+            "customers": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "phone": c.phone,
+                    "balance": float(c.balance or 0),
+                }
+                for c in customers
+            ],
             "count": len(customers),
         }
 
@@ -99,7 +115,9 @@ class AIExecutor:
         self._require_tenant()
         from models import Customer
 
-        c = Customer.query.filter_by(tenant_id=self.tenant_id, name=name, is_active=True).first()
+        c = Customer.query.filter_by(
+            tenant_id=self.tenant_id, name=name, is_active=True
+        ).first()
         if not c:
             raise AIExecutorError(f'العميل "{name}" غير موجود')
 
@@ -113,11 +131,18 @@ class AIExecutor:
 
     # ── PRODUCT ────────────────────────────────────────────────
 
-    def create_product(self, name: str, sku: str = "",
-                       regular_price: float = 0, cost_price: float = 0,
-                       current_stock: float = 0, min_stock_alert: float = 0,
-                       unit: str = "piece", category_id: int | None = None,
-                       barcode: str = "") -> dict:
+    def create_product(
+        self,
+        name: str,
+        sku: str = "",
+        regular_price: float = 0,
+        cost_price: float = 0,
+        current_stock: float = 0,
+        min_stock_alert: float = 0,
+        unit: str = "piece",
+        category_id: int | None = None,
+        barcode: str = "",
+    ) -> dict:
         self._require_tenant()
         from models import Product
 
@@ -146,7 +171,13 @@ class AIExecutor:
             "success": True,
             "id": product.id,
             "message": f'تم إنشاء المنتج "{name}" بنجاح',
-            "product": {"id": product.id, "name": name, "sku": sku, "price": regular_price, "stock": current_stock},
+            "product": {
+                "id": product.id,
+                "name": name,
+                "sku": sku,
+                "price": regular_price,
+                "stock": current_stock,
+            },
         }
 
     def list_products(self, search: str = "", limit: int = 20) -> dict:
@@ -160,9 +191,16 @@ class AIExecutor:
 
         return {
             "success": True,
-            "products": [{"id": p.id, "name": p.name, "sku": p.sku,
-                          "price": float(p.regular_price or 0),
-                          "stock": float(p.current_stock or 0)} for p in products],
+            "products": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "sku": p.sku,
+                    "price": float(p.regular_price or 0),
+                    "stock": float(p.current_stock or 0),
+                }
+                for p in products
+            ],
             "count": len(products),
         }
 
@@ -178,16 +216,27 @@ class AIExecutor:
 
         return {
             "success": True,
-            "low_stock": [{"name": p.name, "stock": float(p.current_stock or 0),
-                           "min": float(p.min_stock_alert or 0)} for p in low[:20]],
+            "low_stock": [
+                {
+                    "name": p.name,
+                    "stock": float(p.current_stock or 0),
+                    "min": float(p.min_stock_alert or 0),
+                }
+                for p in low[:20]
+            ],
             "count": len(low),
         }
 
     # ── SALE (uses SaleService for full accounting treatment) ──
 
-    def create_sale(self, customer_name: str, product_lines: list[dict],
-                    payment_method: str = "cash", paid_amount: float = 0,
-                    notes: str = "") -> dict:
+    def create_sale(
+        self,
+        customer_name: str,
+        product_lines: list[dict],
+        payment_method: str = "cash",
+        paid_amount: float = 0,
+        notes: str = "",
+    ) -> dict:
         self._require_tenant()
         from models import Customer, Product, User
         from services.sale_service import SaleService
@@ -200,7 +249,9 @@ class AIExecutor:
 
         seller = self.user
         if not seller or not hasattr(seller, "id"):
-            seller = User.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
+            seller = User.query.filter_by(
+                tenant_id=self.tenant_id, is_active=True
+            ).first()
             if not seller:
                 raise AIExecutorError("لا يوجد مستخدم نشط لإنشاء الفاتورة")
 
@@ -214,11 +265,13 @@ class AIExecutor:
             if not product:
                 raise AIExecutorError(f'المنتج "{pname}" غير موجود')
 
-            lines_data.append({
-                "product": product,
-                "quantity": qty,
-                "unit_price": pl.get("unit_price") or None,
-            })
+            lines_data.append(
+                {
+                    "product": product,
+                    "quantity": qty,
+                    "unit_price": pl.get("unit_price") or None,
+                }
+            )
 
         payment_data = None
         if paid_amount > 0:
@@ -241,32 +294,42 @@ class AIExecutor:
             "sale_id": sale.id,
             "sale_number": sale.sale_number,
             "total": float(sale.total_amount or 0),
-            "message": f'تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم',
+            "message": f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(sale.total_amount or 0):,.2f} درهم",
         }
 
     def list_sales(self, limit: int = 10) -> dict:
         self._require_tenant()
         from models import Sale
 
-        sales = Sale.query.filter_by(tenant_id=self.tenant_id, status="confirmed"
-                                     ).order_by(Sale.sale_date.desc()).limit(limit).all()
+        sales = (
+            Sale.query.filter_by(tenant_id=self.tenant_id, status="confirmed")
+            .order_by(Sale.sale_date.desc())
+            .limit(limit)
+            .all()
+        )
 
         return {
             "success": True,
-            "sales": [{"id": s.id, "number": s.sale_number,
-                       "customer": s.customer.name if s.customer else "",
-                       "total": float(s.total_amount or 0),
-                       "status": s.payment_status or "unpaid",
-                       "date": str(s.sale_date)[:10]} for s in sales],
+            "sales": [
+                {
+                    "id": s.id,
+                    "number": s.sale_number,
+                    "customer": s.customer.name if s.customer else "",
+                    "total": float(s.total_amount or 0),
+                    "status": s.payment_status or "unpaid",
+                    "date": str(s.sale_date)[:10],
+                }
+                for s in sales
+            ],
         }
 
     # ── PAYMENT ───────────────────────────────────────────────
 
-    def receive_payment(self, customer_name: str, amount: float,
-                        method: str = "cash", notes: str = "") -> dict:
+    def receive_payment(
+        self, customer_name: str, amount: float, method: str = "cash", notes: str = ""
+    ) -> dict:
         self._require_tenant()
         from models import Customer, Payment, Sale
-        from sqlalchemy import func
 
         customer = Customer.query.filter_by(
             tenant_id=self.tenant_id, name=customer_name, is_active=True
@@ -299,12 +362,16 @@ class AIExecutor:
 
         customer.balance = (customer.balance or Decimal("0")) - amount_dec
 
-        unpaid = Sale.query.filter(
-            Sale.tenant_id == self.tenant_id,
-            Sale.customer_id == customer.id,
-            Sale.balance_due > 0,
-            Sale.status.in_(["confirmed", "active"]),
-        ).order_by(Sale.sale_date).all()
+        unpaid = (
+            Sale.query.filter(
+                Sale.tenant_id == self.tenant_id,
+                Sale.customer_id == customer.id,
+                Sale.balance_due > 0,
+                Sale.status.in_(["confirmed", "active"]),
+            )
+            .order_by(Sale.sale_date)
+            .all()
+        )
 
         remaining = amount_dec
         for sale in unpaid:
@@ -332,9 +399,14 @@ class AIExecutor:
 
     # ── EXPENSE ───────────────────────────────────────────────
 
-    def add_expense(self, description: str, amount: float,
-                    category_id: int | None = None, payment_method: str = "cash",
-                    notes: str = "") -> dict:
+    def add_expense(
+        self,
+        description: str,
+        amount: float,
+        category_id: int | None = None,
+        payment_method: str = "cash",
+        notes: str = "",
+    ) -> dict:
         self._require_tenant()
         from models import Expense, ExpenseCategory
         from utils.helpers import generate_number
@@ -350,9 +422,13 @@ class AIExecutor:
                 raise AIExecutorError("لا يوجد تصنيف مصروفات — أنشئ تصنيفاً أولاً")
             category_id = cat.id
 
-        expense_number = generate_number("EXP", Expense, "expense_number",
-                                          branch_id=self._current_branch_id(),
-                                          tenant_id=self.tenant_id)
+        expense_number = generate_number(
+            "EXP",
+            Expense,
+            "expense_number",
+            branch_id=self._current_branch_id(),
+            tenant_id=self.tenant_id,
+        )
         amount_dec = Decimal(str(amount))
         expense = Expense(
             tenant_id=self.tenant_id,
@@ -380,9 +456,14 @@ class AIExecutor:
 
     # ── SUPPLIER ──────────────────────────────────────────────
 
-    def create_supplier(self, name: str, phone: str = "",
-                        email: str = "", company_name: str = "",
-                        tax_number: str = "") -> dict:
+    def create_supplier(
+        self,
+        name: str,
+        phone: str = "",
+        email: str = "",
+        company_name: str = "",
+        tax_number: str = "",
+    ) -> dict:
         self._require_tenant()
         from models import Supplier
 
@@ -409,9 +490,14 @@ class AIExecutor:
 
     # ── EMPLOYEE ──────────────────────────────────────────────
 
-    def create_employee(self, name: str, phone: str = "",
-                        email: str = "", basic_salary: float = 0,
-                        employment_type: str = "salary") -> dict:
+    def create_employee(
+        self,
+        name: str,
+        phone: str = "",
+        email: str = "",
+        basic_salary: float = 0,
+        employment_type: str = "salary",
+    ) -> dict:
         self._require_tenant()
         from models.payroll import Employee
 
@@ -439,10 +525,11 @@ class AIExecutor:
 
     # ── PURCHASE (uses PurchaseService for full GL/stock) ─────
 
-    def create_purchase(self, supplier_name: str, product_lines: list[dict],
-                        notes: str = "") -> dict:
+    def create_purchase(
+        self, supplier_name: str, product_lines: list[dict], notes: str = ""
+    ) -> dict:
         self._require_tenant()
-        from models import Supplier, Product, Warehouse, User
+        from models import Supplier, Product, Warehouse
         from services.purchase_service import PurchaseService
 
         supplier = Supplier.query.filter_by(
@@ -451,9 +538,13 @@ class AIExecutor:
         if not supplier:
             raise AIExecutorError(f'المورد "{supplier_name}" غير موجود')
 
-        warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True, is_main=True).first()
+        warehouse = Warehouse.query.filter_by(
+            tenant_id=self.tenant_id, is_active=True, is_main=True
+        ).first()
         if not warehouse:
-            warehouse = Warehouse.query.filter_by(tenant_id=self.tenant_id, is_active=True).first()
+            warehouse = Warehouse.query.filter_by(
+                tenant_id=self.tenant_id, is_active=True
+            ).first()
         if not warehouse:
             raise AIExecutorError("لا يوجد مستودع نشط — أنشئ مستودعاً أولاً")
 
@@ -469,11 +560,13 @@ class AIExecutor:
             if not product:
                 raise AIExecutorError(f'المنتج "{pname}" غير موجود')
 
-            lines_data.append({
-                "product_id": product.id,
-                "quantity": qty,
-                "unit_cost": cost,
-            })
+            lines_data.append(
+                {
+                    "product_id": product.id,
+                    "quantity": qty,
+                    "unit_cost": cost,
+                }
+            )
 
         purchase = PurchaseService.create_purchase(
             user=self.user,
@@ -487,7 +580,7 @@ class AIExecutor:
             "success": True,
             "purchase_id": purchase.id,
             "purchase_number": purchase.purchase_number,
-            "message": f'تم إنشاء أمر الشراء رقم {purchase.purchase_number}',
+            "message": f"تم إنشاء أمر الشراء رقم {purchase.purchase_number}",
         }
 
     # ── SALES SUMMARY / PROFIT ────────────────────────────────
@@ -497,9 +590,14 @@ class AIExecutor:
         from models import Sale
         from sqlalchemy import func
 
-        total = db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))\
-            .filter(Sale.tenant_id == self.tenant_id,
-                    Sale.status.in_(["confirmed", "active"])).scalar()
+        total = (
+            db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+            .filter(
+                Sale.tenant_id == self.tenant_id,
+                Sale.status.in_(["confirmed", "active"]),
+            )
+            .scalar()
+        )
         count = Sale.query.filter(
             Sale.tenant_id == self.tenant_id,
             Sale.status.in_(["confirmed", "active"]),
@@ -516,20 +614,31 @@ class AIExecutor:
         from models import Sale, SaleLine, Product
         from sqlalchemy import func
 
-        total_revenue = db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))\
-            .filter(Sale.tenant_id == self.tenant_id,
-                    Sale.status.in_(["confirmed", "active"])).scalar()
+        total_revenue = (
+            db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+            .filter(
+                Sale.tenant_id == self.tenant_id,
+                Sale.status.in_(["confirmed", "active"]),
+            )
+            .scalar()
+        )
 
-        lines = SaleLine.query.join(Sale).filter(
-            Sale.tenant_id == self.tenant_id,
-            Sale.status.in_(["confirmed", "active"]),
-        ).all()
+        lines = (
+            SaleLine.query.join(Sale)
+            .filter(
+                Sale.tenant_id == self.tenant_id,
+                Sale.status.in_(["confirmed", "active"]),
+            )
+            .all()
+        )
 
         total_cost = Decimal("0")
         for line in lines:
             product = Product.query.get(line.product_id)
             if product and product.cost_price:
-                total_cost += (product.cost_price or Decimal("0")) * (line.quantity or 0)
+                total_cost += (product.cost_price or Decimal("0")) * (
+                    line.quantity or 0
+                )
 
         profit = (total_revenue or 0) - total_cost
         margin = float(profit / total_revenue * 100) if total_revenue else 0
@@ -547,11 +656,17 @@ class AIExecutor:
     @staticmethod
     def _generate_number(prefix: str, model_class) -> str:
         from utils.helpers import generate_number as gn
+
         try:
-            return gn(prefix, model_class, f"{prefix.lower()}_number",
-                      tenant_id=getattr(flask_user, "tenant_id", None))
+            return gn(
+                prefix,
+                model_class,
+                f"{prefix.lower()}_number",
+                tenant_id=getattr(flask_user, "tenant_id", None),
+            )
         except Exception:
             import random
+
             return f"{prefix}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{random.randint(100, 999)}"
 
 

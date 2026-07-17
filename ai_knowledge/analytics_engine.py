@@ -14,7 +14,12 @@ from ai_knowledge.analytics.analytics_predictions import (
 from ai_knowledge.analytics.market_insights import get_market_insights
 
 __all__ = [
-    'DataAnalyzer', 'data_analyzer',
-    'SalesAnalytics', 'InventoryAnalytics', 'ProfitAnalytics', 'CashFlowAnalytics',
-    'get_analytics', 'get_market_insights',
+    "DataAnalyzer",
+    "data_analyzer",
+    "SalesAnalytics",
+    "InventoryAnalytics",
+    "ProfitAnalytics",
+    "CashFlowAnalytics",
+    "get_analytics",
+    "get_market_insights",
 ]

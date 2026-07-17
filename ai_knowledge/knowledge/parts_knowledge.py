@@ -382,32 +382,32 @@ MAINTENANCE_SCHEDULE = """
 
 # قاموس شامل
 PARTS_DATABASE = {
-    'categories': AUTO_PARTS_CATEGORIES,
-    'heavy_equipment': HEAVY_EQUIPMENT_PARTS,
-    'quality': PARTS_QUALITY,
-    'brands': BRANDS_GUIDE,
-    'compatibility': COMPATIBILITY_GUIDE,
-    'diagnostic': DIAGNOSTIC_GUIDE,
-    'maintenance': MAINTENANCE_SCHEDULE,
+    "categories": AUTO_PARTS_CATEGORIES,
+    "heavy_equipment": HEAVY_EQUIPMENT_PARTS,
+    "quality": PARTS_QUALITY,
+    "brands": BRANDS_GUIDE,
+    "compatibility": COMPATIBILITY_GUIDE,
+    "diagnostic": DIAGNOSTIC_GUIDE,
+    "maintenance": MAINTENANCE_SCHEDULE,
 }
+
 
 def get_part_info(category):
     """الحصول على معلومات قطعة غيار"""
     return PARTS_DATABASE.get(category, "معلومات غير متوفرة")
 
+
 def search_parts(query):
     """البحث في قاعدة قطع الغيار"""
     query = query.lower()
     results = []
-    
+
     for category, content in PARTS_DATABASE.items():
         if query in content.lower():
-            results.append({
-                'category': category,
-                'excerpt': content[:300] + '...'
-            })
-    
+            results.append({"category": category, "excerpt": content[:300] + "..."})
+
     return results
+
 
 def get_compatible_parts(part_name, vehicle_info):
     """البحث عن قطع متوافقة"""

@@ -3,9 +3,10 @@ Idempotent GL provisioning engine.
 Copies account templates from gl_account_registry into a tenant's chart,
 creates concept mappings, and handles industry-specific extensions.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models import Tenant
@@ -15,7 +16,6 @@ from models.gl_account_registry import (
     BASE_ACCOUNTS,
     INDUSTRY_EXTENSIONS,
     GL_MODULE_DEFINITIONS,
-    VALID_INDUSTRY_CODES,
 )
 
 
@@ -27,6 +27,7 @@ class ProvisionResult:
     skipped_accounts: int = 0
     skipped_mappings: int = 0
     errors: list[str] = field(default_factory=list)
+
 
 class GLProvisioningService:
     @staticmethod
@@ -40,16 +41,19 @@ class GLProvisioningService:
             GLProvisioningService._provision_base_accounts(tenant, result)
             GLProvisioningService._provision_industry_accounts(tenant, result)
             GLProvisioningService._provision_module_mappings(tenant, result)
-            with atomic_transaction('provision_tenant'):
+            with atomic_transaction("provision_tenant"):
                 db.session.flush()
         except Exception as e:
             result.errors.append(str(e))
         return result
+
     @staticmethod
     def _provision_base_accounts(tenant: Tenant, result: ProvisionResult) -> None:
         existing_codes = {
-            row[0] for row in
-            db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()
+            row[0]
+            for row in db.session.query(GLAccount.code)
+            .filter_by(tenant_id=tenant.id)
+            .all()
         }
         sorted_accounts = sorted(BASE_ACCOUNTS, key=lambda a: a.level)
         created_ids = {}
@@ -75,21 +79,24 @@ class GLProvisioningService:
                 parent_id=parent_id,
                 industry_code=tmpl.industry_code,
                 module_code=tmpl.module_code,
-                currency=tenant.default_currency or 'AED',
+                currency=tenant.default_currency or "AED",
                 is_active=True,
             )
             db.session.add(acc)
             db.session.flush()
             created_ids[tmpl.code] = acc.id
             result.created_accounts += 1
+
     @staticmethod
     def _provision_industry_accounts(tenant: Tenant, result: ProvisionResult) -> None:
-        industry = (tenant.business_type or 'general').strip().lower()
+        industry = (tenant.business_type or "general").strip().lower()
         if industry not in INDUSTRY_EXTENSIONS:
             return
         existing_codes = {
-            row[0] for row in
-            db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()
+            row[0]
+            for row in db.session.query(GLAccount.code)
+            .filter_by(tenant_id=tenant.id)
+            .all()
         }
         for tmpl in INDUSTRY_EXTENSIONS[industry]:
             if tmpl.code in existing_codes:
@@ -113,19 +120,20 @@ class GLProvisioningService:
                 parent_id=parent_id,
                 industry_code=industry,
                 module_code=tmpl.module_code,
-                currency=tenant.default_currency or 'AED',
+                currency=tenant.default_currency or "AED",
                 is_active=True,
             )
             db.session.add(acc)
             db.session.flush()
             result.created_accounts += 1
+
     @staticmethod
     def _provision_module_mappings(tenant: Tenant, result: ProvisionResult) -> None:
         existing_mappings = {
-            row[0] for row in
-            db.session.query(GLAccountMapping.concept_code).filter_by(
-                tenant_id=tenant.id, branch_id=None
-            ).all()
+            row[0]
+            for row in db.session.query(GLAccountMapping.concept_code)
+            .filter_by(tenant_id=tenant.id, branch_id=None)
+            .all()
         }
         for mod in GL_MODULE_DEFINITIONS.values():
             if not mod.required:
@@ -137,8 +145,13 @@ class GLProvisioningService:
                     result.skipped_mappings += 1
                     continue
                 # Only provision mapping-owned concepts
-                concept_meta: dict[str, Any] = GL_CONCEPT_REGISTRY.get(mapping.concept_code, {})
-                if concept_meta.get('resolution_mode', RESOLUTION_MODE_MAPPING) != RESOLUTION_MODE_MAPPING:
+                concept_meta: dict[str, Any] = GL_CONCEPT_REGISTRY.get(
+                    mapping.concept_code, {}
+                )
+                if (
+                    concept_meta.get("resolution_mode", RESOLUTION_MODE_MAPPING)
+                    != RESOLUTION_MODE_MAPPING
+                ):
                     result.skipped_mappings += 1
                     continue
                 account = GLAccount.query.filter_by(
@@ -176,35 +189,39 @@ class GLProvisioningService:
                 db.session.flush()
                 existing_mappings.add(mapping.concept_code)
                 result.created_mappings += 1
+
     @staticmethod
     def get_missing_accounts(tenant_id: int) -> list:
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
         existing = {
-            row[0] for row in
-            db.session.query(GLAccount.code).filter_by(tenant_id=tenant_id).all()
+            row[0]
+            for row in db.session.query(GLAccount.code)
+            .filter_by(tenant_id=tenant_id)
+            .all()
         }
         missing = []
         for tmpl in BASE_ACCOUNTS:
             if tmpl.code not in existing:
                 missing.append(tmpl)
-        industry = (tenant.business_type or 'general').strip().lower()
+        industry = (tenant.business_type or "general").strip().lower()
         if industry in INDUSTRY_EXTENSIONS:
             for tmpl in INDUSTRY_EXTENSIONS[industry]:
                 if tmpl.code not in existing:
                     missing.append(tmpl)
         return missing
+
     @staticmethod
     def get_missing_mappings(tenant_id: int) -> list:
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
         existing = {
-            row[0] for row in
-            db.session.query(GLAccountMapping.concept_code).filter_by(
-                tenant_id=tenant_id, branch_id=None
-            ).all()
+            row[0]
+            for row in db.session.query(GLAccountMapping.concept_code)
+            .filter_by(tenant_id=tenant_id, branch_id=None)
+            .all()
         }
         missing = []
         for mod in GL_MODULE_DEFINITIONS.values():
@@ -216,28 +233,29 @@ class GLProvisioningService:
                 if mapping.concept_code not in existing:
                     missing.append(mapping)
         return missing
+
     @staticmethod
     def validate_tenant_chart(tenant_id: int) -> dict:
         result: dict[str, Any] = {
-            'tenant_id': tenant_id,
-            'accounts_ok': False,
-            'mappings_ok': False,
-            'missing_accounts': [],
-            'missing_mappings': [],
-            'errors': [],
+            "tenant_id": tenant_id,
+            "accounts_ok": False,
+            "mappings_ok": False,
+            "missing_accounts": [],
+            "missing_mappings": [],
+            "errors": [],
         }
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
-            result['errors'].append('Tenant not found')
+            result["errors"].append("Tenant not found")
             return result
-        result['missing_accounts'] = [
-            {'code': a.code, 'name': a.name, 'name_ar': a.name_ar}
+        result["missing_accounts"] = [
+            {"code": a.code, "name": a.name, "name_ar": a.name_ar}
             for a in GLProvisioningService.get_missing_accounts(tenant_id)
         ]
-        result['missing_mappings'] = [
-            {'concept': m.concept_code, 'account': m.account_code}
+        result["missing_mappings"] = [
+            {"concept": m.concept_code, "account": m.account_code}
             for m in GLProvisioningService.get_missing_mappings(tenant_id)
         ]
-        result['accounts_ok'] = len(result['missing_accounts']) == 0
-        result['mappings_ok'] = len(result['missing_mappings']) == 0
+        result["accounts_ok"] = len(result["missing_accounts"]) == 0
+        result["mappings_ok"] = len(result["missing_mappings"]) == 0
         return result

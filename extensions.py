@@ -14,15 +14,20 @@ from flask_babel import Babel
 
 try:
     from flask_compress import Compress
+
     COMPRESS_AVAILABLE = True
 except ImportError:
     COMPRESS_AVAILABLE = False
-    logging.warning("Flask-Compress not available - install with: pip install Flask-Compress Brotli")
+    logging.warning(
+        "Flask-Compress not available - install with: pip install Flask-Compress Brotli"
+    )
+
 
 def get_locale():
     if "language" in session:
         return session.get("language", "ar")
     return "ar"
+
 
 db = SQLAlchemy(session_options={"expire_on_commit": False})
 
@@ -39,14 +44,18 @@ cache = Cache()
 
 mail = Mail()
 
+
 def _rate_limit_key():
     try:
         from flask_login import current_user
+
         if getattr(current_user, "is_authenticated", False):
             return f"user:{current_user.get_id()}"
     except Exception:
         pass
     return get_remote_address()
+
+
 limiter = Limiter(
     key_func=_rate_limit_key,
     default_limits=[],
@@ -54,11 +63,14 @@ limiter = Limiter(
 )
 babel = Babel()
 compress: Any = Compress() if COMPRESS_AVAILABLE else None
+
+
 def init_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     if app.config.get("SQLALCHEMY_ECHO"):
         from services.logging_core import LoggingCore
+
         LoggingCore.register_slow_query_listener(app)
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -69,17 +81,23 @@ def init_extensions(app):
         compress.init_app(app)
         logging.info("[OK] Compression enabled")
     else:
-        logging.warning("Compression disabled - install Flask-Compress for better performance")
+        logging.warning(
+            "Compression disabled - install Flask-Compress for better performance"
+        )
     default_limit = app.config.get("RATELIMIT_DEFAULT")
     if default_limit:
         if isinstance(default_limit, str):
-            limiter.default_limits = [part.strip() for part in default_limit.split(";") if part.strip()]
+            limiter.default_limits = [
+                part.strip() for part in default_limit.split(";") if part.strip()
+            ]
         else:
             limiter.default_limits = [default_limit]
     if app.config.get("MAIL_USERNAME"):
         mail.init_app(app)
     babel.init_app(app, locale_selector=get_locale)
     app.logger.info("[OK] Extensions initialized")
+
+
 def get_or_create(db_session, model, defaults=None, **kwargs):
     instance = db_session.query(model).filter_by(**kwargs).first()
     if instance:

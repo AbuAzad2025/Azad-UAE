@@ -18,10 +18,10 @@ def coerce_decimal(value, default=None):
 class LocalizationStrategy(ABC):
     """Base class for per-country tax, e-invoice, and compliance logic."""
 
-    country_code: str = 'XX'
-    country_name: str = 'Unknown'
-    default_vat_rate: Decimal = Decimal('0')
-    currency: str = 'AED'
+    country_code: str = "XX"
+    country_name: str = "Unknown"
+    default_vat_rate: Decimal = Decimal("0")
+    currency: str = "AED"
     supports_wps: bool = False
     supports_qr: bool = False
     zatca_phase: int = 0
@@ -33,8 +33,13 @@ class LocalizationStrategy(ABC):
         """
 
     @abstractmethod
-    def format_tax_return(self, output_vat: Decimal, input_vat: Decimal,
-                         period_start: str, period_end: str) -> dict:
+    def format_tax_return(
+        self,
+        output_vat: Decimal,
+        input_vat: Decimal,
+        period_start: str,
+        period_end: str,
+    ) -> dict:
         """
         Return country-specific VAT return structure.
         """
@@ -44,7 +49,9 @@ class LocalizationStrategy(ABC):
         Return dict with: xml_payload, qr_base64, invoice_hash.
         Subclasses should override this for country-specific e-invoice generation.
         """
-        raise NotImplementedError(f"E-invoice generation not supported for {self.country_code}")
+        raise NotImplementedError(
+            f"E-invoice generation not supported for {self.country_code}"
+        )
 
     def get_wps_format(self, employees: list) -> dict:
         """

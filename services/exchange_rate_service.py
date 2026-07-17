@@ -32,10 +32,10 @@ from flask import current_app
 from utils.db_safety import atomic_transaction
 
 # Import existing currency service for manual-rate fallback detection only
-from services.currency_service import CurrencyService
 
 try:
     import requests
+
     REQUESTS_AVAILABLE = True
 except Exception:
     REQUESTS_AVAILABLE = False
@@ -141,7 +141,9 @@ class ExchangeRateService:
         return None
 
     @staticmethod
-    def _fetch_frankfurter(base: str, symbols: tuple[str, ...]) -> dict[str, float] | None:
+    def _fetch_frankfurter(
+        base: str, symbols: tuple[str, ...]
+    ) -> dict[str, float] | None:
         """Frankfurter fallback (https://api.frankfurter.dev)."""
         if not REQUESTS_AVAILABLE:
             return None
@@ -171,13 +173,17 @@ class ExchangeRateService:
         return None
 
     @staticmethod
-    def _fetch_fallbacks(base: str, symbols: tuple[str, ...]) -> dict[str, float] | None:
+    def _fetch_fallbacks(
+        base: str, symbols: tuple[str, ...]
+    ) -> dict[str, float] | None:
         """Try configured fallbacks from config.py (excluding Frankfurter to avoid dup)."""
         if not REQUESTS_AVAILABLE:
             return None
         fallbacks = current_app.config.get("CURRENCY_API_FALLBACKS", [])
         for tmpl in fallbacks:
-            url = tmpl.replace("{base}", base.upper()).replace("{base_lower}", base.lower())
+            url = tmpl.replace("{base}", base.upper()).replace(
+                "{base_lower}", base.lower()
+            )
             # Skip if URL already covered by primary or frankfurter
             if "open.er-api.com" in url or "frankfurter" in url:
                 continue
@@ -251,7 +257,9 @@ class ExchangeRateService:
                 "rates": cached["rates"].copy(),
                 "source": "stale_cache" if cached.get("stale") else "online",
                 "provider": cached.get("provider", "cache"),
-                "last_updated": cached.get("last_updated", datetime.now(timezone.utc).isoformat()),
+                "last_updated": cached.get(
+                    "last_updated", datetime.now(timezone.utc).isoformat()
+                ),
                 "stale": cached.get("stale", False),
             }
 
@@ -280,7 +288,8 @@ class ExchangeRateService:
                 provider = cached.get("provider", "unknown")
             else:
                 rates = {
-                    k: v for k, v in ExchangeRateService.DISPLAY_FALLBACK.items()
+                    k: v
+                    for k, v in ExchangeRateService.DISPLAY_FALLBACK.items()
                     if k in symbols or k == base
                 }
                 provider = "fallback_static"
@@ -306,7 +315,8 @@ class ExchangeRateService:
             "rates": rates.copy(),
             "provider": provider,
             "last_updated": last_updated,
-            "stale": provider == "fallback_static" or rates == ExchangeRateService.DISPLAY_FALLBACK,
+            "stale": provider == "fallback_static"
+            or rates == ExchangeRateService.DISPLAY_FALLBACK,
         }
 
         return {
@@ -468,7 +478,6 @@ class ExchangeRateService:
         """Lookup manager's manual rate in exchange_rate_records for today (or given date)."""
         try:
             from models import ExchangeRateRecord
-            from extensions import db
             from datetime import date
 
             target_date = effective_date or date.today().isoformat()
@@ -498,6 +507,7 @@ class ExchangeRateService:
         """Fetch online rate, auto-save to exchange_rate_records, return the rate."""
         try:
             from services.currency_service import CurrencyService
+
             rate_decimal = CurrencyService.get_exchange_rate(
                 from_currency, to_currency, user_rate=None
             )
@@ -525,13 +535,17 @@ class ExchangeRateService:
         """Get the most recent exchange_rate_record regardless of date or source."""
         try:
             from models import ExchangeRateRecord
+
             record = (
                 ExchangeRateRecord.query.filter_by(
                     tenant_id=tenant_id,
                     from_currency=from_currency,
                     to_currency=to_currency,
                 )
-                .order_by(ExchangeRateRecord.effective_date.desc(), ExchangeRateRecord.created_at.desc())
+                .order_by(
+                    ExchangeRateRecord.effective_date.desc(),
+                    ExchangeRateRecord.created_at.desc(),
+                )
                 .first()
             )
             if record and record.rate:
@@ -556,7 +570,7 @@ class ExchangeRateService:
             from datetime import date
 
             today = date.today().isoformat()
-            with atomic_transaction('save_rate_record'):
+            with atomic_transaction("save_rate_record"):
                 existing = ExchangeRateRecord.query.filter_by(
                     tenant_id=tenant_id,
                     from_currency=from_currency,

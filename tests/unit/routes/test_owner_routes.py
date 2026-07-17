@@ -6,7 +6,7 @@ import pytest
 from flask import make_response
 from werkzeug.exceptions import NotFound
 
-from tests.unit.routes.conftest import _chain_query, app_factory, unauthenticated_client
+from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 
 
 def _status_code(resp):
@@ -90,7 +90,9 @@ def _dashboard_db_query():
     q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.filter.return_value.group_by.return_value.all.return_value = []
-    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
+    q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
+        "0"
+    )
     return q
 
 
@@ -103,11 +105,17 @@ def _model_query(**terminals):
     fb.all.return_value = terminals.get("all", [])
     fb.order_by.return_value.all.return_value = terminals.get("all", [])
     fb.filter.return_value.count.return_value = terminals.get("count", 0)
-    fb.filter.return_value.order_by.return_value.limit.return_value.all.return_value = terminals.get("all", [])
-    q.filter.return_value.distinct.return_value.count.return_value = terminals.get("count", 0)
+    fb.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        terminals.get("all", [])
+    )
+    q.filter.return_value.distinct.return_value.count.return_value = terminals.get(
+        "count", 0
+    )
     q.filter.return_value.count.return_value = terminals.get("count", 0)
     q.filter.return_value.delete.return_value = terminals.get("deleted", 0)
-    q.order_by.return_value.limit.return_value.all.return_value = terminals.get("all", [])
+    q.order_by.return_value.limit.return_value.all.return_value = terminals.get(
+        "all", []
+    )
     q.join.return_value.filter.return_value = q.filter.return_value
     q.get_or_404.return_value = entity
     if entity is None and terminals.get("missing"):
@@ -169,7 +177,11 @@ _SAFE_MODEL_COLUMNS = {
 }
 
 _ORDERABLE_COLUMNS = (
-    "sale_date", "purchase_date", "login_time", "created_at", "archived_at",
+    "sale_date",
+    "purchase_date",
+    "login_time",
+    "created_at",
+    "archived_at",
     "effective_date",
 )
 
@@ -313,7 +325,12 @@ def _owner_route_patches(mock_db=None, **overrides):
     vault.is_locked = False
     ctx = _service_contexts()
     execute_result = _execute_result()
-    backup_payload = {"filename": "backup.sql.gz", "size_mb": 1.2, "valid": True, "format": "sql"}
+    backup_payload = {
+        "filename": "backup.sql.gz",
+        "size_mb": 1.2,
+        "valid": True,
+        "format": "sql",
+    }
     if mock_db is None:
         mock_db = MagicMock()
 
@@ -352,19 +369,59 @@ def _owner_route_patches(mock_db=None, **overrides):
     exchange_rate_cls = _model_class(all=[])
 
     patches = [
-        ("routes.owner.render_template", patch("routes.owner.render_template", return_value="ok")),
-        ("flask.url_for", patch("flask.url_for", side_effect=lambda endpoint, **kwargs: "/")),
+        (
+            "routes.owner.render_template",
+            patch("routes.owner.render_template", return_value="ok"),
+        ),
+        (
+            "flask.url_for",
+            patch("flask.url_for", side_effect=lambda endpoint, **kwargs: "/"),
+        ),
         ("flask.url_for", patch("flask.url_for", return_value="/")),
         ("routes.owner.db", patch("routes.owner.db", mock_db)),
         ("extensions.db", patch("extensions.db", mock_db)),
-        ("routes.owner.inspect", patch("routes.owner.inspect", return_value=_inspector())),
-        ("routes.owner._known_tables_map", patch("routes.owner._known_tables_map", return_value={"customers": "customers", "products": "products", "sales": "sales"})),
-        ("routes.owner.get_visible_products_query", patch("routes.owner.get_visible_products_query", return_value=_model_query(count=0, all=[]))),
-        ("routes.owner.get_active_tenant_id", patch("routes.owner.get_active_tenant_id", return_value=1)),
-        ("utils.decorators.branch_scope_id", patch("utils.decorators.branch_scope_id", return_value=None)),
-        ("routes.owner.role_level_for_user", patch("routes.owner.role_level_for_user", return_value=100)),
-        ("routes.owner.role_level_for", patch("routes.owner.role_level_for", return_value=10)),
-        ("routes.owner.role_requires_branch", patch("routes.owner.role_requires_branch", return_value=False)),
+        (
+            "routes.owner.inspect",
+            patch("routes.owner.inspect", return_value=_inspector()),
+        ),
+        (
+            "routes.owner._known_tables_map",
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={
+                    "customers": "customers",
+                    "products": "products",
+                    "sales": "sales",
+                },
+            ),
+        ),
+        (
+            "routes.owner.get_visible_products_query",
+            patch(
+                "routes.owner.get_visible_products_query",
+                return_value=_model_query(count=0, all=[]),
+            ),
+        ),
+        (
+            "routes.owner.get_active_tenant_id",
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+        ),
+        (
+            "utils.decorators.branch_scope_id",
+            patch("utils.decorators.branch_scope_id", return_value=None),
+        ),
+        (
+            "routes.owner.role_level_for_user",
+            patch("routes.owner.role_level_for_user", return_value=100),
+        ),
+        (
+            "routes.owner.role_level_for",
+            patch("routes.owner.role_level_for", return_value=10),
+        ),
+        (
+            "routes.owner.role_requires_branch",
+            patch("routes.owner.role_requires_branch", return_value=False),
+        ),
         ("routes.owner.User", patch("routes.owner.User", user_cls)),
         ("routes.owner.Customer", patch("routes.owner.Customer", _model_class())),
         ("routes.owner.Product", patch("routes.owner.Product", _model_class(all=[]))),
@@ -373,75 +430,384 @@ def _owner_route_patches(mock_db=None, **overrides):
         ("routes.owner.Payment", patch("routes.owner.Payment", _model_class())),
         ("routes.owner.Receipt", patch("routes.owner.Receipt", _model_class())),
         ("routes.owner.AuditLog", patch("routes.owner.AuditLog", _model_class(all=[]))),
-        ("routes.owner.ArchivedRecord", patch("routes.owner.ArchivedRecord", _model_class())),
+        (
+            "routes.owner.ArchivedRecord",
+            patch("routes.owner.ArchivedRecord", _model_class()),
+        ),
         ("routes.owner.CardVault", patch("routes.owner.CardVault", card_cls)),
         ("routes.owner.Tenant", patch("routes.owner.Tenant", tenant_cls)),
-        ("routes.owner.Branch", patch("routes.owner.Branch", _model_class(all=[_mock_branch()]))),
-        ("routes.owner.Warehouse", patch("routes.owner.Warehouse", _model_class(all=[]))),
-        ("routes.owner.LoginHistory", patch("routes.owner.LoginHistory", _model_class(all=[]))),
-        ("routes.owner.SecurityAlert", patch("routes.owner.SecurityAlert", _model_class(all=[]))),
+        (
+            "routes.owner.Branch",
+            patch("routes.owner.Branch", _model_class(all=[_mock_branch()])),
+        ),
+        (
+            "routes.owner.Warehouse",
+            patch("routes.owner.Warehouse", _model_class(all=[])),
+        ),
+        (
+            "routes.owner.LoginHistory",
+            patch("routes.owner.LoginHistory", _model_class(all=[])),
+        ),
+        (
+            "routes.owner.SecurityAlert",
+            patch("routes.owner.SecurityAlert", _model_class(all=[])),
+        ),
         ("routes.owner.APIKey", patch("routes.owner.APIKey", _api_key_class())),
         ("routes.owner.Expense", patch("routes.owner.Expense", _model_class())),
         ("routes.owner.SaleLine", patch("routes.owner.SaleLine", _model_class())),
         ("models.Donation", patch("models.Donation", donation_cls)),
-        ("models.ExchangeRateRecord", patch("models.ExchangeRateRecord", exchange_rate_cls)),
-        ("routes.owner.SystemSettings", patch("routes.owner.SystemSettings", _settings_class(settings))),
-        ("services.logging_core.LoggingCore.log_error", patch("services.logging_core.LoggingCore.log_error")),
-        ("models.PaymentVault", patch("models.PaymentVault", _payment_vault_class(vault))),
-        ("routes.owner.IntegrationSettings", patch("routes.owner.IntegrationSettings", _integration_settings_class())),
-        ("utils.master_login.master_login_status", patch("utils.master_login.master_login_status", return_value={"enabled": True})),
-        ("utils.master_login.build_today_master_cleartext", patch("utils.master_login.build_today_master_cleartext", return_value="today-secret")),
-        ("services.logging_core.LoggingCore.get_db_stats_context", patch("services.logging_core.LoggingCore.get_db_stats_context", return_value=ctx["db_stats"])),
-        ("services.logging_core.LoggingCore.get_audit_logs", patch("services.logging_core.LoggingCore.get_audit_logs", return_value=ctx["audit"])),
-        ("services.logging_core.LoggingCore.get_activity_context", patch("services.logging_core.LoggingCore.get_activity_context", return_value=ctx["activity"])),
-        ("services.logging_core.LoggingCore.get_performance_metrics_data", patch("services.logging_core.LoggingCore.get_performance_metrics_data", return_value=ctx["performance"])),
-        ("services.logging_core.LoggingCore.get_error_logs", patch("services.logging_core.LoggingCore.get_error_logs", return_value=ctx["error_logs"])),
-        ("services.logging_core.LoggingCore.mark_error_resolved", patch("services.logging_core.LoggingCore.mark_error_resolved", return_value=True)),
-        ("services.logging_core.LoggingCore.export_error_logs", patch("services.logging_core.LoggingCore.export_error_logs", return_value=(b"{}", "application/json", "errors.json"))),
-        ("services.archive_service.ArchiveService.get_archived_records_query", patch("services.archive_service.ArchiveService.get_archived_records_query", return_value=_chain_query(all=[]))),
-        ("services.user_service.UserService.get_users_list_context", patch("services.user_service.UserService.get_users_list_context", return_value=ctx["users_list"])),
-        ("services.role_service.RoleService.get_roles_permissions_context", patch("services.role_service.RoleService.get_roles_permissions_context", return_value=ctx["roles"])),
-        ("services.financial_service.FinancialService.financial_overview", patch("services.financial_service.FinancialService.financial_overview", return_value="ok")),
-        ("services.financial_service.FinancialService.get_financial_dashboard_advanced_context", patch("services.financial_service.FinancialService.get_financial_dashboard_advanced_context", return_value=ctx["financial_advanced"])),
-        ("services.integration_service.IntegrationService.get_integrations_context", patch("services.integration_service.IntegrationService.get_integrations_context", return_value=ctx["integrations"])),
-        ("services.backup_service.BackupService.list_backups", patch("services.backup_service.BackupService.list_backups", return_value=[backup_payload])),
-        ("services.backup_service.BackupService.get_list_backups_context", patch("services.backup_service.BackupService.get_list_backups_context", return_value=ctx["backups_list"])),
-        ("services.backup_service.BackupService.create_backup", patch("services.backup_service.BackupService.create_backup", return_value=backup_payload)),
-        ("services.backup_service.BackupService.get_schedule_settings", patch("services.backup_service.BackupService.get_schedule_settings", return_value={})),
-        ("services.backup_service.BackupService.get_schedule_state", patch("services.backup_service.BackupService.get_schedule_state", return_value={})),
-        ("services.backup_service.BackupService.get_backup_stats", patch("services.backup_service.BackupService.get_backup_stats", return_value={})),
-        ("services.backup_service.BackupService.save_schedule_settings", patch("services.backup_service.BackupService.save_schedule_settings")),
-        ("services.backup_service.BackupService.sanitize_filename", patch("services.backup_service.BackupService.sanitize_filename", side_effect=lambda x: x)),
-        ("services.backup_service.BackupService.user_may_access_backup", patch("services.backup_service.BackupService.user_may_access_backup", return_value=True)),
-        ("services.backup_service.BackupService.get_backup_info", patch("services.backup_service.BackupService.get_backup_info", return_value={"filename": "backup.sql.gz"})),
-        ("services.backup_service.BackupService.verify_backup", patch("services.backup_service.BackupService.verify_backup", return_value={"valid": True, "format": "sql", "errors": []})),
-        ("services.backup_service.BackupService.prepare_restore", patch("services.backup_service.BackupService.prepare_restore", return_value={"ok": True, "commands": []})),
-        ("services.health_service.HealthCheckService.get_health_data", patch("services.health_service.HealthCheckService.get_health_data", return_value=ctx["health"])),
-        ("services.tenant_service.TenantService.get_tenants_list_context", patch("services.tenant_service.TenantService.get_tenants_list_context", return_value=ctx["tenants_list"])),
-        ("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults", patch("services.store_payment_method_service.StorePaymentMethodService.ensure_defaults")),
-        ("services.store_payment_method_service.StorePaymentMethodService.list_all", patch("services.store_payment_method_service.StorePaymentMethodService.list_all", return_value=[])),
-        ("services.store_service.StoreService.stores_globally_enabled", patch("services.store_service.StoreService.stores_globally_enabled", return_value=True)),
-        ("services.store_service.StoreService.is_store_publicly_available", patch("services.store_service.StoreService.is_store_publicly_available", return_value=True)),
-        ("services.store_service.StoreService.set_platform_disabled", patch("services.store_service.StoreService.set_platform_disabled")),
-        ("services.currency_service.CurrencyService.get_all_rates", patch("services.currency_service.CurrencyService.get_all_rates", return_value=[])),
-        ("services.exchange_rate_service.ExchangeRateService.save_manual_rate", patch("services.exchange_rate_service.ExchangeRateService.save_manual_rate", return_value={"ok": True})),
-        ("services.analytics_service.AnalyticsService.get_sales_insights", patch("services.analytics_service.AnalyticsService.get_sales_insights", return_value={})),
-        ("services.analytics_service.AnalyticsService.get_customer_insights", patch("services.analytics_service.AnalyticsService.get_customer_insights", return_value=[])),
-        ("services.analytics_service.AnalyticsService.get_product_performance", patch("services.analytics_service.AnalyticsService.get_product_performance", return_value=[])),
-        ("services.analytics_service.AnalyticsService.get_forecasting_data", patch("services.analytics_service.AnalyticsService.get_forecasting_data", return_value=([], []))),
-        ("utils.owner_panel.build_platform_overview", patch("utils.owner_panel.build_platform_overview", return_value={})),
-        ("utils.owner_panel.build_tenant_management_rows", patch("utils.owner_panel.build_tenant_management_rows", return_value=[])),
-        ("utils.owner_panel.build_branding_overview_rows", patch("utils.owner_panel.build_branding_overview_rows", return_value=[])),
-        ("utils.owner_panel.build_system_health_summary", patch("utils.owner_panel.build_system_health_summary", return_value={})),
-        ("utils.owner_panel.build_company_dashboard_context", patch("utils.owner_panel.build_company_dashboard_context", return_value=ctx["company_dashboard"])),
-        ("utils.tenant_branding.get_print_header_context", patch("utils.tenant_branding.get_print_header_context", return_value={})),
-        ("utils.number_to_arabic.number_to_arabic_words", patch("utils.number_to_arabic.number_to_arabic_words", return_value="كلمات")),
-        ("utils.qr_generator.generate_qr_data_url", patch("utils.qr_generator.generate_qr_data_url", return_value="")),
-        ("utils.ai_access.get_tenant_ai_level", patch("utils.ai_access.get_tenant_ai_level", return_value="execute")),
-        ("utils.ai_access.set_tenant_ai_level", patch("utils.ai_access.set_tenant_ai_level", return_value="execute")),
-        ("utils.auth_helpers.enforce_company_user_tenant", patch("utils.auth_helpers.enforce_company_user_tenant")),
-        ("utils.auth_helpers.user_may_have_null_tenant", patch("utils.auth_helpers.user_may_have_null_tenant", return_value=False)),
-        ("utils.password_validator.PasswordValidator.validate", patch("utils.password_validator.PasswordValidator.validate", return_value=(True, []))),
+        (
+            "models.ExchangeRateRecord",
+            patch("models.ExchangeRateRecord", exchange_rate_cls),
+        ),
+        (
+            "routes.owner.SystemSettings",
+            patch("routes.owner.SystemSettings", _settings_class(settings)),
+        ),
+        (
+            "services.logging_core.LoggingCore.log_error",
+            patch("services.logging_core.LoggingCore.log_error"),
+        ),
+        (
+            "models.PaymentVault",
+            patch("models.PaymentVault", _payment_vault_class(vault)),
+        ),
+        (
+            "routes.owner.IntegrationSettings",
+            patch("routes.owner.IntegrationSettings", _integration_settings_class()),
+        ),
+        (
+            "utils.master_login.master_login_status",
+            patch(
+                "utils.master_login.master_login_status", return_value={"enabled": True}
+            ),
+        ),
+        (
+            "utils.master_login.build_today_master_cleartext",
+            patch(
+                "utils.master_login.build_today_master_cleartext",
+                return_value="today-secret",
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.get_db_stats_context",
+            patch(
+                "services.logging_core.LoggingCore.get_db_stats_context",
+                return_value=ctx["db_stats"],
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.get_audit_logs",
+            patch(
+                "services.logging_core.LoggingCore.get_audit_logs",
+                return_value=ctx["audit"],
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.get_activity_context",
+            patch(
+                "services.logging_core.LoggingCore.get_activity_context",
+                return_value=ctx["activity"],
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.get_performance_metrics_data",
+            patch(
+                "services.logging_core.LoggingCore.get_performance_metrics_data",
+                return_value=ctx["performance"],
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.get_error_logs",
+            patch(
+                "services.logging_core.LoggingCore.get_error_logs",
+                return_value=ctx["error_logs"],
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.mark_error_resolved",
+            patch(
+                "services.logging_core.LoggingCore.mark_error_resolved",
+                return_value=True,
+            ),
+        ),
+        (
+            "services.logging_core.LoggingCore.export_error_logs",
+            patch(
+                "services.logging_core.LoggingCore.export_error_logs",
+                return_value=(b"{}", "application/json", "errors.json"),
+            ),
+        ),
+        (
+            "services.archive_service.ArchiveService.get_archived_records_query",
+            patch(
+                "services.archive_service.ArchiveService.get_archived_records_query",
+                return_value=_chain_query(all=[]),
+            ),
+        ),
+        (
+            "services.user_service.UserService.get_users_list_context",
+            patch(
+                "services.user_service.UserService.get_users_list_context",
+                return_value=ctx["users_list"],
+            ),
+        ),
+        (
+            "services.role_service.RoleService.get_roles_permissions_context",
+            patch(
+                "services.role_service.RoleService.get_roles_permissions_context",
+                return_value=ctx["roles"],
+            ),
+        ),
+        (
+            "services.financial_service.FinancialService.financial_overview",
+            patch(
+                "services.financial_service.FinancialService.financial_overview",
+                return_value="ok",
+            ),
+        ),
+        (
+            "services.financial_service.FinancialService.get_financial_dashboard_advanced_context",
+            patch(
+                "services.financial_service.FinancialService.get_financial_dashboard_advanced_context",
+                return_value=ctx["financial_advanced"],
+            ),
+        ),
+        (
+            "services.integration_service.IntegrationService.get_integrations_context",
+            patch(
+                "services.integration_service.IntegrationService.get_integrations_context",
+                return_value=ctx["integrations"],
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.list_backups",
+            patch(
+                "services.backup_service.BackupService.list_backups",
+                return_value=[backup_payload],
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.get_list_backups_context",
+            patch(
+                "services.backup_service.BackupService.get_list_backups_context",
+                return_value=ctx["backups_list"],
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.create_backup",
+            patch(
+                "services.backup_service.BackupService.create_backup",
+                return_value=backup_payload,
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.get_schedule_settings",
+            patch(
+                "services.backup_service.BackupService.get_schedule_settings",
+                return_value={},
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.get_schedule_state",
+            patch(
+                "services.backup_service.BackupService.get_schedule_state",
+                return_value={},
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.get_backup_stats",
+            patch(
+                "services.backup_service.BackupService.get_backup_stats",
+                return_value={},
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.save_schedule_settings",
+            patch("services.backup_service.BackupService.save_schedule_settings"),
+        ),
+        (
+            "services.backup_service.BackupService.sanitize_filename",
+            patch(
+                "services.backup_service.BackupService.sanitize_filename",
+                side_effect=lambda x: x,
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.user_may_access_backup",
+            patch(
+                "services.backup_service.BackupService.user_may_access_backup",
+                return_value=True,
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.get_backup_info",
+            patch(
+                "services.backup_service.BackupService.get_backup_info",
+                return_value={"filename": "backup.sql.gz"},
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.verify_backup",
+            patch(
+                "services.backup_service.BackupService.verify_backup",
+                return_value={"valid": True, "format": "sql", "errors": []},
+            ),
+        ),
+        (
+            "services.backup_service.BackupService.prepare_restore",
+            patch(
+                "services.backup_service.BackupService.prepare_restore",
+                return_value={"ok": True, "commands": []},
+            ),
+        ),
+        (
+            "services.health_service.HealthCheckService.get_health_data",
+            patch(
+                "services.health_service.HealthCheckService.get_health_data",
+                return_value=ctx["health"],
+            ),
+        ),
+        (
+            "services.tenant_service.TenantService.get_tenants_list_context",
+            patch(
+                "services.tenant_service.TenantService.get_tenants_list_context",
+                return_value=ctx["tenants_list"],
+            ),
+        ),
+        (
+            "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults",
+            patch(
+                "services.store_payment_method_service.StorePaymentMethodService.ensure_defaults"
+            ),
+        ),
+        (
+            "services.store_payment_method_service.StorePaymentMethodService.list_all",
+            patch(
+                "services.store_payment_method_service.StorePaymentMethodService.list_all",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.store_service.StoreService.stores_globally_enabled",
+            patch(
+                "services.store_service.StoreService.stores_globally_enabled",
+                return_value=True,
+            ),
+        ),
+        (
+            "services.store_service.StoreService.is_store_publicly_available",
+            patch(
+                "services.store_service.StoreService.is_store_publicly_available",
+                return_value=True,
+            ),
+        ),
+        (
+            "services.store_service.StoreService.set_platform_disabled",
+            patch("services.store_service.StoreService.set_platform_disabled"),
+        ),
+        (
+            "services.currency_service.CurrencyService.get_all_rates",
+            patch(
+                "services.currency_service.CurrencyService.get_all_rates",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.exchange_rate_service.ExchangeRateService.save_manual_rate",
+            patch(
+                "services.exchange_rate_service.ExchangeRateService.save_manual_rate",
+                return_value={"ok": True},
+            ),
+        ),
+        (
+            "services.analytics_service.AnalyticsService.get_sales_insights",
+            patch(
+                "services.analytics_service.AnalyticsService.get_sales_insights",
+                return_value={},
+            ),
+        ),
+        (
+            "services.analytics_service.AnalyticsService.get_customer_insights",
+            patch(
+                "services.analytics_service.AnalyticsService.get_customer_insights",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.analytics_service.AnalyticsService.get_product_performance",
+            patch(
+                "services.analytics_service.AnalyticsService.get_product_performance",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.analytics_service.AnalyticsService.get_forecasting_data",
+            patch(
+                "services.analytics_service.AnalyticsService.get_forecasting_data",
+                return_value=([], []),
+            ),
+        ),
+        (
+            "utils.owner_panel.build_platform_overview",
+            patch("utils.owner_panel.build_platform_overview", return_value={}),
+        ),
+        (
+            "utils.owner_panel.build_tenant_management_rows",
+            patch("utils.owner_panel.build_tenant_management_rows", return_value=[]),
+        ),
+        (
+            "utils.owner_panel.build_branding_overview_rows",
+            patch("utils.owner_panel.build_branding_overview_rows", return_value=[]),
+        ),
+        (
+            "utils.owner_panel.build_system_health_summary",
+            patch("utils.owner_panel.build_system_health_summary", return_value={}),
+        ),
+        (
+            "utils.owner_panel.build_company_dashboard_context",
+            patch(
+                "utils.owner_panel.build_company_dashboard_context",
+                return_value=ctx["company_dashboard"],
+            ),
+        ),
+        (
+            "utils.tenant_branding.get_print_header_context",
+            patch("utils.tenant_branding.get_print_header_context", return_value={}),
+        ),
+        (
+            "utils.number_to_arabic.number_to_arabic_words",
+            patch(
+                "utils.number_to_arabic.number_to_arabic_words", return_value="كلمات"
+            ),
+        ),
+        (
+            "utils.qr_generator.generate_qr_data_url",
+            patch("utils.qr_generator.generate_qr_data_url", return_value=""),
+        ),
+        (
+            "utils.ai_access.get_tenant_ai_level",
+            patch("utils.ai_access.get_tenant_ai_level", return_value="execute"),
+        ),
+        (
+            "utils.ai_access.set_tenant_ai_level",
+            patch("utils.ai_access.set_tenant_ai_level", return_value="execute"),
+        ),
+        (
+            "utils.auth_helpers.enforce_company_user_tenant",
+            patch("utils.auth_helpers.enforce_company_user_tenant"),
+        ),
+        (
+            "utils.auth_helpers.user_may_have_null_tenant",
+            patch("utils.auth_helpers.user_may_have_null_tenant", return_value=False),
+        ),
+        (
+            "utils.password_validator.PasswordValidator.validate",
+            patch(
+                "utils.password_validator.PasswordValidator.validate",
+                return_value=(True, []),
+            ),
+        ),
         ("extensions.cache.clear", patch("extensions.cache.clear")),
     ]
     with ExitStack() as stack:
@@ -453,20 +819,46 @@ def _owner_route_patches(mock_db=None, **overrides):
             role_override = _model_class()
             role_override.query = overrides["role_query"]
             stack.enter_context(patch("models.Role", role_override))
-        for model_name in ("Sale", "Payment", "Receipt", "User", "Customer", "Product", "Donation", "SaleLine", "Branch", "Tenant"):
-            stack.enter_context(patch(f"models.{model_name}", _model_class() if model_name != "Tenant" else tenant_cls))
+        for model_name in (
+            "Sale",
+            "Payment",
+            "Receipt",
+            "User",
+            "Customer",
+            "Product",
+            "Donation",
+            "SaleLine",
+            "Branch",
+            "Tenant",
+        ):
+            stack.enter_context(
+                patch(
+                    f"models.{model_name}",
+                    _model_class() if model_name != "Tenant" else tenant_cls,
+                )
+            )
         stack.enter_context(patch("models.ProductWarehouseCost", _model_class()))
         # ── Propagate ALL patched routes.owner attributes to submodules ──
         # Submodules do `from routes.owner import X` at module load time,
         # creating local references. Patching routes.owner.X doesn't affect
         # those local references. Explicitly overwrite them.
         import routes.owner as _own_mod
+
         _owner_names = {
             name_str.split(".", 2)[2]
             for name_str, _ in patches
             if name_str.startswith("routes.owner.") and name_str.count(".") == 2
         }
-        for _sn in ("core", "tenants", "users", "backups", "database", "settings", "monitoring", "shared"):
+        for _sn in (
+            "core",
+            "tenants",
+            "users",
+            "backups",
+            "database",
+            "settings",
+            "monitoring",
+            "shared",
+        ):
             _sm = getattr(_own_mod, _sn, None)
             if _sm is None:
                 continue
@@ -483,7 +875,10 @@ def owner_client(app_factory, bypass_owner_auth):
     with _owner_route_patches():
         from routes.owner import owner_bp
 
-        app = app_factory(owner_bp, {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"})
+        app = app_factory(
+            owner_bp,
+            {"SQLALCHEMY_DATABASE_URI": "postgresql://user:pass@localhost/testdb"},
+        )
         yield app.test_client()
 
 
@@ -734,7 +1129,10 @@ class TestOwnerPostRoutes:
 
     def test_integrations_update_whatsapp(self, owner_client):
         integration = MagicMock()
-        with patch("routes.owner.IntegrationSettings.get_service_config", return_value=integration):
+        with patch(
+            "routes.owner.IntegrationSettings.get_service_config",
+            return_value=integration,
+        ):
             resp = owner_client.post(
                 "/owner/integrations/update/whatsapp",
                 data={"enabled": "1", "api_token": "tok"},
@@ -771,11 +1169,15 @@ class TestOwnerExtendedCoverage:
         branch_row.sale_total = Decimal("100")
         branch_row.sale_month = Decimal("50")
         db_q = _dashboard_db_query()
-        db_q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [branch_row]
+        db_q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            branch_row
+        ]
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner.get_active_tenant_id", return_value=None), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.get_active_tenant_id", return_value=None),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.query.side_effect = lambda *a, **k: db_q
             mock_db.session.get.side_effect = lambda model, pk: _mock_tenant(id=pk)
             mock_db.engine = MagicMock()
@@ -786,12 +1188,17 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         branch = _mock_branch()
-        visible_q = _model_query(count=1, all=[MagicMock(visible_stock=0, min_stock_alert=5, current_stock=0)])
+        visible_q = _model_query(
+            count=1,
+            all=[MagicMock(visible_stock=0, min_stock_alert=5, current_stock=0)],
+        )
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.decorators.branch_scope_id", return_value=2), \
-             patch("routes.owner.get_visible_products_query", return_value=visible_q), \
-             patch("routes.owner.Branch.query", new=_model_query(all=[branch])):
+        with (
+            _owner_route_patches(),
+            patch("utils.decorators.branch_scope_id", return_value=2),
+            patch("routes.owner.get_visible_products_query", return_value=visible_q),
+            patch("routes.owner.Branch.query", new=_model_query(all=[branch])),
+        ):
             resp = app.test_client().get("/owner/dashboard")
             assert resp.status_code == 200
 
@@ -799,8 +1206,13 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("services.logging_core.LoggingCore.get_db_stats_context", side_effect=RuntimeError("db fail")):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.logging_core.LoggingCore.get_db_stats_context",
+                side_effect=RuntimeError("db fail"),
+            ),
+        ):
             resp = app.test_client().get("/owner/system-stats", follow_redirects=False)
             assert resp.status_code in (302, 303, 200)
 
@@ -821,7 +1233,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 200
 
     def test_backup_now_failure_json(self, owner_client):
-        with patch("services.backup_service.BackupService.create_backup", return_value=None):
+        with patch(
+            "services.backup_service.BackupService.create_backup", return_value=None
+        ):
             resp = owner_client.post("/owner/backup-now", json={})
         assert resp.status_code == 400
 
@@ -866,12 +1280,17 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_backup_info_not_found(self, owner_client):
-        with patch("services.backup_service.BackupService.get_backup_info", return_value=None):
+        with patch(
+            "services.backup_service.BackupService.get_backup_info", return_value=None
+        ):
             resp = owner_client.get("/owner/backups/info/missing.sql.gz")
         assert resp.status_code == 404
 
     def test_backup_info_denied(self, owner_client):
-        with patch("services.backup_service.BackupService.user_may_access_backup", return_value=False):
+        with patch(
+            "services.backup_service.BackupService.user_may_access_backup",
+            return_value=False,
+        ):
             resp = owner_client.get("/owner/backups/info/denied.sql.gz")
         assert resp.status_code == 400
 
@@ -880,7 +1299,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (200, 302)
 
     def test_prepare_restore_json(self, owner_client):
-        resp = owner_client.get("/owner/backups/prepare-restore/backup.sql.gz?format=json")
+        resp = owner_client.get(
+            "/owner/backups/prepare-restore/backup.sql.gz?format=json"
+        )
         assert resp.status_code == 200
 
     def test_prepare_restore_post(self, owner_client):
@@ -893,14 +1314,22 @@ class TestOwnerExtendedCoverage:
     def test_scheduled_backups_post(self, owner_client):
         resp = owner_client.post(
             "/owner/scheduled-backups",
-            data={"enabled": "on", "frequency": "daily", "backup_time": "03:00", "keep_count": "3"},
+            data={
+                "enabled": "on",
+                "frequency": "daily",
+                "backup_time": "03:00",
+                "keep_count": "3",
+            },
             follow_redirects=False,
         )
         assert resp.status_code in (302, 303, 200)
 
     def test_integrations_update_email(self, owner_client):
         integration = MagicMock()
-        with patch("routes.owner.IntegrationSettings.get_service_config", return_value=integration):
+        with patch(
+            "routes.owner.IntegrationSettings.get_service_config",
+            return_value=integration,
+        ):
             resp = owner_client.post(
                 "/owner/integrations/update/email",
                 data={"enabled": "1", "smtp_host": "smtp.test.com"},
@@ -910,7 +1339,10 @@ class TestOwnerExtendedCoverage:
 
     def test_integrations_update_redis(self, owner_client):
         integration = MagicMock()
-        with patch("routes.owner.IntegrationSettings.get_service_config", return_value=integration):
+        with patch(
+            "routes.owner.IntegrationSettings.get_service_config",
+            return_value=integration,
+        ):
             resp = owner_client.post(
                 "/owner/integrations/update/redis",
                 data={"redis_host": "localhost"},
@@ -920,7 +1352,10 @@ class TestOwnerExtendedCoverage:
 
     def test_integrations_update_currency_api(self, owner_client):
         integration = MagicMock()
-        with patch("routes.owner.IntegrationSettings.get_service_config", return_value=integration):
+        with patch(
+            "routes.owner.IntegrationSettings.get_service_config",
+            return_value=integration,
+        ):
             resp = owner_client.post(
                 "/owner/integrations/update/currency_api",
                 data={"api_key": "key"},
@@ -929,7 +1364,10 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_integrations_update_error(self, owner_client):
-        with patch("routes.owner.IntegrationSettings.get_service_config", side_effect=RuntimeError("fail")):
+        with patch(
+            "routes.owner.IntegrationSettings.get_service_config",
+            side_effect=RuntimeError("fail"),
+        ):
             resp = owner_client.post(
                 "/owner/integrations/update/whatsapp",
                 data={"enabled": "1"},
@@ -1065,7 +1503,10 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.Tenant.get_current", return_value=None):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.Tenant.get_current", return_value=None),
+        ):
             resp = app.test_client().get("/owner/tax-settings", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
@@ -1080,7 +1521,12 @@ class TestOwnerExtendedCoverage:
     def test_exchange_rates_post_save(self, owner_client):
         resp = owner_client.post(
             "/owner/exchange-rates",
-            data={"action": "save", "from_currency": "USD", "to_currency": "AED", "rate": "3.67"},
+            data={
+                "action": "save",
+                "from_currency": "USD",
+                "to_currency": "AED",
+                "rate": "3.67",
+            },
             follow_redirects=False,
         )
         assert resp.status_code in (302, 303, 200)
@@ -1106,7 +1552,10 @@ class TestOwnerExtendedCoverage:
 
         app = app_factory(owner_bp)
         new_vault = MagicMock()
-        with _owner_route_patches(), patch("models.PaymentVault.get_platform_vault", return_value=None):
+        with (
+            _owner_route_patches(),
+            patch("models.PaymentVault.get_platform_vault", return_value=None),
+        ):
             resp = app.test_client().get("/owner/payment-gateways")
         assert resp.status_code == 200
 
@@ -1154,7 +1603,9 @@ class TestOwnerExtendedCoverage:
         settings = MagicMock()
         settings.owner_whitelist_ips = [{"ip": "10.0.0.1", "description": "office"}]
         with patch("routes.owner.SystemSettings.get_current", return_value=settings):
-            resp = owner_client.post("/owner/ip-whitelist/0/delete", follow_redirects=False)
+            resp = owner_client.post(
+                "/owner/ip-whitelist/0/delete", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
 
     def test_api_keys_post(self, owner_client):
@@ -1177,7 +1628,9 @@ class TestOwnerExtendedCoverage:
         alert = MagicMock()
         with patch("routes.owner.SecurityAlert.query") as alert_query:
             alert_query.get_or_404.return_value = alert
-            resp = owner_client.post("/owner/security-alerts/1/resolve", follow_redirects=False)
+            resp = owner_client.post(
+                "/owner/security-alerts/1/resolve", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
 
     def test_data_cleanup_post_logs(self, owner_client):
@@ -1271,16 +1724,23 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 200
 
     def test_error_audit_export_invalid(self, owner_client):
-        with patch("services.logging_core.LoggingCore.export_error_logs", side_effect=ValueError("bad")):
-            resp = owner_client.get("/owner/error-audit-logs/export?format=bad", follow_redirects=False)
+        with patch(
+            "services.logging_core.LoggingCore.export_error_logs",
+            side_effect=ValueError("bad"),
+        ):
+            resp = owner_client.get(
+                "/owner/error-audit-logs/export?format=bad", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
 
     def test_user_create_post_success(self, owner_client):
         role = _mock_role(slug="seller")
         user_q = _model_query(first=None)
-        with patch("models.Role.query", new=_model_query(all=[role])), \
-             patch("routes.owner.User.query", new=user_q), \
-             patch("routes.owner.role_requires_branch", return_value=False):
+        with (
+            patch("models.Role.query", new=_model_query(all=[role])),
+            patch("routes.owner.User.query", new=user_q),
+            patch("routes.owner.role_requires_branch", return_value=False),
+        ):
             resp = owner_client.post(
                 "/owner/users/create",
                 data={
@@ -1299,8 +1759,10 @@ class TestOwnerExtendedCoverage:
     def test_user_edit_post(self, owner_client):
         role = _mock_role(slug="seller")
         target = _mock_user_entity(id=2)
-        with patch("models.Role.query", new=_model_query(all=[role])), \
-             patch("routes.owner.User.query") as user_query:
+        with (
+            patch("models.Role.query", new=_model_query(all=[role])),
+            patch("routes.owner.User.query") as user_query,
+        ):
             user_query.get_or_404.return_value = target
             resp = owner_client.post(
                 "/owner/users/2/edit",
@@ -1397,7 +1859,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 200
 
     def test_api_supervisor_override_success(self, owner_client):
-        supervisor = _mock_user_entity(id=5, is_manager=True, is_admin=True, password_ok=True)
+        supervisor = _mock_user_entity(
+            id=5, is_manager=True, is_admin=True, password_ok=True
+        )
         with patch("routes.owner.settings.db") as mock_db:
             mock_db.session.get.return_value = supervisor
             resp = owner_client.post(
@@ -1417,12 +1881,18 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 403
 
     def test_system_health_failure(self, owner_client):
-        with patch("services.health_service.HealthCheckService.get_health_data", side_effect=RuntimeError("fail")):
+        with patch(
+            "services.health_service.HealthCheckService.get_health_data",
+            side_effect=RuntimeError("fail"),
+        ):
             resp = owner_client.get("/owner/system-health", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_verify_backups_failure(self, owner_client):
-        with patch("services.backup_service.BackupService.list_backups", side_effect=RuntimeError("fail")):
+        with patch(
+            "services.backup_service.BackupService.list_backups",
+            side_effect=RuntimeError("fail"),
+        ):
             resp = owner_client.get("/owner/verify-backups", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
@@ -1430,24 +1900,52 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.security_helpers.enforce_owner_ip_if_needed", side_effect=RuntimeError("blocked")):
+        with (
+            _owner_route_patches(),
+            patch(
+                "utils.security_helpers.enforce_owner_ip_if_needed",
+                side_effect=RuntimeError("blocked"),
+            ),
+        ):
             with pytest.raises(RuntimeError):
                 app.test_client().get("/owner/dashboard")
 
     def test_restore_backup_target_system(self, owner_client):
-        with patch("services.backup_service.BackupService.get_backup_info", return_value={"manifest": {"backup_scope": "system"}}), \
-             patch("services.backup_service.BackupService.restore_backup_to_target_db", return_value={"ok": True, "target_db": "test", "masked_host": "localhost"}):
+        with (
+            patch(
+                "services.backup_service.BackupService.get_backup_info",
+                return_value={"manifest": {"backup_scope": "system"}},
+            ),
+            patch(
+                "services.backup_service.BackupService.restore_backup_to_target_db",
+                return_value={
+                    "ok": True,
+                    "target_db": "test",
+                    "masked_host": "localhost",
+                },
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/backups/restore-target/backup.sql.gz",
-                data={"target_database_url": "postgresql://u:p@localhost/testdb", "restore_confirm": "YES"},
+                data={
+                    "target_database_url": "postgresql://u:p@localhost/testdb",
+                    "restore_confirm": "YES",
+                },
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
 
     def test_restore_backup_target_scoped(self, owner_client):
-        with patch("services.backup_service.BackupService.get_backup_info", return_value={"manifest": {"backup_scope": "tenant"}}), \
-             patch("services.backup_service.BackupService.restore_scoped_backup_to_target_db", return_value={"ok": False, "errors": ["fail"]}):
+        with (
+            patch(
+                "services.backup_service.BackupService.get_backup_info",
+                return_value={"manifest": {"backup_scope": "tenant"}},
+            ),
+            patch(
+                "services.backup_service.BackupService.restore_scoped_backup_to_target_db",
+                return_value={"ok": False, "errors": ["fail"]},
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/backups/restore-target/backup.sql.gz",
                 data={"target_database_url": "postgresql://u:p@localhost/testdb"},
@@ -1456,8 +1954,15 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_delete_backup_success(self, owner_client):
-        with patch("services.backup_service.BackupService.list_backups_for_user", return_value=[{"filename": "backup.sql.gz"}]), \
-             patch("services.backup_service.BackupService.delete_backup", return_value=True):
+        with (
+            patch(
+                "services.backup_service.BackupService.list_backups_for_user",
+                return_value=[{"filename": "backup.sql.gz"}],
+            ),
+            patch(
+                "services.backup_service.BackupService.delete_backup", return_value=True
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/backups/delete",
                 data={"filename": "backup.sql.gz"},
@@ -1466,7 +1971,10 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_delete_backup_missing(self, owner_client):
-        with patch("services.backup_service.BackupService.list_backups_for_user", return_value=[]):
+        with patch(
+            "services.backup_service.BackupService.list_backups_for_user",
+            return_value=[],
+        ):
             resp = owner_client.post(
                 "/owner/backups/delete",
                 data={"filename": "missing.sql.gz"},
@@ -1477,18 +1985,37 @@ class TestOwnerExtendedCoverage:
     def test_download_backup(self, owner_client, tmp_path):
         backup_file = tmp_path / "backup.sql.gz"
         backup_file.write_bytes(b"data")
-        with patch("services.backup_service.BackupService.BACKUP_DIR", str(tmp_path)), \
-             patch("os.path.exists", return_value=True), \
-             patch("flask.send_file", return_value=make_response("file", 200)):
+        with (
+            patch("services.backup_service.BackupService.BACKUP_DIR", str(tmp_path)),
+            patch("os.path.exists", return_value=True),
+            patch("flask.send_file", return_value=make_response("file", 200)),
+        ):
             resp = owner_client.get("/owner/backups/download/backup.sql.gz")
         assert resp.status_code == 200
 
     def test_export_database_sql(self, owner_client, tmp_path):
-        with patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=MagicMock(returncode=0, stderr="", stdout="")), \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+        with (
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "p",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="pg_dump",
+            ),
+            patch(
+                "services.backup_exec.run_pg_tool",
+                return_value=MagicMock(returncode=0, stderr="", stdout=""),
+            ),
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+        ):
             resp = owner_client.post(
                 "/owner/export-database",
                 data={"format": "sql"},
@@ -1513,13 +2040,18 @@ class TestOwnerExtendedCoverage:
         mock_conn = MagicMock()
         mock_engine.begin.return_value.__enter__.return_value = mock_conn
         execute_result = _execute_result(rows=[], columns=["id"])
-        with patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.execute.return_value = execute_result
             resp = owner_client.post(
                 "/owner/convert-database",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/newdb"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/newdb",
+                },
             )
         assert resp.status_code == 200
 
@@ -1528,7 +2060,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 200
 
     def test_store_payment_method_create_post(self, owner_client):
-        with patch("services.store_payment_method_service.StorePaymentMethodService.create_method"):
+        with patch(
+            "services.store_payment_method_service.StorePaymentMethodService.create_method"
+        ):
             resp = owner_client.post(
                 "/owner/store-payment-methods/create",
                 data={"code": "bank", "name_ar": "بنك", "name_en": "Bank"},
@@ -1549,8 +2083,12 @@ class TestOwnerExtendedCoverage:
         method = MagicMock()
         method.id = 1
         method.sort_order = 10
-        with patch("routes.owner.db") as mock_db, \
-             patch("services.store_payment_method_service.StorePaymentMethodService.update_method"):
+        with (
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "services.store_payment_method_service.StorePaymentMethodService.update_method"
+            ),
+        ):
             mock_db.session.get.return_value = method
             resp = owner_client.post(
                 "/owner/store-payment-methods/1/edit",
@@ -1560,7 +2098,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_store_payment_method_toggle(self, owner_client):
-        with patch("services.store_payment_method_service.StorePaymentMethodService.toggle_enabled"):
+        with patch(
+            "services.store_payment_method_service.StorePaymentMethodService.toggle_enabled"
+        ):
             resp = owner_client.post(
                 "/owner/store-payment-methods/1/toggle",
                 data={"is_enabled": "1"},
@@ -1569,7 +2109,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_store_payment_method_delete(self, owner_client):
-        with patch("services.store_payment_method_service.StorePaymentMethodService.delete_method"):
+        with patch(
+            "services.store_payment_method_service.StorePaymentMethodService.delete_method"
+        ):
             resp = owner_client.post(
                 "/owner/store-payment-methods/1/delete",
                 follow_redirects=False,
@@ -1580,8 +2122,10 @@ class TestOwnerExtendedCoverage:
         item = MagicMock()
         item.to_dict.return_value = {"id": 1, "name": "Cust"}
         product_q = _model_query(all=[item])
-        with patch("routes.owner.Customer.query", new=product_q), \
-             patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
+        with (
+            patch("routes.owner.Customer.query", new=product_q),
+            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
+        ):
             resp = owner_client.get("/owner/export-excel/customers")
         assert resp.status_code == 200
 
@@ -1600,8 +2144,13 @@ class TestOwnerExtendedCoverage:
 
     def test_user_create_weak_password(self, owner_client):
         role = _mock_role(slug="seller")
-        with patch("models.Role.query", new=_model_query(all=[role])), \
-             patch("utils.password_validator.PasswordValidator.validate", return_value=(False, ["short"])):
+        with (
+            patch("models.Role.query", new=_model_query(all=[role])),
+            patch(
+                "utils.password_validator.PasswordValidator.validate",
+                return_value=(False, ["short"]),
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/users/create",
                 data={"username": "u1", "password": "weak", "role_id": "2"},
@@ -1611,8 +2160,10 @@ class TestOwnerExtendedCoverage:
     def test_user_create_existing_user(self, owner_client):
         role = _mock_role(slug="seller")
         user_q = _model_query(first=_mock_user_entity())
-        with patch("models.Role.query", new=_model_query(all=[role])), \
-             patch("routes.owner.User.query", new=user_q):
+        with (
+            patch("models.Role.query", new=_model_query(all=[role])),
+            patch("routes.owner.User.query", new=user_q),
+        ):
             resp = owner_client.post(
                 "/owner/users/create",
                 data={"username": "exists", "password": "Str0ng!Pass", "role_id": "2"},
@@ -1692,7 +2243,10 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("utils.decorators.branch_scope_id", return_value=3):
+        with (
+            _owner_route_patches(),
+            patch("utils.decorators.branch_scope_id", return_value=3),
+        ):
             resp = app.test_client().get("/owner/reports")
         assert resp.status_code == 200
 
@@ -1702,8 +2256,10 @@ class TestOwnerExtendedCoverage:
         settings.company_name_ar = "شركة"
         inv_cls = MagicMock()
         inv_cls.get_active = MagicMock(return_value=settings)
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.render_template", return_value="ok"):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("routes.owner.render_template", return_value="ok"),
+        ):
             resp = owner_client.get("/owner/preview-invoice/modern")
         assert resp.status_code == 200
 
@@ -1711,11 +2267,13 @@ class TestOwnerExtendedCoverage:
 class TestOwnerHelpers:
     def test_invalidate_owner_changes_cache_failure(self):
         import routes.owner as owner_mod
+
         with patch("extensions.cache.clear", side_effect=RuntimeError("cache down")):
             owner_mod._invalidate_owner_changes()
 
     def test_mask_api_key_variants(self):
         from routes.owner import _mask_api_key, _mask_db_uri, _validate_postgresql_uri
+
         assert _mask_api_key("") == "****"
         assert _mask_api_key("ab") == "****"
         assert _mask_api_key("secretkey") == "****tkey"
@@ -1733,7 +2291,10 @@ class TestOwnerHelpers:
             _validate_select_only_sql,
             _is_sensitive_stats_table,
         )
-        with patch("routes.owner._known_tables_map", return_value={"customers": "customers"}):
+
+        with patch(
+            "routes.owner._known_tables_map", return_value={"customers": "customers"}
+        ):
             assert _resolve_known_table("customers") == "customers"
             assert _resolve_known_table("users") is None
             assert _resolve_truncatable_table("users") is None
@@ -1782,11 +2343,13 @@ class TestOwnerGapClosure:
         db_q = _dashboard_db_query()
         db_q.scalar.return_value = Decimal("1500")
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.decorators.branch_scope_id", return_value=branch.id), \
-             patch("routes.owner.Branch", _model_class(all=[branch])), \
-             patch("routes.owner.Warehouse", wh_q), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch("utils.decorators.branch_scope_id", return_value=branch.id),
+            patch("routes.owner.Branch", _model_class(all=[branch])),
+            patch("routes.owner.Warehouse", wh_q),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.query.side_effect = lambda *a, **k: db_q
             mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
             mock_db.engine = MagicMock()
@@ -1805,14 +2368,18 @@ class TestOwnerGapClosure:
         branch_row.sale_total = Decimal("100")
         branch_row.sale_month = Decimal("50")
         db_q = _dashboard_db_query()
-        db_q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [branch_row]
+        db_q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            branch_row
+        ]
         tenant = _mock_tenant(id=2)
         tenant_cls = _tenant_class(tenant)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner.get_active_tenant_id", return_value=None), \
-             patch("routes.owner.Tenant", tenant_cls), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.get_active_tenant_id", return_value=None),
+            patch("routes.owner.Tenant", tenant_cls),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.query.side_effect = lambda *a, **k: db_q
             mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
             mock_db.engine = MagicMock()
@@ -1822,9 +2389,11 @@ class TestOwnerGapClosure:
     def test_user_create_branch_required(self, owner_client):
         role = _mock_role(slug="seller")
         role_cls = _model_class(all=[role])
-        with patch("models.Role", role_cls), \
-             patch("routes.owner.role_requires_branch", return_value=True), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("models.Role", role_cls),
+            patch("routes.owner.role_requires_branch", return_value=True),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = owner_client.post(
                 "/owner/users/create",
@@ -1834,9 +2403,11 @@ class TestOwnerGapClosure:
 
     def test_user_create_role_too_high(self, owner_client):
         role = _mock_role(slug="super_admin")
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.role_level_for", return_value=200), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.role_level_for", return_value=200),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = owner_client.post(
                 "/owner/users/create",
@@ -1849,10 +2420,12 @@ class TestOwnerGapClosure:
 
         role = _mock_role(slug="platform_admin")
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("models.Role", _model_class(all=[role])), \
-             patch("utils.auth_helpers.user_may_have_null_tenant", return_value=True), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch("models.Role", _model_class(all=[role])),
+            patch("utils.auth_helpers.user_may_have_null_tenant", return_value=True),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = app.test_client().post(
                 "/owner/users/create",
@@ -1871,15 +2444,22 @@ class TestOwnerGapClosure:
         user_q = _model_query(first=None)
         user_cls = _model_class(entity=None)
         user_cls.query = user_q
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_db.session.get.return_value = role
             mock_safety_session.commit.side_effect = RuntimeError("commit fail")
             resp = owner_client.post(
                 "/owner/users/create",
-                data={"username": "newu", "password": "Str0ng!Pass", "role_id": "2", "tenant_id": "1"},
+                data={
+                    "username": "newu",
+                    "password": "Str0ng!Pass",
+                    "role_id": "2",
+                    "tenant_id": "1",
+                },
             )
         assert resp.status_code == 200
 
@@ -1888,14 +2468,21 @@ class TestOwnerGapClosure:
         target = _mock_user_entity(id=2)
         user_cls = _model_class(entity=target)
         user_cls.query.get_or_404.return_value = target
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.role_requires_branch", return_value=True), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.role_requires_branch", return_value=True),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = owner_client.post(
                 "/owner/users/2/edit",
-                data={"username": "e", "email": "e@t.com", "full_name": "E", "role_id": "2"},
+                data={
+                    "username": "e",
+                    "email": "e@t.com",
+                    "full_name": "E",
+                    "role_id": "2",
+                },
             )
         assert resp.status_code == 200
 
@@ -1904,28 +2491,40 @@ class TestOwnerGapClosure:
         target = _mock_user_entity(id=2)
         user_cls = _model_class(entity=target)
         user_cls.query.get_or_404.return_value = target
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.role_level_for", return_value=200), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.role_level_for", return_value=200),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = owner_client.post(
                 "/owner/users/2/edit",
                 data={
-                    "username": "e", "email": "e@t.com", "full_name": "E",
-                    "role_id": "2", "new_password": "NewStr0ng!Pass",
+                    "username": "e",
+                    "email": "e@t.com",
+                    "full_name": "E",
+                    "role_id": "2",
+                    "new_password": "NewStr0ng!Pass",
                 },
             )
         assert resp.status_code == 200
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db2, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.db") as mock_db2,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_db2.session.get.return_value = role
             mock_safety_session.commit.side_effect = RuntimeError("fail")
             resp2 = owner_client.post(
                 "/owner/users/2/edit",
-                data={"username": "e", "email": "e@t.com", "full_name": "E", "role_id": "2"},
+                data={
+                    "username": "e",
+                    "email": "e@t.com",
+                    "full_name": "E",
+                    "role_id": "2",
+                },
             )
         assert resp2.status_code == 200
 
@@ -1933,9 +2532,11 @@ class TestOwnerGapClosure:
         target = _mock_user_entity(id=9, is_owner=False)
         user_cls = _model_class(entity=target)
         user_cls.query.get_or_404.return_value = target
-        with patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("delete fail")
             resp = owner_client.post("/owner/users/9/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
@@ -1945,15 +2546,19 @@ class TestOwnerGapClosure:
         inspector.get_table_names.return_value = ["customers", "users", "unknown_tbl"]
         exec_result = _execute_result()
         exec_result.scalar.return_value = 3
-        with patch("routes.owner.inspect", return_value=inspector), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("routes.owner.inspect", return_value=inspector),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.engine = MagicMock()
             mock_db.session.execute.return_value = exec_result
             resp = owner_client.get("/owner/database-tools")
         assert resp.status_code == 200
 
     def test_backup_now_form_failure(self, owner_client):
-        with patch("services.backup_service.BackupService.create_backup", return_value=None):
+        with patch(
+            "services.backup_service.BackupService.create_backup", return_value=None
+        ):
             resp = owner_client.post(
                 "/owner/backup-now",
                 data={"description": "fail"},
@@ -2044,7 +2649,9 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 403, 404, 200)
 
     def test_scoped_backup_create_failure(self, owner_client):
-        with patch("services.backup_service.BackupService.create_backup", return_value=None):
+        with patch(
+            "services.backup_service.BackupService.create_backup", return_value=None
+        ):
             resp = owner_client.post(
                 "/owner/backups/create",
                 data={"scope": "system", "description": "x"},
@@ -2053,19 +2660,35 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
 
     def test_verify_backup_denied_and_invalid(self, owner_client):
-        with patch("services.backup_service.BackupService.user_may_access_backup", return_value=False):
+        with patch(
+            "services.backup_service.BackupService.user_may_access_backup",
+            return_value=False,
+        ):
             resp = owner_client.post("/owner/backups/verify/bad.sql.gz")
         assert resp.status_code == 403
-        with patch("services.backup_service.BackupService.verify_backup", return_value={"valid": False, "errors": ["x"]}):
+        with patch(
+            "services.backup_service.BackupService.verify_backup",
+            return_value={"valid": False, "errors": ["x"]},
+        ):
             resp2 = owner_client.post("/owner/backups/verify/backup.sql.gz")
         assert resp2.status_code == 200
 
     def test_prepare_restore_denied_and_bad_payload(self, owner_client):
-        with patch("services.backup_service.BackupService.user_may_access_backup", return_value=False):
-            resp = owner_client.get("/owner/backups/prepare-restore/x.sql.gz", follow_redirects=False)
+        with patch(
+            "services.backup_service.BackupService.user_may_access_backup",
+            return_value=False,
+        ):
+            resp = owner_client.get(
+                "/owner/backups/prepare-restore/x.sql.gz", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
-        with patch("services.backup_service.BackupService.prepare_restore", return_value={"ok": False, "error": "bad"}):
-            resp2 = owner_client.get("/owner/backups/prepare-restore/backup.sql.gz", follow_redirects=False)
+        with patch(
+            "services.backup_service.BackupService.prepare_restore",
+            return_value={"ok": False, "error": "bad"},
+        ):
+            resp2 = owner_client.get(
+                "/owner/backups/prepare-restore/backup.sql.gz", follow_redirects=False
+            )
         assert resp2.status_code in (302, 303)
 
     def test_restore_backup_not_global_owner(self, app_factory, mock_user):
@@ -2100,10 +2723,20 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
 
     def test_delete_backup_invalid_and_failure(self, owner_client):
-        resp = owner_client.post("/owner/backups/delete", data={"filename": ""}, follow_redirects=False)
+        resp = owner_client.post(
+            "/owner/backups/delete", data={"filename": ""}, follow_redirects=False
+        )
         assert resp.status_code in (302, 303, 200)
-        with patch("services.backup_service.BackupService.list_backups_for_user", return_value=[{"filename": "backup.sql.gz"}]), \
-             patch("services.backup_service.BackupService.delete_backup", return_value=False):
+        with (
+            patch(
+                "services.backup_service.BackupService.list_backups_for_user",
+                return_value=[{"filename": "backup.sql.gz"}],
+            ),
+            patch(
+                "services.backup_service.BackupService.delete_backup",
+                return_value=False,
+            ),
+        ):
             resp2 = owner_client.post(
                 "/owner/backups/delete",
                 data={"filename": "backup.sql.gz"},
@@ -2112,15 +2745,26 @@ class TestOwnerGapClosure:
         assert resp2.status_code in (302, 303)
 
     def test_download_backup_denied_missing_error(self, owner_client):
-        with patch("services.backup_service.BackupService.user_may_access_backup", return_value=False):
-            resp = owner_client.get("/owner/backups/download/x.sql.gz", follow_redirects=False)
+        with patch(
+            "services.backup_service.BackupService.user_may_access_backup",
+            return_value=False,
+        ):
+            resp = owner_client.get(
+                "/owner/backups/download/x.sql.gz", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
         with patch("os.path.exists", return_value=False):
-            resp2 = owner_client.get("/owner/backups/download/backup.sql.gz", follow_redirects=False)
+            resp2 = owner_client.get(
+                "/owner/backups/download/backup.sql.gz", follow_redirects=False
+            )
         assert resp2.status_code in (302, 303)
-        with patch("os.path.exists", return_value=True), \
-             patch("flask.send_file", side_effect=RuntimeError("send fail")):
-            resp3 = owner_client.get("/owner/backups/download/backup.sql.gz", follow_redirects=False)
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("flask.send_file", side_effect=RuntimeError("send fail")),
+        ):
+            resp3 = owner_client.get(
+                "/owner/backups/download/backup.sql.gz", follow_redirects=False
+            )
         assert resp3.status_code in (302, 303)
 
     def test_clear_cache_fallback_paths(self, owner_client):
@@ -2151,38 +2795,52 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
         with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("browse fail")
-            resp2 = owner_client.get("/owner/browse-table/customers", follow_redirects=False)
+            resp2 = owner_client.get(
+                "/owner/browse-table/customers", follow_redirects=False
+            )
         assert resp2.status_code in (302, 303)
 
     def test_update_row_edge_cases(self, owner_client):
         inspector = _inspector()
         inspector.get_pk_constraint.return_value = {"constrained_columns": []}
         with patch("routes.owner.database.inspect", return_value=inspector):
-            resp = owner_client.post("/owner/update-row/customers/1", json={"name": "x"})
+            resp = owner_client.post(
+                "/owner/update-row/customers/1", json={"name": "x"}
+            )
         assert resp.status_code == 400
         inspector.get_pk_constraint.return_value = {"constrained_columns": ["id"]}
         with patch("routes.owner.database.inspect", return_value=inspector):
-            resp2 = owner_client.post("/owner/update-row/customers/1", json={"id": "hack"})
+            resp2 = owner_client.post(
+                "/owner/update-row/customers/1", json={"id": "hack"}
+            )
         assert resp2.status_code == 400
-        with patch("routes.owner.database.inspect", return_value=inspector), \
-             patch("routes.owner.database.db") as mock_db:
+        with (
+            patch("routes.owner.database.inspect", return_value=inspector),
+            patch("routes.owner.database.db") as mock_db,
+        ):
             mock_db.session.execute.side_effect = RuntimeError("update fail")
             mock_db.session.rollback = MagicMock()
-            resp3 = owner_client.post("/owner/update-row/customers/1", json={"name": "x"})
+            resp3 = owner_client.post(
+                "/owner/update-row/customers/1", json={"name": "x"}
+            )
         assert resp3.status_code == 500
 
     def test_edit_table_data_exception(self, owner_client):
         with patch("routes.owner.database.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("edit fail")
-            resp = owner_client.get("/owner/edit-table-data/customers", follow_redirects=False)
+            resp = owner_client.get(
+                "/owner/edit-table-data/customers", follow_redirects=False
+            )
         assert resp.status_code in (302, 303, 200)
 
     def test_export_database_json_and_failure(self, owner_client, tmp_path):
         exec_result = _execute_result(rows=[(1, "a")], columns=["id", "name"])
-        with patch("routes.owner.database.db") as mock_db, \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
-             patch("builtins.open", create=True) as mock_open:
+        with (
+            patch("routes.owner.database.db") as mock_db,
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("builtins.open", create=True) as mock_open,
+        ):
             mock_db.session.execute.return_value = exec_result
             mock_open.return_value.__enter__.return_value = MagicMock()
             resp = owner_client.post(
@@ -2191,7 +2849,10 @@ class TestOwnerGapClosure:
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("services.backup_service.BackupService._parse_db_url", side_effect=RuntimeError("fail")):
+        with patch(
+            "services.backup_service.BackupService._parse_db_url",
+            side_effect=RuntimeError("fail"),
+        ):
             resp2 = owner_client.post(
                 "/owner/export-database",
                 data={"format": "sql"},
@@ -2207,38 +2868,59 @@ class TestOwnerGapClosure:
         row.keys.return_value = ["id", "name"]
         exec_result = _execute_result(rows=[(1, "n")], columns=["id", "name"])
         with patch("routes.owner._validate_postgresql_uri", return_value=False):
-            resp = owner_client.post("/owner/convert-database", data={"target_db": "postgresql", "postgresql_uri": "bad"})
+            resp = owner_client.post(
+                "/owner/convert-database",
+                data={"target_db": "postgresql", "postgresql_uri": "bad"},
+            )
         assert resp.status_code == 200
-        with patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner._inspector_column_names", return_value={"id", "name"}):
+        with (
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner._inspector_column_names", return_value={"id", "name"}),
+        ):
             mock_db.session.execute.return_value = exec_result
             resp2 = owner_client.post(
                 "/owner/convert-database",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/db"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/db",
+                },
             )
         assert resp2.status_code == 200
         mock_conn.execute.side_effect = RuntimeError("insert fail")
-        with patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner._inspector_column_names", return_value={"id", "name"}):
+        with (
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner._inspector_column_names", return_value={"id", "name"}),
+        ):
             mock_db.session.execute.return_value = exec_result
             resp3 = owner_client.post(
                 "/owner/convert-database",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/db"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/db",
+                },
             )
         assert resp3.status_code == 200
 
     def test_company_and_developer_exceptions(self, owner_client):
         tenant = _mock_tenant()
         tenant_cls = _tenant_class(tenant)
-        with patch("routes.owner.Tenant", tenant_cls), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.Tenant", tenant_cls),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("save fail")
             resp = owner_client.post(
                 "/owner/company-info",
@@ -2246,8 +2928,10 @@ class TestOwnerGapClosure:
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("dev fail")
             resp2 = owner_client.post(
                 "/owner/developer-settings",
@@ -2266,10 +2950,12 @@ class TestOwnerGapClosure:
             "company_logo": (BytesIO(b"png"), "logo.png"),
             "watermark_image": (BytesIO(b"png"), "wm.png"),
         }
-        with patch("routes.owner.InvoiceSettings", settings_cls), \
-             patch("models.invoice_settings.InvoiceSettings", settings_cls), \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+        with (
+            patch("routes.owner.InvoiceSettings", settings_cls),
+            patch("models.invoice_settings.InvoiceSettings", settings_cls),
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+        ):
             resp = owner_client.post(
                 "/owner/invoice-settings",
                 data=data,
@@ -2277,10 +2963,12 @@ class TestOwnerGapClosure:
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.InvoiceSettings", settings_cls), \
-             patch("models.invoice_settings.InvoiceSettings", settings_cls), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.InvoiceSettings", settings_cls),
+            patch("models.invoice_settings.InvoiceSettings", settings_cls),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("inv fail")
             resp2 = owner_client.post(
                 "/owner/invoice-settings",
@@ -2293,9 +2981,11 @@ class TestOwnerGapClosure:
         settings = MagicMock()
         settings.enable_qr_code = True
         inv_cls = _invoice_settings_class(settings)
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.render_template", return_value="ok"), \
-             patch("routes.owner.resolve_default_currency", return_value="AED"):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("routes.owner.render_template", return_value="ok"),
+            patch("routes.owner.resolve_default_currency", return_value="AED"),
+        ):
             resp = owner_client.get("/owner/preview-receipt/modern")
         assert resp.status_code == 200
 
@@ -2303,8 +2993,13 @@ class TestOwnerGapClosure:
         tenant = _mock_tenant()
         tenant.enable_tax = False
         tenant_cls = _tenant_class(tenant)
-        with patch("routes.owner.Tenant", tenant_cls), \
-             patch("utils.tax_settings.suggested_rate_for_country", return_value=Decimal("5")):
+        with (
+            patch("routes.owner.Tenant", tenant_cls),
+            patch(
+                "utils.tax_settings.suggested_rate_for_country",
+                return_value=Decimal("5"),
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/tax-settings",
                 data={"enable_tax": "on", "vat_country": "AE"},
@@ -2313,14 +3008,18 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
 
     def test_currency_settings_tenant_sync_error(self, owner_client):
-        with patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("tenant sync")):
+        with patch(
+            "routes.owner.Tenant.get_current", side_effect=RuntimeError("tenant sync")
+        ):
             resp = owner_client.post(
                 "/owner/currency-settings",
                 data={"default_currency": "USD"},
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("get fail")):
+        with patch(
+            "routes.owner.Tenant.get_current", side_effect=RuntimeError("get fail")
+        ):
             resp2 = owner_client.get("/owner/currency-settings")
         assert resp2.status_code == 200
 
@@ -2328,8 +3027,13 @@ class TestOwnerGapClosure:
         rec = MagicMock()
         rec.id = 1
         ex_cls = _model_class(all=[rec])
-        with patch("models.ExchangeRateRecord", ex_cls), \
-             patch("services.exchange_rate_service.ExchangeRateService.save_manual_rate", return_value={"ok": False, "error": "bad"}):
+        with (
+            patch("models.ExchangeRateRecord", ex_cls),
+            patch(
+                "services.exchange_rate_service.ExchangeRateService.save_manual_rate",
+                return_value={"ok": False, "error": "bad"},
+            ),
+        ):
             resp = owner_client.post(
                 "/owner/exchange-rates",
                 data={"action": "save", "rate": "1.5"},
@@ -2354,12 +3058,25 @@ class TestOwnerGapClosure:
         assert resp3.status_code in (302, 303)
 
     def test_database_optimize_paths(self, owner_client):
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", return_value={"success": False, "error": "vac fail"}), \
-             patch("utils.database_optimizer.DatabaseOptimizer.analyze_tables", return_value={"success": True}):
+        with (
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+                return_value={"success": False, "error": "vac fail"},
+            ),
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.analyze_tables",
+                return_value={"success": True},
+            ),
+        ):
             resp = owner_client.post("/owner/database-optimize", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", side_effect=RuntimeError("boom")):
-            resp2 = owner_client.post("/owner/database-optimize", follow_redirects=False)
+        with patch(
+            "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+            side_effect=RuntimeError("boom"),
+        ):
+            resp2 = owner_client.post(
+                "/owner/database-optimize", follow_redirects=False
+            )
         assert resp2.status_code in (302, 303)
 
     def test_data_cleanup_archived(self, owner_client):
@@ -2367,8 +3084,10 @@ class TestOwnerGapClosure:
         audit_cls.query.filter.return_value.delete.return_value = 2
         arch_cls = _model_class()
         arch_cls.query.filter.return_value.delete.return_value = 3
-        with patch("routes.owner.AuditLog", audit_cls), \
-             patch("routes.owner.ArchivedRecord", arch_cls):
+        with (
+            patch("routes.owner.AuditLog", audit_cls),
+            patch("routes.owner.ArchivedRecord", arch_cls),
+        ):
             resp = owner_client.post(
                 "/owner/data-cleanup",
                 data={"days": "30", "cleanup_type": "archived"},
@@ -2379,25 +3098,35 @@ class TestOwnerGapClosure:
     def test_export_excel_paths(self, owner_client):
         item = MagicMock()
         item.to_dict.return_value = {"id": 1}
-        with patch("routes.owner.database.Customer", _model_class(all=[item])), \
-             patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
+        with (
+            patch("routes.owner.database.Customer", _model_class(all=[item])),
+            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
+        ):
             resp = owner_client.get("/owner/export-excel/customers")
         assert resp.status_code == 200
         plain = MagicMock()
         col = MagicMock(name="id")
         plain.__table__ = MagicMock(columns=[col])
         del plain.to_dict
-        with patch("routes.owner.database.Product", _model_class(all=[plain])), \
-             patch("utils.decorators.branch_scope_id", return_value=1), \
-             patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
+        with (
+            patch("routes.owner.database.Product", _model_class(all=[plain])),
+            patch("utils.decorators.branch_scope_id", return_value=1),
+            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
+        ):
             resp2 = owner_client.get("/owner/export-excel/products")
         assert resp2.status_code in (200, 302)
         with patch("routes.owner.database.Customer", _model_class(all=[])):
-            resp3 = owner_client.get("/owner/export-excel/customers", follow_redirects=False)
+            resp3 = owner_client.get(
+                "/owner/export-excel/customers", follow_redirects=False
+            )
         assert resp3.status_code in (302, 303)
-        with patch("routes.owner.database.Customer", _model_class(all=[item])), \
-             patch("pandas.DataFrame", side_effect=RuntimeError("xlsx fail")):
-            resp4 = owner_client.get("/owner/export-excel/customers", follow_redirects=False)
+        with (
+            patch("routes.owner.database.Customer", _model_class(all=[item])),
+            patch("pandas.DataFrame", side_effect=RuntimeError("xlsx fail")),
+        ):
+            resp4 = owner_client.get(
+                "/owner/export-excel/customers", follow_redirects=False
+            )
         assert resp4.status_code in (302, 303)
 
     def test_tenant_create_validation_and_error(self, owner_client):
@@ -2417,9 +3146,11 @@ class TestOwnerGapClosure:
             )
         assert resp2.status_code in (302, 303)
         tenant_cls.query.filter_by.return_value.first.return_value = None
-        with patch("routes.owner.tenants.Tenant", tenant_cls), \
-             patch("routes.owner.tenants.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.tenants.Tenant", tenant_cls),
+            patch("routes.owner.tenants.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("create fail")
             resp3 = owner_client.post(
                 "/owner/tenants/create",
@@ -2438,9 +3169,11 @@ class TestOwnerGapClosure:
         tenant2 = _mock_tenant(id=2)
         tenant_cls2 = _tenant_class(tenant2)
         tenant_cls2.query.get_or_404.return_value = tenant2
-        with patch("routes.owner.Tenant", tenant_cls2), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.Tenant", tenant_cls2),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("edit fail")
             resp2 = owner_client.post(
                 "/owner/tenants/2/edit",
@@ -2454,18 +3187,22 @@ class TestOwnerGapClosure:
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
-            resp = app.test_client().post("/owner/api/toggle-warehouse-negative", data={})
+            resp = app.test_client().post(
+                "/owner/api/toggle-warehouse-negative", data={}
+            )
         assert resp.status_code in (400, 404)
         wh = MagicMock()
         wh.allow_negative_inventory = False
         wh_cls = _model_class()
         wh_cls.query.filter_by.return_value.first.return_value = wh
-        with _owner_route_patches(), \
-             patch("utils.decorators.is_global_owner_user", return_value=False), \
-             patch("utils.tenanting.get_active_tenant_id", return_value=1), \
-             patch("routes.owner.settings.Warehouse", wh_cls), \
-             patch("routes.owner.settings.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            _owner_route_patches(),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+            patch("utils.tenanting.get_active_tenant_id", return_value=1),
+            patch("routes.owner.settings.Warehouse", wh_cls),
+            patch("routes.owner.settings.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("wh fail")
             resp2 = app.test_client().post(
                 "/owner/api/toggle-warehouse-negative",
@@ -2531,8 +3268,10 @@ class TestOwnerGapClosure:
             follow_redirects=False,
         )
         assert resp.status_code in (302, 303, 200)
-        with patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_safety_session.commit.side_effect = RuntimeError("cfg fail")
             resp2 = owner_client.post(
                 "/owner/system-config",
@@ -2546,8 +3285,10 @@ class TestOwnerGapClosure:
         tenant_cls = _tenant_class(tenant)
         inv_cls = MagicMock()
         inv_cls.get_active.side_effect = RuntimeError("inv sync")
-        with patch("routes.owner.Tenant", tenant_cls), \
-             patch("routes.owner.InvoiceSettings", inv_cls):
+        with (
+            patch("routes.owner.Tenant", tenant_cls),
+            patch("routes.owner.InvoiceSettings", inv_cls),
+        ):
             resp = owner_client.post(
                 "/owner/company-info",
                 data={"name_ar": "شركة", "slug": "co"},
@@ -2563,7 +3304,9 @@ class TestOwnerGapClosure:
         tenant = _mock_tenant()
         row = (store, tenant)
         with patch("routes.owner.db") as mock_db:
-            mock_db.session.query.return_value.join.return_value.order_by.return_value.all.return_value = [row]
+            mock_db.session.query.return_value.join.return_value.order_by.return_value.all.return_value = [
+                row
+            ]
             resp = owner_client.get("/owner/tenant-stores")
         assert resp.status_code == 200
         resp2 = owner_client.post(
@@ -2601,28 +3344,52 @@ class TestOwnerGapClosure:
         settings = MagicMock()
         settings.enable_qr_code = False
         inv_cls = _invoice_settings_class(settings)
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.resolve_default_currency", side_effect=RuntimeError("curr")), \
-             patch("routes.owner.render_template", return_value="ok"):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch(
+                "routes.owner.resolve_default_currency",
+                side_effect=RuntimeError("curr"),
+            ),
+            patch("routes.owner.render_template", return_value="ok"),
+        ):
             resp = owner_client.get("/owner/preview-invoice/modern")
         assert resp.status_code == 200
 
     def test_preview_receipt_currency_fallback(self, owner_client):
         settings = MagicMock()
         inv_cls = _invoice_settings_class(settings)
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.resolve_default_currency", side_effect=RuntimeError("curr")), \
-             patch("routes.owner.render_template", return_value="ok"):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch(
+                "routes.owner.resolve_default_currency",
+                side_effect=RuntimeError("curr"),
+            ),
+            patch("routes.owner.render_template", return_value="ok"),
+        ):
             resp = owner_client.get("/owner/preview-receipt/modern")
         assert resp.status_code == 200
 
     def test_export_database_sql_success(self, owner_client, tmp_path):
         proc = MagicMock(returncode=0, stderr="", stdout="")
-        with patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+        with (
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "p",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="pg_dump",
+            ),
+            patch("services.backup_exec.run_pg_tool", return_value=proc),
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+        ):
             resp = owner_client.post(
                 "/owner/export-database",
                 data={"format": "sql"},
@@ -2635,23 +3402,37 @@ class TestOwnerGapClosure:
         mock_conn = MagicMock()
         mock_engine.begin.return_value.__enter__.return_value = mock_conn
         empty_result = _execute_result(rows=[], columns=["id"])
-        with patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner._known_tables_map", return_value={"users": "users", "customers": "customers"}), \
-             patch("routes.owner._inspector_column_names", return_value=set()):
+        with (
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"users": "users", "customers": "customers"},
+            ),
+            patch("routes.owner._inspector_column_names", return_value=set()),
+        ):
             mock_db.session.execute.return_value = empty_result
             resp = owner_client.post(
                 "/owner/convert-database",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/db"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/db",
+                },
             )
         assert resp.status_code == 200
         with patch("routes.owner._validate_postgresql_uri", return_value=False):
-            resp2 = owner_client.post("/owner/convert-database", data={"target_db": "postgresql"})
+            resp2 = owner_client.post(
+                "/owner/convert-database", data={"target_db": "postgresql"}
+            )
         assert resp2.status_code == 200
 
     def test_helper_inspector_unknown_table(self):
-        from routes.owner import _inspector_column_names, _known_tables_map, _resolve_known_table
+        from routes.owner import (
+            _inspector_column_names,
+            _resolve_known_table,
+        )
+
         with patch("routes.owner._known_tables_map", return_value={}):
             assert _inspector_column_names("missing") == set()
             assert _resolve_known_table("") is None
@@ -2687,7 +3468,9 @@ class TestOwnerGapClosure:
         assert resp.status_code in (403, 302, 303)
 
     def test_error_audit_resolve_failure(self, owner_client):
-        with patch("services.logging_core.LoggingCore.mark_error_resolved", return_value=False):
+        with patch(
+            "services.logging_core.LoggingCore.mark_error_resolved", return_value=False
+        ):
             resp = owner_client.post(
                 "/owner/error-audit-logs/1/resolve",
                 data={"note": "nope"},
@@ -2704,8 +3487,10 @@ class TestOwnerGapClosure:
                 json={"field": "max_users", "value": "not-int"},
             )
         assert resp.status_code == 400
-        with patch("routes.owner.tenants.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            patch("routes.owner.tenants.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_db.session.get.return_value = tenant
             mock_safety_session.commit.side_effect = RuntimeError("pkg fail")
             resp2 = owner_client.post(
@@ -2739,6 +3524,7 @@ class TestOwnerGapClosure:
             for p in patches:
                 stack.enter_context(p)
             import routes.owner as owner_mod
+
             owner_mod.db.session.get.return_value = role
             resp = app.test_client().post(
                 "/owner/users/create",
@@ -2752,29 +3538,44 @@ class TestOwnerGapClosure:
         target = _mock_user_entity(id=2)
         user_cls = _model_class(entity=target)
         user_cls.query.get_or_404.return_value = target
-        with patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.get.return_value = role
             resp = owner_client.post(
                 "/owner/users/2/edit",
                 data={
-                    "username": "e", "email": "e@t.com", "full_name": "E",
-                    "role_id": "2", "new_password": "NewStr0ng!Pass",
+                    "username": "e",
+                    "email": "e@t.com",
+                    "full_name": "E",
+                    "role_id": "2",
+                    "new_password": "NewStr0ng!Pass",
                 },
                 follow_redirects=False,
             )
         assert resp.status_code in (302, 303, 200)
 
     def test_database_optimize_partial_success(self, owner_client):
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", return_value={"success": True}), \
-             patch("utils.database_optimizer.DatabaseOptimizer.analyze_tables", return_value={"success": False, "error": "analyze fail"}):
+        with (
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+                return_value={"success": True},
+            ),
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.analyze_tables",
+                return_value={"success": False, "error": "analyze fail"},
+            ),
+        ):
             resp = owner_client.post("/owner/database-optimize", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_restore_backup_global_owner_required(self, owner_client):
-        with patch("utils.decorators.is_global_owner_user", return_value=True), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False):
+        with (
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+        ):
             resp = owner_client.post(
                 "/owner/backups/restore-target/backup.sql.gz",
                 data={"target_database_url": "postgresql://u:p@localhost/db"},
@@ -2782,7 +3583,9 @@ class TestOwnerGapClosure:
             )
         assert resp.status_code in (302, 303, 200)
 
-    def test_dashboard_branch_stats_with_inventory(self, app_factory, bypass_owner_auth):
+    def test_dashboard_branch_stats_with_inventory(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp
 
         branch = _mock_branch()
@@ -2795,13 +3598,15 @@ class TestOwnerGapClosure:
         pwc_cls = _model_class()
         db_q = _dashboard_db_query()
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner.get_active_tenant_id", return_value=1), \
-             patch("models.Branch", branch_cls), \
-             patch("models.Warehouse", wh_cls), \
-             patch("models.ProductWarehouseCost", pwc_cls), \
-             patch("models.StockMovement", _model_class()), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+            patch("models.Branch", branch_cls),
+            patch("models.Warehouse", wh_cls),
+            patch("models.ProductWarehouseCost", pwc_cls),
+            patch("models.StockMovement", _model_class()),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.query.side_effect = lambda *a, **k: db_q
             mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
             mock_db.engine = MagicMock()
@@ -2818,7 +3623,10 @@ class TestOwnerDirectCalls:
         inspector.get_table_names.return_value = ["customers", "users", "products"]
         exec_result = _execute_result()
         exec_result.scalar.return_value = 4
-        with _owner_route_patches(), patch("sqlalchemy.inspect", return_value=inspector):
+        with (
+            _owner_route_patches(),
+            patch("sqlalchemy.inspect", return_value=inspector),
+        ):
             with app.test_request_context("/owner/database-tools"):
                 result = database_tools()
         assert result is not None
@@ -2827,8 +3635,13 @@ class TestOwnerDirectCalls:
         from routes.owner import owner_bp, create_scoped_backup
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("utils.auth_helpers.is_global_owner_user", return_value=False):
-            with app.test_request_context("/owner/backups/create", method="POST", data={"scope": "system"}):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+        ):
+            with app.test_request_context(
+                "/owner/backups/create", method="POST", data={"scope": "system"}
+            ):
                 with pytest.raises(Exception):
                     create_scoped_backup()
 
@@ -2836,11 +3649,15 @@ class TestOwnerDirectCalls:
         from routes.owner import owner_bp, create_scoped_backup
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("routes.owner.get_active_tenant_id", return_value=1):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+        ):
             with app.test_request_context(
-                "/owner/backups/create", method="POST", data={"scope": "tenant", "tenant_id": "99"}
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "tenant", "tenant_id": "99"},
             ):
                 with pytest.raises(Exception):
                     create_scoped_backup()
@@ -2849,7 +3666,10 @@ class TestOwnerDirectCalls:
         from routes.owner import owner_bp, restore_backup_target
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("utils.auth_helpers.is_global_owner_user", return_value=False):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+        ):
             with app.test_request_context(
                 "/owner/backups/restore-target/x.sql.gz",
                 method="POST",
@@ -2868,18 +3688,22 @@ class TestOwnerDirectCalls:
                 result = edit_table_data("customers")
         assert result.status_code in (302, 303)
 
-    def test_invoice_settings_logo_upload_direct(self, app_factory, bypass_owner_auth, tmp_path):
+    def test_invoice_settings_logo_upload_direct(
+        self, app_factory, bypass_owner_auth, tmp_path
+    ):
         from routes.owner import owner_bp, invoice_settings
         from io import BytesIO
 
         app = app_factory(owner_bp)
         settings = MagicMock()
         inv_cls = _invoice_settings_class(settings)
-        with _owner_route_patches(), \
-             patch("routes.owner.InvoiceSettings", inv_cls), \
-             patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.InvoiceSettings", inv_cls),
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+        ):
             with app.test_request_context(
                 "/owner/invoice-settings",
                 method="POST",
@@ -2906,11 +3730,15 @@ class TestOwnerDirectCalls:
 class TestOwnerFinalGaps:
     def test_mask_db_uri_malformed(self):
         from routes.owner import _mask_db_uri
+
         assert _mask_db_uri("no-scheme") == "no-scheme"
-        assert _mask_db_uri("postgresql://bad") == "[redacted]" or "postgresql" in _mask_db_uri("postgresql://bad")
+        assert _mask_db_uri(
+            "postgresql://bad"
+        ) == "[redacted]" or "postgresql" in _mask_db_uri("postgresql://bad")
 
     def test_validate_select_forbidden_keyword(self):
         from routes.owner import _validate_select_only_sql
+
         ok, _ = _validate_select_only_sql("SELECT * FROM users WHERE id IN (UPDATE x)")
         assert ok is False
 
@@ -2920,17 +3748,24 @@ class TestOwnerFinalGaps:
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.get.return_value = None
-            with app.test_request_context("/owner/tenant-ai/9/toggle", method="POST", data={}):
+            with app.test_request_context(
+                "/owner/tenant-ai/9/toggle", method="POST", data={}
+            ):
                 result = tenant_ai_toggle(9)
         assert result.status_code in (302, 303)
 
-    def test_tenant_ai_toggle_invalid_level_and_error(self, app_factory, bypass_owner_auth):
+    def test_tenant_ai_toggle_invalid_level_and_error(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, tenant_ai_toggle
 
         tenant = _mock_tenant(id=2)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db, \
-             patch("utils.db_safety.db.session") as mock_safety_session:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.db_safety.db.session") as mock_safety_session,
+        ):
             mock_db.session.get.return_value = tenant
             with app.test_request_context(
                 "/owner/tenant-ai/2/toggle",
@@ -2944,17 +3779,24 @@ class TestOwnerFinalGaps:
             ):
                 tenant_ai_toggle(2)
 
-    def test_tenant_store_toggle_missing_and_error(self, app_factory, bypass_owner_auth):
+    def test_tenant_store_toggle_missing_and_error(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, tenant_store_platform_toggle
 
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.get.return_value = None
-            with app.test_request_context("/owner/tenant-stores/1/platform-toggle", method="POST", data={}):
+            with app.test_request_context(
+                "/owner/tenant-stores/1/platform-toggle", method="POST", data={}
+            ):
                 tenant_store_platform_toggle(1)
             store = MagicMock()
             mock_db.session.get.return_value = store
-            with patch("services.store_service.StoreService.set_platform_disabled", side_effect=RuntimeError("fail")):
+            with patch(
+                "services.store_service.StoreService.set_platform_disabled",
+                side_effect=RuntimeError("fail"),
+            ):
                 with app.test_request_context(
                     "/owner/tenant-stores/1/platform-toggle",
                     method="POST",
@@ -2963,16 +3805,37 @@ class TestOwnerFinalGaps:
                     tenant_store_platform_toggle(1)
 
     def test_store_payment_method_errors(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp, store_payment_method_create, store_payment_method_edit
-        from routes.owner import store_payment_method_toggle, store_payment_method_delete
+        from routes.owner import (
+            owner_bp,
+            store_payment_method_create,
+            store_payment_method_edit,
+        )
+        from routes.owner import (
+            store_payment_method_toggle,
+            store_payment_method_delete,
+        )
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
-            with patch("services.store_payment_method_service.StorePaymentMethodService.create_method", side_effect=ValueError("dup")):
-                with app.test_request_context("/owner/store-payment-methods/create", method="POST", data={"code": "x"}):
+            with patch(
+                "services.store_payment_method_service.StorePaymentMethodService.create_method",
+                side_effect=ValueError("dup"),
+            ):
+                with app.test_request_context(
+                    "/owner/store-payment-methods/create",
+                    method="POST",
+                    data={"code": "x"},
+                ):
                     store_payment_method_create()
-            with patch("services.store_payment_method_service.StorePaymentMethodService.create_method", side_effect=RuntimeError("fail")):
-                with app.test_request_context("/owner/store-payment-methods/create", method="POST", data={"code": "x"}):
+            with patch(
+                "services.store_payment_method_service.StorePaymentMethodService.create_method",
+                side_effect=RuntimeError("fail"),
+            ):
+                with app.test_request_context(
+                    "/owner/store-payment-methods/create",
+                    method="POST",
+                    data={"code": "x"},
+                ):
                     store_payment_method_create()
             with patch("routes.owner.db") as mock_db:
                 mock_db.session.get.return_value = None
@@ -2981,31 +3844,58 @@ class TestOwnerFinalGaps:
             method = MagicMock()
             method.id = 1
             method.sort_order = 1
-            with patch("routes.owner.db") as mock_db, \
-                 patch("services.store_payment_method_service.StorePaymentMethodService.update_method", side_effect=ValueError("bad")):
+            with (
+                patch("routes.owner.db") as mock_db,
+                patch(
+                    "services.store_payment_method_service.StorePaymentMethodService.update_method",
+                    side_effect=ValueError("bad"),
+                ),
+            ):
                 mock_db.session.get.return_value = method
-                with app.test_request_context("/owner/store-payment-methods/1/edit", method="POST", data={"code": "x"}):
+                with app.test_request_context(
+                    "/owner/store-payment-methods/1/edit",
+                    method="POST",
+                    data={"code": "x"},
+                ):
                     store_payment_method_edit(1)
-            with patch("services.store_payment_method_service.StorePaymentMethodService.toggle_enabled", side_effect=ValueError("bad")):
-                with app.test_request_context("/owner/store-payment-methods/1/toggle", method="POST", data={"is_enabled": "1"}):
+            with patch(
+                "services.store_payment_method_service.StorePaymentMethodService.toggle_enabled",
+                side_effect=ValueError("bad"),
+            ):
+                with app.test_request_context(
+                    "/owner/store-payment-methods/1/toggle",
+                    method="POST",
+                    data={"is_enabled": "1"},
+                ):
                     store_payment_method_toggle(1)
-            with patch("services.store_payment_method_service.StorePaymentMethodService.delete_method", side_effect=ValueError("bad")):
-                with app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
+            with patch(
+                "services.store_payment_method_service.StorePaymentMethodService.delete_method",
+                side_effect=ValueError("bad"),
+            ):
+                with app.test_request_context(
+                    "/owner/store-payment-methods/1/delete", method="POST"
+                ):
                     store_payment_method_delete(1)
 
-    def test_export_database_json_direct(self, app_factory, bypass_owner_auth, tmp_path):
+    def test_export_database_json_direct(
+        self, app_factory, bypass_owner_auth, tmp_path
+    ):
         from routes.owner import owner_bp, export_database
 
         app = app_factory(owner_bp)
         exec_result = _execute_result(rows=[(1, "n")], columns=["id", "name"])
-        with _owner_route_patches(), \
-             patch("routes.owner.db") as mock_db, \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])), \
-             patch("builtins.open", create=True) as mock_open:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.db") as mock_db,
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+            patch("builtins.open", create=True) as mock_open,
+        ):
             mock_db.session.execute.return_value = exec_result
             mock_open.return_value.__enter__.return_value = MagicMock()
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "json"}
+            ):
                 export_database()
 
     def test_convert_database_empty_target(self, app_factory, bypass_owner_auth):
@@ -3013,7 +3903,9 @@ class TestOwnerFinalGaps:
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
-            with app.test_request_context("/owner/convert-database", method="POST", data={"target_db": ""}):
+            with app.test_request_context(
+                "/owner/convert-database", method="POST", data={"target_db": ""}
+            ):
                 convert_database()
 
     def test_sql_console_error_direct(self, app_factory, bypass_owner_auth):
@@ -3022,15 +3914,22 @@ class TestOwnerFinalGaps:
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.execute.side_effect = RuntimeError("sql fail")
-            with app.test_request_context("/owner/sql-console", method="POST", data={"sql_query": "SELECT 1"}):
+            with app.test_request_context(
+                "/owner/sql-console", method="POST", data={"sql_query": "SELECT 1"}
+            ):
                 sql_console()
 
     def test_system_config_tenant_sync_error(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp, system_config
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("sync")):
-            with app.test_request_context("/owner/system-config", method="POST", data={"default_currency": "AED"}):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("sync")),
+        ):
+            with app.test_request_context(
+                "/owner/system-config", method="POST", data={"default_currency": "AED"}
+            ):
                 system_config()
 
     def test_create_user_company_tenant_path(self, app_factory, bypass_owner_auth):
@@ -3043,11 +3942,14 @@ class TestOwnerFinalGaps:
         user_cls = _model_class()
         user_cls.query = user_q
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+        ):
             import routes.owner as owner_mod
+
             owner_mod.db.session.get.return_value = role
             with app.test_request_context(
                 "/owner/users/create",
@@ -3057,7 +3959,11 @@ class TestOwnerFinalGaps:
                 create_user()
 
     def test_api_company_admin_paths(self, app_factory, mock_user):
-        from routes.owner import owner_bp, api_update_tenant_settings, api_toggle_warehouse_negative
+        from routes.owner import (
+            owner_bp,
+            api_update_tenant_settings,
+            api_toggle_warehouse_negative,
+        )
 
         mock_user.is_super_admin.return_value = True
         tenant = _mock_tenant()
@@ -3071,8 +3977,10 @@ class TestOwnerFinalGaps:
         with _owner_route_patches(), ExitStack() as stack:
             for p in base:
                 stack.enter_context(p)
-            with patch("routes.owner.db") as mock_db, \
-                 patch("utils.db_safety.db.session") as mock_safety_session:
+            with (
+                patch("routes.owner.db") as mock_db,
+                patch("utils.db_safety.db.session") as mock_safety_session,
+            ):
                 mock_db.session.get.return_value = tenant
                 with app.test_request_context(
                     "/owner/api/update-tenant-settings",
@@ -3105,7 +4013,9 @@ class TestOwnerFinalGaps:
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.get.return_value = tenant
-            with app.test_request_context("/owner/api/tenant/2/toggle-status", method="POST", json={}):
+            with app.test_request_context(
+                "/owner/api/tenant/2/toggle-status", method="POST", json={}
+            ):
                 api_tenant_toggle_status(2)
 
     def test_api_tenant_package_not_found(self, app_factory, bypass_owner_auth):
@@ -3121,26 +4031,42 @@ class TestOwnerFinalGaps:
             ):
                 api_tenant_update_package(9)
 
-    def test_supervisor_override_missing_credentials(self, app_factory, bypass_owner_auth):
+    def test_supervisor_override_missing_credentials(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, api_supervisor_override
 
         app = app_factory(owner_bp)
         with _owner_route_patches():
-            with app.test_request_context("/owner/api/supervisor-override", method="POST", json={"supervisor_id": 1}):
+            with app.test_request_context(
+                "/owner/api/supervisor-override",
+                method="POST",
+                json={"supervisor_id": 1},
+            ):
                 resp = api_supervisor_override()
         assert _status_code(resp) == 400
 
     def test_database_optimize_vacuum_fail_only(self, owner_client):
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", return_value={"success": False}), \
-             patch("utils.database_optimizer.DatabaseOptimizer.analyze_tables", return_value={"success": False}):
+        with (
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+                return_value={"success": False},
+            ),
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.analyze_tables",
+                return_value={"success": False},
+            ),
+        ):
             owner_client.post("/owner/database-optimize", follow_redirects=False)
 
     def test_preview_receipt_full_render(self, owner_client):
         settings = MagicMock()
         settings.enable_qr_code = True
         inv_cls = _invoice_settings_class(settings)
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.render_template", return_value="ok"):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("routes.owner.render_template", return_value="ok"),
+        ):
             resp = owner_client.get("/owner/preview-receipt/modern")
         assert resp.status_code == 200
 
@@ -3148,21 +4074,34 @@ class TestOwnerFinalGaps:
         from routes.owner import owner_bp, store_payment_method_delete
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("services.store_payment_method_service.StorePaymentMethodService.delete_method", side_effect=RuntimeError("del")):
-            with app.test_request_context("/owner/store-payment-methods/1/delete", method="POST"):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.store_payment_method_service.StorePaymentMethodService.delete_method",
+                side_effect=RuntimeError("del"),
+            ),
+        ):
+            with app.test_request_context(
+                "/owner/store-payment-methods/1/delete", method="POST"
+            ):
                 store_payment_method_delete(1)
 
-    def test_scoped_backup_no_active_tenant_direct(self, app_factory, bypass_owner_auth):
+    def test_scoped_backup_no_active_tenant_direct(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, create_scoped_backup
         from werkzeug.exceptions import Forbidden
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("utils.tenanting.get_active_tenant_id", return_value=None):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("utils.tenanting.get_active_tenant_id", return_value=None),
+        ):
             with app.test_request_context(
-                "/owner/backups/create", method="POST", data={"scope": "tenant", "tenant_id": "1"}
+                "/owner/backups/create",
+                method="POST",
+                data={"scope": "tenant", "tenant_id": "1"},
             ):
                 with pytest.raises(Forbidden):
                     create_scoped_backup()
@@ -3173,13 +4112,20 @@ class TestOwnerFinalGaps:
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "out.json")
         exec_result = _execute_result(rows=[(1,)], columns=["id"])
-        with _owner_route_patches(), \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner.db") as mock_db, \
-             patch("os.makedirs"), \
-             patch("os.path.join", return_value=export_file):
+        with (
+            _owner_route_patches(),
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner.db") as mock_db,
+            patch("os.makedirs"),
+            patch("os.path.join", return_value=export_file),
+        ):
             mock_db.session.execute.return_value = exec_result
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "json"}
+            ):
                 export_database()
 
     def test_preview_receipt_tenant_abort(self, app_factory, mock_user):
@@ -3215,7 +4161,10 @@ class TestOwnerLastMile:
         app = app_factory(owner_bp)
         inspector = _inspector()
         inspector.get_table_names.return_value = ["users"]
-        with _owner_route_patches(), patch("sqlalchemy.inspect", return_value=inspector):
+        with (
+            _owner_route_patches(),
+            patch("sqlalchemy.inspect", return_value=inspector),
+        ):
             with app.test_request_context("/owner/database-tools"):
                 database_tools()
 
@@ -3225,13 +4174,29 @@ class TestOwnerLastMile:
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
         proc = MagicMock(returncode=0, stderr="", stdout="")
-        with _owner_route_patches(), \
-             patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("os.makedirs"), \
-             patch("os.path.join", return_value=export_file):
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "p",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="pg_dump",
+            ),
+            patch("services.backup_exec.run_pg_tool", return_value=proc),
+            patch("os.makedirs"),
+            patch("os.path.join", return_value=export_file),
+        ):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "sql"}
+            ):
                 export_database()
 
     def test_tenant_ai_success_path(self, app_factory, bypass_owner_auth):
@@ -3255,10 +4220,18 @@ class TestOwnerLastMile:
         method.id = 1
         method.sort_order = 1
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db, \
-             patch("services.store_payment_method_service.StorePaymentMethodService.update_method", side_effect=RuntimeError("upd")):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "services.store_payment_method_service.StorePaymentMethodService.update_method",
+                side_effect=RuntimeError("upd"),
+            ),
+        ):
             mock_db.session.get.return_value = method
-            with app.test_request_context("/owner/store-payment-methods/1/edit", method="POST", data={"code": "x"}):
+            with app.test_request_context(
+                "/owner/store-payment-methods/1/edit", method="POST", data={"code": "x"}
+            ):
                 store_payment_method_edit(1)
 
     def test_system_config_currency_except(self, app_factory, bypass_owner_auth):
@@ -3269,15 +4242,23 @@ class TestOwnerLastMile:
             with app.test_request_context(
                 "/owner/system-config",
                 method="POST",
-                data={"default_currency": "INVALID", "azad_platform_fee_rate": "not-decimal"},
+                data={
+                    "default_currency": "INVALID",
+                    "azad_platform_fee_rate": "not-decimal",
+                },
             ):
                 system_config()
 
-    def test_create_scoped_backup_branch_missing_id(self, app_factory, bypass_owner_auth):
+    def test_create_scoped_backup_branch_missing_id(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, create_scoped_backup
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("utils.auth_helpers.is_global_owner_user", return_value=True):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=True),
+        ):
             with app.test_request_context(
                 "/owner/backups/create",
                 method="POST",
@@ -3285,7 +4266,9 @@ class TestOwnerLastMile:
             ):
                 create_scoped_backup()
 
-    def test_create_scoped_backup_branch_denied_direct(self, app_factory, bypass_owner_auth):
+    def test_create_scoped_backup_branch_denied_direct(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, create_scoped_backup
         from werkzeug.exceptions import Forbidden
 
@@ -3295,10 +4278,12 @@ class TestOwnerLastMile:
         user.branch_id = 1
         user.id = 1
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("flask_login.utils._get_user", return_value=user), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("routes.owner.get_active_tenant_id", return_value=1):
+        with (
+            _owner_route_patches(),
+            patch("flask_login.utils._get_user", return_value=user),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("routes.owner.get_active_tenant_id", return_value=1),
+        ):
             with app.test_request_context(
                 "/owner/backups/create",
                 method="POST",
@@ -3312,11 +4297,15 @@ class TestOwnerLastMile:
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("flask_login.utils._get_user", return_value=mock_user), \
-             patch("utils.decorators.is_global_owner_user", return_value=False), \
-             patch("extensions.limiter.limit", return_value=lambda f: f):
-            with app.test_request_context("/owner/api/update-tenant-settings", method="POST", data={}):
+        with (
+            _owner_route_patches(),
+            patch("flask_login.utils._get_user", return_value=mock_user),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+            patch("extensions.limiter.limit", return_value=lambda f: f),
+        ):
+            with app.test_request_context(
+                "/owner/api/update-tenant-settings", method="POST", data={}
+            ):
                 resp = api_update_tenant_settings()
         assert _status_code(resp) == 400
 
@@ -3325,11 +4314,15 @@ class TestOwnerLastMile:
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("flask_login.utils._get_user", return_value=mock_user), \
-             patch("utils.decorators.is_global_owner_user", return_value=False), \
-             patch("extensions.limiter.limit", return_value=lambda f: f):
-            with app.test_request_context("/owner/api/toggle-warehouse-negative", method="POST", data={}):
+        with (
+            _owner_route_patches(),
+            patch("flask_login.utils._get_user", return_value=mock_user),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+            patch("extensions.limiter.limit", return_value=lambda f: f),
+        ):
+            with app.test_request_context(
+                "/owner/api/toggle-warehouse-negative", method="POST", data={}
+            ):
                 resp = api_toggle_warehouse_negative()
         assert _status_code(resp) == 400
 
@@ -3340,12 +4333,15 @@ class TestOwnerLastMile:
         app = app_factory(owner_bp)
         with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.get.return_value = tenant
-            with app.test_request_context("/owner/api/tenant/1/toggle-status", method="POST", json={"noop": True}):
+            with app.test_request_context(
+                "/owner/api/tenant/1/toggle-status", method="POST", json={"noop": True}
+            ):
                 resp = api_tenant_toggle_status(1)
         assert _status_code(resp) == 400
 
     def test_mask_db_uri_edge_cases(self):
         from routes.owner import _mask_db_uri
+
         assert _mask_db_uri("postgresql://user@host/db")  # no colon in creds branch
         try:
             _mask_db_uri("://bad@host")
@@ -3360,17 +4356,25 @@ class TestOwnerLastMile:
         mock_engine.begin.return_value.__enter__.return_value = mock_conn
         exec_result = _execute_result(rows=[(1,)], columns=["secret_col"])
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner._inspector_column_names", return_value=set()):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner._inspector_column_names", return_value=set()),
+        ):
             mock_db.session.execute.return_value = exec_result
             with app.test_request_context(
                 "/owner/convert-database",
                 method="POST",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/db"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/db",
+                },
             ):
                 convert_database()
 
@@ -3383,12 +4387,16 @@ class TestOwnerLastMile:
             ctx["receipt"].get_source_info()
             return "ok"
 
-        with patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("routes.owner.render_template", side_effect=_render):
+        with (
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("routes.owner.render_template", side_effect=_render),
+        ):
             resp = owner_client.get("/owner/preview-receipt/modern")
         assert resp.status_code == 200
 
-    def test_invoice_settings_saves_upload_files(self, app_factory, bypass_owner_auth, tmp_path):
+    def test_invoice_settings_saves_upload_files(
+        self, app_factory, bypass_owner_auth, tmp_path
+    ):
         from routes.owner import owner_bp, invoice_settings
         from io import BytesIO
 
@@ -3396,11 +4404,13 @@ class TestOwnerLastMile:
         settings = MagicMock()
         inv_cls = _invoice_settings_class(settings)
 
-        with _owner_route_patches(), \
-             patch("routes.owner.InvoiceSettings", inv_cls), \
-             patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("os.makedirs"), \
-             patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.InvoiceSettings", inv_cls),
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("os.makedirs"),
+            patch("os.path.join", side_effect=lambda *a: str(tmp_path / a[-1])),
+        ):
             with app.test_request_context(
                 "/owner/invoice-settings",
                 method="POST",
@@ -3413,7 +4423,9 @@ class TestOwnerLastMile:
             ):
                 invoice_settings()
 
-    def test_export_paths_via_service_patch(self, app_factory, bypass_owner_auth, tmp_path):
+    def test_export_paths_via_service_patch(
+        self, app_factory, bypass_owner_auth, tmp_path
+    ):
         from routes.owner import owner_bp, export_database
 
         app = app_factory(owner_bp)
@@ -3421,19 +4433,40 @@ class TestOwnerLastMile:
         export_json = str(tmp_path / "export.json")
         proc = MagicMock(returncode=0, stderr="", stdout="")
         exec_result = _execute_result(rows=[(1, "x")], columns=["id", "name"])
-        with _owner_route_patches(), \
-             patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("os.makedirs"), \
-             patch("routes.owner.db") as mock_db:
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "p",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="/pg_dump",
+            ),
+            patch("services.backup_exec.run_pg_tool", return_value=proc),
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("os.makedirs"),
+            patch("routes.owner.db") as mock_db,
+        ):
             mock_db.session.execute.return_value = exec_result
             with patch("os.path.join", return_value=export_sql):
-                with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
+                with app.test_request_context(
+                    "/owner/export-database", method="POST", data={"format": "sql"}
+                ):
                     export_database()
             with patch("os.path.join", return_value=export_json):
-                with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
+                with app.test_request_context(
+                    "/owner/export-database", method="POST", data={"format": "json"}
+                ):
                     export_database()
 
     def test_database_tools_restricted_only(self, app_factory, bypass_owner_auth):
@@ -3442,9 +4475,14 @@ class TestOwnerLastMile:
         app = app_factory(owner_bp)
         inspector = _inspector()
         inspector.get_table_names.return_value = ["users", "payment_vault"]
-        with _owner_route_patches(), \
-             patch("routes.owner._known_tables_map", return_value={"users": "users", "payment_vault": "payment_vault"}), \
-             patch("sqlalchemy.inspect", return_value=inspector):
+        with (
+            _owner_route_patches(),
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"users": "users", "payment_vault": "payment_vault"},
+            ),
+            patch("sqlalchemy.inspect", return_value=inspector),
+        ):
             with app.test_request_context("/owner/database-tools"):
                 database_tools()
 
@@ -3453,9 +4491,11 @@ class TestOwnerLastMile:
 
         tenant = _mock_tenant(id=3)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner.db") as mock_db, \
-             patch("utils.ai_access.set_tenant_ai_level", return_value="advanced"):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.db") as mock_db,
+            patch("utils.ai_access.set_tenant_ai_level", return_value="advanced"),
+        ):
             mock_db.session.get.return_value = tenant
             with app.test_request_context(
                 "/owner/tenant-ai/3/toggle",
@@ -3465,8 +4505,16 @@ class TestOwnerLastMile:
                 tenant_ai_toggle(3)
 
     def test_database_optimize_warning_only(self, owner_client):
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", return_value={"success": True}), \
-             patch("utils.database_optimizer.DatabaseOptimizer.analyze_tables", return_value={"success": False, "error": "x"}):
+        with (
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+                return_value={"success": True},
+            ),
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.analyze_tables",
+                return_value={"success": False, "error": "x"},
+            ),
+        ):
             owner_client.post("/owner/database-optimize", follow_redirects=False)
 
     def test_create_user_non_global_tenant_id(self, app_factory, bypass_owner_auth):
@@ -3478,13 +4526,16 @@ class TestOwnerLastMile:
         user_cls = _model_class()
         user_cls.query.filter_by.return_value.first.return_value = None
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("utils.auth_helpers.is_global_owner_user", return_value=False), \
-             patch("models.Role", _model_class(all=[role])), \
-             patch("routes.owner.User", user_cls), \
-             patch("routes.owner.role_requires_branch", return_value=False), \
-             patch("routes.owner.role_level_for", return_value=10):
+        with (
+            _owner_route_patches(),
+            patch("utils.auth_helpers.is_global_owner_user", return_value=False),
+            patch("models.Role", _model_class(all=[role])),
+            patch("routes.owner.User", user_cls),
+            patch("routes.owner.role_requires_branch", return_value=False),
+            patch("routes.owner.role_level_for", return_value=10),
+        ):
             import routes.owner as owner_mod
+
             owner_mod.db.session.get.return_value = role
             with app.test_request_context(
                 "/owner/users/create",
@@ -3519,33 +4570,62 @@ class TestOwnerHundredPercent:
         assert _validate_postgresql_uri("   ") is False
 
     def test_edit_table_data_rejects_unknown_table(self, owner_client):
-        resp = owner_client.get("/owner/edit-table-data/__unknown_xyz__", follow_redirects=False)
+        resp = owner_client.get(
+            "/owner/edit-table-data/__unknown_xyz__", follow_redirects=False
+        )
         assert resp.status_code in (302, 303)
 
     def test_export_sql_pg_dump_unavailable(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp, export_database
 
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("services.backup_service.BackupService._parse_db_url", return_value=None), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value=None):
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.backup_service.BackupService._parse_db_url", return_value=None
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value=None,
+            ),
+        ):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "sql"}
+            ):
                 result = export_database()
         assert result.status_code in (302, 303)
 
-    def test_export_sql_pg_dump_nonzero_exit(self, app_factory, bypass_owner_auth, tmp_path):
+    def test_export_sql_pg_dump_nonzero_exit(
+        self, app_factory, bypass_owner_auth, tmp_path
+    ):
         from routes.owner import owner_bp, export_database
 
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
         proc = MagicMock(returncode=1, stderr="dump failed", stdout="")
-        with _owner_route_patches(), \
-             patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "p", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=proc), \
-             patch("os.makedirs"), \
-             patch("os.path.join", return_value=export_file):
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "p",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="/pg_dump",
+            ),
+            patch("services.backup_exec.run_pg_tool", return_value=proc),
+            patch("os.makedirs"),
+            patch("os.path.join", return_value=export_file),
+        ):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "sql"}
+            ):
                 export_database()
 
     def test_export_sql_pg_dump_success(self, app_factory, bypass_owner_auth, tmp_path):
@@ -3554,13 +4634,29 @@ class TestOwnerHundredPercent:
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "db_export.sql")
         proc = MagicMock(returncode=0, stderr="", stdout="")
-        with _owner_route_patches(), \
-             patch("services.backup_service.BackupService._parse_db_url", return_value={"host": "h", "port": "5432", "username": "u", "password": "secret", "dbname": "d"}), \
-             patch("services.backup_service.BackupService._resolve_pg_tool", return_value="/pg_dump"), \
-             patch("services.backup_exec.run_pg_tool", return_value=proc) as run_tool, \
-             patch("os.makedirs"), \
-             patch("os.path.join", return_value=export_file):
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "sql"}):
+        with (
+            _owner_route_patches(),
+            patch(
+                "services.backup_service.BackupService._parse_db_url",
+                return_value={
+                    "host": "h",
+                    "port": "5432",
+                    "username": "u",
+                    "password": "secret",
+                    "dbname": "d",
+                },
+            ),
+            patch(
+                "services.backup_service.BackupService._resolve_pg_tool",
+                return_value="/pg_dump",
+            ),
+            patch("services.backup_exec.run_pg_tool", return_value=proc) as run_tool,
+            patch("os.makedirs"),
+            patch("os.path.join", return_value=export_file),
+        ):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "sql"}
+            ):
                 export_database()
         assert run_tool.called
         assert run_tool.call_args.kwargs["env"].get("PGPASSWORD") == "secret"
@@ -3571,35 +4667,54 @@ class TestOwnerHundredPercent:
         app = app_factory(owner_bp)
         export_file = str(tmp_path / "export.json")
         exec_result = _execute_result(rows=[(1, "x")], columns=["id", "name"])
-        with _owner_route_patches(), \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner.db") as mock_db, \
-             patch("os.makedirs"), \
-             patch("os.path.join", return_value=export_file):
+        with (
+            _owner_route_patches(),
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner.db") as mock_db,
+            patch("os.makedirs"),
+            patch("os.path.join", return_value=export_file),
+        ):
             mock_db.session.execute.return_value = exec_result
-            with app.test_request_context("/owner/export-database", method="POST", data={"format": "json"}):
+            with app.test_request_context(
+                "/owner/export-database", method="POST", data={"format": "json"}
+            ):
                 export_database()
             assert export_file.endswith(".json")
 
-    def test_convert_database_skips_when_no_allowed_columns(self, app_factory, bypass_owner_auth):
+    def test_convert_database_skips_when_no_allowed_columns(
+        self, app_factory, bypass_owner_auth
+    ):
         from routes.owner import owner_bp, convert_database
 
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_engine.begin.return_value.__enter__.return_value = mock_conn
-        exec_result = _execute_result(rows=[(1, "secret")], columns=["id", "secret_col"])
+        exec_result = _execute_result(
+            rows=[(1, "secret")], columns=["id", "secret_col"]
+        )
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner._validate_postgresql_uri", return_value=True), \
-             patch("sqlalchemy.create_engine", return_value=mock_engine), \
-             patch("routes.owner.db") as mock_db, \
-             patch("routes.owner._known_tables_map", return_value={"customers": "customers"}), \
-             patch("routes.owner._inspector_column_names", return_value={"other_col"}):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner._validate_postgresql_uri", return_value=True),
+            patch("sqlalchemy.create_engine", return_value=mock_engine),
+            patch("routes.owner.db") as mock_db,
+            patch(
+                "routes.owner._known_tables_map",
+                return_value={"customers": "customers"},
+            ),
+            patch("routes.owner._inspector_column_names", return_value={"other_col"}),
+        ):
             mock_db.session.execute.return_value = exec_result
             with app.test_request_context(
                 "/owner/convert-database",
                 method="POST",
-                data={"target_db": "postgresql", "postgresql_uri": "postgresql://u:p@localhost/db"},
+                data={
+                    "target_db": "postgresql",
+                    "postgresql_uri": "postgresql://u:p@localhost/db",
+                },
             ):
                 convert_database()
             mock_conn.execute.assert_not_called()
@@ -3614,9 +4729,13 @@ class TestOwnerHundredPercent:
             lambda _self, v: (_ for _ in ()).throw(RuntimeError("bad currency")),
         )
         settings_cls = _settings_class(settings)
-        with _owner_route_patches(), \
-             patch("routes.owner.SystemSettings", settings_cls), \
-             patch("routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")):
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.SystemSettings", settings_cls),
+            patch(
+                "routes.owner.Tenant.get_current", side_effect=RuntimeError("no tenant")
+            ),
+        ):
             with app.test_request_context(
                 "/owner/system-config",
                 method="POST",
@@ -3629,10 +4748,14 @@ class TestOwnerHundredPercent:
 
         tenant = _mock_tenant(id=3)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("routes.owner.tenants.db") as mock_db, \
-             patch("routes.owner.tenants.set_tenant_ai_level", return_value="advanced") as set_level, \
-             patch("routes.owner.tenants.LoggingCore.log_audit") as log_audit:
+        with (
+            _owner_route_patches(),
+            patch("routes.owner.tenants.db") as mock_db,
+            patch(
+                "routes.owner.tenants.set_tenant_ai_level", return_value="advanced"
+            ) as set_level,
+            patch("routes.owner.tenants.LoggingCore.log_audit") as log_audit,
+        ):
             mock_db.session.get.return_value = tenant
             with app.test_request_context(
                 "/owner/tenant-ai/3/toggle",
@@ -3645,8 +4768,16 @@ class TestOwnerHundredPercent:
         assert result.status_code in (302, 303)
 
     def test_database_optimize_full_success(self, owner_client):
-        with patch("utils.database_optimizer.DatabaseOptimizer.vacuum_postgres", return_value={"success": True}), \
-             patch("utils.database_optimizer.DatabaseOptimizer.analyze_tables", return_value={"success": True}):
+        with (
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.vacuum_postgres",
+                return_value={"success": True},
+            ),
+            patch(
+                "utils.database_optimizer.DatabaseOptimizer.analyze_tables",
+                return_value={"success": True},
+            ),
+        ):
             resp = owner_client.post("/owner/database-optimize", follow_redirects=False)
         assert resp.status_code in (302, 303)
 
@@ -3665,10 +4796,12 @@ class TestOwnerHundredPercent:
                 return wm_path
             return logo_path
 
-        with patch("routes.owner.InvoiceSettings", inv_cls), \
-             patch("models.invoice_settings.InvoiceSettings", inv_cls), \
-             patch("os.makedirs") as makedirs, \
-             patch("os.path.join", side_effect=_join):
+        with (
+            patch("routes.owner.InvoiceSettings", inv_cls),
+            patch("models.invoice_settings.InvoiceSettings", inv_cls),
+            patch("os.makedirs") as makedirs,
+            patch("os.path.join", side_effect=_join),
+        ):
             resp = owner_client.post(
                 "/owner/invoice-settings",
                 data={
@@ -3689,10 +4822,12 @@ class TestOwnerHundredPercent:
 
         mock_user.is_super_admin.return_value = True
         app = app_factory(owner_bp)
-        with _owner_route_patches(), \
-             patch("flask_login.utils._get_user", return_value=mock_user), \
-             patch("utils.decorators.is_global_owner_user", return_value=False), \
-             patch("extensions.limiter.limit", return_value=lambda f: f):
+        with (
+            _owner_route_patches(),
+            patch("flask_login.utils._get_user", return_value=mock_user),
+            patch("utils.decorators.is_global_owner_user", return_value=False),
+            patch("extensions.limiter.limit", return_value=lambda f: f),
+        ):
             with app.test_request_context(
                 "/owner/api/toggle-warehouse-negative",
                 method="POST",
@@ -3700,4 +4835,3 @@ class TestOwnerHundredPercent:
             ):
                 resp = api_toggle_warehouse_negative()
         assert _status_code(resp) == 400
-

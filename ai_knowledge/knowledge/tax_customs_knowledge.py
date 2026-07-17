@@ -225,21 +225,22 @@ EXPORT_PROCEDURES = """
 
 # دليل شامل
 TAX_CUSTOMS_GUIDE = {
-    'uae_vat': UAE_TAX_SYSTEM,
-    'uae_customs': CUSTOMS_UAE,
-    'saudi_tax': SAUDI_TAX,
-    'palestine_tax': PALESTINE_TAX,
-    'import': IMPORT_PROCEDURES,
-    'export': EXPORT_PROCEDURES,
+    "uae_vat": UAE_TAX_SYSTEM,
+    "uae_customs": CUSTOMS_UAE,
+    "saudi_tax": SAUDI_TAX,
+    "palestine_tax": PALESTINE_TAX,
+    "import": IMPORT_PROCEDURES,
+    "export": EXPORT_PROCEDURES,
 }
+
 
 def get_tax_info(country):
     """الحصول على معلومات ضريبية لدولة"""
     key = f"{country.lower()}_tax"
     return TAX_CUSTOMS_GUIDE.get(key, "معلومات غير متوفرة لهذه الدولة")
 
+
 def get_customs_info(country):
     """الحصول على معلومات جمركية"""
     key = f"{country.lower()}_customs"
     return TAX_CUSTOMS_GUIDE.get(key, "معلومات غير متوفرة")
-

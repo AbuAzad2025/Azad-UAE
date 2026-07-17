@@ -37,7 +37,15 @@ class RoleEnum(str, Enum):
     @classmethod
     def financial(cls):
         """Roles with access to financial / accounting surfaces."""
-        return frozenset({cls.OWNER, cls.DEVELOPER, cls.SUPER_ADMIN, cls.ACCOUNTANT, cls.BRANCH_MANAGER})
+        return frozenset(
+            {
+                cls.OWNER,
+                cls.DEVELOPER,
+                cls.SUPER_ADMIN,
+                cls.ACCOUNTANT,
+                cls.BRANCH_MANAGER,
+            }
+        )
 
     @classmethod
     def financial_values(cls):

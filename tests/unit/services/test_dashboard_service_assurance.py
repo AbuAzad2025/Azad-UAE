@@ -1,4 +1,5 @@
 """Dashboard service — layout retrieval, tenant isolation, empty fallbacks."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -21,12 +22,17 @@ class TestLayoutRetrieval:
     def test_saved_layout_bypasses_default(self, mocker, app):
         from models.dashboard import UserDashboardLayout
 
-        custom = {'widgets': [{'key': 'inventory_alert', 'x': 0, 'y': 2, 'w': 12, 'h': 2}]}
+        custom = {
+            "widgets": [{"key": "inventory_alert", "x": 0, "y": 2, "w": 12, "h": 2}]
+        }
         row = MagicMock(layout_json=custom)
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = row
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.dashboard_service import DashboardService
@@ -42,14 +48,17 @@ class TestLayoutRetrieval:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.dashboard_service import DashboardService
 
         with app.app_context():
             fallback = DashboardService.get_user_layout(tenant_id=1, user_id=99)
-        assert fallback['widgets'][0]['key'] == 'sales_summary'
+        assert fallback["widgets"][0]["key"] == "sales_summary"
 
 
 class TestMultiTenantIsolation:
@@ -61,7 +70,10 @@ class TestMultiTenantIsolation:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.dashboard_service import DashboardService
@@ -71,8 +83,8 @@ class TestMultiTenantIsolation:
             DashboardService.get_user_layout(tenant_id=8, user_id=1)
 
         calls = [c.kwargs for c in mock_q.filter_by.call_args_list]
-        assert {'tenant_id': 7, 'user_id': 1} in calls
-        assert {'tenant_id': 8, 'user_id': 1} in calls
+        assert {"tenant_id": 7, "user_id": 1} in calls
+        assert {"tenant_id": 8, "user_id": 1} in calls
 
     def test_save_layout_pins_tenant_on_create(self, app, mocker):
         from models.dashboard import UserDashboardLayout
@@ -80,15 +92,20 @@ class TestMultiTenantIsolation:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = None
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
-        mock_session = mocker.patch('services.dashboard_service.db.session')
+        mock_session = mocker.patch("services.dashboard_service.db.session")
 
-        layout_json = {'widgets': []}
+        layout_json = {"widgets": []}
         from services.dashboard_service import DashboardService
 
         with app.app_context():
-            saved = DashboardService.save_user_layout(tenant_id=42, user_id=3, layout_json=layout_json)
+            saved = DashboardService.save_user_layout(
+                tenant_id=42, user_id=3, layout_json=layout_json
+            )
 
         added = mock_session.add.call_args[0][0]
         assert added.tenant_id == 42
@@ -101,7 +118,10 @@ class TestMultiTenantIsolation:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.all.return_value = []
         mocker.patch.object(
-            DashboardWidget, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            DashboardWidget,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.dashboard_service import DashboardService
@@ -116,8 +136,8 @@ class TestLayoutPersistence:
         from services.dashboard_service import DashboardService
 
         with app.app_context():
-            with pytest.raises(ValueError, match='Invalid layout'):
-                DashboardService.save_user_layout(1, 1, '')
+            with pytest.raises(ValueError, match="Invalid layout"):
+                DashboardService.save_user_layout(1, 1, "")
 
     def test_update_existing_without_add(self, app, mocker):
         from models.dashboard import UserDashboardLayout
@@ -126,11 +146,16 @@ class TestLayoutPersistence:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = existing
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
-        mock_session = mocker.patch('services.dashboard_service.db.session')
+        mock_session = mocker.patch("services.dashboard_service.db.session")
 
-        payload = {'widgets': [{'key': 'cash_summary', 'x': 0, 'y': 0, 'w': 12, 'h': 1}]}
+        payload = {
+            "widgets": [{"key": "cash_summary", "x": 0, "y": 0, "w": 12, "h": 1}]
+        }
         from services.dashboard_service import DashboardService
 
         with app.app_context():
@@ -146,16 +171,19 @@ class TestLayoutPersistence:
         mock_q = MagicMock()
         mock_q.filter_by.return_value.first.return_value = MagicMock()
         mocker.patch.object(
-            UserDashboardLayout, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            UserDashboardLayout,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
-        mock_session = mocker.patch('services.dashboard_service.db.session')
-        mock_session.flush.side_effect = IntegrityError('dup', {}, Exception())
+        mock_session = mocker.patch("services.dashboard_service.db.session")
+        mock_session.flush.side_effect = IntegrityError("dup", {}, Exception())
 
         from services.dashboard_service import DashboardService
 
         with app.app_context():
             with pytest.raises(IntegrityError):
-                DashboardService.save_user_layout(1, 1, {'widgets': []})
+                DashboardService.save_user_layout(1, 1, {"widgets": []})
 
 
 class TestWidgetCatalog:
@@ -164,11 +192,14 @@ class TestWidgetCatalog:
     def test_returns_only_enabled_widgets(self, mocker):
         from models.dashboard import DashboardWidget
 
-        widgets = [MagicMock(widget_key='a'), MagicMock(widget_key='b')]
+        widgets = [MagicMock(widget_key="a"), MagicMock(widget_key="b")]
         mock_q = MagicMock()
         mock_q.filter_by.return_value.all.return_value = widgets
         mocker.patch.object(
-            DashboardWidget, 'query', new_callable=mocker.PropertyMock, return_value=mock_q
+            DashboardWidget,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
         )
 
         from services.dashboard_service import DashboardService

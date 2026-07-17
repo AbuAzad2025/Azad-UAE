@@ -2,6 +2,7 @@
 Database Transaction Safety Utilities
 Ensures all multi-step financial operations are atomic.
 """
+
 from contextlib import contextmanager
 from extensions import db
 import logging

@@ -1,10 +1,9 @@
 from config import Config
-from decimal import Decimal
 from extensions import db
 
 
 def get_system_default_currency() -> str:
-    return getattr(Config, 'DEFAULT_CURRENCY', None) or 'ILS'
+    return getattr(Config, "DEFAULT_CURRENCY", None) or "ILS"
 
 
 def context_aware_default_currency() -> str:
@@ -12,14 +11,17 @@ def context_aware_default_currency() -> str:
     falling back to system default currency. Used as SQLAlchemy column default."""
     try:
         from flask import has_request_context
+
         if has_request_context():
             from flask_login import current_user
+
             if current_user and current_user.is_authenticated:
-                tenant_id = getattr(current_user, 'tenant_id', None)
+                tenant_id = getattr(current_user, "tenant_id", None)
                 if tenant_id:
                     from models.tenant import Tenant
+
                     tenant = db.session.get(Tenant, tenant_id)
-                    if tenant and getattr(tenant, 'default_currency', None):
+                    if tenant and getattr(tenant, "default_currency", None):
                         val = tenant.default_currency.strip()
                         if val:
                             return val.upper()
@@ -29,14 +31,15 @@ def context_aware_default_currency() -> str:
 
 
 def resolve_default_currency(tenant=None) -> str:
-    if tenant and hasattr(tenant, 'default_currency'):
-        val = (tenant.default_currency or '').strip()
+    if tenant and hasattr(tenant, "default_currency"):
+        val = (tenant.default_currency or "").strip()
         if val:
             return val.upper()
     try:
         from models.system_settings import SystemSettings
+
         settings = SystemSettings.get_current()
-        val = (getattr(settings, 'default_currency', None) or '').strip()
+        val = (getattr(settings, "default_currency", None) or "").strip()
         if val:
             return val.upper()
     except Exception:
@@ -54,14 +57,15 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
     if tenant_id is not None:
         try:
             from models.tenant import Tenant
+
             tenant = db.session.get(Tenant, int(tenant_id))
             if tenant:
-                base = getattr(tenant, 'base_currency', None)
+                base = getattr(tenant, "base_currency", None)
                 if base:
                     val = base.strip().upper()
                     if val:
                         return val
-                default = getattr(tenant, 'default_currency', None)
+                default = getattr(tenant, "default_currency", None)
                 if default:
                     val = default.strip().upper()
                     if val:
@@ -74,12 +78,12 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
 def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
     """Resolve the base currency for a tenant instance or tenant_id."""
     if tenant is not None:
-        base = getattr(tenant, 'base_currency', None)
+        base = getattr(tenant, "base_currency", None)
         if base:
             val = base.strip().upper()
             if val:
                 return val
-        default = getattr(tenant, 'default_currency', None)
+        default = getattr(tenant, "default_currency", None)
         if default:
             val = default.strip().upper()
             if val:
@@ -91,15 +95,17 @@ def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
 
 def get_currency_symbol(code):
     from utils.constants import CURRENCIES
+
     for c_code, data in CURRENCIES:
         if c_code == code:
-            return data.get('symbol', code)
+            return data.get("symbol", code)
     return code
 
 
 def get_currency_name_ar(code):
     from utils.constants import CURRENCIES
+
     for c_code, data in CURRENCIES:
         if c_code == code:
-            return data.get('ar', code)
+            return data.get("ar", code)
     return code

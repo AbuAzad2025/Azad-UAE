@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 import re
 
-from utils.static_asset_paths import TENANT_ASSET_LAYOUT, tenant_asset_base, tenant_asset_rel
+from utils.static_asset_paths import TENANT_ASSET_LAYOUT, tenant_asset_rel
 
 FOLDER_TO_SLUG: dict[str, str] = {
     "alhazem": "alhazem",
@@ -36,7 +36,11 @@ SLUG_TO_FOLDER: dict[str, str] = {
 
 
 def _repo_static_root() -> str:
-    return str(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"))
+    return str(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+        )
+    )
 
 
 def static_assets_root() -> str:

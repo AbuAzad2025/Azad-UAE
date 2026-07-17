@@ -1,6 +1,7 @@
 """
 Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 """
+
 import os
 import shutil
 import sys
@@ -10,8 +11,6 @@ import pytest
 from sqlalchemy import create_engine, text as sa_text
 from sqlalchemy.pool import NullPool
 from urllib.parse import urlparse, urlunparse
-
-
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
@@ -153,7 +152,7 @@ from app import create_app  # noqa: E402
 from extensions import db  # noqa: E402
 from services.logging_core import LoggingCore  # noqa: E402
 
-_LOGGING_CORE_METHODS = ('log_audit', '_fallback_write', 'log_error', 'log_security')
+_LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security")
 _LOGGING_CORE_ORIGINALS = {
     name: LoggingCore.__dict__[name] for name in _LOGGING_CORE_METHODS
 }
@@ -230,11 +229,17 @@ class TestConfig:
     LOGIN_BLOCK_DURATION = 900
     CORS_ORIGINS = ["http://localhost:5000"]
     CORS_SUPPORTS_CREDENTIALS = True
-    COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'text/plain',
-                          'application/json', 'application/javascript']
+    COMPRESS_MIMETYPES = [
+        "text/html",
+        "text/css",
+        "text/xml",
+        "text/plain",
+        "application/json",
+        "application/javascript",
+    ]
     COMPRESS_LEVEL = 6
     COMPRESS_MIN_SIZE = 500
-    COMPRESS_ALGORITHM = 'gzip'
+    COMPRESS_ALGORITHM = "gzip"
     APP_ENV = "testing"
     HOST = "127.0.0.1"
     PORT = 5000
@@ -286,11 +291,12 @@ def app():
         except Exception:
             pass
         try:
-            db.engines['reporting'].dispose()
+            db.engines["reporting"].dispose()
         except Exception:
             pass
         try:
             from sqlalchemy.orm import close_all_sessions
+
             close_all_sessions()
         except Exception:
             pass
@@ -328,6 +334,7 @@ def _ensure_signal_connected():
         return
     try:
         from flask import template_rendered
+
         template_rendered.connect(_on_template_rendered, sender=None)
         _SIGNAL_CONNECTED = True
     except Exception:
@@ -348,18 +355,18 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 _POLLUTED_MODEL_SPECS = (
-    ('sale', 'Sale'),
-    ('product', 'Product'),
-    ('customer', 'Customer'),
-    ('payment', 'Payment'),
-    ('user', 'User'),
-    ('purchase', 'Purchase'),
-    ('expense', 'Expense'),
-    ('supplier', 'Supplier'),
-    ('cheque', 'Cheque'),
-    ('donation', 'Donation'),
-    ('package', 'Package'),
-    ('audit', 'AuditLog'),
+    ("sale", "Sale"),
+    ("product", "Product"),
+    ("customer", "Customer"),
+    ("payment", "Payment"),
+    ("user", "User"),
+    ("purchase", "Purchase"),
+    ("expense", "Expense"),
+    ("supplier", "Supplier"),
+    ("cheque", "Cheque"),
+    ("donation", "Donation"),
+    ("package", "Package"),
+    ("audit", "AuditLog"),
 )
 
 
@@ -376,7 +383,7 @@ def _cleanup_db_connections(app):
     except Exception:
         pass
     try:
-        db.engines['reporting'].dispose()
+        db.engines["reporting"].dispose()
     except Exception:
         pass
 
@@ -390,14 +397,14 @@ def _restore_polluted_model_queries():
 
     polluted_types = (MagicMock, NonCallableMock)
     for mod_name, cls_name in _POLLUTED_MODEL_SPECS:
-        mod = importlib.import_module(f'models.{mod_name}')
+        mod = importlib.import_module(f"models.{mod_name}")
         real_cls = getattr(mod, cls_name)
         pkg_cls = getattr(models, cls_name, None)
         if isinstance(pkg_cls, polluted_types):
             setattr(models, cls_name, real_cls)
-        query = getattr(real_cls, 'query', None)
-        if isinstance(query, polluted_types) and 'query' in real_cls.__dict__:
-            delattr(real_cls, 'query')
+        query = getattr(real_cls, "query", None)
+        if isinstance(query, polluted_types) and "query" in real_cls.__dict__:
+            delattr(real_cls, "query")
 
 
 def _resync_service_model_bindings():
@@ -409,12 +416,11 @@ def _resync_service_model_bindings():
 
     polluted_types = (MagicMock, NonCallableMock)
     model_exports = [
-        name for name in models.__all__
-        if isinstance(getattr(models, name, None), type)
+        name for name in models.__all__ if isinstance(getattr(models, name, None), type)
     ]
 
     for mod_name, mod in list(sys.modules.items()):
-        if not mod_name.startswith('services.'):
+        if not mod_name.startswith("services."):
             continue
         if mod is None:
             continue
@@ -428,8 +434,17 @@ def _resync_service_model_bindings():
 
 
 _SESSION_METHODS_TO_CHECK = (
-    'query', 'get', 'add', 'commit', 'rollback', 'flush', 'delete',
-    'execute', 'scalar', 'remove', 'expire_all',
+    "query",
+    "get",
+    "add",
+    "commit",
+    "rollback",
+    "flush",
+    "delete",
+    "execute",
+    "scalar",
+    "remove",
+    "expire_all",
 )
 
 
@@ -460,17 +475,18 @@ def _resync_service_db_bindings():
     real_db = extensions.db
     if isinstance(real_db, polluted_types):
         import importlib
+
         extensions = importlib.reload(extensions)
         real_db = extensions.db
 
     for mod_name, mod in list(sys.modules.items()):
-        if not mod_name.startswith('services.'):
+        if not mod_name.startswith("services."):
             continue
-        if mod is None or not hasattr(mod, 'db'):
+        if mod is None or not hasattr(mod, "db"):
             continue
-        bound = getattr(mod, 'db')
+        bound = getattr(mod, "db")
         if bound is not real_db or isinstance(bound, polluted_types):
-            setattr(mod, 'db', real_db)
+            setattr(mod, "db", real_db)
 
 
 def _restore_polluted_service_class_methods():
@@ -479,18 +495,32 @@ def _restore_polluted_service_class_methods():
 
     polluted_types = (MagicMock, Mock, NonCallableMock)
     specs = (
-        ('services.analytics_service', 'AnalyticsService', (
-            'get_customer_insights', 'get_sales_insights', 'get_product_performance',
-            'get_forecasting_data', 'get_daily_stats', 'get_revenue_by_period',
-            'get_payment_method_stats', 'get_customer_behavior', 'get_package_performance',
-            'predict_revenue',
-        )),
+        (
+            "services.analytics_service",
+            "AnalyticsService",
+            (
+                "get_customer_insights",
+                "get_sales_insights",
+                "get_product_performance",
+                "get_forecasting_data",
+                "get_daily_stats",
+                "get_revenue_by_period",
+                "get_payment_method_stats",
+                "get_customer_behavior",
+                "get_package_performance",
+                "predict_revenue",
+            ),
+        ),
     )
     for mod_name, cls_name, method_names in specs:
         import importlib
+
         mod = importlib.import_module(mod_name)
         cls = getattr(mod, cls_name)
-        if any(isinstance(getattr(cls, name, None), polluted_types) for name in method_names):
+        if any(
+            isinstance(getattr(cls, name, None), polluted_types)
+            for name in method_names
+        ):
             importlib.reload(mod)
 
     for name, original in _LOGGING_CORE_ORIGINALS.items():
@@ -506,14 +536,14 @@ def auto_cleanup_isolation(app):
 
     def _restore_real_db_session():
         with app.app_context():
-            ext = app.extensions.get('sqlalchemy')
+            ext = app.extensions.get("sqlalchemy")
             if ext is None:
                 return
             if _session_is_polluted(db.session):
                 object.__setattr__(
                     db,
-                    'session',
-                    ext._make_scoped_session(getattr(ext, '_session_options', {})),
+                    "session",
+                    ext._make_scoped_session(getattr(ext, "_session_options", {})),
                 )
 
     def _scrub_db():
@@ -541,6 +571,7 @@ def auto_cleanup_isolation(app):
 
     def _restore_app_logger():
         import logging
+
         with app.app_context():
             logger = getattr(app, "logger", None)
             if isinstance(logger, MagicMock):
@@ -584,13 +615,13 @@ def _restore_session_app_config(app):
     snapshot = {
         key: app.config.get(key)
         for key in (
-            'DEBUG',
-            'APP_ENV',
-            'CORS_ORIGINS',
-            'PORT',
-            'CLIENT_ERROR_TRUSTED_ORIGINS',
-            'ENABLE_MWAC',
-            'ENABLE_LANDED_COST_CAPITALIZATION',
+            "DEBUG",
+            "APP_ENV",
+            "CORS_ORIGINS",
+            "PORT",
+            "CLIENT_ERROR_TRUSTED_ORIGINS",
+            "ENABLE_MWAC",
+            "ENABLE_LANDED_COST_CAPITALIZATION",
         )
     }
     yield
@@ -634,6 +665,7 @@ def runner(app):
 def sample_tenant(db_session):
     import uuid
     from models import Tenant
+
     unique = str(uuid.uuid4())[:8]
     tenant = Tenant(
         name=f"Test Company {unique}",
@@ -661,10 +693,21 @@ def sample_tenant(db_session):
 def sample_permissions(db_session):
     """Create all commonly needed permissions for tests (idempotent)."""
     from models import Permission
+
     codes = [
-        "admin", "view_reports", "view_ledger", "manage_sales", "manage_purchases",
-        "manage_expenses", "manage_payroll", "manage_payments", "manage_products",
-        "manage_customers", "manage_suppliers", "manage_inventory", "manage_warehouse",
+        "admin",
+        "view_reports",
+        "view_ledger",
+        "manage_sales",
+        "manage_purchases",
+        "manage_expenses",
+        "manage_payroll",
+        "manage_payments",
+        "manage_products",
+        "manage_customers",
+        "manage_suppliers",
+        "manage_inventory",
+        "manage_warehouse",
     ]
     existing = {p.code: p for p in Permission.query.all()}
     perms = []
@@ -681,6 +724,7 @@ def sample_permissions(db_session):
 @pytest.fixture
 def sample_role(db_session, sample_permissions):
     from models import Role
+
     # Reuse existing super_admin role to avoid unique constraint violation
     role = db_session.query(Role).filter_by(slug="super_admin").first()
     if not role:
@@ -701,6 +745,7 @@ def sample_branch(db_session, sample_tenant):
     """Creates a sample branch for a tenant."""
     from models import Branch
     import uuid
+
     unique = str(uuid.uuid4())[:8]
     branch = Branch(
         tenant_id=sample_tenant.id,
@@ -718,9 +763,14 @@ def sample_branch(db_session, sample_tenant):
 def sample_user(db_session, sample_tenant, sample_role, sample_branch):
     import uuid
     from models import User
+
     unique = str(uuid.uuid4())[:8]
     # For super_admin/global roles, don't assign branch_id so they can access all branches
-    branch_id = None if sample_role.slug in ('super_admin', 'owner', 'developer') else sample_branch.id
+    branch_id = (
+        None
+        if sample_role.slug in ("super_admin", "owner", "developer")
+        else sample_branch.id
+    )
     user = User(
         username=f"testuser-{unique}",
         email=f"user-{unique}@example.com",
@@ -739,6 +789,7 @@ def sample_user(db_session, sample_tenant, sample_role, sample_branch):
 def sample_owner(db_session):
     import uuid
     from models import Tenant, Role, User
+
     unique = str(uuid.uuid4())[:8]
     tenant = Tenant(
         name=f"Owner Co {unique}",
@@ -774,10 +825,14 @@ def sample_owner(db_session):
 def auth_client(client, sample_user):
     """A logged-in test client for tenant users via actual login."""
     with client:
-        _resp = client.post('/auth/login', data={
-            'username': sample_user.username,
-            'password': 'password123',
-        }, follow_redirects=True)
+        _resp = client.post(
+            "/auth/login",
+            data={
+                "username": sample_user.username,
+                "password": "password123",
+            },
+            follow_redirects=True,
+        )
     return client
 
 
@@ -785,16 +840,21 @@ def auth_client(client, sample_user):
 def owner_client(client, sample_owner):
     """A logged-in test client for platform owner via actual login."""
     with client:
-        _resp = client.post('/auth/login', data={
-            'username': sample_owner.username,
-            'password': 'password123',
-        }, follow_redirects=True)
+        _resp = client.post(
+            "/auth/login",
+            data={
+                "username": sample_owner.username,
+                "password": "password123",
+            },
+            follow_redirects=True,
+        )
     return client
 
 
 @pytest.fixture
 def sample_supplier(db_session, sample_tenant):
     from models import Supplier
+
     supplier = Supplier(
         tenant_id=sample_tenant.id,
         name="Test Supplier",
@@ -809,6 +869,7 @@ def sample_supplier(db_session, sample_tenant):
 @pytest.fixture
 def sample_customer(db_session, sample_tenant):
     from models import Customer
+
     customer = Customer(
         tenant_id=sample_tenant.id,
         name="Test Customer",
@@ -825,6 +886,7 @@ def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
     from decimal import Decimal
     from datetime import datetime, timezone
     from models import Purchase
+
     p = Purchase(
         tenant_id=sample_tenant.id,
         purchase_number="PUR-TEST-001",
@@ -846,6 +908,7 @@ def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
 @pytest.fixture
 def sample_expense_category(db_session, sample_tenant):
     from models import ExpenseCategory
+
     cat = ExpenseCategory(tenant_id=sample_tenant.id, name="Utilities")
     db_session.add(cat)
     db_session.commit()
@@ -857,6 +920,7 @@ def sample_expense(db_session, sample_tenant, sample_expense_category, sample_us
     from datetime import datetime, timezone
     from decimal import Decimal
     from models import Expense
+
     e = Expense(
         tenant_id=sample_tenant.id,
         expense_number="EXP-TEST-001",
@@ -876,6 +940,7 @@ def sample_expense(db_session, sample_tenant, sample_expense_category, sample_us
 @pytest.fixture
 def sample_employee(db_session, sample_tenant):
     from models import Employee
+
     emp = Employee(
         tenant_id=sample_tenant.id,
         name="Test Employee",
@@ -890,6 +955,7 @@ def sample_employee(db_session, sample_tenant):
 def sample_payroll_transaction(db_session, sample_tenant, sample_employee):
     from decimal import Decimal
     from models import PayrollTransaction
+
     pt = PayrollTransaction(
         tenant_id=sample_tenant.id,
         employee_id=sample_employee.id,
@@ -909,6 +975,7 @@ def sample_cheque(db_session, sample_tenant):
     from datetime import date
     from decimal import Decimal
     from models import Cheque
+
     ch = Cheque(
         tenant_id=sample_tenant.id,
         cheque_number="CHQ-TEST-001",
@@ -930,6 +997,7 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
     from datetime import datetime, timezone
     from decimal import Decimal
     from models import Sale
+
     s = Sale(
         tenant_id=sample_tenant.id,
         sale_number="SAL-TEST-001",
@@ -951,6 +1019,7 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
 @pytest.fixture
 def sample_warehouse(db_session, sample_tenant, sample_branch):
     from models import Warehouse
+
     w = Warehouse(
         tenant_id=sample_tenant.id,
         branch_id=sample_branch.id,
@@ -967,6 +1036,7 @@ def sample_warehouse(db_session, sample_tenant, sample_branch):
 def sample_product(db_session, sample_tenant, sample_warehouse):
     from decimal import Decimal
     from models import Product
+
     p = Product(
         tenant_id=sample_tenant.id,
         name="Test Product",
@@ -986,6 +1056,7 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
     from decimal import Decimal
     from models import Product
     from services.stock_service import StockService
+
     p = Product(
         tenant_id=sample_tenant.id,
         name="Stocked Product",
@@ -1009,7 +1080,7 @@ def sample_gl_accounts(db_session, sample_tenant, app):
 
     with app.app_context():
         GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
-        if app.config.get('ENABLE_DYNAMIC_GL_MAPPING'):
+        if app.config.get("ENABLE_DYNAMIC_GL_MAPPING"):
             GLAccountingSetupService.execute(
                 tenant_id=sample_tenant.id,
                 dry_run=False,
@@ -1022,9 +1093,16 @@ def sample_gl_accounts(db_session, sample_tenant, app):
 def sample_currency_aed(db_session, sample_tenant):
     """Ensure AED currency exists."""
     from models import Currency
+
     c = Currency.query.filter_by(code="AED").first()
     if not c:
-        c = Currency(code="AED", name="UAE Dirham", name_ar="درهم إماراتي", symbol="د.إ", rate_to_base=1)
+        c = Currency(
+            code="AED",
+            name="UAE Dirham",
+            name_ar="درهم إماراتي",
+            symbol="د.إ",
+            rate_to_base=1,
+        )
         db_session.add(c)
         db_session.commit()
     return c
@@ -1033,5 +1111,9 @@ def sample_currency_aed(db_session, sample_tenant):
 @pytest.fixture
 def logged_in_client(client, sample_user):
     """A test client authenticated as sample_user via real login."""
-    client.post('/auth/login', data={'username': sample_user.username, 'password': 'password123'}, follow_redirects=True)
+    client.post(
+        "/auth/login",
+        data={"username": sample_user.username, "password": "password123"},
+        follow_redirects=True,
+    )
     return client

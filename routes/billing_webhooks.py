@@ -2,18 +2,20 @@
 Billing Gateway Webhooks — processes Stripe/gateway events and provisions
 purchased packages onto verified tenants.
 """
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, current_app
-from extensions import db, limiter
-from utils.db_safety import atomic_transaction
+from extensions import limiter
 
 logger = logging.getLogger(__name__)
 
-billing_webhook_bp = Blueprint("billing_webhook", __name__, url_prefix="/billing-webhook")
+billing_webhook_bp = Blueprint(
+    "billing_webhook", __name__, url_prefix="/billing-webhook"
+)
 
 _WEBHOOK_MAX_AGE = 300
 
@@ -39,9 +41,12 @@ def _is_duplicate(provider: str, event_id: str | None) -> bool:
         return False
     try:
         from extensions import cache
+
         key = f"billing_webhook:{provider}:{event_id}"
         if cache.get(key):
-            logger.warning("Billing webhook duplicate blocked: %s %s", provider, event_id)
+            logger.warning(
+                "Billing webhook duplicate blocked: %s %s", provider, event_id
+            )
             return True
         cache.set(key, "1", timeout=86400)
     except Exception:
@@ -62,6 +67,7 @@ def stripe_webhook():
             return jsonify({"error": "Webhook not configured"}), 503
 
         import stripe as stripe_lib
+
         try:
             event = stripe_lib.Webhook.construct_event(payload, sig, secret)
         except stripe_lib.error.SignatureVerificationError:
@@ -88,7 +94,8 @@ def stripe_webhook():
             if not tenant_id or not package_id:
                 logger.warning(
                     "Stripe webhook missing metadata: tenant_id=%s package_id=%s",
-                    tenant_id, package_id,
+                    tenant_id,
+                    package_id,
                 )
                 return jsonify({"error": "Missing metadata"}), 400
 
@@ -105,7 +112,8 @@ def stripe_webhook():
                 )
                 logger.info(
                     "Stripe webhook provisioned tenant %s with package %s",
-                    tenant_id, package_id,
+                    tenant_id,
+                    package_id,
                 )
                 return jsonify({"success": True, "provisioning": result}), 200
             except SaaSProvisioningError as exc:
@@ -144,8 +152,11 @@ def generic_webhook():
         SaaSProvisioningService,
         SaaSProvisioningError,
     )
+
     try:
-        secret = current_app.config.get("BILLING_WEBHOOK_SECRET") or current_app.config.get("SECRET_KEY")
+        secret = current_app.config.get(
+            "BILLING_WEBHOOK_SECRET"
+        ) or current_app.config.get("SECRET_KEY")
         if secret:
             provided = request.headers.get("X-Webhook-Secret", "")
             if provided != secret:
@@ -167,7 +178,11 @@ def generic_webhook():
         if _is_duplicate(provider, transaction_id):
             return jsonify({"status": "duplicate"}), 200
 
-        if event not in ("payment_succeeded", "checkout.session.completed", "invoice.payment_succeeded"):
+        if event not in (
+            "payment_succeeded",
+            "checkout.session.completed",
+            "invoice.payment_succeeded",
+        ):
             logger.info("Generic webhook unhandled event: %s", event)
             return jsonify({"status": "acknowledged"}), 200
 
@@ -186,7 +201,9 @@ def generic_webhook():
 
         logger.info(
             "Generic webhook provisioned tenant %s with package %s (tx=%s)",
-            tenant_id, package_id, transaction_id,
+            tenant_id,
+            package_id,
+            transaction_id,
         )
         return jsonify({"success": True, "provisioning": result}), 200
 

@@ -93,21 +93,20 @@ Avoiding One-Off Seed Behaviour
 - The service is idempotent: running `execute()` twice on the same tenant
   skips already-mapped concepts and existing accounts.
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Iterable
 
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models import Tenant
-from models._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
 from models.gl import GLAccount, GLAccountMapping
-
 
 # ---------------------------------------------------------------------------
 # Reusable concept rules
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class ConceptSetupRule:
@@ -121,6 +120,7 @@ class ConceptSetupRule:
         creation_template:  Dict describing a new account if no candidate exists.
         allow_same_as:    Map to another concept's resolved account.
     """
+
     legacy_code: str | None = None
     search_names: tuple[str, ...] = ()
     expected_types: tuple[str, ...] = ()
@@ -248,7 +248,11 @@ DEFAULT_CONCEPT_RULES: dict[str, ConceptSetupRule] = {
         },
     ),
     "INVENTORY_ADJUSTMENT_LOSS": ConceptSetupRule(
-        search_names=("inventory adjustment loss", "inventory adjustments", "خسائر تسوية مخزون"),
+        search_names=(
+            "inventory adjustment loss",
+            "inventory adjustments",
+            "خسائر تسوية مخزون",
+        ),
         expected_types=("expense",),
         creation_template={
             "code_near": "5150",
@@ -280,249 +284,276 @@ DEFAULT_CONCEPT_RULES: dict[str, ConceptSetupRule] = {
 }
 
 
-DEFAULT_CONCEPT_RULES.update({
-    "DEFERRED_CHEQUES_PAYABLE": ConceptSetupRule(
-        legacy_code="2120",
-        expected_types=("liability",),
-        creation_template={
-            "code_near": "2120",
-            "name": "Deferred Cheques Payable",
-            "name_ar": "شيكات مؤجلة الدفع",
-            "type": "liability",
-        },
-    ),
-    "END_OF_SERVICE_PROVISION": ConceptSetupRule(
-        legacy_code="6190",
-        search_names=("end of service", "eos provision", "مخصص نهاية خدمة", "تعويض نهاية خدمة"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6190",
-            "name": "End of Service Provision",
-            "name_ar": "مصروف مخصص نهاية خدمة",
-            "type": "expense",
-        },
-    ),
-    "LEAVE_ACCRUAL_LIABILITY": ConceptSetupRule(
-        legacy_code="2160",
-        search_names=("leave accrual", "vacation accrual", "استحقاقات إجازة", "إلتزام إجازات"),
-        expected_types=("liability",),
-        creation_template={
-            "code_near": "2160",
-            "name": "Leave Accrual Liability",
-            "name_ar": "إلتزام استحقاقات إجازة",
-            "type": "liability",
-        },
-    ),
-    "PARTNER_CURRENT_ACCOUNT": ConceptSetupRule(
-        legacy_code="3350",
-        search_names=("partner current", "partners current", "جاري الشركاء"),
-        expected_types=("equity", "liability", "asset"),
-        creation_template={
-            "code_near": "3350",
-            "name": "Partner Current Account",
-            "name_ar": "جاري الشركاء",
-            "type": "equity",
-        },
-    ),
-    "MERCHANT_CURRENT_ACCOUNT": ConceptSetupRule(
-        legacy_code="2115",
-        search_names=("merchant current", "merchant payable", "ذمم التجار"),
-        expected_types=("liability", "asset"),
-        creation_template={
-            "code_near": "2115",
-            "name": "Merchant Current Account",
-            "name_ar": "ذمم التجار",
-            "type": "liability",
-        },
-    ),
-    "SHIPPING_REVENUE": ConceptSetupRule(
-        legacy_code="4300",
-        search_names=("shipping revenue", "delivery revenue", "إيرادات الشحن"),
-        expected_types=("revenue",),
-        creation_template={
-            "code_near": "4300",
-            "name": "Shipping Revenue",
-            "name_ar": "إيرادات شحن",
-            "type": "revenue",
-        },
-    ),
-    "MISC_EXPENSE": ConceptSetupRule(
-        legacy_code="6990",
-        search_names=("miscellaneous expense", "misc expense", "مصاريف متنوعة"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6990",
-            "name": "Miscellaneous Expense",
-            "name_ar": "مصاريف متنوعة",
-            "type": "expense",
-        },
-    ),
-    "COMMISSION_EXPENSE": ConceptSetupRule(
-        legacy_code="6150",
-        search_names=("commission expense", "partner commission", "مصروف عمولات"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6150",
-            "name": "Commission Expense",
-            "name_ar": "مصروف عمولات",
-            "type": "expense",
-        },
-    ),
-    "EMPLOYEE_ADVANCES": ConceptSetupRule(
-        legacy_code="1160",
-        search_names=("employee advances", "salary advances", "سلف الموظفين"),
-        expected_types=("asset",),
-        creation_template={
-            "code_near": "1160",
-            "name": "Employee Advances",
-            "name_ar": "سلف الموظفين",
-            "type": "asset",
-        },
-    ),
-    "PAYROLL_EXPENSE": ConceptSetupRule(
-        legacy_code="6100",
-        search_names=("salary", "payroll", "wages", "رواتب"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6100",
-            "name": "Payroll Expense",
-            "name_ar": "رواتب وأجور",
-            "type": "expense",
-        },
-    ),
-    "PAYROLL_PAYABLE": ConceptSetupRule(
-        legacy_code="2141",
-        search_names=("salary payable", "payroll payable", "رواتب مستحقة"),
-        expected_types=("liability",),
-        creation_template={
-            "code_near": "2141",
-            "name": "Payroll Payable",
-            "name_ar": "رواتب مستحقة",
-            "type": "liability",
-        },
-    ),
-    "END_OF_SERVICE_LIABILITY": ConceptSetupRule(
-        legacy_code="2140",
-        search_names=("end of service liability", "eos provision", "مخصص نهاية خدمة", "تعويض نهاية خدمة"),
-        expected_types=("liability",),
-        creation_template={
-            "code_near": "2140",
-            "name": "End of Service Benefits Provision",
-            "name_ar": "مخصص نهاية الخدمة للموظفين",
-            "type": "liability",
-        },
-    ),
-    "PAYROLL_EXPENSE_2": ConceptSetupRule(
-        legacy_code="6220",
-        search_names=("salary", "payroll", "wages", "رواتب"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6220",
-            "name": "Payroll Expense",
-            "name_ar": "رواتب وأجور",
-            "type": "expense",
-        },
-    ),
-    "BANK_FEES": ConceptSetupRule(
-        legacy_code="6950",
-        search_names=("bank charges", "bank fees", "مصاريف بنكية"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6950",
-            "name": "Bank Fees",
-            "name_ar": "مصاريف بنكية",
-            "type": "expense",
-        },
-    ),
-    "BANK_INTEREST_INCOME": ConceptSetupRule(
-        legacy_code="4500",
-        search_names=("bank interest", "interest income", "other revenue", "فوائد بنكية"),
-        expected_types=("revenue",),
-        creation_template={
-            "code_near": "4500",
-            "name": "Bank Interest Income",
-            "name_ar": "إيرادات فوائد بنكية",
-            "type": "revenue",
-        },
-    ),
-    "DONATION_REVENUE": ConceptSetupRule(
-        legacy_code="4200",
-        search_names=("donation revenue", "service revenue", "إيرادات الخدمات"),
-        expected_types=("revenue",),
-        creation_template={
-            "code_near": "4200",
-            "name": "Donation Revenue",
-            "name_ar": "إيرادات تبرعات",
-            "type": "revenue",
-        },
-    ),
-    "FIXED_ASSET_ASSET": ConceptSetupRule(
-        legacy_code="1240",
-        search_names=("fixed asset", "equipment", "أصول ثابتة", "معدات"),
-        expected_types=("asset",),
-        parent_code_hint="1200",
-        creation_template={
-            "code_near": "1240",
-            "name": "Fixed Asset",
-            "name_ar": "أصول ثابتة",
-            "type": "asset",
-        },
-    ),
-    "DEPRECIATION_EXPENSE": ConceptSetupRule(
-        legacy_code="6180",
-        search_names=("depreciation expense", "استهلاك"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6180",
-            "name": "Depreciation Expense",
-            "name_ar": "مصروف استهلاك",
-            "type": "expense",
-        },
-    ),
-    "ACCUMULATED_DEPRECIATION": ConceptSetupRule(
-        legacy_code="1290",
-        search_names=("accumulated depreciation", "مجمع الاستهلاك"),
-        expected_types=("asset",),
-        parent_code_hint="1200",
-        creation_template={
-            "code_near": "1290",
-            "name": "Accumulated Depreciation",
-            "name_ar": "مجمع الاستهلاك",
-            "type": "asset",
-        },
-    ),
-    "FIXED_ASSET_GAIN": ConceptSetupRule(
-        legacy_code="4500",
-        search_names=("asset disposal gain", "fixed asset gain", "other revenue"),
-        expected_types=("revenue",),
-        creation_template={
-            "code_near": "4500",
-            "name": "Fixed Asset Disposal Gain",
-            "name_ar": "أرباح بيع أصول ثابتة",
-            "type": "revenue",
-        },
-    ),
-    "FIXED_ASSET_LOSS": ConceptSetupRule(
-        legacy_code="6990",
-        search_names=("asset disposal loss", "fixed asset loss", "miscellaneous expense"),
-        expected_types=("expense",),
-        creation_template={
-            "code_near": "6990",
-            "name": "Fixed Asset Disposal Loss",
-            "name_ar": "خسائر بيع أصول ثابتة",
-            "type": "expense",
-        },
-    ),
-})
+DEFAULT_CONCEPT_RULES.update(
+    {
+        "DEFERRED_CHEQUES_PAYABLE": ConceptSetupRule(
+            legacy_code="2120",
+            expected_types=("liability",),
+            creation_template={
+                "code_near": "2120",
+                "name": "Deferred Cheques Payable",
+                "name_ar": "شيكات مؤجلة الدفع",
+                "type": "liability",
+            },
+        ),
+        "END_OF_SERVICE_PROVISION": ConceptSetupRule(
+            legacy_code="6190",
+            search_names=(
+                "end of service",
+                "eos provision",
+                "مخصص نهاية خدمة",
+                "تعويض نهاية خدمة",
+            ),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6190",
+                "name": "End of Service Provision",
+                "name_ar": "مصروف مخصص نهاية خدمة",
+                "type": "expense",
+            },
+        ),
+        "LEAVE_ACCRUAL_LIABILITY": ConceptSetupRule(
+            legacy_code="2160",
+            search_names=(
+                "leave accrual",
+                "vacation accrual",
+                "استحقاقات إجازة",
+                "إلتزام إجازات",
+            ),
+            expected_types=("liability",),
+            creation_template={
+                "code_near": "2160",
+                "name": "Leave Accrual Liability",
+                "name_ar": "إلتزام استحقاقات إجازة",
+                "type": "liability",
+            },
+        ),
+        "PARTNER_CURRENT_ACCOUNT": ConceptSetupRule(
+            legacy_code="3350",
+            search_names=("partner current", "partners current", "جاري الشركاء"),
+            expected_types=("equity", "liability", "asset"),
+            creation_template={
+                "code_near": "3350",
+                "name": "Partner Current Account",
+                "name_ar": "جاري الشركاء",
+                "type": "equity",
+            },
+        ),
+        "MERCHANT_CURRENT_ACCOUNT": ConceptSetupRule(
+            legacy_code="2115",
+            search_names=("merchant current", "merchant payable", "ذمم التجار"),
+            expected_types=("liability", "asset"),
+            creation_template={
+                "code_near": "2115",
+                "name": "Merchant Current Account",
+                "name_ar": "ذمم التجار",
+                "type": "liability",
+            },
+        ),
+        "SHIPPING_REVENUE": ConceptSetupRule(
+            legacy_code="4300",
+            search_names=("shipping revenue", "delivery revenue", "إيرادات الشحن"),
+            expected_types=("revenue",),
+            creation_template={
+                "code_near": "4300",
+                "name": "Shipping Revenue",
+                "name_ar": "إيرادات شحن",
+                "type": "revenue",
+            },
+        ),
+        "MISC_EXPENSE": ConceptSetupRule(
+            legacy_code="6990",
+            search_names=("miscellaneous expense", "misc expense", "مصاريف متنوعة"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6990",
+                "name": "Miscellaneous Expense",
+                "name_ar": "مصاريف متنوعة",
+                "type": "expense",
+            },
+        ),
+        "COMMISSION_EXPENSE": ConceptSetupRule(
+            legacy_code="6150",
+            search_names=("commission expense", "partner commission", "مصروف عمولات"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6150",
+                "name": "Commission Expense",
+                "name_ar": "مصروف عمولات",
+                "type": "expense",
+            },
+        ),
+        "EMPLOYEE_ADVANCES": ConceptSetupRule(
+            legacy_code="1160",
+            search_names=("employee advances", "salary advances", "سلف الموظفين"),
+            expected_types=("asset",),
+            creation_template={
+                "code_near": "1160",
+                "name": "Employee Advances",
+                "name_ar": "سلف الموظفين",
+                "type": "asset",
+            },
+        ),
+        "PAYROLL_EXPENSE": ConceptSetupRule(
+            legacy_code="6100",
+            search_names=("salary", "payroll", "wages", "رواتب"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6100",
+                "name": "Payroll Expense",
+                "name_ar": "رواتب وأجور",
+                "type": "expense",
+            },
+        ),
+        "PAYROLL_PAYABLE": ConceptSetupRule(
+            legacy_code="2141",
+            search_names=("salary payable", "payroll payable", "رواتب مستحقة"),
+            expected_types=("liability",),
+            creation_template={
+                "code_near": "2141",
+                "name": "Payroll Payable",
+                "name_ar": "رواتب مستحقة",
+                "type": "liability",
+            },
+        ),
+        "END_OF_SERVICE_LIABILITY": ConceptSetupRule(
+            legacy_code="2140",
+            search_names=(
+                "end of service liability",
+                "eos provision",
+                "مخصص نهاية خدمة",
+                "تعويض نهاية خدمة",
+            ),
+            expected_types=("liability",),
+            creation_template={
+                "code_near": "2140",
+                "name": "End of Service Benefits Provision",
+                "name_ar": "مخصص نهاية الخدمة للموظفين",
+                "type": "liability",
+            },
+        ),
+        "PAYROLL_EXPENSE_2": ConceptSetupRule(
+            legacy_code="6220",
+            search_names=("salary", "payroll", "wages", "رواتب"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6220",
+                "name": "Payroll Expense",
+                "name_ar": "رواتب وأجور",
+                "type": "expense",
+            },
+        ),
+        "BANK_FEES": ConceptSetupRule(
+            legacy_code="6950",
+            search_names=("bank charges", "bank fees", "مصاريف بنكية"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6950",
+                "name": "Bank Fees",
+                "name_ar": "مصاريف بنكية",
+                "type": "expense",
+            },
+        ),
+        "BANK_INTEREST_INCOME": ConceptSetupRule(
+            legacy_code="4500",
+            search_names=(
+                "bank interest",
+                "interest income",
+                "other revenue",
+                "فوائد بنكية",
+            ),
+            expected_types=("revenue",),
+            creation_template={
+                "code_near": "4500",
+                "name": "Bank Interest Income",
+                "name_ar": "إيرادات فوائد بنكية",
+                "type": "revenue",
+            },
+        ),
+        "DONATION_REVENUE": ConceptSetupRule(
+            legacy_code="4200",
+            search_names=("donation revenue", "service revenue", "إيرادات الخدمات"),
+            expected_types=("revenue",),
+            creation_template={
+                "code_near": "4200",
+                "name": "Donation Revenue",
+                "name_ar": "إيرادات تبرعات",
+                "type": "revenue",
+            },
+        ),
+        "FIXED_ASSET_ASSET": ConceptSetupRule(
+            legacy_code="1240",
+            search_names=("fixed asset", "equipment", "أصول ثابتة", "معدات"),
+            expected_types=("asset",),
+            parent_code_hint="1200",
+            creation_template={
+                "code_near": "1240",
+                "name": "Fixed Asset",
+                "name_ar": "أصول ثابتة",
+                "type": "asset",
+            },
+        ),
+        "DEPRECIATION_EXPENSE": ConceptSetupRule(
+            legacy_code="6180",
+            search_names=("depreciation expense", "استهلاك"),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6180",
+                "name": "Depreciation Expense",
+                "name_ar": "مصروف استهلاك",
+                "type": "expense",
+            },
+        ),
+        "ACCUMULATED_DEPRECIATION": ConceptSetupRule(
+            legacy_code="1290",
+            search_names=("accumulated depreciation", "مجمع الاستهلاك"),
+            expected_types=("asset",),
+            parent_code_hint="1200",
+            creation_template={
+                "code_near": "1290",
+                "name": "Accumulated Depreciation",
+                "name_ar": "مجمع الاستهلاك",
+                "type": "asset",
+            },
+        ),
+        "FIXED_ASSET_GAIN": ConceptSetupRule(
+            legacy_code="4500",
+            search_names=("asset disposal gain", "fixed asset gain", "other revenue"),
+            expected_types=("revenue",),
+            creation_template={
+                "code_near": "4500",
+                "name": "Fixed Asset Disposal Gain",
+                "name_ar": "أرباح بيع أصول ثابتة",
+                "type": "revenue",
+            },
+        ),
+        "FIXED_ASSET_LOSS": ConceptSetupRule(
+            legacy_code="6990",
+            search_names=(
+                "asset disposal loss",
+                "fixed asset loss",
+                "miscellaneous expense",
+            ),
+            expected_types=("expense",),
+            creation_template={
+                "code_near": "6990",
+                "name": "Fixed Asset Disposal Loss",
+                "name_ar": "خسائر بيع أصول ثابتة",
+                "type": "expense",
+            },
+        ),
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # Result dataclasses
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class SetupPlanAction:
-    action_type: str          # "create_account" | "select_existing" | "map_concept" | "skip"
+    action_type: str  # "create_account" | "select_existing" | "map_concept" | "skip"
     tenant_id: int
     concept_code: str
     gl_account_id: int | None = None
@@ -570,6 +601,7 @@ class SetupResult:
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 class GLAccountingSetupService:
     """Reusable service to prepare a tenant's GL concept mappings."""
@@ -631,17 +663,21 @@ class GLAccountingSetupService:
             if action.action_type != "create_account":
                 continue
             try:
-                account = GLAccountingSetupService._create_account(tenant, action.concept_code)
+                account = GLAccountingSetupService._create_account(
+                    tenant, action.concept_code
+                )
                 db.session.add(account)
                 if not dry_run:
                     db.session.flush()
-                created_accounts.append({
-                    "id": account.id,
-                    "code": account.code,
-                    "name": account.name,
-                    "name_ar": account.name_ar,
-                    "type": account.type,
-                })
+                created_accounts.append(
+                    {
+                        "id": account.id,
+                        "code": account.code,
+                        "name": account.name,
+                        "name_ar": account.name_ar,
+                        "type": account.type,
+                    }
+                )
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"Create account failed for {action.concept_code}: {exc}")
 
@@ -652,20 +688,18 @@ class GLAccountingSetupService:
             if action.action_type != "map_concept":
                 continue
             if action.gl_account_id is None:
-                skipped_concepts.append({
-                    "concept_code": action.concept_code,
-                    "reason": action.reason,
-                })
-                continue
-            existing = (
-                GLAccountMapping.query
-                .filter_by(
-                    tenant_id=tenant.id,
-                    concept_code=action.concept_code,
-                    branch_id=None,
+                skipped_concepts.append(
+                    {
+                        "concept_code": action.concept_code,
+                        "reason": action.reason,
+                    }
                 )
-                .first()
-            )
+                continue
+            existing = GLAccountMapping.query.filter_by(
+                tenant_id=tenant.id,
+                concept_code=action.concept_code,
+                branch_id=None,
+            ).first()
             if existing:
                 continue
             try:
@@ -679,22 +713,23 @@ class GLAccountingSetupService:
                 db.session.add(mapping)
                 if not dry_run:
                     db.session.flush()
-                created_mappings.append({
-                    "id": mapping.id,
-                    "concept_code": action.concept_code,
-                    "gl_account_id": action.gl_account_id,
-                    "gl_account_code": action.gl_account_code,
-                    "gl_account_name": action.gl_account_name,
-                })
+                created_mappings.append(
+                    {
+                        "id": mapping.id,
+                        "concept_code": action.concept_code,
+                        "gl_account_id": action.gl_account_id,
+                        "gl_account_code": action.gl_account_code,
+                        "gl_account_name": action.gl_account_name,
+                    }
+                )
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"Map concept failed for {action.concept_code}: {exc}")
 
         if dry_run:
             db.session.rollback()
         else:
-            with atomic_transaction('gl_accounting_setup_execute'):
+            with atomic_transaction("gl_accounting_setup_execute"):
                 db.session.flush()
-
 
         return SetupResult(
             tenant_id=tenant.id,
@@ -710,8 +745,7 @@ class GLAccountingSetupService:
         """Apply the plan to every tenant."""
         tenants = Tenant.query.order_by(Tenant.id.asc()).all()
         return [
-            GLAccountingSetupService.execute(t.id, dry_run=dry_run)
-            for t in tenants
+            GLAccountingSetupService.execute(t.id, dry_run=dry_run) for t in tenants
         ]
 
     @staticmethod
@@ -803,26 +837,24 @@ class GLAccountingSetupService:
     # ================================================================
 
     @staticmethod
-    def _find_best_candidate(tenant: Tenant, rule: ConceptSetupRule) -> GLAccount | None:
+    def _find_best_candidate(
+        tenant: Tenant, rule: ConceptSetupRule
+    ) -> GLAccount | None:
         """Find the best existing postable GL account for a concept."""
         # 1. Exact legacy code match
         if rule.legacy_code:
-            acc = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, code=rule.legacy_code)
-                .first()
-            )
+            acc = GLAccount.query.filter_by(
+                tenant_id=tenant.id, code=rule.legacy_code
+            ).first()
             if acc and acc.is_active and not acc.is_header:
                 if not rule.expected_types or acc.type in rule.expected_types:
                     return acc
 
         # 2. Name search (exact/partial, EN + AR)
         if rule.search_names:
-            accounts = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, is_active=True, is_header=False)
-                .all()
-            )
+            accounts = GLAccount.query.filter_by(
+                tenant_id=tenant.id, is_active=True, is_header=False
+            ).all()
             for pattern in rule.search_names:
                 for account in accounts:
                     if rule.expected_types and account.type not in rule.expected_types:
@@ -834,15 +866,15 @@ class GLAccountingSetupService:
 
         # 3. Parent-code child scan
         if rule.parent_code_hint:
-            parent = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, code=rule.parent_code_hint)
-                .first()
-            )
+            parent = GLAccount.query.filter_by(
+                tenant_id=tenant.id, code=rule.parent_code_hint
+            ).first()
             if parent:
                 postable = [
-                    c for c in parent.children
-                    if c.is_active and not c.is_header
+                    c
+                    for c in parent.children
+                    if c.is_active
+                    and not c.is_header
                     and (not rule.expected_types or c.type in rule.expected_types)
                 ]
                 if postable:
@@ -866,11 +898,9 @@ class GLAccountingSetupService:
 
         parent = None
         if rule.parent_code_hint:
-            parent = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, code=rule.parent_code_hint)
-                .first()
-            )
+            parent = GLAccount.query.filter_by(
+                tenant_id=tenant.id, code=rule.parent_code_hint
+            ).first()
 
         if "code_suffix" in tmpl:
             base = rule.parent_code_hint or f"{tmpl.get('code_near', '')}"
@@ -902,8 +932,7 @@ class GLAccountingSetupService:
     def _next_child_code(tenant_id: int, parent_code: str) -> str:
         """Allocate next child code, e.g. 1120-B3."""
         existing = (
-            GLAccount.query
-            .filter_by(tenant_id=tenant_id)
+            GLAccount.query.filter_by(tenant_id=tenant_id)
             .filter(GLAccount.code.like(f"{parent_code}-%"))
             .order_by(GLAccount.code.asc())
             .all()
@@ -926,6 +955,8 @@ class GLAccountingSetupService:
             return base_code
         for offset in range(1, 100):
             candidate = str(int(base_code) + offset)
-            if not GLAccount.query.filter_by(tenant_id=tenant_id, code=candidate).first():
+            if not GLAccount.query.filter_by(
+                tenant_id=tenant_id, code=candidate
+            ).first():
                 return candidate
         raise RuntimeError(f"No available code near {base_code} for tenant {tenant_id}")

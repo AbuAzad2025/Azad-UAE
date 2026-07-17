@@ -3,7 +3,12 @@
 import logging
 
 from flask import (
-    Blueprint, render_template, request, flash, redirect, url_for,
+    Blueprint,
+    render_template,
+    request,
+    flash,
+    redirect,
+    url_for,
 )
 from flask_login import current_user
 from sqlalchemy import func
@@ -35,11 +40,7 @@ def dashboard():
     from models.branch import Branch
     from models.package import Package
 
-    tenants = (
-        db.session.query(Tenant)
-        .order_by(Tenant.id.asc())
-        .all()
-    )
+    tenants = db.session.query(Tenant).order_by(Tenant.id.asc()).all()
 
     user_counts = dict(
         db.session.query(User.tenant_id, func.count(User.id))
@@ -77,12 +78,14 @@ def dashboard():
 
     tenant_rows = []
     for t in tenants:
-        tenant_rows.append({
-            "tenant": t,
-            "owner_email": admin_emails.get(t.id, "—"),
-            "users_used": user_counts.get(t.id, 0),
-            "branches_used": branch_counts.get(t.id, 0),
-        })
+        tenant_rows.append(
+            {
+                "tenant": t,
+                "owner_email": admin_emails.get(t.id, "—"),
+                "users_used": user_counts.get(t.id, 0),
+                "branches_used": branch_counts.get(t.id, 0),
+            }
+        )
 
     stats = {
         "total": len(tenants),

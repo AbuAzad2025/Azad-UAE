@@ -1,4 +1,5 @@
 """Error handlers for AZADEXA ERP."""
+
 from flask import jsonify, render_template, request, flash, redirect, url_for
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
@@ -10,9 +11,9 @@ from services.logging_core import LoggingCore
 def _wants_json_error_response():
     return (
         request.is_json
-        or request.path.startswith('/api/')
-        or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        or request.accept_mimetypes.best == 'application/json'
+        or request.path.startswith("/api/")
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accept_mimetypes.best == "application/json"
     )
 
 
@@ -29,7 +30,10 @@ def register_error_handlers(app):
             exception=exc,
         )
         if _wants_json_error_response():
-            return jsonify({"success": False, "error": "CSRF token missing or invalid"}), 400
+            return (
+                jsonify({"success": False, "error": "CSRF token missing or invalid"}),
+                400,
+            )
         if not current_user.is_authenticated:
             flash("Security token expired. Please sign in again.", "warning")
             return redirect(url_for("auth.login"))
@@ -88,11 +92,16 @@ def register_error_handlers(app):
             exception=exc,
         )
         if _wants_json_error_response():
-            return jsonify({
-                "success": False,
-                "error": exc.name,
-                "status": exc.code,
-            }), exc.code
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": exc.name,
+                        "status": exc.code,
+                    }
+                ),
+                exc.code,
+            )
         return exc
 
     @app.errorhandler(Exception)
@@ -100,7 +109,7 @@ def register_error_handlers(app):
         if isinstance(exc, HTTPException):
             return exc
         # Tenant isolation violation → 403 Forbidden
-        if exc.__class__.__name__ == 'TenantIsolationError':
+        if exc.__class__.__name__ == "TenantIsolationError":
             LoggingCore.log_error(
                 message=str(exc),
                 category="SECURITY",
@@ -110,10 +119,14 @@ def register_error_handlers(app):
             )
             if _wants_json_error_response():
                 return jsonify({"success": False, "error": str(exc)}), 403
-            flash(str(exc), 'danger')
+            flash(str(exc), "danger")
             return render_template("errors/403.html"), 403
         category = "DATABASE" if isinstance(exc, SQLAlchemyError) else "BACKEND"
-        source = "app.errorhandler.database" if category == "DATABASE" else "app.errorhandler.generic"
+        source = (
+            "app.errorhandler.database"
+            if category == "DATABASE"
+            else "app.errorhandler.generic"
+        )
         LoggingCore.log_error(
             message=str(exc) or f"{type(exc).__name__} (no message)",
             category=category,

@@ -2,10 +2,13 @@ import logging
 import os
 import sys
 from flask import g, has_request_context
+
 try:
     from colorama import init as colorama_init, Fore, Style
+
     colorama_init(autoreset=True)
 except ImportError:
+
     class _Fore:
         BLUE = ""
         CYAN = ""
@@ -14,10 +17,13 @@ except ImportError:
         RED = ""
         MAGENTA = ""
         WHITE = ""
+
     class _Style:
         BRIGHT = ""
         RESET_ALL = ""
+
     Fore, Style = _Fore(), _Style()
+
 
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
@@ -27,6 +33,7 @@ class RequestIdFilter(logging.Filter):
             record.request_id = "-"
         return True
 
+
 class ColorFormatter(logging.Formatter):
     COLORS = {
         "DEBUG": Fore.CYAN + Style.BRIGHT,
@@ -35,6 +42,7 @@ class ColorFormatter(logging.Formatter):
         "ERROR": Fore.RED + Style.BRIGHT,
         "CRITICAL": Fore.MAGENTA + Style.BRIGHT,
     }
+
     def format(self, record: logging.LogRecord) -> str:
         use_colors = os.environ.get("FLASK_ENV", "development") == "development"
         if use_colors:
@@ -53,22 +61,34 @@ class ColorFormatter(logging.Formatter):
         except Exception:
             target_encoding = "utf-8"
         try:
-            message = message.encode(target_encoding, errors="replace").decode(target_encoding, errors="replace")
+            message = message.encode(target_encoding, errors="replace").decode(
+                target_encoding, errors="replace"
+            )
         except Exception:
             message = message.encode("ascii", errors="replace").decode("ascii")
         return message
+
 
 def setup_logging(app):
     level_name = app.config.get("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
     if sys.platform == "win32":
         import io
-        if hasattr(sys.stdout, "buffer") and not getattr(sys.stdout, "_azad_utf8_wrapped", False):
-            wrapped_out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
+        if hasattr(sys.stdout, "buffer") and not getattr(
+            sys.stdout, "_azad_utf8_wrapped", False
+        ):
+            wrapped_out = io.TextIOWrapper(
+                sys.stdout.buffer, encoding="utf-8", errors="replace"
+            )
             setattr(wrapped_out, "_azad_utf8_wrapped", True)
             sys.stdout = wrapped_out
-        if hasattr(sys.stderr, "buffer") and not getattr(sys.stderr, "_azad_utf8_wrapped", False):
-            wrapped_err = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "buffer") and not getattr(
+            sys.stderr, "_azad_utf8_wrapped", False
+        ):
+            wrapped_err = io.TextIOWrapper(
+                sys.stderr.buffer, encoding="utf-8", errors="replace"
+            )
             setattr(wrapped_err, "_azad_utf8_wrapped", True)
             sys.stderr = wrapped_err
     console_handler = logging.StreamHandler(sys.stdout)

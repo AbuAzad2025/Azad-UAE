@@ -1,6 +1,7 @@
 """
 Allowlisted subprocess helpers for backup/restore (Bandit-safe pg tool invocation).
 """
+
 from __future__ import annotations
 
 import os

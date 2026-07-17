@@ -140,7 +140,9 @@ def assign_tenant_id(record, user=None):
     return record
 
 
-def scoped_user_query(user=None, *, active_only: bool = False, exclude_owners: bool = False):
+def scoped_user_query(
+    user=None, *, active_only: bool = False, exclude_owners: bool = False
+):
     """User queries with tenant isolation (User is exempt from ORM auto-scoping)."""
     from models.user import User
 
@@ -235,7 +237,12 @@ def get_tenant_status(tenant_id: int | None) -> dict:
 
     tenant = db.session.get(Tenant, int(tenant_id))
     if tenant is None:
-        return {"ok": False, "suspended": True, "reason": "Tenant not found", "tenant": None}
+        return {
+            "ok": False,
+            "suspended": True,
+            "reason": "Tenant not found",
+            "tenant": None,
+        }
 
     if not tenant.is_active or getattr(tenant, "is_suspended", False):
         return {

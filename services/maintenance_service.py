@@ -21,18 +21,23 @@ class MaintenanceService:
         1. Drops the deprecated 'ix_cost_centers_code' index if it exists
         2. Deletes orphaned cost centers that still have NULL tenant_id (legacy data)
         """
-        engine = create_engine(os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"))
+        engine = create_engine(
+            os.environ.get(
+                "DATABASE_URL",
+                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
+            )
+        )
         with engine.begin() as conn:
             # Drop old unique index on code
             try:
-                conn.execute(text('DROP INDEX IF EXISTS ix_cost_centers_code'))
-                print('✅ Dropped old unique index on code')
+                conn.execute(text("DROP INDEX IF EXISTS ix_cost_centers_code"))
+                print("✅ Dropped old unique index on code")
             except Exception as e:
-                print(f'Note: {e}')
-            
+                print(f"Note: {e}")
+
             # Delete existing cost centers (they have NULL tenant_id)
-            conn.execute(text('DELETE FROM cost_centers WHERE tenant_id IS NULL'))
-            print('✅ Deleted old cost centers with NULL tenant_id')
+            conn.execute(text("DELETE FROM cost_centers WHERE tenant_id IS NULL"))
+            print("✅ Deleted old cost centers with NULL tenant_id")
 
     @staticmethod
     def rebuild_gl_tree(cleanup_extra=False):
@@ -64,21 +69,30 @@ class MaintenanceService:
             tenant_reports = []
 
             for tenant in tenants:
-                print(f"\nProcessing Tenant: {tenant.name} (ID: {tenant.id}, Slug: {tenant.slug})")
+                print(
+                    f"\nProcessing Tenant: {tenant.name} (ID: {tenant.id}, Slug: {tenant.slug})"
+                )
                 print("-" * 80)
 
                 try:
                     # Build the GL tree
-                    audit_report = GLTreeBuilder.build(tenant.id, cleanup_extra=cleanup_extra, commit=True)
+                    audit_report = GLTreeBuilder.build(
+                        tenant.id, cleanup_extra=cleanup_extra, commit=True
+                    )
 
                     # Print results
-                    created_count = len(audit_report['created'])
-                    updated_count = len(audit_report['updated'])
-                    converted_count = len(audit_report['converted'])
-                    deactivated_count = len(audit_report['deactivated'])
-                    errors_count = len(audit_report['errors'])
+                    created_count = len(audit_report["created"])
+                    updated_count = len(audit_report["updated"])
+                    converted_count = len(audit_report["converted"])
+                    deactivated_count = len(audit_report["deactivated"])
+                    errors_count = len(audit_report["errors"])
 
-                    if created_count or updated_count or converted_count or deactivated_count:
+                    if (
+                        created_count
+                        or updated_count
+                        or converted_count
+                        or deactivated_count
+                    ):
                         tenants_updated += 1
 
                     total_created += created_count
@@ -94,42 +108,51 @@ class MaintenanceService:
 
                     if errors_count:
                         print(f"  WARNING: {errors_count} errors!")
-                        for err in audit_report['errors']:
+                        for err in audit_report["errors"]:
                             print(f"    - {err['code']}: {err['error']}")
 
                     # Validate the tree
                     validation = GLTreeBuilder.validate_tree(tenant.id)
 
-                    if validation['valid']:
-                        print(f"  Validation: ✅ Tree is valid!")
+                    if validation["valid"]:
+                        print("  Validation: ✅ Tree is valid!")
                         print(f"  Total accounts: {validation['total_accounts']}")
-                        print(f"  Core accounts present: {validation['core_accounts_found']}")
-                        if validation['extra_accounts']:
-                            print(f"  Extra accounts found: {len(validation['extra_accounts'])}")
+                        print(
+                            f"  Core accounts present: {validation['core_accounts_found']}"
+                        )
+                        if validation["extra_accounts"]:
+                            print(
+                                f"  Extra accounts found: {len(validation['extra_accounts'])}"
+                            )
                     else:
-                        print(f"  Validation: ❌ Tree has issues!")
-                        for issue in validation['issues']:
+                        print("  Validation: ❌ Tree has issues!")
+                        for issue in validation["issues"]:
                             print(f"    - {issue['code']}: {issue['issue']}")
 
-                        if validation['missing_core_accounts']:
-                            print(f"    - Missing {len(validation['missing_core_accounts'])} core accounts!")
+                        if validation["missing_core_accounts"]:
+                            print(
+                                f"    - Missing {len(validation['missing_core_accounts'])} core accounts!"
+                            )
 
-                    tenant_reports.append({
-                        'tenant_id': tenant.id,
-                        'tenant_name': tenant.name,
-                        'tenant_slug': tenant.slug,
-                        'created': created_count,
-                        'updated': updated_count,
-                        'converted': converted_count,
-                        'deactivated': deactivated_count,
-                        'errors': errors_count,
-                        'validation': validation,
-                    })
+                    tenant_reports.append(
+                        {
+                            "tenant_id": tenant.id,
+                            "tenant_name": tenant.name,
+                            "tenant_slug": tenant.slug,
+                            "created": created_count,
+                            "updated": updated_count,
+                            "converted": converted_count,
+                            "deactivated": deactivated_count,
+                            "errors": errors_count,
+                            "validation": validation,
+                        }
+                    )
 
                 except Exception as e:
                     db.session.rollback()
                     print(f"  ERROR: Failed to process tenant {tenant.id}: {str(e)}")
                     import traceback
+
                     traceback.print_exc()
 
             print("\n" + "=" * 80)
@@ -144,12 +167,12 @@ class MaintenanceService:
             print("\nDone!")
 
             return {
-                'tenants_updated': tenants_updated,
-                'total_created': total_created,
-                'total_updated': total_updated,
-                'total_converted': total_converted,
-                'total_deactivated': total_deactivated,
-                'tenants': tenant_reports,
+                "tenants_updated": tenants_updated,
+                "total_created": total_created,
+                "total_updated": total_updated,
+                "total_converted": total_converted,
+                "total_deactivated": total_deactivated,
+                "tenants": tenant_reports,
             }
 
     # ──────────────────────────────────────────────────────────────────
@@ -161,7 +184,10 @@ class MaintenanceService:
         dt = (data_type or "").lower()
         if "boolean" in dt:
             return False
-        if any(k in dt for k in ("int", "numeric", "decimal", "money", "real", "double", "float")):
+        if any(
+            k in dt
+            for k in ("int", "numeric", "decimal", "money", "real", "double", "float")
+        ):
             return 0
         if "json" in dt:
             return "{}"
@@ -169,6 +195,7 @@ class MaintenanceService:
             return "now()"
         if "uuid" in dt:
             import uuid
+
             return str(uuid.uuid4())
         return ""
 
@@ -176,14 +203,19 @@ class MaintenanceService:
     def fix_default_tenant_metadata(dry_run: bool = False) -> list:
         """
         Fill NOT NULL columns (no DB default) that are NULL on the default tenant row.
-        
+
         Args:
             dry_run: If True, only report what would be done without making changes
-            
+
         Returns:
             list: List of columns that were/would be patched
         """
-        engine = create_engine(os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"))
+        engine = create_engine(
+            os.environ.get(
+                "DATABASE_URL",
+                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
+            )
+        )
         fixed = []
         with engine.begin() as conn:
             cols = conn.execute(
@@ -197,7 +229,9 @@ class MaintenanceService:
                 if default is not None and str(default).upper() != "NULL":
                     continue  # DB will supply the default on insert/update
                 cur = conn.execute(
-                    text(f'SELECT "{name}" FROM tenants WHERE slug = \'default\' LIMIT 1')
+                    text(
+                        f"SELECT \"{name}\" FROM tenants WHERE slug = 'default' LIMIT 1"
+                    )
                 ).scalar()
                 if cur is None:
                     val = MaintenanceService._default_for_type(dtype)
@@ -205,11 +239,15 @@ class MaintenanceService:
                     if not dry_run:
                         if isinstance(val, str) and val == "now()":
                             conn.execute(
-                                text(f"UPDATE tenants SET {name} = now() WHERE slug = 'default'")
+                                text(
+                                    f"UPDATE tenants SET {name} = now() WHERE slug = 'default'"
+                                )
                             )
                         else:
                             conn.execute(
-                                text(f'UPDATE tenants SET "{name}" = :v WHERE slug = \'default\''),
+                                text(
+                                    f"UPDATE tenants SET \"{name}\" = :v WHERE slug = 'default'"
+                                ),
                                 {"v": val},
                             )
         return fixed
@@ -227,22 +265,29 @@ class MaintenanceService:
                 return "(skipped: --check mode)"
             # Find default tenant
             from models.tenant import Tenant
-            demo = Tenant.query.filter_by(slug='default').first()
+
+            demo = Tenant.query.filter_by(slug="default").first()
             if not demo:
                 return "No default tenant found"
-            result = BackupService.create_backup(scope="tenant", tenant_id=demo.id, manual=True)
+            result = BackupService.create_backup(
+                scope="tenant", tenant_id=demo.id, manual=True
+            )
         if isinstance(result, dict):
-            return result.get("filename") or result.get("manifest", {}).get("backup_scope") or str(result)
+            return (
+                result.get("filename")
+                or result.get("manifest", {}).get("backup_scope")
+                or str(result)
+            )
         return str(result)
 
     @staticmethod
     def run_default_tenant_maintenance(dry_run: bool = False) -> dict:
         """
         Run full default tenant maintenance (patch + backup).
-        
+
         Args:
             dry_run: If True, only report what would be done
-            
+
         Returns:
             dict: Maintenance result with keys:
                 - 'patched': list of columns patched
@@ -250,10 +295,14 @@ class MaintenanceService:
                 - 'action_needed': bool
                 - 'conflicts': list of conflicts
         """
-        from models.tenant import Tenant
-        
-        engine = create_engine(os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"))
-        
+
+        engine = create_engine(
+            os.environ.get(
+                "DATABASE_URL",
+                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
+            )
+        )
+
         # Check for conflicts
         conflicts = []
         with engine.connect() as conn:
@@ -267,16 +316,16 @@ class MaintenanceService:
                 conflicts.append(f"{dup_slug} other tenant(s) also use slug 'default'")
 
         fixed = MaintenanceService.fix_default_tenant_metadata(dry_run=dry_run)
-        
+
         backup_fn = None
         if not dry_run:
             backup_fn = MaintenanceService.regenerate_default_backup(dry_run=dry_run)
 
         return {
-            'patched': fixed,
-            'backup_regenerated': backup_fn,
-            'action_needed': len(fixed) > 0 or backup_fn is not None,
-            'conflicts': conflicts,
+            "patched": fixed,
+            "backup_regenerated": backup_fn,
+            "action_needed": len(fixed) > 0 or backup_fn is not None,
+            "conflicts": conflicts,
         }
 
     # ──────────────────────────────────────────────────────────────────
@@ -284,26 +333,26 @@ class MaintenanceService:
     # ──────────────────────────────────────────────────────────────────
 
     STALE_TEST_DATABASES = [
-        'azadexa_dev',
-        'azadexa_test',
-        'azad_accounting_sys_dev',
-        'azad_diag_restore',
-        'azad_diag2',
-        'azad_repro',
-        'azad_verify_live',
-        'azad_verify_dry',
-        'azad_uae_loadtest',
-        'azad_uae_test',
+        "azadexa_dev",
+        "azadexa_test",
+        "azad_accounting_sys_dev",
+        "azad_diag_restore",
+        "azad_diag2",
+        "azad_repro",
+        "azad_verify_live",
+        "azad_verify_dry",
+        "azad_uae_loadtest",
+        "azad_uae_test",
     ]
 
     @staticmethod
     def cleanup_test_databases(dry_run: bool = False) -> dict:
         """
         Drop stale test databases, keeping only the main production DB.
-        
+
         Args:
             dry_run: If True, only report what would be dropped
-            
+
         Returns:
             dict: Results with keys:
                 - 'dropped': list of dropped databases
@@ -311,9 +360,11 @@ class MaintenanceService:
                 - 'remaining': list of remaining azad databases
         """
         engine = create_engine(
-            os.environ.get("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
-            .replace("postgresql+psycopg2", "postgresql"),
-            isolation_level='AUTOCOMMIT'
+            os.environ.get(
+                "DATABASE_URL",
+                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
+            ).replace("postgresql+psycopg2", "postgresql"),
+            isolation_level="AUTOCOMMIT",
         )
         dropped = []
         failed = []
@@ -322,23 +373,26 @@ class MaintenanceService:
             for db in MaintenanceService.STALE_TEST_DATABASES:
                 try:
                     if not dry_run:
-                        conn.execute(text(f'DROP DATABASE IF EXISTS {db} WITH (FORCE)'))
+                        conn.execute(text(f"DROP DATABASE IF EXISTS {db} WITH (FORCE)"))
                     dropped.append(db)
                 except Exception as e:
                     failed.append((db, str(e)))
 
             # List remaining azad databases
-            result = conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")).fetchall()
+            result = conn.execute(
+                text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")
+            ).fetchall()
             remaining = [r[0] for r in result]
 
         return {
-            'dropped': dropped,
-            'failed': failed,
-            'remaining': remaining,
+            "dropped": dropped,
+            "failed": failed,
+            "remaining": remaining,
         }
 
 
 # Entry points for dashboard API
+
 
 def fix_cost_centers_index_api():
     """API endpoint for owner dashboard to fix cost centers index."""

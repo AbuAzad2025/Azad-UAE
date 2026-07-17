@@ -1,17 +1,17 @@
 """
 Scoped JSONL restore — tenant / branch / store to a NEW database only.
 """
+
 from __future__ import annotations
 
 import logging
 import os
 import tarfile
 import tempfile
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from services.backup_scope_config import (
     SCOPE_BRANCH,
-    SCOPE_STORE,
     SCOPE_TENANT,
     TABLE_EXPORT_ORDER,
     normalize_row_to_target,
@@ -41,7 +41,9 @@ def extract_scoped_bundle(archive_path: str, work_dir: str) -> Dict[str, Any]:
             if member in names:
                 tar.extract(member, work_dir, filter="data")
                 out[member] = os.path.join(work_dir, member)
-        if "data/schema_meta.json" in names or any(n.startswith("data/") for n in names):
+        if "data/schema_meta.json" in names or any(
+            n.startswith("data/") for n in names
+        ):
             for n in names:
                 if n.startswith("data/"):
                     tar.extract(n, work_dir, filter="data")
@@ -74,10 +76,9 @@ def _build_id_remap(
 ) -> Dict[str, Dict[Any, Any]]:
     """Map old PK -> new PK per table when restoring as new tenant/branch/store."""
     id_maps: Dict[str, Dict[Any, Any]] = {}
-    old_tid = None
     tenants = tables.get("tenants") or []
     if tenants:
-        old_tid = tenants[0].get("id")
+        tenants[0].get("id")
 
     for table in TABLE_EXPORT_ORDER:
         rows = tables.get(table) or []
@@ -180,7 +181,9 @@ def _apply_row_remap(
     return out
 
 
-def _delete_tenant_scoped_data(conn: Connection, tenant_id: int, branch_id: Optional[int] = None) -> None:
+def _delete_tenant_scoped_data(
+    conn: Connection, tenant_id: int, branch_id: Optional[int] = None
+) -> None:
     from sqlalchemy import text
 
     from services.backup_scope_config import TABLE_EXPORT_ORDER, table_exists
@@ -301,7 +304,7 @@ def import_scoped_tables(
     source_branch_id: Optional[int] = None,
     dry_run: bool = False,
 ) -> Dict[str, Any]:
-    from sqlalchemy import create_engine, text
+    from sqlalchemy import create_engine
 
     result: Dict[str, Any] = {"ok": True, "inserted": {}, "errors": []}
     tgt_tid = target_tenant_id if target_tenant_id is not None else source_tenant_id
@@ -451,8 +454,12 @@ def verify_scoped_restore(
                     if table in core_tables and act_n < exp_n:
                         out["ok"] = False
                         out["errors"].append(f"{table}: expected>={exp_n} got {act_n}")
-                    elif table not in optional_low and act_n < max(1, int(exp_n * 0.85)):
-                        out["warnings"].append(f"{table}: expected>={exp_n} got {act_n}")
+                    elif table not in optional_low and act_n < max(
+                        1, int(exp_n * 0.85)
+                    ):
+                        out["warnings"].append(
+                            f"{table}: expected>={exp_n} got {act_n}"
+                        )
             except Exception as exc:
                 logger.debug("verify count %s: %s", table, exc)
         try:
@@ -473,8 +480,7 @@ def verify_scoped_restore(
             try:
                 with conn.begin_nested():
                     orphan_merchant = conn.execute(
-                        text(
-                            """
+                        text("""
                             SELECT COUNT(*) FROM products p
                             WHERE p.tenant_id = :tid
                               AND p.merchant_customer_id IS NOT NULL
@@ -482,8 +488,7 @@ def verify_scoped_restore(
                                 SELECT 1 FROM customers c
                                 WHERE c.id = p.merchant_customer_id AND c.tenant_id = :tid
                               )
-                            """
-                        ),
+                            """),
                         {"tid": tid},
                     ).scalar()
                     if int(orphan_merchant or 0) > 0:
@@ -517,9 +522,11 @@ def restore_scoped_backup(
         outcome["errors"].append(f"Typed confirmation {required!r} required")
         return outcome
 
-    current_url = os.environ.get("DATABASE_URL") or os.environ.get(
-        "SQLALCHEMY_DATABASE_URI"
-    ) or ""
+    current_url = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        or ""
+    )
     if backup_service_cls._urls_same_database(current_url, target_database_url):
         outcome["errors"].append(
             "Target database is the same as current DATABASE_URL — use a new database"
@@ -561,7 +568,9 @@ def restore_scoped_backup(
             from sqlalchemy import create_engine, text
 
             with create_engine(target_database_url).connect() as conn:
-                max_id = conn.execute(text("SELECT COALESCE(MAX(id),0) FROM tenants")).scalar()
+                max_id = conn.execute(
+                    text("SELECT COALESCE(MAX(id),0) FROM tenants")
+                ).scalar()
             tgt_tid = int(max_id or 0) + 1
 
         import_result = import_scoped_tables(

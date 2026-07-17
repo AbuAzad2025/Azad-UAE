@@ -2,7 +2,7 @@
 System Knowledge - Complete Azad-UAE ERP reference.
 Queryable by AI assistant to answer ANY question about the system.
 """
-from datetime import datetime
+
 from typing import Any
 
 # ===== SYSTEM OVERVIEW =====
@@ -19,42 +19,175 @@ SYSTEM_INFO = {
 
 # ===== ROLE SYSTEM =====
 ROLES: list[dict[str, Any]] = [
-    {"slug": "owner", "level": 100, "name_en": "Owner", "name_ar": "مالك", "permissions": "all"},
-    {"slug": "developer", "level": 95, "name_en": "Developer", "name_ar": "مطور", "permissions": "all"},
-    {"slug": "super_admin", "level": 90, "name_en": "Super Admin", "name_ar": "مدير عام", "permissions": "all"},
-    {"slug": "manager", "level": 25, "name_en": "Manager", "name_ar": "مدير",
-     "permissions": ["manage_sales", "manage_purchases", "manage_products", "manage_customers",
-                     "manage_suppliers", "manage_payments", "manage_expenses", "view_reports",
-                     "manage_warehouse", "manage_store", "view_ledger", "manage_ledger", "manage_payroll"]},
-    {"slug": "branch_manager", "level": 20, "name_en": "Branch Manager", "name_ar": "مدير فرع",
-     "permissions": ["manage_sales", "manage_purchases", "manage_products", "manage_customers",
-                     "manage_suppliers", "manage_payments", "manage_expenses", "view_reports",
-                     "manage_warehouse", "manage_store", "view_ledger", "manage_ledger", "manage_payroll"]},
-    {"slug": "accountant", "level": 15, "name_en": "Accountant", "name_ar": "محاسب",
-     "permissions": ["manage_payments", "manage_expenses", "view_reports", "view_ledger",
-                     "manage_ledger", "manage_payroll"]},
-    {"slug": "seller", "level": 10, "name_en": "Seller", "name_ar": "بائع",
-     "permissions": ["manage_sales", "manage_customers", "view_reports", "view_ledger"]},
+    {
+        "slug": "owner",
+        "level": 100,
+        "name_en": "Owner",
+        "name_ar": "مالك",
+        "permissions": "all",
+    },
+    {
+        "slug": "developer",
+        "level": 95,
+        "name_en": "Developer",
+        "name_ar": "مطور",
+        "permissions": "all",
+    },
+    {
+        "slug": "super_admin",
+        "level": 90,
+        "name_en": "Super Admin",
+        "name_ar": "مدير عام",
+        "permissions": "all",
+    },
+    {
+        "slug": "manager",
+        "level": 25,
+        "name_en": "Manager",
+        "name_ar": "مدير",
+        "permissions": [
+            "manage_sales",
+            "manage_purchases",
+            "manage_products",
+            "manage_customers",
+            "manage_suppliers",
+            "manage_payments",
+            "manage_expenses",
+            "view_reports",
+            "manage_warehouse",
+            "manage_store",
+            "view_ledger",
+            "manage_ledger",
+            "manage_payroll",
+        ],
+    },
+    {
+        "slug": "branch_manager",
+        "level": 20,
+        "name_en": "Branch Manager",
+        "name_ar": "مدير فرع",
+        "permissions": [
+            "manage_sales",
+            "manage_purchases",
+            "manage_products",
+            "manage_customers",
+            "manage_suppliers",
+            "manage_payments",
+            "manage_expenses",
+            "view_reports",
+            "manage_warehouse",
+            "manage_store",
+            "view_ledger",
+            "manage_ledger",
+            "manage_payroll",
+        ],
+    },
+    {
+        "slug": "accountant",
+        "level": 15,
+        "name_en": "Accountant",
+        "name_ar": "محاسب",
+        "permissions": [
+            "manage_payments",
+            "manage_expenses",
+            "view_reports",
+            "view_ledger",
+            "manage_ledger",
+            "manage_payroll",
+        ],
+    },
+    {
+        "slug": "seller",
+        "level": 10,
+        "name_en": "Seller",
+        "name_ar": "بائع",
+        "permissions": [
+            "manage_sales",
+            "manage_customers",
+            "view_reports",
+            "view_ledger",
+        ],
+    },
 ]
 
 # ===== PERMISSION CODES =====
 PERMISSIONS: dict[str, dict[str, Any]] = {
-    "manage_sales": {"name": "Manage Sales", "name_ar": "إدارة المبيعات", "category": "sales"},
-    "manage_purchases": {"name": "Manage Purchases", "name_ar": "إدارة المشتريات", "category": "purchases"},
-    "manage_products": {"name": "Manage Products", "name_ar": "إدارة المنتجات", "category": "products"},
-    "manage_customers": {"name": "Manage Customers", "name_ar": "إدارة العملاء", "category": "customers"},
-    "manage_suppliers": {"name": "Manage Suppliers", "name_ar": "إدارة الموردين", "category": "suppliers"},
-    "manage_payments": {"name": "Manage Payments", "name_ar": "إدارة المدفوعات", "category": "finance"},
-    "manage_expenses": {"name": "Manage Expenses", "name_ar": "إدارة المصروفات", "category": "finance"},
-    "view_reports": {"name": "View Reports", "name_ar": "عرض التقارير", "category": "reports"},
-    "manage_warehouse": {"name": "Manage Warehouse", "name_ar": "إدارة المستودعات", "category": "warehouse"},
-    "manage_store": {"name": "Manage Store", "name_ar": "إدارة المتجر", "category": "store"},
-    "view_ledger": {"name": "View Ledger", "name_ar": "عرض دفتر الأستاذ", "category": "finance"},
-    "manage_ledger": {"name": "Manage Ledger", "name_ar": "إدارة دفتر الأستاذ", "category": "finance"},
+    "manage_sales": {
+        "name": "Manage Sales",
+        "name_ar": "إدارة المبيعات",
+        "category": "sales",
+    },
+    "manage_purchases": {
+        "name": "Manage Purchases",
+        "name_ar": "إدارة المشتريات",
+        "category": "purchases",
+    },
+    "manage_products": {
+        "name": "Manage Products",
+        "name_ar": "إدارة المنتجات",
+        "category": "products",
+    },
+    "manage_customers": {
+        "name": "Manage Customers",
+        "name_ar": "إدارة العملاء",
+        "category": "customers",
+    },
+    "manage_suppliers": {
+        "name": "Manage Suppliers",
+        "name_ar": "إدارة الموردين",
+        "category": "suppliers",
+    },
+    "manage_payments": {
+        "name": "Manage Payments",
+        "name_ar": "إدارة المدفوعات",
+        "category": "finance",
+    },
+    "manage_expenses": {
+        "name": "Manage Expenses",
+        "name_ar": "إدارة المصروفات",
+        "category": "finance",
+    },
+    "view_reports": {
+        "name": "View Reports",
+        "name_ar": "عرض التقارير",
+        "category": "reports",
+    },
+    "manage_warehouse": {
+        "name": "Manage Warehouse",
+        "name_ar": "إدارة المستودعات",
+        "category": "warehouse",
+    },
+    "manage_store": {
+        "name": "Manage Store",
+        "name_ar": "إدارة المتجر",
+        "category": "store",
+    },
+    "view_ledger": {
+        "name": "View Ledger",
+        "name_ar": "عرض دفتر الأستاذ",
+        "category": "finance",
+    },
+    "manage_ledger": {
+        "name": "Manage Ledger",
+        "name_ar": "إدارة دفتر الأستاذ",
+        "category": "finance",
+    },
     "admin": {"name": "Admin", "name_ar": "إدارة النظام", "category": "admin"},
-    "manage_users": {"name": "Manage Users", "name_ar": "إدارة المستخدمين", "category": "admin"},
-    "manage_backups": {"name": "Manage Backups", "name_ar": "إدارة النسخ الاحتياطي", "category": "admin"},
-    "manage_payroll": {"name": "Manage Payroll", "name_ar": "إدارة الرواتب", "category": "admin"},
+    "manage_users": {
+        "name": "Manage Users",
+        "name_ar": "إدارة المستخدمين",
+        "category": "admin",
+    },
+    "manage_backups": {
+        "name": "Manage Backups",
+        "name_ar": "إدارة النسخ الاحتياطي",
+        "category": "admin",
+    },
+    "manage_payroll": {
+        "name": "Manage Payroll",
+        "name_ar": "إدارة الرواتب",
+        "category": "admin",
+    },
 }
 
 # ===== COMPLETE MODELS REFERENCE =====
@@ -108,7 +241,12 @@ MODELS: dict[str, dict[str, Any]] = {
             "location": "String(100)",
             "is_active": "Boolean",
         },
-        "relationships": ["sale_lines", "purchase_lines", "stock_movements", "product_partners"],
+        "relationships": [
+            "sale_lines",
+            "purchase_lines",
+            "stock_movements",
+            "product_partners",
+        ],
     },
     "Sale": {
         "table": "sales",
@@ -335,26 +473,57 @@ ROUTES = {
     "AI Assistant": {
         "prefix": "/ai",
         "permission": "view_reports",
-        "endpoints": ["/chat", "/assistant", "/predict-sales", "/analyze-margins",
-                       "/business-insights", "/deep-analysis", "/cash-flow-prediction",
-                       "/inventory-health", "/churn-prediction", "/optimize-inventory",
-                       "/detect-patterns", "/recommend-price", "/check-stock",
-                       "/analyze-customer/<id>", "/exchange-rate/<currency>",
-                       "/system/summary", "/system/search/<term>",
-                       "/system/add-customer", "/system/customer-balance/<name>",
-                       "/knowledge/search", "/contextual-help/<page>"],
+        "endpoints": [
+            "/chat",
+            "/assistant",
+            "/predict-sales",
+            "/analyze-margins",
+            "/business-insights",
+            "/deep-analysis",
+            "/cash-flow-prediction",
+            "/inventory-health",
+            "/churn-prediction",
+            "/optimize-inventory",
+            "/detect-patterns",
+            "/recommend-price",
+            "/check-stock",
+            "/analyze-customer/<id>",
+            "/exchange-rate/<currency>",
+            "/system/summary",
+            "/system/search/<term>",
+            "/system/add-customer",
+            "/system/customer-balance/<name>",
+            "/knowledge/search",
+            "/contextual-help/<page>",
+        ],
     },
     "Sales": {
         "prefix": "/sales",
         "permission": "manage_sales",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/<id>/cancel",
-                       "/<id>/delete", "/<id>/print", "/<id>/archive", "/<id>/restore",
-                       "/archived"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/<id>/cancel",
+            "/<id>/delete",
+            "/<id>/print",
+            "/<id>/archive",
+            "/<id>/restore",
+            "/archived",
+        ],
     },
     "Purchases": {
         "prefix": "/purchases",
         "permission": "manage_purchases",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/<id>/delete", "/<id>/print"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/<id>/delete",
+            "/<id>/print",
+        ],
     },
     "Products": {
         "prefix": "/products",
@@ -364,14 +533,26 @@ ROUTES = {
     "Customers": {
         "prefix": "/customers",
         "permission": "manage_customers",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/<id>/delete",
-                       "/<id>/statement"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/<id>/delete",
+            "/<id>/statement",
+        ],
     },
     "Suppliers": {
         "prefix": "/suppliers",
         "permission": "manage_suppliers",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/<id>/delete",
-                       "/<id>/statement"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/<id>/delete",
+            "/<id>/statement",
+        ],
     },
     "Payments": {
         "prefix": "/payments",
@@ -386,20 +567,41 @@ ROUTES = {
     "Cheques": {
         "prefix": "/cheques",
         "permission": "manage_payments",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/<id>/delete",
-                       "/<id>/clear", "/<id>/bounce"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/<id>/delete",
+            "/<id>/clear",
+            "/<id>/bounce",
+        ],
     },
     "Warehouse": {
         "prefix": "/warehouse",
         "permission": "manage_warehouse",
-        "endpoints": ["/", "/create", "/<id>", "/<id>/edit", "/movements",
-                       "/transfer", "/adjust"],
+        "endpoints": [
+            "/",
+            "/create",
+            "/<id>",
+            "/<id>/edit",
+            "/movements",
+            "/transfer",
+            "/adjust",
+        ],
     },
     "Reports": {
         "prefix": "/reports",
         "permission": "view_reports",
-        "endpoints": ["/", "/sales", "/purchases", "/customers",
-                       "/profit-loss", "/cash-flow", "/treasury"],
+        "endpoints": [
+            "/",
+            "/sales",
+            "/purchases",
+            "/customers",
+            "/profit-loss",
+            "/cash-flow",
+            "/treasury",
+        ],
     },
     "Ledger": {
         "prefix": "/ledger",
@@ -419,10 +621,20 @@ ROUTES = {
     "Owner": {
         "prefix": "/owner",
         "permission": "admin",
-        "endpoints": ["/dashboard", "/users-list", "/config", "/company-info",
-                       "/audit-logs", "/archived", "/sql-console",
-                       "/database-tools", "/tenant-stores", "/tenant-ai",
-                       "/invoice-settings", "/backups"],
+        "endpoints": [
+            "/dashboard",
+            "/users-list",
+            "/config",
+            "/company-info",
+            "/audit-logs",
+            "/archived",
+            "/sql-console",
+            "/database-tools",
+            "/tenant-stores",
+            "/tenant-ai",
+            "/invoice-settings",
+            "/backups",
+        ],
     },
     "Users": {
         "prefix": "/users",
@@ -467,16 +679,36 @@ ACCOUNTING = {
         "details": "Standard rate 17%. Reduced rates for certain items.",
     },
     "account_types": [
-        {"code": "asset", "name_ar": "أصل", "name_en": "Asset",
-         "subtypes": ["current_asset", "fixed_asset", "other_asset"]},
-        {"code": "liability", "name_ar": "خصم", "name_en": "Liability",
-         "subtypes": ["current_liability", "long_term_liability"]},
-        {"code": "equity", "name_ar": "حقوق ملكية", "name_en": "Equity",
-         "subtypes": ["capital", "retained_earnings", "drawings"]},
-        {"code": "revenue", "name_ar": "إيراد", "name_en": "Revenue",
-         "subtypes": ["sales_revenue", "other_revenue"]},
-        {"code": "expense", "name_ar": "مصروف", "name_en": "Expense",
-         "subtypes": ["cost_of_goods_sold", "operating_expense", "other_expense"]},
+        {
+            "code": "asset",
+            "name_ar": "أصل",
+            "name_en": "Asset",
+            "subtypes": ["current_asset", "fixed_asset", "other_asset"],
+        },
+        {
+            "code": "liability",
+            "name_ar": "خصم",
+            "name_en": "Liability",
+            "subtypes": ["current_liability", "long_term_liability"],
+        },
+        {
+            "code": "equity",
+            "name_ar": "حقوق ملكية",
+            "name_en": "Equity",
+            "subtypes": ["capital", "retained_earnings", "drawings"],
+        },
+        {
+            "code": "revenue",
+            "name_ar": "إيراد",
+            "name_en": "Revenue",
+            "subtypes": ["sales_revenue", "other_revenue"],
+        },
+        {
+            "code": "expense",
+            "name_ar": "مصروف",
+            "name_en": "Expense",
+            "subtypes": ["cost_of_goods_sold", "operating_expense", "other_expense"],
+        },
     ],
     "financial_ratios": {
         "gross_margin": "Gross Profit / Revenue * 100",
@@ -510,9 +742,11 @@ FEATURES: dict[str, dict[str, Any]] = {
         "name_ar": "المساعد الذكي",
         "description": "Integrated AI chatbot. Supports Groq (llama-3.3-70b). Answers questions, performs actions, analyzes data.",
         "permission": "view_reports",
-        "levels": {"basic": "Chat and light insights",
-                    "advanced": "Basic + analytics, predictions, deep analysis",
-                    "execute": "Advanced + create/update records via chat"},
+        "levels": {
+            "basic": "Chat and light insights",
+            "advanced": "Basic + analytics, predictions, deep analysis",
+            "execute": "Advanced + create/update records via chat",
+        },
     },
     "Point of Sale (POS)": {
         "name_ar": "نقطة البيع",
@@ -574,41 +808,93 @@ FEATURES: dict[str, dict[str, Any]] = {
 # ===== COMMON USER QUESTIONS =====
 FAQ = {
     "accountant": [
-        {"q": "كيف أسجل قيد محاسبي؟", "a": "استخدم دفتر الأستاذ /ledger -> إضافة قيد. تأكد من تساوي المدين والدائن."},
-        {"q": "كيف أشيد تقرير الأرباح والخسائر؟", "a": "اذهب إلى التقارير /reports/profit-loss"},
-        {"q": "كيف أعمل كشف حساب لعميل؟", "a": "اذهب إلى العملاء -> العميل -> كشف حساب"},
+        {
+            "q": "كيف أسجل قيد محاسبي؟",
+            "a": "استخدم دفتر الأستاذ /ledger -> إضافة قيد. تأكد من تساوي المدين والدائن.",
+        },
+        {
+            "q": "كيف أشيد تقرير الأرباح والخسائر؟",
+            "a": "اذهب إلى التقارير /reports/profit-loss",
+        },
+        {
+            "q": "كيف أعمل كشف حساب لعميل؟",
+            "a": "اذهب إلى العملاء -> العميل -> كشف حساب",
+        },
         {"q": "ما هي أنواع الحسابات؟", "a": "أصل، خصم، حقوق ملكية، إيراد، مصروف"},
         {"q": "كيف أرجع فاتورة؟", "a": "اذهب إلى المبيعات -> الفاتورة -> إرجاع"},
     ],
     "manager": [
-        {"q": "كيف أشوف تقرير المبيعات؟", "a": "التقارير /reports/sales - يعرض إجمالي المبيعات مع رسوم بيانية"},
-        {"q": "كيف أحلل أداء البائعين؟", "a": "التقارير -> تحليل المبيعات -> تقارير الأداء"},
-        {"q": "كيف أشوف المخزون المنخفض؟", "a": "المستودعات -> المخزون المنخفض /warehouse -> low_stock"},
-        {"q": "كيف أضيف مستخدم جديد؟", "a": "الصلاحيات /users/create (يتطلب صلاحية manage_users)"},
+        {
+            "q": "كيف أشوف تقرير المبيعات؟",
+            "a": "التقارير /reports/sales - يعرض إجمالي المبيعات مع رسوم بيانية",
+        },
+        {
+            "q": "كيف أحلل أداء البائعين؟",
+            "a": "التقارير -> تحليل المبيعات -> تقارير الأداء",
+        },
+        {
+            "q": "كيف أشوف المخزون المنخفض؟",
+            "a": "المستودعات -> المخزون المنخفض /warehouse -> low_stock",
+        },
+        {
+            "q": "كيف أضيف مستخدم جديد؟",
+            "a": "الصلاحيات /users/create (يتطلب صلاحية manage_users)",
+        },
     ],
     "seller": [
         {"q": "كيف أعمل فاتورة؟", "a": "المبيعات -> فاتورة جديدة /sales/create"},
-        {"q": "كيف أبحث عن منتج؟", "a": "المنتجات -> بحث /products مع البحث بالاسم أو الرمز"},
-        {"q": "كيف أستلم دفعة من عميل؟", "a": "المدفوعات -> استلام /payments/receipts/create"},
-        {"q": "كيف أشوف رصيد العميل؟", "a": "العملاء -> العميل -> يظهر الرصيد في أعلى الصفحة"},
+        {
+            "q": "كيف أبحث عن منتج؟",
+            "a": "المنتجات -> بحث /products مع البحث بالاسم أو الرمز",
+        },
+        {
+            "q": "كيف أستلم دفعة من عميل؟",
+            "a": "المدفوعات -> استلام /payments/receipts/create",
+        },
+        {
+            "q": "كيف أشوف رصيد العميل؟",
+            "a": "العملاء -> العميل -> يظهر الرصيد في أعلى الصفحة",
+        },
     ],
     "owner": [
         {"q": "كيف أضبط إعدادات النظام؟", "a": "لوحة المالك /owner/config"},
-        {"q": "كيف أشوف سجل التدقيق؟", "a": "لوحة المالك -> سجل التدقيق /owner/audit-logs"},
-        {"q": "كيف أعمل نسخة احتياطية؟", "a": "لوحة المالك -> النسخ الاحتياطي /owner/backups"},
+        {
+            "q": "كيف أشوف سجل التدقيق؟",
+            "a": "لوحة المالك -> سجل التدقيق /owner/audit-logs",
+        },
+        {
+            "q": "كيف أعمل نسخة احتياطية؟",
+            "a": "لوحة المالك -> النسخ الاحتياطي /owner/backups",
+        },
         {"q": "كيف أضيف منشأة جديدة؟", "a": "سينتقل إلى /tenants - متاح للمالك فقط"},
-        {"q": "كيف أضبط صلاحيات الذكاء الاصطناعي؟", "a": "لوحة المالك -> إعدادات AI /owner/tenant-ai"},
+        {
+            "q": "كيف أضبط صلاحيات الذكاء الاصطناعي؟",
+            "a": "لوحة المالك -> إعدادات AI /owner/tenant-ai",
+        },
     ],
     "programmer": [
-        {"q": "ما هي تقنيات النظام؟", "a": f"Python 3.10+, Flask, PostgreSQL, SQLAlchemy. Frontend: Bootstrap 5, jQuery."},
-        {"q": "كيف أضيف مودل جديد؟", "a": "أنشئ ملف في models/، أضف class يرث db.Model، ثم run flask db migrate"},
-        {"q": "كيف أضيف Route جديد؟", "a": "أنشئ ملف في routes/، عرّف Blueprint، ثم سجله في bootstrap/blueprints.py"},
-        {"q": "ما هي صلاحيات API؟", "a": "API v1 في /api (JSON)، API v2 في /api/v2، GraphQL في /graphql"},
+        {
+            "q": "ما هي تقنيات النظام؟",
+            "a": "Python 3.10+, Flask, PostgreSQL, SQLAlchemy. Frontend: Bootstrap 5, jQuery.",
+        },
+        {
+            "q": "كيف أضيف مودل جديد؟",
+            "a": "أنشئ ملف في models/، أضف class يرث db.Model، ثم run flask db migrate",
+        },
+        {
+            "q": "كيف أضيف Route جديد؟",
+            "a": "أنشئ ملف في routes/، عرّف Blueprint، ثم سجله في bootstrap/blueprints.py",
+        },
+        {
+            "q": "ما هي صلاحيات API؟",
+            "a": "API v1 في /api (JSON)، API v2 في /api/v2، GraphQL في /graphql",
+        },
     ],
 }
 
 
 # ===== QUERY FUNCTIONS =====
+
 
 def get_model_info(model_name: str) -> dict | None:
     """Get detailed info about a model by class name or table name."""
@@ -624,7 +910,10 @@ def get_model_info(model_name: str) -> dict | None:
             return {**val, "_key": key}
     # Try partial match
     for key, val in MODELS.items():
-        if model_name.lower() in key.lower() or model_name.lower() in val["table"].lower():
+        if (
+            model_name.lower() in key.lower()
+            or model_name.lower() in val["table"].lower()
+        ):
             return {**val, "_key": key}
     return None
 
@@ -688,8 +977,11 @@ def get_contextual_help(page: str) -> dict | None:
     """Get help for a specific page/feature."""
     for name, info in ROUTES.items():
         if page.lower() in name.lower():
-            return {"page": name, "endpoints": info["endpoints"],
-                    "required_permission": info["permission"]}
+            return {
+                "page": name,
+                "endpoints": info["endpoints"],
+                "required_permission": info["permission"],
+            }
     return None
 
 

@@ -8,17 +8,28 @@ def _branch_liquidity_account_code(parent_code, branch_id):
     return f"{parent_code}-B{int(branch_id)}"
 
 
-def ensure_branch_liquidity_account(connection, branch, parent_code, liquidity_kind, name_prefix, name_prefix_ar):
+def ensure_branch_liquidity_account(
+    connection, branch, parent_code, liquidity_kind, name_prefix, name_prefix_ar
+):
     parent = connection.execute(
-        text("SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"),
+        text(
+            "SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"
+        ),
         {"tenant_id": branch.tenant_id, "code": parent_code},
     ).fetchone()
     if not parent:
-        logger.debug("Skipped %s liquidity account for branch %s: parent %s is missing", liquidity_kind, branch.id, parent_code)
+        logger.debug(
+            "Skipped %s liquidity account for branch %s: parent %s is missing",
+            liquidity_kind,
+            branch.id,
+            parent_code,
+        )
         return
     code = _branch_liquidity_account_code(parent_code, branch.id)
     existing = connection.execute(
-        text("SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"),
+        text(
+            "SELECT id FROM gl_accounts WHERE tenant_id = :tenant_id AND code = :code LIMIT 1"
+        ),
         {"tenant_id": branch.tenant_id, "code": code},
     ).fetchone()
     params = {
@@ -59,14 +70,25 @@ def register_branch_event_listeners():
     from models import Branch
     from sqlalchemy import event
 
-    @event.listens_for(Branch, 'after_insert')
-    @event.listens_for(Branch, 'after_update')
+    @event.listens_for(Branch, "after_insert")
+    @event.listens_for(Branch, "after_update")
     def _handler(mapper, connection, target):
         if not target.id or not target.tenant_id or not target.is_active:
             return
         try:
-            ensure_branch_liquidity_account(connection, target, "1110", "cash", "Cashbox", "\u0635\u0646\u062f\u0648\u0642")
-            ensure_branch_liquidity_account(connection, target, "1120", "bank", "Bank", "\u0628\u0646\u0643")
+            ensure_branch_liquidity_account(
+                connection,
+                target,
+                "1110",
+                "cash",
+                "Cashbox",
+                "\u0635\u0646\u062f\u0648\u0642",
+            )
+            ensure_branch_liquidity_account(
+                connection, target, "1120", "bank", "Bank", "\u0628\u0646\u0643"
+            )
         except Exception as e:
-            logger.error("Failed to ensure financial accounts for branch %s: %s", target.id, e)
+            logger.error(
+                "Failed to ensure financial accounts for branch %s: %s", target.id, e
+            )
             raise

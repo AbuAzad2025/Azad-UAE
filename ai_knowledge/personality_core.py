@@ -23,10 +23,20 @@ from ai_knowledge.agents.intelligent_assistant import intelligent_assistant
 from ai_knowledge.core.learning_system import learning_system
 
 __all__ = [
-    'AzadPersonality', 'azad_personality',
-    'DialectManager', 'dialect_manager', 'apply_dialect', 'get_dialectal_greeting',
-    'BeginnersGuide', 'beginners_guide', 'BEGINNERS_TUTORIALS',
-    'AzadResponses', 'azad_responses',
-    'system_integrator', 'semantic_matcher', 'understand_message',
-    'intelligent_assistant', 'learning_system',
+    "AzadPersonality",
+    "azad_personality",
+    "DialectManager",
+    "dialect_manager",
+    "apply_dialect",
+    "get_dialectal_greeting",
+    "BeginnersGuide",
+    "beginners_guide",
+    "BEGINNERS_TUTORIALS",
+    "AzadResponses",
+    "azad_responses",
+    "system_integrator",
+    "semantic_matcher",
+    "understand_message",
+    "intelligent_assistant",
+    "learning_system",
 ]

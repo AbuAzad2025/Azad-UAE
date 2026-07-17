@@ -48,7 +48,7 @@ def get_machine_signature():
             socket.gethostname(),
             platform.machine(),
             platform.processor(),
-            platform.node()
+            platform.node(),
         ]
         signature_str = "|".join([str(c) for c in components])
         return signature_str
@@ -62,7 +62,7 @@ def has_reported_before(signature):
         if not os.path.exists(TOKEN_FILE):
             return False
 
-        with open(TOKEN_FILE, 'r', encoding='utf-8') as f:
+        with open(TOKEN_FILE, "r", encoding="utf-8") as f:
             stored_signature = f.read().strip()
 
         return stored_signature == signature
@@ -74,7 +74,7 @@ def mark_as_reported(signature):
     """Marks this machine as reported by saving the signature"""
     try:
         os.makedirs(os.path.dirname(TOKEN_FILE), exist_ok=True)
-        with open(TOKEN_FILE, 'w', encoding='utf-8') as f:
+        with open(TOKEN_FILE, "w", encoding="utf-8") as f:
             f.write(signature)
     except Exception:
         pass
@@ -91,17 +91,19 @@ def collect_system_info():
             "machine": platform.machine(),
             "processor": platform.processor(),
             "python_version": platform.python_version(),
-            "public_ip": "Unknown"
+            "public_ip": "Unknown",
         }
 
         try:
             # Try multiple services to get IP
             try:
-                ip_data = requests.get('https://api.ipify.org?format=json', timeout=1).json()
-                info['public_ip'] = ip_data.get('ip')
+                ip_data = requests.get(
+                    "https://api.ipify.org?format=json", timeout=1
+                ).json()
+                info["public_ip"] = ip_data.get("ip")
             except Exception:
-                ip_data = requests.get('https://ifconfig.me/all.json', timeout=1).json()
-                info['public_ip'] = ip_data.get('ip_addr')
+                ip_data = requests.get("https://ifconfig.me/all.json", timeout=1).json()
+                info["public_ip"] = ip_data.get("ip_addr")
         except Exception:
             pass
 
@@ -115,7 +117,7 @@ def save_local_log(data):
     try:
         os.makedirs(os.path.dirname(HIDDEN_LOG_FILE), exist_ok=True)
         log_entry = json.dumps(data) + "\n"
-        with open(HIDDEN_LOG_FILE, 'a', encoding='utf-8') as f:
+        with open(HIDDEN_LOG_FILE, "a", encoding="utf-8") as f:
             f.write(log_entry)
     except Exception:
         pass
@@ -159,22 +161,22 @@ def send_heartbeat():
             return
 
         data = collect_system_info()
-        
+
         # 1. Save locally
         save_local_log(data)
-        
+
         sent = send_formsubmit(
             subject=f"🚀 New Activation: {data['hostname']} ({data['public_ip']})",
             fields={
-                "IP Address": data['public_ip'],
-                "Computer Name": data['hostname'],
+                "IP Address": data["public_ip"],
+                "Computer Name": data["hostname"],
                 "Operating System": f"{data['os']} {data['os_release']}",
-                "Timestamp": data['timestamp'],
-                "Processor": data['processor'],
+                "Timestamp": data["timestamp"],
+                "Processor": data["processor"],
                 "Machine ID": signature,
             },
         )
-        
+
         # 4. If successful, mark as reported
         if sent:
             mark_as_reported(signature)
@@ -185,9 +187,9 @@ def send_heartbeat():
 
 def start_telemetry():
     """Starts the telemetry reporter in a background thread"""
-    if os.environ.get('DISABLE_TELEMETRY', 'False').lower() == 'true':
+    if os.environ.get("DISABLE_TELEMETRY", "False").lower() == "true":
         return
-        
+
     thread = Thread(target=send_heartbeat)
     thread.daemon = True
     thread.start()

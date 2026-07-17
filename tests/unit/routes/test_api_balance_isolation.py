@@ -1,4 +1,5 @@
 """Tests for API balance isolation - cross-tenant customer/supplier balance returns 0.0"""
+
 from unittest.mock import MagicMock, patch
 from models import Customer, Supplier, Tenant
 
@@ -9,6 +10,7 @@ class TestAPIBalanceIsolation:
     @staticmethod
     def _make_tenant(db_session, name="Test Tenant"):
         import uuid
+
         unique = str(uuid.uuid4())[:8]
         tenant = Tenant(
             name=f"{name} {unique}",
@@ -26,6 +28,7 @@ class TestAPIBalanceIsolation:
     @staticmethod
     def _make_customer(db_session, tenant_id, name="Test Customer"):
         import uuid
+
         unique = str(uuid.uuid4())[:8]
         customer = Customer(
             tenant_id=tenant_id,
@@ -33,7 +36,7 @@ class TestAPIBalanceIsolation:
             phone="0500000000",
             email=f"customer-{unique}@example.com",
             is_active=True,
-            customer_type='regular',
+            customer_type="regular",
         )
         db_session.add(customer)
         db_session.flush()
@@ -42,6 +45,7 @@ class TestAPIBalanceIsolation:
     @staticmethod
     def _make_supplier(db_session, tenant_id, name="Test Supplier"):
         import uuid
+
         unique = str(uuid.uuid4())[:8]
         supplier = Supplier(
             tenant_id=tenant_id,
@@ -71,16 +75,21 @@ class TestAPIBalanceIsolation:
         user_a.is_owner = False
 
         with app.test_request_context():
-            with patch('routes.api.current_user', user_a):
-                with patch('routes.api.branch_scope_id', return_value=None):
+            with patch("routes.api.current_user", user_a):
+                with patch("routes.api.branch_scope_id", return_value=None):
                     from routes.api import _customer_balance
+
                     # Request tenant B's customer from tenant A context - should return 0.0
                     result = _customer_balance(customer_b.id)
-                    assert result == 0.0, "Cross-tenant customer balance must return 0.0"
+                    assert result == 0.0, (
+                        "Cross-tenant customer balance must return 0.0"
+                    )
 
                     # Request tenant A's own customer - should return balance
                     result = _customer_balance(customer_a.id)
-                    assert result == 0.0, "Own tenant customer returns 0.0 (no transactions yet)"
+                    assert result == 0.0, (
+                        "Own tenant customer returns 0.0 (no transactions yet)"
+                    )
 
     def test_supplier_balance_cross_tenant_returns_zero(self, app, db_session):
         """Tenant A user requesting tenant B supplier balance returns 0.0 without branch scope."""
@@ -99,16 +108,21 @@ class TestAPIBalanceIsolation:
         user_a.is_owner = False
 
         with app.test_request_context():
-            with patch('routes.api.current_user', user_a):
-                with patch('routes.api.branch_scope_id', return_value=None):
+            with patch("routes.api.current_user", user_a):
+                with patch("routes.api.branch_scope_id", return_value=None):
                     from routes.api import _supplier_balance
+
                     # Request tenant B's supplier from tenant A context - should return 0.0
                     result = _supplier_balance(supplier_b.id)
-                    assert result == 0.0, "Cross-tenant supplier balance must return 0.0"
+                    assert result == 0.0, (
+                        "Cross-tenant supplier balance must return 0.0"
+                    )
 
                     # Request tenant A's own supplier - should return balance
                     result = _supplier_balance(supplier_a.id)
-                    assert result == 0.0, "Own tenant supplier returns 0.0 (no transactions yet)"
+                    assert result == 0.0, (
+                        "Own tenant supplier returns 0.0 (no transactions yet)"
+                    )
 
     def test_missing_customer_balance_returns_zero(self, app, db_session):
         """Non-existent customer ID returns 0.0 (same as cross-tenant)."""
@@ -120,9 +134,10 @@ class TestAPIBalanceIsolation:
         user_a.is_owner = False
 
         with app.test_request_context():
-            with patch('routes.api.current_user', user_a):
-                with patch('routes.api.branch_scope_id', return_value=None):
+            with patch("routes.api.current_user", user_a):
+                with patch("routes.api.branch_scope_id", return_value=None):
                     from routes.api import _customer_balance
+
                     result = _customer_balance(999999)
                     assert result == 0.0, "Missing customer ID must return 0.0"
 
@@ -136,8 +151,9 @@ class TestAPIBalanceIsolation:
         user_a.is_owner = False
 
         with app.test_request_context():
-            with patch('routes.api.current_user', user_a):
-                with patch('routes.api.branch_scope_id', return_value=None):
+            with patch("routes.api.current_user", user_a):
+                with patch("routes.api.branch_scope_id", return_value=None):
                     from routes.api import _supplier_balance
+
                     result = _supplier_balance(999999)
                     assert result == 0.0, "Missing supplier ID must return 0.0"

@@ -4,7 +4,7 @@
 """
 
 BEGINNERS_TUTORIALS = {
-    'first_time': """🎉 **أهلاً بك في نظام أزاد!**
+    "first_time": """🎉 **أهلاً بك في نظام أزاد!**
 
 أنا أزاد، مساعدك الذكي! سأعلمك كل شيء بالتفصيل 📚
 
@@ -24,8 +24,7 @@ BEGINNERS_TUTORIALS = {
 **اكتب**: "كيف أعمل فاتورة؟"
 
 💡 **نصيحة**: لا تخف من الأخطاء! أنا هنا لمساعدتك دائماً! 😊""",
-
-    'create_invoice': """📝 **شرح مفصل: كيف تعمل فاتورة؟**
+    "create_invoice": """📝 **شرح مفصل: كيف تعمل فاتورة؟**
 
 ### خطوة بخطوة:
 
@@ -59,8 +58,7 @@ BEGINNERS_TUTORIALS = {
 جرب الآن! افتح صفحة الفاتورة وجرب بمنتج واحد
 
 💡 **لا تخف**: يمكنك إلغاء الفاتورة لاحقاً إذا كانت تجريبية!""",
-
-    'add_customer': """👥 **شرح مفصل: كيف تضيف زبون؟**
+    "add_customer": """👥 **شرح مفصل: كيف تضيف زبون؟**
 
 ### خطوة بخطوة:
 
@@ -95,8 +93,7 @@ BEGINNERS_TUTORIALS = {
 • يمكنك تعديل معلومات الزبون أي وقت
 
 **جرب الآن!** 🚀""",
-
-    'add_product': """📦 **شرح مفصل: كيف تضيف منتج/قطعة؟**
+    "add_product": """📦 **شرح مفصل: كيف تضيف منتج/قطعة؟**
 
 ### خطوة بخطوة:
 
@@ -148,8 +145,7 @@ BEGINNERS_TUTORIALS = {
 • استخدم أرقام SKU واضحة (PART-001, PART-002...)
 
 **جرب الآن!** 🔧""",
-
-    'create_report': """📊 **شرح مفصل: كيف تعمل تقرير؟**
+    "create_report": """📊 **شرح مفصل: كيف تعمل تقرير؟**
 
 ### أنواع التقارير:
 
@@ -200,23 +196,29 @@ BEGINNERS_TUTORIALS = {
 • 📋 **Copy**: نسخ
 • 🖨️ **Print**: طباعة
 
-**جرب الآن!** افتح أي تقرير! 📊"""
+**جرب الآن!** افتح أي تقرير! 📊""",
 }
 
 
 class BeginnersGuide:
     """دليل المبتدئين"""
-    
+
     @staticmethod
     def get_tutorial(topic):
         """الحصول على درس تعليمي"""
-        return BEGINNERS_TUTORIALS.get(topic, BEGINNERS_TUTORIALS['first_time'])
-    
+        return BEGINNERS_TUTORIALS.get(topic, BEGINNERS_TUTORIALS["first_time"])
+
     @staticmethod
     def suggest_next_step(current_step):
         """اقتراح الخطوة التالية"""
-        steps_order = ['first_time', 'create_invoice', 'add_customer', 'add_product', 'create_report']
-        
+        steps_order = [
+            "first_time",
+            "create_invoice",
+            "add_customer",
+            "add_product",
+            "create_report",
+        ]
+
         try:
             current_index = steps_order.index(current_step)
             if current_index < len(steps_order) - 1:
@@ -224,27 +226,26 @@ class BeginnersGuide:
                 return BEGINNERS_TUTORIALS.get(next_step)
         except ValueError:
             pass
-        
+
         return "🎉 أحسنت! أصبحت محترفاً! الآن جرب باقي المميزات!"
-    
+
     @staticmethod
-    def get_beginner_response(message, dialect='palestinian'):  # noqa: F841
+    def get_beginner_response(message, dialect="palestinian"):  # noqa: F841
         """رد مفصل للمبتدئين"""
         msg_lower = message.lower()
-        
+
         # أسئلة شائعة للمبتدئين
-        if any(kw in msg_lower for kw in ['فاتورة', 'invoice', 'بيع']):
-            return BEGINNERS_TUTORIALS['create_invoice']
-        elif any(kw in msg_lower for kw in ['زبون', 'customer', 'عميل']):
-            return BEGINNERS_TUTORIALS['add_customer']
-        elif any(kw in msg_lower for kw in ['منتج', 'product', 'قطعة']):
-            return BEGINNERS_TUTORIALS['add_product']
-        elif any(kw in msg_lower for kw in ['تقرير', 'report']):
-            return BEGINNERS_TUTORIALS['create_report']
+        if any(kw in msg_lower for kw in ["فاتورة", "invoice", "بيع"]):
+            return BEGINNERS_TUTORIALS["create_invoice"]
+        elif any(kw in msg_lower for kw in ["زبون", "customer", "عميل"]):
+            return BEGINNERS_TUTORIALS["add_customer"]
+        elif any(kw in msg_lower for kw in ["منتج", "product", "قطعة"]):
+            return BEGINNERS_TUTORIALS["add_product"]
+        elif any(kw in msg_lower for kw in ["تقرير", "report"]):
+            return BEGINNERS_TUTORIALS["create_report"]
         else:
-            return BEGINNERS_TUTORIALS['first_time']
+            return BEGINNERS_TUTORIALS["first_time"]
 
 
 # مثيل عالمي
 beginners_guide = BeginnersGuide()
-

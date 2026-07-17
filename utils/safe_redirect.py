@@ -2,7 +2,7 @@
 
 from urllib.parse import urlparse
 
-from flask import request, url_for
+from flask import url_for
 
 
 def is_safe_redirect_url(url: str | None) -> bool:
@@ -10,7 +10,7 @@ def is_safe_redirect_url(url: str | None) -> bool:
     if not url:
         return False
     url = url.strip()
-    if not url.startswith('/') or url.startswith('//'):
+    if not url.startswith("/") or url.startswith("//"):
         return False
     parsed = urlparse(url)
     if parsed.scheme or parsed.netloc:
@@ -18,7 +18,9 @@ def is_safe_redirect_url(url: str | None) -> bool:
     return True
 
 
-def safe_redirect_target(url: str | None, default_endpoint: str = 'main.dashboard', **url_kwargs):
+def safe_redirect_target(
+    url: str | None, default_endpoint: str = "main.dashboard", **url_kwargs
+):
     """Return a safe redirect target URL or url_for(default)."""
     if is_safe_redirect_url(url):
         return url

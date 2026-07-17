@@ -7,34 +7,53 @@ without models importing directly from services/.
 
 def gl_ensure_core_accounts(tenant_id=None):
     from services.gl_service import GLService
+
     return GLService.ensure_core_accounts(tenant_id=tenant_id)
 
 
 def gl_get_customer_credit_account(customer, branch_id=None, tenant_id=None):
     from services.gl_service import GLService
-    return GLService.get_customer_credit_account(customer, branch_id=branch_id, tenant_id=tenant_id)
+
+    return GLService.get_customer_credit_account(
+        customer, branch_id=branch_id, tenant_id=tenant_id
+    )
 
 
 def gl_get_customer_credit_concept(customer):
     from services.gl_service import GLService
+
     return GLService.get_customer_credit_concept(customer)
 
 
-def gl_get_default_liquidity_account(liquidity_kind='bank', tenant_id=None, branch_id=None):
+def gl_get_default_liquidity_account(
+    liquidity_kind="bank", tenant_id=None, branch_id=None
+):
     from services.gl_service import GLService
-    return GLService.get_default_liquidity_account(liquidity_kind, branch_id=branch_id, tenant_id=tenant_id)
+
+    return GLService.get_default_liquidity_account(
+        liquidity_kind, branch_id=branch_id, tenant_id=tenant_id
+    )
 
 
 def gl_create_manual_entry(*args, **kwargs):
     from services.gl_service import GLService
+
     return GLService.create_manual_entry(*args, **kwargs)
 
 
-def gl_post_or_fail(lines, description, reference_type, reference_id,
-                    currency=None, exchange_rate=1.0, branch_id=None,
-                    tenant_id=None):
+def gl_post_or_fail(
+    lines,
+    description,
+    reference_type,
+    reference_id,
+    currency=None,
+    exchange_rate=1.0,
+    branch_id=None,
+    tenant_id=None,
+):
     from services.gl_posting import post_or_fail
     from utils.currency_utils import get_system_default_currency
+
     if currency is None:
         currency = get_system_default_currency()
     return post_or_fail(
@@ -49,9 +68,12 @@ def gl_post_or_fail(lines, description, reference_type, reference_id,
     )
 
 
-def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency=None, tenant_id=None):
+def gl_resolve_exchange_rate(
+    transaction_date, from_currency, to_currency=None, tenant_id=None
+):
     from services.exchange_rate_service import ExchangeRateService
     from utils.currency_utils import get_system_default_currency
+
     if to_currency is None:
         to_currency = get_system_default_currency()
     return ExchangeRateService.resolve_exchange_rate_for_transaction(
@@ -64,9 +86,11 @@ def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency=None, 
 
 def gl_next_entry_number(tenant_id):
     from services.gl_helpers import next_entry_number
+
     return next_entry_number(tenant_id)
 
 
 def gl_post_entry(*args, **kwargs):
     from services.gl_service import GLService
+
     return GLService.post_entry(*args, **kwargs)

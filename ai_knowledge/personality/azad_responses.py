@@ -2,62 +2,70 @@
 🤖 أزاد - ردود المساعد الذكي الخارق
 AZAD Super Smart Responses Module with Self-Learning + Semantic Understanding + Real Intelligence
 """
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 from ai_knowledge.knowledge.company_info import get_welcome_message
-from ai_knowledge.knowledge.system_knowledge import ALL_MODULES, get_module_help, search_knowledge
-from ai_knowledge.knowledge.tax_customs_knowledge import TAX_CUSTOMS_GUIDE, get_tax_info, get_customs_info
-from ai_knowledge.knowledge.parts_knowledge import PARTS_DATABASE, get_part_info, search_parts
-from ai_knowledge.specialized.user_guide import USER_GUIDE, get_guide, get_help_for_task
-from ai_knowledge.analytics.analytics_predictions import get_analytics, SalesAnalytics, InventoryAnalytics
-from ai_knowledge.expansion.knowledge_sources import knowledge_manager, KNOWLEDGE_SOURCES, recommend_sources_for_query, SOURCES_GUIDE
-from ai_knowledge.personality.dialects import dialect_manager, apply_dialect, get_dialectal_greeting
+from ai_knowledge.knowledge.system_knowledge import search_knowledge
+from ai_knowledge.knowledge.tax_customs_knowledge import get_tax_info, get_customs_info
+from ai_knowledge.knowledge.parts_knowledge import get_part_info, search_parts
+from ai_knowledge.specialized.user_guide import get_help_for_task
+from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
+from ai_knowledge.expansion.knowledge_sources import (
+    knowledge_manager,
+    recommend_sources_for_query,
+    SOURCES_GUIDE,
+)
+from ai_knowledge.personality.dialects import apply_dialect, get_dialectal_greeting
 from ai_knowledge.personality.beginners_mode import beginners_guide, BEGINNERS_TUTORIALS
 from ai_knowledge.specialized.tax_system import get_tax_advice
-from ai_knowledge.knowledge.customs import get_customs_advice
 from ai_knowledge.specialized.customer_service import get_customer_service_tip
 from ai_knowledge.specialized.system_guide import get_system_guide
 from ai_knowledge.analytics.market_insights import get_market_insights
 from ai_knowledge.core.learning_system import learning_system
-from ai_knowledge.expansion.global_knowledge import global_connector, expertise_updater
 from ai_knowledge.improvement.self_improvement import self_improvement
 from ai_knowledge.core.system_integration import system_integrator
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.personality.azad_personality import azad_personality
-from ai_knowledge.specialized.security_rules import security_rules
 from ai_knowledge.generation.document_generator import document_generator
 from ai_knowledge.specialized.advanced_laws import advanced_laws
-from ai_knowledge.core.context_engine import context_engine
-from ai_knowledge.neural.semantic_matcher import semantic_matcher, understand_message  # 🚀 النظام الذكي الجديد!
-from ai_knowledge.agents.intelligent_assistant import intelligent_assistant  # 🧠 الذكاء الحقيقي!
+from ai_knowledge.neural.semantic_matcher import (
+    understand_message,
+)  # 🚀 النظام الذكي الجديد!
+from ai_knowledge.agents.intelligent_assistant import (
+    intelligent_assistant,
+)  # 🧠 الذكاء الحقيقي!
 
 
 class AzadResponses:
     """ردود أزاد الذكية"""
-    
+
     @staticmethod
     def get_error_response():
         return "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."
-    
+
     @staticmethod
     def smart_response(message, context=None):
         """🧠 رد أزاد الذكي الخارق مع التعلم الذاتي والشخصية المرحة + فهم دلالي"""
         from services.ai_service import AIService
-        
+
         msg_lower = message.lower()
-        
+
         # استخراج الإعدادات من السياق
-        dialect = context.get('dialect', 'palestinian') if context else 'palestinian'
-        beginners_mode = context.get('beginners_mode', False) if context else False
-        current_user = context.get('current_user') if context else None
-        is_owner = context.get('is_owner', False) if context else False
-        
+        dialect = context.get("dialect", "palestinian") if context else "palestinian"
+        beginners_mode = context.get("beginners_mode", False) if context else False
+        current_user = context.get("current_user") if context else None
+        context.get("is_owner", False) if context else False
+
         # ========== أسئلة بسيطة - رد فوري ==========
         # من أنت؟ - معلومات عن المساعد
-        if any(kw in msg_lower for kw in ['من أنت', 'من انت', 'who are you', 'مين انت', 'مين أنت']):
+        if any(
+            kw in msg_lower
+            for kw in ["من أنت", "من انت", "who are you", "مين انت", "مين أنت"]
+        ):
             return """🤖 **أنا أزاد - مساعدك الذكي!**
 
 **من أنا:**
@@ -76,12 +84,28 @@ class AzadResponses:
 📍 القائمة → **OWNER MODE** → **مفاتيح AI (Groq)** 🔑
 
 أو: http://localhost:5000/ai/config"""
-        
+
         # هل أنت محلي/جروك؟ | حالة النظام | وضع AI
-        elif any(kw in msg_lower for kw in ['محلي', 'جروك', 'groq', 'openai', 'local', 'cloud', 'حالة', 'status', 'وضع', 'mode', 'مصدر', 'source']):
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "محلي",
+                "جروك",
+                "groq",
+                "openai",
+                "local",
+                "cloud",
+                "حالة",
+                "status",
+                "وضع",
+                "mode",
+                "مصدر",
+                "source",
+            ]
+        ):
             provider = AIService.get_provider()
             has_api_key = bool(AIService.get_api_key())
-            
+
             if has_api_key and provider:
                 status_msg = f"""🤖 **حالة أزاد - نظام هجين نشط**
 
@@ -114,123 +138,169 @@ class AzadResponses:
 
 💡 **ستجد في نهاية كل رد:**
 - 💻 "النظام المحلي الذكي" = وضعك الحالي"""
-            
+
             return status_msg
-        
+
         # ========== 🧠 الذكاء الحقيقي - المحاولة الأولى ==========
         # استخدام النظام الذكي المتكامل للأسئلة التحليلية والبيانات
         analytical_intents = [
-            'sales_analysis', 'customer_balance', 'inventory_check',
-            'market_insights', 'pricing_strategy'
+            "sales_analysis",
+            "customer_balance",
+            "inventory_check",
+            "market_insights",
+            "pricing_strategy",
         ]
-        
+
         # فهم النية أولاً
         smart_result = understand_message(message)
-        detected_intent = smart_result.get('intent')
-        confidence = smart_result.get('confidence', 0)
-        
+        detected_intent = smart_result.get("intent")
+        confidence = smart_result.get("confidence", 0)
+
         # إذا كان سؤال تحليلي، استخدم الذكاء الحقيقي
         if detected_intent in analytical_intents and confidence > 0.5:
             try:
                 # استخدام المساعد الذكي الحقيقي
                 user_id = current_user.id if current_user else None
-                intelligent_result = intelligent_assistant.process(message, user_id, context)
-                
-                if intelligent_result['success'] and intelligent_result.get('data_used'):
+                intelligent_result = intelligent_assistant.process(
+                    message, user_id, context
+                )
+
+                if intelligent_result["success"] and intelligent_result.get(
+                    "data_used"
+                ):
                     # رد مبني على بيانات حقيقية + تحليل + استنتاج
-                    return intelligent_result['response']
+                    return intelligent_result["response"]
             except Exception as e:
                 logger.warning(f"Intelligent assistant failed: {e}")
                 # الاستمرار في النظام التقليدي
-        
+
         # ========== للنوايا الأخرى (روابط، مساعدة، إلخ) ==========
         # استخدام Pattern Matching المحسّن
         if detected_intent and confidence > 0.6:
-            intent_response = AzadResponses._handle_detected_intent(detected_intent, message, context)
+            intent_response = AzadResponses._handle_detected_intent(
+                detected_intent, message, context
+            )
             if intent_response:
                 return intent_response
-        
+
         # فحص الأمان للمعلومات السرية أولاً
-        is_sensitive, requires_owner, security_response = AIService.is_sensitive_request(message, current_user)
-        
+        is_sensitive, requires_owner, security_response = (
+            AIService.is_sensitive_request(message, current_user)
+        )
+
         if is_sensitive:
             if not requires_owner:
                 # رفض الوصول
-                return security_response['message']
+                return security_response["message"]
             else:
                 # المستخدم هو المالك - السماح بالوصول للمعلومات السرية
                 # استخراج اسم المستخدم إذا وجد
                 import re
-                username_match = re.search(r'(?:مستخدم|user)\s+(\w+)', msg_lower)
+
+                username_match = re.search(r"(?:مستخدم|user)\s+(\w+)", msg_lower)
                 username = username_match.group(1) if username_match else None
-                
+
                 user_info = AIService.get_user_info_for_owner(username)
-                
-                if user_info['success']:
-                    if 'user' in user_info:
+
+                if user_info["success"]:
+                    if "user" in user_info:
                         # مستخدم واحد
-                        u = user_info['user']
+                        u = user_info["user"]
                         return f"""🔐 **معلومات المستخدم** (مالك فقط)
 
-**الاسم**: {u['username']}
-**البريد**: {u['email']}
-**كلمة المرور المشفرة**: `{u['password_hash']}`
-**الدور**: {u['role']}
-**نشط**: {'✅ نعم' if u['is_active'] else '❌ لا'}
-**مالك**: {'✅ نعم' if u['is_owner'] else '❌ لا'}
-**تاريخ الإنشاء**: {u['created_at'] or 'غير محدد'}
+**الاسم**: {u["username"]}
+**البريد**: {u["email"]}
+**كلمة المرور المشفرة**: `{u["password_hash"]}`
+**الدور**: {u["role"]}
+**نشط**: {"✅ نعم" if u["is_active"] else "❌ لا"}
+**مالك**: {"✅ نعم" if u["is_owner"] else "❌ لا"}
+**تاريخ الإنشاء**: {u["created_at"] or "غير محدد"}
 
 ⚠️ **تنبيه**: هذه المعلومات سرية ومتاحة لك فقط كمالك للنظام."""
                     else:
                         # جميع المستخدمين
-                        users_list = '\n'.join([
-                            f"- **{u['username']}** ({u['email']}) - {u['role']} - Hash: `{u['password_hash'][:20]}...`"
-                            for u in user_info['users']
-                        ])
+                        users_list = "\n".join(
+                            [
+                                f"- **{u['username']}** ({u['email']}) - {u['role']} - Hash: `{u['password_hash'][:20]}...`"
+                                for u in user_info["users"]
+                            ]
+                        )
                         return f"""🔐 **قائمة المستخدمين** (مالك فقط)
 
-**إجمالي المستخدمين**: {user_info['count']}
+**إجمالي المستخدمين**: {user_info["count"]}
 
 {users_list}
 
 ⚠️ **تنبيه**: هذه المعلومات سرية ومتاحة لك فقط كمالك للنظام."""
                 else:
-                    return user_info['message']
-        
+                    return user_info["message"]
+
         # فحص الأمان والشخصية
         message_type = azad_personality.is_inappropriate_message(message)
         if message_type != "normal":
             return azad_personality.get_contextual_response(message_type, "")
-        
+
         # التعلم من التفاعل
         learning_system.learn_from_interaction(message, "", context=context)
-        
+
         # وضع المبتدئين - له أولوية إذا مفعّل
         if beginners_mode:
             beginner_response = beginners_guide.get_beginner_response(message, dialect)
-            if beginner_response and beginner_response != BEGINNERS_TUTORIALS['first_time']:
+            if (
+                beginner_response
+                and beginner_response != BEGINNERS_TUTORIALS["first_time"]
+            ):
                 return apply_dialect(beginner_response, dialect)
-        
+
         # ترحيب مع دعم اللهجات
-        elif any(kw in msg_lower for kw in ['مرحبا', 'أهلا', 'السلام', 'hello', 'hi', 'مرحبتين', 'أهلين', 'هلا', 'إيش', 'شلون']) or msg_lower in ['أزاد', 'azad', 'مساعد', 'assistant']:
-            if dialect == 'palestinian':
-                greeting = get_dialectal_greeting('palestinian')
-            elif dialect == 'gulf':
-                greeting = get_dialectal_greeting('gulf')
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "مرحبا",
+                "أهلا",
+                "السلام",
+                "hello",
+                "hi",
+                "مرحبتين",
+                "أهلين",
+                "هلا",
+                "إيش",
+                "شلون",
+            ]
+        ) or msg_lower in ["أزاد", "azad", "مساعد", "assistant"]:
+            if dialect == "palestinian":
+                greeting = get_dialectal_greeting("palestinian")
+            elif dialect == "gulf":
+                greeting = get_dialectal_greeting("gulf")
             else:
                 greeting = azad_personality.get_greeting()
             return f"{greeting}\n\n{get_welcome_message()}"
-        
+
         # شكر
-        elif any(kw in msg_lower for kw in ['شكر', 'thank', 'مشكور', 'thanks', 'ممتاز', 'رائع']):
+        elif any(
+            kw in msg_lower
+            for kw in ["شكر", "thank", "مشكور", "thanks", "ممتاز", "رائع"]
+        ):
             return azad_personality.get_thanks_response()
-        
+
         # نكتة
-        elif any(kw in msg_lower for kw in ['نكتة', 'joke', 'أضحكني', 'funny']):
+        elif any(kw in msg_lower for kw in ["نكتة", "joke", "أضحكني", "funny"]):
             return azad_personality.get_professional_joke()
-        
+
         # دليل النظام
-        elif any(kw in msg_lower for kw in ['كيف', 'how', 'دليل', 'guide', 'مساعدة', 'help', 'شرح', 'explain']):
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "كيف",
+                "how",
+                "دليل",
+                "guide",
+                "مساعدة",
+                "help",
+                "شرح",
+                "explain",
+            ]
+        ):
             intro = azad_personality.get_help_intro()
             # البحث في دليل المستخدم
             help_text = get_help_for_task(message)
@@ -239,53 +309,109 @@ class AzadResponses:
             # البحث في معرفة النظام
             results = search_knowledge(message)
             if results:
-                return f"{intro}\n\n📚 **وجدت معلومات في:**\n\n" + "\n".join(f"**{r['module']}**:\n{r['content']}" for r in results[:2])
+                return f"{intro}\n\n📚 **وجدت معلومات في:**\n\n" + "\n".join(
+                    f"**{r['module']}**:\n{r['content']}" for r in results[:2]
+                )
             return f"{intro}\n\n{get_system_guide()}"
-        
+
         # ضرائب وجمارك - معرفة شاملة
-        elif any(kw in msg_lower for kw in ['ضريبة', 'vat', 'tax', 'ضرائب', 'جمارك', 'customs', 'تخليص', 'استيراد', 'تصدير']):
-            if 'إمارات' in msg_lower or 'uae' in msg_lower:
-                if 'جمارك' in msg_lower or 'customs' in msg_lower:
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "ضريبة",
+                "vat",
+                "tax",
+                "ضرائب",
+                "جمارك",
+                "customs",
+                "تخليص",
+                "استيراد",
+                "تصدير",
+            ]
+        ):
+            if "إمارات" in msg_lower or "uae" in msg_lower:
+                if "جمارك" in msg_lower or "customs" in msg_lower:
                     return f"🛃 **الجمارك في الإمارات:**\n\n{get_customs_info('uae')}"
                 else:
                     return f"💵 **الضرائب في الإمارات:**\n\n{get_tax_info('uae')}"
-            elif 'سعودية' in msg_lower or 'saudi' in msg_lower:
+            elif "سعودية" in msg_lower or "saudi" in msg_lower:
                 return f"💵 **الضرائب في السعودية:**\n\n{get_tax_info('saudi')}"
-            elif 'فلسطين' in msg_lower or 'palestine' in msg_lower:
+            elif "فلسطين" in msg_lower or "palestine" in msg_lower:
                 return f"💵 **الضرائب في فلسطين:**\n\n{get_tax_info('palestine')}"
             else:
                 return get_tax_advice(message)
-        
+
         # قطع غيار - معرفة موسعة
-        elif any(kw in msg_lower for kw in ['قطعة', 'part', 'محرك', 'engine', 'فرامل', 'brake', 'مساعد', 'shock', 'بستم', 'piston', 'معدات', 'equipment']):
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "قطعة",
+                "part",
+                "محرك",
+                "engine",
+                "فرامل",
+                "brake",
+                "مساعد",
+                "shock",
+                "بستم",
+                "piston",
+                "معدات",
+                "equipment",
+            ]
+        ):
             # بحث في قاعدة القطع
             parts_results = search_parts(message)
             if parts_results:
-                return f"🔧 **معلومات قطع الغيار:**\n\n" + "\n\n".join(f"**{r['category']}**:\n{r['excerpt']}" for r in parts_results[:2])
+                return "🔧 **معلومات قطع الغيار:**\n\n" + "\n\n".join(
+                    f"**{r['category']}**:\n{r['excerpt']}" for r in parts_results[:2]
+                )
             return get_part_info(message)
-        
+
         # خدمة عملاء
-        elif any(kw in msg_lower for kw in ['عميل', 'customer', 'زبون', 'خدمة']) and not any(kw in msg_lower for kw in ['مورد', 'supplier']):
-            if 'نصيحة' in msg_lower or 'تعامل' in msg_lower:
+        elif any(
+            kw in msg_lower for kw in ["عميل", "customer", "زبون", "خدمة"]
+        ) and not any(kw in msg_lower for kw in ["مورد", "supplier"]):
+            if "نصيحة" in msg_lower or "تعامل" in msg_lower:
                 return get_customer_service_tip()
             else:
                 from ai_knowledge.specialized.customer_service import CUSTOMER_SERVICE
-                return "👥 **التعامل مع العملاء:**\n\n" + "\n".join(CUSTOMER_SERVICE['principles'][:5])
-        
+
+                return "👥 **التعامل مع العملاء:**\n\n" + "\n".join(
+                    CUSTOMER_SERVICE["principles"][:5]
+                )
+
         # 🏪 إدارة الموردين - نظام جديد ⭐
-        elif any(kw in msg_lower for kw in ['مورد', 'supplier', 'موردين', 'suppliers', 'شراء من', 'توريد']):
+        elif any(
+            kw in msg_lower
+            for kw in ["مورد", "supplier", "موردين", "suppliers", "شراء من", "توريد"]
+        ):
             return AzadResponses._handle_suppliers_query(message)
-        
+
         # 🔍 الفلاتر الذكية - نظام جديد ⭐
-        elif any(kw in msg_lower for kw in ['فلتر', 'filter', 'بحث', 'search', 'اختيار', 'select']):
+        elif any(
+            kw in msg_lower
+            for kw in ["فلتر", "filter", "بحث", "search", "اختيار", "select"]
+        ):
             return AzadResponses._handle_smart_filters_query(message)
-        
+
         # 💳 طرق الدفع الديناميكية - نظام جديد ⭐
-        elif any(kw in msg_lower for kw in ['طريقة دفع', 'payment method', 'كاش', 'cash', 'بطاقة', 'card', 'شيك', 'cheque']):
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "طريقة دفع",
+                "payment method",
+                "كاش",
+                "cash",
+                "بطاقة",
+                "card",
+                "شيك",
+                "cheque",
+            ]
+        ):
             return AzadResponses._handle_payment_methods_query(message)
-        
+
         # تحليل مبيعات
-        elif any(kw in msg_lower for kw in ['حلل', 'analyze', 'مبيعات', 'sales']):
+        elif any(kw in msg_lower for kw in ["حلل", "analyze", "مبيعات", "sales"]):
             try:
                 return AzadResponses._smart_sales_analysis(context)
             except Exception as e:
@@ -300,9 +426,12 @@ class AzadResponses:
 - فواتير بيع
 
 بعدها سأستطيع تحليل المبيعات وإعطائك رؤى ذكية! 🚀"""
-        
+
         # التحسين الذاتي
-        elif any(kw in msg_lower for kw in ['تحسين', 'improve', 'تطوير', 'develop', 'تعلم', 'learn']):
+        elif any(
+            kw in msg_lower
+            for kw in ["تحسين", "improve", "تطوير", "develop", "تعلم", "learn"]
+        ):
             try:
                 return AzadResponses._get_improvement_response(message)
             except Exception as e:
@@ -318,9 +447,21 @@ class AzadResponses:
 - المصطلحات الفنية
 
 **حالياً:** القاعدة جديدة - سأتعلم أكثر كلما استخدمت النظام! 🌱"""
-        
+
         # الحالة والأداء
-        elif any(kw in msg_lower for kw in ['حالة', 'status', 'أداء', 'performance', 'تقدم', 'progress', 'شبكات', 'neural']):
+        elif any(
+            kw in msg_lower
+            for kw in [
+                "حالة",
+                "status",
+                "أداء",
+                "performance",
+                "تقدم",
+                "progress",
+                "شبكات",
+                "neural",
+            ]
+        ):
             try:
                 return AzadResponses._get_status_response()
             except Exception as e:
@@ -339,9 +480,9 @@ class AzadResponses:
 **الحالة:** كل شيء يعمل بشكل ممتاز! ✨
 
 💡 **نصيحة:** أضف بيانات لأحصل على رؤى أعمق!"""
-        
+
         # توقعات متقدمة
-        elif any(kw in msg_lower for kw in ['توقع', 'predict', 'تنبؤ', 'forecast']):
+        elif any(kw in msg_lower for kw in ["توقع", "predict", "تنبؤ", "forecast"]):
             # استخدام النظام المتقدم
             try:
                 # جمع البيانات التاريخية
@@ -349,142 +490,172 @@ class AzadResponses:
                 from extensions import db
                 from sqlalchemy import func, extract
                 from datetime import datetime, timedelta
-                
+
                 # آخر 12 شهر
-                monthly_sales = db.session.query(
-                    func.sum(Sale.amount_aed).label('total')
-                ).filter(
-                    Sale.status == 'confirmed',
-                    Sale.sale_date >= datetime.now() - timedelta(days=365)
-                ).group_by(
-                    extract('year', Sale.sale_date),
-                    extract('month', Sale.sale_date)
-                ).all()
-                
+                monthly_sales = (
+                    db.session.query(func.sum(Sale.amount_aed).label("total"))
+                    .filter(
+                        Sale.status == "confirmed",
+                        Sale.sale_date >= datetime.now() - timedelta(days=365),
+                    )
+                    .group_by(
+                        extract("year", Sale.sale_date),
+                        extract("month", Sale.sale_date),
+                    )
+                    .all()
+                )
+
                 historical = [float(m.total or 0) for m in monthly_sales]
-                
+
                 # التنبؤ
                 prediction = SalesAnalytics.predict_next_month_sales(historical)
-                
+
                 return f"""🔮 **توقع مبيعات الشهر القادم:**
 
-📊 **التنبؤ:** {prediction['prediction']:,.0f} AED
+📊 **التنبؤ:** {prediction["prediction"]:,.0f} AED
 
-📈 **الاتجاه:** {prediction['trend']}
-• التغير المتوقع: {prediction['trend_value']:,.0f} AED
+📈 **الاتجاه:** {prediction["trend"]}
+• التغير المتوقع: {prediction["trend_value"]:,.0f} AED
 
-🎯 **مستوى الثقة:** {prediction['confidence']}
+🎯 **مستوى الثقة:** {prediction["confidence"]}
 
-📝 **الطريقة:** {prediction['method']}
+📝 **الطريقة:** {prediction["method"]}
 
-💡 **التوصية:** {'استمر - الاتجاه صاعد!' if prediction['trend'] == 'up' else 'راجع استراتيجية التسويق' if prediction['trend'] == 'down' else 'مستقر'}"""
+💡 **التوصية:** {"استمر - الاتجاه صاعد!" if prediction["trend"] == "up" else "راجع استراتيجية التسويق" if prediction["trend"] == "down" else "مستقر"}"""
             except Exception as e:
                 return f"عذراً، حدث خطأ في التنبؤ: {str(e)}"
-        
+
         # مخزون
-        elif any(kw in msg_lower for kw in ['مخزون', 'stock', 'صحة', 'health', 'inventory']):
+        elif any(
+            kw in msg_lower for kw in ["مخزون", "stock", "صحة", "health", "inventory"]
+        ):
             health = AIService.analyze_inventory_health()
-            if health.get('success'):
-                s = health.get('summary', {})
+            if health.get("success"):
+                s = health.get("summary", {})
                 return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
-• إجمالي المنتجات: {s.get('total', 0)}
-• حالة جيدة: {s.get('good', 0)} ✅
-• منخفض: {s.get('low', 0)} ⚠️
-• نفذ: {s.get('out', 0)} 🔴
+• إجمالي المنتجات: {s.get("total", 0)}
+• حالة جيدة: {s.get("good", 0)} ✅
+• منخفض: {s.get("low", 0)} ⚠️
+• نفذ: {s.get("out", 0)} 🔴
 
-🏆 **التقييم:** {health.get('rating', 'غير محدد')} ({health.get('health_score', 0)}%)
+🏆 **التقييم:** {health.get("rating", "غير محدد")} ({health.get("health_score", 0)}%)
 
-💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s.get('low', 0) > 0 or s.get('out', 0) > 0 else 'المخزون ممتاز!'}"""
+💡 **نصيحة:** {"راجع المنتجات المنخفضة والنافذة فوراً" if s.get("low", 0) > 0 or s.get("out", 0) > 0 else "المخزون ممتاز!"}"""
             else:
-                return health.get('message', 'لا توجد منتجات للتحليل')
-        
+                return health.get("message", "لا توجد منتجات للتحليل")
+
         # هوامش ربح
-        elif any(kw in msg_lower for kw in ['ربح', 'profit', 'هامش', 'margin']):
+        elif any(kw in msg_lower for kw in ["ربح", "profit", "هامش", "margin"]):
             margins = AIService.analyze_profit_margins()
-            if margins.get('success'):
-                overall = margins['overall']
-                top_products = "\n".join(f"• {p['name']}: {p['profit']:,.0f} AED ({p['margin']:.1f}%)" for p in margins.get('top_profitable', [])[:3])
+            if margins.get("success"):
+                overall = margins["overall"]
+                top_products = "\n".join(
+                    f"• {p['name']}: {p['profit']:,.0f} AED ({p['margin']:.1f}%)"
+                    for p in margins.get("top_profitable", [])[:3]
+                )
                 return f"""💰 **تحليل هوامش الربح:**
 
 📊 **آخر 30 يوم:**
-• الإيرادات: {overall['revenue']:,.0f} AED
-• التكلفة: {overall['cost']:,.0f} AED
-• الربح: {overall['profit']:,.0f} AED
-• هامش الربح: {overall['margin']:.1f}%
+• الإيرادات: {overall["revenue"]:,.0f} AED
+• التكلفة: {overall["cost"]:,.0f} AED
+• الربح: {overall["profit"]:,.0f} AED
+• هامش الربح: {overall["margin"]:.1f}%
 
 🏆 **أفضل المنتجات ربحية:**
-{top_products if top_products else '• لا توجد بيانات'}
+{top_products if top_products else "• لا توجد بيانات"}
 
-💡 **النصيحة:** {'ممتاز!' if overall['margin'] >= 25 else 'راجع التسعير'}"""
+💡 **النصيحة:** {"ممتاز!" if overall["margin"] >= 25 else "راجع التسعير"}"""
             else:
-                return margins.get('message', 'لا توجد مبيعات للتحليل')
-        
+                return margins.get("message", "لا توجد مبيعات للتحليل")
+
         # استخدام النظام (keywords not handled by the help branch above)
-        elif 'استخدام' in msg_lower:
+        elif "استخدام" in msg_lower:
             return get_system_guide()
-        
+
         # السوق
-        elif any(kw in msg_lower for kw in ['سوق', 'market', 'منافسة', 'استراتيجية']):
+        elif any(kw in msg_lower for kw in ["سوق", "market", "منافسة", "استراتيجية"]):
             return get_market_insights()
-        
+
         # ملخص النظام
-        elif any(kw in msg_lower for kw in ['ملخص', 'summary', 'إحصائيات', 'statistics']) and any(kw in msg_lower for kw in ['نظام', 'system', 'كلي']):
+        elif any(
+            kw in msg_lower for kw in ["ملخص", "summary", "إحصائيات", "statistics"]
+        ) and any(kw in msg_lower for kw in ["نظام", "system", "كلي"]):
             return AzadResponses._handle_system_summary_query()
-        
+
         # إضافة مصدر معرفة
-        elif any(kw in msg_lower for kw in ['أضف', 'add']) and any(kw in msg_lower for kw in ['موقع', 'website', 'كتاب', 'book', 'مصدر', 'source']):
+        elif any(kw in msg_lower for kw in ["أضف", "add"]) and any(
+            kw in msg_lower
+            for kw in ["موقع", "website", "كتاب", "book", "مصدر", "source"]
+        ):
             return AzadResponses._handle_add_knowledge_source(message)
-        
+
         # روابط النظام السريعة
-        elif any(kw in msg_lower for kw in ['روابط', 'links']) and 'نظام' in msg_lower:
+        elif any(kw in msg_lower for kw in ["روابط", "links"]) and "نظام" in msg_lower:
             return AzadResponses._show_system_quick_links()
-        
+
         # عرض المصادر المتاحة
-        elif any(kw in msg_lower for kw in ['مصادر', 'sources', 'websites', 'مواقع']):
+        elif any(kw in msg_lower for kw in ["مصادر", "sources", "websites", "مواقع"]):
             return AzadResponses._show_knowledge_sources(message)
-        
+
         # توصية بمصادر للاستفسار
-        elif any(kw in msg_lower for kw in ['أين', 'where', 'وين']) and any(kw in msg_lower for kw in ['أجد', 'find', 'معلومات', 'information']):
+        elif any(kw in msg_lower for kw in ["أين", "where", "وين"]) and any(
+            kw in msg_lower for kw in ["أجد", "find", "معلومات", "information"]
+        ):
             return AzadResponses._recommend_sources(message)
-        
+
         # إنشاء فاتورة / سند
-        elif any(kw in msg_lower for kw in ['فاتورة', 'invoice']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
+        elif any(kw in msg_lower for kw in ["فاتورة", "invoice"]) and any(
+            kw in msg_lower for kw in ["جديد", "new", "إنشاء", "create", "أنشئ"]
+        ):
             return AzadResponses._quick_invoice_link()
-        
-        elif any(kw in msg_lower for kw in ['سند', 'receipt']) and any(kw in msg_lower for kw in ['جديد', 'new', 'إنشاء', 'create', 'أنشئ']):
+
+        elif any(kw in msg_lower for kw in ["سند", "receipt"]) and any(
+            kw in msg_lower for kw in ["جديد", "new", "إنشاء", "create", "أنشئ"]
+        ):
             return AzadResponses._quick_receipt_link()
-        
+
         # توليد المستندات
-        elif any(kw in msg_lower for kw in ['سند', 'receipt', 'فاتورة', 'invoice']) and any(kw in msg_lower for kw in ['ولد', 'generate', 'أنشئ', 'create']):
+        elif any(
+            kw in msg_lower for kw in ["سند", "receipt", "فاتورة", "invoice"]
+        ) and any(kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]):
             return AzadResponses._handle_document_generation(message)
-        
+
         # التقارير العامة
-        elif any(kw in msg_lower for kw in ['تقرير', 'report', 'كشف', 'statement']) and any(kw in msg_lower for kw in ['ولد', 'generate', 'أنشئ', 'create']):
+        elif any(
+            kw in msg_lower for kw in ["تقرير", "report", "كشف", "statement"]
+        ) and any(kw in msg_lower for kw in ["ولد", "generate", "أنشئ", "create"]):
             return AzadResponses._handle_report_generation(message)
-        
+
         # قوانين الشحن
-        elif any(kw in msg_lower for kw in ['شحن', 'shipping']) and any(kw in msg_lower for kw in ['قانون', 'law', 'إجراءات', 'procedures']):
+        elif any(kw in msg_lower for kw in ["شحن", "shipping"]) and any(
+            kw in msg_lower for kw in ["قانون", "law", "إجراءات", "procedures"]
+        ):
             return AzadResponses._handle_shipping_laws_query(message)
-        
+
         # جودة البضائع
-        elif any(kw in msg_lower for kw in ['جودة', 'quality', 'معايير', 'standards', 'شهادة', 'certificate']):
+        elif any(
+            kw in msg_lower
+            for kw in ["جودة", "quality", "معايير", "standards", "شهادة", "certificate"]
+        ):
             return AzadResponses._handle_quality_standards_query(message)
-        
+
         # رد عام ذكي
         else:
             intro = azad_personality.get_help_intro()
-            
+
             # محاولة فهم السؤال
             suggestions = []
-            if any(kw in msg_lower for kw in ['كيف', 'how', 'ماذا', 'what', 'متى', 'when']):
+            if any(
+                kw in msg_lower for kw in ["كيف", "how", "ماذا", "what", "متى", "when"]
+            ):
                 suggestions.append("🔍 جرّب: 'كيف أضيف فاتورة؟' أو 'مصادر'")
-            if any(kw in msg_lower for kw in ['رصيد', 'balance', 'ديون', 'debt']):
+            if any(kw in msg_lower for kw in ["رصيد", "balance", "ديون", "debt"]):
                 suggestions.append("💰 جرّب: 'رصيد زبون [الاسم]'")
-            if any(kw in msg_lower for kw in ['فاتورة', 'invoice', 'تقرير', 'report']):
+            if any(kw in msg_lower for kw in ["فاتورة", "invoice", "تقرير", "report"]):
                 suggestions.append("📊 جرّب: 'فاتورة جديدة' أو 'تقرير المبيعات'")
-            
+
             response = f"""{intro}
 
 🤖 **أنا أزاد - مساعدك الذكي!**
@@ -503,250 +674,252 @@ class AzadResponses:
 • "ما هو البستم؟"
 
 **اسألني أي شيء - أحلل بياناتك الحقيقية! 🧠**"""
-            
+
             # إضافة اقتراحات ذكية إن وجدت
             if suggestions:
                 response += "\n\n💡 **اقتراحات لسؤالك:**\n" + "\n".join(suggestions)
-        
+
             return response
-    
+
     @staticmethod
     def _get_improvement_response(message):
         """رد حول التحسين الذاتي"""
         message_lower = message.lower()
-        
-        if 'تلقائي' in message_lower or 'automatic' in message_lower:
+
+        if "تلقائي" in message_lower or "automatic" in message_lower:
             # تطبيق التحسين التلقائي
             improvements = self_improvement.auto_improve()
             return f"""🚀 تم تطبيق التحسين التلقائي!
 
-✅ التحسينات المطبقة: {improvements['improvements_made']}
+✅ التحسينات المطبقة: {improvements["improvements_made"]}
 
 📊 تفاصيل التحسينات:
-{chr(10).join([f"• {imp['area']}: {imp['old_score']} → {imp['new_score']} (+{imp['improvement']})" for imp in improvements['details']])}
+{chr(10).join([f"• {imp['area']}: {imp['old_score']} → {imp['new_score']} (+{imp['improvement']})" for imp in improvements["details"]])}
 
 🎯 أزاد يتطور باستمرار ليصبح أفضل مساعد في العالم!"""
-        
-        elif 'هدف' in message_lower or 'goal' in message_lower:
+
+        elif "هدف" in message_lower or "goal" in message_lower:
             # عرض الأهداف الحالية
             progress = self_improvement.track_progress()
             return f"""🎯 أهداف أزاد الحالية:
 
-📈 التقدم الإجمالي: {progress['overall_progress']}%
+📈 التقدم الإجمالي: {progress["overall_progress"]}%
 
 🎯 الأهداف النشطة:
-{chr(10).join([f"• {goal['area']}: {goal['current_score']}/{goal['target_score']} ({goal['progress_percentage']}%)" for goal in progress['goals_progress']])}
+{chr(10).join([f"• {goal['area']}: {goal['current_score']}/{goal['target_score']} ({goal['progress_percentage']}%)" for goal in progress["goals_progress"]])}
 
 🚀 المعالم القادمة:
-{chr(10).join([f"• {milestone['area']}: {milestone['description']}" for milestone in progress['next_milestones'][:3]])}
+{chr(10).join([f"• {milestone['area']}: {milestone['description']}" for milestone in progress["next_milestones"][:3]])}
 
 أزاد يسعى للوصول لمستوى خبير عالمي!"""
-        
+
         else:
             # عرض حالة التحسين
             status = self_improvement.get_improvement_status()
             return f"""🔧 حالة التحسين الذاتي:
 
-📊 النقاط الإجمالية: {status['overall_score']}/10
-🔄 إجمالي التحسينات: {status['total_improvements']}
-🎯 الأهداف النشطة: {status['active_goals']}
-📅 آخر تحسين: {status['last_improvement'] or 'لم يتم بعد'}
+📊 النقاط الإجمالية: {status["overall_score"]}/10
+🔄 إجمالي التحسينات: {status["total_improvements"]}
+🎯 الأهداف النشطة: {status["active_goals"]}
+📅 آخر تحسين: {status["last_improvement"] or "لم يتم بعد"}
 
 🚀 أزاد يتطور ذاتياً ليصبح أفضل مساعد في العالم!"""
-    
+
     @staticmethod
     def _get_status_response():
         """رد حول الحالة والأداء"""
         # تحليل الأداء
         performance = self_improvement.analyze_performance()
-        
+
         # رؤى التعلم
         learning_insights = learning_system.get_learning_insights()
-        
+
         # التطور
         evolution = self_improvement.evolve_capabilities()
-        
+
         return f"""📊 تقرير حالة أزاد الشامل:
 
-🎯 الأداء الإجمالي: {performance['overall_score']}/10
+🎯 الأداء الإجمالي: {performance["overall_score"]}/10
 
 💪 نقاط القوة:
-{chr(10).join([f"• {strength['description']}: {strength['score']}/10" for strength in performance['strengths'][:3]])}
+{chr(10).join([f"• {strength['description']}: {strength['score']}/10" for strength in performance["strengths"][:3]])}
 
 🔧 مجالات التحسين:
-{chr(10).join([f"• {weakness['description']}: {weakness['score']}/10" for weakness in performance['weaknesses'][:3]])}
+{chr(10).join([f"• {weakness['description']}: {weakness['score']}/10" for weakness in performance["weaknesses"][:3]])}
 
 🧠 التعلم:
-• إجمالي التفاعلات: {learning_insights['total_interactions']}
-• معدل النجاح: {learning_insights['success_rate']:.1%}
-• مستوى التقدم: {learning_insights['learning_progress']}
+• إجمالي التفاعلات: {learning_insights["total_interactions"]}
+• معدل النجاح: {learning_insights["success_rate"]:.1%}
+• مستوى التقدم: {learning_insights["learning_progress"]}
 
 🚀 القدرات الجديدة:
-{chr(10).join([f"• {capability}" for capability in evolution['new_capabilities'][:3]])}
+{chr(10).join([f"• {capability}" for capability in evolution["new_capabilities"][:3]])}
 
 أزاد في طريقه ليصبح خبيراً عالمياً! 🌍"""
-    
+
     @staticmethod
     def _handle_customer_balance_query(message):
         """التعامل مع استعلام رصيد العميل"""
         # استخراج اسم العميل من الرسالة
         words = message.split()
         customer_name = None
-        
+
         # البحث عن كلمات تشير للعميل
         for i, word in enumerate(words):
-            if word.lower() in ['عميل', 'زبون', 'customer'] and i + 1 < len(words):
+            if word.lower() in ["عميل", "زبون", "customer"] and i + 1 < len(words):
                 customer_name = words[i + 1]
                 break
-            elif word.lower() in ['على', 'لـ', 'for'] and i + 1 < len(words):
+            elif word.lower() in ["على", "لـ", "for"] and i + 1 < len(words):
                 customer_name = words[i + 1]
                 break
-        
+
         if not customer_name:
             return "❌ لم أتمكن من تحديد اسم العميل. يرجى كتابة: 'رصيد العميل أحمد' أو 'كم عليه ديون محمد'"
-        
+
         # جلب رصيد العميل
         result = system_integrator.get_customer_balance(customer_name)
-        
-        if not result['success']:
+
+        if not result["success"]:
             return f"❌ {result['error']}"
-        
-        customer = result['customer']
-        
+
+        customer = result["customer"]
+
         # تحليل دقيق للديون
-        debt_analysis = data_analyzer.analyze_customer_debt(customer['id'])
-        
-        if debt_analysis['success']:
-            debt_info = debt_analysis['debt_analysis']
-            response = f"""💰 **رصيد العميل: {customer['name']}**
+        debt_analysis = data_analyzer.analyze_customer_debt(customer["id"])
+
+        if debt_analysis["success"]:
+            debt_info = debt_analysis["debt_analysis"]
+            response = f"""💰 **رصيد العميل: {customer["name"]}**
 
 📊 **المعلومات الأساسية:**
-• المعرف: {customer['id']}
-• نوع العميل: {customer['customer_type']}
-• الهاتف: {customer['phone'] or 'غير محدد'}
-• الإيميل: {customer['email'] or 'غير محدد'}
+• المعرف: {customer["id"]}
+• نوع العميل: {customer["customer_type"]}
+• الهاتف: {customer["phone"] or "غير محدد"}
+• الإيميل: {customer["email"] or "غير محدد"}
 
 💸 **الرصيد والديون:**
-• إجمالي الرصيد: **{customer['balance_aed']:,.2f} AED**
-• عدد الفواتير غير المدفوعة: {debt_info['unpaid_sales_count']}
-• متوسط مبلغ الدين: {debt_info['avg_debt_amount']:,.2f} AED
-• أكبر دين: {debt_info['max_debt_amount']:,.2f} AED
-• الفواتير المتأخرة: {debt_info['overdue_count']}
+• إجمالي الرصيد: **{customer["balance_aed"]:,.2f} AED**
+• عدد الفواتير غير المدفوعة: {debt_info["unpaid_sales_count"]}
+• متوسط مبلغ الدين: {debt_info["avg_debt_amount"]:,.2f} AED
+• أكبر دين: {debt_info["max_debt_amount"]:,.2f} AED
+• الفواتير المتأخرة: {debt_info["overdue_count"]}
 
 📈 **إحصائيات المبيعات:**
-• إجمالي المبيعات: {customer['total_sales']}
-• آخر مبيعة: {customer['last_sale_date'] or 'لا توجد'}
+• إجمالي المبيعات: {customer["total_sales"]}
+• آخر مبيعة: {customer["last_sale_date"] or "لا توجد"}
 
-⚠️ **تحذير:** {'يوجد فواتير متأخرة عن السداد!' if debt_info['overdue_count'] > 0 else 'جميع الفواتير في الموعد المحدد'}"""
+⚠️ **تحذير:** {"يوجد فواتير متأخرة عن السداد!" if debt_info["overdue_count"] > 0 else "جميع الفواتير في الموعد المحدد"}"""
         else:
-            response = f"""💰 **رصيد العميل: {customer['name']}**
+            response = f"""💰 **رصيد العميل: {customer["name"]}**
 
 📊 **المعلومات الأساسية:**
-• المعرف: {customer['id']}
-• نوع العميل: {customer['customer_type']}
-• الهاتف: {customer['phone'] or 'غير محدد'}
-• الإيميل: {customer['email'] or 'غير محدد'}
+• المعرف: {customer["id"]}
+• نوع العميل: {customer["customer_type"]}
+• الهاتف: {customer["phone"] or "غير محدد"}
+• الإيميل: {customer["email"] or "غير محدد"}
 
 💸 **الرصيد:**
-• إجمالي الرصيد: **{customer['balance_aed']:,.2f} AED**
+• إجمالي الرصيد: **{customer["balance_aed"]:,.2f} AED**
 
 📈 **إحصائيات المبيعات:**
-• إجمالي المبيعات: {customer['total_sales']}
-• آخر مبيعة: {customer['last_sale_date'] or 'لا توجد'}"""
-        
+• إجمالي المبيعات: {customer["total_sales"]}
+• آخر مبيعة: {customer["last_sale_date"] or "لا توجد"}"""
+
         return response
-    
+
     @staticmethod
     def _handle_customer_info_query(message):
         """التعامل مع استعلام بيانات العميل"""
         # استخراج اسم العميل
         words = message.split()
         customer_name = None
-        
+
         for i, word in enumerate(words):
-            if word.lower() in ['عميل', 'زبون', 'customer'] and i + 1 < len(words):
+            if word.lower() in ["عميل", "زبون", "customer"] and i + 1 < len(words):
                 customer_name = words[i + 1]
                 break
-        
+
         if not customer_name:
             return "❌ لم أتمكن من تحديد اسم العميل. يرجى كتابة: 'بيانات العميل أحمد'"
-        
+
         result = system_integrator.get_customer_balance(customer_name)
-        
-        if not result['success']:
+
+        if not result["success"]:
             return f"❌ {result['error']}"
-        
-        customer = result['customer']
-        sales_summary = system_integrator.get_customer_sales_summary(customer['id'])
-        
-        if sales_summary.get('success'):
-            summary = sales_summary.get('summary', {})
-            response = f"""👤 **بيانات العميل: {customer['name']}**
+
+        customer = result["customer"]
+        sales_summary = system_integrator.get_customer_sales_summary(customer["id"])
+
+        if sales_summary.get("success"):
+            summary = sales_summary.get("summary", {})
+            response = f"""👤 **بيانات العميل: {customer["name"]}**
 
 📋 **المعلومات الشخصية:**
-• المعرف: {customer['id']}
-• نوع العميل: {customer['customer_type']}
-• الهاتف: {customer['phone'] or 'غير محدد'}
-• الإيميل: {customer['email'] or 'غير محدد'}
+• المعرف: {customer["id"]}
+• نوع العميل: {customer["customer_type"]}
+• الهاتف: {customer["phone"] or "غير محدد"}
+• الإيميل: {customer["email"] or "غير محدد"}
 
 💼 **إحصائيات الأعمال:**
-• إجمالي المبيعات: {summary.get('total_sales', 0)}
-• إجمالي المبلغ: {summary.get('total_amount', 0):,.2f} AED
-• المبلغ المدفوع: {summary.get('paid_amount', 0):,.2f} AED
-• المتبقي: {summary.get('balance_due', 0):,.2f} AED
+• إجمالي المبيعات: {summary.get("total_sales", 0)}
+• إجمالي المبلغ: {summary.get("total_amount", 0):,.2f} AED
+• المبلغ المدفوع: {summary.get("paid_amount", 0):,.2f} AED
+• المتبقي: {summary.get("balance_due", 0):,.2f} AED
 
 📅 **آخر 5 مبيعات:**
-{chr(10).join([f"• فاتورة #{sale.get('id', '')} - {sale.get('date', '')} - {sale.get('amount', 0):,.2f} AED ({sale.get('status', '')})" for sale in summary.get('recent_sales', [])])}
+{chr(10).join([f"• فاتورة #{sale.get('id', '')} - {sale.get('date', '')} - {sale.get('amount', 0):,.2f} AED ({sale.get('status', '')})" for sale in summary.get("recent_sales", [])])}
 
-💡 **التوصية:** {'يحتاج متابعة للدفع' if summary.get('balance_due', 0) > 1000 else 'عميل جيد'}"""
+💡 **التوصية:** {"يحتاج متابعة للدفع" if summary.get("balance_due", 0) > 1000 else "عميل جيد"}"""
         else:
-            response = f"""👤 **بيانات العميل: {customer['name']}**
+            response = f"""👤 **بيانات العميل: {customer["name"]}**
 
 📋 **المعلومات الأساسية:**
-• المعرف: {customer['id']}
-• نوع العميل: {customer['customer_type']}
-• الهاتف: {customer['phone'] or 'غير محدد'}
-• الإيميل: {customer['email'] or 'غير محدد'}
+• المعرف: {customer["id"]}
+• نوع العميل: {customer["customer_type"]}
+• الهاتف: {customer["phone"] or "غير محدد"}
+• الإيميل: {customer["email"] or "غير محدد"}
 
 💼 **إحصائيات المبيعات:**
-• إجمالي المبيعات: {customer['total_sales']}
-• آخر مبيعة: {customer['last_sale_date'] or 'لا توجد'}
+• إجمالي المبيعات: {customer["total_sales"]}
+• آخر مبيعة: {customer["last_sale_date"] or "لا توجد"}
 
-💸 **الرصيد الحالي: {customer['balance_aed']:,.2f} AED**"""
-        
+💸 **الرصيد الحالي: {customer["balance_aed"]:,.2f} AED**"""
+
         return response
-    
+
     @staticmethod
     def _handle_product_stock_query(message):
         """التعامل مع استعلام مخزون المنتج"""
         # استخراج اسم المنتج
         words = message.split()
         product_name = None
-        
+
         for i, word in enumerate(words):
-            if word.lower() in ['منتج', 'product', 'قطعة', 'part'] and i + 1 < len(words):
+            if word.lower() in ["منتج", "product", "قطعة", "part"] and i + 1 < len(
+                words
+            ):
                 product_name = words[i + 1]
                 break
-            elif word.lower() in ['اسمه', 'اسم', 'name'] and i + 1 < len(words):
+            elif word.lower() in ["اسمه", "اسم", "name"] and i + 1 < len(words):
                 product_name = words[i + 1]
                 break
-        
+
         if not product_name:
             return "❌ لم أتمكن من تحديد اسم المنتج. يرجى كتابة: 'مخزون المنتج ABC123' أو 'كمية قطعة المحرك'"
-        
+
         result = system_integrator.get_product_stock(product_name)
-        
-        if not result['success']:
+
+        if not result["success"]:
             return f"❌ {result['error']}"
-        
-        product = result['product']
-        
+
+        product = result["product"]
+
         # تحديد حالة المخزون
-        if product['current_stock'] == 0:
+        if product["current_stock"] == 0:
             status_icon = "🔴"
             status_text = "نفد المخزون"
             action = "يحتاج طلب عاجل!"
-        elif product['current_stock'] <= product.get('alert_limit', 0):
+        elif product["current_stock"] <= product.get("alert_limit", 0):
             status_icon = "🟡"
             status_text = "مخزون منخفض"
             action = "يحتاج طلب قريباً"
@@ -754,76 +927,76 @@ class AzadResponses:
             status_icon = "🟢"
             status_text = "مخزون جيد"
             action = "لا يحتاج طلب حالياً"
-        
-        response = f"""📦 **مخزون المنتج: {product['name']}**
+
+        response = f"""📦 **مخزون المنتج: {product["name"]}**
 
 🏷️ **المعلومات الأساسية:**
-• المعرف: {product['id']}
-• SKU: {product['sku']}
-• الفئة: {product['category']}
-• السعر: {product['unit_price']:,.2f} AED
+• المعرف: {product["id"]}
+• SKU: {product["sku"]}
+• الفئة: {product["category"]}
+• السعر: {product["unit_price"]:,.2f} AED
 
 📊 **حالة المخزون:**
 {status_icon} **الحالة:** {status_text}
-• الكمية الحالية: **{product['current_stock']}**
-• حد التنبيه: {product.get('alert_limit', 'غير محدد')}
-• النسبة: {(product['current_stock'] / product.get('alert_limit', 1) * 100):.1f}% (إذا كان محدداً)
+• الكمية الحالية: **{product["current_stock"]}**
+• حد التنبيه: {product.get("alert_limit", "غير محدد")}
+• النسبة: {(product["current_stock"] / product.get("alert_limit", 1) * 100):.1f}% (إذا كان محدداً)
 
 ⚠️ **التوصية:** {action}
 
-💡 **نصيحة:** {'راجع الموردين للحصول على أفضل الأسعار' if product['current_stock'] <= product.get('alert_limit', 0) else 'المخزون في حالة جيدة'}"""
-        
+💡 **نصيحة:** {"راجع الموردين للحصول على أفضل الأسعار" if product["current_stock"] <= product.get("alert_limit", 0) else "المخزون في حالة جيدة"}"""
+
         return response
-    
+
     @staticmethod
     def _handle_system_summary_query():
         """التعامل مع استعلام ملخص النظام"""
         summary = system_integrator.get_system_summary()
         financial = system_integrator.get_financial_summary()
-        
-        if not summary.get('success'):
+
+        if not summary.get("success"):
             return f"❌ {summary.get('error', 'خطأ في جلب الملخص')}"
 
-        if not financial.get('success'):
+        if not financial.get("success"):
             return f"❌ {financial.get('error', 'خطأ في جلب الملخص المالي')}"
 
-        sys_data = summary.get('summary', {})
-        fin_data = financial.get('financial', {})
-        
+        sys_data = summary.get("summary", {})
+        fin_data = financial.get("financial", {})
+
         response = f"""📊 **ملخص النظام الشامل**
 
 👥 **العملاء:**
-• إجمالي العملاء: {sys_data['customers']['total']}
-• عملاء VIP: {sys_data['customers']['vip']}
+• إجمالي العملاء: {sys_data["customers"]["total"]}
+• عملاء VIP: {sys_data["customers"]["vip"]}
 
 🛒 **المبيعات:**
-• إجمالي المبيعات: {sys_data['sales']['total']}
-• مبيعات اليوم: {sys_data['sales']['today']}
+• إجمالي المبيعات: {sys_data["sales"]["total"]}
+• مبيعات اليوم: {sys_data["sales"]["today"]}
 
 📦 **المنتجات:**
-• إجمالي المنتجات: {sys_data['products']['total']}
-• مخزون منخفض: {sys_data['products']['low_stock']}
-• نفد المخزون: {sys_data['products']['out_of_stock']}
+• إجمالي المنتجات: {sys_data["products"]["total"]}
+• مخزون منخفض: {sys_data["products"]["low_stock"]}
+• نفد المخزون: {sys_data["products"]["out_of_stock"]}
 
 💰 **الأمور المالية:**
-• إجمالي المبيعات: {fin_data['total_sales']:,.2f} AED
-• إجمالي المدفوعات: {fin_data['total_payments']:,.2f} AED
-• الذمم المدينة: {fin_data['total_receivables']:,.2f} AED
-• مبيعات اليوم: {fin_data['today_sales']:,.2f} AED
-• مدفوعات اليوم: {fin_data['today_payments']:,.2f} AED
+• إجمالي المبيعات: {fin_data["total_sales"]:,.2f} AED
+• إجمالي المدفوعات: {fin_data["total_payments"]:,.2f} AED
+• الذمم المدينة: {fin_data["total_receivables"]:,.2f} AED
+• مبيعات اليوم: {fin_data["today_sales"]:,.2f} AED
+• مدفوعات اليوم: {fin_data["today_payments"]:,.2f} AED
 
 📈 **آخر المبيعات:**
-{chr(10).join([f"• فاتورة #{sale['id']} - {sale['customer']} - {sale['amount']:,.2f} AED ({sale['date']})" for sale in sys_data['sales']['recent']])}
+{chr(10).join([f"• فاتورة #{sale['id']} - {sale['customer']} - {sale['amount']:,.2f} AED ({sale['date']})" for sale in sys_data["sales"]["recent"]])}
 
 👤 **أحدث العملاء:**
-{chr(10).join([f"• {customer['name']} ({customer['type']}) - رصيد: {customer['balance']:,.2f} AED" for customer in sys_data['customers']['recent']])}
+{chr(10).join([f"• {customer['name']} ({customer['type']}) - رصيد: {customer['balance']:,.2f} AED" for customer in sys_data["customers"]["recent"]])}
 
 💡 **التوصيات:**
-• {'يحتاج متابعة المدفوعات' if fin_data['total_receivables'] > fin_data['total_sales'] * 0.3 else 'الأمور المالية جيدة'}
-• {'يحتاج طلب منتجات' if sys_data['products']['low_stock'] > 5 else 'المخزون في حالة جيدة'}"""
-        
+• {"يحتاج متابعة المدفوعات" if fin_data["total_receivables"] > fin_data["total_sales"] * 0.3 else "الأمور المالية جيدة"}
+• {"يحتاج طلب منتجات" if sys_data["products"]["low_stock"] > 5 else "المخزون في حالة جيدة"}"""
+
         return response
-    
+
     @staticmethod
     def _handle_add_customer_query(message):
         """التعامل مع إضافة عميل جديد"""
@@ -841,44 +1014,44 @@ class AzadResponses:
 💡 **مثال:** "أضف عميل جديد اسمه أحمد محمد، نوعه VIP، هاتفه 0501234567"
 
 أو يمكنك استخدام النموذج في النظام لإضافة العملاء بطريقة أسهل."""
-    
+
     @staticmethod
     def _handle_search_query(message):
         """التعامل مع البحث في النظام"""
         # استخراج كلمة البحث
         words = message.split()
         search_term = None
-        
+
         for i, word in enumerate(words):
-            if word.lower() in ['ابحث', 'search', 'جد', 'find'] and i + 1 < len(words):
-                search_term = ' '.join(words[i+1:])
+            if word.lower() in ["ابحث", "search", "جد", "find"] and i + 1 < len(words):
+                search_term = " ".join(words[i + 1 :])
                 break
-        
+
         if not search_term:
             return "❌ لم أتمكن من تحديد كلمة البحث. يرجى كتابة: 'ابحث عن أحمد' أو 'جد المنتج ABC'"
-        
+
         result = system_integrator.search_data(search_term)
-        
-        if not result['success']:
+
+        if not result["success"]:
             return f"❌ {result['error']}"
-        
-        results = result['results']
-        
+
+        results = result["results"]
+
         response = f"""🔍 **نتائج البحث عن: "{search_term}"**
 
-👥 **العملاء ({len(results['customers'])}):**
-{chr(10).join([f"• {customer['name']} ({customer['type']}) - رصيد: {customer['balance']:,.2f} AED" for customer in results['customers'][:5]])}
+👥 **العملاء ({len(results["customers"])}):**
+{chr(10).join([f"• {customer['name']} ({customer['type']}) - رصيد: {customer['balance']:,.2f} AED" for customer in results["customers"][:5]])}
 
-📦 **المنتجات ({len(results['products'])}):**
-{chr(10).join([f"• {product['name']} (SKU: {product['sku']}) - مخزون: {product['stock']} - سعر: {product['price']:,.2f} AED" for product in results['products'][:5]])}
+📦 **المنتجات ({len(results["products"])}):**
+{chr(10).join([f"• {product['name']} (SKU: {product['sku']}) - مخزون: {product['stock']} - سعر: {product['price']:,.2f} AED" for product in results["products"][:5]])}
 
-🛒 **المبيعات ({len(results['sales'])}):**
-{chr(10).join([f"• فاتورة #{sale['id']} - {sale['customer']} - {sale['amount']:,.2f} AED ({sale['date']})" for sale in results['sales'][:5]])}
+🛒 **المبيعات ({len(results["sales"])}):**
+{chr(10).join([f"• فاتورة #{sale['id']} - {sale['customer']} - {sale['amount']:,.2f} AED ({sale['date']})" for sale in results["sales"][:5]])}
 
-📊 **إجمالي النتائج: {len(results['customers']) + len(results['products']) + len(results['sales'])}**"""
-        
+📊 **إجمالي النتائج: {len(results["customers"]) + len(results["products"]) + len(results["sales"])}**"""
+
         return response
-    
+
     @staticmethod
     def _handle_add_knowledge_source(message):
         """التعامل مع إضافة مصدر معرفة"""
@@ -899,41 +1072,43 @@ class AzadResponses:
 • عام
 
 💡 **مثال:** "أضف موقع https://tax.gov.ae في فئة الضرائب والجمارك" """
-    
+
     @staticmethod
     def _handle_knowledge_search(message):
         """التعامل مع البحث في المعرفة الموسعة"""
         # استخراج كلمة البحث
         words = message.split()
         search_term = None
-        
+
         for i, word in enumerate(words):
-            if word.lower() in ['ابحث', 'search'] and i + 1 < len(words):
-                search_term = ' '.join(words[i+1:])
+            if word.lower() in ["ابحث", "search"] and i + 1 < len(words):
+                search_term = " ".join(words[i + 1 :])
                 break
-        
+
         if not search_term:
             return "❌ لم أتمكن من تحديد كلمة البحث. يرجى كتابة: 'ابحث في المعرفة عن الضرائب'"
-        
+
         result = knowledge_expander.search_knowledge(search_term)
-        
-        if not result['success']:
+
+        if not result["success"]:
             return f"❌ {result['error']}"
-        
-        if not result['results']:
+
+        if not result["results"]:
             return f"لم أجد نتائج للبحث عن: '{search_term}'"
-        
-        total_found = result['total_found']
+
+        total_found = result["total_found"]
         results_list = []
-        for i, res in enumerate(result['results'][:5]):
-            title = res['title']
-            res_type = res['type']
-            category = res['category']
-            snippet = res['snippet']
-            results_list.append(f"**{i+1}. {title}** ({res_type})\\n   الفئة: {category}\\n   {snippet}\\n")
-        
+        for i, res in enumerate(result["results"][:5]):
+            title = res["title"]
+            res_type = res["type"]
+            category = res["category"]
+            snippet = res["snippet"]
+            results_list.append(
+                f"**{i + 1}. {title}** ({res_type})\\n   الفئة: {category}\\n   {snippet}\\n"
+            )
+
         results_text = chr(10).join(results_list)
-        
+
         response = f"""نتائج البحث في المعرفة عن: "{search_term}"
 
 عدد النتائج: {total_found}
@@ -941,62 +1116,62 @@ class AzadResponses:
 {results_text}
 
 للمزيد من التفاصيل، يمكنك طلب معلومات أكثر عن أي نتيجة."""
-        
+
         return response
-    
+
     @staticmethod
     def _handle_document_generation(message):
         """التعامل مع توليد المستندات"""
         msg_lower = message.lower()
-        
-        if 'سند' in msg_lower or 'receipt' in msg_lower:
+
+        if "سند" in msg_lower or "receipt" in msg_lower:
             # استخراج رقم الفاتورة
             words = message.split()
             sale_id = None
-            
+
             for i, word in enumerate(words):
                 if word.isdigit():
                     sale_id = int(word)
                     break
-            
+
             if not sale_id:
                 return "❌ يرجى تحديد رقم الفاتورة. مثال: 'ولد سند قبض للفاتورة 123'"
-            
+
             # توليد سند القبض
             content, status = document_generator.generate_receipt(sale_id)
             if content:
                 return f"📄 **سند القبض**\n\n```\n{content}\n```\n\n✅ {status}"
             else:
                 return f"❌ {status}"
-        
-        elif 'فاتورة' in msg_lower or 'invoice' in msg_lower:
+
+        elif "فاتورة" in msg_lower or "invoice" in msg_lower:
             # استخراج رقم الفاتورة
             words = message.split()
             sale_id = None
-            
+
             for i, word in enumerate(words):
                 if word.isdigit():
                     sale_id = int(word)
                     break
-            
+
             if not sale_id:
                 return "❌ يرجى تحديد رقم الفاتورة. مثال: 'ولد فاتورة 123'"
-            
+
             # توليد الفاتورة
             content, status = document_generator.generate_invoice(sale_id)
             if content:
                 return f"📄 **فاتورة المبيعات**\n\n```\n{content}\n```\n\n✅ {status}"
             else:
                 return f"❌ {status}"
-        
+
         return "❓ ما نوع المستند الذي تريد توليده؟ سند قبض أم فاتورة؟"
-    
+
     @staticmethod
     def _handle_excel_export(message):
         """التعامل مع التصدير إلى Excel"""
         msg_lower = message.lower()
-        
-        if 'مبيعات' in msg_lower or 'sales' in msg_lower:
+
+        if "مبيعات" in msg_lower or "sales" in msg_lower:
             return """**تصدير المبيعات إلى Excel**
 
 أزاد يمكنه تصدير:
@@ -1008,8 +1183,8 @@ class AzadResponses:
 **مثال:** "صدر مبيعات الشهر الحالي إلى Excel"
 
 أو استخدم واجهة التصدير في النظام!"""
-        
-        elif 'عملاء' in msg_lower or 'customers' in msg_lower:
+
+        elif "عملاء" in msg_lower or "customers" in msg_lower:
             return """**تصدير العملاء إلى Excel**
 
 أزاد يمكنه تصدير:
@@ -1019,8 +1194,8 @@ class AzadResponses:
 • معلومات الاتصال
 
 **مثال:** "صدر بيانات العملاء إلى Excel" """
-        
-        elif 'منتجات' in msg_lower or 'products' in msg_lower:
+
+        elif "منتجات" in msg_lower or "products" in msg_lower:
             return """**تصدير المنتجات إلى Excel**
 
 أزاد يمكنه تصدير:
@@ -1030,15 +1205,15 @@ class AzadResponses:
 • إحصائيات المبيعات
 
 **مثال:** "صدر بيانات المنتجات إلى Excel" """
-        
+
         return "ما البيانات التي تريد تصديرها؟ المبيعات، العملاء، أم المنتجات؟"
-    
+
     @staticmethod
     def _handle_report_generation(message):
         """التعامل مع توليد التقارير"""
         msg_lower = message.lower()
-        
-        if 'مبيعات' in msg_lower or 'sales' in msg_lower:
+
+        if "مبيعات" in msg_lower or "sales" in msg_lower:
             return """**تقرير المبيعات**
 
 أزاد يمكنه توليد:
@@ -1048,8 +1223,8 @@ class AzadResponses:
 • تقرير مبيعات فترة محددة
 
 **مثال:** "ولد تقرير مبيعات الشهر الحالي" """
-        
-        elif 'كشف' in msg_lower or 'statement' in msg_lower:
+
+        elif "كشف" in msg_lower or "statement" in msg_lower:
             return """**كشف حساب العميل**
 
 أزاد يمكنه توليد:
@@ -1059,113 +1234,120 @@ class AzadResponses:
 • تاريخ المعاملات
 
 **مثال:** "ولد كشف حساب العميل أحمد" """
-        
+
         return "ما نوع التقرير الذي تريد؟ تقرير مبيعات أم كشف حساب؟"
-    
+
     @staticmethod
     def _handle_tax_laws_query(message):
         """التعامل مع استعلامات القوانين الضريبية"""
         msg_lower = message.lower()
-        
-        if 'فلسطين' in msg_lower or 'palestine' in msg_lower:
+
+        if "فلسطين" in msg_lower or "palestine" in msg_lower:
             return f"""🇵🇸 **القوانين الضريبية الفلسطينية**
 
 **الضرائب الأساسية:**
-• ضريبة القيمة المضافة: {advanced_laws.PALESTINIAN_TAX_LAWS['vat_rate']}%
-• ضريبة الشركات: {advanced_laws.PALESTINIAN_TAX_LAWS['income_tax_rates']['corporate']['standard']}%
+• ضريبة القيمة المضافة: {advanced_laws.PALESTINIAN_TAX_LAWS["vat_rate"]}%
+• ضريبة الشركات: {advanced_laws.PALESTINIAN_TAX_LAWS["income_tax_rates"]["corporate"]["standard"]}%
 
 **ضريبة الدخل للأفراد:**
-{chr(10).join([f"• {range_text}: {rate}%" for range_text, rate in advanced_laws.PALESTINIAN_TAX_LAWS['income_tax_rates']['individual'].items()])}
+{chr(10).join([f"• {range_text}: {rate}%" for range_text, rate in advanced_laws.PALESTINIAN_TAX_LAWS["income_tax_rates"]["individual"].items()])}
 
 🏛️ **الرسوم الجمركية:**
-• زراعية: {advanced_laws.PALESTINIAN_TAX_LAWS['customs_duties']['agricultural']}%
-• صناعية: {advanced_laws.PALESTINIAN_TAX_LAWS['customs_duties']['industrial']}%
-• فاخرة: {advanced_laws.PALESTINIAN_TAX_LAWS['customs_duties']['luxury']}%
+• زراعية: {advanced_laws.PALESTINIAN_TAX_LAWS["customs_duties"]["agricultural"]}%
+• صناعية: {advanced_laws.PALESTINIAN_TAX_LAWS["customs_duties"]["industrial"]}%
+• فاخرة: {advanced_laws.PALESTINIAN_TAX_LAWS["customs_duties"]["luxury"]}%
 
 **الأنظمة الخاصة:**
-{chr(10).join([f"• {regulation}" for regulation in advanced_laws.PALESTINIAN_TAX_LAWS['special_regulations']])}
+{chr(10).join([f"• {regulation}" for regulation in advanced_laws.PALESTINIAN_TAX_LAWS["special_regulations"]])}
 
 **أزاد يعرف كل التفاصيل الضريبية!**"""
-        
-        elif 'اسرائيل' in msg_lower or 'israel' in msg_lower:
+
+        elif "اسرائيل" in msg_lower or "israel" in msg_lower:
             return f"""🇮🇱 **القوانين الضريبية الإسرائيلية**
 
 **الضرائب الأساسية:**
-• ضريبة القيمة المضافة: {advanced_laws.ISRAELI_TAX_LAWS['vat_rate']}%
-• ضريبة الشركات: {advanced_laws.ISRAELI_TAX_LAWS['income_tax_rates']['corporate']['standard']}%
+• ضريبة القيمة المضافة: {advanced_laws.ISRAELI_TAX_LAWS["vat_rate"]}%
+• ضريبة الشركات: {advanced_laws.ISRAELI_TAX_LAWS["income_tax_rates"]["corporate"]["standard"]}%
 
 **ضريبة الدخل للأفراد:**
-{chr(10).join([f"• {range_text}: {rate}%" for range_text, rate in advanced_laws.ISRAELI_TAX_LAWS['income_tax_rates']['individual'].items()])}
+{chr(10).join([f"• {range_text}: {rate}%" for range_text, rate in advanced_laws.ISRAELI_TAX_LAWS["income_tax_rates"]["individual"].items()])}
 
 🏛️ **الرسوم الجمركية:**
-• زراعية: {advanced_laws.ISRAELI_TAX_LAWS['customs_duties']['agricultural']}%
-• صناعية: {advanced_laws.ISRAELI_TAX_LAWS['customs_duties']['industrial']}%
-• فاخرة: {advanced_laws.ISRAELI_TAX_LAWS['customs_duties']['luxury']}%
+• زراعية: {advanced_laws.ISRAELI_TAX_LAWS["customs_duties"]["agricultural"]}%
+• صناعية: {advanced_laws.ISRAELI_TAX_LAWS["customs_duties"]["industrial"]}%
+• فاخرة: {advanced_laws.ISRAELI_TAX_LAWS["customs_duties"]["luxury"]}%
 
 **الأنظمة الخاصة:**
-{chr(10).join([f"• {regulation}" for regulation in advanced_laws.ISRAELI_TAX_LAWS['special_regulations']])}
+{chr(10).join([f"• {regulation}" for regulation in advanced_laws.ISRAELI_TAX_LAWS["special_regulations"]])}
 
 **أزاد خبير في القوانين الإسرائيلية!**"""
-        
-        elif 'خليج' in msg_lower or 'gulf' in msg_lower or 'امارات' in msg_lower or 'uae' in msg_lower:
+
+        elif (
+            "خليج" in msg_lower
+            or "gulf" in msg_lower
+            or "امارات" in msg_lower
+            or "uae" in msg_lower
+        ):
             return f"""🇦🇪 **القوانين الضريبية الخليجية**
 
 **الإمارات:**
-• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS['uae']['vat_rate']}%
-• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS['uae']['corporate_tax_rate']}%
+• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS["uae"]["vat_rate"]}%
+• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS["uae"]["corporate_tax_rate"]}%
 
 **السعودية:**
-• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS['saudi']['vat_rate']}%
-• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS['saudi']['corporate_tax_rate']}%
-• الزكاة: {advanced_laws.GULF_TAX_LAWS['saudi']['zakat_rate']}%
+• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS["saudi"]["vat_rate"]}%
+• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS["saudi"]["corporate_tax_rate"]}%
+• الزكاة: {advanced_laws.GULF_TAX_LAWS["saudi"]["zakat_rate"]}%
 
 **الكويت:**
-• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS['kuwait']['vat_rate']}% (لم تطبق بعد)
-• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS['kuwait']['corporate_tax_rate']}%
+• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS["kuwait"]["vat_rate"]}% (لم تطبق بعد)
+• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS["kuwait"]["corporate_tax_rate"]}%
 
 **قطر:**
-• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS['qatar']['vat_rate']}% (لم تطبق بعد)
-• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS['qatar']['corporate_tax_rate']}%
+• ضريبة القيمة المضافة: {advanced_laws.GULF_TAX_LAWS["qatar"]["vat_rate"]}% (لم تطبق بعد)
+• ضريبة الشركات: {advanced_laws.GULF_TAX_LAWS["qatar"]["corporate_tax_rate"]}%
 
 **أزاد خبير في قوانين دول الخليج!**"""
-        
+
         return "أي دولة تريد معرفة قوانينها الضريبية؟ فلسطين، إسرائيل، أم دول الخليج؟"
-    
+
     @staticmethod
     def _show_knowledge_sources(message):
         """عرض مصادر المعرفة المتاحة"""
         msg_lower = message.lower()
-        
+
         # عرض كل المصادر
-        if 'كل' in msg_lower or 'all' in msg_lower:
+        if "كل" in msg_lower or "all" in msg_lower:
             summary = knowledge_manager.get_all_sources_summary()
             response = f"""🌐 **مصادر المعرفة المتاحة لأزاد:**
 
 **الإحصائيات:**
-• إجمالي الفئات: {summary.get('total_categories', 0)}
-• إجمالي المصادر: {summary.get('total_sources', 0)}
+• إجمالي الفئات: {summary.get("total_categories", 0)}
+• إجمالي المصادر: {summary.get("total_sources", 0)}
 
 📚 **الفئات:**
 
 """
-            for category, info in summary.get('categories', {}).items():
+            for category, info in summary.get("categories", {}).items():
                 response += f"**{category.upper()}** ({info.get('count', 0)} مصادر):\n"
-                for source in info.get('sources', [])[:3]:
-                    response += f"  • [{source.get('name', '')}]({source.get('url', '')})\n"
+                for source in info.get("sources", [])[:3]:
+                    response += (
+                        f"  • [{source.get('name', '')}]({source.get('url', '')})\n"
+                    )
                 response += "\n"
-            
+
             response += "**للحصول على مصادر محددة، اسأل عن موضوع معين!**"
             return response
-        
+
         # مصادر حسب الموضوع
         topics_map = {
-            'ضريبة': 'vat',
-            'جمارك': 'customs',
-            'قطع': 'parts',
-            'محاسبة': 'accounting',
-            'عملة': 'currency'
+            "ضريبة": "vat",
+            "جمارك": "customs",
+            "قطع": "parts",
+            "محاسبة": "accounting",
+            "عملة": "currency",
         }
-        
+
         for keyword, topic in topics_map.items():
             if keyword in msg_lower:
                 sources = knowledge_manager.get_sources_by_topic(topic)
@@ -1176,53 +1358,53 @@ class AzadResponses:
                         response += f"{source['url']}\n"
                         response += f"النوع: {source['type']}\n\n"
                     return response
-        
+
         # عرض دليل المصادر
         return SOURCES_GUIDE
-    
+
     @staticmethod
     def _recommend_sources(message):
         """توصية بمصادر حسب السؤال"""
         recommendations = recommend_sources_for_query(message)
-        
+
         if not recommendations:
             return "🤔 لم أجد مصادر مناسبة لسؤالك. حاول أن تكون أكثر تحديداً!"
-        
+
         intro = azad_personality.get_help_intro()
         response = f"{intro}\n\n🎯 **أفضل المصادر لسؤالك:**\n\n"
-        
+
         for i, source in enumerate(recommendations, 1):
             response += f"{i}. **{source['name']}**\n"
             response += f"   {source['url']}\n"
             response += f"   الفئة: {source['category']}\n"
             response += f"   النوع: {source['type']}\n\n"
-        
+
         response += "**نصيحة:** افتح هذه المواقع للحصول على أحدث المعلومات!"
         return response
-    
+
     @staticmethod
     def _handle_shipping_laws_query(message):
         """التعامل مع استعلامات قوانين الشحن"""
         msg_lower = message.lower()
-        
-        if 'إجراءات' in msg_lower or 'procedures' in msg_lower:
+
+        if "إجراءات" in msg_lower or "procedures" in msg_lower:
             return f"""**إجراءات الشحن والتخليص**
 
 **الوثائق المطلوبة:**
-{chr(10).join([f"• {doc}" for doc in advanced_laws.SHIPPING_LAWS['documentation_required']])}
+{chr(10).join([f"• {doc}" for doc in advanced_laws.SHIPPING_LAWS["documentation_required"]])}
 
 **الإجراءات الجمركية:**
-{chr(10).join([f"• {procedure}" for procedure in advanced_laws.SHIPPING_LAWS['customs_procedures'].values()])}
+{chr(10).join([f"• {procedure}" for procedure in advanced_laws.SHIPPING_LAWS["customs_procedures"].values()])}
 
 **البضائع المحظورة:**
-{chr(10).join([f"• {item}" for item in advanced_laws.SHIPPING_LAWS['restricted_items']])}
+{chr(10).join([f"• {item}" for item in advanced_laws.SHIPPING_LAWS["restricted_items"]])}
 
 **الإعفاءات الجمركية:**
-{chr(10).join([f"• {allowance}" for allowance in advanced_laws.SHIPPING_LAWS['duty_free_allowances'].values()])}
+{chr(10).join([f"• {allowance}" for allowance in advanced_laws.SHIPPING_LAWS["duty_free_allowances"].values()])}
 
 **أزاد خبير في الشحن والتخليص!**"""
-        
-        elif 'نوع' in msg_lower or 'type' in msg_lower:
+
+        elif "نوع" in msg_lower or "type" in msg_lower:
             return """**أنواع الشحن**
 
 **الشحن البحري:**
@@ -1244,29 +1426,29 @@ class AzadResponses:
 • رسوم متوسطة
 
 **أزاد يساعدك في اختيار أفضل طريقة!**"""
-        
+
         return "ما تريد معرفته عن الشحن؟ الإجراءات أم الأنواع؟"
-    
+
     @staticmethod
     def _handle_quality_standards_query(message):
         """التعامل مع استعلامات معايير الجودة"""
         msg_lower = message.lower()
-        
-        if 'معايير' in msg_lower or 'standards' in msg_lower:
+
+        if "معايير" in msg_lower or "standards" in msg_lower:
             return f"""🏆 **معايير الجودة**
 
 🏛️ **هيئات التقييس:**
-{chr(10).join([f"• {country}: {org}" for country, org in advanced_laws.QUALITY_LAWS['standards_organizations'].items()])}
+{chr(10).join([f"• {country}: {org}" for country, org in advanced_laws.QUALITY_LAWS["standards_organizations"].items()])}
 
 **الشهادات المطلوبة:**
-{chr(10).join([f"• {cert}" for cert in advanced_laws.QUALITY_LAWS['certification_required']])}
+{chr(10).join([f"• {cert}" for cert in advanced_laws.QUALITY_LAWS["certification_required"]])}
 
 **علامات الجودة:**
-{chr(10).join([f"• {mark}: {desc}" for mark, desc in advanced_laws.QUALITY_LAWS['quality_marks'].items()])}
+{chr(10).join([f"• {mark}: {desc}" for mark, desc in advanced_laws.QUALITY_LAWS["quality_marks"].items()])}
 
 **أزاد يعرف كل معايير الجودة!**"""
-        
-        elif 'طعام' in msg_lower or 'food' in msg_lower:
+
+        elif "طعام" in msg_lower or "food" in msg_lower:
             return """**معايير جودة الأغذية**
 
 **الشهادات المطلوبة:**
@@ -1282,8 +1464,8 @@ class AzadResponses:
 • شهادة التغذية
 
 **أزاد خبير في معايير الغذاء!**"""
-        
-        elif 'إلكترونيات' in msg_lower or 'electronics' in msg_lower:
+
+        elif "إلكترونيات" in msg_lower or "electronics" in msg_lower:
             return """**معايير جودة الإلكترونيات**
 
 **الشهادات المطلوبة:**
@@ -1299,9 +1481,9 @@ class AzadResponses:
 • شهادة الجودة البيئية
 
 **أزاد خبير في معايير الإلكترونيات!**"""
-        
+
         return "ما نوع المنتج الذي تريد معرفة معاييره؟ طعام، إلكترونيات، أم عام؟"
-    
+
     @staticmethod
     def _handle_balance_query(message):
         return AzadResponses._handle_customer_balance_query(message)
@@ -1309,21 +1491,22 @@ class AzadResponses:
     @staticmethod
     def _inventory_status():
         from services.ai_service import AIService
+
         health = AIService.analyze_inventory_health()
-        if health.get('success'):
-            s = health.get('summary', {})
+        if health.get("success"):
+            s = health.get("summary", {})
             return f"""📦 **صحة المخزون:**
 
 **الإحصائيات:**
-• إجمالي المنتجات: {s.get('total', 0)}
-• حالة جيدة: {s.get('good', 0)} ✅
-• منخفض: {s.get('low', 0)} ⚠️
-• نفذ: {s.get('out', 0)} 🔴
+• إجمالي المنتجات: {s.get("total", 0)}
+• حالة جيدة: {s.get("good", 0)} ✅
+• منخفض: {s.get("low", 0)} ⚠️
+• نفذ: {s.get("out", 0)} 🔴
 
-🏆 **التقييم:** {health.get('rating', 'غير محدد')} ({health.get('health_score', 0)}%)
+🏆 **التقييم:** {health.get("rating", "غير محدد")} ({health.get("health_score", 0)}%)
 
-💡 **نصيحة:** {'راجع المنتجات المنخفضة والنافذة فوراً' if s.get('low', 0) > 0 or s.get('out', 0) > 0 else 'المخزون ممتاز!'}"""
-        return health.get('message', 'لا توجد منتجات للتحليل')
+💡 **نصيحة:** {"راجع المنتجات المنخفضة والنافذة فوراً" if s.get("low", 0) > 0 or s.get("out", 0) > 0 else "المخزون ممتاز!"}"""
+        return health.get("message", "لا توجد منتجات للتحليل")
 
     @staticmethod
     def _smart_sales_analysis(context):
@@ -1331,27 +1514,31 @@ class AzadResponses:
         from models import Sale
         from datetime import datetime, timedelta, timezone
         from decimal import Decimal
-        
+
         last_7_days = datetime.now(timezone.utc) - timedelta(days=7)
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
-        
-        sales_7d = Sale.query.filter(Sale.sale_date >= last_7_days, Sale.status == 'confirmed').all()
-        sales_30d = Sale.query.filter(Sale.sale_date >= last_30_days, Sale.status == 'confirmed').all()
-        
-        total_7d = sum((Decimal(str(s.amount_aed)) for s in sales_7d), Decimal('0'))
-        total_30d = sum((Decimal(str(s.amount_aed)) for s in sales_30d), Decimal('0'))
-        
-        avg_7d = total_7d / 7 if total_7d > 0 else Decimal('0')
-        avg_30d = total_30d / 30 if total_30d > 0 else Decimal('0')
-        
+
+        sales_7d = Sale.query.filter(
+            Sale.sale_date >= last_7_days, Sale.status == "confirmed"
+        ).all()
+        sales_30d = Sale.query.filter(
+            Sale.sale_date >= last_30_days, Sale.status == "confirmed"
+        ).all()
+
+        total_7d = sum((Decimal(str(s.amount_aed)) for s in sales_7d), Decimal("0"))
+        total_30d = sum((Decimal(str(s.amount_aed)) for s in sales_30d), Decimal("0"))
+
+        avg_7d = total_7d / 7 if total_7d > 0 else Decimal("0")
+        avg_30d = total_30d / 30 if total_30d > 0 else Decimal("0")
+
         # مقارنة الأداء
-        if avg_7d > avg_30d * Decimal('1.1'):
+        if avg_7d > avg_30d * Decimal("1.1"):
             trend = f"📈 تحسن ممتاز! المبيعات الأخيرة أعلى من المتوسط بـ {float((avg_7d / avg_30d - 1) * 100):.1f}%"
-        elif avg_7d < avg_30d * Decimal('0.9'):
+        elif avg_7d < avg_30d * Decimal("0.9"):
             trend = f"📉 تراجع ملحوظ! المبيعات انخفضت بـ {float((1 - avg_7d / avg_30d) * 100):.1f}%"
         else:
             trend = "➡️ مبيعات مستقرة"
-        
+
         return f"""📊 **تحليل المبيعات الذكي:**
 
 📅 **آخر 7 أيام:**
@@ -1367,94 +1554,103 @@ class AzadResponses:
 **الاتجاه:** {trend}
 
 **التوصية:** {"استمر على هذا النهج!" if avg_7d >= avg_30d else "راجع استراتيجية المبيعات والتسويق"}"""
-    
+
     @staticmethod
     def _handle_detected_intent(intent: str, message: str, context=None):
         """
         معالج النوايا المكتشفة بالذكاء الاصطناعي
-        
+
         Args:
             intent: النية المكتشفة (create_invoice, sales_analysis, etc.)
             message: الرسالة الأصلية
             context: السياق
-        
+
         Returns:
             الرد المناسب أو None
         """
         # ربط النوايا بالدوال المناسبة - شامل لكل المعرفة
         intent_handlers = {
             # النظام الأساسي
-            'create_invoice': AzadResponses._quick_invoice_link,
-            'create_receipt': AzadResponses._quick_receipt_link,
-            'sales_analysis': lambda: AzadResponses._smart_sales_analysis(context),
-            'customer_balance': lambda: AzadResponses._handle_balance_query(message),
-            'inventory_check': lambda: AzadResponses._inventory_status(),
-            'system_links': AzadResponses._show_system_quick_links,
-            'add_customer': lambda: AzadResponses._handle_add_customer_query(message),
-            
+            "create_invoice": AzadResponses._quick_invoice_link,
+            "create_receipt": AzadResponses._quick_receipt_link,
+            "sales_analysis": lambda: AzadResponses._smart_sales_analysis(context),
+            "customer_balance": lambda: AzadResponses._handle_balance_query(message),
+            "inventory_check": lambda: AzadResponses._inventory_status(),
+            "system_links": AzadResponses._show_system_quick_links,
+            "add_customer": lambda: AzadResponses._handle_add_customer_query(message),
             # الضرائب والجمارك
-            'tax_info': lambda: f"💵 **الضرائب في الإمارات:**\n\n{get_tax_info('uae')}",
-            'customs_info': lambda: f"🛃 **الجمارك في الإمارات:**\n\n{get_customs_info('uae')}",
-            
+            "tax_info": lambda: f"💵 **الضرائب في الإمارات:**\n\n{get_tax_info('uae')}",
+            "customs_info": lambda: (
+                f"🛃 **الجمارك في الإمارات:**\n\n{get_customs_info('uae')}"
+            ),
             # قطع الغيار والسيارات
-            'parts_info': lambda: f"**معلومات قطع الغيار:**\n\n{get_part_info(message)}",
-            'automotive_ecu': lambda: "🚗 **كمبيوتر السيارة (ECU):**\n\nوحدة التحكم الإلكتروني (ECU) هي دماغ السيارة الحديثة. تتحكم في المحرك، ناقل الحركة، الفرامل، والأنظمة الكهربائية.\n\n**الوظائف:**\n• إدارة المحرك والوقود\n• التشخيص الذاتي\n• تحسين الأداء\n• خفض الانبعاثات",
-            'heavy_equipment': lambda: "🏗️ **المعدات الثقيلة:**\n\nنتعامل مع قطع غيار المعدات الثقيلة:\n• Caterpillar (CAT)\n• Komatsu\n• Volvo\n• Hitachi\n• JCB\n\nشامل: الحفارات، اللوادر، الجريدرات، والرافعات",
-            
+            "parts_info": lambda: (
+                f"**معلومات قطع الغيار:**\n\n{get_part_info(message)}"
+            ),
+            "automotive_ecu": lambda: (
+                "🚗 **كمبيوتر السيارة (ECU):**\n\nوحدة التحكم الإلكتروني (ECU) هي دماغ السيارة الحديثة. تتحكم في المحرك، ناقل الحركة، الفرامل، والأنظمة الكهربائية.\n\n**الوظائف:**\n• إدارة المحرك والوقود\n• التشخيص الذاتي\n• تحسين الأداء\n• خفض الانبعاثات"
+            ),
+            "heavy_equipment": lambda: (
+                "🏗️ **المعدات الثقيلة:**\n\nنتعامل مع قطع غيار المعدات الثقيلة:\n• Caterpillar (CAT)\n• Komatsu\n• Volvo\n• Hitachi\n• JCB\n\nشامل: الحفارات، اللوادر، الجريدرات، والرافعات"
+            ),
             # السوق وخدمة العملاء
-            'market_insights': lambda: f"📊 **رؤى السوق:**\n\n{get_market_insights()}",
-            'customer_service': lambda: f"👥 **خدمة العملاء المتميزة:**\n\n{get_customer_service_tip()}",
-            
+            "market_insights": lambda: f"📊 **رؤى السوق:**\n\n{get_market_insights()}",
+            "customer_service": lambda: (
+                f"👥 **خدمة العملاء المتميزة:**\n\n{get_customer_service_tip()}"
+            ),
             # الشحن والجودة
-            'shipping_laws': lambda: AzadResponses._handle_shipping_laws_query(message),
-            'quality_standards': lambda: AzadResponses._handle_quality_standards_query(message),
-            
+            "shipping_laws": lambda: AzadResponses._handle_shipping_laws_query(message),
+            "quality_standards": lambda: AzadResponses._handle_quality_standards_query(
+                message
+            ),
             # الموردين والمعرفة
-            'suppliers_info': lambda: AzadResponses._handle_suppliers_query(message),
-            'knowledge_sources': lambda: AzadResponses._show_knowledge_sources(message),
-            
+            "suppliers_info": lambda: AzadResponses._handle_suppliers_query(message),
+            "knowledge_sources": lambda: AzadResponses._show_knowledge_sources(message),
             # القوانين المتقدمة
-            'palestine_tax_laws': lambda: AzadResponses._get_palestine_tax_laws(),
-            'israel_tax_laws': lambda: AzadResponses._get_israel_tax_laws(),
-            'gulf_tax_laws': lambda: AzadResponses._get_gulf_tax_laws(),
-            'shipping_regulations': lambda: AzadResponses._get_shipping_regulations(),
-            
+            "palestine_tax_laws": lambda: AzadResponses._get_palestine_tax_laws(),
+            "israel_tax_laws": lambda: AzadResponses._get_israel_tax_laws(),
+            "gulf_tax_laws": lambda: AzadResponses._get_gulf_tax_laws(),
+            "shipping_regulations": lambda: AzadResponses._get_shipping_regulations(),
             # المعالجة المتقدمة
-            'memory_query': lambda: "🧠 **نظام الذاكرة:** قيد التطوير - سيتم تفعيله قريباً لتذكر محادثاتك السابقة!",
-            'multi_step_query': lambda: "🔄 **الاستفسارات متعددة الخطوات:** قيد التطوير - سأتمكن قريباً من تنفيذ عدة أوامر متتالية!",
-            
+            "memory_query": lambda: (
+                "🧠 **نظام الذاكرة:** قيد التطوير - سيتم تفعيله قريباً لتذكر محادثاتك السابقة!"
+            ),
+            "multi_step_query": lambda: (
+                "🔄 **الاستفسارات متعددة الخطوات:** قيد التطوير - سأتمكن قريباً من تنفيذ عدة أوامر متتالية!"
+            ),
             # قطع الغيار التفصيلية
-            'engine_parts': lambda: AzadResponses._get_engine_parts_guide(),
-            'diesel_parts': lambda: AzadResponses._get_diesel_parts_guide(),
-            'transmission_parts': lambda: AzadResponses._get_transmission_guide(),
-            'suspension_parts': lambda: AzadResponses._get_suspension_guide(),
-            'brake_parts': lambda: AzadResponses._get_brakes_guide(),
-            'electrical_parts': lambda: AzadResponses._get_electrical_guide(),
-            'ac_parts': lambda: AzadResponses._get_ac_guide(),
-            
+            "engine_parts": lambda: AzadResponses._get_engine_parts_guide(),
+            "diesel_parts": lambda: AzadResponses._get_diesel_parts_guide(),
+            "transmission_parts": lambda: AzadResponses._get_transmission_guide(),
+            "suspension_parts": lambda: AzadResponses._get_suspension_guide(),
+            "brake_parts": lambda: AzadResponses._get_brakes_guide(),
+            "electrical_parts": lambda: AzadResponses._get_electrical_guide(),
+            "ac_parts": lambda: AzadResponses._get_ac_guide(),
             # التشخيص والأعطال
-            'diagnostic_codes': lambda: AzadResponses._get_dtc_info(message),
-            'sensors_issues': lambda: AzadResponses._get_sensor_troubleshooting(message),
-            
+            "diagnostic_codes": lambda: AzadResponses._get_dtc_info(message),
+            "sensors_issues": lambda: AzadResponses._get_sensor_troubleshooting(
+                message
+            ),
             # الأعمال المتقدمة
-            'pricing_strategy': lambda: AzadResponses._get_pricing_strategy_guide(),
-            'sales_techniques': lambda: AzadResponses._get_sales_techniques_guide(),
-            
+            "pricing_strategy": lambda: AzadResponses._get_pricing_strategy_guide(),
+            "sales_techniques": lambda: AzadResponses._get_sales_techniques_guide(),
             # المساعدة العامة
-            'general_help': lambda: azad_personality.get_help_intro() + "\n\n" + get_system_guide()
+            "general_help": lambda: (
+                azad_personality.get_help_intro() + "\n\n" + get_system_guide()
+            ),
         }
-        
+
         # تنفيذ المعالج المناسب
         handler = intent_handlers.get(intent)
         if handler:
             try:
                 return handler()
-            except Exception as e:
+            except Exception:
                 # في حال حدوث خطأ، نرجع None ليكمل النظام التقليدي
                 return None
-        
+
         return None
-    
+
     @staticmethod
     def _quick_invoice_link():
         """رابط سريع لإنشاء فاتورة"""
@@ -1475,7 +1671,7 @@ class AzadResponses:
 ⌨️ **اختصار سريع:** اضغط `Alt + S` ثم `Alt + N`
 
 💡 **نصيحة أزاد:** استخدم البحث السريع (`Ctrl + K`) للوصول لأي صفحة! 🚀"""
-    
+
     @staticmethod
     def _quick_receipt_link():
         """رابط سريع لسند قبض"""
@@ -1496,36 +1692,36 @@ class AzadResponses:
 ⌨️ **اختصار سريع:** اضغط `Alt + P` ثم `Alt + N`
 
 💡 **نصيحة أزاد:** يمكنك طباعة السند مباشرة بعد الحفظ! 📄"""
-    
+
     @staticmethod
     def _quick_report_links(message):
         """روابط سريعة للتقارير"""
         msg_lower = message.lower()
         intro = azad_personality.get_help_intro()
-        
+
         links = []
-        
+
         # تحديد نوع التقرير
-        if 'مبيعات' in msg_lower or 'sales' in msg_lower:
-            links.append(('📊 تقرير المبيعات', '/reports/sales'))
-        if 'مشتريات' in msg_lower or 'purchases' in msg_lower:
-            links.append(('📦 تقرير المشتريات', '/reports/purchases'))
-        if 'مخزون' in msg_lower or 'inventory' in msg_lower:
-            links.append(('🏪 تقرير المخزون', '/reports/inventory'))
-        if 'ذمم' in msg_lower or 'receivables' in msg_lower:
-            links.append(('💳 تقرير الذمم المدينة', '/reports/receivables'))
-        
+        if "مبيعات" in msg_lower or "sales" in msg_lower:
+            links.append(("📊 تقرير المبيعات", "/reports/sales"))
+        if "مشتريات" in msg_lower or "purchases" in msg_lower:
+            links.append(("📦 تقرير المشتريات", "/reports/purchases"))
+        if "مخزون" in msg_lower or "inventory" in msg_lower:
+            links.append(("🏪 تقرير المخزون", "/reports/inventory"))
+        if "ذمم" in msg_lower or "receivables" in msg_lower:
+            links.append(("💳 تقرير الذمم المدينة", "/reports/receivables"))
+
         # إذا لم يحدد نوعاً، اعرض الكل
         if not links:
             links = [
-                ('📊 تقرير المبيعات', '/reports/sales'),
-                ('📦 تقرير المشتريات', '/reports/purchases'),
-                ('🏪 تقرير المخزون', '/reports/inventory'),
-                ('💳 تقرير الذمم المدينة', '/reports/receivables'),
-                ('📈 قائمة الدخل', '/ledger/income-statement'),
-                ('⚖️ الميزانية العمومية', '/ledger/balance-sheet')
+                ("📊 تقرير المبيعات", "/reports/sales"),
+                ("📦 تقرير المشتريات", "/reports/purchases"),
+                ("🏪 تقرير المخزون", "/reports/inventory"),
+                ("💳 تقرير الذمم المدينة", "/reports/receivables"),
+                ("📈 قائمة الدخل", "/ledger/income-statement"),
+                ("⚖️ الميزانية العمومية", "/ledger/balance-sheet"),
             ]
-        
+
         response = f"""{intro}
 
 📊 **التقارير المتاحة:**
@@ -1533,13 +1729,13 @@ class AzadResponses:
 """
         for title, url in links:
             response += f"🔗 {title}\n👉 [اضغط هنا]({url})\n\n"
-        
+
         response += """⌨️ **اختصار سريع:** `Ctrl + R` للوصول السريع للتقارير
 
 💡 **نصيحة أزاد:** كل التقارير قابلة للتصدير إلى Excel و PDF! 📑"""
-        
+
         return response
-    
+
     @staticmethod
     def _show_system_quick_links():
         """عرض روابط النظام السريعة"""
@@ -1608,28 +1804,37 @@ class AzadResponses:
 • `?` → المساعدة
 
 💡 **نصيحة أزاد:** احفظ الروابط المهمة في مفضلتك! 📌"""
-    
+
     @staticmethod
     def _handle_suppliers_query(message):
         """🏪 معالجة استفسارات الموردين"""
         from models import Supplier
         from extensions import db
-        
-        msg_lower = message.lower()
-        
+
+        message.lower()
+
         try:
             # عدد الموردين
             total_suppliers = Supplier.query.filter_by(is_active=True).count()
-            
+
             # موردين موثوقين
-            verified_suppliers = Supplier.query.filter_by(is_active=True, is_verified=True).count()
-            
+            verified_suppliers = Supplier.query.filter_by(
+                is_active=True, is_verified=True
+            ).count()
+
             # أفضل مورد (حسب التقييم)
-            top_supplier = Supplier.query.filter_by(is_active=True).order_by(Supplier.rating.desc()).first()
-            
+            top_supplier = (
+                Supplier.query.filter_by(is_active=True)
+                .order_by(Supplier.rating.desc())
+                .first()
+            )
+
             # إجمالي المشتريات
-            total_purchases = db.session.query(db.func.sum(Supplier.total_purchases_aed)).scalar() or 0
-            
+            total_purchases = (
+                db.session.query(db.func.sum(Supplier.total_purchases_aed)).scalar()
+                or 0
+            )
+
             response = f"""🏪 **نظام إدارة الموردين** ⭐ (نظام جديد!)
 
 📊 **إحصائيات:**
@@ -1638,16 +1843,16 @@ class AzadResponses:
 • إجمالي المشتريات: {total_purchases:,.2f} درهم
 
 """
-            
+
             if top_supplier:
                 response += f"""⭐ **أفضل مورد:**
 • الاسم: {top_supplier.name}
-• التقييم: {'⭐' * int(top_supplier.rating or 0)}
-• الشركة: {top_supplier.company_name or 'غير محدد'}
-• نوع المورد: {top_supplier.supplier_type or 'عام'}
+• التقييم: {"⭐" * int(top_supplier.rating or 0)}
+• الشركة: {top_supplier.company_name or "غير محدد"}
+• نوع المورد: {top_supplier.supplier_type or "عام"}
 
 """
-            
+
             response += """🔗 **روابط سريعة:**
 • [قائمة الموردين](/suppliers)
 • [إضافة مورد جديد](/suppliers/create)
@@ -1676,9 +1881,9 @@ class AzadResponses:
 
 🎯 **نصيحة أزاد:**
 استخدم الفلتر الذكي في صفحة المشتريات للبحث السريع عن الموردين!"""
-            
+
             return response
-            
+
         except Exception as e:
             return f"""🏪 **نظام الموردين** ⭐
 
@@ -1694,13 +1899,13 @@ class AzadResponses:
 🔗 [فاتورة شراء](/purchases/create)
 
 ❌ ملاحظة: {str(e)}"""
-    
+
     @staticmethod
     def _handle_smart_filters_query(message):
         """🔍 معالجة استفسارات الفلاتر الذكية"""
-        
-        msg_lower = message.lower()
-        
+
+        message.lower()
+
         response = """🔍 **الفلاتر الذكية** ⭐ (نظام جديد!)
 
 نظام بحث واختيار ذكي موحد لجميع الوحدات!
@@ -1762,13 +1967,13 @@ class AzadResponses:
 
 💡 **نصيحة أزاد:**
 الفلاتر الذكية توفر لك الوقت وتقلل الأخطاء! 🚀"""
-        
+
         return response
-    
+
     @staticmethod
     def _handle_payment_methods_query(message):
         """💳 معالجة استفسارات طرق الدفع"""
-        
+
         response = """💳 **طرق الدفع الديناميكية** ⭐ (نظام جديد!)
 
 النظام يدعم 6 طرق دفع مع حقول ديناميكية!
@@ -1841,11 +2046,11 @@ class AzadResponses:
 
 💡 **نصيحة أزاد:**
 استخدم طريقة الدفع المناسبة وسجل كل التفاصيل للمراجعة لاحقاً! 📝"""
-        
+
         return response
-    
+
     # ========== القوانين المتقدمة - Advanced Laws ==========
-    
+
     @staticmethod
     def _get_palestine_tax_laws():
         """القوانين الضريبية الفلسطينية"""
@@ -1870,7 +2075,7 @@ class AzadResponses:
 • كمالية: 30%
 
 💡 **ملاحظة:** القوانين الفلسطينية تتأثر بالواقع السياسي والاقتصادي"""
-    
+
     @staticmethod
     def _get_israel_tax_laws():
         """القوانين الضريبية الإسرائيلية"""
@@ -1891,7 +2096,7 @@ class AzadResponses:
 • الشركات: 23%
 
 💡 **ملاحظة:** معدلات الضرائب تتغير سنوياً - تحقق من التحديثات"""
-    
+
     @staticmethod
     def _get_gulf_tax_laws():
         """القوانين الضريبية الخليجية"""
@@ -1924,7 +2129,7 @@ class AzadResponses:
 • ضريبة الشركات: 15%
 
 💡 **ملاحظة:** دول الخليج تطبق اتفاقية VAT موحدة مع اختلافات بسيطة"""
-    
+
     @staticmethod
     def _get_shipping_regulations():
         """تنظيمات الشحن"""
@@ -1958,9 +2163,9 @@ class AzadResponses:
 • DDP - مسلم مع دفع الرسوم
 
 💡 **نصيحة:** تأكد من جميع المستندات قبل الشحن لتجنب التأخير!"""
-    
+
     # ========== دوال قطع الغيار التفصيلية ==========
-    
+
     @staticmethod
     def _get_engine_parts_guide():
         """دليل قطع المحرك"""
@@ -1982,7 +2187,7 @@ class AzadResponses:
 ❌ البستم مخروط → دخان أزرق + استهلاك زيت
 ❌ جوان الرأس محروق → خلط ماء وزيت
 ❌ بواجي قديمة → صعوبة التشغيل"""
-    
+
     @staticmethod
     def _get_diesel_parts_guide():
         """دليل قطع الديزل"""
@@ -2005,7 +2210,7 @@ class AzadResponses:
 • بخاخات مسدودة → دخان أسود + ضعف قوة
 • تيربو خربان → فقدان قوة ملحوظ
 • فلتر ديزل مسدود → تقطيع وصعوبة تشغيل"""
-    
+
     @staticmethod
     def _get_transmission_guide():
         """دليل ناقل الحركة"""
@@ -2027,7 +2232,7 @@ class AzadResponses:
 ❌ صوت طقة عند تغيير الغيار → كلتش ضعيف
 ❌ انزلاق عند التحميل → زيت قديم أو كلتش
 ❌ اهتزاز → عمود كردان محتاج بلانس"""
-    
+
     @staticmethod
     def _get_suspension_guide():
         """دليل نظام التعليق"""
@@ -2049,7 +2254,7 @@ class AzadResponses:
 ❌ ارتداد زائد بعد المطب → مساعد ضعيف
 ❌ صوت طقة على المطبات → مقص أو بلي تالف
 ❌ سيارة مايلة لجهة → سوست أو مساعد"""
-    
+
     @staticmethod
     def _get_brakes_guide():
         """دليل نظام الفرامل"""
@@ -2072,7 +2277,7 @@ class AzadResponses:
 ❌ صوت صفير → فحمات منتهية
 ❌ اهتزاز بالفرامل → أقراص معوجة
 ❌ بدال للأرض → تسريب زيت أو هواء"""
-    
+
     @staticmethod
     def _get_electrical_guide():
         """دليل النظام الكهربائي"""
@@ -2099,7 +2304,7 @@ class AzadResponses:
 ❌ بطارية فارغة → نظف الأقطاب أو بدّلها
 ❌ سلف مو شغال → افحص البطارية أولاً
 ❌ دينمو ضعيف → ضوء البطارية مشتعل"""
-    
+
     @staticmethod
     def _get_ac_guide():
         """دليل نظام التكييف"""
@@ -2124,27 +2329,28 @@ class AzadResponses:
 ❌ صوت من الكمبروسر → بيرنق تالف
 ❌ ريحة كريهة → فلتر صالون متسخ
 ❌ ماء يطل من الصالون → بلف مسدود"""
-    
+
     @staticmethod
     def _get_dtc_info(message):
         """معلومات أكواد الأعطال"""
-        msg_lower = message.lower()
-        
+        message.lower()
+
         # استخراج الكود إن وجد
         import re
-        code_match = re.search(r'P\d{4}|p\d{4}', message)
-        
+
+        code_match = re.search(r"P\d{4}|p\d{4}", message)
+
         common_codes = {
-            'P0300': '🔴 **P0300 - Misfire عام في المحرك**\n\n**السبب:**\n• بواجي قديمة\n• كويلات ضعيفة\n• بخاخات مسدودة\n• ضغط منخفض\n\n**الحل:** فحص البواجي والكويلات أولاً',
-            'P0420': '🟡 **P0420 - كفاءة Catalyst منخفضة**\n\n**السبب:**\n• الكتلايزر تالف\n• O2 Sensor خربان\n\n**الحل:** فحص O2 sensors ثم الكتلايزر',
-            'P0171': '🟠 **P0171 - خليط فقير (Lean)**\n\n**السبب:**\n• تسريب هواء\n• بخاخات ضعيفة\n• MAF sensor خربان\n\n**الحل:** فحص التسريبات + MAF'
+            "P0300": "🔴 **P0300 - Misfire عام في المحرك**\n\n**السبب:**\n• بواجي قديمة\n• كويلات ضعيفة\n• بخاخات مسدودة\n• ضغط منخفض\n\n**الحل:** فحص البواجي والكويلات أولاً",
+            "P0420": "🟡 **P0420 - كفاءة Catalyst منخفضة**\n\n**السبب:**\n• الكتلايزر تالف\n• O2 Sensor خربان\n\n**الحل:** فحص O2 sensors ثم الكتلايزر",
+            "P0171": "🟠 **P0171 - خليط فقير (Lean)**\n\n**السبب:**\n• تسريب هواء\n• بخاخات ضعيفة\n• MAF sensor خربان\n\n**الحل:** فحص التسريبات + MAF",
         }
-        
+
         if code_match:
             code = code_match.group(0).upper()
             if code in common_codes:
                 return common_codes[code]
-        
+
         return """🔍 **أكواد الأعطال (DTC - Diagnostic Trouble Codes):**
 
 📊 **الأنواع:**
@@ -2164,7 +2370,7 @@ class AzadResponses:
 • **P0506:** RPM الخمول منخفض
 
 💡 **نصيحة:** اقرأ الكود بجهاز OBD2 scanner أولاً!"""
-    
+
     @staticmethod
     def _get_sensor_troubleshooting(message):
         """استكشاف أعطال الحساسات"""
@@ -2195,7 +2401,7 @@ class AzadResponses:
    • العطل: مروحة لا تعمل، P0125
 
 💡 **نصيحة الفحص:** استخدم Multimeter لفحص الفولت والمقاومة"""
-    
+
     @staticmethod
     def _get_pricing_strategy_guide():
         """دليل استراتيجية التسعير"""
@@ -2239,7 +2445,7 @@ class AzadResponses:
 ✅ راقب أسعار المنافسين
 ✅ اعرض قيمة مضافة (ضمان، توصيل، تركيب)
 ✅ كن مرناً مع العملاء الدائمين"""
-    
+
     @staticmethod
     def _get_sales_techniques_guide():
         """دليل تقنيات البيع"""

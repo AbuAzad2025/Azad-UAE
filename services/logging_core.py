@@ -44,10 +44,16 @@ from utils.db_safety import atomic_transaction
 
 try:
     from colorama import init as colorama_init, Fore, Style
+
     colorama_init(autoreset=True)
 except ImportError:
-    class _Fore: BLUE = CYAN = GREEN = YELLOW = RED = MAGENTA = WHITE = ""
-    class _Style: BRIGHT = RESET_ALL = ""
+
+    class _Fore:
+        BLUE = CYAN = GREEN = YELLOW = RED = MAGENTA = WHITE = ""
+
+    class _Style:
+        BRIGHT = RESET_ALL = ""
+
     Fore, Style = _Fore(), _Style()
 
 logger = logging.getLogger(__name__)
@@ -66,17 +72,48 @@ _PERF_THRESHOLD_WARN_MS = 1000
 _PERF_THRESHOLD_INFO_MS = 500
 _SLOW_QUERY_THRESHOLD_S = 0.1
 
-_SECRET_KEYS = frozenset({
-    "password", "password_hash", "password_confirmation",
-    "current_password", "new_password", "token", "access_token",
-    "refresh_token", "api_key", "api_secret", "secret", "secret_key",
-    "csrf_token", "auth_token", "session_token", "credit_card",
-    "cvv", "cvc", "card_number", "bank_account", "iban",
-    "passport", "national_id", "emirates_id", "identity", "id_number",
-    "mobile", "phone_number", "landline", "whatsapp",
-    "tax_number", "vat_number", "cr_number", "license_number",
-    "bank_name", "bank_branch", "swift_code", "routing_number",
-})
+_SECRET_KEYS = frozenset(
+    {
+        "password",
+        "password_hash",
+        "password_confirmation",
+        "current_password",
+        "new_password",
+        "token",
+        "access_token",
+        "refresh_token",
+        "api_key",
+        "api_secret",
+        "secret",
+        "secret_key",
+        "csrf_token",
+        "auth_token",
+        "session_token",
+        "credit_card",
+        "cvv",
+        "cvc",
+        "card_number",
+        "bank_account",
+        "iban",
+        "passport",
+        "national_id",
+        "emirates_id",
+        "identity",
+        "id_number",
+        "mobile",
+        "phone_number",
+        "landline",
+        "whatsapp",
+        "tax_number",
+        "vat_number",
+        "cr_number",
+        "license_number",
+        "bank_name",
+        "bank_branch",
+        "swift_code",
+        "routing_number",
+    }
+)
 
 # ── Rate monitoring ─────────────────────────────────────────────
 _ERROR_RATE_WINDOW_MINUTES = 5
@@ -96,16 +133,37 @@ _AUDIT_ACTION_DISPLAY = {
     "print": {"ar": "طباعة", "en": "Print"},
 }
 
-_CATEGORIES = frozenset({
-    "BACKEND", "DATABASE", "FRONTEND", "SYSTEM_INIT", "API", "SECURITY", "RATE_LIMIT",
-})
+_CATEGORIES = frozenset(
+    {
+        "BACKEND",
+        "DATABASE",
+        "FRONTEND",
+        "SYSTEM_INIT",
+        "API",
+        "SECURITY",
+        "RATE_LIMIT",
+    }
+)
 
-_FRONTEND_ALLOWED_TYPES = frozenset({
-    "runtime", "promise", "resource", "fetch", "fetch_slow",
-    "ajax", "api", "api_slow", "concurrency", "longtask", "layout", "theme",
-})
+_FRONTEND_ALLOWED_TYPES = frozenset(
+    {
+        "runtime",
+        "promise",
+        "resource",
+        "fetch",
+        "fetch_slow",
+        "ajax",
+        "api",
+        "api_slow",
+        "concurrency",
+        "longtask",
+        "layout",
+        "theme",
+    }
+)
 
 # ── Helpers ──────────────────────────────────────────────────────
+
 
 def _ensure_utf8_stream(stream):
     if hasattr(stream, "reconfigure"):
@@ -154,8 +212,11 @@ def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
             continue
         if isinstance(value, list):
             clean[key] = [
-                _sanitize_dict(v) if isinstance(v, dict)
-                else (None if type(v).__name__ == "Undefined" else v)
+                (
+                    _sanitize_dict(v)
+                    if isinstance(v, dict)
+                    else (None if type(v).__name__ == "Undefined" else v)
+                )
                 for v in value
             ]
             continue
@@ -175,10 +236,11 @@ def _get_request_context() -> dict[str, Any]:
     if has_request_context() and request:
         ctx["url"] = request.url[:_MAX_URL_LEN]
         ctx["method"] = request.method
-        ctx["ua"] = (request.headers.get("User-Agent", "")[:_MAX_UA_LEN])
-        ctx["ip"] = (request.headers.get("X-Forwarded-For", request.remote_addr) or "")
+        ctx["ua"] = request.headers.get("User-Agent", "")[:_MAX_UA_LEN]
+        ctx["ip"] = request.headers.get("X-Forwarded-For", request.remote_addr) or ""
         try:
             from flask_login import current_user
+
             if getattr(current_user, "is_authenticated", False):
                 ctx["user_id"] = int(current_user.get_id())
                 ctx["tenant_id"] = getattr(current_user, "tenant_id", None)
@@ -187,7 +249,9 @@ def _get_request_context() -> dict[str, Any]:
     return ctx
 
 
-def _make_fingerprint(category: str, exc_type: str, source: str, endpoint: str, message: str = "") -> str:
+def _make_fingerprint(
+    category: str, exc_type: str, source: str, endpoint: str, message: str = ""
+) -> str:
     message_key = " ".join((message or "").split())[:160]
     raw = f"{category}::{exc_type}::{source}::{endpoint}::{message_key}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
@@ -195,14 +259,18 @@ def _make_fingerprint(category: str, exc_type: str, source: str, endpoint: str, 
 
 # ── Formatters & Filters ─────────────────────────────────────────
 
+
 class _RequestIdFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = getattr(g, "request_id", "-") if has_request_context() else "-"
+        record.request_id = (
+            getattr(g, "request_id", "-") if has_request_context() else "-"
+        )
         return True
 
 
 class _SafeLogRecordFilter(logging.Filter):
     DEFAULTS = {"user": "-", "ip": "-", "tenant": "-", "request_id": "-"}
+
     def filter(self, record):
         for field, default in self.DEFAULTS.items():
             if not hasattr(record, field):
@@ -218,6 +286,7 @@ class _ColorFormatter(logging.Formatter):
         "ERROR": Fore.RED + Style.BRIGHT,
         "CRITICAL": Fore.MAGENTA + Style.BRIGHT,
     }
+
     def format(self, record: logging.LogRecord) -> str:
         use_colors = os.environ.get("FLASK_ENV", "development") == "development"
         color = self.COLORS.get(record.levelname, "") if use_colors else ""
@@ -229,7 +298,9 @@ class _ColorFormatter(logging.Formatter):
             msg += "\n" + self.formatException(record.exc_info)
         try:
             encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
-            msg = msg.encode(encoding, errors="replace").decode(encoding, errors="replace")
+            msg = msg.encode(encoding, errors="replace").decode(
+                encoding, errors="replace"
+            )
         except Exception:
             msg = msg.encode("ascii", errors="replace").decode("ascii")
         return msg
@@ -240,9 +311,12 @@ class _JsonFormatter(logging.Formatter):
 
     Activated via LOG_FORMAT=json in app config.
     """
+
     def format(self, record: logging.LogRecord) -> str:
         entry = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(
+                record.created, tz=timezone.utc
+            ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "module": record.module,
@@ -264,6 +338,7 @@ class _JsonFormatter(logging.Formatter):
 # ── Rate monitor — shared mutable state ─────────────────────────
 class _RateMonitor:
     """Thread-safe counter buckets for error-rate monitoring."""
+
     def __init__(self) -> None:
         self._lock = __import__("threading").Lock()
         self._buckets: dict[str, list[tuple[float, int]]] = {}
@@ -287,13 +362,19 @@ class _RateMonitor:
         while bucket and bucket[0][0] < cutoff:
             bucket.pop(0)
 
-    def spike(self, category: str, threshold: int = _ERROR_RATE_ALERT_THRESHOLD, window: int = 300) -> bool:
+    def spike(
+        self,
+        category: str,
+        threshold: int = _ERROR_RATE_ALERT_THRESHOLD,
+        window: int = 300,
+    ) -> bool:
         return self.count(category, window) >= threshold
 
 
 # ══════════════════════════════════════════════════════════════════
 #  LoggingCore — the unified service
 # ══════════════════════════════════════════════════════════════════
+
 
 class LoggingCore:
     """Single entry point for all logging, monitoring and audit operations."""
@@ -340,7 +421,9 @@ class LoggingCore:
         app.logger.info("=" * 60)
         app.logger.info("[OK] Warnings capture active")
         if cls._alert_callbacks:
-            app.logger.info("[OK] %d alert callback(s) registered", len(cls._alert_callbacks))
+            app.logger.info(
+                "[OK] %d alert callback(s) registered", len(cls._alert_callbacks)
+            )
         app.logger.info("=" * 60)
 
     @classmethod
@@ -383,7 +466,7 @@ class LoggingCore:
     @classmethod
     def _setup_file_handlers(cls, app) -> None:
         """Rotating file handlers for app, errors, security logs."""
-        level = app.config.get("LOG_LEVEL", "INFO").upper()
+        app.config.get("LOG_LEVEL", "INFO").upper()
         max_bytes = app.config.get("LOG_MAX_BYTES", 10 * 1024 * 1024)
         backup_count = app.config.get("LOG_BACKUP_COUNT", 5)
 
@@ -401,7 +484,7 @@ class LoggingCore:
                 "file": os.path.join(_LOGS_DIR, "errors.log"),
                 "level": logging.ERROR,
                 "fmt": "[%(asctime)s] %(levelname)s in %(module)s:%(lineno)d\n"
-                       "Message: %(message)s\nPath: %(pathname)s\n%(exc_info)s\n",
+                "Message: %(message)s\nPath: %(pathname)s\n%(exc_info)s\n",
                 "max_bytes": max_bytes,
                 "backup": backup_count,
             },
@@ -410,7 +493,7 @@ class LoggingCore:
                 "file": os.path.join(_LOGS_DIR, "security.log"),
                 "level": logging.WARNING,
                 "fmt": "[%(asctime)s] SECURITY - %(levelname)s\n"
-                       "User: %(user)s | IP: %(ip)s\nMessage: %(message)s",
+                "User: %(user)s | IP: %(ip)s\nMessage: %(message)s",
                 "max_bytes": 5 * 1024 * 1024,
                 "backup": 10,
             },
@@ -434,7 +517,9 @@ class LoggingCore:
                 encoding="utf-8",
             )
             handler.setLevel(cfg["level"])
-            handler.setFormatter(logging.Formatter(cfg["fmt"], datefmt="%Y-%m-%d %H:%M:%S"))
+            handler.setFormatter(
+                logging.Formatter(cfg["fmt"], datefmt="%Y-%m-%d %H:%M:%S")
+            )
             handler.addFilter(safe_filter)
             app.logger.addHandler(handler)
             cls._handlers[cfg["name"]] = handler
@@ -463,12 +548,18 @@ class LoggingCore:
                 if elapsed > 1.0:
                     current_app.logger.warning(
                         "SLOW REQUEST: %s %s -> %d (%.0fms)",
-                        request.method, request.path, response.status_code, elapsed * 1000,
+                        request.method,
+                        request.path,
+                        response.status_code,
+                        elapsed * 1000,
                     )
                 elif elapsed > 0.5:
                     current_app.logger.info(
                         "REQUEST: %s %s -> %d (%.0fms)",
-                        request.method, request.path, response.status_code, elapsed * 1000,
+                        request.method,
+                        request.path,
+                        response.status_code,
+                        elapsed * 1000,
                     )
             return response
 
@@ -482,16 +573,23 @@ class LoggingCore:
         from sqlalchemy.engine import Engine
 
         @event.listens_for(Engine, "before_cursor_execute")
-        def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        def _before_cursor_execute(
+            conn, cursor, statement, parameters, context, executemany
+        ):
             conn.info.setdefault("query_start_time", []).append(time.time())
 
         @event.listens_for(Engine, "after_cursor_execute")
-        def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        def _after_cursor_execute(
+            conn, cursor, statement, parameters, context, executemany
+        ):
             total = time.time() - conn.info["query_start_time"].pop()
             if total > _SLOW_QUERY_THRESHOLD_S:
                 logger.warning("Slow query (%.3fs): %s", total, statement[:200])
 
-        app.logger.info("[OK] Slow query listener registered (threshold=%.1fms)", _SLOW_QUERY_THRESHOLD_S * 1000)
+        app.logger.info(
+            "[OK] Slow query listener registered (threshold=%.1fms)",
+            _SLOW_QUERY_THRESHOLD_S * 1000,
+        )
 
     @classmethod
     def _register_teardown(cls, app):
@@ -516,6 +614,7 @@ class LoggingCore:
         original_showwarning = None
         try:
             import warnings as _builtin_warnings
+
             original_showwarning = _builtin_warnings.showwarning
 
             def _log_warning(message, category, filename, lineno, file=None, line=None):
@@ -528,7 +627,9 @@ class LoggingCore:
                         pass
                 logger.warning(msg)
                 if original_showwarning:
-                    original_showwarning(message, category, filename, lineno, file, line)
+                    original_showwarning(
+                        message, category, filename, lineno, file, line
+                    )
 
             _builtin_warnings.showwarning = _log_warning
             app.logger.info("[OK] Python warnings captured via logging")
@@ -613,7 +714,9 @@ class LoggingCore:
         """
         if not has_request_context():
             return
-        trace_id = request.headers.get("X-Trace-Id") or request.headers.get("X-Request-Id")
+        trace_id = request.headers.get("X-Trace-Id") or request.headers.get(
+            "X-Request-Id"
+        )
         if trace_id:
             g.request_id = trace_id
             g.trace_id = trace_id
@@ -637,7 +740,11 @@ class LoggingCore:
         exc_type = type(exception).__name__ if exception else None
         trace = None
         if exception:
-            trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+            trace = "".join(
+                traceback.format_exception(
+                    type(exception), exception, exception.__traceback__
+                )
+            )
 
         row_id = cls._persist_error(
             message=message,
@@ -649,7 +756,13 @@ class LoggingCore:
             extra=extra,
         )
         try:
-            logger.error("[ErrorAuditLog %s] %s | source=%s | id=%s", category, message[:200], source, row_id)
+            logger.error(
+                "[ErrorAuditLog %s] %s | source=%s | id=%s",
+                category,
+                message[:200],
+                source,
+                row_id,
+            )
         except Exception:
             pass
         return row_id
@@ -747,7 +860,9 @@ class LoggingCore:
         fp_message = message
         if category == "FRONTEND" and isinstance(request_data, dict):
             fp_message = str(request_data.get("fingerprint_key") or message)
-        fingerprint = _make_fingerprint(category, exc_type or "", source, endpoint_path, fp_message)
+        fingerprint = _make_fingerprint(
+            category, exc_type or "", source, endpoint_path, fp_message
+        )
 
         cls._rate_monitor.record(category)
 
@@ -761,6 +876,7 @@ class LoggingCore:
 
         # Fresh INSERT
         from sqlalchemy import text
+
         sql = text("""
             INSERT INTO error_audit_logs (
                 fingerprint, occurrence_count, first_seen_at, last_seen_at,
@@ -794,7 +910,11 @@ class LoggingCore:
             "app_version": (app_version or "")[:30],
             "user_id": _user_id,
             "tenant_id": _tenant_id,
-            "request_data": json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None,
+            "request_data": (
+                json.dumps(request_data, ensure_ascii=False, default=str)
+                if request_data
+                else None
+            ),
             "now": datetime.now(timezone.utc),
         }
 
@@ -811,7 +931,9 @@ class LoggingCore:
 
                     # Check for rate spike after successful insert
                     if cls._rate_monitor.spike(category):
-                        cls._fire_alert_callbacks(category, level, message, cls._rate_monitor.count(category))
+                        cls._fire_alert_callbacks(
+                            category, level, message, cls._rate_monitor.count(category)
+                        )
 
                     return row[0] if row else None
             except Exception as engine_exc:
@@ -822,30 +944,40 @@ class LoggingCore:
                 time.sleep(delay)
                 delay *= 2
 
-        cls._fallback_write(f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | engine_error={last_exc}")
+        cls._fallback_write(
+            f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | engine_error={last_exc}"
+        )
         return None
 
     @classmethod
     def _find_duplicate(cls, fingerprint: str) -> int | None:
         from extensions import db
         from sqlalchemy import text
+
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
+            cutoff = datetime.now(timezone.utc) - timedelta(
+                minutes=_DEDUP_WINDOW_MINUTES
+            )
             sql = text("""
                 SELECT id FROM error_audit_logs
                 WHERE fingerprint = :fp AND is_resolved = false AND last_seen_at > :cutoff
                 ORDER BY last_seen_at DESC LIMIT 1
             """)
             with db.engine.connect() as conn:
-                row = conn.execute(sql, {"fp": fingerprint, "cutoff": cutoff}).fetchone()
+                row = conn.execute(
+                    sql, {"fp": fingerprint, "cutoff": cutoff}
+                ).fetchone()
                 return row[0] if row else None
         except Exception:
             return None
 
     @classmethod
-    def _bump_duplicate(cls, log_id: int, new_message: str, new_trace: str | None) -> int | None:
+    def _bump_duplicate(
+        cls, log_id: int, new_message: str, new_trace: str | None
+    ) -> int | None:
         from extensions import db
         from sqlalchemy import text
+
         try:
             sql = text("""
                 UPDATE error_audit_logs
@@ -857,12 +989,17 @@ class LoggingCore:
                 RETURNING occurrence_count
             """)
             with db.engine.connect() as conn:
-                result = conn.execute(sql, {
-                    "now": datetime.now(timezone.utc),
-                    "message": (new_message or "")[:_MAX_MESSAGE_LEN],
-                    "stack_trace": (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None,
-                    "log_id": log_id,
-                })
+                result = conn.execute(
+                    sql,
+                    {
+                        "now": datetime.now(timezone.utc),
+                        "message": (new_message or "")[:_MAX_MESSAGE_LEN],
+                        "stack_trace": (
+                            (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None
+                        ),
+                        "log_id": log_id,
+                    },
+                )
                 conn.commit()
                 row = result.fetchone()
                 return row[0] if row else None
@@ -904,8 +1041,20 @@ class LoggingCore:
         query = query.order_by(ErrorAuditLog.created_at.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
-        categories = [r[0] for r in db.session.query(ErrorAuditLog.category).distinct().order_by(ErrorAuditLog.category).all()]
-        levels = [r[0] for r in db.session.query(ErrorAuditLog.level).distinct().order_by(ErrorAuditLog.level).all()]
+        categories = [
+            r[0]
+            for r in db.session.query(ErrorAuditLog.category)
+            .distinct()
+            .order_by(ErrorAuditLog.category)
+            .all()
+        ]
+        levels = [
+            r[0]
+            for r in db.session.query(ErrorAuditLog.level)
+            .distinct()
+            .order_by(ErrorAuditLog.level)
+            .all()
+        ]
         stats = {
             "total": ErrorAuditLog.query.count(),
             "unresolved": ErrorAuditLog.query.filter_by(is_resolved=False).count(),
@@ -938,7 +1087,11 @@ class LoggingCore:
 
         if fmt == "json":
             data = [log.to_dict() for log in logs]
-            return json.dumps(data, ensure_ascii=False, indent=2, default=str), "application/json", "error_audit_logs.json"
+            return (
+                json.dumps(data, ensure_ascii=False, indent=2, default=str),
+                "application/json",
+                "error_audit_logs.json",
+            )
 
         buf = StringIO()
         buf.write("=" * 80 + "\nError Audit Logs Export\n")
@@ -946,18 +1099,25 @@ class LoggingCore:
         buf.write(f"Count: {len(logs)}\n" + "=" * 80 + "\n\n")
         for log in logs:
             buf.write(f"ID: {log.id} | Level: {log.level} | Category: {log.category}\n")
-            buf.write(f"Source: {log.source} | Time: {log.created_at.isoformat() if log.created_at else '-'}\n")
+            buf.write(
+                f"Source: {log.source} | Time: {log.created_at.isoformat() if log.created_at else '-'}\n"
+            )
             buf.write(f"Message: {log.message}\n")
             if log.stack_trace:
                 buf.write(f"Stack: {log.stack_trace[:500]}\n")
             buf.write("-" * 80 + "\n\n")
-        return buf.getvalue().encode("utf-8"), "text/plain; charset=utf-8", "error_audit_logs.txt"
+        return (
+            buf.getvalue().encode("utf-8"),
+            "text/plain; charset=utf-8",
+            "error_audit_logs.txt",
+        )
 
     @classmethod
     def mark_error_resolved(cls, log_id: int, user_id: int, note: str = "") -> bool:
         from models.error_audit_log import ErrorAuditLog
+
         try:
-            with atomic_transaction('mark_error_resolved'):
+            with atomic_transaction("mark_error_resolved"):
                 log = ErrorAuditLog.query.filter_by(id=log_id).first()
                 if log:
                     log.is_resolved = True
@@ -1005,7 +1165,9 @@ class LoggingCore:
             db.session.add(entry)
             db.session.flush()
         except Exception as e:
-            cls._fallback_write(f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}")
+            cls._fallback_write(
+                f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}"
+            )
 
     # ──────────────────────────────────────────────────────────────
     #  AUDIT QUERIES
@@ -1023,7 +1185,6 @@ class LoggingCore:
         from models.audit import AuditLog
         from models.user import User
         from extensions import db
-        from datetime import date
 
         query = AuditLog.query
         if tenant_id:
@@ -1042,7 +1203,9 @@ class LoggingCore:
             base = base.filter_by(tenant_id=tenant_id)
         stats = {
             "total": base.count(),
-            "today": base.filter(db.func.date(AuditLog.created_at) == db.func.current_date()).count(),
+            "today": base.filter(
+                db.func.date(AuditLog.created_at) == db.func.current_date()
+            ).count(),
             "creates": base.filter_by(action="create").count(),
             "updates": base.filter_by(action="update").count(),
             "deletes": base.filter_by(action="delete").count(),
@@ -1094,7 +1257,7 @@ class LoggingCore:
                 username=str(user),
             )
             db.session.add(alert)
-            with atomic_transaction('log_security'):
+            with atomic_transaction("log_security"):
                 db.session.flush()
         except Exception:
             pass
@@ -1124,6 +1287,7 @@ class LoggingCore:
     def _check_db(cls) -> dict:
         from extensions import db
         from sqlalchemy import text
+
         try:
             db.session.execute(text("SELECT 1"))
             return {"status": "connected", "healthy": True}
@@ -1134,6 +1298,7 @@ class LoggingCore:
     def _check_disk(cls) -> dict:
         try:
             import shutil
+
             total, used, free = shutil.disk_usage(os.path.abspath(os.sep))
             percent = (used / total) * 100
             return {
@@ -1150,6 +1315,7 @@ class LoggingCore:
     def _check_memory(cls) -> dict:
         try:
             import psutil
+
             mem = psutil.virtual_memory()
             return {
                 "total_mb": round(mem.total / (1024**2), 2),
@@ -1164,6 +1330,7 @@ class LoggingCore:
     def _check_cpu(cls) -> dict:
         try:
             import psutil
+
             cpu = psutil.cpu_percent(interval=0.5)
             return {"percent": cpu, "cores": psutil.cpu_count(), "healthy": cpu < 80}
         except ImportError:
@@ -1179,6 +1346,7 @@ class LoggingCore:
         Replaces utils/monitoring.py → PerformanceMonitor.monitor_endpoint()
         and utils/performance_tracker.py → track_performance()
         """
+
         @wraps(f)
         def wrapper(*args, **kwargs):
             start = time.time()
@@ -1187,10 +1355,11 @@ class LoggingCore:
                 duration = (time.time() - start) * 1000
                 cls._log_perf(f.__name__, duration)
                 return result
-            except Exception as e:
+            except Exception:
                 duration = (time.time() - start) * 1000
                 cls._log_perf(f"{f.__name__} (ERROR)", duration)
                 raise
+
         return wrapper
 
     @classmethod
@@ -1208,7 +1377,7 @@ class LoggingCore:
         and utils/monitoring.py → DatabaseMonitor.log_query()
         """
         if duration > _SLOW_QUERY_THRESHOLD_S:
-            logger.warning(f"SLOW QUERY ({duration*1000:.1f}ms): {query_str[:200]}")
+            logger.warning(f"SLOW QUERY ({duration * 1000:.1f}ms): {query_str[:200]}")
 
     @classmethod
     def get_performance_metrics(cls) -> dict:
@@ -1236,6 +1405,7 @@ class LoggingCore:
         Replaces services/monitoring_service.py → get_application_metrics()
         """
         from models import Sale, Customer, Product
+
         try:
             return {
                 "total_sales": Sale.query.count(),
@@ -1258,6 +1428,7 @@ class LoggingCore:
         try:
             from extensions import db
             from sqlalchemy import text
+
             db.session.execute(text("SELECT 1"))
             return {"status": "connected", "healthy": True}
         except Exception as e:
@@ -1267,6 +1438,7 @@ class LoggingCore:
     def get_disk_usage(cls) -> dict:
         try:
             import psutil
+
             disk = psutil.disk_usage("/")
             return {
                 "total_gb": round(disk.total / (1024**3), 2),
@@ -1282,6 +1454,7 @@ class LoggingCore:
     def get_memory_usage(cls) -> dict:
         try:
             import psutil
+
             memory = psutil.virtual_memory()
             return {
                 "total_mb": round(memory.total / (1024**2), 2),
@@ -1296,6 +1469,7 @@ class LoggingCore:
     def get_cpu_usage(cls) -> dict:
         try:
             import psutil
+
             cpu = psutil.cpu_percent(interval=1)
             return {
                 "percent": cpu,
@@ -1321,10 +1495,19 @@ class LoggingCore:
     # ──────────────────────────────────────────────────────────────
 
     _TABLE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
-    _STATS_BLOCKED_TABLES = frozenset({
-        "users", "roles", "permissions", "tenants", "alembic_version",
-        "payment_vault", "card_vault", "api_keys", "audit_logs",
-    })
+    _STATS_BLOCKED_TABLES = frozenset(
+        {
+            "users",
+            "roles",
+            "permissions",
+            "tenants",
+            "alembic_version",
+            "payment_vault",
+            "card_vault",
+            "api_keys",
+            "audit_logs",
+        }
+    )
 
     @classmethod
     def _is_sensitive_table(cls, table_name: str) -> bool:
@@ -1334,12 +1517,15 @@ class LoggingCore:
     def _resolve_table_name(cls, table_name: str) -> str | None:
         from extensions import db
         from sqlalchemy import inspect
+
         if not table_name:
             return None
         normalized = table_name.strip().lower()
         if not cls._TABLE_NAME_RE.match(normalized):
             return None
-        table_names = {name.lower(): name for name in inspect(db.engine).get_table_names()}
+        table_names = {
+            name.lower(): name for name in inspect(db.engine).get_table_names()
+        }
         return table_names.get(normalized)
 
     @classmethod
@@ -1350,12 +1536,15 @@ class LoggingCore:
         """
         from extensions import db
         from sqlalchemy import text
+
         db_stats: dict[str, int] = {}
         restricted_count = 0
 
         try:
             result = db.session.execute(
-                text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+                text(
+                    "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"
+                )
             )
             for row in result.fetchall():
                 safe_table = cls._resolve_table_name(row[0])
@@ -1364,31 +1553,44 @@ class LoggingCore:
                 if cls._is_sensitive_table(safe_table):
                     restricted_count += 1
                     continue
-                count: int = db.session.execute(
-                    text(f'SELECT COUNT(*) FROM "{safe_table}"')
-                ).scalar() or 0
+                count: int = (
+                    db.session.execute(
+                        text(f'SELECT COUNT(*) FROM "{safe_table}"')
+                    ).scalar()
+                    or 0
+                )
                 db_stats[safe_table] = count
         except Exception:
             pass
 
-        cls.log_audit("view_system_stats", "database", 0, {
-            "visible_tables": len(db_stats),
-            "restricted_tables": restricted_count,
-        })
+        cls.log_audit(
+            "view_system_stats",
+            "database",
+            0,
+            {
+                "visible_tables": len(db_stats),
+                "restricted_tables": restricted_count,
+            },
+        )
 
         return db_stats, restricted_count
 
     @classmethod
-    def get_activity_context(cls, tenant_id: int | None, branch_id: int | None = None) -> dict:
+    def get_activity_context(
+        cls, tenant_id: int | None, branch_id: int | None = None
+    ) -> dict:
         """Return recent activity for the owner dashboard.
 
         Replaces services/monitoring_service.py → get_activity_monitor_context()
         """
         from models import AuditLog, Sale, User
 
-        recent_audits = AuditLog.query.filter_by(tenant_id=tenant_id).order_by(
-            AuditLog.created_at.desc()
-        ).limit(100).all()
+        recent_audits = (
+            AuditLog.query.filter_by(tenant_id=tenant_id)
+            .order_by(AuditLog.created_at.desc())
+            .limit(100)
+            .all()
+        )
 
         active_users = User.query.filter(
             User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
@@ -1424,7 +1626,9 @@ class LoggingCore:
 
         Replaces services/monitoring_service.py → get_performance_metrics_data()
         """
-        basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
+        basedir = os.path.abspath(
+            os.path.join(os.path.dirname(str(__file__)), os.pardir)
+        )
         perf_file = os.path.join(basedir, "logs", "performance.log")
         slow_queries: list[str] = []
 
@@ -1440,13 +1644,17 @@ class LoggingCore:
         }
 
     @classmethod
-    def log_performance_metric(cls, metric_name: str, value: float, tags: dict | None = None) -> None:
+    def log_performance_metric(
+        cls, metric_name: str, value: float, tags: dict | None = None
+    ) -> None:
         """Write a metric to performance.log.
 
         Replaces services/monitoring_service.py → log_performance_metric()
         """
         try:
-            basedir = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
+            basedir = os.path.abspath(
+                os.path.join(os.path.dirname(str(__file__)), os.pardir)
+            )
             logs_dir = os.path.join(basedir, "logs")
             perf_file = os.path.join(logs_dir, "performance.log")
             os.makedirs(logs_dir, exist_ok=True)
@@ -1494,13 +1702,16 @@ class LoggingCore:
             else:
                 user.login_attempts = (user.login_attempts or 0) + 1
                 if user.login_attempts >= 5:
-                    user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
-            with atomic_transaction('track_login_attempt'):
+                    user.locked_until = datetime.now(timezone.utc) + timedelta(
+                        minutes=15
+                    )
+            with atomic_transaction("track_login_attempt"):
                 db.session.flush()
 
-
     @classmethod
-    def get_security_events(cls, user_id: int | None = None, days: int = 30, tenant_id=None) -> list:
+    def get_security_events(
+        cls, user_id: int | None = None, days: int = 30, tenant_id=None
+    ) -> list:
         """Return recent security-related audit events.
 
         Replaces utils/advanced_audit.py → get_security_events()
@@ -1541,17 +1752,21 @@ class LoggingCore:
         """
         from extensions import db
         from sqlalchemy import text
+
         results: dict[str, Any] = {}
 
         try:
             import shutil
+
             _total, _used, _free = shutil.disk_usage(os.path.abspath(os.sep))
             used_pct = (_used / _total) * 100
             results["disk_used_pct"] = round(used_pct, 1)
             if used_pct > _DISK_WARN_PERCENT:
                 logger.warning(
                     "[CLEANUP] Disk at %.1f%% — above %.0f%% threshold. Free: %.1f GB",
-                    used_pct, _DISK_WARN_PERCENT, _free / (1024**3),
+                    used_pct,
+                    _DISK_WARN_PERCENT,
+                    _free / (1024**3),
                 )
                 results["disk_warning"] = True
         except Exception as e:
@@ -1573,9 +1788,7 @@ class LoggingCore:
             "error_audit_logs": (
                 "DELETE FROM error_audit_logs WHERE is_resolved = true AND last_seen_at < :cutoff"
             ),
-            "audit_logs": (
-                "DELETE FROM audit_logs WHERE created_at < :cutoff"
-            ),
+            "audit_logs": ("DELETE FROM audit_logs WHERE created_at < :cutoff"),
         }
 
         retain_map = {
@@ -1620,4 +1833,6 @@ class LoggingCore:
 
         thread = threading.Thread(target=_cleanup_worker, daemon=True)
         thread.start()
-        app.logger.info("[OK] Log auto-cleanup scheduled every %d hours", interval_hours)
+        app.logger.info(
+            "[OK] Log auto-cleanup scheduled every %d hours", interval_hours
+        )

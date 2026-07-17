@@ -6,12 +6,11 @@ from .purchase import PurchaseForm
 from .payment import ReceiptForm
 
 __all__ = [
-    'LoginForm',
-    'CustomerForm',
-    'ProductForm',
-    'ProductCategoryForm',
-    'SaleForm',
-    'PurchaseForm',
-    'ReceiptForm',
+    "LoginForm",
+    "CustomerForm",
+    "ProductForm",
+    "ProductCategoryForm",
+    "SaleForm",
+    "PurchaseForm",
+    "ReceiptForm",
 ]
-

@@ -3,42 +3,43 @@
 """
 
 CUSTOMS_CLEARANCE = {
-    'general_info': {
-        'authority': 'الهيئة الاتحادية للجمارك',
-        'rates': 'عادة 5% من قيمة البضاعة',
-        'free_zones': [
-            'جبل علي',
-            'دبي للطيران',
-            'الحمرية',
-            'عجمان',
-            'الشارقة',
-            'رأس الخيمة'
-        ]
+    "general_info": {
+        "authority": "الهيئة الاتحادية للجمارك",
+        "rates": "عادة 5% من قيمة البضاعة",
+        "free_zones": [
+            "جبل علي",
+            "دبي للطيران",
+            "الحمرية",
+            "عجمان",
+            "الشارقة",
+            "رأس الخيمة",
+        ],
     },
-    'documents_required': [
-        'الفاتورة التجارية (Commercial Invoice)',
-        'بوليصة الشحن (Bill of Lading)',
-        'قائمة التعبئة (Packing List)',
-        'شهادة المنشأ (Certificate of Origin)',
-        'التصريح الجمركي (Customs Declaration)',
-        'رخصة الاستيراد (إن لزم)',
-        'شهادة المطابقة (للبضائع المقننة)'
+    "documents_required": [
+        "الفاتورة التجارية (Commercial Invoice)",
+        "بوليصة الشحن (Bill of Lading)",
+        "قائمة التعبئة (Packing List)",
+        "شهادة المنشأ (Certificate of Origin)",
+        "التصريح الجمركي (Customs Declaration)",
+        "رخصة الاستيراد (إن لزم)",
+        "شهادة المطابقة (للبضائع المقننة)",
     ],
-    'procedures': [
-        '1. تسجيل البيان الجمركي إلكترونياً',
-        '2. دفع الرسوم الجمركية (5%) + ضريبة القيمة المضافة (5%)',
-        '3. الفحص (إن لزم)',
-        '4. الإفراج عن البضاعة',
-        '5. النقل للمستودع'
+    "procedures": [
+        "1. تسجيل البيان الجمركي إلكترونياً",
+        "2. دفع الرسوم الجمركية (5%) + ضريبة القيمة المضافة (5%)",
+        "3. الفحص (إن لزم)",
+        "4. الإفراج عن البضاعة",
+        "5. النقل للمستودع",
     ],
-    'calculation_example': {
-        'goods_value': 100000,  # AED
-        'customs_duty': '5% = 5,000 AED',
-        'total_with_duty': '105,000 AED',
-        'vat': '5% of 105,000 = 5,250 AED',
-        'total_cost': '110,250 AED'
-    }
+    "calculation_example": {
+        "goods_value": 100000,  # AED
+        "customs_duty": "5% = 5,000 AED",
+        "total_with_duty": "105,000 AED",
+        "vat": "5% of 105,000 = 5,250 AED",
+        "total_cost": "110,250 AED",
+    },
 }
+
 
 def get_customs_advice(_question):
     """نصائح جمركية"""

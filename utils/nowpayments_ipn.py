@@ -1,10 +1,12 @@
 """NOWPayments IPN URL and secret helpers."""
+
 from __future__ import annotations
 
 
 def get_nowpayments_ipn_url() -> str:
     """Canonical IPN callback URL for per-payment NOWPayments requests."""
     from services.payments.nowpayments_provider import NowPaymentsProvider
+
     return NowPaymentsProvider().build_webhook_url()
 
 
@@ -28,4 +30,5 @@ def resolve_nowpayments_ipn_secret(vault=None) -> str:
     except Exception:
         pass
     from services.payments.nowpayments_provider import NowPaymentsProvider
+
     return (NowPaymentsProvider().ipn_secret or "").strip()

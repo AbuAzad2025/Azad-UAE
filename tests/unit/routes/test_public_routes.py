@@ -2,12 +2,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tests.unit.routes.conftest import app_factory
-
 
 @pytest.fixture
 def public_client(app_factory):
     from routes.public import public_bp
+
     app = app_factory(public_bp)
     return app.test_client()
 
@@ -50,16 +49,22 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="")
-
+        render.assert_called_once_with(
+            "public/pricing.html", packages=[], is_en=False, developer_whatsapp_link=""
+        )
 
     def test_pricing_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch("routes.public.render_template", return_value="pricing-en") as render:
+        with patch(
+            "routes.public.render_template", return_value="pricing-en"
+        ) as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing.html", packages=[], is_en=True, developer_whatsapp_link="")
+        render.assert_called_once_with(
+            "public/pricing.html", packages=[], is_en=True, developer_whatsapp_link=""
+        )
+
 
 class TestPublicFeatures:
     def test_features_arabic_default(self, public_client):
@@ -71,7 +76,9 @@ class TestPublicFeatures:
     def test_features_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch("routes.public.render_template", return_value="features-en") as render:
+        with patch(
+            "routes.public.render_template", return_value="features-en"
+        ) as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
         render.assert_called_once_with("public/features_en.html")
@@ -103,7 +110,9 @@ class TestPublicContact:
     def test_contact_english_session(self, public_client):
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with patch("routes.public.render_template", return_value="contact-en") as render:
+        with patch(
+            "routes.public.render_template", return_value="contact-en"
+        ) as render:
             resp = public_client.get("/contact")
         assert resp.status_code == 200
         render.assert_called_once_with("public/contact_en.html")
@@ -112,7 +121,10 @@ class TestPublicContact:
 class TestPublicDonate:
     def test_donate_renders_when_enabled(self, public_client):
         vault = _mock_vault()
-        with _vault_patch(vault), patch("routes.public.render_template", return_value="donate") as render:
+        with (
+            _vault_patch(vault),
+            patch("routes.public.render_template", return_value="donate") as render,
+        ):
             resp = public_client.get("/donate")
         assert resp.status_code == 200
         render.assert_called_once()
@@ -121,7 +133,10 @@ class TestPublicDonate:
 
     def test_support_azad_alias(self, public_client):
         vault = _mock_vault()
-        with _vault_patch(vault), patch("routes.public.render_template", return_value="donate"):
+        with (
+            _vault_patch(vault),
+            patch("routes.public.render_template", return_value="donate"),
+        ):
             resp = public_client.get("/support-azad")
         assert resp.status_code == 200
 
@@ -129,7 +144,10 @@ class TestPublicDonate:
         vault = _mock_vault()
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with _vault_patch(vault), patch("routes.public.render_template", return_value="donate") as render:
+        with (
+            _vault_patch(vault),
+            patch("routes.public.render_template", return_value="donate") as render,
+        ):
             resp = public_client.get("/donate")
         assert resp.status_code == 200
         assert render.call_args[1]["is_en"] is True
@@ -158,9 +176,12 @@ class TestPublicDonateSubmit:
         vault = _mock_vault()
         with public_client.session_transaction() as sess:
             sess["language"] = lang
-        with _vault_patch(vault), patch("extensions.db.session") as mock_session, \
-             patch("routes.public.render_template", return_value="thanks") as render, \
-             patch("routes.public.redirect") as mock_redirect:
+        with (
+            _vault_patch(vault),
+            patch("extensions.db.session") as mock_session,
+            patch("routes.public.render_template", return_value="thanks") as render,
+            patch("routes.public.redirect") as mock_redirect,
+        ):
             mock_redirect.side_effect = lambda *a, **k: ("redirect", 302)
             resp = public_client.post("/donate/submit", data=data)
         return resp, render, mock_session, mock_redirect, vault
@@ -194,8 +215,13 @@ class TestPublicDonateSubmit:
         vault = _mock_vault(min_amt=10)
         with public_client.session_transaction() as sess:
             sess["language"] = "ar"
-        with _vault_patch(vault), patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
         assert resp.status_code == 302
         flash.assert_called_once()
@@ -205,8 +231,13 @@ class TestPublicDonateSubmit:
         vault = _mock_vault(min_amt=10)
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with _vault_patch(vault), patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
         assert resp.status_code == 302
         flash.assert_called_once()
@@ -216,8 +247,13 @@ class TestPublicDonateSubmit:
         vault = _mock_vault(max_amt=100)
         with public_client.session_transaction() as sess:
             sess["language"] = "ar"
-        with _vault_patch(vault), patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})
         assert resp.status_code == 302
         assert "الحد الأقصى" in flash.call_args[0][0]
@@ -226,8 +262,13 @@ class TestPublicDonateSubmit:
         vault = _mock_vault(max_amt=100)
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with _vault_patch(vault), patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})
         assert resp.status_code == 302
         assert "exceeds maximum" in flash.call_args[0][0]
@@ -236,9 +277,14 @@ class TestPublicDonateSubmit:
         vault = _mock_vault()
         with public_client.session_transaction() as sess:
             sess["language"] = "ar"
-        with _vault_patch(vault), patch("extensions.db.session") as mock_session, \
-             patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("extensions.db.session") as mock_session,
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             mock_session.commit.side_effect = RuntimeError("db fail")
             resp = public_client.post("/donate/submit", data={"amount": "50"})
         assert resp.status_code == 302
@@ -249,9 +295,14 @@ class TestPublicDonateSubmit:
         vault = _mock_vault()
         with public_client.session_transaction() as sess:
             sess["language"] = "en"
-        with _vault_patch(vault), patch("extensions.db.session") as mock_session, \
-             patch("flask.flash") as flash, \
-             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)):
+        with (
+            _vault_patch(vault),
+            patch("extensions.db.session") as mock_session,
+            patch("flask.flash") as flash,
+            patch(
+                "routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)
+            ),
+        ):
             mock_session.commit.side_effect = RuntimeError("db fail")
             resp = public_client.post("/donate/submit", data={"amount": "50"})
         assert resp.status_code == 302
@@ -274,6 +325,7 @@ class TestPublicSitemap:
 class TestPublicSafeVault:
     def test_safe_vault_for_public_none(self):
         from routes.public import _safe_vault_for_public
+
         assert _safe_vault_for_public(None) is None
 
 
@@ -292,8 +344,10 @@ class TestPublicTenantSuspended:
     def test_tenant_suspend_page_renders(self, public_client):
         tenant = MagicMock()
         tenant.suspension_reason = "Payment overdue"
-        with patch("models.Tenant") as tenant_model, \
-             patch("routes.public.render_template", return_value="suspended") as render:
+        with (
+            patch("models.Tenant") as tenant_model,
+            patch("routes.public.render_template", return_value="suspended") as render,
+        ):
             tenant_model.query.get_or_404.return_value = tenant
             resp = public_client.get("/suspended/7")
         assert resp.status_code == 200
@@ -306,8 +360,10 @@ class TestPublicTenantSuspended:
     def test_tenant_suspend_default_reason(self, public_client):
         tenant = MagicMock()
         tenant.suspension_reason = None
-        with patch("models.Tenant") as tenant_model, \
-             patch("routes.public.render_template", return_value="suspended") as render:
+        with (
+            patch("models.Tenant") as tenant_model,
+            patch("routes.public.render_template", return_value="suspended") as render,
+        ):
             tenant_model.query.get_or_404.return_value = tenant
             resp = public_client.get("/suspended/3")
         assert resp.status_code == 200

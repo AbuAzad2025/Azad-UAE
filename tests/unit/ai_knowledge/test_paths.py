@@ -1,4 +1,5 @@
 """Tests for ai_knowledge path helpers."""
+
 from __future__ import annotations
 
 import os
@@ -17,17 +18,17 @@ class TestKnowledgePaths:
         assert os.path.isdir(AI_KNOWLEDGE_DIR)
 
     def test_get_training_path(self):
-        path = get_training_path('sample.json')
-        assert path.endswith(os.path.join('data', 'training', 'sample.json'))
+        path = get_training_path("sample.json")
+        assert path.endswith(os.path.join("data", "training", "sample.json"))
 
     def test_get_model_path(self):
-        path = get_model_path('model.bin')
-        assert 'data' in path and 'models' in path
+        path = get_model_path("model.bin")
+        assert "data" in path and "models" in path
 
     def test_get_expanded_path(self):
-        path = get_expanded_path('expanded.json')
-        assert 'expanded' in path
+        path = get_expanded_path("expanded.json")
+        assert "expanded" in path
 
     def test_get_knowledge_path_fallback(self):
-        path = get_knowledge_path('nonexistent-file-xyz.json')
+        path = get_knowledge_path("nonexistent-file-xyz.json")
         assert path.startswith(AI_KNOWLEDGE_DIR)

@@ -1,26 +1,48 @@
 """User management routes — list, create, edit, activate, delete."""
+
 from __future__ import annotations
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
 from models import Branch, Role, User
 from models.tenant import Tenant
 from services.logging_core import LoggingCore
-from utils.auth_helpers import enforce_company_user_tenant, role_level_for, role_level_for_user
+from utils.auth_helpers import (
+    enforce_company_user_tenant,
+    role_level_for,
+    role_level_for_user,
+)
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import ErrorMessages
-from utils.field_validators import FieldValidationError, normalize_phone_optional, normalize_user_email_required
+from utils.field_validators import (
+    FieldValidationError,
+    normalize_phone_optional,
+    normalize_user_email_required,
+)
 from utils.password_validator import PasswordValidator
 from utils.structured_logging import log_mutation
 from utils.tenant_limits import TenantLimitError, check_users_limit
 from utils.tenanting import assign_tenant_id, get_active_tenant_id, scoped_user_query
-from utils.username_policy import is_platform_reserved, tenant_username_prefix, validate_username_for_user
+from utils.username_policy import (
+    is_platform_reserved,
+    tenant_username_prefix,
+    validate_username_for_user,
+)
 
-users_bp = Blueprint('users', __name__, url_prefix='/users')
+users_bp = Blueprint("users", __name__, url_prefix="/users")
 
 
 def _available_branches():
@@ -35,7 +57,7 @@ def _available_branches():
 
 
 def _clean_branch_id(raw_value):
-    if raw_value in (None, '', 'None'):
+    if raw_value in (None, "", "None"):
         return None
     return int(raw_value)
 
@@ -43,20 +65,20 @@ def _clean_branch_id(raw_value):
 def _username_example():
     tid = get_active_tenant_id(current_user)
     tenant = db.session.get(Tenant, int(tid)) if tid else None
-    prefix = tenant_username_prefix(tenant) if tenant else 'CODE'
-    return f'{prefix}_ahmad'
+    prefix = tenant_username_prefix(tenant) if tenant else "CODE"
+    return f"{prefix}_ahmad"
 
 
 def _validate_user_branch(role_id, branch_id):
     role = db.session.get(Role, role_id) if role_id else None
     if not role:
-        raise ValueError('يرجى اختيار الدور الوظيفي.')
+        raise ValueError("يرجى اختيار الدور الوظيفي.")
 
     if role_requires_branch(role):
         if not branch_id:
-            raise ValueError('يجب ربط هذا المستخدم بفرع محدد.')
+            raise ValueError("يجب ربط هذا المستخدم بفرع محدد.")
         if not any(branch.id == branch_id for branch in _available_branches()):
-            raise ValueError('الفرع المحدد خارج نطاقك أو غير نشط.')
+            raise ValueError("الفرع المحدد خارج نطاقك أو غير نشط.")
     return role
 
 
@@ -64,14 +86,14 @@ def _ensure_user_in_scope(user):
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is None:
         return user
-    if getattr(user, 'branch_id', None) != scoped_branch_id:
+    if getattr(user, "branch_id", None) != scoped_branch_id:
         abort(403)
     return user
 
 
 def _create_form_context(roles, branches, form_values):
     return render_template(
-        'users/create.html',
+        "users/create.html",
         roles=roles,
         branches=branches,
         form_data=form_values,
@@ -79,13 +101,13 @@ def _create_form_context(roles, branches, form_values):
     )
 
 
-@users_bp.route('/')
+@users_bp.route("/")
 @login_required
-@permission_required('manage_users')
+@permission_required("manage_users")
 def index():
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    search = request.args.get('search', '', type=str)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    search = request.args.get("search", "", type=str)
 
     query = scoped_user_query(exclude_owners=True, active_only=True)
     scoped_branch_id = branch_scope_id_for(current_user)
@@ -93,7 +115,7 @@ def index():
         query = query.filter(User.branch_id == scoped_branch_id)
 
     if search:
-        search_filter = f'%{search}%'
+        search_filter = f"%{search}%"
         query = query.filter(
             db.or_(
                 User.username.ilike(search_filter),
@@ -109,107 +131,111 @@ def index():
     )
 
     return render_template(
-        'users/index.html',
+        "users/index.html",
         users=pagination.items,
         pagination=pagination,
     )
 
 
-@users_bp.route('/create', methods=['GET', 'POST'])
+@users_bp.route("/create", methods=["GET", "POST"])
 @login_required
-@permission_required('manage_users')
-@limiter.limit("10 per minute", methods=['POST'])
+@permission_required("manage_users")
+@limiter.limit("10 per minute", methods=["POST"])
 def create():
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
+    roles = [
+        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
+    ]
     branches = _available_branches()
-    default_form = {'is_active': '1'}
+    default_form = {"is_active": "1"}
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form_values = request.form.to_dict()
-        form_values['is_active'] = request.form.get('is_active', '1')
+        form_values["is_active"] = request.form.get("is_active", "1")
         try:
-            role_id = request.form.get('role_id', type=int)
+            role_id = request.form.get("role_id", type=int)
             if not role_id:
-                flash('يرجى اختيار الدور الوظيفي.', 'warning')
+                flash("يرجى اختيار الدور الوظيفي.", "warning")
                 return _create_form_context(roles, branches, form_values)
 
-            is_active = request.form.get('is_active', '1') == '1'
-            branch_id = _clean_branch_id(request.form.get('branch_id'))
+            is_active = request.form.get("is_active", "1") == "1"
+            branch_id = _clean_branch_id(request.form.get("branch_id"))
             role = _validate_user_branch(role_id, branch_id)
 
-            if role_level_for(getattr(role, 'slug', None)) > current_level:
-                flash('لا يمكنك تعيين دور أعلى من دورك.', 'danger')
+            if role_level_for(getattr(role, "slug", None)) > current_level:
+                flash("لا يمكنك تعيين دور أعلى من دورك.", "danger")
                 return _create_form_context(roles, branches, form_values)
 
-            username = (request.form.get('username') or '').strip()
+            username = (request.form.get("username") or "").strip()
             if is_platform_reserved(username):
-                flash('اسم المستخدم محجوز للمنصة (owner / azad).', 'danger')
+                flash("اسم المستخدم محجوز للمنصة (owner / azad).", "danger")
                 return _create_form_context(roles, branches, form_values)
 
             tid = get_active_tenant_id(current_user)
             tenant = db.session.get(Tenant, int(tid)) if tid else None
-            uname_err = validate_username_for_user(username, is_owner=False, tenant=tenant)
+            uname_err = validate_username_for_user(
+                username, is_owner=False, tenant=tenant
+            )
             if uname_err:
-                prefix = tenant_username_prefix(tenant) if tenant else 'CODE'
-                flash(f'{uname_err}\nمثال: {prefix}_ahmad', 'danger')
+                prefix = tenant_username_prefix(tenant) if tenant else "CODE"
+                flash(f"{uname_err}\nمثال: {prefix}_ahmad", "danger")
                 return _create_form_context(roles, branches, form_values)
 
             try:
                 check_users_limit()
             except TenantLimitError as e:
-                flash(str(e), 'warning')
+                flash(str(e), "warning")
                 return _create_form_context(roles, branches, form_values)
 
             conflict = User.query.filter(User.username.ilike(username)).first()
             if conflict:
-                flash('اسم المستخدم مستخدم مسبقاً على مستوى النظام.', 'danger')
+                flash("اسم المستخدم مستخدم مسبقاً على مستوى النظام.", "danger")
                 return _create_form_context(roles, branches, form_values)
 
             try:
-                email = normalize_user_email_required(request.form.get('email'))
+                email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
-                flash(str(exc), 'danger')
+                flash(str(exc), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             user = User(
                 username=username,
                 email=email,
-                full_name=request.form.get('full_name'),
-                full_name_ar=request.form.get('full_name_ar'),
-                phone=normalize_phone_optional(request.form.get('phone')),
+                full_name=request.form.get("full_name"),
+                full_name_ar=request.form.get("full_name_ar"),
+                phone=normalize_phone_optional(request.form.get("phone")),
                 role_id=role_id,
                 branch_id=branch_id,
                 is_owner=False,
                 is_active=is_active,
             )
 
-            password = request.form.get('password')
-            is_valid, pwd_errors = PasswordValidator.validate(password or '')
+            password = request.form.get("password")
+            is_valid, pwd_errors = PasswordValidator.validate(password or "")
             if not is_valid:
-                flash(ErrorMessages.weak_password(pwd_errors), 'danger')
+                flash(ErrorMessages.weak_password(pwd_errors), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             user.set_password(password)
             assign_tenant_id(user)
 
-            with atomic_transaction('user_creation'):
+            with atomic_transaction("user_creation"):
                 db.session.add(user)
                 db.session.flush()
-                LoggingCore.log_audit('create', 'users', user.id)
+                LoggingCore.log_audit("create", "users", user.id)
 
-            log_mutation('create', 'User', user.id, {'username': user.username})
-            flash('تم إضافة المستخدم بنجاح!', 'success')
-            return redirect(url_for('users.index'))
+            log_mutation("create", "User", user.id, {"username": user.username})
+            flash("تم إضافة المستخدم بنجاح!", "success")
+            return redirect(url_for("users.index"))
 
         except Exception:
-            current_app.logger.exception('User creation error')
-            flash(ErrorMessages.create_failed('user'), 'danger')
+            current_app.logger.exception("User creation error")
+            flash(ErrorMessages.create_failed("user"), "danger")
             return _create_form_context(roles, branches, form_values)
 
     return render_template(
-        'users/create.html',
+        "users/create.html",
         roles=roles,
         branches=branches,
         form_data=default_form,
@@ -217,9 +243,9 @@ def create():
     )
 
 
-@users_bp.route('/<int:id>')
+@users_bp.route("/<int:id>")
 @login_required
-@permission_required('manage_users')
+@permission_required("manage_users")
 def view(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
@@ -227,13 +253,13 @@ def view(id):  # noqa: A002
         user_query = user_query.filter(User.tenant_id == tid)
     user = user_query.first_or_404()
     _ensure_user_in_scope(user)
-    return render_template('users/view.html', user=user)
+    return render_template("users/view.html", user=user)
 
 
-@users_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@users_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
-@permission_required('manage_users')
-@limiter.limit("10 per minute", methods=['POST'])
+@permission_required("manage_users")
+@limiter.limit("10 per minute", methods=["POST"])
 def edit(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
@@ -244,58 +270,70 @@ def edit(id):  # noqa: A002
 
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
+    roles = [
+        r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level
+    ]
     branches = _available_branches()
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            with atomic_transaction('user_update'):
+            with atomic_transaction("user_update"):
                 try:
-                    user.email = normalize_user_email_required(request.form.get('email'))
+                    user.email = normalize_user_email_required(
+                        request.form.get("email")
+                    )
                 except FieldValidationError as exc:
-                    flash(str(exc), 'danger')
-                    return render_template('users/edit.html', user=user, roles=roles, branches=branches)
-                user.full_name = request.form.get('full_name')
-                user.full_name_ar = request.form.get('full_name_ar')
-                user.phone = normalize_phone_optional(request.form.get('phone'))
-                role_id = request.form.get('role_id', type=int)
-                branch_id = _clean_branch_id(request.form.get('branch_id'))
+                    flash(str(exc), "danger")
+                    return render_template(
+                        "users/edit.html", user=user, roles=roles, branches=branches
+                    )
+                user.full_name = request.form.get("full_name")
+                user.full_name_ar = request.form.get("full_name_ar")
+                user.phone = normalize_phone_optional(request.form.get("phone"))
+                role_id = request.form.get("role_id", type=int)
+                branch_id = _clean_branch_id(request.form.get("branch_id"))
                 role = _validate_user_branch(role_id, branch_id)
 
-                if role_level_for(getattr(role, 'slug', None)) > current_level:
-                    flash('لا يمكنك تعيين دور أعلى من دورك.', 'danger')
-                    return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+                if role_level_for(getattr(role, "slug", None)) > current_level:
+                    flash("لا يمكنك تعيين دور أعلى من دورك.", "danger")
+                    return render_template(
+                        "users/edit.html", user=user, roles=roles, branches=branches
+                    )
 
                 user.role_id = role_id
                 user.branch_id = branch_id
                 enforce_company_user_tenant(user, role=role, is_owner=False)
 
-                new_password = request.form.get('new_password')
+                new_password = request.form.get("new_password")
                 if new_password:
                     is_valid, pwd_errors = PasswordValidator.validate(new_password)
                     if not is_valid:
-                        flash(ErrorMessages.weak_password(pwd_errors), 'danger')
-                        return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+                        flash(ErrorMessages.weak_password(pwd_errors), "danger")
+                        return render_template(
+                            "users/edit.html", user=user, roles=roles, branches=branches
+                        )
                     user.set_password(new_password)
 
-                user.is_active = request.form.get('is_active') == '1'
+                user.is_active = request.form.get("is_active") == "1"
 
-                LoggingCore.log_audit('update', 'users', user.id)
+                LoggingCore.log_audit("update", "users", user.id)
 
-            flash('تم تحديث بيانات المستخدم بنجاح!', 'success')
-            return redirect(url_for('users.index'))
+            flash("تم تحديث بيانات المستخدم بنجاح!", "success")
+            return redirect(url_for("users.index"))
 
         except Exception as e:
-            current_app.logger.error('Error updating user %s: %s', id, e)
-            flash(ErrorMessages.update_failed('user'), 'danger')
-            return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+            current_app.logger.error("Error updating user %s: %s", id, e)
+            flash(ErrorMessages.update_failed("user"), "danger")
+            return render_template(
+                "users/edit.html", user=user, roles=roles, branches=branches
+            )
 
-    return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+    return render_template("users/edit.html", user=user, roles=roles, branches=branches)
 
 
-@users_bp.route('/<int:id>/toggle-active', methods=['POST'])
+@users_bp.route("/<int:id>/toggle-active", methods=["POST"])
 @login_required
-@permission_required('manage_users')
+@permission_required("manage_users")
 def toggle_active(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
@@ -304,19 +342,19 @@ def toggle_active(id):  # noqa: A002
     user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
-    with atomic_transaction('user_toggle_active'):
+    with atomic_transaction("user_toggle_active"):
         user.is_active = not user.is_active
-        LoggingCore.log_audit('toggle_active', 'users', user.id)
+        LoggingCore.log_audit("toggle_active", "users", user.id)
 
-    status_msg = 'تفعيل' if user.is_active else 'إلغاء تفعيل'
-    flash(f'تم {status_msg} المستخدم "{user.username}" بنجاح!', 'success')
+    status_msg = "تفعيل" if user.is_active else "إلغاء تفعيل"
+    flash(f'تم {status_msg} المستخدم "{user.username}" بنجاح!', "success")
 
-    return redirect(url_for('users.index'))
+    return redirect(url_for("users.index"))
 
 
-@users_bp.route('/<int:id>/delete', methods=['POST'])
+@users_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
-@permission_required('manage_users')
+@permission_required("manage_users")
 def delete(id):  # noqa: A002
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
@@ -326,18 +364,21 @@ def delete(id):  # noqa: A002
     _ensure_user_in_scope(user)
 
     current_level = role_level_for_user(current_user)
-    target_role = getattr(user, 'role', None)
-    target_slug = getattr(target_role, 'slug', None) if target_role else None
+    target_role = getattr(user, "role", None)
+    target_slug = getattr(target_role, "slug", None) if target_role else None
     if role_level_for(target_slug) > current_level:
-        flash('لا يمكنك حذف مستخدم بدور أعلى من دورك.', 'danger')
-        return redirect(url_for('users.index'))
+        flash("لا يمكنك حذف مستخدم بدور أعلى من دورك.", "danger")
+        return redirect(url_for("users.index"))
 
     if user.id == current_user.id:
-        flash('لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر.', 'danger')
-        return redirect(url_for('users.index'))
+        flash(
+            "لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر.",
+            "danger",
+        )
+        return redirect(url_for("users.index"))
 
     try:
-        with atomic_transaction('user_delete'):
+        with atomic_transaction("user_delete"):
             from models import Sale
 
             sales_query = Sale.query.filter_by(seller_id=id)
@@ -348,24 +389,24 @@ def delete(id):  # noqa: A002
             has_sales = sales_count > 0
             if has_sales:
                 user.is_active = False
-                LoggingCore.log_audit('deactivate', 'users', id)
+                LoggingCore.log_audit("deactivate", "users", id)
             else:
-                username = user.username
+                user.username
                 db.session.delete(user)
-                LoggingCore.log_audit('delete', 'users', id)
+                LoggingCore.log_audit("delete", "users", id)
 
         if has_sales:
             flash(
                 f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '
-                'لا يمكن حذفه نهائياً للحفاظ على السجلات.',
-                'warning',
+                "لا يمكن حذفه نهائياً للحفاظ على السجلات.",
+                "warning",
             )
         else:
-            flash(f'تم حذف المستخدم "{user.username}" نهائياً!', 'success')
+            flash(f'تم حذف المستخدم "{user.username}" نهائياً!', "success")
 
-        return redirect(url_for('users.index'))
+        return redirect(url_for("users.index"))
 
     except Exception as e:
-        current_app.logger.error('Error deleting user %s: %s', id, e)
-        flash(ErrorMessages.delete_failed('user'), 'danger')
-        return redirect(url_for('users.index'))
+        current_app.logger.error("Error deleting user %s: %s", id, e)
+        flash(ErrorMessages.delete_failed("user"), "danger")
+        return redirect(url_for("users.index"))

@@ -3,9 +3,9 @@
 This module reports whether tenants are ready for dynamic GL mapping. It does
 not create, update, delete, seed, backfill, or resolve posting accounts.
 """
+
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from typing import Any, Iterable
@@ -19,12 +19,8 @@ from models._constants import (
     REQUIRED_GL_CONCEPTS,
     VALID_GL_CONCEPT_CODES,
     RESOLUTION_MODE_MAPPING,
-    RESOLUTION_MODE_LIQUIDITY,
-    RESOLUTION_MODE_RECORD,
-    RESOLUTION_MODE_NON_POSTING,
 )
 from models.gl import GLAccount
-
 
 REPORT_FIELDS = (
     "tenant_id",
@@ -78,7 +74,9 @@ def _recommended_fix(status: str, issue: str) -> str:
     if "inactive" in issue.lower():
         return "Map the concept to an active GL account or reactivate the intended account after finance approval."
     if "header" in issue.lower():
-        return "Map the concept to a postable detail account, not a header/group account."
+        return (
+            "Map the concept to a postable detail account, not a header/group account."
+        )
     if "duplicate" in issue.lower():
         return "Keep one approved mapping for this tenant/concept scope and remove the duplicate after finance review."
     return "Review and correct the GL mapping manually."
@@ -87,7 +85,9 @@ def _recommended_fix(status: str, issue: str) -> str:
 def _is_mapping_owned(concept_code: str) -> bool:
     """Return True if the concept should be resolved via GLAccountMapping."""
     meta = GL_CONCEPT_REGISTRY.get(concept_code, {})
-    return meta.get('resolution_mode', RESOLUTION_MODE_MAPPING) == RESOLUTION_MODE_MAPPING
+    return (
+        meta.get("resolution_mode", RESOLUTION_MODE_MAPPING) == RESOLUTION_MODE_MAPPING
+    )
 
 
 def _row(
@@ -175,155 +175,210 @@ DISCOVERY_RULES: dict[str, dict[str, object]] = {
     },
     "FREIGHT_IN": {
         "name_exact": ["freight in", "freight-in", "shipping in", "landing cost"],
-        "name_partial": ["freight", "shipping in", "transport in", "landing cost", "landed cost"],
+        "name_partial": [
+            "freight",
+            "shipping in",
+            "transport in",
+            "landing cost",
+            "landed cost",
+        ],
         "expected_types": ["expense", "asset"],
         "description": "Freight / shipping-in account for landed costs.",
     },
     "FX_GAIN": {
-        "name_exact": ["foreign exchange gain", "fx gain", "exchange gain", "currency gain"],
+        "name_exact": [
+            "foreign exchange gain",
+            "fx gain",
+            "exchange gain",
+            "currency gain",
+        ],
         "name_partial": ["foreign exchange gain", "fx gain", "exchange gain"],
         "expected_types": ["revenue"],
         "description": "Foreign exchange gain account (revenue).",
     },
     "FX_LOSS": {
-        "name_exact": ["foreign exchange loss", "fx loss", "exchange loss", "currency loss"],
+        "name_exact": [
+            "foreign exchange loss",
+            "fx loss",
+            "exchange loss",
+            "currency loss",
+        ],
         "name_partial": ["foreign exchange loss", "fx loss", "exchange loss"],
         "expected_types": ["expense"],
         "description": "Foreign exchange loss account (expense).",
     },
     "INVENTORY_ADJUSTMENT_GAIN": {
-        "name_exact": ["inventory adjustment gain", "inventory gain", "stock adjustment gain"],
+        "name_exact": [
+            "inventory adjustment gain",
+            "inventory gain",
+            "stock adjustment gain",
+        ],
         "name_partial": ["inventory adjustment gain", "inventory gain", "stock gain"],
         "expected_types": ["revenue", "expense"],
         "description": "Inventory adjustment gain (positive adjustment).",
     },
     "INVENTORY_ADJUSTMENT_LOSS": {
-        "name_exact": ["inventory adjustment loss", "inventory loss", "stock adjustment loss"],
-        "name_partial": ["inventory adjustment loss", "inventory loss", "stock loss", "inventory adjustment"],
+        "name_exact": [
+            "inventory adjustment loss",
+            "inventory loss",
+            "stock adjustment loss",
+        ],
+        "name_partial": [
+            "inventory adjustment loss",
+            "inventory loss",
+            "stock loss",
+            "inventory adjustment",
+        ],
         "expected_types": ["expense"],
         "description": "Inventory adjustment loss (negative adjustment / shrinkage).",
     },
     "SALES_DISCOUNT": {
-        "name_exact": ["sales discount", "discount given", "discounts given", "trade discount"],
-        "name_partial": ["sales discount", "discount given", "discounts given", "trade discount"],
+        "name_exact": [
+            "sales discount",
+            "discount given",
+            "discounts given",
+            "trade discount",
+        ],
+        "name_partial": [
+            "sales discount",
+            "discount given",
+            "discounts given",
+            "trade discount",
+        ],
         "expected_types": ["expense", "revenue"],
         "description": "Sales discount or discount given account.",
     },
     "SALES_RETURNS": {
-        "name_exact": ["sales return", "sales returns", "return sales", "revenue returns"],
-        "name_partial": ["sales return", "return sales", "revenue return", "sales returns"],
+        "name_exact": [
+            "sales return",
+            "sales returns",
+            "return sales",
+            "revenue returns",
+        ],
+        "name_partial": [
+            "sales return",
+            "return sales",
+            "revenue return",
+            "sales returns",
+        ],
         "expected_types": ["revenue"],
         "description": "Sales returns (contra-revenue) account.",
     },
 }
 
 
-DISCOVERY_RULES.update({
-    "DEFERRED_CHEQUES_PAYABLE": {
-        "name_exact": ["deferred cheques payable", "pdc payable"],
-        "name_partial": ["deferred cheque", "pdc payable", "cheques payable"],
-        "expected_types": ["liability"],
-        "description": "Issued post-dated / deferred cheques payable.",
-    },
-    "PARTNER_CURRENT_ACCOUNT": {
-        "name_exact": ["partner current account", "partners current account"],
-        "name_partial": ["partner current", "partners current"],
-        "expected_types": ["equity", "liability", "asset"],
-        "description": "Partner current account.",
-    },
-    "MERCHANT_CURRENT_ACCOUNT": {
-        "name_exact": ["merchant current account", "merchants payable"],
-        "name_partial": ["merchant current", "merchant payable", "merchants payable"],
-        "expected_types": ["liability", "asset"],
-        "description": "Merchant current account / merchant payable bridge.",
-    },
-    "SHIPPING_REVENUE": {
-        "name_exact": ["shipping revenue", "delivery revenue"],
-        "name_partial": ["shipping revenue", "delivery revenue", "shipping"],
-        "expected_types": ["revenue"],
-        "description": "Shipping / delivery revenue.",
-    },
-    "MISC_EXPENSE": {
-        "name_exact": ["miscellaneous expense", "misc expense"],
-        "name_partial": ["miscellaneous", "misc expense"],
-        "expected_types": ["expense"],
-        "description": "Miscellaneous expense fallback.",
-    },
-    "COMMISSION_EXPENSE": {
-        "name_exact": ["commission expense", "partner commission expense"],
-        "name_partial": ["commission", "partner commission"],
-        "expected_types": ["expense"],
-        "description": "Commission expense.",
-    },
-    "EMPLOYEE_ADVANCES": {
-        "name_exact": ["employee advances", "salary advances"],
-        "name_partial": ["employee advance", "salary advance"],
-        "expected_types": ["asset"],
-        "description": "Employee advances asset account.",
-    },
-    "PAYROLL_EXPENSE": {
-        "name_exact": ["payroll expense", "salaries and wages", "salary expense"],
-        "name_partial": ["payroll", "salary", "wages"],
-        "expected_types": ["expense"],
-        "description": "Payroll / salaries expense.",
-    },
-    "PAYROLL_PAYABLE": {
-        "name_exact": ["payroll payable", "salary payable", "salaries payable"],
-        "name_partial": ["payroll payable", "salary payable"],
-        "expected_types": ["liability"],
-        "description": "Payroll payable / salary deductions payable.",
-    },
-    "BANK_FEES": {
-        "name_exact": ["bank fees", "bank charges"],
-        "name_partial": ["bank fee", "bank charge"],
-        "expected_types": ["expense"],
-        "description": "Bank fees and reconciliation charges.",
-    },
-    "BANK_INTEREST_INCOME": {
-        "name_exact": ["bank interest income", "interest income"],
-        "name_partial": ["bank interest", "interest income", "other revenue"],
-        "expected_types": ["revenue"],
-        "description": "Bank interest income.",
-    },
-    "DONATION_REVENUE": {
-        "name_exact": ["donation revenue", "donation income"],
-        "name_partial": ["donation", "service revenue"],
-        "expected_types": ["revenue"],
-        "description": "Donation revenue.",
-    },
-    "FIXED_ASSET_ASSET": {
-        "name_exact": ["fixed asset", "equipment"],
-        "name_partial": ["fixed asset", "equipment", "furniture", "vehicle"],
-        "expected_types": ["asset"],
-        "parent_code_hint": "1200",
-        "description": "Fixed asset cost account.",
-    },
-    "DEPRECIATION_EXPENSE": {
-        "name_exact": ["depreciation expense"],
-        "name_partial": ["depreciation expense", "depreciation"],
-        "expected_types": ["expense"],
-        "description": "Depreciation expense.",
-    },
-    "ACCUMULATED_DEPRECIATION": {
-        "name_exact": ["accumulated depreciation"],
-        "name_partial": ["accumulated depreciation"],
-        "expected_types": ["asset"],
-        "parent_code_hint": "1200",
-        "description": "Accumulated depreciation contra-asset account.",
-    },
-    "FIXED_ASSET_GAIN": {
-        "name_exact": ["fixed asset disposal gain", "asset disposal gain"],
-        "name_partial": ["asset disposal gain", "other revenue"],
-        "expected_types": ["revenue"],
-        "description": "Gain on fixed asset disposal.",
-    },
-    "FIXED_ASSET_LOSS": {
-        "name_exact": ["fixed asset disposal loss", "asset disposal loss"],
-        "name_partial": ["asset disposal loss", "miscellaneous"],
-        "expected_types": ["expense"],
-        "description": "Loss on fixed asset disposal.",
-    },
-})
+DISCOVERY_RULES.update(
+    {
+        "DEFERRED_CHEQUES_PAYABLE": {
+            "name_exact": ["deferred cheques payable", "pdc payable"],
+            "name_partial": ["deferred cheque", "pdc payable", "cheques payable"],
+            "expected_types": ["liability"],
+            "description": "Issued post-dated / deferred cheques payable.",
+        },
+        "PARTNER_CURRENT_ACCOUNT": {
+            "name_exact": ["partner current account", "partners current account"],
+            "name_partial": ["partner current", "partners current"],
+            "expected_types": ["equity", "liability", "asset"],
+            "description": "Partner current account.",
+        },
+        "MERCHANT_CURRENT_ACCOUNT": {
+            "name_exact": ["merchant current account", "merchants payable"],
+            "name_partial": [
+                "merchant current",
+                "merchant payable",
+                "merchants payable",
+            ],
+            "expected_types": ["liability", "asset"],
+            "description": "Merchant current account / merchant payable bridge.",
+        },
+        "SHIPPING_REVENUE": {
+            "name_exact": ["shipping revenue", "delivery revenue"],
+            "name_partial": ["shipping revenue", "delivery revenue", "shipping"],
+            "expected_types": ["revenue"],
+            "description": "Shipping / delivery revenue.",
+        },
+        "MISC_EXPENSE": {
+            "name_exact": ["miscellaneous expense", "misc expense"],
+            "name_partial": ["miscellaneous", "misc expense"],
+            "expected_types": ["expense"],
+            "description": "Miscellaneous expense fallback.",
+        },
+        "COMMISSION_EXPENSE": {
+            "name_exact": ["commission expense", "partner commission expense"],
+            "name_partial": ["commission", "partner commission"],
+            "expected_types": ["expense"],
+            "description": "Commission expense.",
+        },
+        "EMPLOYEE_ADVANCES": {
+            "name_exact": ["employee advances", "salary advances"],
+            "name_partial": ["employee advance", "salary advance"],
+            "expected_types": ["asset"],
+            "description": "Employee advances asset account.",
+        },
+        "PAYROLL_EXPENSE": {
+            "name_exact": ["payroll expense", "salaries and wages", "salary expense"],
+            "name_partial": ["payroll", "salary", "wages"],
+            "expected_types": ["expense"],
+            "description": "Payroll / salaries expense.",
+        },
+        "PAYROLL_PAYABLE": {
+            "name_exact": ["payroll payable", "salary payable", "salaries payable"],
+            "name_partial": ["payroll payable", "salary payable"],
+            "expected_types": ["liability"],
+            "description": "Payroll payable / salary deductions payable.",
+        },
+        "BANK_FEES": {
+            "name_exact": ["bank fees", "bank charges"],
+            "name_partial": ["bank fee", "bank charge"],
+            "expected_types": ["expense"],
+            "description": "Bank fees and reconciliation charges.",
+        },
+        "BANK_INTEREST_INCOME": {
+            "name_exact": ["bank interest income", "interest income"],
+            "name_partial": ["bank interest", "interest income", "other revenue"],
+            "expected_types": ["revenue"],
+            "description": "Bank interest income.",
+        },
+        "DONATION_REVENUE": {
+            "name_exact": ["donation revenue", "donation income"],
+            "name_partial": ["donation", "service revenue"],
+            "expected_types": ["revenue"],
+            "description": "Donation revenue.",
+        },
+        "FIXED_ASSET_ASSET": {
+            "name_exact": ["fixed asset", "equipment"],
+            "name_partial": ["fixed asset", "equipment", "furniture", "vehicle"],
+            "expected_types": ["asset"],
+            "parent_code_hint": "1200",
+            "description": "Fixed asset cost account.",
+        },
+        "DEPRECIATION_EXPENSE": {
+            "name_exact": ["depreciation expense"],
+            "name_partial": ["depreciation expense", "depreciation"],
+            "expected_types": ["expense"],
+            "description": "Depreciation expense.",
+        },
+        "ACCUMULATED_DEPRECIATION": {
+            "name_exact": ["accumulated depreciation"],
+            "name_partial": ["accumulated depreciation"],
+            "expected_types": ["asset"],
+            "parent_code_hint": "1200",
+            "description": "Accumulated depreciation contra-asset account.",
+        },
+        "FIXED_ASSET_GAIN": {
+            "name_exact": ["fixed asset disposal gain", "asset disposal gain"],
+            "name_partial": ["asset disposal gain", "other revenue"],
+            "expected_types": ["revenue"],
+            "description": "Gain on fixed asset disposal.",
+        },
+        "FIXED_ASSET_LOSS": {
+            "name_exact": ["fixed asset disposal loss", "asset disposal loss"],
+            "name_partial": ["asset disposal loss", "miscellaneous"],
+            "expected_types": ["expense"],
+            "description": "Loss on fixed asset disposal.",
+        },
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -385,8 +440,7 @@ class GLMappingValidationService:
             ]
 
         mappings = (
-            GLAccountMapping.query
-            .filter_by(tenant_id=tenant.id)
+            GLAccountMapping.query.filter_by(tenant_id=tenant.id)
             .order_by(
                 GLAccountMapping.concept_code.asc(),
                 GLAccountMapping.branch_id.asc().nullsfirst(),
@@ -396,8 +450,14 @@ class GLMappingValidationService:
         )
 
         rows: list[GLMappingValidationRow] = []
-        rows.extend(GLMappingValidationService._validate_required_defaults(tenant, mappings, include_ready))
-        rows.extend(GLMappingValidationService._validate_existing_mappings(tenant, mappings))
+        rows.extend(
+            GLMappingValidationService._validate_required_defaults(
+                tenant, mappings, include_ready
+            )
+        )
+        rows.extend(
+            GLMappingValidationService._validate_existing_mappings(tenant, mappings)
+        )
         # Add liquidity readiness validation
         rows.extend(GLMappingValidationService._validate_liquidity_readiness(tenant))
         return rows
@@ -409,10 +469,7 @@ class GLMappingValidationService:
         """Read-only validate cash and bank readiness for every active branch."""
         rows: list[GLMappingValidationRow] = []
         tenant_name = (
-            tenant.name
-            or tenant.name_en
-            or tenant.name_ar
-            or f"Tenant {tenant.id}"
+            tenant.name or tenant.name_en or tenant.name_ar or f"Tenant {tenant.id}"
         )
 
         checks = (
@@ -428,8 +485,7 @@ class GLMappingValidationService:
         for branch in active_branches:
             for liquidity_kind, concept_code in checks:
                 account = (
-                    GLAccount.query
-                    .filter_by(
+                    GLAccount.query.filter_by(
                         tenant_id=tenant.id,
                         branch_id=branch.id,
                         liquidity_kind=liquidity_kind,
@@ -489,7 +545,9 @@ class GLMappingValidationService:
             }
 
         if tenant_id is None:
-            rows = GLMappingValidationService.validate_all_tenants(include_ready=include_ready)
+            rows = GLMappingValidationService.validate_all_tenants(
+                include_ready=include_ready
+            )
         else:
             rows = [
                 row.to_dict()
@@ -499,8 +557,16 @@ class GLMappingValidationService:
                 )
             ]
 
-        critical_count = sum(1 for row in rows if row["severity"] == "critical" and row["status"] != "ready")
-        warning_count = sum(1 for row in rows if row["severity"] == "warning" and row["status"] != "ready")
+        critical_count = sum(
+            1
+            for row in rows
+            if row["severity"] == "critical" and row["status"] != "ready"
+        )
+        warning_count = sum(
+            1
+            for row in rows
+            if row["severity"] == "warning" and row["status"] != "ready"
+        )
         return {
             "ready": critical_count == 0,
             "critical_count": critical_count,
@@ -545,9 +611,7 @@ class GLMappingValidationService:
 
         rows: list[dict[str, object]] = []
         for tenant in tenants:
-            rows.extend(
-                GLMappingValidationService._preview_seed_for_tenant(tenant)
-            )
+            rows.extend(GLMappingValidationService._preview_seed_for_tenant(tenant))
 
         proposed_count = sum(1 for r in rows if r["status"] == "proposed")
         manual_count = sum(1 for r in rows if r["status"] == "manual_required")
@@ -597,8 +661,7 @@ class GLMappingValidationService:
 
             # Find candidate GL accounts in this tenant with the legacy code
             candidates = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, code=legacy_code)
+                GLAccount.query.filter_by(tenant_id=tenant.id, code=legacy_code)
                 .order_by(GLAccount.id.asc())
                 .all()
             )
@@ -625,9 +688,7 @@ class GLMappingValidationService:
             chosen_candidate = None
             candidate_issues: list[str] = []
             for candidate in candidates:
-                issues = GLMappingValidationService._account_issues(
-                    tenant, candidate
-                )
+                issues = GLMappingValidationService._account_issues(tenant, candidate)
                 if not issues:
                     chosen_candidate = candidate
                     break
@@ -652,7 +713,11 @@ class GLMappingValidationService:
             else:
                 # Report the first invalid candidate with its issues
                 first_invalid = candidates[0]
-                first_issue = candidate_issues[0] if candidate_issues else "Candidate account is invalid."
+                first_issue = (
+                    candidate_issues[0]
+                    if candidate_issues
+                    else "Candidate account is invalid."
+                )
                 rows.append(
                     GLMappingSeedPreviewRow(
                         tenant_id=tenant.id,
@@ -718,13 +783,15 @@ class GLMappingValidationService:
 
         rows: list[dict[str, object]] = []
         for tenant in tenants:
-            rows.extend(
-                GLMappingValidationService._discover_for_tenant(tenant)
-            )
+            rows.extend(GLMappingValidationService._discover_for_tenant(tenant))
 
         candidate_found = sum(1 for r in rows if r["status"] == "candidate_found")
-        owner_selection = sum(1 for r in rows if r["status"] == "owner_selection_required")
-        manual_creation = sum(1 for r in rows if r["status"] == "manual_creation_required")
+        owner_selection = sum(
+            1 for r in rows if r["status"] == "owner_selection_required"
+        )
+        manual_creation = sum(
+            1 for r in rows if r["status"] == "manual_creation_required"
+        )
 
         # Required summary breakdowns
         total_concepts_checked = len(DISCOVERY_RULES) * len(tenants)
@@ -735,11 +802,13 @@ class GLMappingValidationService:
                 candidate_count_by_concept[r["concept_code"]] += 1
 
         # Per-tenant analysis
-        tenant_status: dict[int, dict[str, bool]] = defaultdict(lambda: {
-            "has_owner_selection": False,
-            "has_manual_creation": False,
-            "has_all_candidates": True,
-        })
+        tenant_status: dict[int, dict[str, bool]] = defaultdict(
+            lambda: {
+                "has_owner_selection": False,
+                "has_manual_creation": False,
+                "has_all_candidates": True,
+            }
+        )
         for r in rows:
             tid = r["tenant_id"]
             if r["status"] == "owner_selection_required":
@@ -759,11 +828,13 @@ class GLMappingValidationService:
             tid for tid, s in tenant_status.items() if s["has_manual_creation"]
         ]
 
-        concepts_unresolvable = sorted({
-            r["concept_code"]
-            for r in rows
-            if r["status"] == "manual_creation_required"
-        })
+        concepts_unresolvable = sorted(
+            {
+                r["concept_code"]
+                for r in rows
+                if r["status"] == "manual_creation_required"
+            }
+        )
 
         return {
             "discovery_type": "candidate_discovery",
@@ -909,17 +980,19 @@ class GLMappingValidationService:
                 account_name_lower = (account.name or "").lower()
                 if pattern.lower() in account_name_lower:
                     candidates.append(
-                        (account, f"Partial name match: '{account.name}' contains '{pattern}'", "medium")
+                        (
+                            account,
+                            f"Partial name match: '{account.name}' contains '{pattern}'",
+                            "medium",
+                        )
                     )
                     seen_ids.add(account.id)
 
         # --- Strategy 3: parent code hint → search children (medium/high confidence) ---
         if parent_code_hint:
-            parent = (
-                GLAccount.query
-                .filter_by(tenant_id=tenant.id, code=parent_code_hint)
-                .first()
-            )
+            parent = GLAccount.query.filter_by(
+                tenant_id=tenant.id, code=parent_code_hint
+            ).first()
             if parent:
                 for child in parent.children:
                     if child.id in seen_ids:
@@ -929,7 +1002,11 @@ class GLMappingValidationService:
                     if expected_types and child.type not in expected_types:
                         continue
                     candidates.append(
-                        (child, f"Child of parent {parent.code} ({parent.name}): '{child.name}'", "high")
+                        (
+                            child,
+                            f"Child of parent {parent.code} ({parent.name}): '{child.name}'",
+                            "high",
+                        )
                     )
                     seen_ids.add(child.id)
 
@@ -979,7 +1056,9 @@ class GLMappingValidationService:
                 )
                 continue
 
-            issues = GLMappingValidationService._mapping_issues(tenant, default_mappings[0])
+            issues = GLMappingValidationService._mapping_issues(
+                tenant, default_mappings[0]
+            )
             if issues:
                 rows.extend(
                     _row(tenant, concept_code, "invalid", issue, severity="critical")
@@ -1041,7 +1120,9 @@ class GLMappingValidationService:
             if mapping.branch_id is None:
                 seen_defaults_filtered[mapping.concept_code] += 1
             else:
-                seen_branch_overrides_filtered[(mapping.concept_code, mapping.branch_id)] += 1
+                seen_branch_overrides_filtered[
+                    (mapping.concept_code, mapping.branch_id)
+                ] += 1
 
         # Check for duplicates in tenant-level mappings (excluding ignored non-mapping-owned)
         for concept_code, count in seen_defaults_filtered.items():
@@ -1074,7 +1155,10 @@ class GLMappingValidationService:
             if not _is_mapping_owned(mapping.concept_code):
                 continue
             # Skip required concepts without branch_id (they're handled in _validate_required_defaults)
-            if mapping.concept_code in REQUIRED_GL_CONCEPTS and mapping.branch_id is None:
+            if (
+                mapping.concept_code in REQUIRED_GL_CONCEPTS
+                and mapping.branch_id is None
+            ):
                 continue
             for issue in GLMappingValidationService._mapping_issues(tenant, mapping):
                 rows.append(_row(tenant, mapping.concept_code, "invalid", issue))
@@ -1098,7 +1182,9 @@ class GLMappingValidationService:
                 issues.append("Mapped GL account is a header/group account.")
 
         if mapping.branch_id is not None:
-            branch = mapping.branch or Branch.query.filter_by(id=mapping.branch_id).first()
+            branch = (
+                mapping.branch or Branch.query.filter_by(id=mapping.branch_id).first()
+            )
             if branch is None:
                 issues.append("Branch override references a missing branch.")
             elif branch.tenant_id != tenant.id:

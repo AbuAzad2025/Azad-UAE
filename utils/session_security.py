@@ -1,5 +1,6 @@
 from flask import session
 
+
 def rotate_session():
     _flashes = session.get("_flashes")
     _user_id = session.get("_user_id")

@@ -2,26 +2,37 @@
 🧠 Quick Learner - المتعلم السريع
 الآن يستخدم قاعدة البيانات بدلاً من ملف JSON.
 """
+
 import difflib
 from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class QuickLearner:
     def __init__(self):
         pass
 
-    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: Optional[int] = None):
+    def learn(
+        self,
+        question: str,
+        answer: str,
+        category: str = "general",
+        tenant_id: Optional[int] = None,
+    ):
         """تعلم معلومة جديدة وحفظها في قاعدة البيانات."""
         from extensions import db
         from models.ai import AiMemory
-        existing = AiMemory.query.filter_by(key=question.strip().lower(), tenant_id=tenant_id).first()
+
+        existing = AiMemory.query.filter_by(
+            key=question.strip().lower(), tenant_id=tenant_id
+        ).first()
         if existing:
             existing.value = answer
             existing.category = category
             existing.confidence = 1.0
-            existing.source = 'quick_learner'
+            existing.source = "quick_learner"
         else:
             mem = AiMemory(
                 key=question.strip().lower(),
@@ -29,17 +40,20 @@ class QuickLearner:
                 category=category,
                 tenant_id=tenant_id,
                 confidence=1.0,
-                source='quick_learner',
+                source="quick_learner",
                 is_active=True,
             )
             db.session.add(mem)
         db.session.flush()
         return True
 
-    def get_answer(self, question: str, tenant_id: Optional[int] = None) -> Optional[str]:
+    def get_answer(
+        self, question: str, tenant_id: Optional[int] = None
+    ) -> Optional[str]:
         """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
         from extensions import db
         from models.ai import AiMemory
+
         key = question.strip().lower()
         query = AiMemory.query.filter_by(is_active=True)
         if tenant_id is not None:
@@ -77,10 +91,12 @@ class QuickLearner:
 
     def _bump_access(self, row):
         from extensions import db
-        from models.ai import AiMemory
+
         row.access_count = (row.access_count or 0) + 1
         from datetime import datetime, timezone
+
         row.last_accessed = datetime.now(timezone.utc)
         db.session.flush()
+
 
 quick_learner = QuickLearner()

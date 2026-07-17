@@ -6,7 +6,7 @@ to the current tenant, preventing cross-tenant data access at the application la
 """
 
 from functools import wraps
-from flask import abort, g, request
+from flask import abort, g
 from flask_login import current_user
 from extensions import db
 
@@ -38,18 +38,20 @@ def validate_tenant_ownership(model_class):
         - Provides defense-in-depth against tenant isolation bypasses
         - Always returns 404 for cross-tenant attempts (doesn't leak existence)
     """
+
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
             # Auto-detect resource ID parameter from function signature
             import inspect
+
             sig = inspect.signature(f)
             param_names = list(sig.parameters.keys())
 
             # Find the ID parameter (e.g., 'product_id', 'customer_id')
             resource_id = None
             for param_name in param_names:
-                if param_name.endswith('_id') or param_name == 'id':
+                if param_name.endswith("_id") or param_name == "id":
                     resource_id = kwargs.get(param_name)
                     if resource_id is not None:
                         break
@@ -63,10 +65,11 @@ def validate_tenant_ownership(model_class):
                 abort(400, description="Missing required resource ID parameter")
 
             # Get current tenant ID from global context
-            tenant_id = getattr(g, 'active_tenant_id', None)
+            tenant_id = getattr(g, "active_tenant_id", None)
             if tenant_id is None:
                 # If no tenant context, deny access (unless platform owner with explicit tenant selection)
                 from utils.tenanting import is_platform_owner
+
                 if not is_platform_owner(current_user):
                     abort(404, description="Resource not found")
 
@@ -76,20 +79,27 @@ def validate_tenant_ownership(model_class):
                 abort(404, description=f"{model_class.__name__} not found")
 
             # Validate tenant ownership
-            resource_tenant_id = getattr(resource, 'tenant_id', None)
+            resource_tenant_id = getattr(resource, "tenant_id", None)
             if resource_tenant_id is None:
                 # Resources without tenant_id can only be accessed by platform owners
                 from utils.tenanting import is_platform_owner
+
                 if not is_platform_owner(current_user):
                     abort(404, description="Resource not found")
             else:
                 # For tenant-scoped resources, strict ownership check
-                if tenant_id is not None and int(resource_tenant_id or 0) != int(tenant_id or 0):
-                    abort(404, description=f"{model_class.__name__} not found")  # Return 404 to avoid leaking existence
+                if tenant_id is not None and int(resource_tenant_id or 0) != int(
+                    tenant_id or 0
+                ):
+                    abort(
+                        404, description=f"{model_class.__name__} not found"
+                    )  # Return 404 to avoid leaking existence
 
             # Resource belongs to current tenant, proceed with the route
             return f(*args, **kwargs)
+
         return wrapped
+
     return decorator
 
 
@@ -107,12 +117,15 @@ def require_tenant_context(f):
             products = Product.query.filter_by(tenant_id=g.active_tenant_id).all()
             return jsonify([p.to_dict() for p in products])
     """
+
     @wraps(f)
     def wrapped(*args, **kwargs):
-        tenant_id = getattr(g, 'active_tenant_id', None)
+        tenant_id = getattr(g, "active_tenant_id", None)
         if tenant_id is None:
             from utils.tenanting import is_platform_owner
+
             if not is_platform_owner(current_user):
                 abort(403, description="Active tenant context required")
         return f(*args, **kwargs)
+
     return wrapped

@@ -1,4 +1,5 @@
 """Canonical GL journal reference types — single source of truth."""
+
 from __future__ import annotations
 
 
@@ -96,7 +97,6 @@ def filter_entries_by_ref(query, canonical_or_legacy: str):
 
 
 def delete_entries_by_ref(reference_id, *canonical_types, tenant_id=None) -> int:
-    from extensions import db
     from models import GLJournalEntry
 
     types: list[str] = []

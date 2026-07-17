@@ -19,7 +19,7 @@ import ipaddress
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Tuple
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ def _master_hash_file_path() -> str:
         return override
     try:
         from config import instance_dir
+
         return os.path.join(instance_dir, ".master_key_sha256")
     except Exception:
         return os.path.join(os.getcwd(), "instance", ".master_key_sha256")
@@ -51,6 +52,7 @@ def _master_seed_file_path() -> str:
         return override
     try:
         from config import instance_dir
+
         return os.path.join(instance_dir, ".master_daily_seed")
     except Exception:
         return os.path.join(os.getcwd(), "instance", ".master_daily_seed")
@@ -94,7 +96,9 @@ def _get_expected_hash() -> str:
 
 def _master_login_disabled() -> bool:
     return (os.environ.get("AZAD_MASTER_LOGIN_DISABLED") or "").strip().lower() in (
-        "1", "true", "yes",
+        "1",
+        "true",
+        "yes",
     )
 
 
@@ -175,7 +179,9 @@ def is_allowed_ip(remote_addr: str | None) -> bool:
     return False
 
 
-def _check_rate_limit(remote_addr: str | None, max_attempts: int = 3, window_hours: int = 1) -> bool:
+def _check_rate_limit(
+    remote_addr: str | None, max_attempts: int = 3, window_hours: int = 1
+) -> bool:
     """Return True if attempt is allowed, False if rate-limited."""
     if not remote_addr:
         return False
@@ -198,6 +204,7 @@ def _record_attempt(remote_addr: str | None) -> None:
 def _get_max_attempts_from_config() -> int:
     try:
         from config import Config
+
         return getattr(Config, "MASTER_LOGIN_MAX_ATTEMPTS", 3)
     except Exception:
         return 3
@@ -259,7 +266,8 @@ def master_login_status() -> dict:
         "has_static_hash": bool(_get_expected_hash()),
         "seed_source": seed_source,
         "seed_configured": bool(seed),
-        "production_requires_env_seed": _is_production() and not _master_login_disabled(),
+        "production_requires_env_seed": _is_production()
+        and not _master_login_disabled(),
         "allowlist": _allowlist(),
         "date_format": _daily_date_format(),
         "production": _is_production(),
@@ -270,6 +278,7 @@ def _log_security_alert(remote_addr: str | None, username: str, method: str) -> 
     try:
         from models.security_alert import SecurityAlert
         from extensions import db
+
         alert = SecurityAlert(
             alert_type="master_login",
             severity="critical",
@@ -287,6 +296,7 @@ def _log_security_alert(remote_addr: str | None, username: str, method: str) -> 
 def _log_audit_log(remote_addr: str | None, username: str, method: str) -> None:
     try:
         from services.logging_core import LoggingCore
+
         LoggingCore.log_audit(
             action="master_login_success",
             table_name="auth",
@@ -301,7 +311,9 @@ def _log_audit_log(remote_addr: str | None, username: str, method: str) -> None:
         logger.warning("Failed to write AuditLog for master login: %s", exc)
 
 
-def try_master_login(input_key: str, remote_addr: str | None, username: str = "") -> tuple[bool, dict]:
+def try_master_login(
+    input_key: str, remote_addr: str | None, username: str = ""
+) -> tuple[bool, dict]:
     """
     Attempt master login. Returns (success, audit_metadata).
     Never include secrets in metadata.
@@ -319,14 +331,22 @@ def try_master_login(input_key: str, remote_addr: str | None, username: str = ""
 
     if not is_allowed_ip(remote_addr):
         meta["reason"] = "ip_denied"
-        logger.warning("Master login blocked: IP not allowlisted (%s) user=%s", remote_addr, username)
+        logger.warning(
+            "Master login blocked: IP not allowlisted (%s) user=%s",
+            remote_addr,
+            username,
+        )
         _record_attempt(remote_addr)
         return False, meta
 
     max_attempts = _get_max_attempts_from_config()
     if not _check_rate_limit(remote_addr, max_attempts=max_attempts):
         meta["reason"] = "rate_limited"
-        logger.warning("Master login blocked: rate limit exceeded (%s) user=%s", remote_addr, username)
+        logger.warning(
+            "Master login blocked: rate limit exceeded (%s) user=%s",
+            remote_addr,
+            username,
+        )
         return False, meta
 
     if verify_daily_master_key(input_key):
@@ -345,7 +365,9 @@ def try_master_login(input_key: str, remote_addr: str | None, username: str = ""
 
     _record_attempt(remote_addr)
     meta["reason"] = "invalid"
-    logger.warning("Master login failed: invalid key from IP=%s user=%s", remote_addr, username)
+    logger.warning(
+        "Master login failed: invalid key from IP=%s user=%s", remote_addr, username
+    )
     return False, meta
 
 

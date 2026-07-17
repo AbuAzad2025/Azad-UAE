@@ -1,4 +1,5 @@
 """Unit tests for BackupService — listing, verify, scoped/system backup, restore guards."""
+
 from __future__ import annotations
 
 import gzip
@@ -14,12 +15,17 @@ from unittest.mock import MagicMock
 import pytest
 
 from services.backup_service import BACKUP_VERSION, BackupService
-from services.backup_scope_config import SCOPE_BRANCH, SCOPE_STORE, SCOPE_SYSTEM, SCOPE_TENANT
-
+from services.backup_scope_config import (
+    SCOPE_BRANCH,
+    SCOPE_STORE,
+    SCOPE_SYSTEM,
+    SCOPE_TENANT,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _app_context(app):
@@ -55,7 +61,9 @@ def _write_json(path, data):
     path.write_text(json.dumps(data), encoding="utf-8")
 
 
-def _minimal_tar_gz(path: os.PathLike | str, member_name: str = "x.txt", content: bytes = b"x"):
+def _minimal_tar_gz(
+    path: os.PathLike | str, member_name: str = "x.txt", content: bytes = b"x"
+):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
         info = tarfile.TarInfo(name=member_name)
@@ -117,7 +125,9 @@ def _make_tenant_archive(archive_path, tenant_id=7, branch_id=None, store_id=Non
     if branch_id is not None:
         tables["branches"] = [{"id": branch_id, "tenant_id": tenant_id, "name": "Main"}]
     if store_id is not None:
-        tables["tenant_stores"] = [{"id": store_id, "tenant_id": tenant_id, "store_slug": "s1"}]
+        tables["tenant_stores"] = [
+            {"id": store_id, "tenant_id": tenant_id, "store_slug": "s1"}
+        ]
 
     manifest = {
         "backup_version": BACKUP_VERSION,
@@ -152,6 +162,7 @@ def _make_tenant_archive(archive_path, tenant_id=7, branch_id=None, store_id=Non
 # Pure helpers
 # ---------------------------------------------------------------------------
 
+
 class TestRetentionAndInit:
     def test_retention_count_default(self, monkeypatch):
         monkeypatch.delenv("BACKUP_RETENTION_COUNT", raising=False)
@@ -178,12 +189,14 @@ class TestJsonSchedule:
         assert s["backup_time"] == "02:00"
 
     def test_save_and_load_schedule_settings(self, backup_root):
-        assert BackupService.save_schedule_settings({
-            "enabled": False,
-            "frequency": "weekly",
-            "backup_time": "03:30",
-            "keep_count": 7,
-        })
+        assert BackupService.save_schedule_settings(
+            {
+                "enabled": False,
+                "frequency": "weekly",
+                "backup_time": "03:30",
+                "keep_count": 7,
+            }
+        )
         loaded = BackupService.get_schedule_settings()
         assert loaded["enabled"] is False
         assert loaded["frequency"] == "weekly"
@@ -215,14 +228,17 @@ class TestJsonSchedule:
 
 
 class TestFilenameAndPaths:
-    @pytest.mark.parametrize("name,ok", [
-        ("azad_backup_system_20260101_120000_abc123.tar.gz", True),
-        ("azad_backup_tenant_acme_20260101_120000_abc.tar.gz", True),
-        ("azad_backup_20260101_120000_abc.tar.gz", True),
-        ("manual_backup_old.sql.gz", True),
-        ("../evil.tar.gz", False),
-        ("not_a_backup.txt", False),
-    ])
+    @pytest.mark.parametrize(
+        "name,ok",
+        [
+            ("azad_backup_system_20260101_120000_abc123.tar.gz", True),
+            ("azad_backup_tenant_acme_20260101_120000_abc.tar.gz", True),
+            ("azad_backup_20260101_120000_abc.tar.gz", True),
+            ("manual_backup_old.sql.gz", True),
+            ("../evil.tar.gz", False),
+            ("not_a_backup.txt", False),
+        ],
+    )
     def test_sanitize_filename(self, name, ok):
         result = BackupService.sanitize_filename(name)
         assert (result is not None) is ok
@@ -292,17 +308,23 @@ class TestListAndStats:
         assert listed[0]["filename"] == newer.name
 
     def test_list_backups_auto_only_filter(self, backup_root):
-        (backup_root / "azad_backup_system_auto_20260101_000000_aa.tar.gz").write_bytes(b"a")
+        (backup_root / "azad_backup_system_auto_20260101_000000_aa.tar.gz").write_bytes(
+            b"a"
+        )
         (backup_root / "azad_backup_system_20260102_000000_bb.tar.gz").write_bytes(b"b")
         auto = BackupService.list_backups(auto_only=True)
         assert len(auto) == 1
         assert "auto" in auto[0]["filename"].lower()
 
     def test_get_backup_stats(self, backup_root, mocker):
-        mocker.patch.object(BackupService, "list_backups", return_value=[
-            {"size": 1024 * 1024, "format": "azad_tar_v1", "manual": True},
-            {"size": 0, "format": "legacy", "manual": False},
-        ])
+        mocker.patch.object(
+            BackupService,
+            "list_backups",
+            return_value=[
+                {"size": 1024 * 1024, "format": "azad_tar_v1", "manual": True},
+                {"size": 0, "format": "legacy", "manual": False},
+            ],
+        )
         stats = BackupService.get_backup_stats()
         assert stats["total_count"] == 2
         assert stats["modern_count"] == 1
@@ -310,7 +332,9 @@ class TestListAndStats:
         assert stats["total_size_mb"] == 1.0
 
     def test_get_backup_stats_on_error(self, mocker):
-        mocker.patch.object(BackupService, "list_backups", side_effect=RuntimeError("boom"))
+        mocker.patch.object(
+            BackupService, "list_backups", side_effect=RuntimeError("boom")
+        )
         stats = BackupService.get_backup_stats()
         assert stats["total_count"] == 0
 
@@ -375,8 +399,15 @@ class TestManifestSidecar:
         archive = backup_root / "x.tar.gz"
         archive.write_bytes(b"data")
         sidecar = BackupService._build_sidecar(
-            archive.name, str(archive), manifest, "20260101_120000",
-            archive.stat().st_size, "abc", "rev1", True, "test",
+            archive.name,
+            str(archive),
+            manifest,
+            "20260101_120000",
+            archive.stat().st_size,
+            "abc",
+            "rev1",
+            True,
+            "test",
         )
         assert sidecar["format"] == "azad_tar_v1"
         assert sidecar["checksum"] == BackupService._sha256_file(str(archive))
@@ -386,7 +417,9 @@ class TestAccessControl:
     def test_list_backups_for_owner_sees_all(self, mocker):
         user = MagicMock()
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=True)
-        mocker.patch.object(BackupService, "list_backups", return_value=[{"filename": "a"}])
+        mocker.patch.object(
+            BackupService, "list_backups", return_value=[{"filename": "a"}]
+        )
         assert BackupService.list_backups_for_user(user) == [{"filename": "a"}]
 
     def test_list_backups_for_tenant_user_filters_system(self, mocker):
@@ -397,8 +430,18 @@ class TestAccessControl:
             {"filename": "sys", "backup_scope": "system"},
             {"filename": "ten", "backup_scope": "tenant", "tenant_id": 7},
             {"filename": "other", "backup_scope": "tenant", "tenant_id": 99},
-            {"filename": "br", "backup_scope": "branch", "tenant_id": 7, "branch_id": 3},
-            {"filename": "br2", "backup_scope": "branch", "tenant_id": 7, "branch_id": 99},
+            {
+                "filename": "br",
+                "backup_scope": "branch",
+                "tenant_id": 7,
+                "branch_id": 3,
+            },
+            {
+                "filename": "br2",
+                "backup_scope": "branch",
+                "tenant_id": 7,
+                "branch_id": 99,
+            },
         ]
         mocker.patch.object(BackupService, "list_backups", return_value=backups)
         filtered = BackupService.list_backups_for_user(user)
@@ -413,16 +456,27 @@ class TestAccessControl:
         user = MagicMock(branch_id=2)
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "branch", "tenant_id": 5, "branch_id": 2},
-        })
-        assert BackupService.user_may_access_backup(user, "azad_backup_branch_2_20260101_000000_ab.tar.gz")
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "branch", "tenant_id": 5, "branch_id": 2},
+            },
+        )
+        assert BackupService.user_may_access_backup(
+            user, "azad_backup_branch_2_20260101_000000_ab.tar.gz"
+        )
 
-    def test_get_list_backups_context_tenant_user(self, mocker, sample_tenant, sample_branch, sample_user):
+    def test_get_list_backups_context_tenant_user(
+        self, mocker, sample_tenant, sample_branch, sample_user
+    ):
         user = MagicMock()
         user.branch_id = sample_branch.id
         mocker.patch("services.backup_service.is_global_owner_user", return_value=False)
-        mocker.patch("services.backup_service.get_active_tenant_id", return_value=sample_tenant.id)
+        mocker.patch(
+            "services.backup_service.get_active_tenant_id",
+            return_value=sample_tenant.id,
+        )
         mocker.patch.object(BackupService, "list_backups_for_user", return_value=[])
         mocker.patch.object(BackupService, "get_backup_stats", return_value={})
         mocker.patch.object(BackupService, "get_schedule_settings", return_value={})
@@ -435,17 +489,25 @@ class TestAccessControl:
     def test_user_may_access_owner_always(self, mocker):
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=True)
         assert BackupService.user_may_access_backup(MagicMock(), "any/../x") is False
-        assert BackupService.user_may_access_backup(
-            MagicMock(), "azad_backup_system_20260101_000000_abcd.tar.gz",
-        ) is True
+        assert (
+            BackupService.user_may_access_backup(
+                MagicMock(),
+                "azad_backup_system_20260101_000000_abcd.tar.gz",
+            )
+            is True
+        )
 
     def test_user_may_access_denies_system_scope(self, mocker):
         user = MagicMock()
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "system", "tenant_id": 1},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "system", "tenant_id": 1},
+            },
+        )
         name = "azad_backup_system_20260101_000000_abcd.tar.gz"
         assert BackupService.user_may_access_backup(user, name) is False
 
@@ -464,7 +526,9 @@ class TestAccessControl:
 
 class TestVerifyBackup:
     def test_verify_missing_backup(self, backup_root):
-        result = BackupService.verify_backup("azad_backup_system_20260101_000000_aa.tar.gz")
+        result = BackupService.verify_backup(
+            "azad_backup_system_20260101_000000_aa.tar.gz"
+        )
         assert result["valid"] is False
         assert "not found" in result["errors"][0]
 
@@ -488,7 +552,9 @@ class TestVerifyBackup:
             "checksum": "0" * 64,
             "format": "azad_tar_v1",
         }
-        (backup_root / f"{name}.meta.json").write_text(json.dumps(sidecar), encoding="utf-8")
+        (backup_root / f"{name}.meta.json").write_text(
+            json.dumps(sidecar), encoding="utf-8"
+        )
         result = BackupService.verify_backup(name)
         assert result["valid"] is False
         assert "checksum mismatch" in result["errors"][0]
@@ -512,11 +578,20 @@ class TestVerifyBackup:
 
     def test_verify_tenant_export_mismatch(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 99,
-            "tables": {"tenants": [{"id": 99}]},
-        }), encoding="utf-8")
-        manifest = {"backup_scope": "tenant", "tenant_id": 7, "row_counts_per_table": {}}
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 99,
+                    "tables": {"tenants": [{"id": 99}]},
+                }
+            ),
+            encoding="utf-8",
+        )
+        manifest = {
+            "backup_scope": "tenant",
+            "tenant_id": 7,
+            "row_counts_per_table": {},
+        }
         out = BackupService._verify_tenant_export(str(export), manifest)
         assert out["ok"] is False
         assert any("tenant_id mismatch" in e for e in out["errors"])
@@ -562,21 +637,27 @@ class TestCreateBackupGuards:
 
 
 class TestSystemBackupFlow:
-    def test_create_system_backup_success(self, backup_root, mocker, monkeypatch, pg_tools):
+    def test_create_system_backup_success(
+        self, backup_root, mocker, monkeypatch, pg_tools
+    ):
         monkeypatch.setenv(
             "DATABASE_URL",
             "postgresql://u:p@127.0.0.1:5432/testdb",
         )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="abc123")
         mocker.patch.object(BackupService, "_alembic_info", return_value=("r1", "r1"))
-        mocker.patch.object(BackupService, "_pre_backup_checks_summary", return_value={"checks": []})
+        mocker.patch.object(
+            BackupService, "_pre_backup_checks_summary", return_value={"checks": []}
+        )
         mocker.patch.object(BackupService, "_apply_retention")
 
         def fake_uploads(dest_path):
             _minimal_tar_gz(dest_path)
             return {"files_packed": 0}
 
-        mocker.patch.object(BackupService, "_build_uploads_archive", side_effect=fake_uploads)
+        mocker.patch.object(
+            BackupService, "_build_uploads_archive", side_effect=fake_uploads
+        )
 
         def fake_dump(params, dest):
             with open(dest, "wb") as f:
@@ -596,7 +677,9 @@ class TestSystemBackupFlow:
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
 
         sidecar = BackupService.create_backup(
-            manual=True, description="unit test", scope=SCOPE_SYSTEM,
+            manual=True,
+            description="unit test",
+            scope=SCOPE_SYSTEM,
         )
         assert sidecar is not None
         assert sidecar["format"] == "azad_tar_v1"
@@ -605,17 +688,27 @@ class TestSystemBackupFlow:
 
     def test_create_system_backup_no_pg_dump(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "pg_tools_status", return_value={"pg_dump": None})
+        mocker.patch.object(
+            BackupService, "pg_tools_status", return_value={"pg_dump": None}
+        )
         assert BackupService.create_backup(scope=SCOPE_SYSTEM) is None
 
     def test_run_pg_dump_custom_failure(self, backup_root, mocker):
-        mocker.patch.object(BackupService, "_resolve_pg_tool", return_value="/usr/bin/pg_dump")
+        mocker.patch.object(
+            BackupService, "_resolve_pg_tool", return_value="/usr/bin/pg_dump"
+        )
         mocker.patch(
             "services.backup_exec.run_pg_tool",
             return_value=subprocess.CompletedProcess([], 1, stdout="", stderr="fail"),
         )
         ok, err = BackupService._run_pg_dump_custom(
-            {"host": "127.0.0.1", "port": "5432", "username": "u", "password": "p", "dbname": "d"},
+            {
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "password": "p",
+                "dbname": "d",
+            },
             str(backup_root / "out.dump"),
         )
         assert ok is False
@@ -626,12 +719,20 @@ class TestScopedBackupFlow:
     def test_create_tenant_backup_success(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         tid = 42
-        mocker.patch.object(BackupService, "_fetch_tenant_row", return_value={
-            "id": tid, "slug": "acme", "name": "Acme",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_fetch_tenant_row",
+            return_value={
+                "id": tid,
+                "slug": "acme",
+                "name": "Acme",
+            },
+        )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="sha1")
         mocker.patch.object(BackupService, "_alembic_info", return_value=(None, None))
-        mocker.patch.object(BackupService, "_pre_backup_checks_summary", return_value={})
+        mocker.patch.object(
+            BackupService, "_pre_backup_checks_summary", return_value={}
+        )
         mocker.patch.object(BackupService, "pg_tools_status", return_value={})
         mocker.patch.object(BackupService, "_apply_retention")
 
@@ -662,7 +763,9 @@ class TestScopedBackupFlow:
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
 
         sidecar = BackupService.create_backup(
-            scope=SCOPE_TENANT, tenant_id=tid, description="tenant backup",
+            scope=SCOPE_TENANT,
+            tenant_id=tid,
+            description="tenant backup",
         )
         assert sidecar is not None
         assert "tenant_acme" in sidecar["filename"]
@@ -674,20 +777,34 @@ class TestScopedBackupFlow:
     def test_create_branch_backup_success(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         tid, bid = 42, 3
-        mocker.patch.object(BackupService, "_fetch_tenant_row", return_value={
-            "id": tid, "slug": "acme", "name": "Acme",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_fetch_tenant_row",
+            return_value={
+                "id": tid,
+                "slug": "acme",
+                "name": "Acme",
+            },
+        )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="sha1")
         mocker.patch.object(BackupService, "_alembic_info", return_value=(None, None))
-        mocker.patch.object(BackupService, "_pre_backup_checks_summary", return_value={})
+        mocker.patch.object(
+            BackupService, "_pre_backup_checks_summary", return_value={}
+        )
         mocker.patch.object(BackupService, "pg_tools_status", return_value={})
         mocker.patch.object(BackupService, "_apply_retention")
         mocker.patch(
             "services.backup_scope_config.export_scoped_database",
-            return_value=({
-                "tenants": [{"id": tid, "slug": "acme", "name": "Acme"}],
-                "branches": [{"id": bid, "tenant_id": tid, "name": "Main"}],
-            }, {"tenants": 1, "branches": 1}, ["tenants", "branches"], [], []),
+            return_value=(
+                {
+                    "tenants": [{"id": tid, "slug": "acme", "name": "Acme"}],
+                    "branches": [{"id": bid, "tenant_id": tid, "name": "Main"}],
+                },
+                {"tenants": 1, "branches": 1},
+                ["tenants", "branches"],
+                [],
+                [],
+            ),
         )
         mocker.patch(
             "services.backup_scope_config.collect_scoped_upload_paths",
@@ -709,7 +826,9 @@ class TestScopedBackupFlow:
         mock_engine.connect.return_value = mock_conn
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
         sidecar = BackupService.create_backup(
-            scope=SCOPE_BRANCH, tenant_id=tid, branch_id=bid,
+            scope=SCOPE_BRANCH,
+            tenant_id=tid,
+            branch_id=bid,
         )
         assert sidecar is not None
         assert "branch_3" in sidecar["filename"]
@@ -717,20 +836,36 @@ class TestScopedBackupFlow:
     def test_create_store_backup_success(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         tid, sid = 42, 9
-        mocker.patch.object(BackupService, "_fetch_tenant_row", return_value={
-            "id": tid, "slug": "acme", "name": "Acme",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_fetch_tenant_row",
+            return_value={
+                "id": tid,
+                "slug": "acme",
+                "name": "Acme",
+            },
+        )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="sha1")
         mocker.patch.object(BackupService, "_alembic_info", return_value=(None, None))
-        mocker.patch.object(BackupService, "_pre_backup_checks_summary", return_value={})
+        mocker.patch.object(
+            BackupService, "_pre_backup_checks_summary", return_value={}
+        )
         mocker.patch.object(BackupService, "pg_tools_status", return_value={})
         mocker.patch.object(BackupService, "_apply_retention")
         mocker.patch(
             "services.backup_scope_config.export_scoped_database",
-            return_value=({
-                "tenants": [{"id": tid, "slug": "acme", "name": "Acme"}],
-                "tenant_stores": [{"id": sid, "tenant_id": tid, "store_slug": "s1"}],
-            }, {"tenants": 1, "tenant_stores": 1}, ["tenants", "tenant_stores"], [], []),
+            return_value=(
+                {
+                    "tenants": [{"id": tid, "slug": "acme", "name": "Acme"}],
+                    "tenant_stores": [
+                        {"id": sid, "tenant_id": tid, "store_slug": "s1"}
+                    ],
+                },
+                {"tenants": 1, "tenant_stores": 1},
+                ["tenants", "tenant_stores"],
+                [],
+                [],
+            ),
         )
         mocker.patch(
             "services.backup_scope_config.collect_scoped_upload_paths",
@@ -752,7 +887,9 @@ class TestScopedBackupFlow:
         mock_engine.connect.return_value = mock_conn
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
         sidecar = BackupService.create_backup(
-            scope=SCOPE_STORE, tenant_id=tid, store_id=sid,
+            scope=SCOPE_STORE,
+            tenant_id=tid,
+            store_id=sid,
         )
         assert sidecar is not None
         assert "store_9" in sidecar["filename"]
@@ -762,12 +899,24 @@ class TestRetentionAndDelete:
     def test_apply_retention_deletes_oldest(self, backup_root, mocker):
         mocker.patch.object(BackupService, "retention_count", return_value=1)
         backups = [
-            {"filename": "old.tar.gz", "format": "azad_tar_v1", "timestamp": "20260101"},
-            {"filename": "new.tar.gz", "format": "azad_tar_v1", "timestamp": "20260201"},
+            {
+                "filename": "old.tar.gz",
+                "format": "azad_tar_v1",
+                "timestamp": "20260101",
+            },
+            {
+                "filename": "new.tar.gz",
+                "format": "azad_tar_v1",
+                "timestamp": "20260201",
+            },
         ]
         mocker.patch.object(BackupService, "list_backups", return_value=backups)
         deleted = []
-        mocker.patch.object(BackupService, "delete_backup", side_effect=lambda f: deleted.append(f) or True)
+        mocker.patch.object(
+            BackupService,
+            "delete_backup",
+            side_effect=lambda f: deleted.append(f) or True,
+        )
         BackupService._apply_retention()
         assert "old.tar.gz" in deleted
 
@@ -780,32 +929,45 @@ class TestRetentionAndDelete:
         assert not path.exists()
 
     def test_auto_backup_disabled(self, backup_root, mocker):
-        mocker.patch.object(BackupService, "get_schedule_settings", return_value={"enabled": False})
+        mocker.patch.object(
+            BackupService, "get_schedule_settings", return_value={"enabled": False}
+        )
         assert BackupService.auto_backup_daily() is None
 
     def test_auto_backup_enabled(self, backup_root, mocker):
         mocker.patch.object(
-            BackupService, "get_schedule_settings",
+            BackupService,
+            "get_schedule_settings",
             return_value={"enabled": True, "frequency": "daily"},
         )
-        mocker.patch.object(BackupService, "create_backup", return_value={"filename": "x.tar.gz"})
+        mocker.patch.object(
+            BackupService, "create_backup", return_value={"filename": "x.tar.gz"}
+        )
         assert BackupService.auto_backup_daily()["filename"] == "x.tar.gz"
 
 
 class TestPrepareRestore:
     def test_prepare_restore_system(self, backup_root, mocker, pg_tools):
         name = "azad_backup_system_20260101_120000_ab.tar.gz"
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "system"},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "system"},
+            },
+        )
         plan = BackupService.prepare_restore_command(name)
         assert plan["ok"] is True
         assert any("pg_restore" in cmd for cmd in plan["commands"])
 
     def test_prepare_restore_tenant_remap_guard(self, mocker):
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "tenant", "tenant_id": 7},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "tenant", "tenant_id": 7},
+            },
+        )
         plan = BackupService.prepare_restore_command(
             "azad_backup_tenant_x_20260101_000000_ab.tar.gz",
             target_tenant_id=99,
@@ -815,7 +977,8 @@ class TestPrepareRestore:
 
     def test_prepare_restore_wrapper(self, mocker):
         mocker.patch.object(
-            BackupService, "prepare_restore_command",
+            BackupService,
+            "prepare_restore_command",
             return_value={"ok": True},
         )
         assert BackupService.prepare_restore("f.tar.gz")["ok"] is True
@@ -833,12 +996,16 @@ class TestRestoreToTarget:
     def test_restore_blocks_same_database(self, backup_root, mocker, monkeypatch):
         url = "postgresql://u:p@127.0.0.1:5432/samedb"
         monkeypatch.setenv("DATABASE_URL", url)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         name = "azad_backup_system_20260101_120000_ab.tar.gz"
         path = backup_root / name
         _make_system_archive(path)
         out = BackupService.restore_backup_to_target_db(
-            name, url, confirmation="RESTORE CONFIRM",
+            name,
+            url,
+            confirmation="RESTORE CONFIRM",
         )
         assert out["ok"] is False
         assert "same as current" in out["errors"][0]
@@ -850,13 +1017,17 @@ class TestRestoreToTarget:
         name = "azad_backup_system_20260101_120000_ab.tar.gz"
         path = backup_root / name
         _make_system_archive(path)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch(
             "services.backup_exec.run_pg_tool",
             return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
         )
         out = BackupService.restore_backup_to_target_db(
-            name, target, confirmation="RESTORE CONFIRM",
+            name,
+            target,
+            confirmation="RESTORE CONFIRM",
         )
         assert out["ok"] is True
         assert out["target_db"] == "restore_db"
@@ -870,13 +1041,18 @@ class TestRestoreToTarget:
         _make_system_archive(path)
         uploads_root = backup_root.parent.parent / "static" / "uploads"
         uploads_root.mkdir(parents=True, exist_ok=True)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch(
             "services.backup_exec.run_pg_tool",
             return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""),
         )
         out = BackupService.restore_backup_to_target_db(
-            name, target, confirmation="RESTORE CONFIRM", restore_uploads=True,
+            name,
+            target,
+            confirmation="RESTORE CONFIRM",
+            restore_uploads=True,
         )
         assert out["ok"] is True
         assert any("uploads restored" in w for w in out.get("warnings", []))
@@ -887,9 +1063,14 @@ class TestRestoreScoped:
         name = "azad_backup_tenant_acme_20260101_120000_ab.tar.gz"
         path = backup_root / name
         manifest = _make_tenant_archive(path, tenant_id=7)
-        mocker.patch.object(BackupService, "verify_backup", return_value={
-            "valid": True, "manifest": manifest,
-        })
+        mocker.patch.object(
+            BackupService,
+            "verify_backup",
+            return_value={
+                "valid": True,
+                "manifest": manifest,
+            },
+        )
         mocker.patch(
             "services.backup_scoped_engine.restore_scoped_to_target",
             return_value={"ok": True, "target_tenant_id": 7},
@@ -913,9 +1094,14 @@ class TestRestoreScoped:
         name = "azad_backup_tenant_acme_20260101_120000_abcd.tar.gz"
         path = backup_root / name
         manifest = _make_tenant_archive(path, tenant_id=7)
-        mocker.patch.object(BackupService, "verify_backup", return_value={
-            "valid": True, "manifest": manifest,
-        })
+        mocker.patch.object(
+            BackupService,
+            "verify_backup",
+            return_value={
+                "valid": True,
+                "manifest": manifest,
+            },
+        )
         mocker.patch(
             "services.backup_scoped_engine.restore_scoped_to_target",
             return_value={"ok": True, "target_tenant_id": 7},
@@ -929,7 +1115,8 @@ class TestRestoreScoped:
             return_value={"ok": False, "errors": ["row mismatch"]},
         )
         out = BackupService.restore_scoped_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert out["ok"] is False
@@ -938,10 +1125,13 @@ class TestRestoreScoped:
 class TestMisc:
     def test_write_restore_proof(self, backup_root):
         name = "azad_backup_system_20260101_120000_ab.tar.gz"
-        path = BackupService.write_restore_proof(name, {
-            "verified_at": "2026-01-01",
-            "backup_scope": "system",
-        })
+        path = BackupService.write_restore_proof(
+            name,
+            {
+                "verified_at": "2026-01-01",
+                "backup_scope": "system",
+            },
+        )
         assert os.path.isfile(path)
         assert (backup_root / ".latest_restore_proof.json").is_file()
 
@@ -954,7 +1144,9 @@ class TestMisc:
         path = backup_root / name
         _make_system_archive(path)
         sidecar = {"filename": name, "format": "azad_tar_v1"}
-        (backup_root / f"{name}.meta.json").write_text(json.dumps(sidecar), encoding="utf-8")
+        (backup_root / f"{name}.meta.json").write_text(
+            json.dumps(sidecar), encoding="utf-8"
+        )
         info = BackupService.get_backup_info(name)
         assert info["sidecar"]["format"] == "azad_tar_v1"
         assert info["manifest"]["backup_scope"] == "system"
@@ -962,7 +1154,9 @@ class TestMisc:
     def test_pg_tools_status(self, mocker, pg_tools):
         mocker.patch(
             "services.backup_exec.run_pg_tool",
-            return_value=subprocess.CompletedProcess([], 0, stdout="pg_dump 16.1\n", stderr=""),
+            return_value=subprocess.CompletedProcess(
+                [], 0, stdout="pg_dump 16.1\n", stderr=""
+            ),
         )
         status = BackupService.pg_tools_status()
         assert status["available"] is True
@@ -992,20 +1186,35 @@ class TestExtendedHelpers:
         mock_engine.connect.return_value = mock_conn
         mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
         row = BackupService._fetch_tenant_row(7)
-        assert row == {"id": 7, "slug": "acme", "name": "Acme", "enable_auto_backup": True}
+        assert row == {
+            "id": 7,
+            "slug": "acme",
+            "name": "Acme",
+            "enable_auto_backup": True,
+        }
 
     def test_pre_backup_checks_integrity_ok(self, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_parse_db_url", return_value={
-            "host": "127.0.0.1", "port": "5432", "username": "u", "dbname": "db",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_parse_db_url",
+            return_value={
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "dbname": "db",
+            },
+        )
         mock_conn = MagicMock()
         mock_conn.__enter__ = MagicMock(return_value=mock_conn)
         mock_conn.__exit__ = MagicMock(return_value=False)
         mock_conn.execute.return_value.scalar.side_effect = [10, 0, 0]
-        mocker.patch("sqlalchemy.create_engine", return_value=MagicMock(
-            connect=MagicMock(return_value=mock_conn),
-        ))
+        mocker.patch(
+            "sqlalchemy.create_engine",
+            return_value=MagicMock(
+                connect=MagicMock(return_value=mock_conn),
+            ),
+        )
         summary = BackupService._pre_backup_checks_summary()
         assert summary["tables_count"] == 10
         assert summary["checks"][-1] == "basic_integrity: OK"
@@ -1112,34 +1321,55 @@ class TestExtendedHelpers:
         assert ctx["stores"] == []
 
     def test_pre_backup_checks_missing_database_url(self, mocker):
-        mocker.patch.object(BackupService, "_parse_db_url", return_value={
-            "host": "127.0.0.1", "port": "5432", "username": "u", "dbname": "db",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_parse_db_url",
+            return_value={
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "dbname": "db",
+            },
+        )
         mocker.patch.dict(os.environ, {}, clear=True)
         summary = BackupService._pre_backup_checks_summary()
         assert "database_url: missing" in summary["checks"][0]
 
     def test_apply_retention_keeps_when_under_limit(self, mocker):
         mocker.patch.object(BackupService, "retention_count", return_value=5)
-        mocker.patch.object(BackupService, "list_backups", return_value=[
-            {"filename": "a.tar.gz", "format": "azad_tar_v1", "timestamp": "1"},
-        ])
+        mocker.patch.object(
+            BackupService,
+            "list_backups",
+            return_value=[
+                {"filename": "a.tar.gz", "format": "azad_tar_v1", "timestamp": "1"},
+            ],
+        )
         mocker.patch.object(BackupService, "delete_backup")
         BackupService._apply_retention()
         BackupService.delete_backup.assert_not_called()
 
     def test_verify_tenant_export_rejects_owner_user(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {
-                "tenants": [{"id": 7}],
-                "users": [{"id": 1, "tenant_id": 7, "is_owner": True}],
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {
+                        "tenants": [{"id": 7}],
+                        "users": [{"id": 1, "tenant_id": 7, "is_owner": True}],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = BackupService._verify_tenant_export(
+            str(export),
+            {
+                "backup_scope": "tenant",
+                "tenant_id": 7,
+                "row_counts_per_table": {},
             },
-        }), encoding="utf-8")
-        out = BackupService._verify_tenant_export(str(export), {
-            "backup_scope": "tenant", "tenant_id": 7, "row_counts_per_table": {},
-        })
+        )
         assert out["ok"] is False
 
     def test_verify_legacy_gzip_corrupt(self, backup_root):
@@ -1151,15 +1381,23 @@ class TestExtendedHelpers:
         mocker.patch.object(BackupService, "_parse_db_url", return_value=None)
         assert BackupService.create_backup(scope=SCOPE_SYSTEM) is None
 
-    def test_system_backup_pg_dump_failure(self, backup_root, mocker, monkeypatch, pg_tools):
+    def test_system_backup_pg_dump_failure(
+        self, backup_root, mocker, monkeypatch, pg_tools
+    ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_run_pg_dump_custom", return_value=(False, "dump failed"))
+        mocker.patch.object(
+            BackupService, "_run_pg_dump_custom", return_value=(False, "dump failed")
+        )
         assert BackupService.create_backup(scope=SCOPE_SYSTEM) is None
 
     def test_prepare_restore_tenant_ok(self, mocker):
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "tenant", "tenant_id": 7},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "tenant", "tenant_id": 7},
+            },
+        )
         plan = BackupService.prepare_restore_command(
             "azad_backup_tenant_x_20260101_000000_abcd.tar.gz",
             target_tenant_id=7,
@@ -1180,17 +1418,27 @@ class TestExtendedHelpers:
         user = MagicMock(branch_id=1)
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "tenant", "tenant_id": 99},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "tenant", "tenant_id": 99},
+            },
+        )
         name = "azad_backup_tenant_x_20260101_000000_abcd.tar.gz"
         assert BackupService.user_may_access_backup(user, name) is False
 
     def test_scoped_backup_handles_exception(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_fetch_tenant_row", return_value={
-            "id": 1, "slug": "x", "name": "X",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_fetch_tenant_row",
+            return_value={
+                "id": 1,
+                "slug": "x",
+                "name": "X",
+            },
+        )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="ab")
         mocker.patch(
             "services.backup_scope_config.export_scoped_database",
@@ -1307,24 +1555,41 @@ class TestFullCoverage:
 
     def test_pre_backup_integrity_warn(self, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_parse_db_url", return_value={
-            "host": "127.0.0.1", "port": "5432", "username": "u", "dbname": "db",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_parse_db_url",
+            return_value={
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "dbname": "db",
+            },
+        )
         mock_conn = MagicMock()
         mock_conn.__enter__ = MagicMock(return_value=mock_conn)
         mock_conn.__exit__ = MagicMock(return_value=False)
         mock_conn.execute.return_value.scalar.side_effect = [5, 2, 0]
-        mocker.patch("sqlalchemy.create_engine", return_value=MagicMock(
-            connect=MagicMock(return_value=mock_conn),
-        ))
+        mocker.patch(
+            "sqlalchemy.create_engine",
+            return_value=MagicMock(
+                connect=MagicMock(return_value=mock_conn),
+            ),
+        )
         summary = BackupService._pre_backup_checks_summary()
         assert summary["checks"][-1] == "WARN"
 
     def test_pre_backup_integrity_db_error(self, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_parse_db_url", return_value={
-            "host": "127.0.0.1", "port": "5432", "username": "u", "dbname": "db",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_parse_db_url",
+            return_value={
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "dbname": "db",
+            },
+        )
         mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("db down"))
         summary = BackupService._pre_backup_checks_summary()
         assert "basic_integrity: error" in summary["checks"][-1]
@@ -1340,8 +1605,11 @@ class TestFullCoverage:
         mocker.patch("services.backup_exec.run_pg_tool", side_effect=write_dump)
         ok, err = BackupService._run_pg_dump_custom(
             {
-                "host": "127.0.0.1", "port": "5432", "username": "u",
-                "password": "secret", "dbname": "d",
+                "host": "127.0.0.1",
+                "port": "5432",
+                "username": "u",
+                "password": "secret",
+                "dbname": "d",
             },
             str(dest),
         )
@@ -1376,16 +1644,25 @@ class TestFullCoverage:
         mock_conn.__enter__ = MagicMock(return_value=mock_conn)
         mock_conn.__exit__ = MagicMock(return_value=False)
         mock_conn.execute.return_value.fetchone.return_value = None
-        mocker.patch("sqlalchemy.create_engine", return_value=MagicMock(
-            connect=MagicMock(return_value=mock_conn),
-        ))
+        mocker.patch(
+            "sqlalchemy.create_engine",
+            return_value=MagicMock(
+                connect=MagicMock(return_value=mock_conn),
+            ),
+        )
         assert BackupService._fetch_tenant_row(999) is None
 
     def test_scoped_backup_unparseable_db_url(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
-        mocker.patch.object(BackupService, "_fetch_tenant_row", return_value={
-            "id": 1, "slug": "x", "name": "X",
-        })
+        mocker.patch.object(
+            BackupService,
+            "_fetch_tenant_row",
+            return_value={
+                "id": 1,
+                "slug": "x",
+                "name": "X",
+            },
+        )
         mocker.patch.object(BackupService, "_git_short_sha", return_value="ab")
         mocker.patch.object(BackupService, "_parse_db_url", return_value=None)
         assert BackupService.create_backup(scope=SCOPE_TENANT, tenant_id=1) is None
@@ -1394,18 +1671,28 @@ class TestFullCoverage:
         user = MagicMock(branch_id=1)
         mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=False)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=7)
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "tenant", "tenant_id": 7},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "tenant", "tenant_id": 7},
+            },
+        )
         name = "azad_backup_tenant_x_20260101_000000_abcd.tar.gz"
         assert BackupService.user_may_access_backup(user, name) is True
 
     def test_system_backup_exception_removes_partial_archive(
-        self, backup_root, mocker, monkeypatch, pg_tools,
+        self,
+        backup_root,
+        mocker,
+        monkeypatch,
+        pg_tools,
     ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         mocker.patch.object(BackupService, "_git_short_sha", return_value="abc")
-        mocker.patch.object(BackupService, "_run_pg_dump_custom", return_value=(True, ""))
+        mocker.patch.object(
+            BackupService, "_run_pg_dump_custom", return_value=(True, "")
+        )
 
         def boom(dest):
             _minimal_tar_gz(dest)
@@ -1415,12 +1702,18 @@ class TestFullCoverage:
         assert BackupService.create_backup(scope=SCOPE_SYSTEM) is None
 
     def test_system_backup_approx_rows_query_fails(
-        self, backup_root, mocker, monkeypatch, pg_tools,
+        self,
+        backup_root,
+        mocker,
+        monkeypatch,
+        pg_tools,
     ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         mocker.patch.object(BackupService, "_git_short_sha", return_value="abc123")
         mocker.patch.object(BackupService, "_alembic_info", return_value=(None, None))
-        mocker.patch.object(BackupService, "_pre_backup_checks_summary", return_value={"checks": []})
+        mocker.patch.object(
+            BackupService, "_pre_backup_checks_summary", return_value={"checks": []}
+        )
         mocker.patch.object(BackupService, "_apply_retention")
 
         def fake_dump(params, dest):
@@ -1428,12 +1721,17 @@ class TestFullCoverage:
             return True, ""
 
         mocker.patch.object(BackupService, "_run_pg_dump_custom", side_effect=fake_dump)
+
         def fake_up(dest):
             _minimal_tar_gz(dest)
             return {"files_packed": 0}
 
-        mocker.patch.object(BackupService, "_build_uploads_archive", side_effect=fake_up)
-        mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("stats unavailable"))
+        mocker.patch.object(
+            BackupService, "_build_uploads_archive", side_effect=fake_up
+        )
+        mocker.patch(
+            "sqlalchemy.create_engine", side_effect=RuntimeError("stats unavailable")
+        )
         sidecar = BackupService.create_backup(scope=SCOPE_SYSTEM)
         assert sidecar is not None
 
@@ -1574,66 +1872,111 @@ class TestFullCoverage:
 
     def test_verify_tenant_export_row_count_mismatch(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {"tenants": [{"id": 7}], "products": [{"id": 1, "tenant_id": 7}]},
-        }), encoding="utf-8")
-        out = BackupService._verify_tenant_export(str(export), {
-            "tenant_id": 7,
-            "row_counts_per_table": {"tenants": 1, "products": 2},
-        })
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {
+                        "tenants": [{"id": 7}],
+                        "products": [{"id": 1, "tenant_id": 7}],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = BackupService._verify_tenant_export(
+            str(export),
+            {
+                "tenant_id": 7,
+                "row_counts_per_table": {"tenants": 1, "products": 2},
+            },
+        )
         assert any("row count mismatch" in e for e in out["errors"])
 
     def test_verify_tenant_export_cross_branch(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {
-                "tenants": [{"id": 7}],
-                "branches": [{"id": 3, "tenant_id": 7}],
-                "products": [{"id": 1, "tenant_id": 7, "branch_id": 99}],
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {
+                        "tenants": [{"id": 7}],
+                        "branches": [{"id": 3, "tenant_id": 7}],
+                        "products": [{"id": 1, "tenant_id": 7, "branch_id": 99}],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = BackupService._verify_tenant_export(
+            str(export),
+            {
+                "backup_scope": "branch",
+                "tenant_id": 7,
+                "branch_id": 3,
+                "row_counts_per_table": {},
             },
-        }), encoding="utf-8")
-        out = BackupService._verify_tenant_export(str(export), {
-            "backup_scope": "branch", "tenant_id": 7, "branch_id": 3,
-            "row_counts_per_table": {},
-        })
+        )
         assert any("cross-branch" in e for e in out["errors"])
 
     def test_verify_tenant_export_store_id_mismatch(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {
-                "tenants": [{"id": 7}],
-                "tenant_stores": [{"id": 9, "tenant_id": 7}],
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {
+                        "tenants": [{"id": 7}],
+                        "tenant_stores": [{"id": 9, "tenant_id": 7}],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = BackupService._verify_tenant_export(
+            str(export),
+            {
+                "backup_scope": "store",
+                "tenant_id": 7,
+                "store_id": 5,
+                "row_counts_per_table": {},
             },
-        }), encoding="utf-8")
-        out = BackupService._verify_tenant_export(str(export), {
-            "backup_scope": "store", "tenant_id": 7, "store_id": 5,
-            "row_counts_per_table": {},
-        })
+        )
         assert any("tenant_stores id mismatch" in e for e in out["errors"])
 
     def test_verify_tenant_export_branch_isolation_failed(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {"tenants": [{"id": 7}], "branches": []},
-        }), encoding="utf-8")
-        out = BackupService._verify_tenant_export(str(export), {
-            "backup_scope": "branch", "tenant_id": 7, "branch_id": 3,
-            "row_counts_per_table": {},
-        })
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {"tenants": [{"id": 7}], "branches": []},
+                }
+            ),
+            encoding="utf-8",
+        )
+        out = BackupService._verify_tenant_export(
+            str(export),
+            {
+                "backup_scope": "branch",
+                "tenant_id": 7,
+                "branch_id": 3,
+                "row_counts_per_table": {},
+            },
+        )
         assert any("branches isolation failed" in e for e in out["errors"])
 
     def test_prepare_restore_not_found(self):
         assert BackupService.prepare_restore_command("missing.tar.gz")["ok"] is False
 
     def test_prepare_restore_remap_tenant(self, mocker):
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "tenant", "tenant_id": 7},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "tenant", "tenant_id": 7},
+            },
+        )
         plan = BackupService.prepare_restore_command(
             "azad_backup_tenant_x_20260101_000000_abcd.tar.gz",
             target_tenant_id=99,
@@ -1648,14 +1991,17 @@ class TestFullCoverage:
 
     def test_restore_invalid_filename(self, backup_root):
         out = BackupService.restore_backup_to_target_db(
-            "../bad.tar.gz", "postgresql://u:p@127.0.0.1:5432/newdb",
+            "../bad.tar.gz",
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert "invalid filename" in out["errors"][0]
 
     def test_restore_verify_fails(self, backup_root, mocker, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": False})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": False}
+        )
         out = BackupService.restore_backup_to_target_db(
             "azad_backup_system_20260101_120000_abcd.tar.gz",
             "postgresql://u:p@127.0.0.1:5432/newdb",
@@ -1667,10 +2013,14 @@ class TestFullCoverage:
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
         name = "azad_backup_system_20260101_120000_abcd.tar.gz"
         _make_system_archive(backup_root / name)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch.object(BackupService, "_parse_db_url", return_value=None)
         out = BackupService.restore_backup_to_target_db(
-            name, "not-postgres", confirmation="RESTORE CONFIRM",
+            name,
+            "not-postgres",
+            confirmation="RESTORE CONFIRM",
         )
         assert "Invalid target PostgreSQL URL" in out["errors"][0]
 
@@ -1678,10 +2028,13 @@ class TestFullCoverage:
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
         name = "azad_backup_system_20260101_120000_abcd.tar.gz"
         _make_system_archive(backup_root / name)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch.object(BackupService, "_resolve_pg_tool", return_value=None)
         out = BackupService.restore_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert "pg_restore not found" in out["errors"][0]
@@ -1690,47 +2043,62 @@ class TestFullCoverage:
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
         name = "manual_backup_data.dump"
         (backup_root / name).write_bytes(b"PGDMP")
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch(
             "services.backup_exec.run_pg_tool",
             return_value=subprocess.CompletedProcess([], 0),
         )
         out = BackupService.restore_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert out["ok"] is True
 
-    def test_restore_pg_restore_command_fails(self, backup_root, mocker, monkeypatch, pg_tools):
+    def test_restore_pg_restore_command_fails(
+        self, backup_root, mocker, monkeypatch, pg_tools
+    ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
         name = "azad_backup_system_20260101_120000_abcd.tar.gz"
         _make_system_archive(backup_root / name)
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         mocker.patch(
             "services.backup_exec.run_pg_tool",
             return_value=subprocess.CompletedProcess([], 1, stderr="restore failed"),
         )
         out = BackupService.restore_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert "restore failed" in out["errors"][0]
 
-    def test_restore_legacy_sql_gz_rejected(self, backup_root, mocker, monkeypatch, pg_tools):
+    def test_restore_legacy_sql_gz_rejected(
+        self, backup_root, mocker, monkeypatch, pg_tools
+    ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/live")
         name = "manual_backup_data.sql.gz"
         path = backup_root / name
         with gzip.open(path, "wb") as gz:
             gz.write(b"-- sql")
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": True})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": True}
+        )
         out = BackupService.restore_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert "Legacy .sql.gz restore" in out["errors"][0]
 
     def test_restore_scoped_invalid_backup(self, mocker):
-        mocker.patch.object(BackupService, "verify_backup", return_value={"valid": False})
+        mocker.patch.object(
+            BackupService, "verify_backup", return_value={"valid": False}
+        )
         out = BackupService.restore_scoped_backup_to_target_db(
             "azad_backup_tenant_x_20260101_000000_abcd.tar.gz",
             "postgresql://u:p@127.0.0.1:5432/newdb",
@@ -1739,9 +2107,14 @@ class TestFullCoverage:
         assert out["ok"] is False
 
     def test_restore_scoped_invalid_path_after_verify(self, backup_root, mocker):
-        mocker.patch.object(BackupService, "verify_backup", return_value={
-            "valid": True, "manifest": {"backup_scope": "tenant", "tenant_id": 7},
-        })
+        mocker.patch.object(
+            BackupService,
+            "verify_backup",
+            return_value={
+                "valid": True,
+                "manifest": {"backup_scope": "tenant", "tenant_id": 7},
+            },
+        )
         mocker.patch.object(BackupService, "_backup_path", return_value=None)
         out = BackupService.restore_scoped_backup_to_target_db(
             "azad_backup_tenant_x_20260101_120000_abcd.tar.gz",
@@ -1754,9 +2127,14 @@ class TestFullCoverage:
         name = "azad_backup_tenant_acme_20260101_120000_abcd.tar.gz"
         path = backup_root / name
         manifest = _make_tenant_archive(path, tenant_id=7)
-        mocker.patch.object(BackupService, "verify_backup", return_value={
-            "valid": True, "manifest": manifest,
-        })
+        mocker.patch.object(
+            BackupService,
+            "verify_backup",
+            return_value={
+                "valid": True,
+                "manifest": manifest,
+            },
+        )
         mocker.patch(
             "services.backup_scoped_engine.restore_scoped_to_target",
             return_value={"ok": True, "target_tenant_id": 7},
@@ -1770,7 +2148,8 @@ class TestFullCoverage:
             return_value={"ok": True},
         )
         out = BackupService.restore_scoped_backup_to_target_db(
-            name, "postgresql://u:p@127.0.0.1:5432/newdb",
+            name,
+            "postgresql://u:p@127.0.0.1:5432/newdb",
             confirmation="RESTORE CONFIRM",
         )
         assert out["ok"] is True
@@ -1804,29 +2183,43 @@ class TestFullCoverage:
 
     def test_verify_tenant_export_wrong_tenant_row_count(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {"tenants": [{"id": 7}, {"id": 8}]},
-        }), encoding="utf-8")
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {"tenants": [{"id": 7}, {"id": 8}]},
+                }
+            ),
+            encoding="utf-8",
+        )
         out = BackupService._verify_tenant_export(str(export), {"tenant_id": 7})
         assert any("tenants row count" in e for e in out["errors"])
 
     def test_verify_tenant_export_cross_tenant_row(self, backup_root):
         export = backup_root / "export.json"
-        export.write_text(json.dumps({
-            "tenant_id": 7,
-            "tables": {
-                "tenants": [{"id": 7}],
-                "products": [{"id": 1, "tenant_id": 99}],
-            },
-        }), encoding="utf-8")
+        export.write_text(
+            json.dumps(
+                {
+                    "tenant_id": 7,
+                    "tables": {
+                        "tenants": [{"id": 7}],
+                        "products": [{"id": 1, "tenant_id": 99}],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
         out = BackupService._verify_tenant_export(str(export), {"tenant_id": 7})
         assert any("cross-tenant" in e for e in out["errors"])
 
     def test_prepare_restore_mask_target_url_failure(self, mocker):
-        mocker.patch.object(BackupService, "get_backup_info", return_value={
-            "manifest": {"backup_scope": "system"},
-        })
+        mocker.patch.object(
+            BackupService,
+            "get_backup_info",
+            return_value={
+                "manifest": {"backup_scope": "system"},
+            },
+        )
         mocker.patch("services.backup_service.urlparse", side_effect=ValueError("bad"))
         plan = BackupService.prepare_restore_command(
             "azad_backup_system_20260101_120000_abcd.tar.gz",
@@ -1838,7 +2231,10 @@ class TestFullCoverage:
     def test_resolve_pg_tool_via_which(self, mocker, monkeypatch):
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
         mocker.patch("shutil.which", return_value="/usr/bin/pg_dump")
-        assert BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH") == "/usr/bin/pg_dump"
+        assert (
+            BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
+            == "/usr/bin/pg_dump"
+        )
 
     def test_resolve_pg_tool_non_windows_no_candidate(self, mocker, monkeypatch):
         monkeypatch.setattr(os, "name", "posix")
@@ -1858,16 +2254,23 @@ class TestFullCoverage:
         assert BackupService._git_branch() is None
 
     def test_system_backup_remove_archive_oserror(
-        self, backup_root, mocker, monkeypatch, pg_tools,
+        self,
+        backup_root,
+        mocker,
+        monkeypatch,
+        pg_tools,
     ):
         monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:5432/db")
         fixed = "azad_backup_system_20260101_120000_abcd.tar.gz"
         mocker.patch.object(BackupService, "_archive_basename", return_value=fixed)
         (backup_root / fixed).write_bytes(b"partial")
         mocker.patch.object(BackupService, "_git_short_sha", return_value="ab")
-        mocker.patch.object(BackupService, "_run_pg_dump_custom", return_value=(True, ""))
         mocker.patch.object(
-            BackupService, "_build_uploads_archive",
+            BackupService, "_run_pg_dump_custom", return_value=(True, "")
+        )
+        mocker.patch.object(
+            BackupService,
+            "_build_uploads_archive",
             side_effect=RuntimeError("tar failed"),
         )
         mocker.patch("os.remove", side_effect=OSError("locked"))
@@ -1896,7 +2299,8 @@ class TestFullCoverage:
         data_dir = work / "data"
         data_dir.mkdir()
         (data_dir / "tenants.jsonl").write_text(
-            json.dumps({"id": 7, "slug": "a"}), encoding="utf-8",
+            json.dumps({"id": 7, "slug": "a"}),
+            encoding="utf-8",
         )
         manifest = {
             "backup_scope": "tenant",

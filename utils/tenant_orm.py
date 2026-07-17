@@ -6,8 +6,6 @@ Automatic ORM-level tenant isolation:
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from typing import Iterable
 
 from flask import g, has_request_context, request
 from sqlalchemy import event, inspect as sa_inspect, true as sql_true
@@ -20,13 +18,15 @@ class TenantIsolationError(Exception):
     """Raised when a write operation violates tenant isolation."""
 
 
-_SKIP_BLUEPRINTS = frozenset({
-    "auth",      # Login/logout/register — platform-level auth, not tenant data
-    "public",    # Landing, pricing, features — platform-level marketing pages only
-    "language",  # Language switcher — no tenant data accessed
-    "tenants",   # Tenant context switching — platform-owner-only via is_global_tenant_user
-    "shop",      # Public tenant stores — exempt by design (see below)
-})
+_SKIP_BLUEPRINTS = frozenset(
+    {
+        "auth",  # Login/logout/register — platform-level auth, not tenant data
+        "public",  # Landing, pricing, features — platform-level marketing pages only
+        "language",  # Language switcher — no tenant data accessed
+        "tenants",  # Tenant context switching — platform-owner-only via is_global_tenant_user
+        "shop",  # Public tenant stores — exempt by design (see below)
+    }
+)
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
 _ORM_EXEMPT_MODELS = frozenset({"User", "Package", "PackagePurchase"})
 
@@ -206,6 +206,7 @@ def _inject_tenant_criteria(execute_state):
 #   does NOT match the active tenant triggers an error.
 # -------------------------------------------------------------------------
 
+
 @event.listens_for(Session, "before_flush")
 def _inject_tenant_write_guard(session, flush_context, instances):
     if not has_request_context():
@@ -272,9 +273,12 @@ def _inject_tenant_write_guard(session, flush_context, instances):
 def _log_cross_tenant_warning(model_name: str, obj_tid, active_tid):
     try:
         from flask import current_app
+
         current_app.logger.warning(
             "[TENANT_ISOLATION] Cross-tenant write blocked: %s obj.tenant_id=%s active_tenant=%s",
-            model_name, obj_tid, active_tid,
+            model_name,
+            obj_tid,
+            active_tid,
         )
     except Exception:
         pass

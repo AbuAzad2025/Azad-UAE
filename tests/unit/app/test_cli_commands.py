@@ -22,55 +22,71 @@ def cli_app():
 
 class TestBuildAssetsCommand:
     def test_build_assets_invokes_script(self, cli_app):
-        with patch('utils.build_assets.build_all') as build_all:
+        with patch("utils.build_assets.build_all") as build_all:
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(args=['build-assets'])
+            result = runner.invoke(args=["build-assets"])
         assert result.exit_code == 0
         build_all.assert_called_once()
 
 
 class TestStockCommands:
     def test_reconcile_stock_dry_run(self, cli_app):
-        with patch('services.stock_service.StockService.reconcile_stock', return_value={
-            'created': 1,
-            'updated': 2,
-            'errors': 0,
-            'total_pws': 10,
-        }) as reconcile:
+        with patch(
+            "services.stock_service.StockService.reconcile_stock",
+            return_value={
+                "created": 1,
+                "updated": 2,
+                "errors": 0,
+                "total_pws": 10,
+            },
+        ) as reconcile:
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(args=['reconcile-stock'])
+            result = runner.invoke(args=["reconcile-stock"])
         assert result.exit_code == 0
         reconcile.assert_called_once_with(tenant_id=None, commit=False)
-        assert 'Dry run' in result.output
+        assert "Dry run" in result.output
 
     def test_reconcile_stock_commit(self, cli_app):
-        with patch('services.stock_service.StockService.reconcile_stock', return_value={
-            'created': 0,
-            'updated': 1,
-            'errors': 0,
-            'total_pws': 5,
-        }):
+        with patch(
+            "services.stock_service.StockService.reconcile_stock",
+            return_value={
+                "created": 0,
+                "updated": 1,
+                "errors": 0,
+                "total_pws": 5,
+            },
+        ):
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(args=['reconcile-stock', '--tenant-id', '3', '--commit'])
+            result = runner.invoke(
+                args=["reconcile-stock", "--tenant-id", "3", "--commit"]
+            )
         assert result.exit_code == 0
-        assert 'Dry run' not in result.output
+        assert "Dry run" not in result.output
 
 
 class TestBackupCommands:
     def test_backup_success(self, cli_app):
-        with patch('services.backup_service.BackupService.create_backup', return_value={
-            'success': True,
-            'filename': 'backup.zip',
-        }):
+        with patch(
+            "services.backup_service.BackupService.create_backup",
+            return_value={
+                "success": True,
+                "filename": "backup.zip",
+            },
+        ):
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(args=['backup'])
+            result = runner.invoke(args=["backup"])
         assert result.exit_code == 0
-        assert 'backup.zip' in result.output
+        assert "backup.zip" in result.output
 
     def test_backup_failure(self, cli_app):
-        with patch('services.backup_service.BackupService.create_backup', return_value={'success': False}):
+        with patch(
+            "services.backup_service.BackupService.create_backup",
+            return_value={"success": False},
+        ):
             runner = cli_app.test_cli_runner()
-            result = runner.invoke(args=['backup', '--scope', 'tenant', '--tenant-id', '1'])
+            result = runner.invoke(
+                args=["backup", "--scope", "tenant", "--tenant-id", "1"]
+            )
         assert result.exit_code != 0
 
 
@@ -80,6 +96,6 @@ class TestRegisterFunctions:
         register_build_assets_command(app)
         register_stock_commands(app)
         register_backup_commands(app)
-        assert 'build-assets' in app.cli.commands
-        assert 'reconcile-stock' in app.cli.commands
-        assert 'backup' in app.cli.commands
+        assert "build-assets" in app.cli.commands
+        assert "reconcile-stock" in app.cli.commands
+        assert "backup" in app.cli.commands

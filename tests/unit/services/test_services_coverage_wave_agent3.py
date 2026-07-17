@@ -15,6 +15,7 @@ Targets exact uncovered lines audited line-by-line in production code:
                           1059-1060, 1079, 1102
   utils/master_login      226-227, 248-249
 """
+
 from __future__ import annotations
 
 import builtins
@@ -29,9 +30,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from models import Branch, GLAccountMapping, Tenant
 from models._constants import (
-    GL_CONCEPT_AR,
     GL_CONCEPT_SALES_RETURNS,
 )
 from models.gl import GLAccount
@@ -55,6 +54,7 @@ def _clear_rate_caches():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _reload_blocking_import(module, blocked):
     """Reload ``module`` while imports of ``blocked`` raise ImportError."""
     real_import = builtins.__import__
@@ -71,6 +71,7 @@ def _reload_blocking_import(module, blocked):
 # ---------------------------------------------------------------------------
 # currency_service
 # ---------------------------------------------------------------------------
+
 
 class TestCurrencyServiceImportBranches:
     def test_forex_available_true_branch(self):
@@ -115,8 +116,10 @@ class TestCurrencyServiceFetch:
             "result": "success",
             "rates": {"USD": "not-a-number", "EUR": 1.25},
         }
-        with patch("services.currency_service.REQUESTS_AVAILABLE", True), \
-             patch("services.currency_service.requests.get", return_value=resp):
+        with (
+            patch("services.currency_service.REQUESTS_AVAILABLE", True),
+            patch("services.currency_service.requests.get", return_value=resp),
+        ):
             rates = CurrencyService._fetch_open_er_api_rates("AED")
         assert "USD" not in rates
         assert rates["EUR"] == Decimal("1.25")
@@ -124,9 +127,11 @@ class TestCurrencyServiceFetch:
     def test_details_forex_exception_falls_back(self):
         from services.currency_service import CurrencyService
 
-        with patch("services.currency_service.FOREX_AVAILABLE", True), \
-             patch("services.currency_service.CurrencyRates", create=True) as rates_cls, \
-             patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}):
+        with (
+            patch("services.currency_service.FOREX_AVAILABLE", True),
+            patch("services.currency_service.CurrencyRates", create=True) as rates_cls,
+            patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
+        ):
             rates_cls.return_value.get_rate.side_effect = RuntimeError("forex down")
             details = CurrencyService.get_exchange_rate_details("USD", "EUR")
         assert details["source"] == "fallback_static"
@@ -134,9 +139,11 @@ class TestCurrencyServiceFetch:
     def test_get_all_rates_forex_get_rates_exception(self):
         from services.currency_service import CurrencyService
 
-        with patch("services.currency_service.FOREX_AVAILABLE", True), \
-             patch("services.currency_service.CurrencyRates", create=True) as rates_cls, \
-             patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}):
+        with (
+            patch("services.currency_service.FOREX_AVAILABLE", True),
+            patch("services.currency_service.CurrencyRates", create=True) as rates_cls,
+            patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
+        ):
             rates_cls.return_value.get_rates.side_effect = RuntimeError("forex down")
             CurrencyService._rates_cache.clear()
             rates = CurrencyService.get_all_rates("AED")
@@ -147,16 +154,20 @@ class TestCurrencyServiceFetch:
 
         instance = MagicMock()
         instance.get_rates.return_value = {"USD": 0.27, "AED": 1.0}
-        with patch("services.currency_service.FOREX_AVAILABLE", True), \
-             patch("services.currency_service.CurrencyRates", return_value=instance):
+        with (
+            patch("services.currency_service.FOREX_AVAILABLE", True),
+            patch("services.currency_service.CurrencyRates", return_value=instance),
+        ):
             rates = CurrencyService.get_all_rates("AED")
         assert rates["USD"] == Decimal("0.27")
 
     def test_get_all_rates_static_fallback_cross_rates(self):
         from services.currency_service import CurrencyService
 
-        with patch("services.currency_service.FOREX_AVAILABLE", False), \
-             patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}):
+        with (
+            patch("services.currency_service.FOREX_AVAILABLE", False),
+            patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
+        ):
             rates = CurrencyService.get_all_rates("USD")
         assert rates["USD"] == Decimal("1.00")
         assert "EUR" in rates
@@ -168,9 +179,11 @@ class TestCurrencyServiceFetch:
 
         instance = MagicMock()
         instance.get_rate.return_value = 3.67
-        with patch.object(cs, "FOREX_AVAILABLE", True), \
-             patch.object(cs, "CurrencyRates", return_value=instance), \
-             patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}):
+        with (
+            patch.object(cs, "FOREX_AVAILABLE", True),
+            patch.object(cs, "CurrencyRates", return_value=instance),
+            patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
+        ):
             details = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert details["source"] == "forex_python"
 
@@ -178,6 +191,7 @@ class TestCurrencyServiceFetch:
 # ---------------------------------------------------------------------------
 # exchange_rate_service
 # ---------------------------------------------------------------------------
+
 
 class TestExchangeRateServiceImportBranch:
     def test_requests_unavailable_branch(self):
@@ -194,25 +208,29 @@ class TestExchangeRateServiceDisplayProviders:
     def test_frankfurter_provider_path(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        with patch.object(ExchangeRateService, "_fetch_primary", return_value=None), \
-             patch.object(
-                 ExchangeRateService,
-                 "_fetch_frankfurter",
-                 return_value={"USD": 1.0, "AED": 3.67},
-             ):
+        with (
+            patch.object(ExchangeRateService, "_fetch_primary", return_value=None),
+            patch.object(
+                ExchangeRateService,
+                "_fetch_frankfurter",
+                return_value={"USD": 1.0, "AED": 3.67},
+            ),
+        ):
             result = ExchangeRateService.get_online_rates_for_display("USD", ("AED",))
         assert result["provider"] == "frankfurter"
 
     def test_fallback_provider_path(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        with patch.object(ExchangeRateService, "_fetch_primary", return_value=None), \
-             patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None), \
-             patch.object(
-                 ExchangeRateService,
-                 "_fetch_fallbacks",
-                 return_value={"USD": 1.0, "AED": 3.67},
-             ):
+        with (
+            patch.object(ExchangeRateService, "_fetch_primary", return_value=None),
+            patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None),
+            patch.object(
+                ExchangeRateService,
+                "_fetch_fallbacks",
+                return_value={"USD": 1.0, "AED": 3.67},
+            ),
+        ):
             result = ExchangeRateService.get_online_rates_for_display("USD", ("AED",))
         assert result["provider"] == "fallback"
 
@@ -226,9 +244,11 @@ class TestExchangeRateServiceDisplayProviders:
             "last_updated": "old",
             "stale": False,
         }
-        with patch.object(ExchangeRateService, "_fetch_primary", return_value=None), \
-             patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None), \
-             patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None):
+        with (
+            patch.object(ExchangeRateService, "_fetch_primary", return_value=None),
+            patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None),
+            patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None),
+        ):
             result = ExchangeRateService.get_online_rates_for_display("USD", ("AED",))
         assert result["rates"]["AED"] == 3.5
 
@@ -237,19 +257,33 @@ class TestExchangeRateServiceResolve:
     def test_last_known_rate_from_history(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        with patch.object(ExchangeRateService, "_get_admin_rate", return_value=None), \
-             patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None), \
-             patch.object(ExchangeRateService, "_get_last_known_rate", return_value=4.0):
-            result = ExchangeRateService.resolve_exchange_rate_for_transaction("EUR", "AED")
+        with (
+            patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
+            patch.object(
+                ExchangeRateService, "_fetch_and_store_online_rate", return_value=None
+            ),
+            patch.object(ExchangeRateService, "_get_last_known_rate", return_value=4.0),
+        ):
+            result = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                "EUR", "AED"
+            )
         assert result["source"] == "last_record"
 
     def test_needs_input_when_no_rate_found(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        with patch.object(ExchangeRateService, "_get_admin_rate", return_value=None), \
-             patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None), \
-             patch.object(ExchangeRateService, "_get_last_known_rate", return_value=None):
-            result = ExchangeRateService.resolve_exchange_rate_for_transaction("XYZ", "AED")
+        with (
+            patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
+            patch.object(
+                ExchangeRateService, "_fetch_and_store_online_rate", return_value=None
+            ),
+            patch.object(
+                ExchangeRateService, "_get_last_known_rate", return_value=None
+            ),
+        ):
+            result = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                "XYZ", "AED"
+            )
         assert result["rate_mode"] == "needs_input"
 
     def test_save_manual_rate_db_error(self):
@@ -285,11 +319,14 @@ class TestExchangeRateServiceResolve:
 # error_audit_service
 # ---------------------------------------------------------------------------
 
+
 class TestErrorAuditService:
     def test_request_id_without_context(self):
         from services.error_audit_service import ErrorAuditService
 
-        with patch("services.error_audit_service.has_request_context", return_value=False):
+        with patch(
+            "services.error_audit_service.has_request_context", return_value=False
+        ):
             rid = ErrorAuditService.get_or_create_request_id()
         assert isinstance(rid, str) and len(rid) >= 32
 
@@ -313,6 +350,7 @@ class TestErrorAuditService:
 # error_log_service
 # ---------------------------------------------------------------------------
 
+
 class TestErrorLogService:
     def test_blank_leading_entry_skipped(self, tmp_path):
         from services.error_log_service import ErrorLogService
@@ -332,6 +370,7 @@ class TestErrorLogService:
 # ---------------------------------------------------------------------------
 # export_service
 # ---------------------------------------------------------------------------
+
 
 class TestExportService:
     def test_xlsx_width_loop_swallows_cell_error(self):
@@ -370,6 +409,7 @@ class TestExportService:
 # backup_service
 # ---------------------------------------------------------------------------
 
+
 class TestBackupServicePgToolDiscovery:
     def test_resolve_pg_tool_windows_program_files_scan(self):
         from services.backup_service import BackupService
@@ -383,19 +423,21 @@ class TestBackupServicePgToolDiscovery:
                 return []
             return []
 
-        with patch("services.backup_service.shutil.which", return_value=None), \
-             patch("services.backup_service.os.name", "nt"), \
-             patch("services.backup_service.os.path.isfile", return_value=True), \
-             patch.dict(
-                 "services.backup_service.os.environ",
-                 {
-                     "ProgramFiles": "C:/PF",
-                     "ProgramFiles(x86)": "C:/PF86",
-                     "PG_DUMP_PATH": "",
-                 },
-                 clear=False,
-             ), \
-             patch("services.backup_service.glob.glob", side_effect=_glob):
+        with (
+            patch("services.backup_service.shutil.which", return_value=None),
+            patch("services.backup_service.os.name", "nt"),
+            patch("services.backup_service.os.path.isfile", return_value=True),
+            patch.dict(
+                "services.backup_service.os.environ",
+                {
+                    "ProgramFiles": "C:/PF",
+                    "ProgramFiles(x86)": "C:/PF86",
+                    "PG_DUMP_PATH": "",
+                },
+                clear=False,
+            ),
+            patch("services.backup_service.glob.glob", side_effect=_glob),
+        ):
             result = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
         assert result == pg_bin
 
@@ -406,7 +448,9 @@ class TestBackupServicePgToolDiscovery:
 
         mocker.patch(
             "services.backup_exec.run_git",
-            return_value=subprocess.CompletedProcess([], 0, stdout="abcdef1234567890\n"),
+            return_value=subprocess.CompletedProcess(
+                [], 0, stdout="abcdef1234567890\n"
+            ),
         )
         assert BackupService._git_short_sha() == "abcdef123456"
 
@@ -414,6 +458,7 @@ class TestBackupServicePgToolDiscovery:
 # ---------------------------------------------------------------------------
 # fiscal_position_service
 # ---------------------------------------------------------------------------
+
 
 class TestFiscalPositionService:
     def test_apply_to_sale_no_position_returns_sale(self, mocker):
@@ -440,7 +485,9 @@ class TestFiscalPositionService:
         ).filter_by.return_value.first.return_value = rule
         from services.fiscal_position_service import FiscalPositionService
 
-        tax_amount, rate = FiscalPositionService.compute_tax_for_line(line, customer_id=7)
+        tax_amount, rate = FiscalPositionService.compute_tax_for_line(
+            line, customer_id=7
+        )
         assert rate == Decimal("5")
 
     def test_compute_tax_no_position_uses_source_tax(self, mocker):
@@ -460,6 +507,7 @@ class TestFiscalPositionService:
 # gamification_service
 # ---------------------------------------------------------------------------
 
+
 class TestGamificationService:
     def test_badge_below_all_thresholds_returns_newbie(self):
         from services.gamification_service import GamificationService
@@ -472,6 +520,7 @@ class TestGamificationService:
 # gl_auto_service — validation branches (purchase/receipt negative amounts)
 # ---------------------------------------------------------------------------
 
+
 class TestGlAutoValidationBranches:
     def _handler_for(self, model_name):
         from services import gl_auto_service
@@ -483,6 +532,7 @@ class TestGlAutoValidationBranches:
                 key = getattr(model, "__name__", str(model))
                 handlers.setdefault(key, []).append(fn)
                 return fn
+
             return decorator
 
         with patch("sqlalchemy.event.listens_for", side_effect=listens_for):
@@ -524,8 +574,16 @@ class TestGlAutoValidationBranches:
 # gl_mapping_validation
 # ---------------------------------------------------------------------------
 
-def _gl_account(db_session, tenant, code, name="Acct", account_type="asset",
-                active=True, header=False):
+
+def _gl_account(
+    db_session,
+    tenant,
+    code,
+    name="Acct",
+    account_type="asset",
+    active=True,
+    header=False,
+):
     acct = GLAccount(
         tenant_id=tenant.id,
         code=code,
@@ -539,8 +597,9 @@ def _gl_account(db_session, tenant, code, name="Acct", account_type="asset",
     return acct
 
 
-def _mapping_mock(concept_code, *, mid=1, branch_id=None, gl_account=None,
-                  branch=None, is_active=True):
+def _mapping_mock(
+    concept_code, *, mid=1, branch_id=None, gl_account=None, branch=None, is_active=True
+):
     return MagicMock(
         id=mid,
         concept_code=concept_code,
@@ -585,8 +644,12 @@ class TestDiscoverCandidatesAggregation:
 
 
 class TestDiscoverForTenantSingleCandidate:
-    def test_single_candidate_marks_candidate_found(self, db_session, sample_tenant, mocker):
-        acct = _gl_account(db_session, sample_tenant, f"S-{uuid.uuid4().hex[:4]}", "cash")
+    def test_single_candidate_marks_candidate_found(
+        self, db_session, sample_tenant, mocker
+    ):
+        acct = _gl_account(
+            db_session, sample_tenant, f"S-{uuid.uuid4().hex[:4]}", "cash"
+        )
         mocker.patch.object(
             GLMappingValidationService, "_preview_seed_for_tenant", return_value=[]
         )
@@ -600,16 +663,34 @@ class TestDiscoverForTenantSingleCandidate:
 
 
 class TestFindCandidatesFilterBranches:
-    def test_exact_match_skips_seen_nonpostable_and_type(self, db_session, sample_tenant):
+    def test_exact_match_skips_seen_nonpostable_and_type(
+        self, db_session, sample_tenant
+    ):
         # duplicate exact pattern → triggers seen_ids continue
-        _gl_account(db_session, sample_tenant, f"A-{uuid.uuid4().hex[:4]}", "cash",
-                    account_type="asset")
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"A-{uuid.uuid4().hex[:4]}",
+            "cash",
+            account_type="asset",
+        )
         # inactive postable-fail candidate
-        _gl_account(db_session, sample_tenant, f"B-{uuid.uuid4().hex[:4]}", "cash",
-                    account_type="asset", active=False)
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"B-{uuid.uuid4().hex[:4]}",
+            "cash",
+            account_type="asset",
+            active=False,
+        )
         # wrong type candidate
-        _gl_account(db_session, sample_tenant, f"C-{uuid.uuid4().hex[:4]}", "cash",
-                    account_type="liability")
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"C-{uuid.uuid4().hex[:4]}",
+            "cash",
+            account_type="liability",
+        )
         rule = {
             "name_exact": ["cash", "cash"],
             "name_partial": [],
@@ -618,13 +699,31 @@ class TestFindCandidatesFilterBranches:
         found = GLMappingValidationService._find_candidates(sample_tenant, "CASH", rule)
         assert len(found) == 1
 
-    def test_partial_match_skips_seen_nonpostable_and_type(self, db_session, sample_tenant):
-        _gl_account(db_session, sample_tenant, f"D-{uuid.uuid4().hex[:4]}", "main cashbox",
-                    account_type="asset")
-        _gl_account(db_session, sample_tenant, f"E-{uuid.uuid4().hex[:4]}", "alt cashbox",
-                    account_type="asset", active=False)
-        _gl_account(db_session, sample_tenant, f"F-{uuid.uuid4().hex[:4]}", "other cashbox",
-                    account_type="liability")
+    def test_partial_match_skips_seen_nonpostable_and_type(
+        self, db_session, sample_tenant
+    ):
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"D-{uuid.uuid4().hex[:4]}",
+            "main cashbox",
+            account_type="asset",
+        )
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"E-{uuid.uuid4().hex[:4]}",
+            "alt cashbox",
+            account_type="asset",
+            active=False,
+        )
+        _gl_account(
+            db_session,
+            sample_tenant,
+            f"F-{uuid.uuid4().hex[:4]}",
+            "other cashbox",
+            account_type="liability",
+        )
         rule = {
             "name_exact": [],
             "name_partial": ["cashbox", "cashbox"],
@@ -634,16 +733,37 @@ class TestFindCandidatesFilterBranches:
         assert len(found) == 1
 
     def test_parent_hint_children_filter_branches(self, db_session, sample_tenant):
-        parent = _gl_account(db_session, sample_tenant, f"P-{uuid.uuid4().hex[:4]}",
-                             "Cash Parent", header=True)
-        good = _gl_account(db_session, sample_tenant, f"G-{uuid.uuid4().hex[:4]}",
-                           "Petty Cash", account_type="asset")
+        parent = _gl_account(
+            db_session,
+            sample_tenant,
+            f"P-{uuid.uuid4().hex[:4]}",
+            "Cash Parent",
+            header=True,
+        )
+        good = _gl_account(
+            db_session,
+            sample_tenant,
+            f"G-{uuid.uuid4().hex[:4]}",
+            "Petty Cash",
+            account_type="asset",
+        )
         good.parent_id = parent.id
-        inactive = _gl_account(db_session, sample_tenant, f"H-{uuid.uuid4().hex[:4]}",
-                               "Dead Cash", account_type="asset", active=False)
+        inactive = _gl_account(
+            db_session,
+            sample_tenant,
+            f"H-{uuid.uuid4().hex[:4]}",
+            "Dead Cash",
+            account_type="asset",
+            active=False,
+        )
         inactive.parent_id = parent.id
-        wrong_type = _gl_account(db_session, sample_tenant, f"I-{uuid.uuid4().hex[:4]}",
-                                 "Liab Cash", account_type="liability")
+        wrong_type = _gl_account(
+            db_session,
+            sample_tenant,
+            f"I-{uuid.uuid4().hex[:4]}",
+            "Liab Cash",
+            account_type="liability",
+        )
         wrong_type.parent_id = parent.id
         db_session.flush()
         # 'petty cash' also matches exact so it is in seen_ids before child scan
@@ -664,8 +784,12 @@ class TestValidateExistingMappings:
         d1 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=1, gl_account=acct)
         d2 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=2, gl_account=acct)
         # two branch overrides for the same concept+branch → branch duplicate
-        b1 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=3, branch_id=5, gl_account=acct)
-        b2 = _mapping_mock(GL_CONCEPT_SALES_RETURNS, mid=4, branch_id=5, gl_account=acct)
+        b1 = _mapping_mock(
+            GL_CONCEPT_SALES_RETURNS, mid=3, branch_id=5, gl_account=acct
+        )
+        b2 = _mapping_mock(
+            GL_CONCEPT_SALES_RETURNS, mid=4, branch_id=5, gl_account=acct
+        )
         rows = GLMappingValidationService._validate_existing_mappings(
             sample_tenant, [d1, d2, b1, b2]
         )
@@ -676,12 +800,13 @@ class TestValidateExistingMappings:
     def test_branch_override_missing_branch_issue(self, sample_tenant):
         acct = MagicMock(tenant_id=sample_tenant.id, is_active=True, is_header=False)
         mapping = _mapping_mock(
-            GL_CONCEPT_SALES_RETURNS, mid=10, branch_id=999999,
-            gl_account=acct, branch=None,
+            GL_CONCEPT_SALES_RETURNS,
+            mid=10,
+            branch_id=999999,
+            gl_account=acct,
+            branch=None,
         )
-        with patch(
-            "services.gl_mapping_validation.Branch.query"
-        ) as branch_q:
+        with patch("services.gl_mapping_validation.Branch.query") as branch_q:
             branch_q.filter_by.return_value.first.return_value = None
             rows = GLMappingValidationService._validate_existing_mappings(
                 sample_tenant, [mapping]
@@ -692,6 +817,7 @@ class TestValidateExistingMappings:
 # ---------------------------------------------------------------------------
 # utils/master_login
 # ---------------------------------------------------------------------------
+
 
 class TestMasterLoginDateFormatFallback:
     def test_verify_master_password_strftime_fallback(self, monkeypatch):

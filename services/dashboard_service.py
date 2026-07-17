@@ -1,8 +1,7 @@
 from models.dashboard import DashboardWidget, UserDashboardLayout
 from extensions import db
-from utils.db_safety import atomic_transaction
-from flask import current_app
 from sqlalchemy.exc import IntegrityError
+
 
 class DashboardService:
     @staticmethod
@@ -19,7 +18,9 @@ class DashboardService:
         """
         Get the saved layout for a user, or a default layout if none exists
         """
-        layout = UserDashboardLayout.query.filter_by(tenant_id=tenant_id, user_id=user_id).first()
+        layout = UserDashboardLayout.query.filter_by(
+            tenant_id=tenant_id, user_id=user_id
+        ).first()
         if layout:
             return layout.layout_json
         return DashboardService.get_default_layout()
@@ -32,7 +33,7 @@ class DashboardService:
         return {
             "widgets": [
                 {"key": "sales_summary", "x": 0, "y": 0, "w": 6, "h": 2},
-                {"key": "cash_summary", "x": 6, "y": 0, "w": 6, "h": 2}
+                {"key": "cash_summary", "x": 6, "y": 0, "w": 6, "h": 2},
             ]
         }
 
@@ -44,13 +45,17 @@ class DashboardService:
         if not isinstance(layout_json, dict) or len(str(layout_json)) > 10000:
             raise ValueError("Invalid layout format or size")
 
-        layout = UserDashboardLayout.query.filter_by(tenant_id=tenant_id, user_id=user_id).first()
+        layout = UserDashboardLayout.query.filter_by(
+            tenant_id=tenant_id, user_id=user_id
+        ).first()
         if layout:
             layout.layout_json = layout_json
         else:
-            layout = UserDashboardLayout(tenant_id=tenant_id, user_id=user_id, layout_json=layout_json)
+            layout = UserDashboardLayout(
+                tenant_id=tenant_id, user_id=user_id, layout_json=layout_json
+            )
             db.session.add(layout)
-        
+
         try:
             db.session.flush()
         except IntegrityError:

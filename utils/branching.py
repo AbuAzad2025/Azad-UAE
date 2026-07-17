@@ -80,6 +80,7 @@ def role_requires_branch(role=None, *, is_owner=False):
 
 def get_accessible_branches_query(user=None):
     from models import Branch
+
     query = Branch.query.filter_by(is_active=True)
     user = _resolve_user(user)
     if not user or not getattr(user, "is_authenticated", False):
@@ -97,11 +98,17 @@ def get_accessible_branches_query(user=None):
 
 def get_accessible_branches(user=None):
     from models import Branch
-    return get_accessible_branches_query(user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
+
+    return (
+        get_accessible_branches_query(user)
+        .order_by(Branch.is_main.desc(), Branch.code, Branch.name)
+        .all()
+    )
 
 
 def user_can_access_branch(branch_id, user=None):
     from models import Branch
+
     if branch_id in (None, "", "all"):
         return is_global_user(user)
     try:
@@ -115,6 +122,7 @@ def user_can_access_branch(branch_id, user=None):
 
 def get_main_branch():
     from models import Branch
+
     tenant_id = get_active_tenant_id(current_user)
     query = Branch.query.filter_by(is_active=True, is_main=True)
     if tenant_id is not None:
@@ -146,7 +154,9 @@ def get_active_branch_id(user=None):
     if not user or not getattr(user, "is_authenticated", False):
         return None
 
-    session_branch_id = session.get(ACTIVE_BRANCH_SESSION_KEY) if has_request_context() else None
+    session_branch_id = (
+        session.get(ACTIVE_BRANCH_SESSION_KEY) if has_request_context() else None
+    )
     session_mode = get_active_branch_mode()
 
     if is_global_user(user):
@@ -160,13 +170,18 @@ def get_active_branch_id(user=None):
         return None
 
     user_branch_id = getattr(user, "branch_id", None)
-    if user_branch_id and session_branch_id and int(session_branch_id or 0) == int(user_branch_id or 0):
+    if (
+        user_branch_id
+        and session_branch_id
+        and int(session_branch_id or 0) == int(user_branch_id or 0)
+    ):
         return int(user_branch_id or 0)
     return int(user_branch_id or 0) if user_branch_id else None
 
 
 def get_active_branch(user=None):
     from models import Branch
+
     branch_id = get_active_branch_id(user)
     if not branch_id:
         return None
@@ -205,6 +220,7 @@ def clear_active_branch():
 
 def get_accessible_warehouses_query(user=None):
     from models import Warehouse
+
     query = Warehouse.query.filter_by(is_active=True)
     tenant_id = get_active_tenant_id(user)
     if tenant_id is not None:
@@ -217,10 +233,15 @@ def get_accessible_warehouses_query(user=None):
 
 def get_accessible_warehouses(user=None):
     from models import Warehouse
-    return get_accessible_warehouses_query(user).order_by(
-        Warehouse.is_main.desc(),
-        Warehouse.name,
-    ).all()
+
+    return (
+        get_accessible_warehouses_query(user)
+        .order_by(
+            Warehouse.is_main.desc(),
+            Warehouse.name,
+        )
+        .all()
+    )
 
 
 def get_accessible_warehouse_ids(user=None):
@@ -229,6 +250,7 @@ def get_accessible_warehouse_ids(user=None):
 
 def get_branch_stock_map(product_ids=None, warehouse_ids=None):
     from models import StockMovement
+
     warehouse_ids = list(warehouse_ids or [])
     if not warehouse_ids:
         return {}
@@ -253,12 +275,15 @@ def get_product_stock(product_id, *, warehouse_id=None, warehouse_ids=None, user
     elif warehouse_ids is None:
         warehouse_ids = get_accessible_warehouse_ids(user)
 
-    stock_map = get_branch_stock_map(product_ids=[product_id], warehouse_ids=warehouse_ids)
+    stock_map = get_branch_stock_map(
+        product_ids=[product_id], warehouse_ids=warehouse_ids
+    )
     return stock_map.get(product_id, Decimal("0"))
 
 
 def get_visible_products_query(user=None):
     from models import Product, StockMovement
+
     query = apply_tenant_scope(
         Product.query.filter(Product.is_active == True),
         Product,
@@ -269,16 +294,19 @@ def get_visible_products_query(user=None):
         return query
     if not warehouse_ids:
         return query.filter(Product.id < 0)
-    subq = db.session.query(Product.id).join(
-        Product.stock_movements
-    ).filter(
-        StockMovement.warehouse_id.in_(warehouse_ids)
-    ).distinct().subquery()
+    subq = (
+        db.session.query(Product.id)
+        .join(Product.stock_movements)
+        .filter(StockMovement.warehouse_id.in_(warehouse_ids))
+        .distinct()
+        .subquery()
+    )
     return query.filter(Product.id.in_(db.session.query(subq.c.id)))
 
 
 def user_can_access_warehouse(warehouse_id, user=None):
     from models import Warehouse
+
     if warehouse_id is None:
         return False
     query = get_accessible_warehouses_query(user).filter(Warehouse.id == warehouse_id)
@@ -287,10 +315,15 @@ def user_can_access_warehouse(warehouse_id, user=None):
 
 def ensure_warehouse_access(warehouse_id, user=None):
     from models import Warehouse
+
     if not warehouse_id:
         raise ValueError("⚠️ يجب اختيار مستودع صالح.")
 
-    warehouse = get_accessible_warehouses_query(user).filter(Warehouse.id == warehouse_id).first()
+    warehouse = (
+        get_accessible_warehouses_query(user)
+        .filter(Warehouse.id == warehouse_id)
+        .first()
+    )
     if not warehouse:
         raise ValueError("⚠️ المستودع المحدد خارج نطاق الفرع أو غير نشط.")
     return warehouse

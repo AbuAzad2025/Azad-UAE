@@ -22,26 +22,36 @@ import ai_knowledge.core.conversation_manager as _conversation_manager_mod
 import ai_knowledge.core.memory_system as _memory_system_mod
 
 __all__ = [
-    'ContextEngine', 'context_engine',
-    'ConversationManager', 'get_conversation_manager',
-    'LongTermMemory', 'get_memory_system',
-    'SystemIntegrator', 'system_integrator',
-    'ReasoningEngine', 'get_reasoning_engine',
-    'data_analyzer', 'global_connector', 'knowledge_expander',
-    'document_generator', 'advanced_laws',
+    "ContextEngine",
+    "context_engine",
+    "ConversationManager",
+    "get_conversation_manager",
+    "LongTermMemory",
+    "get_memory_system",
+    "SystemIntegrator",
+    "system_integrator",
+    "ReasoningEngine",
+    "get_reasoning_engine",
+    "data_analyzer",
+    "global_connector",
+    "knowledge_expander",
+    "document_generator",
+    "advanced_laws",
 ]
 
 
 def __getattr__(name):
-    if name == '_conversation_manager_instance':
+    if name == "_conversation_manager_instance":
         return _conversation_manager_mod._conversation_manager_instance
-    if name == '_memory_instance':
+    if name == "_memory_instance":
         return _memory_system_mod._memory_instance
-    if name in ('AzadLearningSystem', 'learning_system'):
+    if name in ("AzadLearningSystem", "learning_system"):
         import importlib
-        mod = importlib.import_module('ai_knowledge.core.learning_system')
+
+        mod = importlib.import_module("ai_knowledge.core.learning_system")
         val = getattr(mod, name)
         import sys as _sys
+
         setattr(_sys.modules[__name__], name, val)
         return val
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

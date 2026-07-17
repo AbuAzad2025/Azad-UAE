@@ -3,18 +3,18 @@ Scoped backup export (JSONL) and restore with optional ID remap.
 
 Used for tenant / branch / store backups — never mixes scopes.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
 import os
-import sys
 import tarfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import text
@@ -27,13 +27,10 @@ from services.backup_scope_config import (
     SCOPE_STORE,
     SCOPE_TENANT,
     TABLE_EXPORT_ORDER,
-    build_tenant_uploads_archive,
-    collect_scoped_upload_paths,
     export_scoped_database,
     read_data_directory,
     table_exists,
     normalize_row_to_target,
-    write_data_directory,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +44,11 @@ TABLE_FK_REMAP: Dict[str, Dict[str, str]] = {
     "users": {"tenant_id": "tenants", "branch_id": "branches"},
     "products": {"tenant_id": "tenants", "category_id": "product_categories"},
     "product_categories": {"tenant_id": "tenants", "parent_id": "product_categories"},
-    "product_partners": {"tenant_id": "tenants", "product_id": "products", "partner_id": "customers"},
+    "product_partners": {
+        "tenant_id": "tenants",
+        "product_id": "products",
+        "partner_id": "customers",
+    },
     "customers": {"tenant_id": "tenants"},
     "suppliers": {"tenant_id": "tenants"},
     "warehouses": {"tenant_id": "tenants", "branch_id": "branches"},
@@ -299,8 +300,14 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
     """Apply schema to empty target DB via schema-only pg_dump from source (preferred) or flask db upgrade."""
     from services.backup_service import BackupService
 
-    source_url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI") or ""
-    if source_url and not BackupService._urls_same_database(source_url, target_database_url):
+    source_url = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        or ""
+    )
+    if source_url and not BackupService._urls_same_database(
+        source_url, target_database_url
+    ):
         src = BackupService._parse_db_url(source_url)
         tgt = BackupService._parse_db_url(target_database_url)
         pg_dump = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
@@ -437,9 +444,15 @@ def restore_scoped_to_target(
 
     from services.backup_service import BackupService
 
-    current_url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI") or ""
+    current_url = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        or ""
+    )
     if BackupService._urls_same_database(current_url, target_database_url):
-        outcome["errors"].append("Target database must differ from current DATABASE_URL")
+        outcome["errors"].append(
+            "Target database must differ from current DATABASE_URL"
+        )
         return outcome
 
     ok_schema, schema_err = ensure_target_schema(target_database_url)
@@ -451,7 +464,9 @@ def restore_scoped_to_target(
 
     src_tid = int(manifest.get("tenant_id") or manifest.get("source_tenant_id") or 0)
 
-    if os.path.isdir(data_dir) and os.path.isfile(os.path.join(data_dir, "schema_meta.json")):
+    if os.path.isdir(data_dir) and os.path.isfile(
+        os.path.join(data_dir, "schema_meta.json")
+    ):
         tables_data, export_meta = read_data_directory(data_dir)
         dependency_order = export_meta.get("table_order") or list(tables_data.keys())
     elif os.path.isfile(legacy_export):
@@ -504,7 +519,11 @@ def restore_scoped_to_target(
                 branch_rows = tables_data.get("branches") or []
                 if branch_rows:
                     old_bid = int(branch_rows[0]["id"])
-                    new_bid = int(target_branch_id) if target_branch_id else _new_id(conn, "branches")
+                    new_bid = (
+                        int(target_branch_id)
+                        if target_branch_id
+                        else _new_id(conn, "branches")
+                    )
                     id_maps.setdefault("branches", {})[old_bid] = new_bid
                     br = dict(branch_rows[0])
                     br["id"] = new_bid
@@ -516,7 +535,11 @@ def restore_scoped_to_target(
                 store_rows = tables_data.get("tenant_stores") or []
                 if store_rows:
                     old_sid = int(store_rows[0]["id"])
-                    new_sid = int(target_store_id) if target_store_id else _new_id(conn, "tenant_stores")
+                    new_sid = (
+                        int(target_store_id)
+                        if target_store_id
+                        else _new_id(conn, "tenant_stores")
+                    )
                     id_maps.setdefault("tenant_stores", {})[old_sid] = new_sid
                     sr = dict(store_rows[0])
                     sr["id"] = new_sid
@@ -597,15 +620,24 @@ def restore_scoped_to_target(
             try:
                 with tarfile.open(uploads_arc, "r:gz") as tar:
                     for member in tar.getmembers():
-                        target = os.path.abspath(os.path.join(restore_uploads_dir, member.name))
-                        if not target.startswith(dest_abs + os.sep) and target != dest_abs:
-                            outcome["warnings"].append(f"skipped unsafe path {member.name}")
+                        target = os.path.abspath(
+                            os.path.join(restore_uploads_dir, member.name)
+                        )
+                        if (
+                            not target.startswith(dest_abs + os.sep)
+                            and target != dest_abs
+                        ):
+                            outcome["warnings"].append(
+                                f"skipped unsafe path {member.name}"
+                            )
                             continue
                     tar.extractall(restore_uploads_dir, filter="data")
                 outcome["uploads_restored_to"] = restore_uploads_dir
             except (tarfile.TarError, EOFError, OSError) as exc:
                 outcome["ok"] = False
-                outcome["errors"].append(f"uploads restore failed: {type(exc).__name__}")
+                outcome["errors"].append(
+                    f"uploads restore failed: {type(exc).__name__}"
+                )
                 return outcome
 
     outcome["target_tenant_id"] = force_tid
@@ -712,7 +744,9 @@ def _restore_scoped_table(
         logger.debug("session_replication_role default: %s", exc)
 
 
-def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[str, Any]:
+def verify_scoped_isolation(
+    manifest: Dict[str, Any], extract_dir: str
+) -> Dict[str, Any]:
     """Post-restore or pre-restore archive checks for scope boundaries."""
     out: Dict[str, Any] = {"ok": True, "errors": []}
     scope = str(manifest.get("backup_scope") or "")
@@ -766,7 +800,9 @@ def verify_scoped_isolation(manifest: Dict[str, Any], extract_dir: str) -> Dict[
     for table, expected in counts.items():
         if not expected:
             continue
-        jsonl_path = os.path.join(data_dir, f"{table}.jsonl") if os.path.isdir(data_dir) else ""
+        jsonl_path = (
+            os.path.join(data_dir, f"{table}.jsonl") if os.path.isdir(data_dir) else ""
+        )
         if jsonl_path and not os.path.isfile(jsonl_path):
             continue
         actual = len(tables.get(table) or [])
