@@ -76,30 +76,29 @@ a.btn.btn-outline-secondary span {
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label for="customer_name">
-              <i class="fas fa-user text-primary"></i> {{ t('Name') }} 
+            <label>
+              <i class="fas fa-user text-primary"></i> {{ t('Name') }}
               <span class="text-danger">*</span>
+              {{ form.name(class="form-control", id="customer_name", placeholder="اسم الزبون", required=true) }}
             </label>
-            {{ form.name(class="form-control", id="customer_name", placeholder="اسم الزبون", required=true) }}
           </div>
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label for="customer_type">
-              <i class="fas fa-tag text-primary"></i> {{ t('نوع') }} {{ t('Customer_2') }} 
+            <label>
+              <i class="fas fa-tag text-primary"></i> {{ t('نوع') }} {{ t('Customer_2') }}
               <span class="text-danger">*</span>
+              {{ form.customer_type(class="form-control", id="customer_type", required=true) }}
             </label>
-            {{ form.customer_type(class="form-control", id="customer_type", required=true) }}
           </div>
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label for="is_active">
-              <i class="fas fa-toggle-on text-success"></i> {{ t('Status') }}
-            </label>
             <div class="custom-control custom-switch">
               {{ form.is_active(class="custom-control-input", id="is_active") }}
-              <label class="custom-control-label" for="is_active">{{ t('Active') }}</label>
+              <label class="custom-control-label" for="is_active">
+                <i class="fas fa-toggle-on text-success"></i> {{ t('Active') }}
+              </label>
             </div>
           </div>
         </div>
@@ -108,43 +107,43 @@ a.btn.btn-outline-secondary span {
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label for="customer_phone">
-              <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 
+            <label>
+              <i class="fas fa-phone text-primary"></i> {{ t('Phone') }}
               <span class="text-danger">*</span>
+              {{ form.phone(class="form-control", id="customer_phone", placeholder="+971-5x-xxx-xxxx", required=true) }}
             </label>
-            {{ form.phone(class="form-control", id="customer_phone", placeholder="+971-5x-xxx-xxxx", required=true) }}
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label for="customer_email">
+            <label>
               <i class="fas fa-envelope text-info"></i> {{ t('Email') }}
+              {{ form.email(class="form-control", id="customer_email", placeholder="email@example.com") }}
             </label>
-            {{ form.email(class="form-control", id="customer_email", placeholder="email@example.com") }}
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label for="preferred_currency">
+            <label>
               <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('الافتراضية') }}
+              {{ form.preferred_currency(class="form-control", id="preferred_currency") }}
             </label>
-            {{ form.preferred_currency(class="form-control", id="preferred_currency") }}
           </div>
         </div>
       </div>
 
       <div class="form-group">
-        <label for="customer_address">
+        <label>
           <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
+          {{ form.address(class="form-control", id="customer_address", rows=2, placeholder="العنوان الكامل...") }}
         </label>
-        {{ form.address(class="form-control", id="customer_address", rows=2, placeholder="العنوان الكامل...") }}
       </div>
 
       <div class="form-group">
-        <label for="customer_notes">
+        <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
+          {{ form.notes(class="form-control", id="customer_notes", rows=3, placeholder="أي ملاحظات عن العميل...") }}
         </label>
-        {{ form.notes(class="form-control", id="customer_notes", rows=3, placeholder="أي ملاحظات عن العميل...") }}
       </div>
     </div>
 

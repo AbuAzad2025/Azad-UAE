@@ -52,9 +52,10 @@
               <input type="email" name="email" class="form-control" id="input_email" aria-label="email">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold" for="input_default_currency">العملة الافتراضية *</label>
-              {% from 'macros/currency_options.html' import currency_select %}
-              {{ currency_select(name='default_currency', id='input_default_currency', default_code='AED', extra_classes='form-select') }}
+              <label class="form-label fw-semibold">العملة الافتراضية *
+                {% from 'macros/currency_options.html' import currency_select %}
+                {{ currency_select(name='default_currency', id='input_default_currency', default_code='AED', extra_classes='form-select') }}
+              </label>
             </div>
             <div class="col-12">
               <label class="form-label fw-semibold">{{ t('Address') }}</label>

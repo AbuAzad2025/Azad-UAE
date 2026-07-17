@@ -131,12 +131,12 @@
 
         <div class="col-md-4">
           <div class="form-group">
-            <label for="currency">
+            <label>
               <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
+              {% set dc = company_default_currency or system_default_currency or 'AED' %}
+              {% from 'macros/currency_options.html' import currency_select %}
+              {{ currency_select(name='currency', id='currency', default_code=dc) }}
             </label>
-            {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            {% from 'macros/currency_options.html' import currency_select %}
-            {{ currency_select(name='currency', id='currency', default_code=dc) }}
           </div>
         </div>
 

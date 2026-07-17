@@ -144,9 +144,10 @@
             </div>
             <div class="row2">
               <div class="field">
-                <label for="currency">{{ t('Currency') }}</label>
-                {% from 'macros/currency_options.html' import currency_select %}
-                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
+                <label>{{ t('Currency') }}
+                  {% from 'macros/currency_options.html' import currency_select %}
+                  {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
+                </label>
               </div>
               <div class="field">
                 <label for="exchangeRate">{{ t('Exchange Rate') }}</label>
