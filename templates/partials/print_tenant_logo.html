@@ -4,7 +4,6 @@
   {% if _doc_logo %}
   <img src="{{ _doc_logo if _doc_logo.startswith('http') else url_for('static', filename=_doc_logo) }}"
        alt="{{ (print_branding.company_name_ar if print_branding is defined else none) or (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or 'Logo' }}"
-       class="{{ logo_class|default('logo') }}"
-       {% if logo_style is defined %}style="{{ logo_style }}"{% endif %}>
+        class="{{ logo_class|default('logo') }}" {% if logo_style is defined %}style="{{ logo_style }}"{% endif %} >
   {% endif %}
 {% endif %}

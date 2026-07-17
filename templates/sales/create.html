@@ -172,7 +172,7 @@
             <small class="form-text text-muted">{{ t('تُضاف') }} {{ t('للمجموع') }} قبل {{ t('Tax') }}</small>
           </div>
 
-          <div class="form-group" id="tax-rate-group" {% if not tenant_enable_tax %}class="d-none"{% endif %}>
+          <div id="tax-rate-group" class="form-group{% if not tenant_enable_tax %} d-none{% endif %}">
             <label for="sale_tax_rate" class="font-weight-bold">
               <i class="fas fa-receipt text-warning mr-1"></i>{{ t('Rate') }} {{ t('Tax') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }} VAT% ({{ t('Optional') }})"></i>

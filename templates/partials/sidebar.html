@@ -31,7 +31,7 @@
 
       {% macro _nav(href, icon, label, active_if=none, perm=true) %}
         {% if perm %}<li class="nav-item">
-          <a href="{{ href }}" class="nav-link{% if active_if is not none and request.endpoint == active_if %} active{% endif %}"{% if request.endpoint == active_if %} aria-current="page"{% endif %}>
+          <a href="{{ href }}"class="nav-link{% if active_if is not none and request.endpoint == active_if %} active{% endif %}" {% if request.endpoint == active_if %}aria-current="page"{% endif %}>
             <i class="nav-icon {{ icon }}"></i><p>{{ label }}</p>
           </a>
         </li>{% endif %}

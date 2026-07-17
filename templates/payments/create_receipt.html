@@ -425,9 +425,9 @@
 
               ] %}
 
-              {% for value, label in currency_options %}
+              {% for code, label in currency_options %}
 
-              <option value="{{ value }}" {% if selected_currency == value %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ code }}" {% if selected_currency == code %} selected{% endif %}>{{ label }}</option>
 
               {% endfor %}
 
