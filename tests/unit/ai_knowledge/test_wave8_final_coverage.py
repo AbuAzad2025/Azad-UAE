@@ -912,7 +912,6 @@ class TestWave8ExtraPush:
         from ai_knowledge.core.context_engine import ContextEngine
         from ai_knowledge.core.conversation_manager import ConversationManager
         from ai_knowledge.core.learning_system import AzadLearningSystem
-        from ai_knowledge.core.memory_system import LongTermMemory
         from ai_knowledge.core.reasoning_engine import ReasoningEngine
         from ai_knowledge.agents.multi_agent_system import (
             AccountingAgent,

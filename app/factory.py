@@ -101,9 +101,13 @@ def create_app(config_class=Config) -> Flask:
 
     # Default tenant maintenance check at startup
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
+        run_default_tenant_maintenance_api = None
         try:
             from services.maintenance_service import run_default_tenant_maintenance_api
+        except ImportError:
+            pass
 
+        if run_default_tenant_maintenance_api is not None:
             with app.app_context():
                 result = run_default_tenant_maintenance_api()
                 if result.get("action_needed"):
@@ -114,13 +118,9 @@ def create_app(config_class=Config) -> Flask:
                     app.logger.info(
                         "[OK] Default tenant maintenance check passed - no action needed"
                     )
-        except ImportError:
+        else:
             app.logger.info(
                 "Default tenant maintenance service not available - skipping"
-            )
-        except Exception as e:
-            app.logger.warning(
-                f"Default tenant maintenance check failed (non-critical): {e}"
             )
 
     # Proxy Fix for Nginx/Cloudflare
@@ -290,12 +290,16 @@ def create_app(config_class=Config) -> Flask:
         response.headers["Content-Security-Policy"] = csp
         return response
 
+    register_all_listeners = None
     try:
         from models.events import register_all_listeners
+    except ImportError:
+        pass
 
+    if register_all_listeners is not None:
         with app.app_context():
             register_all_listeners()
-    except ImportError:
+    else:
         app.logger.warning("Event listeners not available")
 
     # Tenant ORM scoping (after all models are imported so registry is populated)
@@ -307,15 +311,17 @@ def create_app(config_class=Config) -> Flask:
         app.logger.error("[ERROR] Tenant ORM scoping failed: %s", exc)
 
     # Register CLI Commands
+    register_cli_commands = None
     try:
         from cli_commands import register_cli_commands
+    except ImportError:
+        pass
 
+    if register_cli_commands is not None:
         register_cli_commands(app)
         app.logger.info("[OK] Enhanced CLI commands registered")
-    except ImportError:
+    else:
         app.logger.info("CLI commands not available - skipping")
-    except Exception as e:
-        app.logger.warning(f"Enhanced CLI commands not registered: {e}")
 
     app.logger.info("[OK] Application initialized successfully")
 

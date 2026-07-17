@@ -1265,7 +1265,7 @@ class TestVoucherPaymentIsolation:
         db_session.add(s)
         db_session.flush()
         # Create a non-global manager user scoped to b1
-        from models import Role, User, Supplier
+        from models import Role, User
 
         manager_role = Role.query.filter_by(slug="manager").first()
         if not manager_role:

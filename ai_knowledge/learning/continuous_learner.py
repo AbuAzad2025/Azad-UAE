@@ -23,11 +23,9 @@ from requests.adapters import HTTPAdapter
 
 Retry: Any
 try:
-    from urllib3.util.retry import Retry as _Retry
-    Retry = _Retry
+    from urllib3.util.retry import Retry
 except ImportError:
-    import requests.packages.urllib3.util.retry as _retry_module
-    Retry = _retry_module.Retry
+    from requests.packages.urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
 
