@@ -32,13 +32,13 @@ body.ps-shop {
   min-height: 100vh;
   background: var(--ps-cream);
   color: var(--ps-black);
-  font-family: var(--ps-font-ar);
+  font-family: var(--ps-font-ar), sans-serif;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
 
 body.ps-shop.ltr {
-  font-family: var(--ps-font-en);
+  font-family: var(--ps-font-en), sans-serif;
   direction: ltr;
 }
 

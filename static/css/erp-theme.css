@@ -205,7 +205,7 @@ html[data-ui-variant="gulf"][data-ui-mode="dark"] {
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: var(--az-font);
+  font-family: var(--az-font), sans-serif;
   background: var(--az-bg);
   color: var(--az-text);
   -webkit-font-smoothing: antialiased;
