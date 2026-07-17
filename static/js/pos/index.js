@@ -788,7 +788,6 @@
 
     qs('#closeSessionBtn').addEventListener('click', async () => {
         hideModalAlert('closeSession');
-        let reportLoaded = false;
         try {
             const r = await fetch('/pos/api/session/report', { credentials: 'same-origin' });
             const j = await r.json();
@@ -796,7 +795,6 @@
                 qs('#closeOpening').textContent = fmt(j.session.opening_balance);
                 qs('#closeCashSales').textContent = fmt(j.session.total_cash_sales);
                 qs('#closeExpected').textContent = fmt((j.session.opening_balance || 0) + (j.session.total_cash_sales || 0));
-                reportLoaded = true;
             }
         } catch (err) {
             showModalAlert('closeSession', 'تعذر تحميل بيانات الجلسة: ' + (err.message || 'خطأ غير معروف'), 'warning');

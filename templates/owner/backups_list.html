@@ -523,7 +523,7 @@ function verifyBackup(filename) {
     }
   })
     .then(async (res) => {
-      let payload = {};
+      let payload;
       try { payload = await res.json(); } catch (e) { payload = {}; }
       return { ok: res.ok, status: res.status, payload };
     })
