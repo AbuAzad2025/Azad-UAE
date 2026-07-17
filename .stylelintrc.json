@@ -15,7 +15,7 @@
     "property-no-vendor-prefix": null,
     "selector-no-qualifying-type": null,
     "color-function-alias-notation": null,
-    "declaration-block-single-line-max-declarations": null,
+    "declaration-block-single-line-max-declarations": 100,
     "keyframes-name-pattern": null,
     "media-feature-range-notation": null,
     "property-no-unknown": null,
