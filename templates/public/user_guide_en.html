@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ current_language if current_language is defined else 'en' }}" dir="{{ 'ltr' if (is_rtl is not defined or not is_rtl) else 'rtl' }}">
+{% if current_language is defined %}
+<html lang="{{ current_language }}" dir="ltr">
+{% else %}
+<html lang="en" dir="ltr">
+{% endif %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

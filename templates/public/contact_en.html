@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-
-<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+{% if is_rtl %}
+<html lang="{{ current_language }}" dir="rtl">
+{% else %}
+<html lang="{{ current_language }}" dir="ltr">
+{% endif %}
 
 <head>
 

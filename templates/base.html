@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
+{% if is_rtl %}
+<html lang="{{ current_language or 'ar' }}" dir="rtl" data-ui-variant="palestinian" data-ui-mode="light">
+{% else %}
+<html lang="{{ current_language or 'ar' }}" dir="ltr" data-ui-variant="palestinian" data-ui-mode="light">
+{% endif %}
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

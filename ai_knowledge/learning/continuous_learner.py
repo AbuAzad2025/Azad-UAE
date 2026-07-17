@@ -76,7 +76,6 @@ class ContinuousLearner:
         retry = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
 
         adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
         session.mount("https://", adapter)
 
         # Headers
@@ -185,7 +184,7 @@ class ContinuousLearner:
             {success: bool, papers: int}
         """
         try:
-            url = "http://export.arxiv.org/api/query"
+            url = "https://export.arxiv.org/api/query"
             params = {"search_query": f"all:{query}", "max_results": max_results}
 
             response = self.session.get(url, params=params, timeout=15)
