@@ -230,13 +230,14 @@
         const r = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
         if (r.status === 404) {
             const j = await r.json().catch(() => ({}));
-            throw new Error(j.error || 'غير موجود');
+            return { ok: false, error: j.error || 'غير موجود' };
         }
         if (!r.ok) {
             const j = await r.json().catch(() => ({}));
-            throw new Error(j.error || ('HTTP ' + r.status));
+            return { ok: false, error: j.error || ('HTTP ' + r.status) };
         }
-        return r.json();
+        const data = await r.json();
+        return { ok: true, data };
     };
     let customerTimer = null;
     qs('#customerSearch').addEventListener('input', function(){
@@ -248,9 +249,10 @@
                 return;
             }
             const res = await fetchJson('/pos/api/customers?q=' + encodeURIComponent(q));
+            if (!res.ok) return;
             const box = qs('#customerResults');
             box.innerHTML = '';
-            res.forEach(c => {
+            res.data.forEach(c => {
                 const a = document.createElement('button');
                 a.type = 'button';
                 a.className = 'list-group-item list-group-item-action';
@@ -273,14 +275,13 @@
         customerHint();
     });
     qs('#walkinCustomer').addEventListener('click', async () => {
-        try {
-            const c = await fetchJson('/pos/api/walkin-customer');
+            const res = await fetchJson('/pos/api/walkin-customer');
+            if (!res.ok) return showAlert(res.error || 'تعذر تحميل عميل نقدي');
+            const c = res.data;
             state.customer = c;
             qs('#customerSearch').value = c.text || c.name;
             customerHint();
             qs('#productSearch').focus();
-        } catch (err) {
-            showAlert(err.message || 'تعذر تحميل عميل نقدي');
         }
     });
     let productTimer = null;
@@ -317,18 +318,20 @@
             qs('#productResults').classList.add('d-none');
             return;
         }
-        try {
-            const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(q) + warehouseParam());
+        const res = await fetchJson('/pos/api/product?code=' + encodeURIComponent(q) + warehouseParam());
+            if (!res.ok) {
+                if ((state.lastProductResults || []).length) {
+                    await addToCart(state.lastProductResults[0]);
+                    qs('#productSearch').value = '';
+                    qs('#productResults').classList.add('d-none');
+                }
+                return;
+            }
+            const p = res.data;
             if (p && p.id) {
                 if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
                 if (p.warning) showAlert(p.warning, 'warning');
                 await addToCart(p);
-                qs('#productSearch').value = '';
-                qs('#productResults').classList.add('d-none');
-            }
-        } catch (err) {
-            if ((state.lastProductResults || []).length) {
-                await addToCart(state.lastProductResults[0]);
                 qs('#productSearch').value = '';
                 qs('#productResults').classList.add('d-none');
             } else {
@@ -346,14 +349,11 @@
         if (productBusy) return;
         productBusy = true;
         qs('#productLoading').classList.remove('d-none');
-        try {
-            const res = await fetchJson('/pos/api/products?q=' + encodeURIComponent(q) + warehouseParam());
-            renderProductResults(res);
-        } catch (err) {
-            showAlert(err.message || 'فشل البحث');
-        } finally {
-            productBusy = false;
-            qs('#productLoading').classList.add('d-none');
+        const res = await fetchJson('/pos/api/products?q=' + encodeURIComponent(q) + warehouseParam());
+        if (res.ok) renderProductResults(res.data);
+        else showAlert(res.error || 'فشل البحث');
+        productBusy = false;
+        qs('#productLoading').classList.add('d-none');
         }
     };
     qs('#productSearch').addEventListener('input', function(){
@@ -459,7 +459,8 @@
             });
             const j = await r.json().catch(()=> ({}));
             if (!r.ok || !j.success) {
-                throw new Error(j.error || ('HTTP ' + r.status));
+                showError(j.error || ('HTTP ' + r.status));
+                return;
             }
             qs('#doneSaleNumber').textContent = j.sale_number;
             qs('#doneViewBtn').href = j.view_url;
@@ -525,16 +526,16 @@
     state.barcodeScanner = new BarcodeScanner({
         onScan: async (code) => {
             if (!code || !code.trim()) return;
-            try {
-                const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(code.trim()) + warehouseParam());
-                if (p && p.id) {
-                    if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
-                    await addToCart(p);
-                    qs('#productSearch').value = '';
-                    qs('#productResults').classList.add('d-none');
-                    showAlert('تمت إضافة ' + p.name, 'success');
-                }
-            } catch (_) {}
+            const res = await fetchJson('/pos/api/product?code=' + encodeURIComponent(code.trim()) + warehouseParam());
+            if (!res.ok) return;
+            const p = res.data;
+            if (p && p.id) {
+                if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
+                await addToCart(p);
+                qs('#productSearch').value = '';
+                qs('#productResults').classList.add('d-none');
+                showAlert('تمت إضافة ' + p.name, 'success');
+            }
         }
     });
     state.barcodeScanner.start();
@@ -581,13 +582,15 @@
     const loadCategories = async () => {
         const box = qs('#posCategories');
         if (!box) return;
-        try {
-            const cats = await fetchJson('/pos/api/categories');
-            let html = '<div class="pos-cat active" data-cat="">الكل</div>';
-            cats.forEach(c => {
-                const name = c.name_ar || c.name;
-                html += `<div class="pos-cat" data-cat="${c.id}">${esc(name)}</div>`;
-            });
+        const res = await fetchJson('/pos/api/categories');
+        if (!res.ok) return;
+        const cats = res.data;
+        if (!cats) return;
+        let html = '<div class="pos-cat active" data-cat="">الكل</div>';
+        cats.forEach(c => {
+            const name = c.name_ar || c.name;
+            html += `<div class="pos-cat" data-cat="${c.id}">${esc(name)}</div>`;
+        });
             box.innerHTML = html;
             box.querySelectorAll('.pos-cat').forEach(el => {
                 el.addEventListener('click', () => {
@@ -605,9 +608,9 @@
         try {
             const url = '/pos/api/products?per_page=60' + (categoryId ? ('&category_id=' + encodeURIComponent(categoryId)) : '') + warehouseParam();
             const res = await fetchJson(url);
-            if (!res.length) { grid.innerHTML = '<div class="pos-cart-empty">لا توجد منتجات</div>'; return; }
+            if (!res.ok || !res.data || !res.data.length) { grid.innerHTML = '<div class="pos-cart-empty">لا توجد منتجات</div>'; return; }
             grid.innerHTML = '';
-            res.forEach(p => {
+            res.data.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'pos-card' + (p.is_out_of_stock ? ' out' : '');
                 const badge = p.is_inactive
@@ -651,45 +654,44 @@
     if (POS_CONFIG.enable_tables && tablesBtn) tablesBtn.classList.remove('d-none');
     if (POS_CONFIG.enable_hold && holdBtn) holdBtn.classList.remove('d-none');
 
-    const loadFloors = async () => {
+const loadFloors = async () => {
         const box = qs('#posFloors');
         const grid = qs('#posTablesGrid');
-        try {
-            const floors = await fetchJson('/pos/api/floors');
-            if (!floors.length) {
-                box.innerHTML = '<div class="pos-cart-empty">لا توجد أرضيات</div>';
-            } else {
-                box.innerHTML = floors.map(f => `<div class="pos-cat" data-floor="${f.id}">${esc(f.name_ar || f.name)}</div>`).join('');
-                box.querySelectorAll('.pos-cat').forEach(el => el.addEventListener('click', () => {
-                    box.querySelectorAll('.pos-cat').forEach(x => x.classList.remove('active'));
-                    el.classList.add('active');
-                    loadTables(el.getAttribute('data-floor'));
-                }));
-                await loadTables(floors[0].id);
-            }
-            if (window.jQuery) $('#posTablesModal').modal('show');
-        } catch (_) { showAlert('تعذر تحميل الطاولات', 'warning'); }
+        const res = await fetchJson('/pos/api/floors');
+        if (!res.ok) return;
+        const floors = res.data;
+        if (!floors || !floors.length) {
+            box.innerHTML = '<div class="pos-cart-empty">لا توجد أرضيات</div>';
+        } else {
+            box.innerHTML = floors.map(f => `<div class="pos-cat" data-floor="${f.id}">${esc(f.name_ar || f.name)}</div>`).join('');
+            box.querySelectorAll('.pos-cat').forEach(el => el.addEventListener('click', () => {
+                box.querySelectorAll('.pos-cat').forEach(x => x.classList.remove('active'));
+                el.classList.add('active');
+                loadTables(el.getAttribute('data-floor'));
+            }));
+        }
     };
     const loadTables = async (floorId) => {
         const grid = qs('#posTablesGrid');
         grid.innerHTML = '<div class="pos-cart-empty"><i class="fas fa-spinner fa-spin"></i></div>';
-        try {
-            const tables = await fetchJson('/pos/api/floors/' + floorId + '/tables');
-            grid.innerHTML = '';
-            tables.forEach(t => {
-                const occupied = t.status && t.status !== 'free';
-                const card = document.createElement('div');
-                card.className = 'pos-card' + (occupied ? ' out' : '');
-                card.innerHTML = `<div class="icon">🪑</div><div class="name">${esc(t.label)}</div><div class="meta"><span class="price">${esc(t.status || 'free')}</span></div>`;
-                card.addEventListener('click', () => {
-                    selectedTable = { id: t.id, label: t.label };
-                    const sel = qs('#posTableSelected'); if (sel) sel.textContent = 'الطاولة المحددة: ' + t.label;
-                    if (tablesBtn) tablesBtn.title = 'الطاولة: ' + t.label;
-                    if (window.jQuery) $('#posTablesModal').modal('hide');
-                });
-                grid.appendChild(card);
+        const res = await fetchJson('/pos/api/floors/' + floorId + '/tables');
+        if (!res.ok) { grid.innerHTML = '<div class="pos-cart-empty">تعذر التحميل</div>'; return; }
+        const tables = res.data;
+        if (!tables) { grid.innerHTML = '<div class="pos-cart-empty">تعذر التحميل</div>'; return; }
+        grid.innerHTML = '';
+        tables.forEach(t => {
+            const occupied = t.status && t.status !== 'free';
+            const card = document.createElement('div');
+            card.className = 'pos-card' + (occupied ? ' out' : '');
+            card.innerHTML = `<div class="icon">🪑</div><div class="name">${esc(t.label)}</div><div class="meta"><span class="price">${esc(t.status || 'free')}</span></div>`;
+            card.addEventListener('click', () => {
+                selectedTable = { id: t.id, label: t.label };
+                const sel = qs('#posTableSelected'); if (sel) sel.textContent = 'الطاولة المحددة: ' + t.label;
+                if (tablesBtn) tablesBtn.title = 'الطاولة: ' + t.label;
+                if (window.jQuery) $('#posTablesModal').modal('hide');
             });
-        } catch (_) { grid.innerHTML = '<div class="pos-cart-empty">تعذر التحميل</div>'; }
+            grid.appendChild(card);
+        });
     };
     if (tablesBtn) {
         tablesBtn.addEventListener('click', loadFloors);
@@ -775,7 +777,10 @@
                 body: JSON.stringify({ opening_balance: balance, notes: notes || undefined })
             });
             const j = await r.json();
-            if (!r.ok || !j.success) throw new Error(j.error || 'فشل فتح الجلسة');
+            if (!r.ok || !j.success) {
+                showModalAlert('openSession', j.error || 'فشل فتح الجلسة', 'danger');
+                return;
+            }
             $('#openSessionModal').modal('hide');
             await loadSession();
             showAlert('تم فتح الجلسة: ' + j.session.number, 'success');
@@ -821,7 +826,10 @@
                 body: JSON.stringify({ closing_balance: balance, notes: notes || undefined })
             });
             const j = await r.json();
-            if (!r.ok || !j.success) throw new Error(j.error || 'فشل إغلاق الجلسة');
+            if (!r.ok || !j.success) {
+                showModalAlert('closeSession', j.error || 'فشل إغلاق الجلسة', 'danger');
+                return;
+            }
             $('#closeSessionModal').modal('hide');
             await loadSession();
             const diff = j.session.difference;

@@ -79,22 +79,31 @@ async function loadFxRates() {
   }
   try {
     const res = await fetch(window._FX_API_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      populateFxDisplay(getFallbackFx());
+      return;
+    }
     const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'data not ok');
+    if (!data.ok) {
+      populateFxDisplay(getFallbackFx());
+      return;
+    }
     fxDisplayCache = data;
     fxDisplayCacheTime = now;
     populateFxDisplay(data);
   } catch (e) {
-    populateFxDisplay({
-      ok: false,
-      base: window._FX_FALLBACK_BASE,
-      rates: { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, EUR: 0.92, SAR: 3.75, EGP: 50.5, GBP: 0.79 },
-      source: 'fallback_static',
-      stale: true,
-      last_updated: new Date().toISOString(),
-    });
+    populateFxDisplay(getFallbackFx());
   }
+
+function getFallbackFx() {
+  return {
+    ok: false,
+    base: window._FX_FALLBACK_BASE,
+    rates: { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, EUR: 0.92, SAR: 3.75, EGP: 50.5, GBP: 0.79 },
+    source: 'fallback_static',
+    stale: true,
+    last_updated: new Date().toISOString(),
+  };
 }
 
 function populateFxDisplay(data) {
