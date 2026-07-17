@@ -14,7 +14,7 @@
     <div>
         <form class="needs-validation ic-2" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="btn btn-success mr-2" onclick="return confirm('{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}')">
+            <button type="submit" class="btn btn-success mr-2" onclick="return confirm(&quot;{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}&quot;)"">
                 <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('تلقائي') }}
             </button>
         </form>
@@ -399,13 +399,13 @@
         data: {
             labels: {{ monthly_labels|tojson }},
             datasets: [{
-                label: '{{ t('Purchases') }}',
+                label: '{{ t("Purchases") }}',
                 data: {{ monthly_purchases|tojson }},
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
-                label: '{{ t('التبرعات') }}',
+                label: '{{ t("التبرعات") }}',
                 data: {{ monthly_donations|tojson }},
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
@@ -425,7 +425,7 @@
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) {
+                        callback: (value) => {
                             return '$' + value;
                         }
                     }
@@ -436,12 +436,12 @@
     
     function lockVault() {
         Swal.fire({
-            title: '{{ t('قفل') }} {{ t('الخزينة_2') }}',
+            title: '{{ t("قفل") }} {{ t("الخزينة_2") }}',
             text: 'هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('الخزينة') }} {{ t('السرية_2') }}',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: '{{ t('نعم،') }} {{ t('قفل') }}',
-            cancelButtonText: '{{ t('Cancel') }}',
+            confirmButtonText: '{{ t("نعم،") }} {{ t("قفل") }}',
+            cancelButtonText: '{{ t("Cancel") }}',
             confirmButtonColor: '#d33'
         }).then((result) => {
             if (result.isConfirmed) {

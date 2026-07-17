@@ -54,7 +54,7 @@
                 <td>
                   <form class="needs-validation d-inline" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-success" onclick="return confirm('{{ t('Restore') }} هذا {{ t('Cheque_2') }}')">
+                    <button type="submit" class="btn btn-success" onclick="return confirm(&quot;{{ t('Restore') }} هذا {{ t('Cheque_2') }}&quot;)"">
                       <i class="fas fa-undo"></i> {{ t('Restore') }}
                     </button>
                   </form>

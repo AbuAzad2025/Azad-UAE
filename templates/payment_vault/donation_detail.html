@@ -224,7 +224,7 @@
                         <div class="col-md-6">
                             <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('{{ t('قبول') }} هذا {{ t('التبرع_2') }}')">
+                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm(&quot;{{ t('قبول') }} هذا {{ t('التبرع_2') }}&quot;)"">
                                     <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -232,7 +232,7 @@
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('{{ t('رفض') }} هذا {{ t('التبرع_2') }}')">
+                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm(&quot;{{ t('رفض') }} هذا {{ t('التبرع_2') }}&quot;)"">
                                     <i class="fas fa-times-circle"></i> {{ t('رفض') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -262,7 +262,7 @@
 {% block extra_js %}
 <script>
 function sendThankYou(email, name, amount) {
-    const subject = encodeURIComponent('{{ t('شكراً') }} على {{ t('تبرعك') }} {{ t('الكريم') }}');
+    const subject = encodeURIComponent('{{ t("شكراً") }} على {{ t("تبرعك") }} {{ t("الكريم") }}');
     const body = encodeURIComponent(`{{ t('عزيزي') }} ${name},\n\n{{ t('نشكرك') }} على {{ t('تبرعك') }} {{ t('الكريم') }} {{ t('بمبلغ') }} $${amount}.\n\nمع {{ t('أطيب') }} {{ t('التحيات') }},\n{{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }

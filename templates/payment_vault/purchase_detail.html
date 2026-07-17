@@ -416,7 +416,7 @@
 
                                 {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
 
-                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm('هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}')">
+                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm(&quot;هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}&quot;)"">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -535,7 +535,7 @@ function sendEmailToCustomer() {
     const packageName = '{{ purchase.package.name_ar if purchase.package else "" }}';
     const orderId = '{{ purchase.id }}';
     const amountPaid = '{{ purchase.amount_paid }}';
-    const subject = '{{ t('Confirm') }} {{ t('Purchase') }} {{ t('Plan') }} - {{ developer_name_ar or developer_name or "Azad Systems" }}';
+    const subject = '{{ t("Confirm") }} {{ t("Purchase") }} {{ t("Plan") }} - {{ developer_name_ar or developer_name or "Azad Systems" }}';
     const body = `{{ t('مرحباً') }} ${customerName},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${packageName}\n{{ t('رقم') }} {{ t('الطلب') }}: #${orderId}\n{{ t('Amount') }}: $${amountPaid}\n\n{{ t('سنتواصل') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('التفعيل') }}.`;
 
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

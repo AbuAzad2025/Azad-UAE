@@ -206,7 +206,7 @@
 
             {% if order.status == 'pending' %}
 
-            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" onsubmit="return confirm('{{ t('Confirm') }} {{ t('الطلب') }} ' + {{ order.sale_number|tojson }} + '؟');">
+            <form class="needs-validation d-inline" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Confirm') }} {{ t('الطلب') }} &quot; + {{ order.sale_number|tojson }} + &quot;؟&quot;);">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

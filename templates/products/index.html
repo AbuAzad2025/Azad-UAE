@@ -345,7 +345,7 @@
 $(document).ready(function() {
   const $tableEl = $('#productsTable');
   const printOptions = {
-    title: '{{ t('كتالوج') }} {{ t('Products') }}',
+    title: '{{ t("كتالوج") }} {{ t("Products") }}',
     headerColor: '#007A3D'
   };
 
@@ -394,7 +394,7 @@ $(document).ready(function() {
 
   $('#filterOut').off('click.smartPrint').on('click.smartPrint', function() {
     $.fn.dataTable.ext.search.push(function(settings, data) {
-      return data[7].includes('{{ t('نفذ') }}');
+      return data[7].includes('{{ t("نفذ") }}');
     });
     table.draw();
     $.fn.dataTable.ext.search.pop();
@@ -431,17 +431,17 @@ function saveStockAdjustment() {
   const notes = $('#adjustmentNotes').val();
   
   if (!adjustmentType) {
-    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('نوع') }} {{ t('Edit_2') }}');
+    alert('{{ t("يرجى") }} {{ t("Select") }} {{ t("نوع") }} {{ t("Edit_2") }}');
     return;
   }
   
   if (!reason) {
-    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('سبب') }} {{ t('Edit_2') }}');
+    alert('{{ t("يرجى") }} {{ t("Select") }} {{ t("سبب") }} {{ t("Edit_2") }}');
     return;
   }
   
   if (!quantity || quantity <= 0) {
-    alert('{{ t('يرجى') }} {{ t('إدخال') }} {{ t('Qty') }} {{ t('صحيحة') }}');
+    alert('{{ t("يرجى") }} {{ t("إدخال") }} {{ t("Qty") }} {{ t("صحيحة") }}');
     return;
   }
   
@@ -460,11 +460,11 @@ function saveStockAdjustment() {
         $('#stockModal').modal('hide');
         location.reload();
       } else {
-        alert('{{ t('حدث') }} {{ t('Error') }}: ' + response.message);
+        alert('{{ t("حدث") }} {{ t("Error") }}: ' + response.message);
       }
     },
     error: function() {
-      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('الاتصال') }}');
+      alert('{{ t("حدث") }} {{ t("Error") }} في {{ t("الاتصال") }}');
     }
   });
 }

@@ -258,7 +258,7 @@
 
         </form>
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('الطلب') }} ' + {{ order.sale_number|tojson }} + '؟');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Cancel') }} {{ t('الطلب') }} &quot; + {{ order.sale_number|tojson }} + &quot;؟&quot;);">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -272,7 +272,7 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm(&quot;{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}&quot;)"">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

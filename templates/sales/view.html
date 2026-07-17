@@ -908,8 +908,8 @@
 <script>
 
 const RETURN_CSRF_TOKEN = document.querySelector('#returnForm [name="csrf_token"]').value;
-const RETURN_QTY_ALERT = '{{ t('يرجى') }} {{ t('تحديد') }} {{ t('Qty') }} {{ t('لمنتج') }} واحد على {{ t('الأقل') }} {{ t('Return_2') }}';
-const RETURN_CONFIRM_MSG = '{{ t('متأكد') }} {{ t('Create') }} {{ t('Return_4') }} {{ t('سيتم') }} {{ t('Update') }} {{ t('Inventory') }} {{ t('والحسابات') }} {{ t('تلقائياً') }}.';
+const RETURN_QTY_ALERT = '{{ t("يرجى") }} {{ t("تحديد") }} {{ t("Qty") }} {{ t("لمنتج") }} واحد على {{ t("الأقل") }} {{ t("Return_2") }}';
+const RETURN_CONFIRM_MSG = '{{ t("متأكد") }} {{ t("Create") }} {{ t("Return_4") }} {{ t("سيتم") }} {{ t("Update") }} {{ t("Inventory") }} {{ t("والحسابات") }} {{ t("تلقائياً") }}.';
 
 $(document).on('click', '[data-action="cancel-sale"]', confirmCancel);
 $(document).on('click', '[data-action="delete-sale"]', confirmDelete);
@@ -1003,7 +1003,7 @@ function submitReturn() {
 
         } else {
 
-            alert('{{ t('Error') }}: ' + data.message);
+            alert('{{ t("Error") }}: ' + data.message);
 
         }
 
@@ -1013,7 +1013,7 @@ function submitReturn() {
 
         console.error('Error:', error);
 
-        alert('{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('الاتصال') }} {{ t('بالخادم') }}');
+        alert('{{ t("حدث") }} {{ t("Error") }} {{ t("أثناء") }} {{ t("الاتصال") }} {{ t("بالخادم") }}');
 
     });
 
@@ -1023,7 +1023,7 @@ function submitReturn() {
 
 function confirmCancel() {
 
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Cancel') }} هذه {{ t('Invoice_3') }}\nلا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
+  if (confirm('هل أنت {{ t("متأكد") }} من {{ t("Cancel") }} هذه {{ t("Invoice_3") }}\nلا يمكن {{ t("التراجع") }} عن هذا {{ t("الإجراء") }}.')) {
 
     document.getElementById('cancelForm').submit();
 
@@ -1035,7 +1035,7 @@ function confirmCancel() {
 
 function confirmDelete() {
 
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('will Delete (feminine)') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
+  if (confirm('هل أنت {{ t("متأكد") }} من {{ t("Delete") }} هذه {{ t("Invoice_3") }}\n\n{{ t("Alert_2") }}: {{ t("سيتم") }} {{ t("أرشفة") }} {{ t("Invoice_2") }} إذا كان لها {{ t("ارتباطات") }} {{ t("مالية") }} ({{ t("دفعات") }}/{{ t("Cheques_2") }})، أو {{ t("will Delete (feminine)") }} {{ t("نهائياً") }} إذا كانت غير {{ t("مرتبطة") }}.')) {
 
     document.getElementById('deleteForm').submit();
 
