@@ -417,7 +417,19 @@ def view(**kwargs):
     # إضافة today للـ template
     today = datetime.now().strftime("%Y-%m-%d")
 
-    return render_template("cheques/view.html", cheque=cheque, today=today)
+    from models import Tenant
+    tenant_default_currency = ""
+    tenant = Tenant.get_current()
+    if tenant:
+        tenant_default_currency = tenant.get_base_currency if tenant else ""
+    is_foreign_currency = bool(cheque.currency != tenant_default_currency)
+
+    return render_template(
+        "cheques/view.html",
+        cheque=cheque,
+        today=today,
+        is_foreign_currency=is_foreign_currency,
+    )
 
 
 @cheques_bp.route("/<int:id>/edit", methods=["GET", "POST"])

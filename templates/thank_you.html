@@ -288,7 +288,7 @@
     
     <script>
         // {{ t('Update') }} {{ t('Status_2') }} {{ t('Payment_2') }} كل 30 {{ t('ثانية') }} إذا كانت في {{ t('Waiting') }}
-        const shouldPollPayment = {{ 'true' if status_polling and status == 'pending' and payment_id and status_token else 'false' }};
+        const shouldPollPayment = {{ should_poll_payment | tojson }};
         if (shouldPollPayment) {
         function checkPaymentStatus() {
             fetch(`/auth/payment/status/{{ payment_id }}?token={{ status_token | urlencode }}`)

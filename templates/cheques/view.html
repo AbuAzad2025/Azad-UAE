@@ -486,7 +486,7 @@
 
 {% block extra_js %}
 <script>
-const isForeignCurrency = {{ 'true' if cheque.currency != tenant_default_currency else 'false' }};
+const isForeignCurrency = {{ is_foreign_currency | tojson }};
 
 function depositCheque() {
   $('#depositModal').modal('show');

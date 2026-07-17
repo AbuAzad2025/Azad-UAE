@@ -713,10 +713,15 @@ def thank_you():
                 )
             status_polling = True
 
+    should_poll_payment = bool(
+        status_polling and status == "pending" and payment_id and status_token
+    )
+
     return render_template(
         "thank_you.html",
         payment_id=payment_id,
         status=status,
         status_token=status_token,
         status_polling=status_polling,
+        should_poll_payment=should_poll_payment,
     )
