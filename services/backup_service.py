@@ -339,11 +339,25 @@ class BackupService:
         )
 
     @classmethod
+    def _which(cls, exe_name: str) -> Optional[str]:
+        exe = str(exe_name)
+        path_env = os.environ.get("PATH") or ""
+        exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if os.name == "nt" else ("",)
+        for directory in path_env.split(os.pathsep):
+            if not directory:
+                continue
+            for ext in exts:
+                candidate = os.path.join(directory, exe + ext)
+                if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                    return candidate
+        return None
+
+    @classmethod
     def _resolve_pg_tool(cls, exe_name: str, env_var: str) -> Optional[str]:
         value = (os.environ.get(env_var) or "").strip().strip('"')
         if value and os.path.isfile(value):
             return value
-        found = shutil.which(str(exe_name))
+        found = cls._which(exe_name)
         if found:
             return found
         if os.name != "nt":
