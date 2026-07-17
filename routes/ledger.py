@@ -64,20 +64,20 @@ def index():
     )
 
 
-@ledger_bp.route("/account/<int:id>")
+@ledger_bp.route("/account/<int:account_id>")
 @login_required
 @permission_required("view_ledger")
-def account_ledger(id):
+def account_ledger(account_id):
     from utils.gl_tenant import scope_gl_accounts
 
-    account = scope_gl_accounts(GLAccount.query.filter_by(id=id)).first_or_404()
+    account = scope_gl_accounts(GLAccount.query.filter_by(id=account_id)).first_or_404()
 
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
     branch_id = _effective_branch_id()
 
     # Use GLService for optimized query with branch support
-    result = GLService.get_account_statement(id, date_from, date_to, branch_id)
+    result = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
 
     branches = get_accessible_branches(current_user)
 
@@ -542,15 +542,15 @@ def accounts_tree():
     return render_template("ledger/accounts_tree.html", accounts_tree=tree)
 
 
-@ledger_bp.route("/account/<int:id>/statement")
+@ledger_bp.route("/account/<int:account_id>/statement")
 @login_required
 @permission_required("view_ledger")
-def account_statement(id):
+def account_statement(account_id):
     """كشف حساب تفصيلي - مع فلترة اختيارية حسب الفرع للعزل"""
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
     branch_id = _effective_branch_id()
-    statement = GLService.get_account_statement(id, date_from, date_to, branch_id)
+    statement = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
     branches = get_accessible_branches(current_user)
     return render_template(
         "ledger/account_statement.html",
@@ -658,23 +658,33 @@ def manual_entry():
         .order_by(GLAccount.code)
         .all()
     )
+    accounts_json = [
+        {
+            "id": a.id,
+            "code": a.code,
+            "name_ar": a.name_ar,
+            "name_en": a.name,
+        }
+        for a in accounts
+    ]
     branches = get_accessible_branches(current_user)
     return render_template(
         "ledger/manual_entry.html",
         accounts=accounts,
+        accounts_json=accounts_json,
         branches=branches,
         today=date.today(),
     )
 
 
-@ledger_bp.route("/entry/<int:id>")
+@ledger_bp.route("/entry/<int:entry_id>")
 @login_required
 @permission_required("view_ledger")
-def view_entry(id):
+def view_entry(entry_id):
     """عرض تفاصيل القيد"""
     from utils.gl_tenant import gl_entry_query
 
-    entry = gl_entry_query().filter_by(id=id).first_or_404()
+    entry = gl_entry_query().filter_by(id=entry_id).first_or_404()
     selected_branch_id = _effective_branch_id()
     if selected_branch_id is not None and entry.branch_id != selected_branch_id:
         return render_template("errors/403.html"), 403
@@ -683,15 +693,15 @@ def view_entry(id):
     return render_template("ledger/view_entry.html", entry=entry, lines=lines)
 
 
-@ledger_bp.route("/entry/<int:id>/reverse", methods=["POST"])
+@ledger_bp.route("/entry/<int:entry_id>/reverse", methods=["POST"])
 @login_required
 @permission_required("manage_ledger")
-def reverse_entry(id):
+def reverse_entry(entry_id):
     """عكس القيد"""
     try:
         from utils.gl_tenant import gl_entry_query
 
-        entry = gl_entry_query().filter_by(id=id).first_or_404()
+        entry = gl_entry_query().filter_by(id=entry_id).first_or_404()
         selected_branch_id = _effective_branch_id()
         if selected_branch_id is not None and entry.branch_id != selected_branch_id:
             return render_template("errors/403.html"), 403

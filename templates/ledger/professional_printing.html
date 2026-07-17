@@ -462,16 +462,16 @@ function printExcel() {
   const data = [];
   
   // {{ t('Add') }} {{ t('Data') }}
-  {% for item in trial_balance_data %}
-  data.push([
-    '{{ item.account.code }}',
-    '{{ item.account.full_name }}',
-    '{{ item.account.type_ar }}',
-    {{ item.debit }},
-    {{ item.credit }},
-    {{ item.account.get_balance() }}
-  ]);
-  {% endfor %}
+  {{ trial_balance_json | tojson }}.forEach(function (item) {
+    data.push([
+      item.code,
+      item.full_name,
+      item.type_ar,
+      item.debit,
+      item.credit,
+      item.balance
+    ]);
+  });
   
   // {{ t('Export') }} Excel
   const ws = XLSX.utils.aoa_to_sheet([

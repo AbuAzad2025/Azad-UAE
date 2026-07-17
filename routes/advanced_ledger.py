@@ -65,9 +65,22 @@ def professional_printing():
     print_branding = get_print_header_context()
     settings = InvoiceSettings.get_active()
 
+    trial_balance_json = [
+        {
+            "code": item["account"].code,
+            "full_name": item["account"].full_name,
+            "type_ar": item["account"].type_ar,
+            "debit": item["debit"],
+            "credit": item["credit"],
+            "balance": item["account"].get_balance(),
+        }
+        for item in trial_balance_data
+    ]
+
     return render_template(
         "ledger/professional_printing.html",
         trial_balance_data=trial_balance_data,
+        trial_balance_json=trial_balance_json,
         total_debit=total_debit,
         total_credit=total_credit,
         date_from=date.today() - timedelta(days=30),

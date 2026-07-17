@@ -343,9 +343,9 @@
 $(function() {
   const partnersList = $('#partnersList');
   let partnerOptions = '<option value="">اختر شريكاً...</option>';
-  {% for partner in partners %}
-  partnerOptions += '<option value="{{ partner.id }}">{{ partner.name|e }}</option>';
-  {% endfor %}
+  {{ partners_json | tojson }}.forEach(function (partner) {
+    partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
+  });
 
   function addPartnerRow(partnerId, percentage) {
     const rowId = 'row-' + Date.now();

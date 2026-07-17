@@ -369,9 +369,35 @@ def error_audit_logs():
         category, level, is_resolved, page, per_page
     )
 
+    error_log_data = {}
+    for log in items:
+        error_log_data[str(log.id)] = {
+            "id": log.id,
+            "category": log.category,
+            "level": log.level,
+            "source": log.source,
+            "fingerprint": log.fingerprint or "",
+            "occurrence_count": log.occurrence_count or 1,
+            "first_seen_at": log.first_seen_at.isoformat() if log.first_seen_at else "",
+            "last_seen_at": log.last_seen_at.isoformat() if log.last_seen_at else "",
+            "request_id": log.request_id or "",
+            "environment": log.environment or "",
+            "app_version": log.app_version or "",
+            "url": log.url or "",
+            "method": log.method or "",
+            "ip_address": log.ip_address or "",
+            "user_id": log.user_id,
+            "tenant_id": log.tenant_id,
+            "message": log.message,
+            "exception_type": log.exception_type or "",
+            "stack_trace": log.stack_trace or "",
+            "request_data": log.request_data if log.request_data else None,
+        }
+
     return render_template(
         "owner/error_audit_logs.html",
         logs=items,
+        error_log_data=error_log_data,
         pagination=pagination,
         categories=categories,
         levels=levels,

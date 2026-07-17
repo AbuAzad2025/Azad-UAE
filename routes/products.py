@@ -849,17 +849,19 @@ def create():
                         flash(
                             "⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.", "warning"
                         )
-                        warehouses = get_accessible_warehouses(current_user)
-                        return render_template(
-                            "products/create.html",
-                            form=form,
-                            categories=categories,
-                            warehouses=warehouses,
-                            merchants=merchants,
-                            partners=partners,
-                            preselected_warehouse_id=preselected_warehouse_id,
-                            default_industry=default_industry,
-                        )
+                    warehouses = get_accessible_warehouses(current_user)
+                    partners_json = [{"id": p.id, "name": p.name} for p in partners]
+                    return render_template(
+                        "products/create.html",
+                        form=form,
+                        categories=categories,
+                        warehouses=warehouses,
+                        merchants=merchants,
+                        partners=partners,
+                        partners_json=partners_json,
+                        preselected_warehouse_id=preselected_warehouse_id,
+                        default_industry=default_industry,
+                    )
 
                 partner_rows, partner_error = _parse_product_partners(request.form)
                 if partner_error:
@@ -1014,6 +1016,7 @@ def create():
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
     warehouses = get_accessible_warehouses(current_user)
+    partners_json = [{"id": p.id, "name": p.name} for p in partners]
 
     return render_template(
         "products/create.html",
@@ -1022,6 +1025,7 @@ def create():
         warehouses=warehouses,
         merchants=merchants,
         partners=partners,
+        partners_json=partners_json,
         preselected_warehouse_id=preselected_warehouse_id,
         default_industry=default_industry,
         categories_count=len(categories),
@@ -1072,6 +1076,11 @@ def edit(**kwargs):
     warehouses = get_accessible_warehouses(current_user)
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
     partners = _scoped_customers_query("partner").order_by(Customer.name).all()
+    partners_json = [{"id": p.id, "name": p.name} for p in partners]
+    partner_shares_json = [
+        {"partner_customer_id": s.partner_customer_id, "percentage": s.percentage}
+        for s in (product.partner_shares or [])
+    ]
 
     if request.method == "POST" and form.validate_on_submit():
         try:
@@ -1099,6 +1108,8 @@ def edit(**kwargs):
                     warehouses=warehouses,
                     merchants=merchants,
                     partners=partners,
+                    partners_json=partners_json,
+                    partner_shares_json=partner_shares_json,
                 )
 
             merchant_customer_id = request.form.get("merchant_customer_id", type=int)
@@ -1118,6 +1129,8 @@ def edit(**kwargs):
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
+                        partners_json=partners_json,
+                        partner_shares_json=partner_shares_json,
                     )
 
             partner_rows, partner_error = _parse_product_partners(request.form)
@@ -1142,15 +1155,11 @@ def edit(**kwargs):
             product.regular_price = safe_float(
                 request.form.get("regular_price"), default=0
             )
-            product.merchant_price = cast(
-                float, safe_float(request.form.get("merchant_price"), default=None)
-            )
+            product.merchant_price = safe_float(request.form.get("merchant_price"), default=None)
             product.merchant_share = safe_float(
                 request.form.get("merchant_share"), default=100.0
             )
-            product.partner_price = cast(
-                float, safe_float(request.form.get("partner_price"), default=None)
-            )
+            product.partner_price = safe_float(request.form.get("partner_price"), default=None)
             product.min_stock_alert = safe_float(
                 request.form.get("min_stock_alert"), default=0
             )
@@ -1302,6 +1311,11 @@ def edit(**kwargs):
     product.visible_stock = StockService.get_product_stock(
         product.id, user=current_user
     )
+    partners_json = [{"id": p.id, "name": p.name} for p in partners]
+    partner_shares_json = [
+        {"partner_customer_id": s.partner_customer_id, "percentage": s.percentage}
+        for s in (product.partner_shares or [])
+    ]
     return render_template(
         "products/edit.html",
         form=form,
@@ -1310,6 +1324,8 @@ def edit(**kwargs):
         warehouses=warehouses,
         merchants=merchants,
         partners=partners,
+        partners_json=partners_json,
+        partner_shares_json=partner_shares_json,
     )
 
 

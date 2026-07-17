@@ -182,17 +182,11 @@
 
 <script>
 // {{ t('List') }} {{ t('Accounts') }} (من Backend)
-const accounts = [
-  {% for account in accounts %}
-  {
-    id: {{ account.id }},
-    code: '{{ account.code }}',
-    name_ar: '{{ account.name_ar }}',
-    name_en: '{{ account.name }}',
-    full_name: '{{ account.code }} - {{ account.name_ar or account.name }}'
-  }{% if not loop.last %},{% endif %}
-  {% endfor %}
-];
+const accounts = {{ accounts_json | tojson }}.map(function (a) {
+  return Object.assign({}, a, {
+    full_name: a.code + ' - ' + (a.name_ar || a.name_en)
+  });
+});
 
 let lineCounter = 0;
 
@@ -422,7 +416,7 @@ function deleteLine(button) {
     row.remove();
     // {{ t('إعادة') }} {{ t('ترقيم') }} {{ t('الأسطر') }}
     document.querySelectorAll('#linesTableBody tr').forEach((r, idx) => {
-      r.cells[0].textContent = idx + 1;
+      r.cells[0].textContent = String(idx + 1);
       // {{ t('Update') }} name attributes
       const selects = r.querySelectorAll('select, input');
       selects.forEach(el => {

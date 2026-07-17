@@ -248,32 +248,7 @@
 <script>
 (function() {
   // Inline data for the current page (safe — no secrets, all server-side rendered)
-  window.ERROR_LOG_DATA = {
-    {% for log in logs %}
-    "{{ log.id }}": {
-      id: {{ log.id }},
-      category: {{ log.category | tojson }},
-      level: {{ log.level | tojson }},
-      source: {{ log.source | tojson }},
-      fingerprint: {{ (log.fingerprint or '') | tojson }},
-      occurrence_count: {{ log.occurrence_count or 1 }},
-      first_seen_at: {{ (log.first_seen_at.isoformat() if log.first_seen_at else '') | tojson }},
-      last_seen_at: {{ (log.last_seen_at.isoformat() if log.last_seen_at else '') | tojson }},
-      request_id: {{ (log.request_id or '') | tojson }},
-      environment: {{ (log.environment or '') | tojson }},
-      app_version: {{ (log.app_version or '') | tojson }},
-      url: {{ (log.url or '') | tojson }},
-      method: {{ (log.method or '') | tojson }},
-      ip_address: {{ (log.ip_address or '') | tojson }},
-      user_id: {{ log.user_id or 'null' }},
-      tenant_id: {{ log.tenant_id or 'null' }},
-      message: {{ log.message | tojson }},
-      exception_type: {{ (log.exception_type or '') | tojson }},
-      stack_trace: {{ (log.stack_trace or '') | tojson }},
-      request_data: {{ (log.request_data | tojson(indent=0) if log.request_data else 'null') | safe }}
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  };
+  window.ERROR_LOG_DATA = {{ error_log_data | tojson }};
 
   let modalEl = document.getElementById('errorDetailModal');
   if (!modalEl || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.modal) {
