@@ -3,7 +3,7 @@
 import hashlib
 import hmac
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import requests
@@ -275,7 +275,7 @@ class NOWPaymentsService:
 
             if status == "finished":
                 donation.status = "completed"
-                donation.completed_at = datetime.utcnow()
+                donation.completed_at = datetime.now(timezone.utc)
             elif status == "failed":
                 donation.status = "failed"
             elif status == "refunded":

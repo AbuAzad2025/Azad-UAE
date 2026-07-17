@@ -3,8 +3,12 @@ Payment Vault Model - وحدة الدفع السرية
 نموذج محمي بكلمة مرور منفصلة للدفع والتبرعات
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from extensions import db
+
+
+def _utc_now():
+    return datetime.now(timezone.utc)
 from decimal import Decimal
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -30,7 +34,7 @@ class PaymentVault(db.Model):
     vault_password_hash = db.Column(db.String(255), nullable=False)  # كلمة مرور الخزينة
     vault_name = db.Column(db.String(100), default="Payment Vault")  # اسم الخزينة
     is_locked = db.Column(db.Boolean, default=True)  # هل مقفلة
-    last_access = db.Column(db.DateTime, default=datetime.utcnow)  # آخر وصول
+    last_access = db.Column(db.DateTime, default=_utc_now)  # آخر وصول
 
     # Payment Gateway Settings - إعدادات بوابات الدفع
     nowpayments_api_key = db.Column(db.String(255))  # NOWPayments API Key
@@ -93,9 +97,9 @@ class PaymentVault(db.Model):
     max_failed_attempts = db.Column(db.Integer, default=3)  # محاولات فاشلة
     failed_attempts = db.Column(db.Integer, default=0)  # عدد المحاولات الفاشلة
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=_utc_now, onupdate=_utc_now
     )
 
     @classmethod
@@ -126,7 +130,7 @@ class PaymentVault(db.Model):
         """فتح الخزينة"""
         if self.check_vault_password(password):
             self.is_locked = False
-            self.last_access = datetime.utcnow()
+            self.last_access = _utc_now()
             self.failed_attempts = 0
             db.session.flush()
             return True
@@ -147,7 +151,7 @@ class PaymentVault(db.Model):
 
         # التحقق من انتهاء صلاحية الجلسة
         if self.auto_lock_minutes > 0:
-            time_diff = datetime.utcnow() - self.last_access
+            time_diff = _utc_now() - self.last_access
             if time_diff.total_seconds() > (self.auto_lock_minutes * 60):
                 self.lock_vault()
                 return False
@@ -201,9 +205,9 @@ class PaymentTransaction(db.Model):
     user_agent = db.Column(db.String(500))  # User Agent
     is_verified = db.Column(db.Boolean, default=False)  # هل تم التحقق
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=_utc_now, onupdate=_utc_now
     )
     completed_at = db.Column(db.DateTime)  # وقت الإكمال
 
@@ -262,7 +266,7 @@ class PaymentLog(db.Model):
     ip_address = db.Column(db.String(50))  # عنوان IP
     user_agent = db.Column(db.String(500))  # User Agent
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
 
     vault_id = db.Column(
         db.Integer, db.ForeignKey("payment_vault.id"), nullable=False, index=True

@@ -343,7 +343,7 @@ class BackupService:
         value = (os.environ.get(env_var) or "").strip().strip('"')
         if value and os.path.isfile(value):
             return value
-        found = shutil.which(exe_name)
+        found = shutil.which(str(exe_name))
         if found:
             return found
         if os.name != "nt":

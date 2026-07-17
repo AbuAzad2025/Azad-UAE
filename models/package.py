@@ -3,7 +3,11 @@ Package model for system packages
 """
 
 from extensions import db
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def _utc_now():
+    return datetime.now(timezone.utc)
 
 
 class Package(db.Model):
@@ -49,9 +53,9 @@ class Package(db.Model):
     has_training = db.Column(db.Boolean, default=False)  # تدريب
     has_priority_support = db.Column(db.Boolean, default=False)  # دعم أولوية
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=_utc_now, onupdate=_utc_now
     )
 
     def __repr__(self):
@@ -135,9 +139,9 @@ class PackagePurchase(db.Model):
         db.Integer, db.ForeignKey("tenants.id"), nullable=True, index=True
     )
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=_utc_now, onupdate=_utc_now
     )
 
     # العلاقات

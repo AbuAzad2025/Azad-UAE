@@ -562,7 +562,7 @@ def settings():
             request.form.get("max_failed_attempts"), vault.max_failed_attempts
         )
 
-        vault.updated_at = datetime.utcnow()
+        vault.updated_at = datetime.now(timezone.utc)
 
         # تسجيل العملية
         with atomic_transaction("vault_settings_update"):
@@ -1139,7 +1139,7 @@ def change_password():
 
         # تحديث كلمة المرور
         vault.set_vault_password(new_password)
-        vault.updated_at = datetime.utcnow()
+        vault.updated_at = datetime.now(timezone.utc)
 
         # تسجيل العملية
         with atomic_transaction("vault_password_change"):
