@@ -33,7 +33,7 @@ This repository represents a real business operating system. It is not a single 
 ## Product Identity
 
 | Item | Value |
-|------|-------|
+|:-----|:------|
 | Product | Azadexa / أزاديكسا |
 | Company | AZAD Intelligent Systems |
 | System type | Multi-Tenant ERP SaaS / Commerce and Accounting Platform |
@@ -59,7 +59,7 @@ See [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) for the code-derived modu
 ## Core Domains
 
 | Domain | What it covers |
-|--------|----------------|
+|:-------|:---------------|
 | Tenant ERP | tenant-specific sales, purchases, customers, suppliers, branches, users, roles, permissions |
 | Inventory | products, warehouses, stock movements, warehouse stock, serials, warranty, cost history, MWAC/WAC support |
 | Accounting | GL accounts, journal entries, journal lines, periods, mappings, budgets, assets, reconciliation, cost/profit centers |
@@ -113,7 +113,7 @@ These must not be mixed. Tenant store orders are tenant operations; public donat
 ## Documentation
 
 | Document | Purpose |
-|----------|---------|
+|:---------|:--------|
 | [`docs/README.md`](docs/README.md) | Documentation index |
 | [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) | Product name, positioning, Arabic/English brand rules |
 | [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) | Code-derived module and model map |
