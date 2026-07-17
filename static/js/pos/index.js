@@ -808,7 +808,7 @@
 
     qs('#closeSessionConfirm').addEventListener('click', async () => {
         const balance = toNum(qs('#closeSessionBalance').value);
-        if (balance === '' || Number.isNaN(Number(qs('#closeSessionBalance').value))) {
+        if (Number.isNaN(Number(qs('#closeSessionBalance').value))) {
             showModalAlert('closeSession', 'يرجى إدخال رصيد الإغلاق.', 'warning');
             return;
         }
