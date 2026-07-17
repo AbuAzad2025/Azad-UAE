@@ -206,9 +206,10 @@ def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    lines: list[str] = []
-    lines.append("## 📊 نظام التغطية الشاملة — Comprehensive Coverage Report")
-    lines.append("")
+    lines: list[str] = [
+        "## 📊 نظام التغطية الشاملة — Comprehensive Coverage Report",
+        "",
+    ]
 
     # ── Backend ──
     backend = get_backend_coverage()
