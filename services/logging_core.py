@@ -1788,7 +1788,7 @@ class LoggingCore:
             "error_audit_logs": (
                 "DELETE FROM error_audit_logs WHERE is_resolved = true AND last_seen_at < :cutoff"
             ),
-            "audit_logs": ("DELETE FROM audit_logs WHERE created_at < :cutoff"),
+            "audit_logs": "DELETE FROM audit_logs WHERE created_at < :cutoff",
         }
 
         retain_map = {
