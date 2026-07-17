@@ -80,8 +80,9 @@ def create():
 @branches_bp.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def edit(id):  # noqa: A002
-    branch = tenant_get_or_404(Branch, id)
+def edit(**kwargs):
+    record_id = kwargs.pop("id")
+    branch = tenant_get_or_404(Branch, record_id)
 
     if request.method == "POST":
         branch.name = request.form.get("name")
@@ -109,8 +110,9 @@ def edit(id):  # noqa: A002
 @branches_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 @admin_required
-def delete(id):  # noqa: A002
-    branch = tenant_get_or_404(Branch, id)
+def delete(**kwargs):
+    record_id = kwargs.pop("id")
+    branch = tenant_get_or_404(Branch, record_id)
 
     # Check for related data before deletion
     # This is a basic check. In a real system, you might want to soft-delete or strict check.

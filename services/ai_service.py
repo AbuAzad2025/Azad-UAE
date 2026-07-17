@@ -553,7 +553,7 @@ class AIService:
             .options(joinedload(Sale.customer), joinedload(Sale.lines))
             .filter(
                 Sale.customer_id == customer.id,
-                Sale.created_at != None,  # noqa: E711
+                Sale.created_at is not None,
                 Sale.created_at >= last_90_days,
             )
             .all()
@@ -563,7 +563,7 @@ class AIService:
             session.query(Payment)
             .filter(
                 Payment.customer_id == customer.id,
-                Payment.created_at != None,  # noqa: E711
+                Payment.created_at is not None,
                 Payment.created_at >= last_90_days,
             )
             .all()

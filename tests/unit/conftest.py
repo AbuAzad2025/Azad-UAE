@@ -127,25 +127,25 @@ def app_factory():
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
 
-        app = Flask(  # noqa: F811
+        _app = Flask(
             __name__, template_folder=os.path.join(project_root, "templates")
         )
-        app.config.from_object(TestConfig)
+        _app.config.from_object(TestConfig)
         if config_overrides:
-            app.config.update(config_overrides)
+            _app.config.update(config_overrides)
         from flask_login import current_user
 
-        app.jinja_env.globals["current_user"] = current_user
+        _app.jinja_env.globals["current_user"] = current_user
         from utils.i18n import t
 
-        app.jinja_env.globals["t"] = t
-        app.jinja_env.globals["csrf_token"] = lambda: ""
-        app.register_blueprint(blueprint)
+        _app.jinja_env.globals["t"] = t
+        _app.jinja_env.globals["csrf_token"] = lambda: ""
+        _app.register_blueprint(blueprint)
         from routes.main import main_bp
 
-        if "main" not in app.blueprints:
-            app.register_blueprint(main_bp)
-        return app
+        if "main" not in _app.blueprints:
+            _app.register_blueprint(main_bp)
+        return _app
 
     return _create_app
 
@@ -213,8 +213,8 @@ def bypass_owner_auth(mocker, mock_owner_user):
 def mock_owner_client(app_factory, bypass_owner_auth):
     from routes.owner import owner_bp
 
-    app = app_factory(owner_bp)  # noqa: F811
-    return app.test_client()
+    _app = app_factory(owner_bp)
+    return _app.test_client()
 
 
 # ---------------------------------------------------------------------------
@@ -244,8 +244,8 @@ def bypass_company_admin_auth(mocker, mock_owner_user):
 def mock_company_admin_client(app_factory, bypass_company_admin_auth):
     from routes.owner import owner_bp
 
-    app = app_factory(owner_bp)  # noqa: F811
-    return app.test_client()
+    _app = app_factory(owner_bp)
+    return _app.test_client()
 
 
 # ---------------------------------------------------------------------------
@@ -257,8 +257,8 @@ def mock_company_admin_client(app_factory, bypass_company_admin_auth):
 def mock_vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
 
-    app = app_factory(payment_vault_bp)  # noqa: F811
-    return app.test_client()
+    _app = app_factory(payment_vault_bp)
+    return _app.test_client()
 
 
 # ---------------------------------------------------------------------------
@@ -287,8 +287,8 @@ def bypass_product_auth(mocker):
 def product_client(app_factory, bypass_product_auth):
     from routes.products import products_bp
 
-    app = app_factory(products_bp)  # noqa: F811
-    return app.test_client()
+    _app = app_factory(products_bp)
+    return _app.test_client()
 
 
 # ---------------------------------------------------------------------------
@@ -492,5 +492,5 @@ def ai_client(app_factory, bypass_ai_access):
     """Test client with the ``ai`` blueprint registered."""
     from routes.ai_routes import ai_bp
 
-    app = app_factory(ai_bp)  # noqa: F811
-    return app.test_client()
+    _app = app_factory(ai_bp)
+    return _app.test_client()

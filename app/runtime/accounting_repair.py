@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 RUNTIME CORE FILE.
 
@@ -7,7 +5,8 @@ This module is called from `utils/system_init.py` during normal application star
 Do not delete or move it without updating startup wiring.
 """
 
-# ruff: noqa: E402
+from __future__ import annotations
+
 import re
 from decimal import Decimal
 

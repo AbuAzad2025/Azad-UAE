@@ -28,6 +28,9 @@ from utils.branching import (
 from utils.decorators import permission_required
 from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
+import queue as _queue
+import os as _os
+import urllib.request
 from utils.pos_helpers import (
     POS_QA_MARKER,
     create_pos_session,
@@ -1034,11 +1037,6 @@ def _accumulate_shift_totals(shift: PosShift):
     shift.total_cash_sales = cash
     shift.total_card_sales = card
 
-
-# ruff: noqa: E402
-import queue as _queue
-import os as _os
-import urllib.request
 
 _HARDWARE_AGENT_URL = _os.environ.get("POS_HARDWARE_AGENT_URL", "http://127.0.0.1:8567")
 _KDS_SUBSCRIBERS: list[tuple[int | None, _queue.Queue]] = []

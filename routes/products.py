@@ -1029,8 +1029,9 @@ def create():
 @products_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_products")
-def view(id):  # noqa: A002
-    product = tenant_get_or_404(Product, id)
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         return render_template("errors/403.html"), 403
     movements_query = product.stock_movements
@@ -1052,8 +1053,9 @@ def view(id):  # noqa: A002
 @products_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_products")
-def edit(id):  # noqa: A002
-    product = tenant_get_or_404(Product, id)
+def edit(**kwargs):
+    record_id = kwargs.pop("id")
+    product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         return render_template("errors/403.html"), 403
     from forms.product import ProductForm
@@ -1312,9 +1314,10 @@ def edit(id):  # noqa: A002
 @products_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_products")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (إلغاء تفعيل) المنتج - soft delete"""
-    product = tenant_get_or_404(Product, id)
+    record_id = kwargs.pop("id")
+    product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         if _wants_json():
             return jsonify({"success": False, "error": "المنتج خارج النطاق"}), 403
@@ -1336,13 +1339,13 @@ def delete(id):  # noqa: A002
                     400,
                 )
             flash("⚠️ لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً.", "warning")
-            return redirect(url_for("products.view", id=id))
+            return redirect(url_for("products.view", id=record_id))
 
         from models import SaleLine, PurchaseLine
 
         tid = get_active_tenant_id(current_user)
-        sales_query = SaleLine.query.filter_by(product_id=id)
-        purchases_query = PurchaseLine.query.filter_by(product_id=id)
+        sales_query = SaleLine.query.filter_by(product_id=record_id)
+        purchases_query = PurchaseLine.query.filter_by(product_id=record_id)
         if tid is not None:
             sales_query = sales_query.filter(SaleLine.tenant_id == tid)
             purchases_query = purchases_query.filter(PurchaseLine.tenant_id == tid)
@@ -1352,10 +1355,10 @@ def delete(id):  # noqa: A002
         with atomic_transaction("product_delete"):
             if sales_count > 0 or purchases_count > 0:
                 product.is_active = False
-                LoggingCore.log_audit("deactivate", "products", id)
+                LoggingCore.log_audit("deactivate", "products", record_id)
             else:
                 db.session.delete(product)
-                LoggingCore.log_audit("delete", "products", id)
+                LoggingCore.log_audit("delete", "products", record_id)
 
         if sales_count > 0 or purchases_count > 0:
             if _wants_json():
@@ -1382,7 +1385,7 @@ def delete(id):  # noqa: A002
         return redirect(url_for("products.index"))
 
     except Exception as e:
-        current_app.logger.error(f"Error deleting product {id}: {e}")
+        current_app.logger.error(f"Error deleting product {record_id}: {e}")
         if _wants_json():
             return (
                 jsonify(
@@ -1391,7 +1394,7 @@ def delete(id):  # noqa: A002
                 500,
             )
         flash("❌ فشل حذف المنتج. حدث خطأ غير متوقع.", "danger")
-        return redirect(url_for("products.view", id=id))
+        return redirect(url_for("products.view", id=record_id))
 
 
 @products_bp.route("/api/search")
@@ -1519,17 +1522,19 @@ def create_category():
 @products_bp.route("/categories/<int:id>", methods=["GET"])
 @login_required
 @permission_required("manage_products")
-def get_category(id):  # noqa: A002
-    category = _tenant_category_or_404(id)
+def get_category(**kwargs):
+    record_id = kwargs.pop("id")
+    category = _tenant_category_or_404(record_id)
     return jsonify({"success": True, "category": _category_json(category)})
 
 
 @products_bp.route("/categories/<int:id>/update", methods=["POST", "PUT"])
 @login_required
 @permission_required("manage_products")
-def update_category(id):  # noqa: A002
+def update_category(**kwargs):
     try:
-        category = _tenant_category_or_404(id)
+        record_id = kwargs.pop("id")
+        category = _tenant_category_or_404(record_id)
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
             return jsonify({"success": False, "error": "بيانات غير صحيحة"}), 400
@@ -1575,9 +1580,10 @@ def update_category(id):  # noqa: A002
 @products_bp.route("/categories/<int:id>/delete", methods=["POST", "DELETE"])
 @login_required
 @permission_required("manage_products")
-def delete_category(id):  # noqa: A002
+def delete_category(**kwargs):
     try:
-        category = _tenant_category_or_404(id)
+        record_id = kwargs.pop("id")
+        category = _tenant_category_or_404(record_id)
         tid = get_active_tenant_id(current_user)
         product_count = Product.query.filter_by(
             tenant_id=tid,
@@ -1659,8 +1665,9 @@ def _wants_json():
 @products_bp.route("/<int:id>/adjust-stock", methods=["POST"])
 @login_required
 @permission_required("manage_products")
-def adjust_stock(id):  # noqa: A002
-    product = tenant_get_or_404(Product, id)
+def adjust_stock(**kwargs):
+    record_id = kwargs.pop("id")
+    product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         return (
             jsonify({"success": False, "message": "المنتج خارج نطاق الفرع الحالي"}),
@@ -1775,11 +1782,12 @@ def adjust_stock(id):  # noqa: A002
 @products_bp.route("/<int:id>/print-label")
 @login_required
 @permission_required("view_products")
-def print_label(id):  # noqa: A002
+def print_label(**kwargs):
     from services.label_print_service import get_single_label_html
 
+    record_id = kwargs.pop("id")
     tenant_id = get_active_tenant_id(current_user)
-    product = tenant_get_or_404(Product, id, tenant_id)
+    product = tenant_get_or_404(Product, record_id, tenant_id)
     branch_id = None
     try:
         from utils.decorators import report_branch_scope_id

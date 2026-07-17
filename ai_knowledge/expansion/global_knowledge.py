@@ -222,7 +222,7 @@ class GlobalKnowledgeConnector:
             # مقارنة مع البيانات المحلية
             if "electric_vehicles" in auto_trends:
                 analysis["opportunities"].append(
-                    {  # type: ignore[union-attr]
+                    {
                         "area": "السيارات الكهربائية",
                         "description": "فرصة للاستثمار في قطع الغيار الكهربائية",
                         "priority": "عالي",
@@ -236,7 +236,7 @@ class GlobalKnowledgeConnector:
 
             if "construction_boom" in equipment_trends:
                 analysis["opportunities"].append(
-                    {  # type: ignore[union-attr]
+                    {
                         "area": "المعدات الثقيلة",
                         "description": "طفرة في الإنشاءات تزيد الطلب على المعدات",
                         "priority": "عالي",
@@ -246,10 +246,8 @@ class GlobalKnowledgeConnector:
 
         # تحليل التحديثات الضريبية
         if global_insights["tax_updates"]["success"]:
-            tax_updates = global_insights["tax_updates"]["data"]  # noqa: F841
-
             analysis["recommendations"].append(
-                {  # type: ignore[union-attr]
+                {
                     "area": "الضرائب",
                     "description": "تحديثات ضريبية جديدة",
                     "action": "راجع التحديثات الضريبية مع العملاء",

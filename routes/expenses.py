@@ -283,8 +283,9 @@ def create():
 @expenses_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_expenses")
-def view(id):  # noqa: A002
-    expense = tenant_get_or_404(Expense, id)
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
     return render_template("expenses/view.html", expense=expense)
@@ -293,8 +294,9 @@ def view(id):  # noqa: A002
 @expenses_bp.route("/<int:id>/print")
 @login_required
 @permission_required("manage_expenses")
-def print_expense(id):  # noqa: A002
-    expense = tenant_get_or_404(Expense, id)
+def print_expense(**kwargs):
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
     from flask import current_app
@@ -310,9 +312,10 @@ def print_expense(id):  # noqa: A002
 @expenses_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_expenses")
-def edit(id):  # noqa: A002
+def edit(**kwargs):
     """تعديل مصروف"""
-    expense = tenant_get_or_404(Expense, id)
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
@@ -327,7 +330,7 @@ def edit(id):  # noqa: A002
     )
     if is_archived:
         flash("⚠️ لا يمكن تعديل مصروف مؤرشف.", "warning")
-        return redirect(url_for("expenses.view", id=id))
+        return redirect(url_for("expenses.view", id=record_id))
 
     categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
 
@@ -402,9 +405,9 @@ def edit(id):  # noqa: A002
                         branch_id=expense.branch_id,
                     )
 
-            LoggingCore.log_audit("update", "expenses", id)
+            LoggingCore.log_audit("update", "expenses", record_id)
             flash("✅ تم تحديث المصروف بنجاح!", "success")
-            return redirect(url_for("expenses.view", id=id))
+            return redirect(url_for("expenses.view", id=record_id))
 
         except ValueError as e:
             flash(f"❌ خطأ في البيانات: {str(e)}", "danger")
@@ -420,12 +423,13 @@ def edit(id):  # noqa: A002
 @expenses_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_expenses")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (أرشفة) المصروف"""
     from models import Cheque
     from services.archive_service import ArchiveService
 
-    expense = tenant_get_or_404(Expense, id)
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
@@ -450,7 +454,7 @@ def delete(id):  # noqa: A002
                     archive_service.archive_record(
                         "cheques", cheque, reason="تم أرشفة الشيك لارتباطه بمصروف مؤرشف"
                     )
-                LoggingCore.log_audit("archive", "expenses", id)
+                LoggingCore.log_audit("archive", "expenses", record_id)
             flash(
                 f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)',
                 "warning",
@@ -474,25 +478,26 @@ def delete(id):  # noqa: A002
                     )
                     db.session.delete(cheque)
                 db.session.delete(expense)
-                LoggingCore.log_audit("delete", "expenses", id)
+                LoggingCore.log_audit("delete", "expenses", record_id)
             flash(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً', "success")
 
         return redirect(url_for("expenses.index"))
 
     except Exception as e:
         flash(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة.", "danger")
-        return redirect(url_for("expenses.view", id=id))
+        return redirect(url_for("expenses.view", id=record_id))
 
 
 @expenses_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @permission_required("manage_expenses")
-def cancel(id):  # noqa: A002
+def cancel(**kwargs):
     """إلغاء مصروف — عكس القيد المحاسبي وتحديث حالة الشيك"""
     from models import Cheque
     from utils.gl_tenant import reverse_document_gl
 
-    expense = tenant_get_or_404(Expense, id)
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
@@ -522,7 +527,7 @@ def cancel(id):  # noqa: A002
                     tenant_id=getattr(expense, "tenant_id", None),
                 )
             expense.is_reversed = True
-        LoggingCore.log_audit("cancel", "expenses", id)
+        LoggingCore.log_audit("cancel", "expenses", record_id)
         flash(
             f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.',
             "success",
@@ -530,7 +535,7 @@ def cancel(id):  # noqa: A002
     except Exception as e:
         flash(f"❌ خطأ في الإلغاء: {str(e)}", "danger")
 
-    return redirect(url_for("expenses.view", id=id))
+    return redirect(url_for("expenses.view", id=record_id))
 
 
 @expenses_bp.route("/categories")
@@ -686,11 +691,12 @@ def archived():
 @expenses_bp.route("/<int:id>/archive", methods=["POST"])
 @login_required
 @permission_required("manage_expenses")
-def archive(id):  # noqa: A002
+def archive(**kwargs):
     """أرشفة مصروف"""
     from services.archive_service import ArchiveService
 
-    expense = tenant_get_or_404(Expense, id)
+    record_id = kwargs.pop("id")
+    expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
@@ -710,12 +716,13 @@ def archive(id):  # noqa: A002
 @expenses_bp.route("/<int:id>/restore", methods=["POST"])
 @login_required
 @permission_required("manage_expenses")
-def restore(id):  # noqa: A002
+def restore(**kwargs):
     """استعادة مصروف من الأرشيف"""
     from models import ArchivedRecord
 
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=id)
+    archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
@@ -724,7 +731,7 @@ def restore(id):  # noqa: A002
         with atomic_transaction("expense_restore"):
             db.session.delete(archived)
             db.session.flush()
-        LoggingCore.log_audit("restore", "expenses", id)
+        LoggingCore.log_audit("restore", "expenses", record_id)
     except Exception as e:
         flash(f"تعذر الاستعادة: {str(e)}", "danger")
         return redirect(url_for("expenses.archived"))

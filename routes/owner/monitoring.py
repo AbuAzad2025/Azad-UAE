@@ -170,8 +170,9 @@ def security_alerts():
 
 @owner_bp.route("/security-alerts/<int:id>/resolve", methods=["POST"])
 @owner_required
-def resolve_alert(id):  # noqa: A002
-    alert = SecurityAlert.query.get_or_404(id)
+def resolve_alert(**kwargs):
+    record_id = kwargs.pop("id")
+    alert = SecurityAlert.query.get_or_404(record_id)
     try:
         with atomic_transaction("resolve_alert"):
             alert.is_resolved = True
@@ -263,8 +264,9 @@ def api_keys():
 
 @owner_bp.route("/api-keys/<int:id>/toggle", methods=["POST"])
 @owner_required
-def toggle_api_key(id):  # noqa: A002
-    key = APIKey.query.get_or_404(id)
+def toggle_api_key(**kwargs):
+    record_id = kwargs.pop("id")
+    key = APIKey.query.get_or_404(record_id)
     try:
         with atomic_transaction("toggle_api_key"):
             key.is_active = not key.is_active

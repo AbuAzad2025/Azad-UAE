@@ -10,10 +10,9 @@ import json
 import logging
 import os
 import re
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
-# ruff: noqa: E402
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection

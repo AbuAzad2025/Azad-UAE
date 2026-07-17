@@ -1,5 +1,7 @@
 """Owner blueprint package — routes split into sub-modules for maintainability."""
 
+from .blueprint import owner_bp
+
 # ── Re-exports (for testing + shared access across sub-modules) ──────────────
 # These are defined here before sub-module imports so sub-modules can import
 # from `routes.owner` instead of importing directly from flask/models/utils.
@@ -7,7 +9,6 @@
 # made inside any sub-module.
 
 from flask import (
-    Blueprint,
     render_template,
     request,
     jsonify,
@@ -89,45 +90,31 @@ from .shared import (
     _owner_branch_scope,
     _invalidate_owner_changes,
     _audit_owner_db_action,
-)  # noqa: E402 — used by test_owner_routes patches
-
-import logging
-
-logger = logging.getLogger(__name__)
-
-owner_bp = Blueprint("owner", __name__, url_prefix="/owner")
-
-
-@owner_bp.before_request
-def _owner_ip_guard():
-    from utils.security_helpers import enforce_owner_ip_if_needed
-
-    enforce_owner_ip_if_needed()
-
+)
 
 # Import sub-modules so they register their routes on the shared owner_bp.
 # Each sub-module is loaded here to ensure all @owner_bp.route decorators fire.
-from . import shared  # noqa: E402 — shared helpers (loaded first)
-from . import core  # noqa: E402 — dashboard, landing, config, cards
-from . import tenants  # noqa: E402
-from . import users  # noqa: E402
-from . import backups  # noqa: E402
-from . import database  # noqa: E402
-from . import settings  # noqa: E402 — configurations, tax, currency, invoices, comms
-from . import monitoring  # noqa: E402 — health, security, analytics, error audit
-from . import maintenance  # noqa: E402 — system maintenance tools
+from . import shared
+from . import core
+from . import tenants
+from . import users
+from . import backups
+from . import database
+from . import settings
+from . import monitoring
+from . import maintenance
 
 # Re-export route handler names so `from routes.owner import X` works
 # (matching the flat-module API from pre-refactoring routes/owner.py).
-from .backups import create_scoped_backup, restore_backup_target  # noqa: E402
-from .database import (  # noqa: E402
+from .backups import create_scoped_backup, restore_backup_target
+from .database import (
     database_tools,
     edit_table_data,
     sql_console,
     export_database,
     convert_database,
 )
-from .settings import (  # noqa: E402
+from .settings import (
     system_config,
     store_payment_method_create,
     store_payment_method_edit,
@@ -139,13 +126,24 @@ from .settings import (  # noqa: E402
     api_toggle_warehouse_negative,
     api_supervisor_override,
 )
-from .tenants import (  # noqa: E402
+from .tenants import (
     tenant_ai_toggle,
     tenant_store_platform_toggle,
     api_tenant_toggle_status,
     api_tenant_update_package,
 )
-from .users import create_user  # noqa: E402
+from .users import create_user
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@owner_bp.before_request
+def _owner_ip_guard():
+    from utils.security_helpers import enforce_owner_ip_if_needed
+
+    enforce_owner_ip_if_needed()
 
 __all__ = [
     "shared",

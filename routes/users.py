@@ -246,9 +246,10 @@ def create():
 @users_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_users")
-def view(id):  # noqa: A002
+def view(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=id, is_owner=False)
+    user_query = User.query.filter_by(id=record_id, is_owner=False)
     if tid is not None:
         user_query = user_query.filter(User.tenant_id == tid)
     user = user_query.first_or_404()
@@ -260,9 +261,10 @@ def view(id):  # noqa: A002
 @login_required
 @permission_required("manage_users")
 @limiter.limit("10 per minute", methods=["POST"])
-def edit(id):  # noqa: A002
+def edit(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=id, is_owner=False)
+    user_query = User.query.filter_by(id=record_id, is_owner=False)
     if tid is not None:
         user_query = user_query.filter(User.tenant_id == tid)
     user = user_query.first_or_404()
@@ -322,7 +324,7 @@ def edit(id):  # noqa: A002
             return redirect(url_for("users.index"))
 
         except Exception as e:
-            current_app.logger.error("Error updating user %s: %s", id, e)
+            current_app.logger.error("Error updating user %s: %s", record_id, e)
             flash(ErrorMessages.update_failed("user"), "danger")
             return render_template(
                 "users/edit.html", user=user, roles=roles, branches=branches
@@ -334,9 +336,10 @@ def edit(id):  # noqa: A002
 @users_bp.route("/<int:id>/toggle-active", methods=["POST"])
 @login_required
 @permission_required("manage_users")
-def toggle_active(id):  # noqa: A002
+def toggle_active(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=id, is_owner=False)
+    user_query = User.query.filter_by(id=record_id, is_owner=False)
     if tid is not None:
         user_query = user_query.filter(User.tenant_id == tid)
     user = user_query.first_or_404()
@@ -355,9 +358,10 @@ def toggle_active(id):  # noqa: A002
 @users_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_users")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=id, is_owner=False)
+    user_query = User.query.filter_by(id=record_id, is_owner=False)
     if tid is not None:
         user_query = user_query.filter(User.tenant_id == tid)
     user = user_query.first_or_404()

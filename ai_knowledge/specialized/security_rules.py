@@ -23,7 +23,7 @@ class SecurityRules:
         return SecurityRules.is_owner()
 
     @staticmethod
-    def filter_sensitive_data(data, user_id=None):  # noqa: F841
+    def filter_sensitive_data(data, user_id=None):
         """تصفية البيانات الحساسة"""
         if SecurityRules.can_access_sensitive_info():
             return data
@@ -114,7 +114,7 @@ class SecurityRules:
         print(f"SECURITY_LOG: {log_entry}")
 
     @staticmethod
-    def rate_limit_check(user_id, action):  # noqa: F841
+    def rate_limit_check(user_id, action):
         """فحص معدل الطلبات"""
         # يمكن تطوير نظام rate limiting أكثر تعقيداً
         # هنا مثال بسيط

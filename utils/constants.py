@@ -1,3 +1,5 @@
+from models.enums import RoleEnum
+
 CUSTOMER_TYPES = [
     ("regular", {"ar": "عادي", "en": "Regular"}),
     ("merchant", {"ar": "تاجر", "en": "Merchant"}),
@@ -164,9 +166,6 @@ def normalize_payment_method_code(method):
     value = str(method).strip().lower()
     return PAYMENT_METHOD_ALIASES.get(value, value)
 
-
-# ruff: noqa: E402
-from models.enums import RoleEnum
 
 ROLE_LEVELS = {
     RoleEnum.SELLER.value: 10,

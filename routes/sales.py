@@ -279,8 +279,9 @@ def create():
 @sales_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_sales")
-def view(id):  # noqa: A002
-    sale = tenant_get_or_404(Sale, id)
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -299,8 +300,9 @@ def view(id):  # noqa: A002
 @sales_bp.route("/<int:id>/print")
 @login_required
 @permission_required("manage_sales")
-def print_invoice(id):  # noqa: A002
-    sale = tenant_get_or_404(Sale, id)
+def print_invoice(**kwargs):
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -415,9 +417,10 @@ def print_invoice(id):  # noqa: A002
 @sales_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_sales")
-def edit(id):  # noqa: A002
+def edit(**kwargs):
     """تعديل فاتورة - فقط الفواتير غير المدفوعة وغير الملغاة"""
-    sale = tenant_get_or_404(Sale, id)
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -430,14 +433,14 @@ def edit(id):  # noqa: A002
             "⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً.",
             "danger",
         )
-        return redirect(url_for("sales.view", id=id))
+        return redirect(url_for("sales.view", id=record_id))
 
     if sale.status == "cancelled":
         flash(
             "⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك.",
             "danger",
         )
-        return redirect(url_for("sales.view", id=id))
+        return redirect(url_for("sales.view", id=record_id))
 
     from services.sale_service import SaleService
 
@@ -449,7 +452,7 @@ def edit(id):  # noqa: A002
                 if has_gl:
                     # للفواتير المنفذة مخزنياً: السماح فقط بتعديل الملاحظات (لا تغيير في المبالغ المالية)
                     sale.notes = request.form.get("notes", sale.notes)
-                    LoggingCore.log_audit("update", "sales", id)
+                    LoggingCore.log_audit("update", "sales", record_id)
                 else:
                     # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
                     sale.notes = request.form.get("notes", "")
@@ -459,9 +462,9 @@ def edit(id):  # noqa: A002
                     )
                     sale.discount_amount = discount_amount
                     sale.calculate_totals()
-                    LoggingCore.log_audit("update", "sales", id)
+                    LoggingCore.log_audit("update", "sales", record_id)
             flash("✅ تم تحديث الفاتورة بنجاح!", "success")
-            return redirect(url_for("sales.view", id=id))
+            return redirect(url_for("sales.view", id=record_id))
 
         except Exception as e:
             flash(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة.", "danger")
@@ -472,14 +475,15 @@ def edit(id):  # noqa: A002
 @sales_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
-def cancel(id):  # noqa: A002
+def cancel(**kwargs):
+    record_id = kwargs.pop("id")
     if current_user.is_seller():
         from utils.error_messages import ErrorMessages
 
         flash(ErrorMessages.permission_denied("إلغاء الفواتير"), "danger")
         return redirect(url_for("sales.index"))
 
-    sale = tenant_get_or_404(Sale, id)
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -499,7 +503,7 @@ def cancel(id):  # noqa: A002
             "danger",
         )
 
-    return redirect(url_for("sales.view", id=id))
+    return redirect(url_for("sales.view", id=record_id))
 
 
 @sales_bp.route("/api/get-price")
@@ -592,8 +596,9 @@ def archived():
 @sales_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (أرشفة) فاتورة مبيعات — يُسمح فقط للحذف المادي للفواتير غير المُرحلة (draft/pending)"""
+    record_id = kwargs.pop("id")
     if not current_user.is_owner:
         from utils.error_messages import ErrorMessages
 
@@ -604,7 +609,7 @@ def delete(id):  # noqa: A002
     from models import Payment, Cheque
     from services.sale_service import SaleService
 
-    sale = tenant_get_or_404(Sale, id)
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -617,7 +622,7 @@ def delete(id):  # noqa: A002
             "⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف.",
             "danger",
         )
-        return redirect(url_for("sales.view", id=id))
+        return redirect(url_for("sales.view", id=record_id))
 
     # التحقق من الارتباطات
     has_links = False
@@ -659,7 +664,7 @@ def delete(id):  # noqa: A002
                 else "تم أرشفة الفاتورة"
             )
             archive_service.archive_record("sales", sale, reason=archive_reason)
-            LoggingCore.log_audit("archive", "sales", id)
+            LoggingCore.log_audit("archive", "sales", record_id)
         flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"', "warning")
         return redirect(url_for("sales.index"))
 
@@ -671,12 +676,13 @@ def delete(id):  # noqa: A002
 @sales_bp.route("/<int:id>/archive", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
-def archive(id):  # noqa: A002
+def archive(**kwargs):
     """أرشفة فاتورة — يتطلب إلغاء كامل للفواتير المؤكدة/المنفذة مخزنياً"""
+    record_id = kwargs.pop("id")
     from services.archive_service import ArchiveService
     from services.sale_service import SaleService
 
-    sale = tenant_get_or_404(Sale, id)
+    sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -701,12 +707,13 @@ def archive(id):  # noqa: A002
 @sales_bp.route("/<int:id>/restore", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
-def restore(id):  # noqa: A002
+def restore(**kwargs):
     """استعادة فاتورة من الأرشيف"""
+    record_id = kwargs.pop("id")
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=id)
+    archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
@@ -714,7 +721,7 @@ def restore(id):  # noqa: A002
     try:
         with atomic_transaction("sale_restore"):
             db.session.delete(archived)
-            LoggingCore.log_audit("restore", "sales", id)
+            LoggingCore.log_audit("restore", "sales", record_id)
     except Exception as e:
         flash(f"❌ حدث خطأ في استعادة الفاتورة: {str(e)}", "danger")
 

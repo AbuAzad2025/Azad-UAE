@@ -19,7 +19,9 @@ import config
 from config import Config, ensure_runtime_dirs, assert_production_sanity
 from extensions import db, init_extensions
 from services.logging_core import LoggingCore
+from typing import cast, Any
 from werkzeug.middleware.proxy_fix import ProxyFix
+from utils import bootstrap_keys
 
 from app.handlers import register_error_handlers
 from app.context import register_context_processors
@@ -45,9 +47,7 @@ def create_app(config_class=Config) -> Flask:
     app.config.from_object(config_class)
 
     # Bootstrap SECRET_KEY and CARD_ENCRYPTION_KEY outside Config class
-    from utils.bootstrap_keys import bootstrap_keys  # noqa: F811
-
-    bootstrap_keys(app, config.instance_dir)
+    bootstrap_keys.bootstrap_keys(app, config.instance_dir)
 
     # Ensure runtime directories exist
     ensure_runtime_dirs(config_class)
@@ -124,7 +124,7 @@ def create_app(config_class=Config) -> Flask:
             )
 
     # Proxy Fix for Nginx/Cloudflare
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)  # type: ignore[method-assign]
+    cast(Any, app).wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)
 
     from bootstrap.blueprints import register_blueprints
 

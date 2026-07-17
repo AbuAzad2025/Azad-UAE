@@ -126,8 +126,9 @@ def api_create_return():
 @returns_bp.route("/view/<int:id>")
 @login_required
 @permission_required("manage_sales")
-def view(id):  # noqa: A002
-    product_return = _scoped_returns_query().filter(ProductReturn.id == id).first()
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    product_return = _scoped_returns_query().filter(ProductReturn.id == record_id).first()
     if not product_return:
         abort(404)
 

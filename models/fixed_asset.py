@@ -1,18 +1,16 @@
+"""
+نموذج الأصول الثابتة والاستهلاك - Fixed Assets & Depreciation Model
+"""
+
+from datetime import datetime, timezone, date
+from extensions import db
+from decimal import Decimal, ROUND_HALF_UP
 from utils.gl_services import (
     gl_post_or_fail,
     gl_ensure_core_accounts,
     gl_get_default_liquidity_account,
     gl_post_entry,
 )
-
-"""
-نموذج الأصول الثابتة والاستهلاك - Fixed Assets & Depreciation Model
-"""
-
-# ruff: noqa: E402
-from datetime import datetime, timezone, date
-from extensions import db
-from decimal import Decimal, ROUND_HALF_UP
 
 
 class FixedAsset(db.Model):

@@ -68,9 +68,9 @@ class Query(graphene.ObjectType):
         sales = tenant_query(Sale).limit(limit).offset(offset).all()
         return [Query._convert_sale_to_type(sale) for sale in sales]
 
-    def resolve_sale(self, info, id):  # noqa: A002
+    def resolve_sale(self, info, record_id):
         _require_permission("manage_sales")
-        sale = tenant_query(Sale).filter_by(id=id).first()
+        sale = tenant_query(Sale).filter_by(id=record_id).first()
         return Query._convert_sale_to_type(sale) if sale else None
 
     def resolve_all_customers(self, info, limit=50):
@@ -78,9 +78,9 @@ class Query(graphene.ObjectType):
         customers = tenant_query(Customer).limit(limit).all()
         return [Query._convert_customer_to_type(customer) for customer in customers]
 
-    def resolve_customer(self, info, id):  # noqa: A002
+    def resolve_customer(self, info, record_id):
         _require_permission("manage_customers")
-        customer = tenant_query(Customer).filter_by(id=id).first()
+        customer = tenant_query(Customer).filter_by(id=record_id).first()
         return Query._convert_customer_to_type(customer) if customer else None
 
     def resolve_all_products(self, info, limit=50):
@@ -88,9 +88,9 @@ class Query(graphene.ObjectType):
         products = tenant_query(Product).limit(limit).all()
         return [Query._convert_product_to_type(product) for product in products]
 
-    def resolve_product(self, info, id):  # noqa: A002
+    def resolve_product(self, info, record_id):
         _require_permission("manage_products")
-        product = tenant_query(Product).filter_by(id=id).first()
+        product = tenant_query(Product).filter_by(id=record_id).first()
         return Query._convert_product_to_type(product) if product else None
 
     @staticmethod

@@ -1,7 +1,6 @@
 """AI Routes Package — Modular sub-blueprint structure."""
 
 from flask import (
-    Blueprint,
     render_template,
     request,
     jsonify,
@@ -18,7 +17,42 @@ from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from utils.tenanting import get_active_tenant_id, assign_tenant_id
 
-ai_bp: Blueprint = Blueprint("ai", __name__, url_prefix="/ai")
+from .blueprint import ai_bp
+
+from ai_knowledge.core.conversation_store import (
+    get_context as _get_conversation_context,
+    set_context as _set_conversation_context,
+    clear_context as _clear_conversation_context,
+)
+
+# ── Sub-module imports ───────────────────────────────────────────
+# Each sub-module registers its routes on the shared ai_bp.
+from . import shared  # helpers loaded first
+from . import chat
+from . import actions
+from . import assistant
+from . import analytics
+from . import knowledge
+from . import system
+from . import specialized
+
+# Re-export symbols for backward compatibility with routes.ai namespace
+from .shared import (
+    smart_listener,
+    train_local_ai,
+    apply_smart_listeners,
+    create_final_options,
+    _conversation_ctx,
+)
+from .actions import _process_user_action, _user_can_ai_execute_actions
+from .assistant import (
+    _intelligent_column_detector,
+    _process_excel_intelligently,
+    _train_ai_from_excel,
+)
+
+_conversation_set = _set_conversation_context
+_conversation_clear = _clear_conversation_context
 
 # ── Request lifecycle hooks ──────────────────────────────────────
 
@@ -118,17 +152,6 @@ def _audit_ai_requests(response):
     return response
 
 
-from ai_knowledge.core.conversation_store import (  # noqa: E402
-    set_context as _set_conversation_context,
-)
-from ai_knowledge.core.conversation_store import (  # noqa: E402
-    clear_context as _clear_conversation_context,
-)
-
-_conversation_set = _set_conversation_context
-_conversation_clear = _clear_conversation_context
-
-
 class _AutoSaveCtx(dict):
     """Dict that auto-persists changes to DB."""
 
@@ -159,32 +182,6 @@ class _AutoSaveCtx(dict):
         _set_conversation_context(self._user_id, dict(self), self._tenant_id)
 
 
-# ── Sub-module imports ───────────────────────────────────────────
-# Each sub-module registers its routes on the shared ai_bp.
-from . import shared  # noqa: E402 — helpers loaded first
-from . import chat  # noqa: E402
-from . import actions  # noqa: E402
-from . import assistant  # noqa: E402
-from . import analytics  # noqa: E402
-from . import knowledge  # noqa: E402
-from . import system  # noqa: E402
-from . import specialized  # noqa: E402
-
-# Re-export symbols for backward compatibility with routes.ai namespace
-from .shared import (  # noqa: E402
-    smart_listener,
-    train_local_ai,
-    apply_smart_listeners,
-    create_final_options,
-    _conversation_ctx,
-)
-from .actions import _process_user_action, _user_can_ai_execute_actions  # noqa: E402
-from .assistant import (  # noqa: E402
-    _intelligent_column_detector,
-    _process_excel_intelligently,
-    _train_ai_from_excel,
-)
-
 __all__ = [
     "ai_bp",
     "shared",
@@ -200,6 +197,7 @@ __all__ = [
     "apply_smart_listeners",
     "create_final_options",
     "_conversation_ctx",
+    "_get_conversation_context",
     "_process_user_action",
     "_user_can_ai_execute_actions",
     "_intelligent_column_detector",

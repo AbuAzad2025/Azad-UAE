@@ -17,14 +17,17 @@ import json
 import os
 from datetime import datetime
 from typing import Any, Dict, List
+from urllib.parse import quote
 import requests
 from requests.adapters import HTTPAdapter
 
+Retry: Any
 try:
-    from urllib3.util.retry import Retry
+    from urllib3.util.retry import Retry as _Retry
+    Retry = _Retry
 except ImportError:
-    from requests.packages.urllib3.util.retry import Retry  # type: ignore[no-redef]
-from urllib.parse import quote
+    import requests.packages.urllib3.util.retry as _retry_module
+    Retry = _retry_module.Retry
 
 logger = logging.getLogger(__name__)
 
@@ -308,7 +311,6 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
     results: List[Dict[str, Any]] = []
     if not svc:
         return results
-    memory = None  # noqa: F841
     try:
         memory = svc.get_learning_system()
     except Exception as exc:

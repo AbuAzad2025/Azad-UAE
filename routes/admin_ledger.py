@@ -221,9 +221,10 @@ def add_account():
 @admin_ledger_bp.route("/accounts/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @admin_required
-def edit_account(id):  # noqa: A002
+def edit_account(**kwargs):
     """تعديل حساب محاسبي"""
-    account = _accounts().filter_by(id=id).first_or_404()
+    record_id = kwargs.pop("id")
+    account = _accounts().filter_by(id=record_id).first_or_404()
 
     if request.method == "POST":
         try:
@@ -273,26 +274,27 @@ def edit_account(id):  # noqa: A002
 @admin_ledger_bp.route("/accounts/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
-def delete_account(id):  # noqa: A002
+def delete_account(**kwargs):
     """حذف حساب محاسبي"""
-    account = _accounts().filter_by(id=id).first_or_404()
+    record_id = kwargs.pop("id")
+    account = _accounts().filter_by(id=record_id).first_or_404()
 
     try:
         # التحقق من وجود قيود مرتبطة
-        has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=id).first()
+        has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
         if has_entries:
             flash("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به", "danger")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         # التحقق من وجود حسابات فرعية
-        has_children = _accounts().filter_by(parent_id=id).first()
+        has_children = _accounts().filter_by(parent_id=record_id).first()
         if has_children:
             flash("❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به", "danger")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         with atomic_transaction("delete_gl_account"):
             db.session.delete(account)
-            LoggingCore.log_audit("delete", "gl_accounts", id)
+            LoggingCore.log_audit("delete", "gl_accounts", record_id)
         flash(f"✅ تم حذف الحساب {account.full_name} بنجاح", "success")
 
     except Exception as e:
@@ -330,29 +332,31 @@ def journals_management():
 @admin_ledger_bp.route("/journals/<int:id>/view")
 @login_required
 @admin_required
-def view_journal(id):  # noqa: A002
+def view_journal(**kwargs):
     """عرض تفاصيل قيد محاسبي"""
-    entry = _entries().filter_by(id=id).first_or_404()
+    record_id = kwargs.pop("id")
+    entry = _entries().filter_by(id=record_id).first_or_404()
     return render_template("admin/ledger/view_journal.html", entry=entry)
 
 
 @admin_ledger_bp.route("/journals/<int:id>/reverse", methods=["POST"])
 @login_required
 @admin_required
-def reverse_journal(id):  # noqa: A002
+def reverse_journal(**kwargs):
     """عكس قيد محاسبي"""
-    entry = _entries().filter_by(id=id).first_or_404()
+    record_id = kwargs.pop("id")
+    entry = _entries().filter_by(id=record_id).first_or_404()
 
     try:
         with atomic_transaction("reverse_journal"):
             entry.reverse_entry()
-            LoggingCore.log_audit("reverse", "gl_journal_entries", id)
+            LoggingCore.log_audit("reverse", "gl_journal_entries", record_id)
         flash(f"✅ تم عكس القيد {entry.entry_number} بنجاح", "success")
 
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}", "danger")
 
-    return redirect(url_for("admin_ledger.view_journal", id=id))
+    return redirect(url_for("admin_ledger.view_journal", id=record_id))
 
 
 @admin_ledger_bp.route("/reports")

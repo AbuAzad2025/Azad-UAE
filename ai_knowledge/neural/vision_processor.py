@@ -126,10 +126,6 @@ class VisionProcessor:
             if not os.path.exists(image_path):
                 return {"error": "Image file not found"}
 
-            from PIL import Image
-
-            image = Image.open(image_path)  # noqa: F841
-
             # تحليل بسيط (يمكن استخدام ML لاحقاً)
             analysis = {
                 "part_name": "Unknown",

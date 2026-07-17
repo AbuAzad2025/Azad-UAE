@@ -471,11 +471,12 @@ def search_entities():
 @payments_bp.route("/payments/<int:id>")
 @login_required
 @permission_required("manage_payments")
-def view_payment(id):  # noqa: A002
+def view_payment(**kwargs):
     """عرض سند صرف - يستخدم نفس قالب سندات القبض"""
     from models import Payment
 
-    payment = tenant_get_or_404(Payment, id)
+    record_id = kwargs.pop("id")
+    payment = tenant_get_or_404(Payment, record_id)
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template("errors/403.html"), 403
@@ -487,11 +488,12 @@ def view_payment(id):  # noqa: A002
 @payments_bp.route("/payments/<int:id>/print")
 @login_required
 @permission_required("manage_payments")
-def print_payment(id):  # noqa: A002
+def print_payment(**kwargs):
     """طباعة سند صرف - يستخدم نفس قالب طباعة سندات القبض"""
     from models import Payment
 
-    payment = tenant_get_or_404(Payment, id)
+    record_id = kwargs.pop("id")
+    payment = tenant_get_or_404(Payment, record_id)
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template("errors/403.html"), 403
@@ -571,12 +573,13 @@ def print_payment(id):  # noqa: A002
 @payments_bp.route("/payments/<int:id>/archive", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def archive_payment(id):  # noqa: A002
+def archive_payment(**kwargs):
     """أرشفة سند صرف"""
     from models import Payment
     from services.archive_service import ArchiveService
 
-    payment = tenant_get_or_404(Payment, id)
+    record_id = kwargs.pop("id")
+    payment = tenant_get_or_404(Payment, record_id)
     if not _in_scope_branch(payment.branch_id):
         return render_template("errors/403.html"), 403
 
@@ -589,7 +592,7 @@ def archive_payment(id):  # noqa: A002
             LoggingCore.log_audit("archive", "payments", payment.id)
 
     except Exception as e:
-        current_app.logger.error(f"Failed to archive payment {id}: {e}")
+        current_app.logger.error(f"Failed to archive payment {record_id}: {e}")
         flash(f"فشلت الأرشفة: {str(e)}", "danger")
         return redirect(url_for("payments.receipts"))
 
@@ -599,12 +602,13 @@ def archive_payment(id):  # noqa: A002
 @payments_bp.route("/payments/<int:id>/restore", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def restore_payment(id):  # noqa: A002
+def restore_payment(**kwargs):
     """استعادة سند صرف من الأرشيف"""
     from models import ArchivedRecord
 
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="payments", record_id=id)
+    archived_query = ArchivedRecord.query.filter_by(table_name="payments", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
@@ -614,7 +618,7 @@ def restore_payment(id):  # noqa: A002
     try:
         with atomic_transaction("payment_restore"):
             db.session.delete(archived)
-            LoggingCore.log_audit("restore", "payments", id)
+            LoggingCore.log_audit("restore", "payments", record_id)
     except Exception:
         pass
 
@@ -1217,12 +1221,13 @@ def create_receipt():
 @payments_bp.route("/receipts/<int:id>")
 @login_required
 @permission_required("manage_payments")
-def view_receipt(id):  # noqa: A002
-    receipt = tenant_get(Receipt, id, or_404=False)
+def view_receipt(**kwargs):
+    record_id = kwargs.pop("id")
+    receipt = tenant_get(Receipt, record_id, or_404=False)
     if not receipt:
-        payment = tenant_get(Payment, id, or_404=False)
+        payment = tenant_get(Payment, record_id, or_404=False)
         if payment:
-            return redirect(url_for("payments.view_payment", id=id))
+            return redirect(url_for("payments.view_payment", id=record_id))
         abort(404)
     receipt_branch_id = receipt.branch_id
     if receipt.source_type == "sale" and receipt.source_id:
@@ -1247,15 +1252,16 @@ def view_receipt(id):  # noqa: A002
 @payments_bp.route("/receipts/<int:id>/print")
 @login_required
 @permission_required("manage_payments")
-def print_receipt(id):  # noqa: A002
-    receipt = tenant_get(Receipt, id, or_404=False)
+def print_receipt(**kwargs):
+    record_id = kwargs.pop("id")
+    receipt = tenant_get(Receipt, record_id, or_404=False)
     if receipt:
         if not assert_tenant_record(receipt):
             abort(404)
     else:
-        payment = tenant_get(Payment, id, or_404=False)
+        payment = tenant_get(Payment, record_id, or_404=False)
         if payment:
-            return redirect(url_for("payments.print_payment", id=id))
+            return redirect(url_for("payments.print_payment", id=record_id))
         abort(404)
     receipt_branch_id = receipt.branch_id
     if receipt.source_type == "sale" and receipt.source_id:
@@ -1476,11 +1482,12 @@ def archived_receipts():
 @payments_bp.route("/receipts/<int:id>/archive", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def archive_receipt(id):  # noqa: A002
+def archive_receipt(**kwargs):
     """أرشفة سند قبض"""
     from services.archive_service import ArchiveService
 
-    receipt = tenant_get_or_404(Receipt, id)
+    record_id = kwargs.pop("id")
+    receipt = tenant_get_or_404(Receipt, record_id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template("errors/403.html"), 403
 
@@ -1500,14 +1507,15 @@ def archive_receipt(id):  # noqa: A002
 @payments_bp.route("/receipts/<int:id>/restore", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def restore_receipt(id):  # noqa: A002
+def restore_receipt(**kwargs):
     """استعادة سند قبض من الأرشيف"""
     from models import ArchivedRecord
 
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
     archived_query = ArchivedRecord.query.filter_by(
         table_name="receipts",
-        record_id=id,
+        record_id=record_id,
     )
     if tid is not None:
         archived_query = archived_query.filter_by(tenant_id=tid)
@@ -1518,7 +1526,7 @@ def restore_receipt(id):  # noqa: A002
     try:
         with atomic_transaction("receipt_restore"):
             db.session.delete(archived)
-            LoggingCore.log_audit("restore", "receipts", id)
+            LoggingCore.log_audit("restore", "receipts", record_id)
     except Exception:
         pass
 
@@ -1528,12 +1536,13 @@ def restore_receipt(id):  # noqa: A002
 @payments_bp.route("/receipts/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def delete_receipt(id):  # noqa: A002
+def delete_receipt(**kwargs):
     """حذف أو أرشفة سند قبض"""
     from models import Receipt
     from services.archive_service import ArchiveService
 
-    receipt = tenant_get_or_404(Receipt, id)
+    record_id = kwargs.pop("id")
+    receipt = tenant_get_or_404(Receipt, record_id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template("errors/403.html"), 403
 
@@ -1591,7 +1600,7 @@ def delete_receipt(id):  # noqa: A002
                         reason="تم أرشفة الشيك لارتباطه بسند مؤرشف",
                     )
 
-                LoggingCore.log_audit("archive", "receipts", id)
+                LoggingCore.log_audit("archive", "receipts", record_id)
                 flash(
                     f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)',
                     "warning",
@@ -1613,26 +1622,27 @@ def delete_receipt(id):  # noqa: A002
                     db.session.delete(receipt.cheque)
 
                 db.session.delete(receipt)
-                LoggingCore.log_audit("delete", "receipts", id)
+                LoggingCore.log_audit("delete", "receipts", record_id)
                 flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', "success")
 
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
         flash(f"فشل الحذف: {str(e)}", "danger")
-        return redirect(url_for("payments.view_receipt", id=id))
+        return redirect(url_for("payments.view_receipt", id=record_id))
 
 
 @payments_bp.route("/payments/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def delete_payment(id):  # noqa: A002
+def delete_payment(**kwargs):
     """حذف أو أرشفة سند صرف"""
     from decimal import Decimal
     from models import Payment
     from services.archive_service import ArchiveService
 
-    payment = tenant_get_or_404(Payment, id)
+    record_id = kwargs.pop("id")
+    payment = tenant_get_or_404(Payment, record_id)
     if not _in_scope_branch(payment.branch_id):
         return render_template("errors/403.html"), 403
 
@@ -1660,7 +1670,7 @@ def delete_payment(id):  # noqa: A002
                         reason="تم أرشفة الشيك لارتباطه بسند مؤرشف",
                     )
 
-                LoggingCore.log_audit("archive", "payments", id)
+                LoggingCore.log_audit("archive", "payments", record_id)
                 flash(
                     f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)',
                     "warning",
@@ -1692,14 +1702,14 @@ def delete_payment(id):  # noqa: A002
                     db.session.delete(payment.cheque)
 
                 db.session.delete(payment)
-                LoggingCore.log_audit("delete", "payments", id)
+                LoggingCore.log_audit("delete", "payments", record_id)
                 flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', "success")
 
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
         flash(f"فشل الحذف: {str(e)}", "danger")
-        return redirect(url_for("payments.view_payment", id=id))
+        return redirect(url_for("payments.view_payment", id=record_id))
 
 
 @payments_bp.route("/create_payment/<int:purchase_id>", methods=["GET", "POST"])

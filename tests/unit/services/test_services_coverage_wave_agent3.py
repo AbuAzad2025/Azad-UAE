@@ -335,7 +335,7 @@ class TestErrorAuditService:
 
         class _Meta(type):
             @property
-            def __name__(cls):  # noqa: N805
+            def __name__(self):
                 raise RuntimeError("no name")
 
         class _Weird(metaclass=_Meta):

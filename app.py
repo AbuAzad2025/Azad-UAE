@@ -9,14 +9,14 @@ All application logic lives in app/factory.py and supporting modules:
 
 import os
 
-print("Starting Application...")
-# ruff: noqa: E402
 from config import _init_env
-
-_init_env()
 from app.factory import create_app
 
+_init_env()
+
 app = create_app()
+
+print("Starting Application...")
 
 if __name__ == "__main__":
     try:

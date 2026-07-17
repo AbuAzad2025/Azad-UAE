@@ -382,20 +382,21 @@ def create():
 @customers_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_customers")
-def view(id):  # noqa: A002
-    customer = tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    customer = tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     tid = get_active_tenant_id(current_user)
-    sales = Sale.query.filter_by(customer_id=id, tenant_id=tid)
+    sales = Sale.query.filter_by(customer_id=record_id, tenant_id=tid)
     if branch_scope_id() is not None:
         sales = sales.filter(Sale.branch_id == branch_scope_id())
     sales = sales.order_by(Sale.sale_date.desc()).limit(20).all()
 
-    balance = _get_customer_balance(id)
+    balance = _get_customer_balance(record_id)
 
-    unpaid_sales = _get_unpaid_sales(id)
+    unpaid_sales = _get_unpaid_sales(record_id)
 
     return render_template(
         "customers/view.html",
@@ -409,9 +410,10 @@ def view(id):  # noqa: A002
 @customers_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_customers")
-def edit(id):  # noqa: A002
-    customer = tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+def edit(**kwargs):
+    record_id = kwargs.pop("id")
+    customer = tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     if request.method == "POST":
@@ -460,19 +462,20 @@ def edit(id):  # noqa: A002
 @customers_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_customers")
-def delete(id):  # noqa: A002
-    customer = tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+def delete(**kwargs):
+    record_id = kwargs.pop("id")
+    customer = tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     tid = get_active_tenant_id(current_user)
     try:
         with atomic_transaction("customer_delete"):
-            sales_query = Sale.query.filter_by(customer_id=id, tenant_id=tid)
+            sales_query = Sale.query.filter_by(customer_id=record_id, tenant_id=tid)
             from models import Payment, Receipt
 
-            payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
-            receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
+            payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
+            receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
             if branch_scope_id() is not None:
                 sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
                 payments_query = payments_query.filter(
@@ -490,7 +493,7 @@ def delete(id):  # noqa: A002
                 customer.is_active = False
             else:
                 db.session.delete(customer)
-            LoggingCore.log_audit("delete", "customers", id)
+            LoggingCore.log_audit("delete", "customers", record_id)
 
         if has_relations:
             flash(
@@ -501,10 +504,10 @@ def delete(id):  # noqa: A002
             flash(f'✅ تم حذف العميل "{customer.name}" نهائياً!', "success")
 
     except Exception as e:
-        current_app.logger.error(f"Error deleting customer {id}: {e}")
+        current_app.logger.error(f"Error deleting customer {record_id}: {e}")
         try:
             with atomic_transaction("customer_soft_delete"):
-                customer = Customer.query.filter_by(id=id, tenant_id=tid).first()
+                customer = Customer.query.filter_by(id=record_id, tenant_id=tid).first()
                 if customer:
                     customer.is_active = False
                     db.session.add(customer)
@@ -514,7 +517,7 @@ def delete(id):  # noqa: A002
                     )
         except Exception as inner_e:
             current_app.logger.error(
-                f"Error falling back to soft delete for customer {id}: {inner_e}"
+                f"Error falling back to soft delete for customer {record_id}: {inner_e}"
             )
             from utils.error_messages import ErrorMessages
 
@@ -526,9 +529,10 @@ def delete(id):  # noqa: A002
 @customers_bp.route("/<int:id>/statement")
 @login_required
 @permission_required("manage_customers")
-def statement(id):  # noqa: A002
-    customer = tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+def statement(**kwargs):
+    record_id = kwargs.pop("id")
+    customer = tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     try:
@@ -545,10 +549,10 @@ def statement(id):  # noqa: A002
 
     tid = get_active_tenant_id(current_user)
     sales_query = Sale.query.filter_by(
-        customer_id=id, status="confirmed", tenant_id=tid
+        customer_id=record_id, status="confirmed", tenant_id=tid
     )
-    payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
-    receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
+    payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
+    receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
     if branch_scope_id() is not None:
         sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
         payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
@@ -946,10 +950,11 @@ def api_search():
 @customers_bp.route("/<int:id>/balance")
 @login_required
 @permission_required("manage_payments")
-def customer_balance(id):  # noqa: A002
+def customer_balance(**kwargs):
     """رصيد العميل + فواتير غير المدفوعة - API موحد (مصدر واحد مع payments)."""
-    tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+    record_id = kwargs.pop("id")
+    tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return jsonify({"error": "forbidden"}), 403
     try:
         default_currency = resolve_default_currency()
@@ -957,8 +962,8 @@ def customer_balance(id):  # noqa: A002
         default_currency = get_system_default_currency()
     return jsonify(
         {
-            "balance_aed": float(_get_customer_balance(id)),
-            "balance": float(_get_customer_balance(id)),
+            "balance_aed": float(_get_customer_balance(record_id)),
+            "balance": float(_get_customer_balance(record_id)),
             "currency": default_currency,
             "unpaid_sales": [
                 {
@@ -973,7 +978,7 @@ def customer_balance(id):  # noqa: A002
                     "balance_due": float(s.balance_due),
                     "currency": s.currency or default_currency,
                 }
-                for s in _get_unpaid_sales(id)
+                for s in _get_unpaid_sales(record_id)
             ],
         }
     )
@@ -982,12 +987,13 @@ def customer_balance(id):  # noqa: A002
 @customers_bp.route("/<int:id>/sales")
 @login_required
 @permission_required("manage_customers")
-def customer_sales(id):  # noqa: A002
-    tenant_get_or_404(Customer, id)
-    if not _customer_in_scope(id):
+def customer_sales(**kwargs):
+    record_id = kwargs.pop("id")
+    tenant_get_or_404(Customer, record_id)
+    if not _customer_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
-    sales = Sale.query.filter_by(customer_id=id, status="confirmed")
+    sales = Sale.query.filter_by(customer_id=record_id, status="confirmed")
     if branch_scope_id() is not None:
         sales = sales.filter(Sale.branch_id == branch_scope_id())
     sales = sales.order_by(Sale.sale_date.desc()).all()

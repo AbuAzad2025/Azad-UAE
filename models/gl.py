@@ -444,10 +444,12 @@ class GLJournalLine(db.Model):
         return f"<GLLine acc={self.account_id} d={self.debit} c={self.credit}>"
 
 
-from models._constants import (  # noqa: E402
-    VALID_GL_CONCEPT_CODES,
-    _GL_CONCEPT_CODE_CHECK,
-)
+def _load_gl_constants():
+    from models._constants import VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
+    return VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
+
+
+VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK = _load_gl_constants()
 
 
 class GLAccountMapping(db.Model):

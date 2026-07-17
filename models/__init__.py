@@ -16,7 +16,8 @@ from .archive import ArchivedRecord
 from .product_return import ProductReturn, ProductReturnLine
 from .card_vault import CardVault
 from .gl import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod, GLAccountMapping
-from .gl import GL_CONCEPT_REGISTRY, VALID_GL_CONCEPT_CODES, REQUIRED_GL_CONCEPTS
+from .gl import VALID_GL_CONCEPT_CODES
+from ._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS
 from .expense import Expense, ExpenseCategory
 from .invoice_settings import InvoiceSettings
 from .tenant import Tenant

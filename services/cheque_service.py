@@ -2,9 +2,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from extensions import db
-
-logger = logging.getLogger(__name__)
-# ruff: noqa: E402
 from utils.gl_reference_types import GLRef
 from services.gl_service import GLService
 from utils.gl_services import (
@@ -15,6 +12,8 @@ from utils.gl_services import (
     gl_get_default_liquidity_account,
     gl_resolve_exchange_rate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def validate_cheque(cheque):

@@ -87,7 +87,7 @@ class KnowledgeExpander:
 
             # إضافة للمصادر
             self.sources["websites"].append(
-                {  # type: ignore[union-attr]
+                {
                     "url": url,
                     "filename": filename,
                     "category": category,
@@ -173,7 +173,7 @@ class KnowledgeExpander:
 
             # إضافة للمصادر
             self.sources["documents"].append(
-                {  # type: ignore[union-attr]
+                {
                     "filename": filename,
                     "title": title,
                     "category": category,
@@ -338,9 +338,9 @@ class KnowledgeExpander:
                 if websites is not None and source_id < len(websites):
                     website = websites[source_id]
                     return self.add_website(
-                        website["url"],  # type: ignore[index]
-                        website.get("category", "general"),  # type: ignore[union-attr]
-                        website.get("description", ""),  # type: ignore[union-attr]
+                        website["url"],
+                        website.get("category", "general"),
+                        website.get("description", ""),
                     )
 
             return {"success": False, "error": "نوع المصدر غير صحيح"}

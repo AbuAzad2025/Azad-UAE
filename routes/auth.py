@@ -27,6 +27,8 @@ from utils.tenanting import set_active_tenant, clear_active_tenant
 from utils.db_safety import atomic_transaction
 from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 
+import ipaddress
+
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 _PAYMENT_STATUS_TOKEN_SALT = "payment-status-v1"
@@ -519,9 +521,6 @@ def payment_status(payment_id):
             500,
         )
 
-
-# ruff: noqa: E402
-import ipaddress
 
 _payment_callback_cache: dict[str, float] = {}
 

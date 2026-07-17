@@ -137,12 +137,13 @@ def create():
 @partners_bp.route("/<int:id>")
 @login_required
 @permission_required("view_reports")
-def view(id):  # noqa: A002
-    partner = tenant_query(Partner).filter_by(id=id).first_or_404()
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
     tid = _tenant_id()
 
     # Latest distributions
-    latest_dists = PartnerProfitDistribution.query.filter_by(partner_id=id)
+    latest_dists = PartnerProfitDistribution.query.filter_by(partner_id=record_id)
     if tid is not None:
         latest_dists = latest_dists.filter(PartnerProfitDistribution.tenant_id == tid)
     latest_dists = (
@@ -152,7 +153,7 @@ def view(id):  # noqa: A002
     )
 
     # Latest transactions
-    latest_txs = PartnerTransaction.query.filter_by(partner_id=id)
+    latest_txs = PartnerTransaction.query.filter_by(partner_id=record_id)
     if tid is not None:
         latest_txs = latest_txs.filter(PartnerTransaction.tenant_id == tid)
     latest_txs = (
@@ -171,8 +172,9 @@ def view(id):  # noqa: A002
 @partners_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_users")
-def edit(id):  # noqa: A002
-    partner = tenant_query(Partner).filter_by(id=id).first_or_404()
+def edit(**kwargs):
+    record_id = kwargs.pop("id")
+    partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
     from models import Branch, Warehouse
 
     branches = tenant_query(Branch).all()
@@ -224,7 +226,7 @@ def edit(id):  # noqa: A002
             with atomic_transaction("partner_edit"):
                 db.session.flush()
             flash("✅ تم تحديث بيانات الشريك.", "success")
-            return redirect(url_for("partners.view", id=id))
+            return redirect(url_for("partners.view", id=record_id))
         except Exception as e:
             flash(f"❌ خطأ: {e}", "danger")
 
@@ -239,8 +241,9 @@ def edit(id):  # noqa: A002
 @partners_bp.route("/<int:id>/statement")
 @login_required
 @permission_required("view_reports")
-def statement(id):  # noqa: A002
-    partner = tenant_query(Partner).filter_by(id=id).first_or_404()
+def statement(**kwargs):
+    record_id = kwargs.pop("id")
+    partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
 
     end_date = _parse_date(request.args.get("end_date"))
     start_date = _parse_date(request.args.get("start_date"))
@@ -346,8 +349,9 @@ def pay_distribution(dist_id):
 @partners_bp.route("/<int:id>/tx", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def add_transaction(id):  # noqa: A002
+def add_transaction(**kwargs):
     """إضافة حركة يدوية (مسحوبات / استثمار إضافي / تسوية)"""
+    record_id = kwargs.pop("id")
     try:
         tx_type = request.form.get("transaction_type")
         amount = Decimal(request.form.get("amount", "0") or "0")
@@ -358,7 +362,7 @@ def add_transaction(id):  # noqa: A002
 
         with atomic_transaction("partner_add_transaction"):
             tx_id = PartnerService.add_transaction(
-                partner_id=id,
+                partner_id=record_id,
                 transaction_type=tx_type or "",
                 amount=amount,
                 notes=notes,

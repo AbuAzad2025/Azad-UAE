@@ -1828,7 +1828,8 @@ def api_entity_search():
 @reports_bp.route("/entity_report_fragment/<type>/<id>")
 @login_required
 @permission_required("view_reports")
-def entity_report_fragment(type, id):  # noqa: A002
+def entity_report_fragment(type, **kwargs):
+    record_id = kwargs.pop("id")
     try:
         from models import Receipt, Payment, PurchaseLine, Supplier
 
@@ -1846,11 +1847,11 @@ def entity_report_fragment(type, id):  # noqa: A002
         }
 
         if type == "supplier":
-            entity = tenant_get_or_404(Supplier, id)
+            entity = tenant_get_or_404(Supplier, record_id)
             if (
                 report_branch_scope_id() is not None
                 and not db.session.query(
-                    _scoped_supplier_query().filter_by(id=id).exists()
+                    _scoped_supplier_query().filter_by(id=record_id).exists()
                 ).scalar()
             ):
                 return render_template("errors/403.html"), 403
@@ -1867,7 +1868,7 @@ def entity_report_fragment(type, id):  # noqa: A002
                 )
                 .join(Purchase)
                 .join(Product)
-                .filter(Purchase.supplier_id == id, Purchase.status == "confirmed")
+                .filter(Purchase.supplier_id == record_id, Purchase.status == "confirmed")
             )
             if tenant_id is not None:
                 p_lines = p_lines.filter(Purchase.tenant_id == tenant_id)
@@ -1888,7 +1889,7 @@ def entity_report_fragment(type, id):  # noqa: A002
             ]
 
             # Invoices (Purchases)
-            purchases = Purchase.query.filter_by(supplier_id=id)
+            purchases = Purchase.query.filter_by(supplier_id=record_id)
             if tenant_id is not None:
                 purchases = purchases.filter(Purchase.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -1901,7 +1902,7 @@ def entity_report_fragment(type, id):  # noqa: A002
 
             # مدفوعات المورد الأساسية
             supplier_payments_base = Payment.query.filter(
-                Payment.supplier_id == id,
+                Payment.supplier_id == record_id,
                 Payment.direction == "outgoing",
                 Payment.payment_confirmed,
             )
@@ -1976,7 +1977,7 @@ def entity_report_fragment(type, id):  # noqa: A002
             context["allocation_exact"] = has_direct_allocation
             context["unallocated_supplier_credit"] = unallocated_credit
 
-            payments = Payment.query.filter_by(supplier_id=id, payment_confirmed=True)
+            payments = Payment.query.filter_by(supplier_id=record_id, payment_confirmed=True)
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -2003,11 +2004,11 @@ def entity_report_fragment(type, id):  # noqa: A002
             ]
 
         else:  # Customer/Partner/Merchant
-            entity = tenant_get_or_404(Customer, id)
+            entity = tenant_get_or_404(Customer, record_id)
             if (
                 report_branch_scope_id() is not None
                 and not db.session.query(
-                    _scoped_customer_query().filter_by(id=id).exists()
+                    _scoped_customer_query().filter_by(id=record_id).exists()
                 ).scalar()
             ):
                 return render_template("errors/403.html"), 403
@@ -2022,16 +2023,16 @@ def entity_report_fragment(type, id):  # noqa: A002
             # Balance calculation (Receivables/Payables)
             # Sales (He took goods) + Payments Out (He took money) - Receipts (He gave money)
             total_sales_query = db.session.query(func.sum(Sale.amount_aed)).filter(
-                Sale.customer_id == id, Sale.status == "confirmed"
+                Sale.customer_id == record_id, Sale.status == "confirmed"
             )
             total_receipts_query = db.session.query(
                 func.sum(Receipt.amount_aed)
-            ).filter(Receipt.customer_id == id, Receipt.payment_confirmed)
+            ).filter(Receipt.customer_id == record_id, Receipt.payment_confirmed)
             # Payments made TO customer (e.g. returns/share/drawings)
             total_payments_query = db.session.query(
                 func.sum(Payment.amount_aed)
             ).filter(
-                Payment.customer_id == id,
+                Payment.customer_id == record_id,
                 Payment.direction == "outgoing",
                 Payment.payment_confirmed,
             )
@@ -2077,7 +2078,7 @@ def entity_report_fragment(type, id):  # noqa: A002
                 )
                 .join(Sale)
                 .join(Product)
-                .filter(Sale.customer_id == id, Sale.status == "confirmed")
+                .filter(Sale.customer_id == record_id, Sale.status == "confirmed")
             )
             if tenant_id is not None:
                 s_lines = s_lines.filter(Sale.tenant_id == tenant_id)
@@ -2111,7 +2112,7 @@ def entity_report_fragment(type, id):  # noqa: A002
                     .join(SaleLine, SaleLine.product_id == Product.id)
                     .join(Sale, Sale.id == SaleLine.sale_id)
                     .filter(
-                        ProductPartner.partner_customer_id == id,
+                        ProductPartner.partner_customer_id == record_id,
                         Sale.status == "confirmed",
                     )
                 )
@@ -2155,7 +2156,7 @@ def entity_report_fragment(type, id):  # noqa: A002
                     .join(SaleLine, SaleLine.product_id == Product.id)
                     .join(Sale, Sale.id == SaleLine.sale_id)
                     .filter(
-                        Product.merchant_customer_id == id, Sale.status == "confirmed"
+                        Product.merchant_customer_id == record_id, Sale.status == "confirmed"
                     )
                 )
                 if tenant_id is not None:
@@ -2187,7 +2188,7 @@ def entity_report_fragment(type, id):  # noqa: A002
                     )
 
             # Invoices (Sales)
-            sales = Sale.query.filter_by(customer_id=id)
+            sales = Sale.query.filter_by(customer_id=record_id)
             if tenant_id is not None:
                 sales = sales.filter(Sale.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -2205,9 +2206,9 @@ def entity_report_fragment(type, id):  # noqa: A002
                 for s in sales
             ]
 
-            receipts = Receipt.query.filter_by(customer_id=id, payment_confirmed=True)
+            receipts = Receipt.query.filter_by(customer_id=record_id, payment_confirmed=True)
             payments_out = Payment.query.filter_by(
-                customer_id=id, direction="outgoing", payment_confirmed=True
+                customer_id=record_id, direction="outgoing", payment_confirmed=True
             )
             if tenant_id is not None:
                 receipts = receipts.filter(Receipt.tenant_id == tenant_id)

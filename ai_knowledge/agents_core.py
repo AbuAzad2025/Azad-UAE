@@ -5,17 +5,14 @@ Imports from individual agent modules and adds enhanced AI capabilities.
 
 import logging
 from typing import Any, Optional
-
-logger = logging.getLogger(__name__)
-
-# ruff: noqa: E402
-# Import base agents from their dedicated modules
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,
 )
 from ai_knowledge.agents.master_brain import (
     get_master_brain,
 )
+
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # intelligent_response - dispatcher-aware wrapper

@@ -303,10 +303,11 @@ def create():
 @suppliers_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_suppliers")
-def view(id):  # noqa: A002
+def view(**kwargs):
     """عرض تفاصيل المورد"""
-    supplier = tenant_get_or_404(Supplier, id)
-    if not _supplier_in_scope(id):
+    record_id = kwargs.pop("id")
+    supplier = tenant_get_or_404(Supplier, record_id)
+    if not _supplier_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     # آخر المشتريات
@@ -318,7 +319,7 @@ def view(id):  # noqa: A002
     recent_purchases = (
         recent_purchases_query.order_by(desc(Purchase.purchase_date)).limit(10).all()
     )
-    _, total_amount, total_paid = _supplier_scoped_totals(id)
+    _, total_amount, total_paid = _supplier_scoped_totals(record_id)
 
     # إحصائيات
     stats = {
@@ -342,10 +343,11 @@ def view(id):  # noqa: A002
 @suppliers_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_suppliers")
-def edit(id):  # noqa: A002
+def edit(**kwargs):
     """تعديل المورد"""
-    supplier = tenant_get_or_404(Supplier, id)
-    if not _supplier_in_scope(id):
+    record_id = kwargs.pop("id")
+    supplier = tenant_get_or_404(Supplier, record_id)
+    if not _supplier_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     if request.method == "POST":
@@ -402,7 +404,7 @@ def edit(id):  # noqa: A002
             return redirect(url_for("suppliers.view", id=supplier.id))
 
         except Exception as e:
-            current_app.logger.error(f"Error updating supplier {id}: {e}")
+            current_app.logger.error(f"Error updating supplier {record_id}: {e}")
             flash(ErrorMessages.update_failed("supplier"), "danger")
 
     return render_template("suppliers/edit.html", supplier=supplier)
@@ -411,17 +413,18 @@ def edit(id):  # noqa: A002
 @suppliers_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_suppliers")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (إلغاء تفعيل) المورد"""
-    supplier = tenant_get_or_404(Supplier, id)
-    if not _supplier_in_scope(id):
+    record_id = kwargs.pop("id")
+    supplier = tenant_get_or_404(Supplier, record_id)
+    if not _supplier_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     try:
         # Check for related records preventing deletion
         tid = get_active_tenant_id(current_user)
-        purchases_query = Purchase.query.filter_by(supplier_id=id, tenant_id=tid)
-        payments_query = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
+        purchases_query = Purchase.query.filter_by(supplier_id=record_id, tenant_id=tid)
+        payments_query = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
         if branch_scope_id() is not None:
             purchases_query = purchases_query.filter(
                 Purchase.branch_id == branch_scope_id()
@@ -449,7 +452,7 @@ def delete(id):  # noqa: A002
         LoggingCore.log_audit("delete", "suppliers", supplier.id)
 
     except Exception as e:
-        current_app.logger.error(f"Error deleting supplier {id}: {e}")
+        current_app.logger.error(f"Error deleting supplier {record_id}: {e}")
         try:
             supplier.is_active = False
             with atomic_transaction("supplier_delete_fallback"):
@@ -460,7 +463,7 @@ def delete(id):  # noqa: A002
             )
         except Exception as inner_e:
             current_app.logger.error(
-                f"Error falling back to soft delete for supplier {id}: {inner_e}"
+                f"Error falling back to soft delete for supplier {record_id}: {inner_e}"
             )
             flash(ErrorMessages.delete_failed("supplier"), "danger")
 
@@ -470,12 +473,13 @@ def delete(id):  # noqa: A002
 @suppliers_bp.route("/<int:id>/statement")
 @login_required
 @admin_required
-def statement(id):  # noqa: A002
+def statement(**kwargs):
     """كشف حساب المورد مع الرصيد الجاري والتصفية حسب التاريخ"""
     from datetime import datetime, date as date_type
 
-    supplier = tenant_get_or_404(Supplier, id)
-    if not _supplier_in_scope(id):
+    record_id = kwargs.pop("id")
+    supplier = tenant_get_or_404(Supplier, record_id)
+    if not _supplier_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
     date_from = request.args.get("date_from", type=str)

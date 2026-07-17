@@ -192,8 +192,9 @@ def create():
 @purchases_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_purchases")
-def view(id):  # noqa: A002
-    purchase = tenant_get_or_404(Purchase, id)
+def view(**kwargs):
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -205,8 +206,9 @@ def view(id):  # noqa: A002
 @purchases_bp.route("/<int:id>/print")
 @login_required
 @permission_required("manage_purchases")
-def print_purchase(id):  # noqa: A002
-    purchase = tenant_get_or_404(Purchase, id)
+def print_purchase(**kwargs):
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -245,9 +247,10 @@ def print_purchase(id):  # noqa: A002
 @purchases_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_purchases")
-def edit(id):  # noqa: A002
+def edit(**kwargs):
     """تعديل فاتورة شراء - الملاحظات والخصم فقط"""
-    purchase = tenant_get_or_404(Purchase, id)
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -260,7 +263,7 @@ def edit(id):  # noqa: A002
             "⚠️ لا يمكن تعديل فاتورة شراء تم الدفع عليها.\n💡 للحفاظ على السجلات المحاسبية.",
             "danger",
         )
-        return redirect(url_for("purchases.view", id=id))
+        return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
         try:
@@ -269,10 +272,10 @@ def edit(id):  # noqa: A002
 
             with atomic_transaction("purchase_edit"):
                 db.session.flush()
-            LoggingCore.log_audit("update", "purchases", id)
+            LoggingCore.log_audit("update", "purchases", record_id)
 
             flash("✅ تم تحديث فاتورة الشراء بنجاح!", "success")
-            return redirect(url_for("purchases.view", id=id))
+            return redirect(url_for("purchases.view", id=record_id))
 
         except Exception as e:
             flash(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات.", "danger")
@@ -283,13 +286,14 @@ def edit(id):  # noqa: A002
 @purchases_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_purchases")
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (أرشفة) فاتورة شراء"""
     from services.archive_service import ArchiveService
     from models import Cheque, PurchaseLine
     from services.gl_service import GLService
 
-    purchase = tenant_get_or_404(Purchase, id)
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -332,7 +336,7 @@ def delete(id):  # noqa: A002
                 "purchases", purchase, reason="تم أرشفة الفاتورة لوجود مدفوعات أو شيكات"
             )
 
-            LoggingCore.log_audit("archive", "purchases", id)
+            LoggingCore.log_audit("archive", "purchases", record_id)
             with atomic_transaction("purchase_archive"):
                 db.session.flush()
             flash(
@@ -349,7 +353,7 @@ def delete(id):  # noqa: A002
             archive_service.archive_record(
                 "purchases", purchase, reason="تم أرشفة الفاتورة لوجود حركة مخزون"
             )
-            LoggingCore.log_audit("archive", "purchases", id)
+            LoggingCore.log_audit("archive", "purchases", record_id)
             with atomic_transaction("purchase_archive_fallback"):
                 db.session.flush()
         else:
@@ -381,7 +385,7 @@ def delete(id):  # noqa: A002
                     purchase_id=purchase.id, tenant_id=purchase.tenant_id
                 ).delete()
                 db.session.delete(purchase)
-                LoggingCore.log_audit("delete", "purchases", id)
+                LoggingCore.log_audit("delete", "purchases", record_id)
             flash(
                 f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً',
                 "success",
@@ -391,15 +395,16 @@ def delete(id):  # noqa: A002
 
     except Exception as e:
         flash(f"❌ حدث خطأ: {str(e)}", "danger")
-        return redirect(url_for("purchases.view", id=id))
+        return redirect(url_for("purchases.view", id=record_id))
 
 
 @purchases_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @permission_required("manage_purchases")
-def cancel(id):  # noqa: A002
+def cancel(**kwargs):
     """إلغاء فاتورة شراء مع عكس القيد المحاسبي والمخزون ورصيد المورد"""
-    purchase = tenant_get_or_404(Purchase, id)
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -416,15 +421,16 @@ def cancel(id):  # noqa: A002
     except Exception as e:
         flash(f"❌ حدث خطأ: {str(e)}", "danger")
 
-    return redirect(url_for("purchases.view", id=id))
+    return redirect(url_for("purchases.view", id=record_id))
 
 
 @purchases_bp.route("/<int:id>/return", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_purchases")
-def purchase_return(id):  # noqa: A002
+def purchase_return(**kwargs):
     """إنشاء مرتجع مشتريات"""
-    purchase = tenant_get_or_404(Purchase, id)
+    record_id = kwargs.pop("id")
+    purchase = tenant_get_or_404(Purchase, record_id)
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
@@ -433,7 +439,7 @@ def purchase_return(id):  # noqa: A002
 
     if purchase.status in ("draft", "cancelled"):
         flash("❌ لا يمكن عمل مرتجع لفاتورة شراء في حالة مسودة أو ملغاة", "danger")
-        return redirect(url_for("purchases.view", id=id))
+        return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
         lines_data = (

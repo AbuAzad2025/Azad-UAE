@@ -406,9 +406,10 @@ def create():
 @cheques_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_payments")
-def view(id):  # noqa: A002
+def view(**kwargs):
     """عرض تفاصيل الشيك"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
     cheque.update_status_based_on_date()
@@ -422,9 +423,10 @@ def view(id):  # noqa: A002
 @cheques_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_payments")
-def edit(id):  # noqa: A002
+def edit(**kwargs):
     """تعديل الشيك"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -434,7 +436,7 @@ def edit(id):  # noqa: A002
             "⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات.",
             "danger",
         )
-        return redirect(url_for("cheques.view", id=id))
+        return redirect(url_for("cheques.view", id=record_id))
 
     if request.method == "POST":
         try:
@@ -489,10 +491,10 @@ def edit(id):  # noqa: A002
                 calculate_amount_aed(cheque)
                 cheque.update_status_based_on_date()
 
-                LoggingCore.log_audit("update", "cheques", id)
+                LoggingCore.log_audit("update", "cheques", record_id)
 
             flash("✅ تم تحديث الشيك بنجاح", "success")
-            return redirect(url_for("cheques.view", id=id))
+            return redirect(url_for("cheques.view", id=record_id))
 
         except Exception as e:
             current_app.logger.error(f"Error in cheque operation: {e}")
@@ -523,9 +525,10 @@ def edit(id):  # noqa: A002
 @cheques_bp.route("/<int:id>/deposit", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def deposit_cheque(id):  # noqa: A002
+def deposit_cheque(**kwargs):
     """إيداع الشيك في البنك - الخطوة 1"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -542,7 +545,7 @@ def deposit_cheque(id):  # noqa: A002
             LoggingCore.log_audit(
                 "cheque_deposit",
                 "cheques",
-                id,
+                record_id,
                 {"message": f"إيداع شيك رقم {cheque.cheque_bank_number} في البنك"},
             )
 
@@ -554,15 +557,16 @@ def deposit_cheque(id):  # noqa: A002
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
 
-    return redirect(url_for("cheques.view", id=id))
+    return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/<int:id>/clear", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def clear_cheque(id):  # noqa: A002
+def clear_cheque(**kwargs):
     """تأكيد صرف الشيك من البنك - الخطوة 2 - المحاسبة الفعلية"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -603,7 +607,7 @@ def clear_cheque(id):  # noqa: A002
             LoggingCore.log_audit(
                 "cheque_clear",
                 "cheques",
-                id,
+                record_id,
                 {
                     "message": f"تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}"
                 },
@@ -620,15 +624,16 @@ def clear_cheque(id):  # noqa: A002
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
 
-    return redirect(url_for("cheques.view", id=id))
+    return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/<int:id>/bounce", methods=["POST"])
 @login_required
 @permission_required("manage_payments")
-def bounce_cheque(id):  # noqa: A002
+def bounce_cheque(**kwargs):
     """رفض الشيك من البنك - إرجاع الدين"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -643,7 +648,7 @@ def bounce_cheque(id):  # noqa: A002
             LoggingCore.log_audit(
                 "cheque_bounce",
                 "cheques",
-                id,
+                record_id,
                 {"message": f"رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}"},
             )
 
@@ -658,15 +663,16 @@ def bounce_cheque(id):  # noqa: A002
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
 
-    return redirect(url_for("cheques.view", id=id))
+    return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @admin_required
-def cancel(id):  # noqa: A002
+def cancel(**kwargs):
     """إلغاء الشيك"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -675,29 +681,30 @@ def cancel(id):  # noqa: A002
             "⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه.",
             "danger",
         )
-        return redirect(url_for("cheques.view", id=id))
+        return redirect(url_for("cheques.view", id=record_id))
 
     try:
         reason = request.form.get("cancel_reason")
 
         with atomic_transaction("cheque_cancel"):
             process_cheque_cancel(cheque, reason)
-            LoggingCore.log_audit("cancel", "cheques", id)
+            LoggingCore.log_audit("cancel", "cheques", record_id)
 
         flash(f"✅ تم إلغاء الشيك {cheque.cheque_bank_number}", "success")
 
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
 
-    return redirect(url_for("cheques.view", id=id))
+    return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
-def delete(id):  # noqa: A002
+def delete(**kwargs):
     """حذف (أرشفة) الشيك"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
@@ -732,7 +739,7 @@ def delete(id):  # noqa: A002
             # عكس القيد المحاسبي إذا كان نشطاً (يتم داخل دالة archive)
             with atomic_transaction("cheque_archive"):
                 cheque.archive(reason)
-                LoggingCore.log_audit("archive", "cheques", id)
+                LoggingCore.log_audit("archive", "cheques", record_id)
             flash(
                 f"✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)",
                 "warning",
@@ -760,36 +767,37 @@ def delete(id):  # noqa: A002
 
                 # حذف الشيك
                 db.session.delete(cheque)
-                LoggingCore.log_audit("delete", "cheques", id)
+                LoggingCore.log_audit("delete", "cheques", record_id)
             flash(f"✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً", "success")
 
         return redirect(url_for("cheques.index"))
 
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
-        return redirect(url_for("cheques.view", id=id))
+        return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/<int:id>/restore", methods=["POST"])
 @login_required
 @admin_required
-def restore(id):  # noqa: A002
+def restore(**kwargs):
     """استعادة شيك من الأرشيف"""
-    cheque = _get_cheque_or_404(id)
+    record_id = kwargs.pop("id")
+    cheque = _get_cheque_or_404(record_id)
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
     try:
         with atomic_transaction("cheque_restore"):
             cheque.restore()
-            LoggingCore.log_audit("restore", "cheques", id)
+            LoggingCore.log_audit("restore", "cheques", record_id)
 
         flash(f"✅ تم استعادة الشيك {cheque.cheque_bank_number}", "success")
 
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
 
-    return redirect(url_for("cheques.view", id=id))
+    return redirect(url_for("cheques.view", id=record_id))
 
 
 @cheques_bp.route("/alerts")

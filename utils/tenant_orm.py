@@ -7,6 +7,8 @@ Automatic ORM-level tenant isolation:
 from __future__ import annotations
 
 
+from typing import Any, cast
+
 from flask import g, has_request_context, request
 from sqlalchemy import event, inspect as sa_inspect, true as sql_true
 from sqlalchemy.orm import Session, with_loader_criteria
@@ -70,7 +72,7 @@ def _discover_tenant_models() -> list[type]:
 
     classes: list[type] = []
     try:
-        registry = db.Model.registry  # type: ignore[attr-defined]
+        registry = cast(Any, db.Model).registry
         for mapper in registry.mappers:
             cls = mapper.class_
             if cls.__tablename__ == "tenants":
@@ -166,7 +168,7 @@ def _patch_session_get():
             return None
         return obj
 
-    Session.get = _get_with_tenant  # type: ignore[method-assign]
+    cast(Any, Session).get = _get_with_tenant
     _SESSION_GET_PATCHED = True
 
 

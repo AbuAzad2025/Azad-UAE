@@ -678,7 +678,7 @@ class GLAccountingSetupService:
                         "type": account.type,
                     }
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 errors.append(f"Create account failed for {action.concept_code}: {exc}")
 
         # Rebuild plan so new account IDs are visible
@@ -722,7 +722,7 @@ class GLAccountingSetupService:
                         "gl_account_name": action.gl_account_name,
                     }
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 errors.append(f"Map concept failed for {action.concept_code}: {exc}")
 
         if dry_run:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 
+from typing import cast
+
 from extensions import db
 from utils.db_safety import atomic_transaction
 from models.store_payment_method import StorePaymentMethod
@@ -89,7 +91,7 @@ class StorePaymentMethodService:
                 )
                 cfg = item.get("config") or {}
                 if cfg:
-                    row.set_config(cfg)  # type: ignore[arg-type]
+                    row.set_config(cast(dict, cfg))
                 db.session.add(row)
 
     @staticmethod

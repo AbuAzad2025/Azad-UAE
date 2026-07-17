@@ -235,9 +235,10 @@ def process_payroll():
 @payroll_bp.route("/slip/<int:id>")
 @login_required
 @permission_required("manage_payroll")
-def salary_slip(id):  # noqa: A002
+def salary_slip(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    transaction_query = PayrollTransaction.query.filter_by(id=id)
+    transaction_query = PayrollTransaction.query.filter_by(id=record_id)
     if tid is not None:
         transaction_query = transaction_query.filter(
             PayrollTransaction.tenant_id == tid
@@ -252,17 +253,18 @@ def salary_slip(id):  # noqa: A002
 @payroll_bp.route("/statement/<int:id>")
 @login_required
 @permission_required("manage_payroll")
-def statement(id):  # noqa: A002
+def statement(**kwargs):
+    record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    employee_query = Employee.query.filter_by(id=id)
+    employee_query = Employee.query.filter_by(id=record_id)
     if tid is not None:
         employee_query = employee_query.filter(Employee.tenant_id == tid)
     employee = employee_query.first_or_404()
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    advances = SalaryAdvance.query.filter_by(employee_id=id)
-    payments = PayrollTransaction.query.filter_by(employee_id=id)
+    advances = SalaryAdvance.query.filter_by(employee_id=record_id)
+    payments = PayrollTransaction.query.filter_by(employee_id=record_id)
     if tid is not None:
         advances = advances.filter(SalaryAdvance.tenant_id == tid)
         payments = payments.filter(PayrollTransaction.tenant_id == tid)

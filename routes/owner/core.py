@@ -829,15 +829,16 @@ def cards_vault():
 
 @owner_bp.route("/cards-vault/<int:id>/view")
 @owner_required
-def view_card(id):  # noqa: A002
-    card = CardVault.query.get_or_404(id)
+def view_card(**kwargs):
+    record_id = kwargs.pop("id")
+    card = CardVault.query.get_or_404(record_id)
 
     card_data = card.to_dict(include_sensitive=True)
 
     _audit_owner_db_action(
         "view_card_vault_detail",
         {
-            "card_id": id,
+            "card_id": record_id,
             "customer_id": card.customer_id,
             "last_four": card.last_four,
             "include_sensitive": True,

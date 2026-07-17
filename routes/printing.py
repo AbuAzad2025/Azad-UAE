@@ -46,20 +46,21 @@ def _check_branch_scope(doc):
     return False
 
 
-def _get_filename(entry, doc, doc_type, id):  # noqa: A002
+def _get_filename(entry, doc, doc_type, record_id):
     """Build a meaningful PDF filename from the registry entry and document."""
     attr = entry.get("filename_attr")
     if attr:
         val = getattr(doc, attr, None)
         if val:
             return f"{entry.get('filename_prefix', doc_type)}_{val}.pdf"
-    return f"{entry.get('filename_prefix', doc_type)}_{id}.pdf"
+    return f"{entry.get('filename_prefix', doc_type)}_{record_id}.pdf"
 
 
 @printing_bp.route("/<doc_type>/<int:id>")
 @login_required
-def print_document(doc_type, id):  # noqa: A002
+def print_document(doc_type, **kwargs):
     """Generic print handler — dispatches to the correct template via PRINTABLE_DOCUMENTS registry."""
+    record_id = kwargs.pop("id")
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
     if not entry:
@@ -74,9 +75,9 @@ def print_document(doc_type, id):  # noqa: A002
     model_cls = PrintService._get_model(entry["model"])
 
     if doc_type == "packing_slip":
-        return _handle_packing_slip(id, tid)
+        return _handle_packing_slip(record_id, tid)
 
-    result = model_cls.query.filter_by(id=id)
+    result = model_cls.query.filter_by(id=record_id)
     if tid is not None:
         result = result.filter(model_cls.tenant_id == tid)
     doc = result.first_or_404()
@@ -85,8 +86,8 @@ def print_document(doc_type, id):  # noqa: A002
         return render_template("errors/403.html"), 403
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
-    PrintService.create_snapshot(eff_tid, doc_type, id, reason="print", document=doc)
-    PrintService.audit_print(eff_tid, doc_type, id, action="print")
+    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
+    PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
 
     return PrintService.render_print(
         entry["template"],
@@ -97,8 +98,9 @@ def print_document(doc_type, id):  # noqa: A002
 
 @printing_bp.route("/<doc_type>/<int:id>/pdf")
 @login_required
-def print_document_pdf(doc_type, id):  # noqa: A002
+def print_document_pdf(doc_type, **kwargs):
     """Generic PDF handler — renders a document as PDF download via the PRINTABLE_DOCUMENTS registry."""
+    record_id = kwargs.pop("id")
     doc_type = _normalize_doc_type(doc_type)
     entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
     if not entry:
@@ -113,9 +115,9 @@ def print_document_pdf(doc_type, id):  # noqa: A002
     model_cls = PrintService._get_model(entry["model"])
 
     if doc_type == "packing_slip":
-        return _handle_packing_slip_pdf(id, tid)
+        return _handle_packing_slip_pdf(record_id, tid)
 
-    result = model_cls.query.filter_by(id=id)
+    result = model_cls.query.filter_by(id=record_id)
     if tid is not None:
         result = result.filter(model_cls.tenant_id == tid)
     doc = result.first_or_404()
@@ -124,7 +126,7 @@ def print_document_pdf(doc_type, id):  # noqa: A002
         return render_template("errors/403.html"), 403
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
-    filename = _get_filename(entry, doc, doc_type, id)
+    filename = _get_filename(entry, doc, doc_type, record_id)
     pdf = PrintService.render_pdf(
         entry["template"],
         {entry["context_key"]: doc},
@@ -132,9 +134,9 @@ def print_document_pdf(doc_type, id):  # noqa: A002
         filename=filename,
     )
     PrintService.create_snapshot(
-        eff_tid, doc_type, id, reason="pdf_download", document=doc
+        eff_tid, doc_type, record_id, reason="pdf_download", document=doc
     )
-    PrintService.audit_print(eff_tid, doc_type, id, action="pdf_download")
+    PrintService.audit_print(eff_tid, doc_type, record_id, action="pdf_download")
 
     return send_file(
         BytesIO(pdf),

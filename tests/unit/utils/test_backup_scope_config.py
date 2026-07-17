@@ -3,7 +3,9 @@ tests/unit/test_backup_scope_config.py — Pure-logic tests for backup scope
 configuration and scoped database export (no Flask, no real DB).
 """
 
+import json
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,6 +18,9 @@ from services.backup_scope_config import (
     _merge_product_customer_dependencies,
     _path_from_urlish,
     _serialize_row,
+    build_tenant_uploads_archive,
+    collect_scoped_upload_paths,
+    collect_tenant_upload_paths,
     export_scoped_database,
     export_tenant_database,
     read_data_directory,
@@ -387,16 +392,6 @@ def test_read_data_directory_missing_meta_falls_back_to_jsonl_files(tmp_path):
 def test_read_data_directory_empty_dir(tmp_path):
     tables, _meta = read_data_directory(str(tmp_path))
     assert tables == {}
-
-
-import json  # noqa: E402
-from unittest.mock import MagicMock  # noqa: E402
-
-from services.backup_scope_config import (  # noqa: E402
-    build_tenant_uploads_archive,
-    collect_scoped_upload_paths,
-    collect_tenant_upload_paths,
-)
 
 
 def test_path_from_urlish_static_and_uploads(tmp_path):

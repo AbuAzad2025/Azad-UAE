@@ -6,14 +6,16 @@ This module consolidates multiple small files into one.
 Old import paths still work via backward-compatible shims in the original files.
 """
 
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ===== Consolidated from: knowledge/company_info.py =====
 """
 🏢 معلومات الشركة - Company Information
 شركة أزاد للأنظمة الذكية
 """
-# ruff: noqa: E402
-
-import os
 
 COMPANY_INFO = {
     "name_ar": "شركة أزاد للأنظمة الذكية",
@@ -827,10 +829,6 @@ def get_compatible_parts(part_name, vehicle_info):
 
 شركة أزاد للأنظمة الذكية
 """
-
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class AutomotiveECUKnowledge:

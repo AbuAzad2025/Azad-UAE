@@ -25,6 +25,7 @@ import logging
 import re
 import os
 from urllib.parse import urlparse
+import threading
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
 logger = logging.getLogger(__name__)
@@ -164,9 +165,6 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
 # ---------------------------------------------------------------------------
 # Idempotency-key cache for public API endpoints
 # ---------------------------------------------------------------------------
-
-# ruff: noqa: E402
-import threading
 
 _idempotency_lock = threading.Lock()
 _idempotency_store: dict[str, tuple] = {}
@@ -1570,21 +1568,23 @@ def view_purchases():
 
 @payment_vault_bp.route("/purchase/<int:id>")
 @owner_only
-def purchase_detail(id):  # noqa: A002
+def purchase_detail(**kwargs):
     """تفاصيل عملية شراء"""
+    record_id = kwargs.pop("id")
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return redirect(url_for("payment_vault.unlock_vault"))
 
-    purchase = PackagePurchase.query.get_or_404(id)
+    purchase = PackagePurchase.query.get_or_404(record_id)
     return render_template("payment_vault/purchase_detail.html", purchase=purchase)
 
 
 @payment_vault_bp.route("/purchase/<int:id>/activate", methods=["POST"])
 @owner_only
-def activate_purchase(id):  # noqa: A002
+def activate_purchase(**kwargs):
     """تفعيل عملية شراء"""
-    purchase = PackagePurchase.query.get_or_404(id)
+    record_id = kwargs.pop("id")
+    purchase = PackagePurchase.query.get_or_404(record_id)
 
     try:
         purchase.activation_status = "activated"

@@ -1,16 +1,20 @@
 from datetime import datetime, timezone
+from typing import Any
+
 from extensions import db
 from flask import current_app
 import base64
 import hashlib
 
+Fernet: Any
 try:
-    from cryptography.fernet import Fernet
+    from cryptography.fernet import Fernet as _Fernet
 
+    Fernet = _Fernet
     HAS_CRYPTO = True
 except ImportError:
     HAS_CRYPTO = False
-    Fernet = None  # type: ignore[assignment,misc]
+    Fernet = None
 
 
 class CardVault(db.Model):

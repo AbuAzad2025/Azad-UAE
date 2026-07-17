@@ -4,10 +4,6 @@ AZAD Super Smart Responses Module with Self-Learning + Semantic Understanding + 
 """
 
 import logging
-
-logger = logging.getLogger(__name__)
-
-# ruff: noqa: E402
 from ai_knowledge.knowledge.company_info import get_welcome_message
 from ai_knowledge.knowledge.system_knowledge import search_knowledge
 from ai_knowledge.knowledge.tax_customs_knowledge import get_tax_info, get_customs_info
@@ -35,10 +31,12 @@ from ai_knowledge.generation.document_generator import document_generator
 from ai_knowledge.specialized.advanced_laws import advanced_laws
 from ai_knowledge.neural.semantic_matcher import (
     understand_message,
-)  # 🚀 النظام الذكي الجديد!
+)
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,
-)  # 🧠 الذكاء الحقيقي!
+)
+
+logger = logging.getLogger(__name__)
 
 
 class AzadResponses:

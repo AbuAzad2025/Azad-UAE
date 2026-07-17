@@ -11,6 +11,7 @@ import pytest
 from sqlalchemy import create_engine, text as sa_text
 from sqlalchemy.pool import NullPool
 from urllib.parse import urlparse, urlunparse
+from unittest.mock import MagicMock, NonCallableMock
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
@@ -25,6 +26,16 @@ os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
+
+
+def _init_project_imports():
+    from app import create_app
+    from extensions import db
+    from services.logging_core import LoggingCore
+    return create_app, db, LoggingCore
+
+
+create_app, db, LoggingCore = _init_project_imports()
 
 _DEV_DB_NAME = "azad_uae"
 _TEST_DB_NAME = os.environ.get("PYTEST_DB_NAME", "azad_uae_test")
@@ -131,8 +142,6 @@ _TEST_DATABASE_URL = _resolve_test_database_url()
 os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 os.environ["TEST_DATABASE_URL"] = _TEST_DATABASE_URL
 
-from unittest.mock import MagicMock, NonCallableMock  # noqa: E402
-
 # Global Python 3.14 Introspection Safeguard — instances raise AttributeError on __name__
 if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
     _orig_mock_getattr = NonCallableMock.__getattr__
@@ -147,10 +156,6 @@ if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
 
     NonCallableMock.__getattr__ = _safe_mock_getattr
     NonCallableMock._azad_py314_name_guard = True
-
-from app import create_app  # noqa: E402
-from extensions import db  # noqa: E402
-from services.logging_core import LoggingCore  # noqa: E402
 
 _LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security")
 _LOGGING_CORE_ORIGINALS = {

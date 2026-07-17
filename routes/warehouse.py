@@ -230,8 +230,9 @@ def out_of_stock():
 @warehouse_bp.route("/<int:id>")
 @login_required
 @permission_required("manage_warehouse")
-def view_warehouse(id):  # noqa: A002
-    warehouse = tenant_get_or_404(Warehouse, id)
+def view_warehouse(**kwargs):
+    record_id = kwargs.pop("id")
+    warehouse = tenant_get_or_404(Warehouse, record_id)
     branch_id = branch_scope_id()
     if branch_id is not None and warehouse.branch_id != branch_id:
         abort(403)
@@ -242,7 +243,7 @@ def view_warehouse(id):  # noqa: A002
             StockMovement.product_id,
             db.func.sum(StockMovement.quantity).label("total_quantity"),
         )
-        .filter_by(warehouse_id=id)
+        .filter_by(warehouse_id=record_id)
         .group_by(StockMovement.product_id)
         .all()
     )
@@ -266,8 +267,9 @@ def view_warehouse(id):  # noqa: A002
 @warehouse_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @admin_required
-def edit_warehouse(id):  # noqa: A002
-    warehouse = tenant_get_or_404(Warehouse, id)
+def edit_warehouse(**kwargs):
+    record_id = kwargs.pop("id")
+    warehouse = tenant_get_or_404(Warehouse, record_id)
     tid = get_active_tenant_id(current_user)
     parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
     if tid is not None:
@@ -532,9 +534,10 @@ def list_warehouses():
 @warehouse_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
-def delete_warehouse(id):  # noqa: A002
+def delete_warehouse(**kwargs):
     """حذف مستودع"""
-    warehouse = tenant_get_or_404(Warehouse, id)
+    record_id = kwargs.pop("id")
+    warehouse = tenant_get_or_404(Warehouse, record_id)
 
     # Check if main warehouse
     if warehouse.is_main:
@@ -550,7 +553,7 @@ def delete_warehouse(id):  # noqa: A002
                 db.session.delete(warehouse)
 
     except Exception as e:
-        current_app.logger.error(f"Error deleting warehouse {id}: {e}")
+        current_app.logger.error(f"Error deleting warehouse {record_id}: {e}")
         flash(ErrorMessages.delete_failed("warehouse"), "danger")
     else:
         if has_stock:

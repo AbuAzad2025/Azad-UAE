@@ -6,6 +6,22 @@ Re-exports from ai_knowledge.learning sub-package (single source of truth).
 import logging
 from typing import Optional
 
+from ai_knowledge.learning.auto_retraining import (
+    AutoRetrainingScheduler,
+    auto_retraining,
+)
+from ai_knowledge.learning.continuous_learner import (
+    ContinuousLearner,
+    continuous_learner,
+    get_continuous_learner,
+    evaluate_and_learn,
+)
+from ai_knowledge.learning.external_learning import (
+    ExternalLearningSystem,
+    get_external_learning,
+    LEARNING_SOURCES_CATALOG,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,23 +58,6 @@ class QuickLearner:
 
 
 quick_learner = QuickLearner()
-
-# ruff: noqa: E402
-from ai_knowledge.learning.auto_retraining import (
-    AutoRetrainingScheduler,
-    auto_retraining,
-)
-from ai_knowledge.learning.continuous_learner import (
-    ContinuousLearner,
-    continuous_learner,
-    get_continuous_learner,
-    evaluate_and_learn,
-)
-from ai_knowledge.learning.external_learning import (
-    ExternalLearningSystem,
-    get_external_learning,
-    LEARNING_SOURCES_CATALOG,
-)
 
 __all__ = [
     "QuickLearner",
