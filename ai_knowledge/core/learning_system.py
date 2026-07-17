@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AzadLearningSystem:
     """نظام التعلم الذاتي لأزاد"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         from ai_knowledge import get_knowledge_path
         
         self.knowledge_file = get_knowledge_path('learned_knowledge.json')
@@ -29,7 +29,7 @@ class AzadLearningSystem:
         self.interactions = self._load_interactions()
         self.patterns: dict[str, Any] = self._load_patterns()
         self.feedback_log = self._load_feedback()
-        self.groq_training_log = []
+        self.groq_training_log: list[Any] = []
 
     @staticmethod
     def _default_knowledge():
@@ -128,12 +128,14 @@ class AzadLearningSystem:
                 logger.debug('Could not load interactions file: %s', exc)
         return []
     
-    def _load_patterns(self):
+    def _load_patterns(self) -> dict[str, Any]:
         """تحميل الأنماط المكتشفة"""
         if os.path.exists(self.patterns_file):
             try:
                 with open(self.patterns_file, 'r', encoding='utf-8') as f:
-                    return self._patterns_from_storage(json.load(f))
+                    result = self._patterns_from_storage(json.load(f))
+                    if isinstance(result, dict):
+                        return result
             except (json.JSONDecodeError, OSError, TypeError, ValueError) as exc:
                 logger.debug('Could not load patterns.json: %s', exc)
         return self._empty_patterns()

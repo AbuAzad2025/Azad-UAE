@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import current_app
 from flask_login import current_user
 from services.logging_core import LoggingCore
+from typing import Any
 from utils.currency_utils import get_system_default_currency, get_currency_symbol, get_currency_name_ar
 
 
@@ -23,7 +24,7 @@ def register_context_processors(app):
         return dict(has_endpoint=lambda endpoint: endpoint in current_app.view_functions)
 
     @app.context_processor
-    def utility_processor():
+    def utility_processor() -> dict[str, Any]:
         from utils.helpers import format_currency, timeago
         from utils.number_to_arabic import number_to_arabic_words
         from utils.i18n import t, is_rtl, get_current_language
@@ -206,7 +207,7 @@ def register_context_processors(app):
                     'suppliers': ('suppliers', 'Supplier', lambda: Supplier.query.filter(Supplier.tenant_id == _t.id, Supplier.is_active == True).count()),
                 }
                 for key, (_res_name, _model_name, _counter) in _res_map.items():
-                    max_val: int = getattr(_t, f'max_{key}', None)
+                    max_val = getattr(_t, f'max_{key}', None)  # type: int | None
                     cur_val = _counter()
                     tenant_usage[key] = {'current': cur_val, 'max': max_val, 'percent': round((cur_val / max_val * 100) if max_val and max_val > 0 else 0)}
                 tenant_subscription = {

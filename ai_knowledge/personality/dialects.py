@@ -151,7 +151,7 @@ FORMAL_ARABIC = {
 class DialectManager:
     """مدير اللهجات"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.dialects: dict[str, Any] = {
             'palestinian': PALESTINIAN_DIALECT,
             'gulf': GULF_DIALECT,

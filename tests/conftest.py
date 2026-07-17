@@ -243,7 +243,7 @@ class TestConfig:
 _PYTEST_TEMP_INITIALIZED = False
 
 
-def pytest_configure(_config):
+def pytest_configure(config):
     """Ensure basetemp exists; clean only once per process (importlib may re-call)."""
     global _PYTEST_TEMP_INITIALIZED
     temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
@@ -334,11 +334,11 @@ def _ensure_signal_connected():
         pass
 
 
-def pytest_runtest_setup(_item):
+def pytest_runtest_setup(item):
     _ensure_signal_connected()
 
 
-def pytest_sessionfinish(_session, _exitstatus):
+def pytest_sessionfinish(session, exitstatus):
     try:
         out_path = os.path.join(PROJECT_ROOT, "templates_rendered.json")
         with open(out_path, "w", encoding="utf-8") as f:

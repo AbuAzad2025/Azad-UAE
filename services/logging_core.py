@@ -163,7 +163,7 @@ def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
     return clean
 
 
-def _get_request_context():
+def _get_request_context() -> dict[str, Any]:
     ctx: dict[str, Any] = {
         "url": None,
         "method": None,
@@ -264,7 +264,7 @@ class _JsonFormatter(logging.Formatter):
 # ── Rate monitor — shared mutable state ─────────────────────────
 class _RateMonitor:
     """Thread-safe counter buckets for error-rate monitoring."""
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = __import__("threading").Lock()
         self._buckets: dict[str, list[tuple[float, int]]] = {}
 
@@ -381,7 +381,7 @@ class LoggingCore:
         werkzeug_log.propagate = True
 
     @classmethod
-    def _setup_file_handlers(cls, app):
+    def _setup_file_handlers(cls, app) -> None:
         """Rotating file handlers for app, errors, security logs."""
         level = app.config.get("LOG_LEVEL", "INFO").upper()
         max_bytes = app.config.get("LOG_MAX_BYTES", 10 * 1024 * 1024)

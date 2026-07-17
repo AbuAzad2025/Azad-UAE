@@ -289,7 +289,7 @@ class Trainer:
                 self.quick_learner = ql
         return self.quick_learner
 
-    def seed(self):
+    def seed(self) -> None:
         """Seed quick_learner with essential knowledge + expertise files."""
         if self._seeded:
             return

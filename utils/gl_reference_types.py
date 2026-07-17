@@ -95,7 +95,7 @@ def filter_entries_by_ref(query, canonical_or_legacy: str):
     return query.filter(GLJournalEntry.reference_type.in_(variants))
 
 
-def delete_entries_by_ref(reference_id, *canonical_types, tenant_id=None):
+def delete_entries_by_ref(reference_id, *canonical_types, tenant_id=None) -> int:
     from extensions import db
     from models import GLJournalEntry
 

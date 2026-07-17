@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class KnowledgeExpander:
     """موسع المعرفة لأزاد"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         from ai_knowledge import get_knowledge_path
         self.knowledge_dir = get_knowledge_path('expanded_knowledge')
         self.sources_file = get_knowledge_path('knowledge_sources.json')
@@ -30,12 +30,14 @@ class KnowledgeExpander:
         # تحميل مصادر المعرفة
         self.sources: dict[str, Any] = self._load_sources()
     
-    def _load_sources(self):
+    def _load_sources(self) -> dict[str, Any]:
         """تحميل مصادر المعرفة"""
         if os.path.exists(self.sources_file):
             try:
                 with open(self.sources_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    result = json.load(f)
+                    if isinstance(result, dict):
+                        return result
             except (json.JSONDecodeError, OSError) as exc:
                 logger.debug('Could not load knowledge sources: %s', exc)
         
@@ -54,7 +56,7 @@ class KnowledgeExpander:
         except Exception as e:
             print(f"Error saving sources: {e}")
     
-    def add_website(self, url, category='general', description=''):
+    def add_website(self, url, category='general', description='') -> dict[str, Any]:
         """إضافة موقع ويب كمصدر معرفة"""
         try:
             # التحقق من صحة الرابط
@@ -116,7 +118,7 @@ class KnowledgeExpander:
                 'error': f'خطأ في إضافة الموقع: {str(e)}'
             }
     
-    def _fetch_website_content(self, url):
+    def _fetch_website_content(self, url) -> dict[str, Any]:
         """جلب محتوى الموقع"""
         try:
             headers = {

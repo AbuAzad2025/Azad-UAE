@@ -10,7 +10,7 @@ def validate_decimal_precision(value: Any, max_digits=15, decimal_places=3):
         return True
     try:
         decimal_value = Decimal(str(value))
-        if abs(decimal_value.as_tuple().exponent) > decimal_places:
+        if abs(int(decimal_value.as_tuple().exponent)) > decimal_places:
             return False
         total_digits = len(decimal_value.as_tuple().digits)
         if total_digits > max_digits:

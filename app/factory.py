@@ -22,7 +22,7 @@ except ImportError:
     COMPRESS_AVAILABLE = False
 
 
-def create_app(config_class=Config):
+def create_app(config_class=Config) -> Flask:
     config._init_env()
     # Flask app is inside app/ package; templates/static live at project root
     project_root: str = os.path.abspath(os.path.join(str(os.path.dirname(__file__)), '..'))
@@ -93,7 +93,7 @@ def create_app(config_class=Config):
             app.logger.warning(f"Default tenant maintenance check failed (non-critical): {e}")
 
     # Proxy Fix for Nginx/Cloudflare
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)  # type: ignore[method-assign]
 
     from bootstrap.blueprints import register_blueprints
     register_blueprints(app)

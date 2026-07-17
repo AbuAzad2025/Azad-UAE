@@ -139,7 +139,7 @@ class ActionDispatcher:
     Each action has: name, required_permission, handler function, description.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._registry: dict[str, dict] = {}
         self._register_all()
 

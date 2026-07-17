@@ -70,7 +70,7 @@ DEFAULT_METHODS = (
 
 class StorePaymentMethodService:
     @staticmethod
-    def ensure_defaults():
+    def ensure_defaults() -> None:
         with atomic_transaction('ensure_payment_defaults'):
             for item in DEFAULT_METHODS:
                 existing = StorePaymentMethod.query.filter_by(code=item['code']).first()
@@ -85,11 +85,11 @@ class StorePaymentMethodService:
                     icon=item.get('icon', 'fas fa-money-bill-wave'),
                     is_enabled=bool(item.get('is_enabled', False)),
                     is_builtin=bool(item.get('is_builtin', False)),
-                    sort_order=int(item.get('sort_order', 100)),
+                    sort_order=item['sort_order'],
                 )
-                cfg: dict[str, Any] = item.get('config') or {}
+                cfg = item.get('config') or {}
                 if cfg:
-                    row.set_config(cfg)
+                    row.set_config(cfg)  # type: ignore[arg-type]
                 db.session.add(row)
 
     @staticmethod

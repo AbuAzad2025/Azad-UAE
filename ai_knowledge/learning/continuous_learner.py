@@ -35,7 +35,7 @@ class ContinuousLearner:
     يتعلم تلقائياً كل يوم من مصادر متعددة
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         from ai_knowledge import get_knowledge_path
         self.knowledge_dir = get_knowledge_path('learned_knowledge')
         self.ensure_knowledge_dir()

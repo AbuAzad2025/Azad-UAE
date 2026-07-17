@@ -49,7 +49,7 @@ class SecurityRules:
         return data
     
     @staticmethod
-    def get_security_response(request_type):
+    def get_security_response(request_type) -> str:
         """الحصول على رد أمني"""
         responses = {
             'password_request': "😊 عذراً، أزاد لا يشارك كلمات المرور. هذا لأمانك! 🔒",  # nosec B105
@@ -61,7 +61,7 @@ class SecurityRules:
         return responses.get(request_type, "🔒 عذراً، وصول غير مصرح به!")
     
     @staticmethod
-    def check_user_permissions(action):
+    def check_user_permissions(action) -> tuple[bool, str]:
         """فحص صلاحيات المستخدم"""
         if not current_user or not current_user.is_authenticated:
             return False, "يجب تسجيل الدخول أولاً"
@@ -69,13 +69,13 @@ class SecurityRules:
         if SecurityRules.is_owner():
             return True, "صلاحيات كاملة"
         role = getattr(current_user, 'role', None)
-        slug: str = getattr(role, 'slug', None) if role else None
+        slug = getattr(role, 'slug', None) if role else None
         role_permissions = {
             'super_admin': ['view_all', 'edit_all', 'delete_all'],
             'manager': ['view_all', 'edit_limited'],
             'seller': ['view_limited', 'edit_own'],
         }
-        user_permissions = role_permissions.get(slug, [])
+        user_permissions = role_permissions.get(slug, []) if slug else []
         if action in user_permissions:
             return True, "صلاحية ممنوحة"
         return False, "ليس لديك صلاحية لهذا الإجراء"

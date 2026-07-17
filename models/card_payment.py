@@ -6,6 +6,7 @@ Card Payment Model
 from datetime import datetime, timezone
 from extensions import db
 from flask import current_app
+from typing import Any
 import base64
 import json
 import hashlib
@@ -141,7 +142,7 @@ class CardPayment(db.Model):
         except Exception:
             return False
 
-    def decrypt_card_data(self):
+    def decrypt_card_data(self) -> dict[str, Any] | None:
         """فك تشفير بيانات البطاقة (للمالك فقط) — يعيد None إذا كان ALLOW_CARD_DECRYPTION=False"""
         try:
             if not self.encrypted_data:

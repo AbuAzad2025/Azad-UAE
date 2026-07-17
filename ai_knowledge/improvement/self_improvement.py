@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class AzadSelfImprovement:
     """نظام التحسين الذاتي لأزاد"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         from ai_knowledge import get_knowledge_path
         self.improvement_file = get_knowledge_path('self_improvement.json')
         self.performance_file = get_knowledge_path('performance_metrics.json')
@@ -62,7 +62,7 @@ class AzadSelfImprovement:
             }
         }
     
-    def _load_improvement_data(self):
+    def _load_improvement_data(self) -> dict[str, Any]:
         """تحميل بيانات التحسين"""
         if os.path.exists(self.improvement_file):
             try:
@@ -78,7 +78,7 @@ class AzadSelfImprovement:
             'next_version': '1.1.0'
         }
     
-    def _load_performance_metrics(self):
+    def _load_performance_metrics(self) -> dict[str, Any]:
         """تحميل مقاييس الأداء"""
         if os.path.exists(self.performance_file):
             try:
@@ -93,7 +93,7 @@ class AzadSelfImprovement:
             'overall_performance': 8.0
         }
     
-    def _load_improvement_goals(self):
+    def _load_improvement_goals(self) -> dict[str, Any]:
         """تحميل أهداف التحسين"""
         if os.path.exists(self.goals_file):
             try:

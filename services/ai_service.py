@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from extensions import db
 
@@ -454,7 +454,7 @@ class AIService:
         from functools import lru_cache
         
         @lru_cache(maxsize=100)
-        def _cached_analysis(cust_id):
+        def _cached_analysis(cust_id) -> dict[str, Any] | None:
             from models import Customer, Sale, Payment
             
             customer: Customer = AIService._get_model(Customer, cust_id)

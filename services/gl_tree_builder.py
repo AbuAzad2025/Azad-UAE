@@ -353,7 +353,7 @@ class GLTreeBuilder:
         return acc
     
     @staticmethod
-    def validate_tree(tenant_id):
+    def validate_tree(tenant_id) -> dict[str, Any]:
         """
         التحقق من سلامة شجرة الحسابات.
         
