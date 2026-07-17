@@ -1,4 +1,5 @@
 /* === Financial UI Kit — Scoped Styles === */
+/* purgecss start ignore */
 .fin-filter-card .card-body { padding: .5rem .75rem; }
 .fin-filter-card .form-control-sm { min-height: 36px; font-size: .85rem; }
 .fin-filter-card .btn-sm { min-height: 36px; }
@@ -31,3 +32,4 @@
   .fin-report-header { border-bottom-color: #333; }
   @page { margin: 12mm; }
 }
+/* purgecss end ignore */

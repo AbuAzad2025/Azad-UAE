@@ -8,11 +8,13 @@
   @media print {
     @page { size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }}; margin: 15mm; }
   }
+/* purgecss start ignore */
   .tb-level-0 { padding-right: 0; }
   .tb-level-1 { padding-right: 20px; }
   .tb-level-2 { padding-right: 40px; }
   .tb-level-3 { padding-right: 60px; }
   .tb-level-4 { padding-right: 80px; }
+/* purgecss end ignore */
 </style>
 {% endblock %}
 

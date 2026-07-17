@@ -199,10 +199,12 @@ body.ps-shop.rtl { direction: rtl; }
 
 .ps-btn-sm { padding: 0.45rem 0.85rem !important; font-size: 0.82rem !important; }
 
+/* purgecss start ignore */
 .ps-lang-toggle {
   border: 1px solid rgba(215, 167, 65, 0.4) !important;
   color: var(--azad-gold);
 }
+/* purgecss end ignore */
 
 .ps-cart-link {
   position: relative;
@@ -237,6 +239,7 @@ body.ps-shop.rtl { direction: rtl; }
   padding: 1.5rem 1.25rem 3rem;
 }
 
+/* purgecss start ignore */
 .ps-hero {
   border-radius: var(--ps-radius);
   padding: 2rem 1.75rem;
@@ -248,7 +251,9 @@ body.ps-shop.rtl { direction: rtl; }
   position: relative;
   overflow: hidden;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .ps-hero::after {
   content: '';
   position: absolute;
@@ -260,6 +265,7 @@ body.ps-shop.rtl { direction: rtl; }
   border: 3px solid rgba(212, 175, 55, 0.35);
   pointer-events: none;
 }
+/* purgecss end ignore */
 
 .ps-hero h2 {
   margin: 0 0 0.5rem;
@@ -274,6 +280,7 @@ body.ps-shop.rtl { direction: rtl; }
   font-size: 0.95rem;
 }
 
+/* purgecss start ignore */
 .ps-pride {
   display: inline-flex;
   align-items: center;
@@ -285,6 +292,7 @@ body.ps-shop.rtl { direction: rtl; }
   font-size: 0.82rem;
   font-weight: 600;
 }
+/* purgecss end ignore */
 
 .ps-toolbar {
   display: flex;
@@ -324,12 +332,15 @@ body.ps-shop.rtl { direction: rtl; }
   cursor: pointer;
 }
 
+/* purgecss start ignore */
 .ps-categories {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .ps-cat-chip {
   padding: 0.4rem 0.85rem;
   border-radius: 999px;
@@ -339,12 +350,15 @@ body.ps-shop.rtl { direction: rtl; }
   border: 1px solid rgba(0, 122, 61, 0.2);
   transition: all 0.2s;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .ps-cat-chip.active, .ps-cat-chip:hover {
   background: var(--theme-primary, var(--ps-green));
   color: #fff;
   border-color: transparent;
 }
+/* purgecss end ignore */
 
 .ps-grid {
   display: grid;
@@ -471,10 +485,12 @@ body.ps-shop.rtl { direction: rtl; }
   font-weight: 500;
 }
 
+/* purgecss start ignore */
 .ps-alert-success { background: #e8f5ee; color: #0d5c32; border: 1px solid #b8dfc8; }
 .ps-alert-warning { background: #fff8e6; color: #7a5a00; border: 1px solid #f0dfa0; }
 .ps-alert-danger { background: #fdecee; color: #9b1c2e; border: 1px solid #f5c2c9; }
 
+/* purgecss end ignore */
 .ps-empty {
   text-align: center;
   padding: 3rem 1.5rem;
@@ -793,10 +809,12 @@ body.ps-shop.rtl { direction: rtl; }
   white-space: nowrap;
 }
 
+/* purgecss start ignore */
 .ps-order-badge-pending { background: #fff3cd; color: #856404; }
 .ps-order-badge-confirmed { background: #d4edda; color: #155724; }
 .ps-order-badge-cancelled { background: #e2e3e5; color: #383d41; }
 
+/* purgecss end ignore */
 .ps-order-detail-grid {
   display: grid;
   grid-template-columns: 1fr 280px;

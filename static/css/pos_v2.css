@@ -10,6 +10,7 @@
 .pos-categories .cat-all { font-weight: 700; border-bottom: 1px solid #e2e8f0; margin-bottom: .5rem; padding-bottom: .5rem; }
 
 /* Product grid */
+/* purgecss start ignore */
 .pos-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; padding: .5rem; max-height: calc(100vh - 280px); overflow-y: auto; }
 .pos-product-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem; cursor: pointer; transition: all .15s; text-align: center; position: relative; }
 .pos-product-card:hover { border-color: #10b981; box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-2px); }
@@ -21,6 +22,7 @@
 .pos-product-card .prod-stock.low { color: #ef4444; }
 .pos-product-card .prod-stock.out { color: #94a3b8; }
 .pos-product-card.out-of-stock { opacity: .5; pointer-events: none; }
+/* purgecss end ignore */
 
 /* Cart panel */
 .pos-cart-panel { background: #fff; border-left: 1px solid #e2e8f0; min-height: calc(100vh - 220px); display: flex; flex-direction: column; }
@@ -73,6 +75,7 @@
 .pos-empty-cart i { font-size: 2.5rem; margin-bottom: .5rem; }
 
 /* Legacy compatibility */
+/* purgecss start ignore */
 .pos-cart-table td, .pos-cart-table th { vertical-align: middle; white-space: nowrap; }
 .pos-cart-table input { min-height: 40px; }
 .pos-results { max-height: 280px; overflow: auto; }
@@ -90,6 +93,7 @@
 .pos-payment-presets .btn { flex: 1; min-width: 60px; }
 .pos-table-footer { background: #f8f9fa; font-weight: 600; }
 
+/* purgecss end ignore */
 /* Responsive */
 @media (max-width: 991px) {
   .pos-categories { min-height: auto; border-right: none; border-bottom: 1px solid #e2e8f0; }
@@ -111,9 +115,11 @@
 .pos-payment-btns .btn-print { background: #3b82f6; color: #fff; }
 .pos-payment-btns .btn-print:hover { box-shadow: 0 4px 12px rgba(59,130,246,.35); }
 
+/* purgecss start ignore */
 @media (max-width: 576px) {
   .pos-product-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: .5rem; }
   .pos-product-card { padding: .5rem; }
   .pos-product-card .prod-img { height: 60px; }
   .pos-numpad button { min-height: 40px; font-size: 1rem; }
+/* purgecss end ignore */
 }

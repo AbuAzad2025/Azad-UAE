@@ -30,7 +30,9 @@
     
     .card-item.visa { border-color: #1A1F71; }
     .card-item.mastercard { border-color: #EB001B; }
+    /* purgecss start ignore */
     .card-item.amex { border-color: #006FCF; }
+    /* purgecss end ignore */
     
     .card-item:hover {
         transform: translateX(-5px);
@@ -55,9 +57,11 @@
         background: linear-gradient(135deg, #EB001B 0%, #F79E1B 100%);
     }
     
+    /* purgecss start ignore */
     .card-visual.amex {
         background: linear-gradient(135deg, #006FCF 0%, #0099CC 100%);
     }
+    /* purgecss end ignore */
     
     .card-visual::before {
         content: '';

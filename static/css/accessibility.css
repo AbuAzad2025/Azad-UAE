@@ -162,6 +162,7 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* purgecss start ignore */
 .btn-primary,
 .bg-primary,
 .callout.callout-primary,
@@ -177,6 +178,7 @@ button:focus-visible {
   -webkit-text-fill-color: var(--color-on-primary) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+/* purgecss end ignore */
 
 .btn-primary:hover,
 .btn-primary:focus,
@@ -186,6 +188,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(9, 73, 163, 0.28) !important;
 }
 
+/* purgecss start ignore */
 .btn-secondary,
 .bg-secondary,
 .callout.callout-secondary,
@@ -196,6 +199,7 @@ button:focus-visible {
   color: var(--color-on-secondary) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+/* purgecss end ignore */
 
 .btn-secondary:hover,
 .btn-secondary:focus {
@@ -204,6 +208,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(76, 29, 149, 0.28) !important;
 }
 
+/* purgecss start ignore */
 .btn-success,
 .bg-success,
 .callout.callout-success,
@@ -218,6 +223,7 @@ button:focus-visible {
   -webkit-text-fill-color: var(--color-on-success) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+/* purgecss end ignore */
 
 .btn-success:hover,
 .btn-success:focus {
@@ -226,6 +232,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(15, 81, 50, 0.28) !important;
 }
 
+/* purgecss start ignore */
 .btn-danger,
 .bg-danger,
 .callout.callout-danger,
@@ -240,6 +247,7 @@ button:focus-visible {
   -webkit-text-fill-color: var(--color-on-danger) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+/* purgecss end ignore */
 
 .btn-danger:hover,
 .btn-danger:focus {
@@ -248,6 +256,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(155, 28, 28, 0.28) !important;
 }
 
+/* purgecss start ignore */
 .btn-warning,
 .bg-warning,
 .callout.callout-warning,
@@ -261,6 +270,7 @@ button:focus-visible {
   color: var(--color-on-warning) !important;
   text-shadow: none !important;
 }
+/* purgecss end ignore */
 
 .btn-warning:hover,
 .btn-warning:focus {
@@ -269,6 +279,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(180, 83, 9, 0.24) !important;
 }
 
+/* purgecss start ignore */
 .btn-info,
 .bg-info,
 .callout.callout-info,
@@ -283,6 +294,7 @@ button:focus-visible {
   -webkit-text-fill-color: var(--color-on-info) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
+/* purgecss end ignore */
 
 .btn-info:hover,
 .btn-info:focus {
@@ -291,6 +303,7 @@ button:focus-visible {
   box-shadow: 0 8px 18px rgba(2, 86, 127, 0.28) !important;
 }
 
+/* purgecss start ignore */
 .btn-light,
 .bg-light,
 .callout.callout-light,
@@ -302,7 +315,9 @@ button:focus-visible {
   color: var(--color-on-light) !important;
   text-shadow: none !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .btn-dark,
 .bg-dark,
 .callout.callout-dark,
@@ -316,6 +331,7 @@ button:focus-visible {
   color: var(--color-on-dark) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
+/* purgecss end ignore */
 
 .btn-outline-primary {
   color: var(--color-primary) !important;
@@ -512,6 +528,7 @@ label {
 }
 
 /* Select2 overrides */
+/* purgecss start ignore */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {
   min-height: 3rem !important;
@@ -520,28 +537,37 @@ label {
   background-color: var(--color-input-bg) !important;
   padding: 0.4rem 0 !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .select2-container--default .select2-selection__rendered {
   color: var(--color-text-regular) !important;
   line-height: 2rem !important;
   font-size: 0.95rem !important;
   font-weight: 500 !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .select2-dropdown {
   border-color: var(--color-primary) !important;
   background-color: var(--color-surface-elevated) !important;
   color: var(--color-text-regular) !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .select2-results__option {
   color: var(--color-text-regular) !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .select2-results__option--highlighted[aria-selected] {
   background-color: var(--color-primary) !important;
   color: var(--color-on-primary) !important;
 }
+/* purgecss end ignore */
 
 /* Tables */
 .table {
@@ -762,6 +788,7 @@ label {
   color: var(--color-text-regular) !important;
 }
 
+/* purgecss start ignore */
 .receipt-print .receipt,
 .receipt-print .receipt-container,
 .invoice-print .invoice,
@@ -773,6 +800,7 @@ label {
   border-color: rgba(15, 23, 42, 0.12) !important;
   box-shadow: none !important;
 }
+/* purgecss end ignore */
 
 .receipt-print :is(div, section, header)[class*="header"],
 .invoice-print :is(div, section, header)[class*="header"],
@@ -791,6 +819,7 @@ label {
   border-color: rgba(11, 94, 215, 0.25) !important;
 }
 
+/* purgecss start ignore */
 .receipt-print .amount-box,
 .receipt-print .amount-display,
 .receipt-print .amount-showcase,
@@ -803,6 +832,7 @@ label {
   color: var(--color-on-primary) !important;
   border-color: var(--color-primary-strong) !important;
 }
+/* purgecss end ignore */
 
 .receipt-print [class*="badge"],
 .invoice-print [class*="badge"],
@@ -827,6 +857,7 @@ label {
   border-color: rgba(15, 23, 42, 0.2) !important;
 }
 
+/* purgecss start ignore */
 .receipt-print .info-box,
 .receipt-print .info-card,
 .invoice-print .info-box,
@@ -843,6 +874,7 @@ label {
   border-color: rgba(15, 23, 42, 0.1) !important;
   box-shadow: none !important;
 }
+/* purgecss end ignore */
 
 .receipt-print .payment-method-badge,
 .invoice-print .payment-method-badge {
@@ -873,6 +905,7 @@ label {
 }
 
 /* Dark mode overrides */
+/* purgecss start ignore */
 .dark-mode,
 body.dark-mode {
   --color-surface: #0b1220;
@@ -890,6 +923,7 @@ body.dark-mode {
   --footer-bg: #111a2d;
   --footer-text: #e2e8f0;
 }
+/* purgecss end ignore */
 
 .dark-mode .table thead th {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
@@ -953,6 +987,7 @@ body.dark-mode {
 }
 
 /* Icons inside colored backgrounds */
+/* purgecss start ignore */
 .bg-primary .fas,
 .bg-primary .far,
 .bg-primary .fab,
@@ -979,14 +1014,17 @@ body.dark-mode {
 .bg-warning .svg-inline--fa {
   color: inherit !important;
 }
+/* purgecss end ignore */
 
 /* Ensure readibility inside badges and pills */
+/* purgecss start ignore */
 .badge .fas,
 .badge .far,
 .badge .fab,
 .badge .svg-inline--fa {
   color: inherit !important;
 }
+/* purgecss end ignore */
 
 /* Forms inside tables */
 table .form-control,
@@ -996,21 +1034,27 @@ table .custom-select {
 }
 
 /* Toasts / notifications */
+/* purgecss start ignore */
 .toast,
 .swal2-popup {
   color: var(--color-text-regular) !important;
   background-color: var(--color-surface-elevated) !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .swal2-styled.swal2-confirm {
   background-color: var(--color-primary) !important;
   color: var(--color-on-primary) !important;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .swal2-styled.swal2-cancel {
   background-color: var(--color-danger) !important;
   color: var(--color-on-danger) !important;
 }
+/* purgecss end ignore */
 
 /* Focus states for links in nav */
 .sidebar .nav-link:focus-visible,

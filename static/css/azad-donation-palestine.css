@@ -199,12 +199,16 @@ body.az-donate.ltr { font-family: Rubik, sans-serif; }
   line-height: 1.6;
 }
 
+/* purgecss start ignore */
 .az-alert {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   border-radius: 2px;
   font-size: 0.9rem;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .az-alert-ok { background: #e8f5ec; color: #0d4d2a; }
 .az-alert-err { background: #fde8ea; color: #8b1020; }
+/* purgecss end ignore */

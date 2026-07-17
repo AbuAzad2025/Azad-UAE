@@ -50,9 +50,11 @@ html, body {
   white-space: nowrap;
 }
 
+/* purgecss start ignore */
 .minh {
   min-height: 40px;
 }
+/* purgecss end ignore */
 
 .receipt-header {
   display: flex;
@@ -84,10 +86,12 @@ html, body {
   font-size: 16px;
 }
 
+/* purgecss start ignore */
 .brand .brand-sub {
   font-size: 12px;
   color: #666;
 }
+/* purgecss end ignore */
 
 table {
   border-collapse: collapse;
@@ -119,6 +123,7 @@ thead th {
   color: #394b6a;
 }
 
+/* purgecss start ignore */
 .col-s-idx { width: 10%; }
 .col-s-amt { width: 22%; }
 .col-s-mth { width: 20%; }
@@ -128,6 +133,7 @@ thead th {
   font-variant-numeric: tabular-nums;
   text-align: end;
 }
+/* purgecss end ignore */
 
 .wrap {
   overflow-wrap: anywhere;
@@ -157,12 +163,14 @@ thead th {
   padding-top: 8px;
 }
 
+/* purgecss start ignore */
 .main-footer,
 .app-footer,
 .footer,
 footer {
   display: none !important;
 }
+/* purgecss end ignore */
 
 @media print {
   @page {

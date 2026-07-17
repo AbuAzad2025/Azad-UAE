@@ -5,10 +5,12 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* ══════════════ إعدادات عامة للشاشة ══════════════ */
+/* purgecss start ignore */
 .print-header-report,
 .print-footer-report {
   display: none;
 }
+/* purgecss end ignore */
 
 /* ══════════════ إعدادات الطباعة ══════════════ */
 @media print {

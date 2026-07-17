@@ -24,6 +24,7 @@
   justify-content: center;
   font-size: 0.95rem;
 }
+/* purgecss start ignore */
 .purchase-create-form .select2-container--default .select2-selection--single {
   height: 56px;
   min-height: 56px;
@@ -54,6 +55,7 @@
   padding-top: 0.6rem;
   padding-bottom: 0.6rem;
 }
+/* purgecss end ignore */
 .purchase-create-form textarea.form-control {
   text-align: right;
   line-height: 1.6;
@@ -102,12 +104,14 @@
   box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
   text-shadow: none !important;
 }
+/* purgecss start ignore */
 .purchase-header-link--owner {
   color: #0d9488 !important;
   background: rgba(13, 148, 136, 0.12);
   border: 2px solid rgba(13, 148, 136, 0.3);
   box-shadow: 0 6px 18px rgba(13, 148, 136, 0.22);
 }
+/* purgecss end ignore */
 .ic-1 { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; }
 .ic-2 { padding: 5px; }
 .purchase-header-actions .purchase-header-link + .purchase-header-link {

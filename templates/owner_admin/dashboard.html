@@ -57,7 +57,9 @@
     vertical-align: middle;
 }
 .sa-table tbody tr:hover { background: #f8f9fa; }
+/* purgecss start ignore */
 .sa-table tbody tr.sa-row-suspended { opacity: 0.55; }
+/* purgecss end ignore */
 
 .sa-badge {
     display: inline-flex;
@@ -84,9 +86,15 @@
     margin-{{ 'left' if not is_rtl else 'right' }}: 8px;
 }
 .sa-usage-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+/* purgecss start ignore */
 .sa-usage-ok { background: #28a745; }
+/* purgecss end ignore */
+/* purgecss start ignore */
 .sa-usage-warn { background: #ffc107; }
+/* purgecss end ignore */
+/* purgecss start ignore */
 .sa-usage-crit { background: #dc3545; }
+/* purgecss end ignore */
 .sa-usage-text { font-size: 0.78rem; color: #495057; white-space: nowrap; }
 
 .sa-btn-activate {

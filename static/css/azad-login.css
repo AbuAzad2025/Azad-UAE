@@ -271,25 +271,31 @@ html, body.azad-login-page {
   line-height: 1.6;
 }
 
+/* purgecss start ignore */
 .azad-login-alert--danger {
   background: rgba(255,92,115,0.1);
   border: 1px solid rgba(255,92,115,0.28);
   color: #ffb1bc
 ;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .azad-login-alert--success {
   background: rgba(74,222,128,0.08);
   border: 1px solid rgba(74,222,128,0.24);
   color: #a9efbf
 ;
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 .azad-login-alert--warning {
   background: rgba(242,199,107,0.08);
   border: 1px solid var(--border-gold);
   color: var(--gold-300);
 }
+/* purgecss end ignore */
 
 .azad-login-form { display: grid; gap: 15px; }
 

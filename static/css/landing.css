@@ -34,6 +34,7 @@ body {
 }
 body.en-lang { font-family: Inter, Tajawal, sans-serif; }
 
+/* purgecss start ignore */
 .text-accent { color: var(--azad-accent) !important; }
 .text-cyan { color: var(--azad-cyan) !important; }
 .text-success { color: var(--azad-success) !important; }
@@ -41,6 +42,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
 
 [dir="rtl"] .ms-auto { margin-left: 0 !important; margin-right: auto !important; }
 [dir="rtl"] .me-auto { margin-right: 0 !important; margin-left: auto !important; }
+/* purgecss end ignore */
 
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--azad-primary); }
@@ -56,12 +58,14 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   transition: all 0.4s ease;
 }
+/* purgecss start ignore */
 .azad-nav.scrolled {
   background: rgba(15, 23, 36, 0.98);
   border-bottom-color: var(--azad-accent-border);
   box-shadow: 0 4px 30px rgba(0,0,0,0.5);
   padding: 8px 0;
 }
+/* purgecss end ignore */
 .azad-nav-inner {
   max-width: 1320px; margin: 0 auto; padding: 0 24px;
   display: flex; align-items: center; gap: 8px;
@@ -265,6 +269,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
   transition: all 0.3s;
 }
+/* purgecss start ignore */
 .btn-hero-secondary:hover { background: rgba(212, 160, 23, 0.08); border-color: var(--azad-accent); color: var(--azad-accent-light); }
 .btn-hero-success {
   background: var(--azad-success); border: none; color: #fff;
@@ -277,6 +282,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   display: flex; gap: 20px; flex-wrap: wrap;
   font-size: 0.88rem; color: var(--azad-text-muted);
 }
+/* purgecss end ignore */
 .azad-hero-trust span { display: flex; align-items: center; gap: 6px; }
 .azad-hero-trust i { color: var(--azad-success); font-size: 0.8rem; }
 .azad-hero-visual { position: relative; display: flex; align-items: center; justify-content: center; }
@@ -405,6 +411,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   border-radius: var(--azad-radius);
   padding: 36px 30px;
 }
+/* purgecss start ignore */
 .azad-calc-label { font-size: 0.85rem; color: var(--azad-text-muted); margin-bottom: 6px; font-weight: 600; }
 .azad-calc-value { font-size: 2.2rem; font-weight: 800; color: var(--azad-accent-light); margin-bottom: 4px; }
 .azad-calc-sub { font-size: 0.82rem; color: var(--azad-text-muted); }
@@ -414,6 +421,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
 .azad-calc-total { background: rgba(212, 160, 23, 0.06); border: 1px solid var(--azad-accent-border); border-radius: 14px; padding: 16px; text-align: center; }
 .azad-calc-total.highlight { background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.2); }
 .azad-calc-total .label { font-size: 0.78rem; color: var(--azad-text-muted); margin-bottom: 4px; }
+/* purgecss end ignore */
 .azad-calc-total .amount { font-size: 1.6rem; font-weight: 800; }
 .azad-calc-total .sub { font-size: 0.72rem; color: var(--azad-text-muted); }
 .azad-calc-cta { display: block; text-align: center; margin-top: 16px; }
@@ -505,12 +513,14 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   font-size: 0.82rem; font-weight: 600; cursor: pointer;
   transition: all 0.3s; text-align: center; min-width: 100px;
 }
+/* purgecss start ignore */
 .azad-tier-btn:hover { border-color: var(--azad-accent-border); color: var(--azad-accent-light); }
 .azad-tier-btn.active { border-color: var(--azad-accent); background: rgba(212,160,23,0.08); color: var(--azad-accent-light); }
 .azad-tier-btn .tier-price { display: block; font-size: 1.3rem; font-weight: 800; color: var(--azad-accent-light); margin-top: 4px; }
 .azad-tier-btn .tier-sub { font-size: 0.68rem; opacity: 0.7; }
 .azad-tier-slider-wrap { margin: 16px 0 24px; }
 .azad-tier-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; background: rgba(212,160,23,0.15); border-radius: 3px; outline: none; }
+/* purgecss end ignore */
 .azad-tier-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--azad-accent); cursor: pointer; box-shadow: 0 0 12px var(--azad-accent-glow); }
 .azad-tier-card { display: none; }
 .azad-tier-card.active { display: block; }
@@ -621,6 +631,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   .azad-footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
   .azad-mini-grid { grid-template-columns: repeat(3, 1fr); }
 }
+/* purgecss start ignore */
 @media (max-width: 767px) {
   .azad-hero { padding: 100px 0 50px; }
   .azad-hero-title { font-size: 2rem; }
@@ -636,6 +647,7 @@ body.en-lang { font-family: Inter, Tajawal, sans-serif; }
   .azad-calc-value { font-size: 1.8rem; }
   .btn-hero-primary, .btn-hero-secondary, .btn-hero-success { width: 100%; justify-content: center; }
   .azad-hero-actions { flex-direction: column; }
+/* purgecss end ignore */
   .azad-footer-grid { grid-template-columns: 1fr; }
   .azad-mini-grid { grid-template-columns: repeat(2, 1fr); }
   .azad-nav-inner { padding: 0 16px; }

@@ -104,6 +104,7 @@ html[dir="rtl"] .ps-cart-drawer {
   display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ps-border);
   align-items: center; transition: opacity 0.2s;
 }
+/* purgecss start ignore */
 .ps-cart-item.removing { opacity: 0.4; }
 .ps-cart-item-img {
   width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex-shrink: 0;
@@ -113,6 +114,7 @@ html[dir="rtl"] .ps-cart-drawer {
   width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0;
   display: grid; place-items: center; background: var(--ps-sand); color: var(--ps-muted);
 }
+/* purgecss end ignore */
 .ps-cart-item-info { flex: 1; min-width: 0; }
 .ps-cart-item-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ps-cart-item-price { font-size: 0.8rem; color: var(--ps-muted); margin-top: 2px; }

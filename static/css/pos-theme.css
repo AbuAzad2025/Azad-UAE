@@ -131,8 +131,10 @@
 .pos-search .search-clear:hover{color:var(--pos-danger);}
 
 /* customer quick chips */
+/* purgecss start ignore */
 .pos-cust-chips{display:flex;gap:8px;flex-wrap:wrap;}
 .pos-cust-chips .pos-chip{font-size:12px;padding:6px 12px;}
+/* purgecss end ignore */
 
 /* product results dropdown (search) — visibility controlled by Bootstrap .d-none */
 .pos-product-results{
@@ -228,6 +230,7 @@
   border-radius:999px;padding:2px 10px;font-size:12px;color:var(--pos-muted);
 }
 
+/* purgecss start ignore */
 .pos-cart-scroll{flex:1;overflow:auto;padding:8px 12px;}
 .pos-cart-table{width:100%;border-collapse:collapse;}
 .pos-cart-table td{border-bottom:1px solid var(--pos-border);padding:10px 6px;vertical-align:top;}
@@ -236,6 +239,7 @@
 .pos-cart-item .ci-name{font-weight:700;font-size:14px;}
 .pos-cart-item .ci-meta{color:var(--pos-muted);font-size:11px;}
 .pos-cart-item .ci-price{color:var(--pos-accent);font-weight:700;white-space:nowrap;}
+/* purgecss end ignore */
 .pos-cart-item .ci-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .pos-cart-item .ci-price-in{
   width:64px;text-align:center;background:var(--pos-surface);border:1px solid var(--pos-border);
@@ -317,9 +321,11 @@
   padding:10px;border-radius:10px;border:1px solid var(--pos-border);background:var(--pos-surface-2);
   cursor:pointer;text-align:center;font-weight:700;font-size:13px;color:var(--pos-muted);
 }
+/* purgecss start ignore */
 .pos-pay-method .pm.active{border-color:var(--pos-accent);color:var(--pos-accent);background:rgba(22,163,74,.08);}
 .pos-pay .paid-field{display:flex;flex-direction:column;gap:5px;}
 .pos-pay .paid-field label{font-size:12px;color:var(--pos-muted);}
+/* purgecss end ignore */
 .pos-pay .ref-field{display:none;}
 .pos-pay .ref-field.show{display:block;}
 .pos-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -343,11 +349,13 @@
 #posAlert{margin:0;}
 
 /* ---------- KPI (kept legacy ids) ---------- */
+/* purgecss start ignore */
 .pos-kpi{display:flex;gap:8px;flex-wrap:wrap;}
 .pos-kpi .kpi{
   background:var(--pos-surface-2);border:1px solid var(--pos-border);border-radius:10px;
   padding:6px 10px;font-size:12px;color:var(--pos-muted);
 }
+/* purgecss end ignore */
 .pos-kpi .kpi b{color:var(--pos-text);}
 
 /* ---------- session bar ---------- */

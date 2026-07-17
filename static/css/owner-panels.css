@@ -6,10 +6,12 @@
   border: 0;
   box-shadow: var(--ui-shadow, 0 2px 12px rgba(0, 0, 0, 0.06));
 }
+/* purgecss start ignore */
 .owner-badge-active { background: var(--ui-success, #188A4C); color: #fff; }
 .owner-badge-suspended { background: var(--ui-muted, #6c757d); color: #fff; }
 .owner-badge-missing { background: var(--ui-danger, #B11E2B); color: #fff; }
 .owner-badge-warn { background: var(--ui-warning, #C97C10); color: #fff; }
+/* purgecss end ignore */
 .owner-tenant-logo {
   width: 40px;
   height: 40px;

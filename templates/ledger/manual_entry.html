@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 0.75rem 1rem;
   }
 
-/* {{ t('تنسيق') }} {{ t('البطاقات') }} {{ t('الثابتة') }} */
+/* purgecss start ignore */
 #quickSummaryCard, #quickTemplatesCard {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-width: 2px !important;
@@ -513,13 +513,16 @@ document.addEventListener('DOMContentLoaded', function() {
   font-weight: bold;
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
+/* purgecss end ignore */
 
+/* purgecss start ignore */
 #quickSummaryBody,
 #quickTemplatesBody {
   display: block !important;
   padding: 1.5rem;
   background: #f8f9fa;
 }
+/* purgecss end ignore */
 
 #quickSummaryBody ol li,
 #quickTemplatesBody .row {
