@@ -486,6 +486,8 @@
 
 {% block extra_js %}
 <script>
+const isForeignCurrency = {{ 'true' if cheque.currency != tenant_default_currency else 'false' }};
+
 function depositCheque() {
   $('#depositModal').modal('show');
 }
@@ -493,13 +495,13 @@ function depositCheque() {
 function clearCheque() {
   $('#clearModal').modal('show');
   
-  {% if cheque.currency != tenant_default_currency %}
-  // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} عند {{ t('فتح') }} {{ t('النافذة') }}
-  fetchCurrentExchangeRate();
-  
-  // {{ t('Account') }} {{ t('Amount') }} {{ t('Actual') }} عند {{ t('Change') }} {{ t('Price') }}
-  $('#clearance_exchange_rate').on('input', calculateActualAmount);
-  {% endif %}
+  if (isForeignCurrency) {
+    // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} عند {{ t('فتح') }} {{ t('النافذة') }}
+    fetchCurrentExchangeRate();
+    
+    // {{ t('Account') }} {{ t('Amount') }} {{ t('Actual') }} عند {{ t('Change') }} {{ t('Price') }}
+    $('#clearance_exchange_rate').on('input', calculateActualAmount);
+  }
 }
 
 function bounceCheque() {
@@ -510,7 +512,7 @@ function cancelCheque() {
   $('#cancelModal').modal('show');
 }
 
-{% if cheque.currency != tenant_default_currency %}
+if (isForeignCurrency) {
 function fetchCurrentExchangeRate() {
   // {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('الحالي') }} من API
   $.ajax({
@@ -554,7 +556,7 @@ function calculateActualAmount() {
     $('#gain_loss_preview').hide();
   }
 }
-{% endif %}
+}
 </script>
 {% endblock %}
 

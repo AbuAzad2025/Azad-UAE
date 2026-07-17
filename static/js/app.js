@@ -143,7 +143,7 @@
       if (!$btn.attr("data-dismiss") && $btn.attr("data-bs-dismiss")) {
         $btn.attr("data-dismiss", $btn.attr("data-bs-dismiss"));
       }
-      if (!$btn.children().length && !$btn.text().trim()) {
+      if ($btn[0] && !$btn[0].children.length && !$btn.text().trim()) {
         $btn.html('<span aria-hidden="true">&times;</span>');
       }
     });
@@ -315,7 +315,7 @@
         width: "100%",
         language: "ar",
         placeholder: $el.attr("placeholder") || "اختر...",
-        allowClear: String($el.data("allow-clear") || "").toLowerCase() === "true" || $el.data("allowClear") == 1,
+        allowClear: String($el.data("allow-clear") || "").toLowerCase() === "true" || $el.data("allowClear") === 1,
         dropdownParent: parent.length ? parent : $(document.body)
       });
     });
@@ -342,7 +342,7 @@
         width: "100%",
         language: "ar",
         placeholder: $el.attr("placeholder") || "اختر...",
-        allowClear: String($el.data("allow-clear") || "").toLowerCase() === "true" || $el.data("allowClear") == 1,
+        allowClear: String($el.data("allow-clear") || "").toLowerCase() === "true" || $el.data("allowClear") === 1,
         minimumInputLength: minLen,
         dropdownParent: parent.length ? parent : $(document.body),
         ajax: {
@@ -363,7 +363,8 @@
       const val = $el.val();
       const txt = $el.data("initial-text");
       if (val && txt && !$el.find('option[value="' + val + '"]').length) {
-        $el.append(new Option(txt, val, true, true)).trigger("change");
+        $el.append(new Option(txt, val, true, true));
+        $el.trigger("change");
       }
     });
   }

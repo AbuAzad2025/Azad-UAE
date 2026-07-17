@@ -59,7 +59,7 @@ $('#add_serial_btn').click(function() {
     }
 });
 $('#serial_input').keypress(function(e) {
-    if (e.which == 13) {
+    if (e.which === 13) {
         e.preventDefault();
         $('#add_serial_btn').click();
     }
