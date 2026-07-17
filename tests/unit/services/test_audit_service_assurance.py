@@ -36,7 +36,7 @@ class TestAuditServiceGetLogs:
         log1 = MagicMock(
             action="create", user_id=1, created_at=datetime.now(timezone.utc)
         )
-        query_mock = _build_audit_mocks(mocker, [log1])
+        _build_audit_mocks(mocker, [log1])
 
         from services.audit_service import AuditService
 

@@ -306,14 +306,14 @@ class TestTenantIsolationHardening:
         # Verify owner is recognized as platform owner
         from utils.auth_helpers import is_global_owner_user
 
-        assert is_global_owner_user(owner) == True
+        assert is_global_owner_user(owner)
 
         # Master login function should be callable (we don't test actual secrets)
         # Just verify the function exists and returns expected structure
         success, meta = try_master_login(
             "wrong_password", "127.0.0.1", username=owner.username
         )
-        assert success == False
+        assert not success
         assert isinstance(meta, dict)
         assert "reason" in meta
 
@@ -354,7 +354,7 @@ class TestTenantIsolationHardening:
         # Test that developer with null tenant and assigned branch does not raise
         from utils.auth_helpers import user_may_have_null_tenant
 
-        assert user_may_have_null_tenant(is_owner=False, role=dev_role) == True
+        assert user_may_have_null_tenant(is_owner=False, role=dev_role)
 
         # Login should work (effective_tenant_id remains None)
         # set_active_tenant with None should clear session, not raise

@@ -182,7 +182,7 @@ class Supplier(db.Model):
                 Payment.tenant_id == self.tenant_id,
                 Payment.direction == "outgoing",
                 db.or_(
-                    Payment.payment_confirmed == True,
+                    Payment.payment_confirmed,
                     db.and_(
                         Payment.payment_method == "cheque",
                         Payment.rejection_reason.is_(None),

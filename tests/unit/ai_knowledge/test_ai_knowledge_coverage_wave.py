@@ -859,8 +859,8 @@ class TestNeuralEngineCovWave:
         mock_chain.limit.return_value = mock_chain
         mock_chain.all.return_value = list(range(30))
         with (
-            patch("models.Sale") as MockSale,
-            patch("models.Customer") as MockCust,
+            patch("models.Sale"),
+            patch("models.Customer"),
             patch("extensions.db") as mock_db,
         ):
             mock_db.session.query.return_value = mock_chain

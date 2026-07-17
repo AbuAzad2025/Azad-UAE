@@ -127,7 +127,9 @@ class TestWalkinCustomer:
     def test_returns_existing_walkin(self, mocker):
         existing = MagicMock(id=7)
         chain = MagicMock()
-        chain.filter.return_value.filter.return_value.order_by.return_value.first.return_value = existing
+        chain.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            existing
+        )
         mocker.patch("utils.pos_helpers.tenant_query", return_value=chain)
         mocker.patch("utils.pos_helpers.get_active_tenant_id", return_value=1)
         assert get_pos_walkin_customer(1) is existing

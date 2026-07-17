@@ -111,9 +111,7 @@ class TestPurchaseServiceCreate:
                                 line_instance = MagicMock()
                                 line_instance.line_total = Decimal("100")
                                 mock_line.return_value = line_instance
-                                with patch(
-                                    "services.purchase_service.Product"
-                                ) as mock_product_class:
+                                with patch("services.purchase_service.Product"):
                                     patch(
                                         "services.purchase_service.db.session.get",
                                         return_value=product,
@@ -179,9 +177,7 @@ class TestPurchaseServiceCreate:
                                 line_instance = MagicMock()
                                 line_instance.line_total = Decimal("100")
                                 mock_line.return_value = line_instance
-                                with patch(
-                                    "services.purchase_service.Product"
-                                ) as mock_product_class:
+                                with patch("services.purchase_service.Product"):
                                     patch(
                                         "services.purchase_service.db.session.get",
                                         return_value=product,
@@ -193,8 +189,12 @@ class TestPurchaseServiceCreate:
                                         with patch(
                                             "models.product_serial.ProductSerial"
                                         ) as mock_sn:
-                                            mock_sn.query.filter_by.return_value.first.return_value = None
-                                            mock_sn.query.filter.return_value.count.return_value = 0
+                                            mock_sn.query.filter_by.return_value.first.return_value = (
+                                                None
+                                            )
+                                            mock_sn.query.filter.return_value.count.return_value = (
+                                                0
+                                            )
                                             result = PurchaseService.create_purchase(
                                                 user,
                                                 {"supplier_name": "Test Supplier"},
@@ -307,9 +307,7 @@ class TestPurchaseServiceTenantIsolation:
                                     line_instance = MagicMock()
                                     line_instance.line_total = 100
                                     mock_line.return_value = line_instance
-                                    with patch(
-                                        "services.purchase_service.Product"
-                                    ) as mock_product_class:
+                                    with patch("services.purchase_service.Product"):
                                         patch(
                                             "services.purchase_service.db.session.get",
                                             return_value=product,
@@ -377,9 +375,7 @@ class TestPurchaseServiceTenantIsolation:
                                 line_instance = MagicMock()
                                 line_instance.line_total = 100
                                 mock_line.return_value = line_instance
-                                with patch(
-                                    "services.purchase_service.Product"
-                                ) as mock_product_class:
+                                with patch("services.purchase_service.Product"):
                                     patch(
                                         "services.purchase_service.db.session.get",
                                         return_value=product,
@@ -500,9 +496,7 @@ class TestPurchaseServiceTenantIsolation:
                                 line_instance = MagicMock()
                                 line_instance.line_total = Decimal("100")
                                 mock_line.return_value = line_instance
-                                with patch(
-                                    "services.purchase_service.Product"
-                                ) as mock_product_class:
+                                with patch("services.purchase_service.Product"):
                                     patch(
                                         "services.purchase_service.db.session.get",
                                         return_value=product,

@@ -282,7 +282,7 @@ class Cheque(db.Model):
         """الشيكات القريبة من الاستحقاق (7 أيام)"""
         Cheque.update_all_statuses(tenant_id=tenant_id, branch_id=branch_id)
         query = Cheque.query.filter(
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.status == "pending",
             Cheque.days_until_due <= 7,
             Cheque.days_until_due >= 0,
@@ -298,9 +298,9 @@ class Cheque(db.Model):
         """الشيكات المتأخرة"""
         Cheque.update_all_statuses(tenant_id=tenant_id, branch_id=branch_id)
         query = Cheque.query.filter(
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.status == "pending",
-            Cheque.is_overdue == True,
+            Cheque.is_overdue,
         )
         if tenant_id is not None:
             query = query.filter(Cheque.tenant_id == tenant_id)
@@ -375,7 +375,7 @@ class Cheque(db.Model):
 
         due_soon_query = Cheque.query.filter(
             Cheque.status == "pending",
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.days_until_due <= 7,
             Cheque.days_until_due >= 0,
         )

@@ -117,7 +117,7 @@ class TestWave8ActionDispatcher:
                 assert ad._get_active_tenant_id() == 7
         with (
             patch("ai_knowledge.action_dispatcher.db.session") as sess,
-            patch("models.ErrorAuditLog") as Log,
+            patch("models.ErrorAuditLog"),
         ):
             sess.add = MagicMock()
             sess.commit = MagicMock()

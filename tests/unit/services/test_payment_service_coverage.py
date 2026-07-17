@@ -1120,7 +1120,7 @@ class TestPaymentServiceChequeAndFxLoss:
             app.app_context(),
             patch.object(PaymentService, "get_unpaid_sales", return_value=[sale]),
             patch("services.payment_service.generate_number", return_value="PAY-Z"),
-            patch("services.payment_service.db") as mock_db,
+            patch("services.payment_service.db"),
             patch(
                 "services.payment_service.current_user",
                 MagicMock(is_authenticated=True, id=1),

@@ -80,15 +80,19 @@ def _mock_branch():
 def _dashboard_db_query():
     q = _chain_query(scalar=Decimal("0"), count=0, all=[])
     triple = (0, Decimal("0"), Decimal("0"))
-    pair = (Decimal("0"), 0)
-    inv_pair = (Decimal("0"), Decimal("0"))
+    (Decimal("0"), 0)
+    (Decimal("0"), Decimal("0"))
     q.first.return_value = triple
     q.filter.return_value.first.return_value = triple
     q.filter.return_value.scalar.return_value = Decimal("0")
     q.scalar.return_value = Decimal("0")
     q.join.return_value.filter.return_value.distinct.return_value.count.return_value = 0
-    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
+    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     q.filter.return_value.group_by.return_value.all.return_value = []
     q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
         "0"
@@ -1551,7 +1555,7 @@ class TestOwnerExtendedCoverage:
         from routes.owner import owner_bp
 
         app = app_factory(owner_bp)
-        new_vault = MagicMock()
+        MagicMock()
         with (
             _owner_route_patches(),
             patch("models.PaymentVault.get_platform_vault", return_value=None),
@@ -2534,7 +2538,7 @@ class TestOwnerGapClosure:
         user_cls.query.get_or_404.return_value = target
         with (
             patch("routes.owner.User", user_cls),
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("delete fail")
@@ -2918,7 +2922,7 @@ class TestOwnerGapClosure:
         tenant_cls = _tenant_class(tenant)
         with (
             patch("routes.owner.Tenant", tenant_cls),
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("save fail")
@@ -2929,7 +2933,7 @@ class TestOwnerGapClosure:
             )
         assert resp.status_code in (302, 303, 200)
         with (
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("dev fail")
@@ -2966,7 +2970,7 @@ class TestOwnerGapClosure:
         with (
             patch("routes.owner.InvoiceSettings", settings_cls),
             patch("models.invoice_settings.InvoiceSettings", settings_cls),
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("inv fail")
@@ -3148,7 +3152,7 @@ class TestOwnerGapClosure:
         tenant_cls.query.filter_by.return_value.first.return_value = None
         with (
             patch("routes.owner.tenants.Tenant", tenant_cls),
-            patch("routes.owner.tenants.db") as mock_db,
+            patch("routes.owner.tenants.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("create fail")
@@ -3171,7 +3175,7 @@ class TestOwnerGapClosure:
         tenant_cls2.query.get_or_404.return_value = tenant2
         with (
             patch("routes.owner.Tenant", tenant_cls2),
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("edit fail")
@@ -3200,7 +3204,7 @@ class TestOwnerGapClosure:
             patch("utils.decorators.is_global_owner_user", return_value=False),
             patch("utils.tenanting.get_active_tenant_id", return_value=1),
             patch("routes.owner.settings.Warehouse", wh_cls),
-            patch("routes.owner.settings.db") as mock_db,
+            patch("routes.owner.settings.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("wh fail")
@@ -3269,7 +3273,7 @@ class TestOwnerGapClosure:
         )
         assert resp.status_code in (302, 303, 200)
         with (
-            patch("routes.owner.db") as mock_db,
+            patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("cfg fail")

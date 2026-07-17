@@ -258,7 +258,7 @@ class TestReverseEntry:
         self, db_session, sample_tenant, sample_gl_accounts, mocker
     ):
         mocker.patch("services.gl_helpers.assert_period_open")
-        entry = GLService.create_journal_entry(
+        GLService.create_journal_entry(
             datetime(2026, 6, 1, tzinfo=timezone.utc),
             "Reversible",
             _balanced_lines(Decimal("75")),

@@ -486,7 +486,6 @@ class TestPrintingCoverageGaps:
         sale.customer = None
         sale.lines = []
         sale.sale_date = datetime.now(timezone.utc)
-        mocks = printing_client._printing_mocks
         sale_q = MagicMock()
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q

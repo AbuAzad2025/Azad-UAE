@@ -60,7 +60,7 @@ class TestBuildIdRemapExtended:
 class TestDeleteTenantScopedData:
     def test_deletes_tenant_and_branch_scoped_rows(self):
         conn = MagicMock()
-        nested = MagicMock()
+        MagicMock()
         conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)
         conn.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
 

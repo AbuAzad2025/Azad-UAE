@@ -100,9 +100,9 @@ class TestFullBusinessCycleTenantScoping:
     def _verify_tenant_id(self, records, expected_tid, label):
         for name, obj in records.items():
             actual = getattr(obj, "tenant_id", None)
-            assert actual == expected_tid, (
-                f"[{label}] {name}.tenant_id={actual} != expected={expected_tid}"
-            )
+            assert (
+                actual == expected_tid
+            ), f"[{label}] {name}.tenant_id={actual} != expected={expected_tid}"
 
     def test_tenant_a_business_cycle(self, tenant_a_data):
         """Tenant A: create sale, verify tenant_id on all objects."""
@@ -119,7 +119,7 @@ class TestFullBusinessCycleTenantScoping:
         from utils.tenanting import set_active_tenant
 
         # Create data for both tenants
-        rec_a = self._create_sale(tenant_a_data, user=None)
+        self._create_sale(tenant_a_data, user=None)
         rec_b = self._create_sale(tenant_b_data, user=None)
 
         from models import Sale
@@ -201,9 +201,9 @@ class TestFullBusinessCycleTenantScoping:
 
         # Verify filter_by was called with tenant_id
         calls = [c for c in mock_q.method_calls if "filter_by" in str(c)]
-        assert any(str(TENANT_A) in str(c) for c in calls), (
-            "get_service_config must filter by tenant_id"
-        )
+        assert any(
+            str(TENANT_A) in str(c) for c in calls
+        ), "get_service_config must filter by tenant_id"
 
     def test_crm_team_member_tenant_inheritance(self, mocker):
         """Verify CRMTeamMember inherits tenant_id from CRMTeam."""
@@ -211,7 +211,7 @@ class TestFullBusinessCycleTenantScoping:
         from models.tenant import Tenant
 
         # Create team with tenant_id
-        tenant = Tenant(id=TENANT_A)
+        Tenant(id=TENANT_A)
         team = CRMTeam(id=1, tenant_id=TENANT_A, name="Team_A")
 
         member = CRMTeamMember(

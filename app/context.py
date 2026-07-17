@@ -292,7 +292,7 @@ def register_context_processors(app):
                         "users",
                         "User",
                         lambda: User.query.filter(
-                            User.tenant_id == _t.id, User.is_active == True
+                            User.tenant_id == _t.id, User.is_active
                         ).count(),
                     ),
                     "branches": (
@@ -311,21 +311,21 @@ def register_context_processors(app):
                         "products",
                         "Product",
                         lambda: Product.query.filter(
-                            Product.tenant_id == _t.id, Product.is_active == True
+                            Product.tenant_id == _t.id, Product.is_active
                         ).count(),
                     ),
                     "customers": (
                         "customers",
                         "Customer",
                         lambda: Customer.query.filter(
-                            Customer.tenant_id == _t.id, Customer.is_active == True
+                            Customer.tenant_id == _t.id, Customer.is_active
                         ).count(),
                     ),
                     "suppliers": (
                         "suppliers",
                         "Supplier",
                         lambda: Supplier.query.filter(
-                            Supplier.tenant_id == _t.id, Supplier.is_active == True
+                            Supplier.tenant_id == _t.id, Supplier.is_active
                         ).count(),
                     ),
                 }

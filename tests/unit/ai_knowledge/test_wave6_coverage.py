@@ -331,7 +331,7 @@ class TestActionDispatcherWave6:
             patch("ai_knowledge.action_dispatcher._has_permission", return_value=True),
             patch("ai_knowledge.action_dispatcher._log_ai_error"),
         ):
-            bad = action_dispatcher._registry.copy()
+            action_dispatcher._registry.copy()
             action_dispatcher._registry["boom_action"] = {
                 "handler": lambda a: (_ for _ in ()).throw(RuntimeError("x")),
                 "permission": "",

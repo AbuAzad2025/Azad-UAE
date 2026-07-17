@@ -293,7 +293,7 @@ class TestAdjustStock:
         assert result is movement
 
     def test_rollback_on_create_failure(self, mocker, app):
-        session = mocker.patch("services.stock_service.db.session")
+        mocker.patch("services.stock_service.db.session")
         mocker.patch(
             "services.stock_service.StockService.create_movement",
             side_effect=RuntimeError("fail"),
@@ -471,9 +471,7 @@ class TestCreateMovement:
         wh_cls = mocker.patch("services.stock_service.Warehouse")
         wh_cls.query = wh_q
         wh_cls.return_value = new_wh
-        mov_cls = mocker.patch(
-            "services.stock_service.StockMovement", return_value=MagicMock()
-        )
+        mocker.patch("services.stock_service.StockMovement", return_value=MagicMock())
         pws_q = _patch_pws_query(mocker, pws=None)
         pws_cls = mocker.patch(
             "services.stock_service.ProductWarehouseStock", return_value=MagicMock()
@@ -958,9 +956,9 @@ class TestCalculateSaleCogs:
         )
         mocker.patch("services.stock_service._safe_for_update", return_value=pwc)
         mocker.patch("services.stock_service.ProductCostHistory")
-        mocker.patch(
-            "services.stock_service.db.session"
-        ).get.return_value = _warehouse()
+        mocker.patch("services.stock_service.db.session").get.return_value = (
+            _warehouse()
+        )
         from services.stock_service import StockService
 
         sale = _sale(lines=[_sale_line(quantity=Decimal("1"))])
@@ -1804,7 +1802,7 @@ class TestReconcileStock:
         movement = MagicMock(product_id=1, warehouse_id=5, total_qty=Decimal("3"))
         pws_sum = MagicMock(product_id=1, total=Decimal("3"))
         product = _product(current_stock=Decimal("3"))
-        session = self._setup_reconcile_queries(
+        self._setup_reconcile_queries(
             mocker,
             existing_rows=[],
             movement_rows=[movement],

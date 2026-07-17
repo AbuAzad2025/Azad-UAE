@@ -14,7 +14,9 @@ class TestRepairAccountingData:
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         merchant = MagicMock(id=5)
         Customer = mocker.patch("models.Customer")
-        Customer.query.filter_by.return_value.order_by.return_value.first.return_value = merchant
+        Customer.query.filter_by.return_value.order_by.return_value.first.return_value = (
+            merchant
+        )
         inv_acct = MagicMock(id=10)
         eq_acct = MagicMock(id=20)
         mocker.patch(
@@ -54,7 +56,9 @@ class TestRepairAccountingData:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         Customer = mocker.patch("models.Customer")
-        Customer.query.filter_by.return_value.order_by.return_value.first.return_value = None
+        Customer.query.filter_by.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         new_merchant = MagicMock(id=9)
         Customer.return_value = new_merchant
         mocker.patch(
@@ -89,9 +93,9 @@ class TestRepairAccountingData:
             "models.gl.GLJournalEntry"
         ).query.filter.return_value.all.return_value = [entry]
         cheque = MagicMock(id=42)
-        mocker.patch(
-            "models.Cheque"
-        ).query.filter.return_value.first.return_value = cheque
+        mocker.patch("models.Cheque").query.filter.return_value.first.return_value = (
+            cheque
+        )
         result = repair_accounting_data()
         assert entry.reference_type == "cheque_receive"
         assert entry.reference_id == 42
@@ -121,9 +125,9 @@ class TestRepairAccountingData:
         mocker.patch(
             "models.gl.GLJournalEntry"
         ).query.filter.return_value.all.return_value = [entry]
-        mocker.patch(
-            "models.Cheque"
-        ).query.filter.return_value.first.return_value = None
+        mocker.patch("models.Cheque").query.filter.return_value.first.return_value = (
+            None
+        )
         result = repair_accounting_data()
         assert result["legacy_cheque_refs"] == 0
 
@@ -173,8 +177,8 @@ class TestRepairAccountingData:
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch(
             "models.Customer"
-        ).query.filter_by.return_value.order_by.return_value.first.return_value = (
-            MagicMock(id=1)
+        ).query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(
+            id=1
         )
         mocker.patch("models.Product").query.filter.return_value.all.return_value = []
         mocker.patch(
@@ -188,8 +192,8 @@ class TestRepairAccountingData:
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch(
             "models.Customer"
-        ).query.filter_by.return_value.order_by.return_value.first.return_value = (
-            MagicMock(id=1)
+        ).query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(
+            id=1
         )
         mocker.patch("models.Product").query.filter.return_value.all.return_value = []
         mocker.patch(
@@ -209,8 +213,8 @@ class TestRepairAccountingData:
         ensure = mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch(
             "models.Customer"
-        ).query.filter_by.return_value.order_by.return_value.first.return_value = (
-            MagicMock(id=1)
+        ).query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(
+            id=1
         )
         mocker.patch("models.Product").query.filter.return_value.all.return_value = []
         mocker.patch(
@@ -250,9 +254,9 @@ class TestRepairAccountingData:
         mocker.patch(
             "models.gl.GLJournalEntry"
         ).query.filter.return_value.all.return_value = [entry]
-        mocker.patch(
-            "models.Cheque"
-        ).query.filter.return_value.first.return_value = MagicMock(id=1)
+        mocker.patch("models.Cheque").query.filter.return_value.first.return_value = (
+            MagicMock(id=1)
+        )
         result = repair_accounting_data()
         assert entry.reference_type is None
         assert result["legacy_cheque_refs"] == 0

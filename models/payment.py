@@ -298,7 +298,7 @@ class Receipt(db.Model):
                 Payment.reference_number == self.receipt_number,
             ),
             Payment.payment_type == "sale_payment",
-            Payment.payment_confirmed == True,
+            Payment.payment_confirmed,
         ).all()
         for pmt in linked_payments:
             pmt.payment_confirmed = False

@@ -627,9 +627,9 @@ class TestMiscSecondPass:
 
     def test_track_login_attempt_commit_failure(self, mocker):
         user = MagicMock(login_attempts=0)
-        mocker.patch(
-            "models.User"
-        ).query.filter_by.return_value.first.return_value = user
+        mocker.patch("models.User").query.filter_by.return_value.first.return_value = (
+            user
+        )
         mock_session = mocker.patch("utils.db_safety.db.session")
         mock_session.flush.side_effect = RuntimeError("commit fail")
         with pytest.raises(RuntimeError):

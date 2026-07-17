@@ -474,7 +474,9 @@ class TestBranchingExtendedCoverage:
         subq.c.id = MagicMock()
         mocker.patch(
             "utils.branching.db.session.query"
-        ).return_value.join.return_value.filter.return_value.distinct.return_value.subquery.return_value = subq
+        ).return_value.join.return_value.filter.return_value.distinct.return_value.subquery.return_value = (
+            subq
+        )
         mocker.patch("models.Product.query", product_q)
         from utils.branching import get_visible_products_query
 

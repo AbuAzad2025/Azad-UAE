@@ -60,7 +60,9 @@ class TestKnowledgeAPI:
 
 class TestLearningSystem:
     def test_learn_from_interaction(self, tmp_path):
-        path_fn = lambda name: str(tmp_path / name)
+        def path_fn(name):
+            return str(tmp_path / name)
+
         with patch("ai_knowledge.get_knowledge_path", side_effect=path_fn):
             from ai_knowledge.core.learning_system import AzadLearningSystem
 
@@ -69,7 +71,9 @@ class TestLearningSystem:
             assert ls.get_learning_insights()["total_interactions"] >= 1
 
     def test_patterns_saved_as_json(self, tmp_path):
-        path_fn = lambda name: str(tmp_path / name)
+        def path_fn(name):
+            return str(tmp_path / name)
+
         with patch("ai_knowledge.get_knowledge_path", side_effect=path_fn):
             from ai_knowledge.core.learning_system import AzadLearningSystem
 

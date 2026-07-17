@@ -559,7 +559,7 @@ class TestGenerateBranchPayroll:
         sal = _employee(
             db_session, sample_branch, sample_tenant, employment_type="salary"
         )
-        daily = _employee(
+        _employee(
             db_session,
             sample_branch,
             sample_tenant,

@@ -100,18 +100,18 @@ class TestPosCheckoutAtomicity:
         assert resp.status_code == 500
 
         db.session.expire_all()
-        assert Sale.query.count() == sale_count_before, (
-            "Sale leaked despite commit failure"
-        )
+        assert (
+            Sale.query.count() == sale_count_before
+        ), "Sale leaked despite commit failure"
 
         setup["product"] = type(setup["product"]).query.get(setup["product"].id)
-        assert Decimal(str(setup["product"].current_stock or "0")) == stock_before, (
-            "Stock was mutated despite rollback"
-        )
+        assert (
+            Decimal(str(setup["product"].current_stock or "0")) == stock_before
+        ), "Stock was mutated despite rollback"
 
-        assert PosKdsOrder.query.count() == kds_count_before, (
-            "KDS order leaked despite rollback"
-        )
+        assert (
+            PosKdsOrder.query.count() == kds_count_before
+        ), "KDS order leaked despite rollback"
 
     def test_checkout_rolls_back_mid_block_after_flush(
         self, app, logged_in_client, pos_setup
@@ -123,7 +123,7 @@ class TestPosCheckoutAtomicity:
         sale_count_before = Sale.query.count()
         gl_count_before = GLJournalEntry.query.count()
         stock_before = Decimal(str(setup["product"].current_stock or "0"))
-        kds_count_before = PosKdsOrder.query.count()
+        PosKdsOrder.query.count()
 
         payload = self._checkout_payload(setup)
 
@@ -140,22 +140,22 @@ class TestPosCheckoutAtomicity:
 
         # Get response data for debugging
         resp_data = resp.get_json() if resp.is_json else None
-        assert resp.status_code == 500, (
-            f"Expected 500, got {resp.status_code}: {resp_data}"
-        )
+        assert (
+            resp.status_code == 500
+        ), f"Expected 500, got {resp.status_code}: {resp_data}"
 
         db.session.expire_all()
-        assert Sale.query.count() == sale_count_before, (
-            "Sale leaked despite mid-block failure"
-        )
-        assert GLJournalEntry.query.count() == gl_count_before, (
-            "GL entries leaked despite rollback"
-        )
+        assert (
+            Sale.query.count() == sale_count_before
+        ), "Sale leaked despite mid-block failure"
+        assert (
+            GLJournalEntry.query.count() == gl_count_before
+        ), "GL entries leaked despite rollback"
 
         setup["product"] = type(setup["product"]).query.get(setup["product"].id)
-        assert Decimal(str(setup["product"].current_stock or "0")) == stock_before, (
-            "Stock leaked despite rollback"
-        )
+        assert (
+            Decimal(str(setup["product"].current_stock or "0")) == stock_before
+        ), "Stock leaked despite rollback"
 
     def test_checkout_rolls_back_on_flush_failure(
         self, app, logged_in_client, pos_setup
@@ -178,9 +178,9 @@ class TestPosCheckoutAtomicity:
         assert resp.status_code == 500
 
         db.session.expire_all()
-        assert Sale.query.count() == sale_count_before, (
-            "Sale leaked despite flush failure"
-        )
+        assert (
+            Sale.query.count() == sale_count_before
+        ), "Sale leaked despite flush failure"
 
         setup["session"] = type(setup["session"]).query.get(setup["session"].id)
         assert (
@@ -210,17 +210,17 @@ class TestPurchaseDeleteAtomicity:
             "routes.purchases.GLService.reverse_entry",
             side_effect=Exception("Simulated GL failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 f"/purchases/{purchase_id}/delete", follow_redirects=True
             )
 
         db.session.expire_all()
-        assert Purchase.query.count() == purchase_count_before, (
-            "Purchase was deleted despite GL failure"
-        )
-        assert PurchaseLine.query.count() == line_count_before, (
-            "PurchaseLines were deleted despite GL failure"
-        )
+        assert (
+            Purchase.query.count() == purchase_count_before
+        ), "Purchase was deleted despite GL failure"
+        assert (
+            PurchaseLine.query.count() == line_count_before
+        ), "PurchaseLines were deleted despite GL failure"
 
         if sample_purchase.supplier:
             refreshed_supplier = Supplier.query.get(sample_purchase.supplier.id)
@@ -242,14 +242,14 @@ class TestPurchaseDeleteAtomicity:
             mock_filter.return_value.first.side_effect = Exception(
                 "Supplier lookup failure"
             )
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 f"/purchases/{purchase_id}/delete", follow_redirects=True
             )
 
         db.session.expire_all()
-        assert Purchase.query.count() == purchase_count_before, (
-            "Purchase was deleted despite supplier failure"
-        )
+        assert (
+            Purchase.query.count() == purchase_count_before
+        ), "Purchase was deleted despite supplier failure"
 
     def test_purchase_archive_fallback_atomicity(
         self, app, logged_in_client, sample_purchase
@@ -278,14 +278,14 @@ class TestPurchaseDeleteAtomicity:
             "routes.purchases.db.session.flush",
             side_effect=Exception("Archive flush failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 f"/purchases/{purchase_id}/delete", follow_redirects=True
             )
 
         db.session.expire_all()
-        assert type(sample_purchase).query.count() == purchase_count_before, (
-            "Purchase was archived despite flush failure"
-        )
+        assert (
+            type(sample_purchase).query.count() == purchase_count_before
+        ), "Purchase was archived despite flush failure"
 
 
 class TestCrmAtomicity:
@@ -303,7 +303,7 @@ class TestCrmAtomicity:
             "utils.db_safety.db.session.flush",
             side_effect=Exception("Simulated lead creation failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 "/crm/leads/create",
                 data={
                     "name": "Stress Test Lead",
@@ -315,9 +315,9 @@ class TestCrmAtomicity:
             )
 
         db.session.expire_all()
-        assert CRMLead.query.count() == count_before, (
-            "CRMLead was created despite flush failure"
-        )
+        assert (
+            CRMLead.query.count() == count_before
+        ), "CRMLead was created despite flush failure"
 
     def test_crm_stage_move_rolls_back(
         self, app, logged_in_client, db_session, sample_tenant, crm_permissions
@@ -347,7 +347,7 @@ class TestCrmAtomicity:
             "services.crm_lead_service.db.session.flush",
             side_effect=ValueError("Stage move failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 "/crm/api/move-stage",
                 json={
                     "lead_id": lead_id,
@@ -375,7 +375,7 @@ class TestExpenseAtomicity:
             "routes.expenses.db.session.flush",
             side_effect=Exception("Expense creation failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 "/expenses/create",
                 data={
                     "category_id": sample_expense_category.id,
@@ -386,9 +386,9 @@ class TestExpenseAtomicity:
             )
 
         db.session.expire_all()
-        assert Expense.query.count() == count_before, (
-            "Expense was created despite flush failure"
-        )
+        assert (
+            Expense.query.count() == count_before
+        ), "Expense was created despite flush failure"
 
 
 class TestSupplierAtomicity:
@@ -404,7 +404,7 @@ class TestSupplierAtomicity:
             "routes.suppliers.db.session.commit",
             side_effect=Exception("Supplier creation failure"),
         ):
-            resp = logged_in_client.post(
+            logged_in_client.post(
                 "/suppliers/create",
                 data={
                     "name": "Stress Test Supplier",
@@ -414,6 +414,6 @@ class TestSupplierAtomicity:
             )
 
         db.session.expire_all()
-        assert Supplier.query.count() == count_before, (
-            "Supplier was created despite commit failure"
-        )
+        assert (
+            Supplier.query.count() == count_before
+        ), "Supplier was created despite commit failure"

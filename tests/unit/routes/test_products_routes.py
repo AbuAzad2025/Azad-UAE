@@ -286,7 +286,7 @@ def _run_import_post(
 
     with app.test_request_context("/products/import", method="POST"):
         with ExitStack() as stack:
-            read_mock = stack.enter_context(
+            stack.enter_context(
                 patch("routes.products._read_import_dataframe", return_value=df)
             )
             stack.enter_context(patch("models.Warehouse.query", wh_query))
@@ -327,7 +327,7 @@ class TestProductsAuth:
 
     def test_view_scope_403_when_out_of_scope(self, products_client):
         with (
-            _products_patches() as ctx,
+            _products_patches(),
             patch("routes.products._ensure_product_scope", return_value=False),
             patch("routes.products.render_template", return_value="denied") as render,
         ):
@@ -569,9 +569,7 @@ class TestProductsIndex:
         items = [_product(1), _product(2)]
         query = _chain_query(all=items, count=2)
         with (
-            _products_patches(
-                products=items, visible_query=query, branch_scope=None
-            ) as ctx,
+            _products_patches(products=items, visible_query=query, branch_scope=None),
             patch("routes.products.render_template", return_value="index") as render,
         ):
             resp = products_client.get("/products/?page=1&per_page=10")
@@ -582,9 +580,7 @@ class TestProductsIndex:
         items = [_product(i, current_stock=i * 5) for i in range(1, 6)]
         query = _chain_query(all=items)
         with (
-            _products_patches(
-                products=items, visible_query=query, branch_scope=2
-            ) as ctx,
+            _products_patches(products=items, visible_query=query, branch_scope=2),
             patch("routes.products.render_template", return_value="index") as render,
             patch(
                 "routes.products.get_branch_stock_map",
@@ -642,7 +638,9 @@ class TestProductsIndex:
         query = _chain_query(all=items)
         session_rows = [(1, "WH", "مستودع", "Branch", "B1")]
         session_query = MagicMock()
-        session_query.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = session_rows
+        session_query.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = (
+            session_rows
+        )
         with (
             _products_patches(products=items, visible_query=query),
             patch("routes.products.should_show_all_branch_columns", return_value=True),
@@ -693,7 +691,7 @@ class TestProductsCreate:
             patch(
                 "routes.products.ensure_warehouse_access", side_effect=ValueError("bad")
             ),
-            patch("routes.products.render_template", return_value="create") as render,
+            patch("routes.products.render_template", return_value="create"),
         ):
             resp = products_client.post(
                 "/products/create",
@@ -733,7 +731,7 @@ class TestProductsCreate:
         session.flush.side_effect = lambda: setattr(added_product, "id", 99)
 
         with (
-            _products_patches() as ctx,
+            _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.Product", return_value=added_product),
             patch("routes.products.db.session", session),
@@ -760,7 +758,7 @@ class TestProductsViewEditDelete:
     def test_view_success(self, products_client):
         product = _product()
         with (
-            _products_patches(product=product) as ctx,
+            _products_patches(product=product),
             patch("routes.products.render_template", return_value="view") as render,
         ):
             resp = products_client.get("/products/1")
@@ -795,7 +793,7 @@ class TestProductsViewEditDelete:
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products.render_template", return_value="edit") as render,
+            patch("routes.products.render_template", return_value="edit"),
         ):
             resp = products_client.post(
                 "/products/1/edit",
@@ -808,7 +806,7 @@ class TestProductsViewEditDelete:
         product = _product()
         mock_user.can_see_costs.return_value = False
         with (
-            _products_patches(product=product) as ctx,
+            _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.StockService.get_product_stock", return_value=10.0),
             patch("routes.products.LoggingCore.log_audit") as log_audit,
@@ -846,7 +844,7 @@ class TestProductsViewEditDelete:
         sl.query.filter_by.return_value.filter.return_value.count.return_value = 2
         pl.query.filter_by.return_value.filter.return_value.count.return_value = 0
         with (
-            _products_patches(product=product) as ctx,
+            _products_patches(product=product),
             patch("routes.products.StockService.get_product_stock", return_value=0.0),
             patch("models.SaleLine", sl),
             patch("models.PurchaseLine", pl),
@@ -959,7 +957,7 @@ class TestCategories:
         pc_class.query.filter.return_value.first.return_value = None
         pc_class.return_value = new_cat
         with (
-            _products_patches() as ctx,
+            _products_patches(),
             patch("routes.products.ProductCategory", pc_class),
         ):
             resp = products_client.post(
@@ -1239,7 +1237,7 @@ class TestProductsExtendedCoverage:
         customer_query.filter.return_value.first.side_effect = [merchant, partner]
 
         with (
-            _products_patches() as ctx,
+            _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.Product", return_value=added),
             patch("routes.products.db.session", session),
@@ -1279,7 +1277,7 @@ class TestProductsExtendedCoverage:
             _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.tenant_query", return_value=customer_query),
-            patch("routes.products.render_template", return_value="create") as render,
+            patch("routes.products.render_template", return_value="create"),
         ):
             resp = products_client.post(
                 "/products/create",
@@ -1317,7 +1315,7 @@ class TestProductsExtendedCoverage:
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.StockService.get_product_stock", return_value=5.0),
-            patch("routes.products.render_template", return_value="edit") as render,
+            patch("routes.products.render_template", return_value="edit"),
             patch("models.ProductPriceTier") as tier_model,
         ):
             tier_model.query.filter_by.return_value.first.return_value = None
@@ -1340,7 +1338,7 @@ class TestProductsExtendedCoverage:
             _products_patches(product=product, branch_scope=2),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.StockService.get_product_stock", return_value=5.0),
-            patch("routes.products.render_template", return_value="edit") as render,
+            patch("routes.products.render_template", return_value="edit"),
             patch("models.ProductPriceTier") as tier_model,
         ):
             tier_model.query.filter_by.return_value.first.return_value = None

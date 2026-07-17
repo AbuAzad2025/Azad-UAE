@@ -111,7 +111,7 @@ class TestTreasuryServiceGaps:
         assert result["accounts"][0]["source"] == "gl_account"
 
     def test_cheque_maturity_branch_and_missing_due_date(self, mocker):
-        today = date.today()
+        date.today()
         cheque = MagicMock(
             id=1,
             cheque_type="incoming",
@@ -1003,7 +1003,7 @@ class TestPaymentServiceRemainingGaps:
                 PaymentService, "get_unpaid_sales", return_value=[sale1, sale2]
             ),
             patch("services.payment_service.generate_number", return_value="PAY-OLD"),
-            patch("services.payment_service.db") as mock_db,
+            patch("services.payment_service.db"),
             patch(
                 "services.payment_service.current_user",
                 MagicMock(is_authenticated=True, id=1),

@@ -219,7 +219,7 @@ class TestImportScopedTables:
 
     def _mock_engine(self, mocker):
         conn = MagicMock()
-        nested = MagicMock()
+        MagicMock()
         conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)
         conn.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
         conn.execute.return_value = MagicMock()

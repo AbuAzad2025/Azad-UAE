@@ -451,7 +451,7 @@ class TestExpensesEdit:
     def test_edit_exception_rolls_back(self, expenses_client):
         expense = _mock_expense()
         with (
-            _expense_patches(expense=expense) as mocks,
+            _expense_patches(expense=expense),
             patch("models.ArchivedRecord") as ar,
             patch(
                 "services.gl_helpers.assert_period_open",

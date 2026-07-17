@@ -45,7 +45,7 @@ class TestProvisionTenant:
             "_provision_base_accounts",
             side_effect=RuntimeError("db fail"),
         )
-        session = mocker.patch("services.gl_provisioning_service.db.session")
+        mocker.patch("services.gl_provisioning_service.db.session")
         result = GLProvisioningService.provision_tenant(1)
         assert "db fail" in result.errors[0]
 

@@ -439,7 +439,7 @@ class TestCreateReturn:
         line = _sale_line(cost_price=Decimal("40"))
         product = _product()
         line.product = product
-        session = self._patch_common(mocker, sale, line, product)
+        self._patch_common(mocker, sale, line, product)
         mocker.patch(
             "services.return_service.current_app.config.get", return_value=True
         )
@@ -537,7 +537,9 @@ class TestCreateReturn:
         line.product = product
         session = self._patch_common(mocker, sale, line, product)
         mocker.patch("services.return_service.ProductCostHistory", create=True)
-        session.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        session.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         from services.return_service import ReturnService
 
         with app.app_context():

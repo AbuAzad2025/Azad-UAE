@@ -56,10 +56,8 @@ class TestPurchaseReturnValidations:
                 mock_db.session.rollback = MagicMock()
                 with patch("services.purchase_service.StockService") as mock_ss:
                     with patch("services.purchase_service.post_or_fail") as mock_post:
-                        with patch("services.purchase_service.GLService") as mock_gl:
-                            with patch(
-                                "services.purchase_service.LoggingCore"
-                            ) as mock_log:
+                        with patch("services.purchase_service.GLService"):
+                            with patch("services.purchase_service.LoggingCore"):
                                 from models.purchase_return import PurchaseReturn
 
                                 result = PurchaseService.create_purchase_return(

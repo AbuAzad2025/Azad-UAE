@@ -29,12 +29,12 @@ def test_no_inline_script_in_pos():
 
 
 def test_pos_js_exists():
-    assert os.path.isfile(_static_path("js", "pos", "index.js")), (
-        "static/js/pos/index.js not found"
-    )
+    assert os.path.isfile(
+        _static_path("js", "pos", "index.js")
+    ), "static/js/pos/index.js not found"
 
 
 def test_pos_css_exists():
-    assert os.path.isfile(_static_path("css", "pos-theme.css")), (
-        "static/css/pos-theme.css not found"
-    )
+    assert os.path.isfile(
+        _static_path("css", "pos-theme.css")
+    ), "static/css/pos-theme.css not found"

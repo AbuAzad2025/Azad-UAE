@@ -104,7 +104,7 @@ class TestPurchaseCancelValidations:
             mock_db.session.rollback = MagicMock()
             with patch("models.warehouse.StockMovement") as mock_sm:
                 mock_sm.query.filter_by.return_value.first.return_value = None
-                with patch("services.purchase_service.StockService") as mock_ss:
+                with patch("services.purchase_service.StockService"):
                     with patch("services.purchase_service.GLService"):
                         with patch("services.purchase_service.LoggingCore"):
                             PurchaseService.cancel_purchase(purchase)

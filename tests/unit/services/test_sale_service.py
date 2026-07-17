@@ -418,7 +418,7 @@ class TestSaleServiceCreate:
                                                 mock_line.return_value = line_instance
                                                 with patch(
                                                     "services.sale_service.Payment"
-                                                ) as mock_pay:
+                                                ):
                                                     result = SaleService.create_sale(
                                                         customer,
                                                         seller,
@@ -500,7 +500,9 @@ class TestSaleServiceCreate:
                                                     sn_obj = MagicMock()
                                                     sn_obj.status = "available"
                                                     sn_obj.warehouse_id = 1
-                                                    mock_sn.query.filter_by.return_value.first.return_value = sn_obj
+                                                    mock_sn.query.filter_by.return_value.first.return_value = (
+                                                        sn_obj
+                                                    )
                                                     with patch(
                                                         "services.sale_service.current_app"
                                                     ) as mock_app:

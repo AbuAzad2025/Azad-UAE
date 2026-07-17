@@ -140,7 +140,7 @@ class Purchase(db.Model):
             Payment.purchase_id == self.id,
             Payment.tenant_id == self.tenant_id,
             Payment.direction == "outgoing",
-            Payment.payment_confirmed == True,
+            Payment.payment_confirmed,
             func.date(Payment.payment_date) <= as_of_date,
         )
         if self.branch_id is not None:
@@ -155,7 +155,7 @@ class Purchase(db.Model):
             Payment.supplier_id == self.supplier_id,
             Payment.tenant_id == self.tenant_id,
             Payment.direction == "outgoing",
-            Payment.payment_confirmed == True,
+            Payment.payment_confirmed,
             Payment.purchase_id.is_(None),
             func.date(Payment.payment_date) <= as_of_date,
         )

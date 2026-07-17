@@ -664,9 +664,9 @@ class TestPOSSession:
                 },
                 content_type="application/json",
             )
-        assert resp.status_code == 403, (
-            f"Expected 403, got {resp.status_code}: {resp.get_json()}"
-        )
+        assert (
+            resp.status_code == 403
+        ), f"Expected 403, got {resp.status_code}: {resp.get_json()}"
 
     def test_pos_sale_on_customer_credit(self, app, db_session, client):
         """POS sale on credit defers payment — sale has balance_due > 0."""

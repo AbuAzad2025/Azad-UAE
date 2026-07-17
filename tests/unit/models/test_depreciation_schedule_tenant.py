@@ -77,8 +77,8 @@ class TestDepreciationScheduleTenantIsolation:
         # Check model definition
         tenant_id_column = DepreciationSchedule.__table__.c.tenant_id
         assert tenant_id_column is not None
-        assert tenant_id_column.nullable == False
-        assert tenant_id_column.index == True
+        assert not tenant_id_column.nullable
+        assert tenant_id_column.index
 
         # Check foreign key
         fks = [
@@ -95,8 +95,8 @@ class TestDepreciationScheduleTenantIsolation:
         # Check model definition
         tenant_id_column = FixedAsset.__table__.c.tenant_id
         assert tenant_id_column is not None
-        assert tenant_id_column.nullable == False
-        assert tenant_id_column.index == True
+        assert not tenant_id_column.nullable
+        assert tenant_id_column.index
 
         # Check foreign key
         fks = [fk for fk in FixedAsset.__table__.foreign_keys if "tenants" in str(fk)]

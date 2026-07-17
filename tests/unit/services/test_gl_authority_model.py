@@ -113,18 +113,18 @@ class TestProvisioningScope:
             mappings = GLAccountMapping.query.filter_by(tenant_id=tenant.id).all()
             for mapping in mappings:
                 account = db.session.get(GLAccount, mapping.gl_account_id)
-                assert account is not None, (
-                    f"Mapping {mapping.concept_code} -> missing account"
-                )
-                assert account.is_active, (
-                    f"Mapping {mapping.concept_code} -> inactive {account.code}"
-                )
-                assert not account.is_header, (
-                    f"Mapping {mapping.concept_code} -> header {account.code}"
-                )
-                assert account.tenant_id == tenant.id, (
-                    f"Mapping {mapping.concept_code} -> foreign {account.code}"
-                )
+                assert (
+                    account is not None
+                ), f"Mapping {mapping.concept_code} -> missing account"
+                assert (
+                    account.is_active
+                ), f"Mapping {mapping.concept_code} -> inactive {account.code}"
+                assert (
+                    not account.is_header
+                ), f"Mapping {mapping.concept_code} -> header {account.code}"
+                assert (
+                    account.tenant_id == tenant.id
+                ), f"Mapping {mapping.concept_code} -> foreign {account.code}"
 
 
 # ===================================================================
@@ -224,9 +224,9 @@ class TestLiquidityMode:
                 .first()
             )
             posted = db.session.get(GLAccount, cash_line.account_id)
-            assert posted.id == cash_acc.id, (
-                f"Expected {cash_acc.id} ({cash_acc.code}), got {posted.id} ({posted.code})"
-            )
+            assert (
+                posted.id == cash_acc.id
+            ), f"Expected {cash_acc.id} ({cash_acc.code}), got {posted.id} ({posted.code})"
 
     def test_branch_bank_bypasses_stale_mapping(self, app):
         from extensions import db
@@ -278,9 +278,9 @@ class TestLiquidityMode:
                 .first()
             )
             posted = db.session.get(GLAccount, bank_line.account_id)
-            assert posted.id == bank_acc.id, (
-                f"Expected {bank_acc.id} ({bank_acc.code}), got {posted.id} ({posted.code})"
-            )
+            assert (
+                posted.id == bank_acc.id
+            ), f"Expected {bank_acc.id} ({bank_acc.code}), got {posted.id} ({posted.code})"
 
     def test_liquidity_requires_account_code(self, app):
         from extensions import db
@@ -395,12 +395,12 @@ class TestRecordMode:
             acc0 = db.session.get(GLAccount, lines[0].account_id)
             acc1 = db.session.get(GLAccount, lines[1].account_id)
 
-            assert acc0.id == dep_exp_acc.id, (
-                f"Expected expense {dep_exp_acc.id}, got {acc0.id}"
-            )
-            assert acc1.id == dep_acc.id, (
-                f"Expected depreciation {dep_acc.id}, got {acc1.id}"
-            )
+            assert (
+                acc0.id == dep_exp_acc.id
+            ), f"Expected expense {dep_exp_acc.id}, got {acc0.id}"
+            assert (
+                acc1.id == dep_acc.id
+            ), f"Expected depreciation {dep_acc.id}, got {acc1.id}"
 
     def test_disposal_posts_to_exact_asset_account(self, app):
         from extensions import db
@@ -712,21 +712,21 @@ class TestStaleMappings:
 
             for row in result["rows"]:
                 if row["concept_code"] in stale_concepts:
-                    assert row["severity"] == "warning", (
-                        f"{row['concept_code']} should be warning, got {row['severity']}: {row['issue']}"
-                    )
+                    assert (
+                        row["severity"] == "warning"
+                    ), f"{row['concept_code']} should be warning, got {row['severity']}: {row['issue']}"
             # Additional assertion: stale mappings should be warnings regardless of
             # unrelated required mapping gaps (they are ignored during posting)
             stale_warnings = [
                 r for r in result["rows"] if r["concept_code"] in stale_concepts
             ]
-            assert len(stale_warnings) == len(stale_concepts), (
-                f"Expected {len(stale_concepts)} stale concept warnings, got {len(stale_warnings)}"
-            )
+            assert len(stale_warnings) == len(
+                stale_concepts
+            ), f"Expected {len(stale_concepts)} stale concept warnings, got {len(stale_warnings)}"
             for warning in stale_warnings:
-                assert warning["severity"] == "warning", (
-                    f"Stale concept {warning['concept_code']} should be warning, got {warning['severity']}"
-                )
+                assert (
+                    warning["severity"] == "warning"
+                ), f"Stale concept {warning['concept_code']} should be warning, got {warning['severity']}"
 
     def test_provisioner_rejects_header_target_mapping(self, app, monkeypatch):
         """Test that provisioning service rejects header account targets for mapping-owned concepts."""
@@ -789,9 +789,9 @@ class TestStaleMappings:
             bad_mapping = GLAccountMapping.query.filter_by(
                 tenant_id=tenant.id, concept_code="TEST_HEADER_TARGET"
             ).first()
-            assert bad_mapping is None, (
-                "Mapping to header account should not be created"
-            )
+            assert (
+                bad_mapping is None
+            ), "Mapping to header account should not be created"
 
             # Provisioning should report an error mentioning header
             assert any(
@@ -1356,13 +1356,13 @@ class TestAuthorityModelEdgeCases:
                 r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"
             ]
 
-            assert len(cash_rows) == 1, (
-                f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
-            )
+            assert (
+                len(cash_rows) == 1
+            ), f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
             assert cash_rows[0]["severity"] == "critical"
-            assert len(bank_rows) == 1, (
-                f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
-            )
+            assert (
+                len(bank_rows) == 1
+            ), f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
             assert bank_rows[0]["severity"] == "critical"
 
     def test_cash_bank_readiness_after_build(self, app):
@@ -1403,12 +1403,12 @@ class TestAuthorityModelEdgeCases:
             ]
 
             # After build, liquidity accounts exist so readiness rows should be absent
-            assert len(cash_rows) == 0, (
-                f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
-            )
-            assert len(bank_rows) == 0, (
-                f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"
-            )
+            assert (
+                len(cash_rows) == 0
+            ), f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
+            assert (
+                len(bank_rows) == 0
+            ), f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"
 
 
 class TestGLModelUnitCoverage:

@@ -300,7 +300,7 @@ class TestApproveEntry:
         )
         mocker.patch.object(AdvancedJournalEntryManager, "_log_audit")
         mocker.patch("services.advanced_journal_manager.db")
-        result = AdvancedJournalEntryManager.approve_entry(1, 1)
+        AdvancedJournalEntryManager.approve_entry(1, 1)
         # validate_entry catches balance errors and sets status='error' instead of raising
         assert entry.status == "error"
 

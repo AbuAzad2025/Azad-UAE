@@ -58,7 +58,7 @@ class TestListAndGet:
         assert inactive.id not in {r.id for r in active_rows}
 
     def test_get_by_code(self, db_session, sample_tenant):
-        row = _coupon(db_session, sample_tenant.id, code="SAVE10")
+        _coupon(db_session, sample_tenant.id, code="SAVE10")
         assert StoreCouponService.get_by_code(sample_tenant.id, "  save10 ") is not None
         assert StoreCouponService.get_by_code(sample_tenant.id, "") is None
 

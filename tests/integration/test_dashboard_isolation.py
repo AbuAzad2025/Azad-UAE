@@ -286,7 +286,7 @@ class TestTenantDashboardStats:
         t = _make_tenant(db_session, "Scope", "scope")
         b1 = _make_branch(db_session, t.id, name="BranchA")
         b2 = _make_branch(db_session, t.id, name="BranchB")
-        u = _make_user(db_session, t.id, b1.id, role_slug="admin")
+        _make_user(db_session, t.id, b1.id, role_slug="admin")
         _make_branch(db_session, t.id)
         ctx_b1 = build_company_dashboard_context(t.id, branch_id=b1.id)
         ctx_b2 = build_company_dashboard_context(t.id, branch_id=b2.id)

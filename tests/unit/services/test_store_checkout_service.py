@@ -506,7 +506,7 @@ class TestCreateWebOrder:
     def test_get_or_create_customer_sets_address_when_empty(
         self, db_session, sample_tenant
     ):
-        customer = StoreCheckoutService.get_or_create_customer(
+        StoreCheckoutService.get_or_create_customer(
             sample_tenant.id,
             "Addr User",
             "05066667777",

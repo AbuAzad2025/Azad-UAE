@@ -23,11 +23,12 @@ The generator emits:
     by the dedicated seed commands at runtime.
 """
 
-import os, sys, glob, re, shutil
+import os
+import sys
+import re
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from sqlalchemy import create_engine, text
 
 MAIN_DB_URL = "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"
 VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "migrations", "versions")
@@ -111,7 +112,7 @@ for mod in GL_MODULE_DEFINITIONS.values():
 
 print(f"[info] business_type={business_type} currency={default_currency}")
 print(
-    f"[info] schema-only baseline; accounts/mappings computed but NOT seeded (provisioned at runtime)"
+    "[info] schema-only baseline; accounts/mappings computed but NOT seeded (provisioned at runtime)"
 )
 
 # ---------------------------------------------------------------------------
@@ -348,17 +349,10 @@ depends_on = None
 
 '''
 
-tail = (
-    "\n\ndef upgrade():"
-    + schema_body
-    + data_block
-    + """
+tail = "\n\ndef upgrade():" + schema_body + data_block + """
 
 def downgrade():
-"""
-    + downgrade_body
-    + "\n"
-)
+""" + downgrade_body + "\n"
 
 content = header + tail
 

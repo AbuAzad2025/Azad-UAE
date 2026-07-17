@@ -40,8 +40,12 @@ def _make_dashboard_query(first_results=None, scalar_results=None):
     q.first.return_value = (0, Decimal("0"), Decimal("0"))
     q.scalar.return_value = Decimal("0")
     q.join.return_value.filter.return_value.distinct.return_value.count.return_value = 0
-    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
+    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     q.filter.return_value.group_by.return_value.all.return_value = []
     q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
         "0"

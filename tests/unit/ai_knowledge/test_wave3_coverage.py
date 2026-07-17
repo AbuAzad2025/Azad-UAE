@@ -744,7 +744,9 @@ class TestAzadResponsesWave3:
             }
             da.analyze_sales_trends.return_value = {"success": True, "trends": []}
             dg.generate_sales_report.return_value = ("تقرير", "ok")
-            mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+            mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+                []
+            )
             result = responses._handle_detected_intent(intent, "رسالة اختبار", {})
             if intent == "unknown_intent_xyz":
                 assert result is None

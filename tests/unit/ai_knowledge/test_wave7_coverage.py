@@ -160,9 +160,9 @@ class TestNeuralWave7:
                 [[1.0] * 6]
             )
             engine.models["maintenance_predictor"].predict.return_value = np.array([0])
-            engine.models[
-                "maintenance_predictor"
-            ].predict_proba.return_value = np.array([[0.8, 0.2]])
+            engine.models["maintenance_predictor"].predict_proba.return_value = (
+                np.array([[0.8, 0.2]])
+            )
             result = engine._predict_maintenance_internal(1)
             assert result["estimated_days"] == 30
 
@@ -174,9 +174,9 @@ class TestNeuralWave7:
                 [[1.0] * 6]
             )
             engine.models["accounting_classifier"].predict.return_value = np.array([0])
-            engine.models[
-                "accounting_classifier"
-            ].predict_proba.return_value = np.array([[0.3, 0.7]])
+            engine.models["accounting_classifier"].predict_proba.return_value = (
+                np.array([[0.3, 0.7]])
+            )
             result = engine.validate_accounting_entry(100, 100, 2, "Sale")
             assert (
                 "مراجعة" in result["recommendation"]
@@ -783,7 +783,7 @@ class TestWave8FinalPush:
             patch("extensions.db") as mock_db,
             patch("models.Customer") as Customer,
             patch("models.Product") as Product,
-            patch("models.Sale") as Sale,
+            patch("models.Sale"),
             patch("ai_knowledge.personality.azad_responses.document_generator") as dg,
             patch("ai_knowledge.personality.azad_responses.knowledge_expander") as ke,
         ):
@@ -1051,9 +1051,6 @@ class TestWave9PushTo99:
         assert CashFlowAnalytics.working_capital_ratio(500, 100)["ratio"] == 5.0
 
     def test_azad_smart_elif_branches(self, responses):
-        base_patches = {
-            "understand_message": {"intent": None, "confidence": 0},
-        }
         msgs = [
             "استخدام usage دليل guide شرح explain",
             "رصيد balance عميل customer ali",

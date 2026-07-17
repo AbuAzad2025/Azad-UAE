@@ -93,7 +93,7 @@ async function fetchAndCache(request) {
   const response = await fetch(request);
   if (response.ok && request.method === 'GET') {
     const cache = await caches.open(POS_CACHE);
-    cache.put(request, response.clone());
+    await cache.put(request, response.clone());
   }
   return response;
 }

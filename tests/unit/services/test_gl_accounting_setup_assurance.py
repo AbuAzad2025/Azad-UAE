@@ -310,14 +310,18 @@ class TestCodeAllocation:
     def test_next_child_code(self, mocker):
         existing = [_account(code="1120-B1"), _account(code="1120-B2")]
         mock_q = MagicMock()
-        mock_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = existing
+        mock_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            existing
+        )
         mocker.patch("services.gl_accounting_setup.GLAccount.query", mock_q)
         assert GLAccountingSetupService._next_child_code(1, "1120") == "1120-B3"
 
     def test_next_child_code_skips_invalid_suffix(self, mocker):
         existing = [_account(code="1120-BX")]
         mock_q = MagicMock()
-        mock_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = existing
+        mock_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            existing
+        )
         mocker.patch("services.gl_accounting_setup.GLAccount.query", mock_q)
         assert GLAccountingSetupService._next_child_code(1, "1120") == "1120-B1"
 

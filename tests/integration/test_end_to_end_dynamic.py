@@ -552,7 +552,7 @@ class TestWarehouseEditSecurity:
         t = _make_tenant(db_session, "T", "t-branch-val", "AED", False)
         b1 = _make_branch(db_session, t.id, "B1", "B1")
         b2 = _make_branch(db_session, t.id, "B2", "B2")
-        wh = _make_wh(db_session, t.id, b1.id, False)
+        _make_wh(db_session, t.id, b1.id, False)
         user = _make_user(db_session, t.id, "u_branch", b1.id)
 
         from utils.branching import get_accessible_branches_query
@@ -565,9 +565,9 @@ class TestWarehouseEditSecurity:
 
         # Verify branch validation logic (as implemented in route)
         new_branch_id = b2.id
-        assert new_branch_id not in accessible_ids, (
-            "Inaccessible branch should be rejected by route"
-        )
+        assert (
+            new_branch_id not in accessible_ids
+        ), "Inaccessible branch should be rejected by route"
 
 
 class TestPartnerCommissionDynamicProfitMargin:
@@ -1212,8 +1212,8 @@ class TestVoucherPaymentIsolation:
         t1 = _make_tenant(db_session, "TV1", "tv1", "USD")
         t2 = _make_tenant(db_session, "TV2", "tv2", "AED")
         b1 = _make_branch(db_session, t1.id, "B1", "B1")
-        wh1 = _make_wh(db_session, t1.id, b1.id, True)
-        p1 = _make_product(db_session, t1.id, "P", "P", cost=50, stock=100)
+        _make_wh(db_session, t1.id, b1.id, True)
+        _make_product(db_session, t1.id, "P", "P", cost=50, stock=100)
         c1 = _make_customer(db_session, t1.id, "C")
         seller = _make_user(db_session, t1.id, "seller", b1.id)
         # Add manage_payments permission to seller
@@ -1495,7 +1495,7 @@ class TestFxGainLossAutoPosting:
         )
         db_session.flush()
         # Verify FX gain/loss GL entry was created
-        fx_entries = GLJournalEntry.query.filter(
+        GLJournalEntry.query.filter(
             GLJournalEntry.description.like("%FX Gain/Loss%"),
             GLJournalEntry.tenant_id == t.id,
         ).all()

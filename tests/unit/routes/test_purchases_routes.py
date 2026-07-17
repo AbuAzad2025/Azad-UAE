@@ -288,7 +288,9 @@ class TestPurchasesReturn:
             patch("routes.purchases.PurchaseReturn") as ret_model,
             patch("routes.purchases.PurchaseReturnLine") as _line_model,
         ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
             resp = purchases_client.get("/purchases/1/return")
         assert resp.status_code == 200
         assert ctx["render"].call_args[0][0] == "purchases/return.html"
@@ -301,7 +303,9 @@ class TestPurchasesReturn:
             patch("routes.purchases.PurchaseReturn") as ret_model,
             patch("routes.purchases.PurchaseReturnLine"),
         ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
             ctx["purchase_service"].create_purchase_return.return_value = result
             resp = purchases_client.post(
                 "/purchases/1/return",
@@ -488,7 +492,9 @@ class TestPurchasesExtended:
             patch("routes.purchases.PurchaseReturn") as ret_model,
             patch("routes.purchases.PurchaseReturnLine"),
         ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
             resp = purchases_client.post("/purchases/1/return", data={})
         assert resp.status_code == 302
 
@@ -499,7 +505,9 @@ class TestPurchasesExtended:
             patch("routes.purchases.PurchaseReturn") as ret_model,
             patch("routes.purchases.PurchaseReturnLine"),
         ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
             ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError(
                 "fail"
             )
@@ -569,7 +577,9 @@ class TestPurchasesExtended:
             patch("routes.purchases.PurchaseReturn") as ret_model,
             patch("routes.purchases.PurchaseReturnLine"),
         ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
             ctx["purchase_service"].create_purchase_return.side_effect = ValueError(
                 "invalid qty"
             )

@@ -98,9 +98,9 @@ class TestLedgerManualEntry:
 
         entry = GLJournalEntry.query.filter_by(description="Test manual entry").first()
         assert entry is not None, "Journal entry was not created"
-        assert entry.is_balanced(), (
-            f"Entry is not balanced: debit={entry.total_debit} credit={entry.total_credit}"
-        )
+        assert (
+            entry.is_balanced()
+        ), f"Entry is not balanced: debit={entry.total_debit} credit={entry.total_credit}"
         assert entry.entry_type == "manual"
 
     def test_ledger_unauthorized_user_cannot_post(self, app, db_session):

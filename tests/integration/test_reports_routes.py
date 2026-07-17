@@ -63,9 +63,9 @@ class TestTrialBalance:
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
         html = resp.data.decode("utf-8")
-        assert "ميزان" in html or "Trial" in html or "Balance" in html, (
-            f"Expected trial balance page. HTML snippet: {html[500:1200]}"
-        )
+        assert (
+            "ميزان" in html or "Trial" in html or "Balance" in html
+        ), f"Expected trial balance page. HTML snippet: {html[500:1200]}"
 
         found_debits = False
         found_credits = False
@@ -77,6 +77,6 @@ class TestTrialBalance:
             if word in html:
                 found_credits = True
                 break
-        assert found_debits and found_credits, (
-            f"Expected debit/credit columns in page. HTML: {html[1000:2000]}"
-        )
+        assert (
+            found_debits and found_credits
+        ), f"Expected debit/credit columns in page. HTML: {html[1000:2000]}"

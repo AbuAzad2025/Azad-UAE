@@ -213,7 +213,9 @@ class TestMainDashboard:
         sale_q.order_by.return_value.limit.return_value.all.return_value = [recent_sale]
         customer_count_q = MagicMock()
         customer_count_q.filter_by.return_value = customer_count_q
-        customer_count_q.join.return_value.filter.return_value.distinct.return_value.count.return_value = 3
+        customer_count_q.join.return_value.filter.return_value.distinct.return_value.count.return_value = (
+            3
+        )
         product_count_q = MagicMock()
         product_count_q.count.return_value = 12
 
@@ -274,7 +276,9 @@ class TestMainProfile:
             patch("routes.main.Sale.query") as sale_q,
         ):
             sess.get.return_value = tenant
-            sale_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+            sale_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                []
+            )
             resp = main_client.get("/my-profile")
         assert resp.status_code == 200
 

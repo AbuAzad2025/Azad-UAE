@@ -395,7 +395,9 @@ class TestAzadResponsesWave4:
                     },
                 ),
             ):
-                mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = monthly
+                mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+                    monthly
+                )
                 assert "5,000" in responses.smart_response(
                     "توقع predict forecast الشهر"
                 )
@@ -839,7 +841,9 @@ class TestAzadResponsesWave4:
             da.analyze_customer_debt.return_value = {"success": False}
             MockSale.query.filter.return_value.all.return_value = []
             MockSup.query.filter_by.return_value.count.return_value = 0
-            MockSup.query.filter_by.return_value.order_by.return_value.first.return_value = None
+            MockSup.query.filter_by.return_value.order_by.return_value.first.return_value = (
+                None
+            )
             mock_db.session.query.return_value.scalar.return_value = 0
             result = responses._handle_detected_intent(intent, "test message", {})
             assert result is None or isinstance(result, str)
@@ -1325,7 +1329,9 @@ class TestActionDispatcherWave4:
             permitted[3],
             patch("models.Customer") as Customer,
         ):
-            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = RuntimeError()
+            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = (
+                RuntimeError()
+            )
             assert action_dispatcher.dispatch("list_customers", {}).success is False
             assert (
                 action_dispatcher.dispatch("customer_balance", {"name": ""}).success
@@ -2072,7 +2078,7 @@ class TestWave4Extended:
             assert summary["success"] is True
             MockC.query.get.return_value = None
             assert integrator.get_customer_sales_summary(99)["success"] is False
-        with patch("models.Customer") as MockC, patch("extensions.db") as mock_db:
+        with patch("models.Customer") as MockC, patch("extensions.db"):
             MockC.query.get.side_effect = RuntimeError("db")
             assert integrator.get_customer_sales_summary(1)["success"] is False
 
@@ -2112,7 +2118,9 @@ class TestWave4Extended:
                 patch.object(engine, "_load_model", return_value=True),
                 patch("extensions.db") as mock_db,
             ):
-                mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+                mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    []
+                )
                 assert (
                     engine._forecast_sales_internal(3)["error"]
                     == "Not enough recent data"
@@ -2190,6 +2198,6 @@ class TestWave4Extended:
             == "order_now"
         )
         assert ProfitAnalytics.break_even_analysis(1000, 10, 25)["break_even_units"] > 0
-        with patch("extensions.db") as mock_db, patch("models.Customer") as MockC:
+        with patch("extensions.db") as mock_db, patch("models.Customer"):
             mock_db.session.get.return_value = None
             assert DataAnalyzer().analyze_customer_debt(99)["success"] is False

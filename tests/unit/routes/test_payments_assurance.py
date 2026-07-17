@@ -858,7 +858,7 @@ class TestPaymentsGapCoverage:
         receipt = MagicMock(receipt_number="R-1", id=10)
         mocker.patch("services.logging_core.LoggingCore.log_error")
         with (
-            _payments_patches(customer=customer) as ctx,
+            _payments_patches(customer=customer),
             patch(
                 "routes.payments.resolve_default_currency",
                 side_effect=RuntimeError("tenant fx"),

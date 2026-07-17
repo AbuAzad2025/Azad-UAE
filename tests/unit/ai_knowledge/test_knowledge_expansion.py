@@ -49,7 +49,9 @@ class TestKnowledgeExpansion:
             assert isinstance(result, dict)
 
     def test_search_knowledge(self, tmp_path):
-        path_fn = lambda name: str(tmp_path / name)
+        def path_fn(name):
+            return str(tmp_path / name)
+
         with patch("ai_knowledge.get_knowledge_path", side_effect=path_fn):
             result = KnowledgeExpander().search_knowledge("test")
             assert result["success"] is True
@@ -73,14 +75,18 @@ class TestKnowledgeSources:
 
 class TestLearningSystem:
     def test_learn_from_interaction(self, tmp_path):
-        path_fn = lambda name: str(tmp_path / name)
+        def path_fn(name):
+            return str(tmp_path / name)
+
         with patch("ai_knowledge.get_knowledge_path", side_effect=path_fn):
             sys = AzadLearningSystem()
             result = sys.learn_from_interaction("سؤال", "جواب", user_feedback=5)
             assert result is None or isinstance(result, dict)
 
     def test_get_insights(self, tmp_path):
-        path_fn = lambda name: str(tmp_path / name)
+        def path_fn(name):
+            return str(tmp_path / name)
+
         with patch("ai_knowledge.get_knowledge_path", side_effect=path_fn):
             assert isinstance(AzadLearningSystem().get_learning_insights(), dict)
 

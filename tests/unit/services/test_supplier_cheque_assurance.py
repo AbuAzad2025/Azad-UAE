@@ -255,11 +255,11 @@ class TestChequeBounceGL:
     def test_bounce_incoming_reverses_gl(self, mocker, app):
         self._patch_bounce_deps(mocker)
         mock_gl = mocker.patch("services.cheque_service.gl_post_or_fail")
-        mock_cust_account = mocker.patch(
+        mocker.patch(
             "services.cheque_service.gl_get_customer_credit_account",
             return_value="1100",
         )
-        mock_cust_concept = mocker.patch(
+        mocker.patch(
             "services.cheque_service.gl_get_customer_credit_concept", return_value="AR"
         )
         mocker.patch(
@@ -291,7 +291,7 @@ class TestChequeBounceGL:
 
     def test_bounce_outgoing_reverses_gl(self, mocker, app):
         self._patch_bounce_deps(mocker)
-        mock_gl = mocker.patch("services.cheque_service.gl_post_or_fail")
+        mocker.patch("services.cheque_service.gl_post_or_fail")
         mocker.patch(
             "services.cheque_service.GLService.get_account_code_for_concept",
             return_value="2130",

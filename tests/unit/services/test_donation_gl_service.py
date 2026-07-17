@@ -55,9 +55,7 @@ class TestVaultAccounts:
     ):
         from models import GLAccount
 
-        acct = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code="4100"
-        ).first()
+        GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="4100").first()
         vault = MagicMock()
         vault.donation_debit_account = "4100"
         vault.donation_credit_account = "4200"

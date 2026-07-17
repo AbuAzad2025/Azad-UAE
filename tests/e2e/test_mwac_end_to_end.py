@@ -42,7 +42,7 @@ def main():
         current_app.config["ENABLE_MWAC"] = True
 
         try:
-            tenant = Tenant.query.filter(Tenant.is_active == True).first()
+            tenant = Tenant.query.filter(Tenant.is_active).first()
             if not tenant:
                 print("FAIL: No active tenant")
                 return 1
@@ -133,9 +133,9 @@ def main():
             expected_value = old_pwc_val + (purchase_qty * new_unit_cost)
             expected_avg = expected_value / expected_qty
 
-            assert pwc.total_quantity == expected_qty, (
-                f"Qty mismatch: {pwc.total_quantity} != {expected_qty}"
-            )
+            assert (
+                pwc.total_quantity == expected_qty
+            ), f"Qty mismatch: {pwc.total_quantity} != {expected_qty}"
             assert abs(
                 pwc.average_cost - expected_avg.quantize(Decimal("0.0001"))
             ) < Decimal("0.001"), f"Avg mismatch: {pwc.average_cost} != {expected_avg}"
@@ -149,9 +149,9 @@ def main():
                 reference_type="Purchase",
                 reference_id=purchase.id,
             ).first()
-            assert purchase_history is not None, (
-                "Missing ProductCostHistory for purchase"
-            )
+            assert (
+                purchase_history is not None
+            ), "Missing ProductCostHistory for purchase"
             print("  ✅ ProductCostHistory record exists for purchase")
 
             # Step 2: Create a sale and verify COGS
@@ -211,9 +211,9 @@ def main():
             print(f"  COGS computed: {cogs_total}")
             print(f"  Expected COGS: {expected_cogs}")
 
-            assert abs(cogs_total - expected_cogs) < Decimal("0.01"), (
-                f"COGS mismatch: {cogs_total} != {expected_cogs}"
-            )
+            assert abs(cogs_total - expected_cogs) < Decimal(
+                "0.01"
+            ), f"COGS mismatch: {cogs_total} != {expected_cogs}"
             print("  ✅ COGS computed correctly from WAC")
 
             # Refresh PWC after sale
@@ -223,9 +223,9 @@ def main():
             )
 
             expected_qty_after_sale = expected_qty - sale_qty
-            assert pwc.total_quantity == expected_qty_after_sale, (
-                f"Qty after sale mismatch: {pwc.total_quantity} != {expected_qty_after_sale}"
-            )
+            assert (
+                pwc.total_quantity == expected_qty_after_sale
+            ), f"Qty after sale mismatch: {pwc.total_quantity} != {expected_qty_after_sale}"
             print("  ✅ PWC quantity deducted correctly")
 
             # Verify ProductCostHistory for sale

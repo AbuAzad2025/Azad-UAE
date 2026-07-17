@@ -523,7 +523,7 @@ class TestChatEndpoint:
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
             with patch(
                 "ai_knowledge.agents_core.intelligent_response", return_value="مساعدة"
-            ) as ir:
+            ):
                 ad.parse_chat_action.return_value = ("help", {})
                 resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
         assert resp.get_json()["response"] == "مساعدة"
@@ -1091,12 +1091,16 @@ class TestProcessExcelIntelligently:
             ):
                 with patch("models.Warehouse") as Warehouse:
                     with patch("models.Product") as Product:
-                        with patch("routes.ai_routes.assistant.db") as db:
+                        with patch("routes.ai_routes.assistant.db"):
                             with patch("routes.ai_routes.actions.assign_tenant_id"):
                                 with patch("routes.ai_routes.assistant.StockService"):
                                     with patch("routes.ai_routes._train_ai_from_excel"):
-                                        Warehouse.query.filter_by.return_value.first.return_value = warehouse
-                                        Product.query.filter_by.return_value.first.return_value = None
+                                        Warehouse.query.filter_by.return_value.first.return_value = (
+                                            warehouse
+                                        )
+                                        Product.query.filter_by.return_value.first.return_value = (
+                                            None
+                                        )
                                         result = _process_excel_intelligently(
                                             file_obj, 1, mock_user
                                         )
@@ -1144,8 +1148,12 @@ class TestProcessExcelIntelligently:
                     with patch("models.Product") as Product:
                         with patch("routes.ai_routes.assistant.db"):
                             with patch("routes.ai_routes._train_ai_from_excel"):
-                                Warehouse.query.filter_by.return_value.first.return_value = warehouse
-                                Product.query.filter_by.return_value.first.return_value = existing
+                                Warehouse.query.filter_by.return_value.first.return_value = (
+                                    warehouse
+                                )
+                                Product.query.filter_by.return_value.first.return_value = (
+                                    existing
+                                )
                                 result = _process_excel_intelligently(
                                     MagicMock(), 1, mock_user
                                 )
@@ -1226,7 +1234,7 @@ class TestConfig:
         fake_assistant.write_text("#", encoding="utf-8")
         (tmp_path / ".env").write_text("", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
-            resp = ai_client.post(
+            ai_client.post(
                 "/ai/config", data={"api_key": "o-key", "provider": "openai"}
             )
         assert "OPENAI_API_KEY=o-key" in (tmp_path / ".env").read_text(encoding="utf-8")
@@ -1747,7 +1755,7 @@ class TestDataRoutes:
     def test_analyze_products(self, ai_client):
         with patch("routes.ai_routes.system.data_analyzer") as da:
             da.analyze_product_performance.return_value = {"id": 1}
-            resp = ai_client.get("/ai/data/analyze-products?product_id=5")
+            ai_client.get("/ai/data/analyze-products?product_id=5")
         da.analyze_product_performance.assert_called_once_with(5)
 
     def test_analyze_products_error(self, ai_client):
@@ -2108,12 +2116,12 @@ class TestCustomerWizardFlow:
     def test_full_create_flow(self, mock_user):
         ctx = {"last_action": "عميل", "option": "1", "step": 1, "data": {}}
         customer = _obj(id=55)
-        with patch("models.customer.Customer", customer_cls := MagicMock()) as Customer:
+        with patch("models.customer.Customer", customer_cls := MagicMock()):
             customer_cls.return_value = customer
             r1 = _run_action("Ali Hassan", mock_user, ctx)
             assert ctx["step"] == 2
             assert "الخطوة 2" in r1
-            r2 = _run_action("0501234567", mock_user, ctx)
+            _run_action("0501234567", mock_user, ctx)
             assert ctx["step"] == 3
             r3 = _run_action("Dubai Marina", mock_user, ctx)
             assert "تم إنشاء العميل" in r3
@@ -2150,7 +2158,7 @@ class TestProductWizardFlow:
         ctx = {"last_action": "منتج", "option": "1", "step": 1, "data": {}}
         product = _obj(id=12)
         with (
-            patch("models.product.Product", product_cls := MagicMock()) as Product,
+            patch("models.product.Product", product_cls := MagicMock()),
             patch("routes.ai_routes.actions.StockService.add_opening_stock"),
         ):
             product_cls.return_value = product
@@ -2183,7 +2191,7 @@ class TestProductWizardFlow:
 class TestInvoiceWizardFlow:
     def test_step_one_customer_name(self, mock_user):
         ctx = {"last_action": "فاتورة", "option": "1", "step": 1, "data": {}}
-        result = _run_action("Customer A", mock_user, ctx)
+        _run_action("Customer A", mock_user, ctx)
         assert ctx["step"] == 2
 
     def test_step_two_product(self, mock_user):
@@ -2198,7 +2206,7 @@ class TestInvoiceWizardFlow:
         chain.first.return_value = customer
         with patch("models.customer.Customer") as Customer:
             Customer.query.filter_by.return_value = chain
-            result = _run_action("Product Z", mock_user, ctx)
+            _run_action("Product Z", mock_user, ctx)
         assert ctx["step"] == 3
 
     def test_option_two_list_invoices(self, mock_user):
@@ -2264,7 +2272,7 @@ class TestColonSyntaxCommands:
     def test_create_customer_colon(self, mock_user):
         ctx = {}
         customer = _obj(id=7)
-        with patch("models.Customer", cust_cls := MagicMock()) as Customer:
+        with patch("models.Customer", cust_cls := MagicMock()):
             cust_cls.return_value = customer
             result = _run_action("عميل: Ali, 0501111111, Dubai", mock_user, ctx)
         assert "تم إنشاء العميل" in result
@@ -2273,7 +2281,7 @@ class TestColonSyntaxCommands:
         ctx = {}
         product = _obj(id=8)
         with (
-            patch("models.Product", prod_cls := MagicMock()) as Product,
+            patch("models.Product", prod_cls := MagicMock()),
             patch("routes.ai_routes.actions.StockService.add_opening_stock"),
         ):
             prod_cls.return_value = product
@@ -2283,7 +2291,7 @@ class TestColonSyntaxCommands:
     def test_create_supplier_colon(self, mock_user):
         ctx = {}
         supplier = _obj(id=9)
-        with patch("models.Supplier", sup_cls := MagicMock()) as Supplier:
+        with patch("models.Supplier", sup_cls := MagicMock()):
             sup_cls.return_value = supplier
             result = _run_action(
                 "مورد: SupCo, 0502222222, sup@test.com", mock_user, ctx
@@ -2305,8 +2313,8 @@ class TestColonSyntaxCommands:
         with (
             patch("models.Customer") as Customer,
             patch("models.Product") as Product,
-            patch("models.Sale", sale_cls := MagicMock()) as Sale,
-            patch("models.SaleLine", line_cls := MagicMock()) as SaleLine,
+            patch("models.Sale", sale_cls := MagicMock()),
+            patch("models.SaleLine", line_cls := MagicMock()),
             patch("models.Warehouse") as Warehouse,
             patch("routes.ai_routes.actions.StockService.remove_stock"),
         ):
@@ -2336,7 +2344,7 @@ class TestColonSyntaxCommands:
         payment = _obj(id=20)
         with (
             patch("models.Customer") as Customer,
-            patch("models.Payment", pay_cls := MagicMock()) as Payment,
+            patch("models.Payment", pay_cls := MagicMock()),
             patch("utils.helpers.generate_number", return_value="PAY-1"),
         ):
             Customer.query.filter_by.return_value = chain
@@ -2368,7 +2376,7 @@ class TestColonSyntaxCommands:
         payment = _obj(id=30)
         with (
             patch("models.Customer") as Customer,
-            patch("models.Payment", pay_cls := MagicMock()) as Payment,
+            patch("models.Payment", pay_cls := MagicMock()),
             patch("utils.helpers.generate_number", return_value="PAY-2"),
         ):
             Customer.query.filter_by.return_value = chain
@@ -2409,12 +2417,12 @@ class TestExpenseSupplierPurchaseChequeWizards:
         chain.first.return_value = supplier
         with patch("models.supplier.Supplier") as Supplier:
             Supplier.query.filter_by.return_value = chain
-            result = _run_action("S", mock_user, ctx)
+            _run_action("S", mock_user, ctx)
         assert ctx["step"] == 2
 
     def test_cheque_wizard_start(self, mock_user):
         ctx = {"last_action": "شيك", "option": "1", "step": 1, "data": {}}
-        result = _run_action("وارد", mock_user, ctx)
+        _run_action("وارد", mock_user, ctx)
         assert ctx["step"] == 2
 
     def test_receive_wizard_steps(self, mock_user):
@@ -2537,8 +2545,8 @@ class TestInvoiceWizardExtended:
         sale = _obj(id=50, sale_number="S-1", total_amount=Decimal("200"))
         wh = _obj(id=1)
         with (
-            patch("models.sale.Sale", sale_cls := MagicMock()) as Sale,
-            patch("models.sale.SaleLine", line_cls := MagicMock()) as SaleLine,
+            patch("models.sale.Sale", sale_cls := MagicMock()),
+            patch("models.sale.SaleLine", line_cls := MagicMock()),
             patch("utils.helpers.generate_number", return_value="S-001"),
             patch("models.Warehouse") as Warehouse,
             patch("routes.ai_routes.actions.StockService.remove_stock"),
@@ -2559,16 +2567,16 @@ class TestReceivePaymentWizardExtended:
         chain.first.return_value = customer
         with patch("models.customer.Customer") as Customer:
             Customer.query.filter_by.return_value = chain
-            r1 = _run_action("PayC", mock_user, ctx)
+            _run_action("PayC", mock_user, ctx)
         assert ctx["step"] == 2
-        r2 = _run_action("250", mock_user, ctx)
+        _run_action("250", mock_user, ctx)
         assert ctx["step"] == 3
         payment = _obj(id=9)
         cust2 = _obj(id=1, balance=Decimal("50"))
         chain2 = MagicMock()
         chain2.first.return_value = cust2
         with (
-            patch("models.payment.Payment", pay_cls := MagicMock()) as Payment,
+            patch("models.payment.Payment", pay_cls := MagicMock()),
             patch("models.customer.Customer") as Customer,
             patch("utils.helpers.generate_number", return_value="PAY-X"),
             patch("routes.ai_routes.create_final_options", return_value="opts"),
@@ -2607,7 +2615,7 @@ class TestGivePaymentWizardExtended:
         chain2 = MagicMock()
         chain2.first.return_value = cust2
         with (
-            patch("models.payment.Payment", pay_cls := MagicMock()) as Payment,
+            patch("models.payment.Payment", pay_cls := MagicMock()),
             patch("models.customer.Customer") as Customer,
             patch("utils.helpers.generate_number", return_value="PAY-Y"),
             patch("routes.ai_routes.create_final_options", return_value="opts"),
@@ -2627,7 +2635,7 @@ class TestExpenseWizardExtended:
         assert ctx["step"] == 3
         expense = _obj(id=3)
         with (
-            patch("models.expense.Expense", exp_cls := MagicMock()) as Expense,
+            patch("models.expense.Expense", exp_cls := MagicMock()),
             patch("utils.helpers.generate_number", return_value="EXP-1"),
             patch("routes.ai_routes.create_final_options", return_value="opts"),
         ):
@@ -2674,10 +2682,8 @@ class TestPurchaseWizardExtended:
         assert ctx["step"] == 4
         purchase = _obj(id=8)
         with (
-            patch("models.purchase.Purchase", pur_cls := MagicMock()) as Purchase,
-            patch(
-                "models.purchase.PurchaseLine", line_cls := MagicMock()
-            ) as PurchaseLine,
+            patch("models.purchase.Purchase", pur_cls := MagicMock()),
+            patch("models.purchase.PurchaseLine", line_cls := MagicMock()),
             patch("models.product.Product") as Product,
             patch("utils.helpers.generate_number", return_value="PO-1"),
             patch("routes.ai_routes.actions.StockService.add_stock"),
@@ -2702,7 +2708,7 @@ class TestChequeWizardExtended:
         _run_action("5000", mock_user, ctx)
         assert ctx["step"] == 4
         cheque = _obj(id=3)
-        with patch("models.cheque.Cheque", chq_cls := MagicMock()) as Cheque:
+        with patch("models.cheque.Cheque", chq_cls := MagicMock()):
             chq_cls.return_value = cheque
             result = _run_action("2026-12-31", mock_user, ctx)
         assert "شيك" in result or "تم" in result
@@ -2711,7 +2717,7 @@ class TestChequeWizardExtended:
         ctx = {}
         expense = _obj(id=4)
         with (
-            patch("models.Expense", exp_cls := MagicMock()) as Expense,
+            patch("models.Expense", exp_cls := MagicMock()),
             patch("utils.helpers.generate_number", return_value="EXP-2"),
         ):
             exp_cls.return_value = expense

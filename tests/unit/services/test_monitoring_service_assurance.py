@@ -134,7 +134,9 @@ class TestActivityMonitor:
                 return self
 
         audit_q = MagicMock()
-        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         user_q = MagicMock()
         user_q.filter.return_value.all.return_value = []
         sale_q = MagicMock()
@@ -174,7 +176,7 @@ class TestPerformanceMetricsFile:
 
 class TestHealthMetrics:
     def test_check_database_healthy(self, mocker):
-        session = mocker.patch("services.monitoring_service.db.session")
+        mocker.patch("services.monitoring_service.db.session")
         result = MonitoringService.check_database()
         assert result["healthy"] is True
 

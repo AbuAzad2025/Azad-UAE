@@ -185,7 +185,7 @@ class TestPasswordReset:
         )
 
     def test_request_password_reset_sets_token(self, db_session, sample_tenant):
-        account = _account(db_session, sample_tenant.id, email="reset@shop.test")
+        _account(db_session, sample_tenant.id, email="reset@shop.test")
         updated = ShopCustomerAuthService.request_password_reset(
             sample_tenant.id, "reset@shop.test"
         )

@@ -47,7 +47,7 @@ class TestSumHelpers:
         q.filter.assert_called()
 
     def test_sum_receipts_branch_scoped(self, mocker):
-        q = self._scalar_chain(mocker, Decimal("800"))
+        self._scalar_chain(mocker, Decimal("800"))
         from services.financial_service import FinancialService
 
         assert FinancialService.sum_receipts(2, branch_id=5) == Decimal("800")
@@ -64,9 +64,9 @@ class TestDashboardContext:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("400")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = (
+            expense_q
+        )
 
         from services.financial_service import FinancialService
 
@@ -84,9 +84,9 @@ class TestDashboardContext:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("0")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = (
+            expense_q
+        )
 
         from services.financial_service import FinancialService
 
@@ -271,7 +271,7 @@ class TestSumFiltersExtended:
         assert q.filter.call_count >= 3
 
     def test_sum_receipts_date_to(self, mocker):
-        q = self._scalar_chain(mocker, Decimal("25"))
+        self._scalar_chain(mocker, Decimal("25"))
         from services.financial_service import FinancialService
 
         FinancialService.sum_receipts(
@@ -286,9 +286,9 @@ class TestSumFiltersExtended:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("100")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = (
+            expense_q
+        )
         mocker.patch(
             "services.financial_service.datetime",
         )
@@ -315,9 +315,9 @@ class TestSumFiltersExtended:
         expense_q = MagicMock()
         expense_q.filter.return_value = expense_q
         expense_q.scalar.return_value = Decimal("50")
-        mocker.patch(
-            "services.financial_service.db.session"
-        ).query.return_value = expense_q
+        mocker.patch("services.financial_service.db.session").query.return_value = (
+            expense_q
+        )
 
         from services.financial_service import FinancialService
 

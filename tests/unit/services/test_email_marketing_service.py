@@ -390,7 +390,7 @@ class TestSendCampaign:
             EmailMarketingService.send_campaign(camp.id, tenant_user)
 
     def test_no_list(self, tenant_user, db_session, sample_tenant):
-        lst = _email_list(db_session, sample_tenant.id)
+        _email_list(db_session, sample_tenant.id)
         tpl = _template(db_session, sample_tenant.id)
         camp = EmailCampaign(
             tenant_id=sample_tenant.id,

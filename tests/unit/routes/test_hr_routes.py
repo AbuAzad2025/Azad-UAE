@@ -29,7 +29,7 @@ def _mock_leave(**kwargs):
 
 @contextmanager
 def _hr_patches(**kwargs):
-    tid = kwargs.get("tid", 1)
+    kwargs.get("tid", 1)
     user_q = _chain_query(all=kwargs.get("users", []))
 
     with ExitStack() as stack:

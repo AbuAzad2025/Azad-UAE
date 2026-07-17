@@ -60,7 +60,9 @@ def store_service_mocks():
     ]
     product_query.filter_by.return_value.first.return_value = _mock_product()
     customer_query = MagicMock()
-    customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     tenant_store_query = MagicMock()
     tenant_store_query.filter.return_value.first.return_value = None
     patches = [

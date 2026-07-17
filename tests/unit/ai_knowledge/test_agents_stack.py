@@ -71,7 +71,7 @@ class TestMasterBrain:
         assert isinstance(result, str)
 
     def test_ask_with_user_id(self, brain):
-        result = brain.ask("سؤال", user_id="u1")
+        brain.ask("سؤال", user_id="u1")
         assert len(brain.unified_memory["conversations"]) >= 1
 
     def test_ask_exception(self, brain):

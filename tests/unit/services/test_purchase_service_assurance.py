@@ -1043,7 +1043,7 @@ class TestCreatePurchaseReturn:
         purchase = _purchase(tax_amount=None)
         session, _post = _patch_return_common(mocker, purchase)
         session.flush.side_effect = RuntimeError("return commit fail")
-        mock_logger = mocker.patch("services.purchase_service.current_app.logger")
+        mocker.patch("services.purchase_service.current_app.logger")
         from services.purchase_service import PurchaseService
 
         with app.app_context():

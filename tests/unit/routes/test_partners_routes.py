@@ -306,9 +306,9 @@ class TestPartnersDistribute:
         ].create_distributions.assert_called_once()
 
     def test_distribute_post_exception(self, partners_client):
-        partners_client._partners_mocks[
-            "service"
-        ].create_distributions.side_effect = ValueError("no profit")
+        partners_client._partners_mocks["service"].create_distributions.side_effect = (
+            ValueError("no profit")
+        )
         resp = partners_client.post(
             "/partners/distribute",
             data={
@@ -321,9 +321,9 @@ class TestPartnersDistribute:
 
 class TestPartnersApprovePayDistribution:
     def test_approve_distribution_success(self, partners_client):
-        partners_client._partners_mocks[
-            "service"
-        ].approve_distribution.return_value = True
+        partners_client._partners_mocks["service"].approve_distribution.return_value = (
+            True
+        )
         resp = partners_client.post("/partners/distributions/7/approve")
         assert resp.status_code in (302, 303)
         partners_client._partners_mocks[
@@ -331,9 +331,9 @@ class TestPartnersApprovePayDistribution:
         ].approve_distribution.assert_called_once_with(7, 42, tenant_id=1)
 
     def test_approve_distribution_failure(self, partners_client):
-        partners_client._partners_mocks[
-            "service"
-        ].approve_distribution.return_value = False
+        partners_client._partners_mocks["service"].approve_distribution.return_value = (
+            False
+        )
         resp = partners_client.post("/partners/distributions/7/approve")
         assert resp.status_code in (302, 303)
 
@@ -396,9 +396,9 @@ class TestPartnersAddTransaction:
         assert resp.status_code in (302, 303)
 
     def test_add_transaction_exception(self, partners_client):
-        partners_client._partners_mocks[
-            "service"
-        ].add_transaction.side_effect = RuntimeError("fail")
+        partners_client._partners_mocks["service"].add_transaction.side_effect = (
+            RuntimeError("fail")
+        )
         resp = partners_client.post(
             "/partners/3/tx",
             data={

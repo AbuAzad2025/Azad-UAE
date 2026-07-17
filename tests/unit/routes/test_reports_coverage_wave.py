@@ -175,7 +175,9 @@ class TestSalesBranchScopeWave:
             patch("utils.tenanting.scoped_user_query", return_value=sellers_q),
             patch("routes.reports.report_branch_scope_id", return_value=4),
         ):
-            Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+            Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                []
+            )
             resp = reports_client.get(
                 "/reports/sales?customer=3&seller=2&date_from=2025-01-01&date_to=2025-06-30"
             )
@@ -296,7 +298,9 @@ class TestReconciliationWave:
         _configure_user(mock_user)
         mock_user.is_admin.return_value = False
         wh_q = MagicMock()
-        wh_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        wh_q.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         with (
             patch("models.Warehouse.query", wh_q),
             patch("utils.branching.get_accessible_branches", return_value=[]),
@@ -399,7 +403,9 @@ class TestReceivablesWave:
             patch("routes.reports.Customer") as Customer,
             patch("routes.reports.report_branch_scope_id", return_value=2),
         ):
-            Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+            Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                []
+            )
             resp = reports_client.get("/reports/receivables?customer=5")
             assert resp.status_code == 200
 
@@ -478,7 +484,9 @@ class TestInventoryWave:
         warehouse, product = TestInventoryWave._warehouse_product_setup()
         warehouse.branch_id = 99
         wh_chain = MagicMock()
-        wh_chain.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        wh_chain.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         product_chain = _chain_query_stub(all=[product])
 
         def tq(model):
@@ -848,9 +856,15 @@ class TestEntityFragmentWave:
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
         ):
-            Sale.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = []
-            Payment.query.filter_by.return_value.filter.return_value.all.return_value = []
+            Sale.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
+            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
+            Payment.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
             resp = reports_client.get("/reports/entity_report_fragment/partner/30")
             assert resp.status_code == 200
 
@@ -884,9 +898,15 @@ class TestEntityFragmentWave:
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
         ):
-            Sale.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
-            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = []
-            Payment.query.filter_by.return_value.filter.return_value.all.return_value = []
+            Sale.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                []
+            )
+            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
+            Payment.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
             resp = reports_client.get("/reports/entity_report_fragment/merchant/31")
             assert resp.status_code == 200
 
@@ -959,7 +979,9 @@ class TestEntityFragmentDirectCall:
                 patch("models.Payment.query") as pay_query,
             ):
                 pay_query.filter.return_value = ctx["pay_chain"]
-                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+                pay_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                    []
+                )
                 from routes.reports import entity_report_fragment
 
                 entity_report_fragment("supplier", 12)
@@ -1461,7 +1483,6 @@ class TestInventoryStatsWave:
         wh_query = MagicMock()
         wh_query.filter_by.return_value.first.return_value = warehouse
         product_chain = _chain_query_stub(all=[])
-        call_model = {"wh": 0}
 
         def tq(model):
             if getattr(model, "__name__", "") == "Warehouse":
@@ -1901,7 +1922,11 @@ class TestCustomerFragmentFullWave:
             Receipt.query = MagicMock()
             Payment.query = MagicMock()
             Sale.query.filter_by.return_value = sale_q
-            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = []
-            Payment.query.filter_by.return_value.filter.return_value.all.return_value = []
+            Receipt.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
+            Payment.query.filter_by.return_value.filter.return_value.all.return_value = (
+                []
+            )
             resp = reports_client.get("/reports/entity_report_fragment/merchant/51")
             assert resp.status_code == 200

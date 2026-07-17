@@ -134,9 +134,9 @@ class TestWarehouseAddStock:
         stock_after = ProductWarehouseStock.query.filter_by(
             product_id=product.id, warehouse_id=warehouse.id
         ).first()
-        assert stock_after.quantity == Decimal("15"), (
-            f"Expected 15, got {stock_after.quantity}"
-        )
+        assert stock_after.quantity == Decimal(
+            "15"
+        ), f"Expected 15, got {stock_after.quantity}"
 
         movement = (
             StockMovement.query.filter_by(
@@ -157,12 +157,12 @@ class TestWarehouseAddStock:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert total_debit == total_credit, (
-            f"GL unbalanced: debit={total_debit} credit={total_credit}"
-        )
-        assert total_debit == Decimal("250"), (
-            f"Expected 250 (5 * 50), got {total_debit}"
-        )
+        assert (
+            total_debit == total_credit
+        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == Decimal(
+            "250"
+        ), f"Expected 250 (5 * 50), got {total_debit}"
 
     def test_add_stock_calculates_gl_from_cost_price(self, app, db_session, client):
         from models import (
@@ -308,9 +308,9 @@ class TestWarehouseAddStock:
         total_debit = sum((l.debit or 0) for l in lines)
         total_credit = sum((l.credit or 0) for l in lines)
         assert total_debit == total_credit
-        assert total_debit == Decimal("200"), (
-            f"Expected 200 (10 * 20), got {total_debit}"
-        )
+        assert total_debit == Decimal(
+            "200"
+        ), f"Expected 200 (10 * 20), got {total_debit}"
 
 
 class TestWarehouseCreate:

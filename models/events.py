@@ -255,7 +255,7 @@ def register_advanced_sale_listener():
                 Sale.__table__.select().where(
                     Sale.customer_id == target.customer_id,
                     Sale.status == "confirmed",
-                    Sale.is_active == True,
+                    Sale.is_active,
                 )
             ).fetchall()
             new_balance = sum(
