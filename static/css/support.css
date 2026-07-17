@@ -315,7 +315,7 @@ body {
 }
 
 .sp-package-card.active::after {
-  content: '✓ {{ t('محدد') }}';
+  content: "✓ {{ t('محدد') }}";
   position: absolute;
   top: 10px;
   left: 10px;
