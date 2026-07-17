@@ -254,7 +254,8 @@ class IntelligentAssistant:
                     logger.debug('Tenant resolution failed: %s', exc)
             
             def _f(model: type) -> Any:
-                q = db.session.query(model)
+                from sqlalchemy.orm import Query
+                q: Query = db.session.query(model)
                 if tid is not None:
                     q = q.filter_by(tenant_id=tid)
                 return q
