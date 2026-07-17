@@ -206,75 +206,75 @@ def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    lines: list[str] = [
-        "## 📊 نظام التغطية الشاملة — Comprehensive Coverage Report",
-        "",
-    ]
-
-    # ── Backend ──
     backend = get_backend_coverage()
-    if backend:
-        lines.append("### Backend (Python) — التغطية حسب الفئة")
-        lines.append("")
-        lines.append("| الفئة (Component) | الملفات | التعليمات | المغطاة | النسبة |")
-        lines.append("|------------------|---------|-----------|---------|--------|")
-        for _key, label, files, total, covered, pct in backend:
-            lines.append(f"| {label} | {files} | {total} | {covered} | {_pct(pct)} |")
-        lines.append("")
-    else:
-        lines.append("### Backend (Python) — ⚠️ لا توجد بيانات تغطية")
-        lines.append("")
-        backend = None
 
-    # ── Templates ──
-    all_templates, rendered_templates, tmpl_pct = get_template_coverage()
-    lines.append("### Frontend (Templates) — تغطية القوالب")
-    lines.append("")
-    lines.append(f"- إجمالي القوالب: **{len(all_templates)}**")
-    lines.append(f"- القوالب المُقدّمة أثناء الاختبارات: **{len(rendered_templates)}**")
-    lines.append(f"- نسبة التغطية: **{_pct(tmpl_pct)}**")
-    lines.append("")
+    def _iter_lines():
+        yield "## 📊 نظام التغطية الشاملة — Comprehensive Coverage Report"
+        yield ""
 
-    # ── JS ──
-    all_js, js_ref = get_js_coverage(rendered_templates)
-    js_pct = (len(js_ref) / len(all_js) * 100) if all_js else 0
-    lines.append("### Frontend (JavaScript) — تغطية ملفات JS")
-    lines.append("")
-    lines.append(f"- إجمالي ملفات JS: **{len(all_js)}**")
-    lines.append(f"- ملفات JS مُحمّلة عبر قوالب تم اختبارها: **{len(js_ref)}**")
-    lines.append(f"- نسبة الوصول (reachability): **{_pct(js_pct)}**")
-    lines.append("- ⚠️ لا يوجد إطار اختبار JS (jest/vitest)، التغطية الفعلية = **0%**")
-    lines.append("")
+        # ── Backend ──
+        if backend:
+            yield "### Backend (Python) — التغطية حسب الفئة"
+            yield ""
+            yield "| الفئة (Component) | الملفات | التعليمات | المغطاة | النسبة |"
+            yield "|------------------|---------|-----------|---------|--------|"
+            for _key, label, files, total, covered, pct in backend:
+                yield f"| {label} | {files} | {total} | {covered} | {_pct(pct)} |"
+            yield ""
+        else:
+            yield "### Backend (Python) — ⚠️ لا توجد بيانات تغطية"
+            yield ""
 
-    # ── Summary table ──
-    lines.append("### الملخص الإجمالي — Overall Summary")
-    lines.append("")
-    if backend:
-        overall_pct = next((b[5] for b in backend if b[0] == "_overall"), 0)
-        combined = overall_pct * 0.60 + tmpl_pct * 0.25 + 0 * 0.15
-        lines.append("| الطبقة (Layer) | النسبة (Coverage) |")
-        lines.append("|---------------|-------------------|")
-        lines.append(f"| Backend (Python) | {_pct(overall_pct)} |")
-        lines.append(f"| Frontend (Templates) | {_pct(tmpl_pct)} |")
-        lines.append(f"| Frontend (JS reachability) | {_pct(js_pct)} |")
-        lines.append("| Frontend (JS test coverage) | 🔴 0.0% |")
-        lines.append(f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |")
-        lines.append("")
-    else:
-        lines.append("لا توجد بيانات تغطية كافية لعرض الملخص.")
-        lines.append("")
+        # ── Templates ──
+        all_templates, rendered_templates, tmpl_pct = get_template_coverage()
+        yield "### Frontend (Templates) — تغطية القوالب"
+        yield ""
+        yield f"- إجمالي القوالب: **{len(all_templates)}**"
+        yield f"- القوالب المُقدّمة أثناء الاختبارات: **{len(rendered_templates)}**"
+        yield f"- نسبة التغطية: **{_pct(tmpl_pct)}**"
+        yield ""
 
-    # ── Missing templates (top 30) ──
-    missing = sorted(all_templates - rendered_templates)
-    if missing:
-        lines.append("### قوالب غير مُغطاة — Uncovered Templates (top 30)")
-        lines.append("")
-        for t in missing[:30]:
-            lines.append(f"- `{t}`")
-        if len(missing) > 30:
-            lines.append(f"- ... و {len(missing) - 30} قوالب أخرى")
-        lines.append("")
+        # ── JS ──
+        all_js, js_ref = get_js_coverage(rendered_templates)
+        js_pct = (len(js_ref) / len(all_js) * 100) if all_js else 0
+        yield "### Frontend (JavaScript) — تغطية ملفات JS"
+        yield ""
+        yield f"- إجمالي ملفات JS: **{len(all_js)}**"
+        yield f"- ملفات JS مُحمّلة عبر قوالب تم اختبارها: **{len(js_ref)}**"
+        yield f"- نسبة الوصول (reachability): **{_pct(js_pct)}**"
+        yield "- ⚠️ لا يوجد إطار اختبار JS (jest/vitest)، التغطية الفعلية = **0%**"
+        yield ""
 
+        # ── Summary table ──
+        yield "### الملخص الإجمالي — Overall Summary"
+        yield ""
+        if backend:
+            overall_pct = next((b[5] for b in backend if b[0] == "_overall"), 0)
+            combined = overall_pct * 0.60 + tmpl_pct * 0.25 + 0 * 0.15
+            yield "| الطبقة (Layer) | النسبة (Coverage) |"
+            yield "|---------------|-------------------|"
+            yield f"| Backend (Python) | {_pct(overall_pct)} |"
+            yield f"| Frontend (Templates) | {_pct(tmpl_pct)} |"
+            yield f"| Frontend (JS reachability) | {_pct(js_pct)} |"
+            yield "| Frontend (JS test coverage) | 🔴 0.0% |"
+            yield f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |"
+            yield ""
+        else:
+            yield "لا توجد بيانات تغطية كافية لعرض الملخص."
+            yield ""
+
+        # ── Missing templates (top 30) ──
+        missing = sorted(all_templates - rendered_templates)
+        if missing:
+            yield "### قوالب غير مُغطاة — Uncovered Templates (top 30)"
+            yield ""
+            for t in missing[:30]:
+                yield f"- `{t}`"
+            if len(missing) > 30:
+                yield f"- ... و {len(missing) - 30} قوالب أخرى"
+            yield ""
+
+    lines: list[str] = list(_iter_lines())
     output = "\n".join(lines)
     print(output)
 
