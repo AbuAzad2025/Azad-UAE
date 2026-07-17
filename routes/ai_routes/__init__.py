@@ -24,6 +24,7 @@ from ai_knowledge.core.conversation_store import (
     set_context as _set_conversation_context,
     clear_context as _clear_conversation_context,
 )
+from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 
 # ── Sub-module imports ───────────────────────────────────────────
 # Each sub-module registers its routes on the shared ai_bp.
@@ -152,36 +153,6 @@ def _audit_ai_requests(response):
     return response
 
 
-class _AutoSaveCtx(dict):
-    """Dict that auto-persists changes to DB."""
-
-    def __init__(self, user_id, tenant_id, data):
-        super().__init__(data or {})
-        self._user_id = user_id
-        self._tenant_id = tenant_id
-
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
-
-    def __delitem__(self, key):
-        super().__delitem__(key)
-        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
-
-    def pop(self, key, *args):
-        result = super().pop(key, *args)
-        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
-        return result
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
-
-    def clear(self):
-        super().clear()
-        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
-
-
 __all__ = [
     "ai_bp",
     "shared",
@@ -196,6 +167,7 @@ __all__ = [
     "train_local_ai",
     "apply_smart_listeners",
     "create_final_options",
+    "_AutoSaveCtx",
     "_conversation_ctx",
     "_get_conversation_context",
     "_process_user_action",

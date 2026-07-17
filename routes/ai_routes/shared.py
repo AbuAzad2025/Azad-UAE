@@ -6,12 +6,12 @@ from flask_login import current_user
 from extensions import db
 from utils.sanitizer import InputSanitizer
 from services.ai_service import AIService
-from routes.ai_routes import (
-    _AutoSaveCtx,
-    _get_conversation_context,
-    _set_conversation_context,
-    _clear_conversation_context,
+from ai_knowledge.core.conversation_store import (
+    get_context as _get_conversation_context,
+    set_context as _set_conversation_context,
+    clear_context as _clear_conversation_context,
 )
+from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 from utils.ai_access import get_ai_access_state
 from datetime import datetime, timezone
 from utils.db_safety import atomic_transaction
