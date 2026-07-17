@@ -13,7 +13,8 @@ class SystemIntegrator:
     def __init__(self):
         pass
 
-    def get_customer_balance(self, customer_name_or_id):
+    @staticmethod
+    def get_customer_balance(customer_name_or_id):
         """الحصول على رصيد العميل"""
         try:
             from models import Customer, Sale
@@ -56,7 +57,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب بيانات العميل: {str(e)}"}
 
-    def get_supplier_balance(self, supplier_name_or_id):
+    @staticmethod
+    def get_supplier_balance(supplier_name_or_id):
         """الحصول على رصيد المورد - ✅ جديد 2025-10-19"""
         try:
             from models import Supplier, Purchase
@@ -103,7 +105,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب بيانات المورد: {str(e)}"}
 
-    def get_customer_sales_summary(self, customer_id):
+    @staticmethod
+    def get_customer_sales_summary(customer_id):
         """ملخص مبيعات العميل"""
         try:
             from models import Customer
@@ -148,7 +151,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب ملخص المبيعات: {str(e)}"}
 
-    def add_customer(self, customer_data):
+    @staticmethod
+    def add_customer(customer_data):
         """إضافة عميل جديد"""
         try:
             from models import Customer
@@ -200,7 +204,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في إضافة العميل: {str(e)}"}
 
-    def get_product_stock(self, product_name_or_sku):
+    @staticmethod
+    def get_product_stock(product_name_or_sku):
         """الحصول على مخزون المنتج"""
         try:
             from models import Product
@@ -240,7 +245,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب بيانات المنتج: {str(e)}"}
 
-    def get_system_summary(self):
+    @staticmethod
+    def get_system_summary():
         """ملخص النظام الشامل"""
         try:
             from models import Customer, Sale, Product, Payment
@@ -323,7 +329,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب ملخص النظام: {str(e)}"}
 
-    def get_financial_summary(self):
+    @staticmethod
+    def get_financial_summary():
         """ملخص مالي شامل"""
         try:
             from models import Sale, Payment
@@ -376,7 +383,8 @@ class SystemIntegrator:
         except Exception as e:
             return {"success": False, "error": f"خطأ في جلب الملخص المالي: {str(e)}"}
 
-    def search_data(self, query, data_type="all"):
+    @staticmethod
+    def search_data(query, data_type="all"):
         """البحث في البيانات"""
         try:
             from models import Customer, Product, Sale

@@ -147,7 +147,8 @@ class TestAIExecutorCustomerOps:
 class TestAIExecutorPaymentMatching:
     """receive_payment — full, partial, and multi-invoice allocation."""
 
-    def _run_payment(self, executor, mocker, app, customer, sales, amount):
+    @staticmethod
+    def _run_payment(executor, mocker, app, customer, sales, amount):
         with app.app_context():
             from models import Customer, Sale
 

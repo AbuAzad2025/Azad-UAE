@@ -205,8 +205,7 @@
   // إنشاء حقول ديناميكية
   // =====================================
   function renderPaymentFields(method, containerSelector, fieldPrefix = '') {
-    const $container = $(containerSelector);
-    $container.empty();
+    $(containerSelector).empty();
     
     if (!method || method === '' || !PAYMENT_METHODS[method]) {
       return;
@@ -320,6 +319,7 @@
   // =====================================
   // API عامة
   // =====================================
+  // noinspection JSUnusedGlobalSymbols
   window.PaymentFieldsManager = {
     methods: PAYMENT_METHODS,
     render: renderPaymentFields,

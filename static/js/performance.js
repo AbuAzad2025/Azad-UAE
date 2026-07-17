@@ -2,7 +2,7 @@
 $(document).ready(function() {
     // Lazy loading for images
     if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
+        const imageObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
@@ -122,7 +122,7 @@ $(document).ready(function() {
         complete: function() {
             $('body').removeClass('loading');
         },
-        error: function(xhr, status, error) {
+        error: function(xhr, status) {
             if (status === 'timeout') {
                 alert('انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.');
             } else if (xhr.status === 500) {
@@ -190,12 +190,10 @@ $(document).ready(function() {
     });
 
     // Add performance monitoring - تحسين
-    if (window.performance && window.performance.timing) {
+    if (window.performance && (window.performance.timing || window.performance.getEntriesByType)) {
         window.addEventListener('load', function() {
             setTimeout(function() {
-                const timing = window.performance.timing;
-                const loadTime = timing.loadEventEnd - timing.navigationStart;
-                const domContentLoaded = timing.domContentLoadedEventEnd - timing.navigationStart;
+                // Use Navigation Timing API (modern) with timing fallback
                 
 
             }, 100);

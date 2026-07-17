@@ -2437,7 +2437,8 @@ class AzadNeuralEngine:
             logger.error(f"Intent understanding failed: {e}")
             return {"intent": None, "confidence": 0, "features": {}}
 
-    def _extract_text_features(self, text: str) -> Dict:
+    @staticmethod
+    def _extract_text_features(text: str) -> Dict:
         """استخراج ميزات من النص"""
         return {
             "length": len(text),

@@ -923,7 +923,8 @@ def preview_receipt(template):
             SampleAllocation("S-2025-0002", "700.00"),
         ]
 
-        def get_source_info(self):
+        @staticmethod
+        def get_source_info():
             return {
                 "type": "فاتورة",
                 "number": "S-2025-0001",

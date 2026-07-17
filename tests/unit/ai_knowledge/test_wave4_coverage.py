@@ -29,13 +29,16 @@ class _Col:
     def __eq__(self, other):
         return MagicMock()
 
-    def between(self, a, b):
+    @staticmethod
+    def between(a, b):
         return MagicMock()
 
-    def ilike(self, *a, **kw):
+    @staticmethod
+    def ilike(*a, **kw):
         return MagicMock()
 
-    def desc(self):
+    @staticmethod
+    def desc():
         return MagicMock()
 
 
@@ -119,7 +122,8 @@ class TestAzadResponsesWave4:
 
         return AzadResponses()
 
-    def _safe_mocks(self):
+    @staticmethod
+    def _safe_mocks():
         return patch.multiple(
             "ai_knowledge.personality.azad_responses",
             understand_message=MagicMock(

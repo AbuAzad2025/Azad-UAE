@@ -9,7 +9,8 @@ from app.runtime.accounting_repair import repair_accounting_data
 
 
 class TestRepairAccountingData:
-    def _base_patches(self, mocker, tenant_id=1):
+    @staticmethod
+    def _base_patches(mocker, tenant_id=1):
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=tenant_id)
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         merchant = MagicMock(id=5)

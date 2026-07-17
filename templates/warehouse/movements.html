@@ -230,25 +230,25 @@ $(document).ready(function() {
   });
 
   // Filter buttons
-  $('#filterAll').click(function() {
+  $('#filterAll').on('click', function() {
     table.search('').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterIn').click(function() {
+  $('#filterIn').on('click', function() {
     table.column(2).search('{{ t('Sign In') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterOut').click(function() {
+  $('#filterOut').on('click', function() {
     table.column(2).search('{{ t('خروج') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterAdjust').click(function() {
+  $('#filterAdjust').on('click', function() {
     table.column(2).search('{{ t('Edit') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');

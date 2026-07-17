@@ -61,6 +61,26 @@
   --az-mobile-nav-height: 64px;
 }
 
+/* UI design-token aliases consumed by owner-panels.css / product-form.css.
+   They mirror the active --az-* theme tokens so they stay theme-aware. */
+:root {
+  --ui-border: var(--az-border);
+  --ui-danger: var(--az-danger);
+  --ui-focus-ring: var(--az-focus-ring);
+  --ui-gold: var(--az-gold);
+  --ui-muted: var(--az-text-muted);
+  --ui-primary: var(--az-primary);
+  --ui-primary-2: var(--az-primary-2);
+  --ui-radius-md: var(--az-radius-md);
+  --ui-radius-sm: var(--az-radius-sm);
+  --ui-shadow: var(--az-shadow);
+  --ui-success: var(--az-success);
+  --ui-surface: var(--az-surface);
+  --ui-surface-2: var(--az-surface-2);
+  --ui-text: var(--az-text);
+  --ui-warning: var(--az-warning);
+}
+
 /* ── Palestinian Light ── */
 html[data-ui-variant="palestinian"][data-ui-mode="light"],
 :root {
@@ -386,7 +406,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   background: var(--az-surface-2); color: var(--az-text);
 }
 
-.dropdown-header { font-weight: 800; color: var(--az-text-secondary); text-align: start; padding: 4px 16px; }
+.dropdown-header { font-weight: 800; color: var(--az-text-muted); text-align: start; padding: 4px 16px; }
 
 /* ERP Navbar Layout */
 .erp-navbar {

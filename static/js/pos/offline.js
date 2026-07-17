@@ -56,5 +56,6 @@
     });
   });
 
+  // noinspection JSUnusedGlobalSymbols
   window.__posOffline = { retryQueue: retryQueue };
 })();

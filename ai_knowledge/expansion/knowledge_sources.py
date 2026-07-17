@@ -209,7 +209,8 @@ class KnowledgeSourceManager:
         self.cache = {}
         self.cache_duration = timedelta(hours=24)  # 24 ساعة
 
-    def get_sources_by_topic(self, topic):
+    @staticmethod
+    def get_sources_by_topic(topic):
         """الحصول على المصادر حسب الموضوع"""
         relevant_sources = []
 
@@ -259,7 +260,8 @@ class KnowledgeSourceManager:
             "suggestion": f'ابحث عن "{part_number}" في المصادر المذكورة',
         }
 
-    def get_tax_resources(self, country="UAE"):
+    @staticmethod
+    def get_tax_resources(country="UAE"):
         """الحصول على مصادر ضريبية"""
         country_map = {
             "UAE": "uae_tax",
@@ -275,7 +277,8 @@ class KnowledgeSourceManager:
 
         return resources
 
-    def learn_from_source(self, source_url, topic):
+    @staticmethod
+    def learn_from_source(source_url, topic):
         """التعلم من مصدر (مستقبلي - web scraping)"""
         # TODO: Implement web scraping with BeautifulSoup
         # TODO: Extract relevant information
@@ -287,7 +290,8 @@ class KnowledgeSourceManager:
             "topic": topic,
         }
 
-    def get_all_sources_summary(self):
+    @staticmethod
+    def get_all_sources_summary():
         """ملخص جميع المصادر"""
         summary = {
             "total_categories": len(KNOWLEDGE_SOURCES),

@@ -149,7 +149,8 @@ class TestValidateSaleAccess:
 
 
 class TestCreateReturn:
-    def _patch_common(self, mocker, sale, sale_line, product):
+    @staticmethod
+    def _patch_common(mocker, sale, sale_line, product):
         session = mocker.patch("services.return_service.db.session")
         session.get.side_effect = lambda model, pk: {
             sale.id: sale,

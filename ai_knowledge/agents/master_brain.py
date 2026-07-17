@@ -62,7 +62,8 @@ class MasterBrain:
 
         logger.info(f"🧠 {self.name} initialized - Ready for genius-level operations!")
 
-    def _initialize_ultimate_knowledge(self) -> dict:
+    @staticmethod
+    def _initialize_ultimate_knowledge() -> dict:
         """تهيئة قاعدة المعرفة الشاملة - أضخم قاعدة معرفة!"""
 
         # استيراد المعرفة الإضافية
@@ -376,7 +377,8 @@ class MasterBrain:
                 "error": str(e),
             }
 
-    def _analyze_question(self, question: str) -> Tuple[str, str, dict]:
+    @staticmethod
+    def _analyze_question(question: str) -> Tuple[str, str, dict]:
         """تحليل السؤال بذكاء خارق"""
         q_lower = question.lower()
 
@@ -431,8 +433,8 @@ class MasterBrain:
             return self.knowledge_base[domain]
         return {}
 
-    def _think_logically(
-        self, question: str, _intent: str, knowledge: dict, context: dict
+    @staticmethod
+    def _think_logically( question: str, _intent: str, knowledge: dict, context: dict
     ) -> dict:
         """التفكير المنطقي العميق"""
         available_data = list(context.keys()) if context else []
@@ -452,7 +454,8 @@ class MasterBrain:
 
         return {"steps": steps, "confidence": 0.9}
 
-    def _use_neural_if_needed(self, intent: str, context: dict) -> Optional[dict]:
+    @staticmethod
+    def _use_neural_if_needed(intent: str, context: dict) -> Optional[dict]:
         """استخدام النماذج العصبية عند الحاجة"""
         # استيراد كسول (lazy import) للسرعة
         if intent in ["prediction", "pricing", "classification"]:
@@ -475,8 +478,8 @@ class MasterBrain:
 
         return None
 
+    @staticmethod
     def _synthesize_answer(
-        self,
         question: str,
         _reasoning: dict,
         neural: dict,
@@ -603,7 +606,8 @@ class MasterBrain:
                 -100:
             ]
 
-    def _generate_smart_suggestions(self, _intent: str, domain: str) -> List[str]:
+    @staticmethod
+    def _generate_smart_suggestions(_intent: str, domain: str) -> List[str]:
         """توليد اقتراحات ذكية"""
         suggestions = {
             "accounting": [
@@ -641,7 +645,8 @@ class MasterBrain:
     # دوال متقدمة سريعة
     # ========================================================================
 
-    def quick_calc(self, formula_name: str, **params) -> dict:
+    @staticmethod
+    def quick_calc(formula_name: str, **params) -> dict:
         """حسابات سريعة للصيغ الشائعة"""
         formulas: dict[str, Callable[..., Any]] = {
             "gross_margin": lambda sales, cogs: (
@@ -700,7 +705,8 @@ class MasterBrain:
 
         return f"🤔 لم أجد شرح مباشر لـ '{concept}'. يمكنك السؤال بشكل أكثر تحديداً؟"
 
-    def validate_accounting_entry(self, debit: float, credit: float) -> dict:
+    @staticmethod
+    def validate_accounting_entry(debit: float, credit: float) -> dict:
         """التحقق من القيد المحاسبي بسرعة"""
         is_balanced = abs(debit - credit) < 0.01
 

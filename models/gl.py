@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-import sqlalchemy as sa
+from sqlalchemy import event, text
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.gl_services import gl_next_entry_number
@@ -482,8 +482,8 @@ class GLAccountMapping(db.Model):
             "tenant_id",
             "concept_code",
             unique=True,
-            postgresql_where=sa.text("branch_id IS NULL"),
-            sqlite_where=sa.text("branch_id IS NULL"),
+            postgresql_where=text("branch_id IS NULL"),
+            sqlite_where=text("branch_id IS NULL"),
         ),
         db.Index(
             "uq_gl_account_mappings_tenant_concept_branch",
@@ -491,8 +491,8 @@ class GLAccountMapping(db.Model):
             "concept_code",
             "branch_id",
             unique=True,
-            postgresql_where=sa.text("branch_id IS NOT NULL"),
-            sqlite_where=sa.text("branch_id IS NOT NULL"),
+            postgresql_where=text("branch_id IS NOT NULL"),
+            sqlite_where=text("branch_id IS NOT NULL"),
         ),
     )
 
@@ -553,8 +553,8 @@ class GLAccountMapping(db.Model):
             )
 
 
-@sa.event.listens_for(GLJournalEntry, "before_insert")
-@sa.event.listens_for(GLJournalEntry, "before_update")
+@event.listens_for(GLJournalEntry, "before_insert")
+@event.listens_for(GLJournalEntry, "before_update")
 def _validate_journal_entry(mapper, connection, target):
     # 1. Balance check
     diff = abs(

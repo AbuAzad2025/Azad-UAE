@@ -218,14 +218,14 @@ const pieCtx = document.getElementById('agingPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
     data: {
-        labels: ['0-30 {{ t('يوم') }}', '31-60 {{ t('يوم') }}', '61-90 {{ t('يوم') }}', '91-120 {{ t('يوم') }}', '+120 {{ t('يوم') }}'],
+        labels: ["0-30 {{ t('يوم') }}", "31-60 {{ t('يوم') }}", "61-90 {{ t('يوم') }}", "91-120 {{ t('يوم') }}", "+120 {{ t('يوم') }}"],
         datasets: [{
             data: [
-                {{ report.totals['0-30'] }},
-                {{ report.totals['31-60'] }},
-                {{ report.totals['61-90'] }},
-                {{ report.totals['91-120'] }},
-                {{ report.totals['over_120'] }}
+                JSON.parse('{{ report.totals['0-30'] }}'),
+                JSON.parse('{{ report.totals['31-60'] }}'),
+                JSON.parse('{{ report.totals['61-90'] }}'),
+                JSON.parse('{{ report.totals['91-120'] }}'),
+                JSON.parse('{{ report.totals['over_120'] }}')
             ],
             backgroundColor: [
                 'rgba(40, 167, 69, 0.7)',
@@ -246,11 +246,11 @@ new Chart(pieCtx, {
             },
             tooltip: {
                 callbacks: {
-                    label: function(context) {
-                        const total = {{ report.totals['total'] }};
+                    label: (context) => {
+                        const total = JSON.parse('{{ report.totals['total'] }}');
                         const value = context.parsed;
                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                        return context.label + ': ' + value.toLocaleString('ar-AE') + ' ' + baseCurrency + ' (' + percentage + '%)';
+                        return context.label + ': ' + new Intl.NumberFormat('ar-AE').format(value) + ' ' + baseCurrency + ' (' + percentage + '%)';
                     }
                 }
             }

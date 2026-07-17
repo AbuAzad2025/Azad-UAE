@@ -12,7 +12,7 @@
     let val = parseFloat(input.value) || min;
     if (btn.hasAttribute('data-qty-minus')) val = Math.max(min, val - step);
     else val = Math.min(max, val + step);
-    input.value = val;
+    input.value = String(val);
     const evt = new Event('change', { bubbles: true });
     input.dispatchEvent(evt);
   });
@@ -52,7 +52,7 @@
   const searchInput = document.querySelector('.ps-search-form input[type="search"]:not([data-search-autocomplete])');
   if (searchInput) {
     const searchForm = searchInput.closest('form');
-    var searchTimer;
+    let searchTimer;
     searchInput.addEventListener('input', function () {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
@@ -71,13 +71,13 @@
           data[key] = value;
         });
         if (window.ShopCart && window.ShopCart.updateCart) {
-          window.ShopCart.updateCart(data);
+          void window.ShopCart.updateCart(data);
         }
       });
     });
   }
 
-  var deferredPrompt;
+  let deferredPrompt;
   window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
     deferredPrompt = e;

@@ -153,7 +153,7 @@ $('#importForm').on('submit', function() {
 });
 
 // Grid Functionality
-$('#addRowBtn').click(function() {
+$('#addRowBtn').on('click', function() {
     const template = $('.product-row').first().clone();
     template.find('input').val(''); // Clear values
     for(let i=0; i<10; i++) {

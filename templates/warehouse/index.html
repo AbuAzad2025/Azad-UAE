@@ -333,13 +333,13 @@ $(document).ready(function() {
   });
 
   // Smart filters
-  $('#filterAll').click(function() {
+  $('#filterAll').on('click', function() {
     table.search('').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterLow').click(function() {
+  $('#filterLow').on('click', function() {
     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
       const row = table.row(dataIndex).node();
       return $(row).data('status') === 'low';
@@ -350,7 +350,7 @@ $(document).ready(function() {
     $(this).addClass('active');
   });
 
-  $('#filterOut').click(function() {
+  $('#filterOut').on('click', function() {
     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
       const row = table.row(dataIndex).node();
       return $(row).data('status') === 'out';

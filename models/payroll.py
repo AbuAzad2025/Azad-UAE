@@ -54,7 +54,8 @@ class Employee(db.Model):
     def __repr__(self):
         return f"<Employee {self.name}>"
 
-    def get_balance(self):
+    @staticmethod
+    def get_balance():
         return 0
 
 

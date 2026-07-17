@@ -25,10 +25,10 @@
 new Chart(document.getElementById('forecastChart'), {
   type: 'line',
   data: {
-    labels: {{ historical|map(attribute='month')|list|tojson }},
+    labels: JSON.parse('{{ historical|map(attribute='month')|list|tojson }}'),
     datasets: [{
       label: 'الإيرادات الشهرية',
-      data: {{ historical|map(attribute='revenue')|list|tojson }},
+      data: JSON.parse('{{ historical|map(attribute='revenue')|list|tojson }}'),
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
     }]

@@ -10,7 +10,7 @@
     // CUSTOMER SEARCH
   // =====================================
     initCustomerSearch: function() {      
-      $('.customer-select').each(function(index) {
+      $('.customer-select').each(function() {
         const $select = $(this);        
     if ($select.hasClass('select2-hidden-accessible')) {      $select.select2('destroy');
     }
@@ -26,7 +26,7 @@
           };
         },
         processResults: function(data) {              const items = Array.isArray(data) ? data : (data.results || []);
-              const results = {
+              return {
                 results: items.map(item => ({
                   id: item.id,
                   text: item.text || `${item.name}${item.phone ? ' - ' + item.phone : ''}`,
@@ -35,7 +35,7 @@
                   balance: item.balance || 0
                 })),
                 pagination: { more: false }
-              };              return results;
+              };
         },
         cache: true
       },
@@ -54,7 +54,7 @@
     // SUPPLIER SEARCH
     // =====================================
     initSupplierSearch: function() {      
-      $('.supplier-select').each(function(index) {
+      $('.supplier-select').each(function() {
         const $select = $(this);        
         if ($select.hasClass('select2-hidden-accessible')) {          $select.select2('destroy');
         }
@@ -70,7 +70,7 @@
               };
             },
             processResults: function(data) {              const items = Array.isArray(data) ? data : (data.results || []);
-              const results = {
+              return {
                 results: items.map(item => ({
                   id: item.id,
                   text: item.text || `${item.name}${item.phone ? ' - ' + item.phone : ''}`,
@@ -79,7 +79,7 @@
                   balance: item.balance || 0
                 })),
                 pagination: { more: false }
-              };              return results;
+              };
             },
             cache: true
           },
@@ -98,7 +98,7 @@
     // PRODUCT SEARCH
   // =====================================
     initProductSearch: function() {      
-      $('.product-select').each(function(index) {
+      $('.product-select').each(function() {
         const $select = $(this);    
     if ($select.hasClass('select2-hidden-accessible')) {      $select.select2('destroy');
     }

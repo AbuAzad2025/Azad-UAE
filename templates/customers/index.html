@@ -273,31 +273,31 @@ $(document).ready(function() {
   });
 
   // Filter buttons
-  $('#filterAll').click(function() {
+  $('#filterAll').on('click', function() {
     table.search('').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterVIP').click(function() {
+  $('#filterVIP').on('click', function() {
     table.search('vip').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterMerchant').click(function() {
+  $('#filterMerchant').on('click', function() {
     table.search('{{ t('تاجر') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterRegular').click(function() {
+  $('#filterRegular').on('click', function() {
     table.search('{{ t('عادي') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
-  $('#filterOverdue').click(function() {
+  $('#filterOverdue').on('click', function() {
     table.column(4).search('^[1-9]', true, false).draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');

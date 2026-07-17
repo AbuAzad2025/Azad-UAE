@@ -387,7 +387,8 @@ class TestExportService:
             def __init__(self):
                 self.column_dimensions = defaultdict(SimpleNamespace)
 
-            def append(self, row):
+            @staticmethod
+            def append(row):
                 return None
 
             def __getitem__(self, col):
@@ -397,7 +398,8 @@ class TestExportService:
             def __init__(self):
                 self.active = _FakeWS()
 
-            def save(self, output):
+            @staticmethod
+            def save(output):
                 output.write(b"xlsx")
 
         with patch("openpyxl.Workbook", _FakeWB):
@@ -522,7 +524,8 @@ class TestGamificationService:
 
 
 class TestGlAutoValidationBranches:
-    def _handler_for(self, model_name):
+    @staticmethod
+    def _handler_for(model_name):
         from services import gl_auto_service
 
         handlers = {}

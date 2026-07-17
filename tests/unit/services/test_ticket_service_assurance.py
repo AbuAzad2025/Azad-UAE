@@ -83,7 +83,8 @@ class TestCreateTicket:
 class TestStateTransitions:
     """assign / resolve / close / reopen — lifecycle."""
 
-    def _ticket(self, tenant_id=1):
+    @staticmethod
+    def _ticket(tenant_id=1):
         t = MagicMock(tenant_id=tenant_id, status="open", id=1)
         return t
 

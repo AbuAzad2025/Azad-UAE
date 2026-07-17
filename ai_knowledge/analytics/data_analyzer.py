@@ -14,7 +14,8 @@ class DataAnalyzer:
     def __init__(self):
         pass
 
-    def analyze_customer_debt(self, customer_id):
+    @staticmethod
+    def analyze_customer_debt(customer_id):
         """تحليل ديون العميل بالتفصيل"""
         try:
             from models import Customer, Sale
@@ -83,7 +84,8 @@ class DataAnalyzer:
         except Exception as e:
             return {"success": False, "error": f"خطأ في تحليل ديون العميل: {str(e)}"}
 
-    def analyze_sales_performance(self, period_days=30):
+    @staticmethod
+    def analyze_sales_performance(period_days=30):
         """تحليل أداء المبيعات"""
         try:
             from models import Sale
@@ -169,7 +171,8 @@ class DataAnalyzer:
         except Exception as e:
             return {"success": False, "error": f"خطأ في تحليل أداء المبيعات: {str(e)}"}
 
-    def analyze_product_performance(self, product_id=None):
+    @staticmethod
+    def analyze_product_performance(product_id=None):
         """تحليل أداء المنتجات"""
         try:
             from models import Product, SaleLine, Sale
@@ -267,7 +270,8 @@ class DataAnalyzer:
         except Exception as e:
             return {"success": False, "error": f"خطأ في تحليل أداء المنتجات: {str(e)}"}
 
-    def analyze_payment_patterns(self, customer_id=None):
+    @staticmethod
+    def analyze_payment_patterns(customer_id=None):
         """تحليل أنماط الدفع"""
         try:
             from models import Customer, Payment
@@ -340,7 +344,8 @@ class DataAnalyzer:
         except Exception as e:
             return {"success": False, "error": f"خطأ في تحليل أنماط الدفع: {str(e)}"}
 
-    def get_financial_ratios(self):
+    @staticmethod
+    def get_financial_ratios():
         """الحصول على النسب المالية"""
         try:
             from models import Sale, Payment, Customer, Product

@@ -135,9 +135,9 @@ def advances():
         employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
         advances_query = advances_query.filter(Employee.branch_id == scoped_branch_id)
     employees = employees_query.order_by(Employee.name).all()
-    advances = advances_query.order_by(SalaryAdvance.date.desc()).limit(50).all()
+    advance_list = advances_query.order_by(SalaryAdvance.date.desc()).limit(50).all()
     return render_template(
-        "payroll/advances.html", advances=advances, employees=employees
+        "payroll/advances.html", advances=advance_list, employees=employees
     )
 
 
@@ -263,16 +263,16 @@ def statement(**kwargs):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    advances = SalaryAdvance.query.filter_by(employee_id=record_id)
+    advance_list_query = SalaryAdvance.query.filter_by(employee_id=record_id)
     payments = PayrollTransaction.query.filter_by(employee_id=record_id)
     if tid is not None:
-        advances = advances.filter(SalaryAdvance.tenant_id == tid)
+        advance_list_query = advance_list_query.filter(SalaryAdvance.tenant_id == tid)
         payments = payments.filter(PayrollTransaction.tenant_id == tid)
-    advances = advances.all()
+    advance_list = advance_list_query.all()
     payments = payments.all()
 
     history = []
-    for a in advances:
+    for a in advance_list:
         history.append(
             {"date": a.date, "type": "سلفة", "amount": -a.amount, "desc": a.description}
         )

@@ -95,14 +95,14 @@
 <script>
 function filterByWarehouse() {
   let sel = document.getElementById('product_id');
-  var wh = document.getElementById('source_warehouse_id');
-  var whId = parseInt(wh.value) || 0;
-  var detail = document.getElementById('product_stock_detail');
-  var whCount = document.getElementById('wh_count');
-  var count = 0;
+  const wh = document.getElementById('source_warehouse_id');
+  const whId = parseInt(wh.value) || 0;
+  const detail = document.getElementById('product_stock_detail');
+  const whCount = document.getElementById('wh_count');
+  let count = 0;
 
-  for (var i = 0; i < sel.options.length; i++) {
-    var opt = sel.options[i];
+  for (let i = 0; i < sel.options.length; i++) {
+    const opt = sel.options[i];
     if (!opt.value) {
       if (whId) opt.text = '— اختر منتجاً —';
       else opt.text = '— اختر مستودعاً أولاً —';
@@ -110,7 +110,7 @@ function filterByWarehouse() {
       continue;
     }
     if (whId) {
-      var stock = parseFloat(opt.getAttribute('data-wh-' + whId)) || 0;
+      const stock = parseFloat(opt.getAttribute('data-wh-' + whId)) || 0;
       if (stock > 0) {
         opt.hidden = false;
         count++;

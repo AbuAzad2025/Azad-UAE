@@ -60,7 +60,8 @@ def _sale_mock():
 
 
 class TestNeuralEngineFinal:
-    def _engine(self, knowledge_path):
+    @staticmethod
+    def _engine(knowledge_path):
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         return AzadNeuralEngine()
@@ -496,7 +497,8 @@ class TestAzadResponsesHandlers:
 
         return AzadResponses()
 
-    def _common_mocks(self):
+    @staticmethod
+    def _common_mocks():
         customer_payload = {
             "success": True,
             "customer": {

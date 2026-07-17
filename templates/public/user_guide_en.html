@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-{% if current_language is defined %}
-<html lang="{{ current_language }}" dir="ltr">
-{% else %}
-<html lang="en" dir="ltr">
-{% endif %}
+<html lang="{{ current_language if current_language is defined else 'en' }}" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -77,15 +73,15 @@
         <aside class="sidebar">
             <h3>Quick Navigation</h3>
             <ul>
-                <li class="active" onclick="scrollToSection('overview')"><i class="fas fa-home"></i> Overview</li>
-                <li onclick="scrollToSection('access')"><i class="fas fa-user-shield"></i> Access & Roles</li>
-                <li onclick="scrollToSection('operations')"><i class="fas fa-cogs"></i> Daily Operations</li>
-                <li onclick="scrollToSection('finance')"><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</li>
-                <li onclick="scrollToSection('inventory')"><i class="fas fa-warehouse"></i> Inventory & Branches</li>
-                <li onclick="scrollToSection('ecommerce')"><i class="fas fa-store"></i> E-commerce Store</li>
-                <li onclick="scrollToSection('analytics')"><i class="fas fa-chart-bar"></i> Reports & Analytics</li>
-                <li onclick="scrollToSection('admin')"><i class="fas fa-tools"></i> Admin & Configuration</li>
-                <li onclick="scrollToSection('best-practices')"><i class="fas fa-check-circle"></i> Best Practices</li>
+                <li class="active" onclick="scrollToSection('overview', event)"><i class="fas fa-home"></i> Overview</li>
+                <li onclick="scrollToSection('access', event)"><i class="fas fa-user-shield"></i> Access & Roles</li>
+                <li onclick="scrollToSection('operations', event)"><i class="fas fa-cogs"></i> Daily Operations</li>
+                <li onclick="scrollToSection('finance', event)"><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</li>
+                <li onclick="scrollToSection('inventory', event)"><i class="fas fa-warehouse"></i> Inventory & Branches</li>
+                <li onclick="scrollToSection('ecommerce', event)"><i class="fas fa-store"></i> E-commerce Store</li>
+                <li onclick="scrollToSection('analytics', event)"><i class="fas fa-chart-bar"></i> Reports & Analytics</li>
+                <li onclick="scrollToSection('admin', event)"><i class="fas fa-tools"></i> Admin & Configuration</li>
+                <li onclick="scrollToSection('best-practices', event)"><i class="fas fa-check-circle"></i> Best Practices</li>
             </ul>
         </aside>
 
@@ -205,11 +201,12 @@
     </div>
 
     <script>
-        function scrollToSection(id) {
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            event.target.classList.add('active');
-        }
+function scrollToSection(id, event) {
+    if (!event) return;
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+    event.target.classList.add('active');
+}
     </script>
 </body>
 </html>

@@ -750,7 +750,7 @@ def index():
         items = pagination.items
         _annotate_visible_stock(items)
 
-    categories = ProductCategory.query.filter_by(
+    category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
     show_branch_columns = should_show_all_branch_columns(current_user)
@@ -762,7 +762,7 @@ def index():
         "products/index.html",
         products=items,
         pagination=pagination,
-        categories=categories,
+        categories=category_list,
         show_branch_columns=show_branch_columns,
     )
 
@@ -777,10 +777,10 @@ def create():
     form = ProductForm()
 
     # تعيين choices للتصنيفات
-    categories = ProductCategory.query.filter_by(
+    category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
-    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in categories]
+    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in category_list]
     preselected_warehouse_id = request.args.get("warehouse_id", type=int)
     default_industry = _tenant_business_type_default()
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
@@ -809,7 +809,7 @@ def create():
                     return render_template(
                         "products/create.html",
                         form=form,
-                        categories=categories,
+                        categories=category_list,
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
@@ -828,7 +828,7 @@ def create():
                     return render_template(
                         "products/create.html",
                         form=form,
-                        categories=categories,
+                        categories=category_list,
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
@@ -854,7 +854,7 @@ def create():
                     return render_template(
                         "products/create.html",
                         form=form,
-                        categories=categories,
+                        categories=category_list,
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
@@ -870,7 +870,7 @@ def create():
                     return render_template(
                         "products/create.html",
                         form=form,
-                        categories=categories,
+                        categories=category_list,
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
@@ -1012,7 +1012,7 @@ def create():
                     flash(f"⚠️ خطأ في حقل {field}: {error}", "danger")
 
     # GET request - إرسال البيانات للقالب
-    categories = ProductCategory.query.filter_by(
+    category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
     warehouses = get_accessible_warehouses(current_user)
@@ -1021,14 +1021,14 @@ def create():
     return render_template(
         "products/create.html",
         form=form,
-        categories=categories,
+        categories=category_list,
         warehouses=warehouses,
         merchants=merchants,
         partners=partners,
         partners_json=partners_json,
         preselected_warehouse_id=preselected_warehouse_id,
         default_industry=default_industry,
-        categories_count=len(categories),
+        categories_count=len(category_list),
     )
 
 
@@ -1069,10 +1069,10 @@ def edit(**kwargs):
     form = ProductForm(obj=product)
 
     # تعيين choices للتصنيفات
-    categories = ProductCategory.query.filter_by(
+    category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
-    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in categories]
+    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in category_list]
     warehouses = get_accessible_warehouses(current_user)
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
     partners = _scoped_customers_query("partner").order_by(Customer.name).all()
@@ -1104,7 +1104,7 @@ def edit(**kwargs):
                     "products/edit.html",
                     form=form,
                     product=product,
-                    categories=categories,
+                    categories=category_list,
                     warehouses=warehouses,
                     merchants=merchants,
                     partners=partners,
@@ -1125,7 +1125,7 @@ def edit(**kwargs):
                         "products/edit.html",
                         form=form,
                         product=product,
-                        categories=categories,
+                        categories=category_list,
                         warehouses=warehouses,
                         merchants=merchants,
                         partners=partners,
@@ -1140,7 +1140,7 @@ def edit(**kwargs):
                     "products/edit.html",
                     form=form,
                     product=product,
-                    categories=categories,
+                    categories=category_list,
                     warehouses=warehouses,
                     merchants=merchants,
                     partners=partners,
@@ -1205,7 +1205,7 @@ def edit(**kwargs):
                             "products/edit.html",
                             form=form,
                             product=product,
-                            categories=categories,
+                            categories=category_list,
                             warehouses=warehouses,
                             merchants=merchants,
                             partners=partners,
@@ -1220,7 +1220,7 @@ def edit(**kwargs):
                     "products/edit.html",
                     form=form,
                     product=product,
-                    categories=categories,
+                    categories=category_list,
                     warehouses=warehouses,
                     merchants=merchants,
                     partners=partners,
@@ -1305,7 +1305,7 @@ def edit(**kwargs):
         except Exception as e:
             flash(f"❌ فشل تحديث المنتج: {str(e)}", "danger")
 
-    categories = ProductCategory.query.filter_by(
+    category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
     product.visible_stock = StockService.get_product_stock(
@@ -1320,7 +1320,7 @@ def edit(**kwargs):
         "products/edit.html",
         form=form,
         product=product,
-        categories=categories,
+        categories=category_list,
         warehouses=warehouses,
         merchants=merchants,
         partners=partners,
@@ -1470,14 +1470,14 @@ def api_search():
 @login_required
 @permission_required("manage_products")
 def categories():
-    categories = (
+    category_list = (
         ProductCategory.query.filter_by(
             is_active=True, tenant_id=get_active_tenant_id(current_user)
         )
         .order_by(ProductCategory.name)
         .all()
     )
-    return render_template("products/categories.html", categories=categories)
+    return render_template("products/categories.html", categories=category_list)
 
 
 @products_bp.route("/categories/create", methods=["POST"])

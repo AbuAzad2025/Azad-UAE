@@ -63,32 +63,38 @@ class Query(graphene.ObjectType):
     all_products = graphene.List(ProductType, limit=graphene.Int())
     product = graphene.Field(ProductType, id=graphene.Int())
 
-    def resolve_all_sales(self, info, limit=50, offset=0):
+    @staticmethod
+    def resolve_all_sales(info, limit=50, offset=0):
         _require_permission("manage_sales")
         sales = tenant_query(Sale).limit(limit).offset(offset).all()
         return [Query._convert_sale_to_type(sale) for sale in sales]
 
-    def resolve_sale(self, info, record_id):
+    @staticmethod
+    def resolve_sale(info, record_id):
         _require_permission("manage_sales")
         sale = tenant_query(Sale).filter_by(id=record_id).first()
         return Query._convert_sale_to_type(sale) if sale else None
 
-    def resolve_all_customers(self, info, limit=50):
+    @staticmethod
+    def resolve_all_customers(info, limit=50):
         _require_permission("manage_customers")
         customers = tenant_query(Customer).limit(limit).all()
         return [Query._convert_customer_to_type(customer) for customer in customers]
 
-    def resolve_customer(self, info, record_id):
+    @staticmethod
+    def resolve_customer(info, record_id):
         _require_permission("manage_customers")
         customer = tenant_query(Customer).filter_by(id=record_id).first()
         return Query._convert_customer_to_type(customer) if customer else None
 
-    def resolve_all_products(self, info, limit=50):
+    @staticmethod
+    def resolve_all_products(info, limit=50):
         _require_permission("manage_products")
         products = tenant_query(Product).limit(limit).all()
         return [Query._convert_product_to_type(product) for product in products]
 
-    def resolve_product(self, info, record_id):
+    @staticmethod
+    def resolve_product(info, record_id):
         _require_permission("manage_products")
         product = tenant_query(Product).filter_by(id=record_id).first()
         return Query._convert_product_to_type(product) if product else None
@@ -137,7 +143,8 @@ class CreateSale(graphene.Mutation):
     sale = graphene.Field(SaleType)
     success = graphene.Boolean()
 
-    def mutate(self, info, customer_id, total_amount):
+    @staticmethod
+    def mutate(info, customer_id, total_amount):
         _require_permission("manage_sales")
         from utils.helpers import generate_number
         from decimal import Decimal

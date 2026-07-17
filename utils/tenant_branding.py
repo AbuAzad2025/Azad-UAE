@@ -25,7 +25,7 @@ def normalize_static_rel(path: str | None) -> str:
     p = (path or "").strip()
     if not p or _WINDOWS_ABS.match(p):
         return ""
-    if p.startswith("http://") or p.startswith("https://"):
+    if "://" in p:
         return p
     if p.startswith("/static/"):
         p = p[len("/static/") :]

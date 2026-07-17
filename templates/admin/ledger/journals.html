@@ -191,7 +191,7 @@
 {% block scripts %}
 <script>
 function reverseEntry(entryId) {
-  if (confirm('{{ t("Are you sure you want to reverse this entry? This action cannot be undone.") }}')) {
+  if (confirm("{{ t('Are you sure you want to reverse this entry? This action cannot be undone.') }}")) {
     fetch(`/ledger/entry/${entryId}/reverse`, {
       method: 'POST',
       headers: {
@@ -204,10 +204,10 @@ function reverseEntry(entryId) {
       if (data.success) {
         location.reload();
       } else {
-        alert('{{ t("Failed to reverse entry:") }} ' + data.message);
+        alert("{{ t('Failed to reverse entry:') }} " + data.message);
       }
     })
-    .catch(() => {      alert('{{ t("Error occurred while reversing entry") }}');
+    .catch(() => {      alert("{{ t('Error occurred while reversing entry') }}");
     });
   }
 }

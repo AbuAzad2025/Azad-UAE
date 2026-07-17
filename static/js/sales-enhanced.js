@@ -4,7 +4,6 @@
  */
 
 let lineIndex = 0;
-const productsCache = {};
 
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
@@ -161,14 +160,14 @@ function addLine() {
                     if (data.cost_price) {
                         $(`#cost_${currentIndex}`).text(parseFloat(data.cost_price).toFixed(2) + ' ' + (window._CURRENCY_SYMBOL || 'AED'));
                     }
-                    calculateTotals();
+                    void calculateTotals();
                 },
                 error: function() {
                     // Fallback to selected data
                     if (selectedData.price) {
                         $(`#price_${currentIndex}`).val(parseFloat(selectedData.price).toFixed(2));
                     }
-                    calculateTotals();
+                    void calculateTotals();
                 }
             });
         } else {
@@ -188,7 +187,7 @@ function addLine() {
         }
         
         // حساب الإجماليات
-        calculateTotals();
+        void calculateTotals();
     });
     
     lineIndex++;
@@ -200,7 +199,7 @@ function addLine() {
  */
 function removeLine(index) {
     $(`#line_${index}`).remove();
-    calculateTotals();
+    void calculateTotals();
 }
 
 /**
@@ -267,7 +266,7 @@ function loadProductPrice(index) {
 
             $(`#line_info_${index}`).show();
             
-            calculateTotals();
+            void calculateTotals();
             azad.hideLoading();
         },
         error: function() {
@@ -296,8 +295,10 @@ function triggerSerialModal(lineIndex) {
  * Update all line prices based on exchange rate
  */
 function updateLinePrices() {
-    const rate = parseFloat($('#exchange_rate').val()) || 1;
-    const currency = $('#currency').val();
+    const $exchangeRate = $('#exchange_rate');
+    const $currency = $('#currency');
+    const rate = parseFloat($exchangeRate.val()) || 1;
+    const currency = $currency.val();
     
     $('.product-line').each(function() {
         const index = $(this).find('.product-select').data('index');
@@ -314,11 +315,12 @@ function updateLinePrices() {
     });
     
     updateCurrencyLabels();
-    calculateTotals();
+    void calculateTotals();
 }
 
 function updateCurrencyLabels() {
-    const currency = $('#currency').val();
+    const $currency = $('#currency');
+    const currency = $currency.val();
     $('#discount_currency').text(currency);
     $('#shipping_currency').text(currency);
     $('#total_currency_label').text(currency);
@@ -464,8 +466,6 @@ $('#currency').on('change', function() {
                 $rateInput.data('server-rate', data.rate);
                 $rateInput.prop('readonly', false);
                 $rateInput.css('background-color', '#d4edda');
-                const examplePayment = 100;
-                const exampleBase = (examplePayment * data.rate).toFixed(2);
                 azad.showSuccess(`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} ${window._FX_FALLBACK_BASE || 'AED'}`);
                 updateLinePrices();
             } else if (data.manual_input_required) {
@@ -513,8 +513,9 @@ $('#exchange_rate').on('change', function() {
             );
             
             // Add hidden field to track manual override
-            $('#saleForm').find('input[name="exchange_rate_manual"]').remove();
-            $('#saleForm').append(`
+            const $saleForm = $('#saleForm');
+            $saleForm.find('input[name="exchange_rate_manual"]').remove();
+            $saleForm.append(`
                 <input type="hidden" name="exchange_rate_manual" value="true">
                 <input type="hidden" name="exchange_rate_server" value="${serverRate}">
                 <input type="hidden" name="exchange_rate_difference" value="${diff}">
@@ -528,8 +529,9 @@ $('#exchange_rate').on('change', function() {
     } else if (!serverRate) {
         // Manual input without server rate
         $(this).css('background-color', '#fff3cd');
-        $('#saleForm').find('input[name="exchange_rate_manual"]').remove();
-        $('#saleForm').append(`<input type="hidden" name="exchange_rate_manual" value="true">`);
+        const $saleForm = $('#saleForm');
+        $saleForm.find('input[name="exchange_rate_manual"]').remove();
+        $saleForm.append(`<input type="hidden" name="exchange_rate_manual" value="true">`);
     }
     
     updateLinePrices();
@@ -646,7 +648,7 @@ $(document).ready(function() {
     addLine();
     
     $('[name="discount_amount"], [name="shipping_cost"], [name="tax_rate"]').on('change keyup', function() {
-        calculateTotals();
+        void calculateTotals();
     });
     
     $('#saleForm').on('submit', async function(e) {

@@ -265,13 +265,13 @@
   let $modal = window.jQuery(modalEl);
 
   function esc(str) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.appendChild(document.createTextNode(str || ''));
     return div.innerHTML;
   }
 
   function buildDetailHtml(data) {
-    var html = '<dl class="row small">' +
+    let html = '<dl class="row small">' +
       '<dt class="col-sm-3">{{ t('الفئة') }}</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
       '<dt class="col-sm-3">{{ t('المستوى') }}</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
       '<dt class="col-sm-3">{{ t('المصدر') }}</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
@@ -315,10 +315,10 @@
   $modal.on('show.bs.modal', function(e) {
     $('body').addClass('error-audit-modal-open');
     try {
-      var btn = e.relatedTarget;
+      const btn = e.relatedTarget;
       if (!btn) return;
-      var id = btn.getAttribute('data-error-id');
-      var data = window.ERROR_LOG_DATA[id];
+      const id = btn.getAttribute('data-error-id');
+      const data = window.ERROR_LOG_DATA[id];
       if (!data) return;
       document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
       document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);

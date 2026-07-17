@@ -31,15 +31,16 @@ class KSAStrategy(LocalizationStrategy):
                 return sale_rate
         return self.default_vat_rate
 
-    def _sale_total(self, sale) -> Decimal:
+    @staticmethod
+    def _sale_total(sale) -> Decimal:
         for attr in ("total_aed", "amount_aed", "total_amount", "amount"):
             amount = coerce_decimal(getattr(sale, attr, None))
             if amount is not None:
                 return amount
         return Decimal("0")
 
-    def _extract_tax_from_inclusive(
-        self, total: Decimal, rate: Decimal
+    @staticmethod
+    def _extract_tax_from_inclusive( total: Decimal, rate: Decimal
     ) -> tuple[Decimal, Decimal]:
         total = Decimal(str(total))
         rate = Decimal(str(rate))
@@ -98,7 +99,8 @@ class KSAStrategy(LocalizationStrategy):
         cleaned = re.sub(r"\D", "", str(tax_number).strip())
         return bool(_TRN_PATTERN.match(cleaned))
 
-    def sign_zatca_payload(self, payload: str) -> str:
+    @staticmethod
+    def sign_zatca_payload(payload: str) -> str:
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         return digest
 

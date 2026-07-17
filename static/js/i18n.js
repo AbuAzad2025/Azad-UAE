@@ -3,11 +3,12 @@
  * نظام الترجمة في JavaScript
  */
 
+/* global Swal */
+
 // Get current language from session/cookie
 function getCurrentLanguage() {
     // Try to get from body data attribute
-    const lang = document.documentElement.lang || 'ar';
-    return lang;
+    return document.documentElement.lang || 'ar';
 }
 
 // Translation dictionary
@@ -584,18 +585,6 @@ const translations = {
     'New Manual Entry': { ar: 'قيد يدوي جديد', en: 'New Manual Entry' },
     'All Accounting Journals': { ar: 'جميع القيود المحاسبية', en: 'All Accounting Journals' },
     'Entry Number': { ar: 'رقم القيد', en: 'Entry Number' },
-    'Type': { ar: 'النوع', en: 'Type' },
-    'View Entry': { ar: 'عرض القيد', en: 'View Entry' },
-    'Reverse Entry': { ar: 'عكس القيد', en: 'Reverse Entry' },
-    'Posted': { ar: 'مرحل', en: 'Posted' },
-    'Draft': { ar: 'مسودة', en: 'Draft' },
-    'Reversed': { ar: 'معكوس', en: 'Reversed' },
-    'Total Journals': { ar: 'إجمالي القيود', en: 'Total Journals' },
-    'Posted Entries': { ar: 'قيود مرحلة', en: 'Posted Entries' },
-    'Drafts': { ar: 'مسودات', en: 'Drafts' },
-    'Reversed Entries': { ar: 'قيود معكوسة', en: 'Reversed Entries' },
-    'Previous': { ar: 'السابق', en: 'Previous' },
-    'Next': { ar: 'التالي', en: 'Next' },
     'Are you sure you want to reverse this entry? This action cannot be undone.': { ar: 'هل أنت متأكد من عكس هذا القيد؟ لا يمكن التراجع عن هذا الإجراء.', en: 'Are you sure you want to reverse this entry? This action cannot be undone.' },
     'Failed to reverse entry:': { ar: 'فشل في عكس القيد:', en: 'Failed to reverse entry:' },
     'Error occurred while reversing entry': { ar: 'حدث خطأ أثناء عكس القيد', en: 'Error occurred while reversing entry' },
@@ -640,7 +629,6 @@ const translations = {
     'Official contact with Azad': { ar: 'التواصل الرسمي مع أزاد', en: 'Official contact with Azad' },
     'Open Azad WhatsApp': { ar: 'فتح واتساب أزاد', en: 'Open Azad WhatsApp' },
     'Send Email': { ar: 'إرسال بريد', en: 'Send Email' },
-    'Close': { ar: 'إغلاق', en: 'Close' },
     'Minimum donation amount is': { ar: 'الحد الأدنى للتبرع هو', en: 'Minimum donation amount is' },
     'Minimum donation': { ar: 'الحد الأدنى للتبرع', en: 'Minimum donation' },
     'Creating payment address...': { ar: 'جاري إنشاء عنوان الدفع...', en: 'Creating payment address...' },
@@ -661,7 +649,6 @@ const translations = {
     'Azad WhatsApp': { ar: 'واتساب أزاد', en: 'Azad WhatsApp' },
     'Email us': { ar: 'راسلنا بريد', en: 'Email us' },
     'Order saved successfully': { ar: 'تم حفظ الطلب بنجاح', en: 'Order saved successfully' },
-    'Payment Method': { ar: 'طريقة الدفع', en: 'Payment Method' },
     'Order registered pending follow-up or confirmation': { ar: 'تم تسجيل الطلب بانتظار المتابعة أو التأكيد', en: 'Order registered pending follow-up or confirmation' },
     'Could not create order': { ar: 'تعذر إنشاء الطلب', en: 'Could not create order' },
     'Error occurred while creating the order': { ar: 'حدث خطأ أثناء إنشاء الطلب', en: 'Error occurred while creating the order' },
@@ -674,8 +661,6 @@ const translations = {
     'You can follow up directly with Azad via WhatsApp or email for the same amount': { ar: 'يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ', en: 'You can follow up directly with Azad via WhatsApp or email for the same amount' },
     'Copied!': { ar: 'تم النسخ!', en: 'Copied!' },
     'Address copied to clipboard': { ar: 'تم نسخ العنوان إلى الحافظة', en: 'Address copied to clipboard' },
-    'Payment Details': { ar: 'بيانات الدفع', en: 'Payment Details' },
-    'Full Name': { ar: 'الاسم الكامل', en: 'Full Name' },
     'Email address': { ar: 'بريد إلكتروني', en: 'Email address' },
     'Mobile Number': { ar: 'رقم الجوال', en: 'Mobile Number' },
     'Company Name': { ar: 'اسم الشركة', en: 'Company Name' },

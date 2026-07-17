@@ -219,12 +219,17 @@ def build_system_health_summary() -> dict:
         "predeploy_hint": "python tools/qa/predeploy_check.py --profile local",
     }
     try:
-        from flask import has_app_context
-        from flask_migrate import current as alembic_current
+        from sqlalchemy import create_engine, text
 
-        if has_app_context():
-            rev = alembic_current()
-            summary["migration"] = rev or "head"
+        url = os.environ.get("DATABASE_URL") or os.environ.get(
+            "SQLALCHEMY_DATABASE_URI"
+        )
+        if url:
+            with create_engine(url).connect() as conn:
+                rev = conn.execute(
+                    text("SELECT version_num FROM alembic_version LIMIT 1")
+                ).scalar()
+                summary["migration"] = str(rev) if rev else "head"
     except Exception:
         summary["migration"] = "check alembic"
 

@@ -7,30 +7,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
-  <style>
+<style>
+    :root {
+      --header-color: {{ settings.header_color or '#c9a961' }};
+      --accent-color: {{ settings.accent_color or '#8b7355' }};
+      --accent-gradient: linear-gradient(135deg, var(--header-color) 0%, var(--accent-color) 100%);
+    }
     body {
       font-family: 'Noto Kufi Arabic', 'Arial', sans-serif;
-      background: linear-gradient(135deg, #8b7355 0%, #c9a961 100%);
+      background: var(--accent-gradient);
       color: #1a1a1a;
     }
     .invoice {
       {% if settings.paper_size == 'A5' %}
-        width: 100%;
-        max-height: {{ '200mm' if settings.orientation == 'portrait' else '138mm' }};
+        --page-width: 100%;
+        --page-max-height: {{ '200mm' if settings.orientation == 'portrait' else '138mm' }};
       {% elif settings.paper_size == 'Letter' %}
-        width: 100%;
-        max-height: {{ '269mm' if settings.orientation == 'portrait' else '206mm' }};
+        --page-width: 100%;
+        --page-max-height: {{ '269mm' if settings.orientation == 'portrait' else '206mm' }};
       {% else %}
-        width: 100%;
-        max-height: {{ '287mm' if settings.orientation == 'portrait' else '200mm' }};
+        --page-width: 100%;
+        --page-max-height: {{ '287mm' if settings.orientation == 'portrait' else '200mm' }};
       {% endif %}
-      border: 1px solid {{ settings.header_color or '#c9a961' }};
+      width: var(--page-width);
+      max-height: var(--page-max-height);
+      border: 1px solid var(--header-color);
       border-radius: 5px;
       overflow: visible;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
     .header {
-      background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
+      background: var(--accent-gradient);
       color: white;
       padding: 10px;
       text-align: center;
@@ -51,9 +58,9 @@
       background: #f8f9fa;
       padding: 8px;
       text-align: center;
-      border-bottom: 1px solid {{ settings.accent_color or '#8b7355' }};
+      border-bottom: 1px solid var(--accent-color);
     }
-    .invoice-title { font-size: 9px; font-weight: 700; color: {{ settings.header_color or '#c9a961' }}; margin-bottom: 3px; }
+    .invoice-title { font-size: 9px; font-weight: 700; color: var(--header-color); margin-bottom: 3px; }
     .invoice-number { font-size: 9px; color: #666; }
     .content { padding: 10px; }
     .info-boxes {
@@ -64,24 +71,24 @@
     }
     .info-box {
       background: linear-gradient(to bottom, #fff 0%, #f8f9fa 100%);
-      border: 1px solid {{ settings.accent_color or '#8b7355' }};
+      border: 1px solid var(--accent-color);
       border-radius: 5px;
       padding: 6px;
     }
-    .info-box h3 { color: {{ settings.header_color or '#c9a961' }}; font-size: 8px; margin-bottom: 4px; border-bottom: 1px solid {{ settings.accent_color or '#8b7355' }}; padding-bottom: 3px; }
+    .info-box h3 { color: var(--header-color); font-size: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--accent-color); padding-bottom: 3px; }
     .info-box p { margin: 2px 0; font-size: 8px; }
     table {
       margin: 8px 0;
-      border: 1px solid {{ settings.accent_color or '#8b7355' }};
+      border: 1px solid var(--accent-color);
     }
-    thead { background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%); }
+    thead { background: var(--accent-gradient); }
     th { padding: 5px 4px; text-align: center; font-weight: 700; }
     td { padding: 4px; text-align: center; border-bottom: 1px solid #dee2e6; }
     tbody tr:nth-child(even) { background: #f8f9fa; }
     .totals {
       margin-top: 10px;
       background: linear-gradient(to bottom, #fff 0%, #f8f9fa 100%);
-      border: 1px solid {{ settings.accent_color or '#8b7355' }};
+      border: 1px solid var(--accent-color);
       border-radius: 8px;
       padding: 8px;
       width: 400px;
@@ -90,7 +97,7 @@
     }
     .total-row { border-bottom: 1px dashed #dee2e6; }
     .total-row.final {
-      background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
+      background: var(--accent-gradient);
       color: white;
       padding: 10px;
       margin-top: 10px;
@@ -99,12 +106,12 @@
     }
     .payments-table {
       margin-top: 10px;
-      border: 1px solid {{ settings.accent_color or '#8b7355' }};
+      border: 1px solid var(--accent-color);
       border-radius: 8px;
       overflow: hidden;
     }
     .payments-header {
-      background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
+      background: var(--accent-gradient);
       color: white;
       padding: 10px;
       text-align: center;
@@ -126,7 +133,7 @@
       font-size: 9px;
     }
     .footer {
-      background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
+      background: var(--accent-gradient);
       color: white;
       padding: 8px;
       text-align: center;
@@ -138,7 +145,7 @@
       justify-content: space-around;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 2px dashed {{ settings.accent_color or '#8b7355' }};
+      border-top: 2px dashed var(--accent-color);
     }
     .signature-box { text-align: center; width: 150px; }
     .signature-line { border-top: 2px solid #333; margin-top: 40px; padding-top: 8px; font-size: 8px; }
@@ -155,30 +162,6 @@
     .ic-5 { width: 13%; }
     .ic-6 { width: 14%; }
     .ic-7 { width: 15%; }
-    .ic-8 { text-align: right; }
-    .ic-9 { color: #dc3545; }
-    .ic-10 { padding: 10px; }
-    .ic-11 { font-size: 8px; }
-    .ic-12 { display: flex; justify-content: space-between; margin-bottom: 5px; }
-    .ic-13 { margin: 0 8px; }
-    .ic-14 { font-weight: bold; color: #28a745; font-size: 9px; }
-    .ic-15 { font-size: 9px; color: #666; }
-    .ic-16 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
-    .ic-17 { font-size: 8px; font-weight: bold; }
-    .ic-18 { background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin-top: 8px; }
-    .ic-19 { margin-top: 5px; font-size: 8px; }
-    .ic-20 { font-size: 9px; margin-bottom: 5px; }
-    .ic-21 { margin: 12px 0; padding: 6px; background: rgba(255,255,255,0.15); border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); }
-    .ic-22 { font-weight: 700; font-size: 9px; margin-bottom: 6px; text-align: center; }
-    .ic-23 { font-size: 9px; line-height: 1.6; text-align: center; }
-    .ic-24 { font-size: 8px; opacity: 0.8; margin-bottom: 8px; text-align: center; }
-    .ic-25 { background: rgba(255,243,205,0.3); border-right: 3px solid #ffc107; padding: 8px; margin: 10px 0; border-radius: 5px; }
-    .ic-26 { font-size: 9px; margin: 0; }
-    .ic-27 { margin-top: 10px; font-size: 8px; }
-    .ic-28 { margin: 0 5px; color: rgba(255,255,255,0.9); text-decoration: none; }
-    .ic-29 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
-    .ic-30 { width: 100%; }
-    .ic-31 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic', sans-serif; }
   </style>
 </head>
 <body class="invoice-print gulf-invoice">

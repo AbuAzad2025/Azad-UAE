@@ -265,10 +265,10 @@
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['{{ t('Plan') }} {{ t('الأساسية') }}', '{{ t('Plan') }} {{ t('الاحترافية') }}', '{{ t('Plan_2') }} {{ t('الشركات') }}'],
+            labels: ["{{ t('Plan') }} {{ t('الأساسية') }}", "{{ t('Plan') }} {{ t('الاحترافية') }}", "{{ t('Plan_2') }} {{ t('الشركات') }}"],
             datasets: [{
-                label: '{{ t('Count') }} {{ t('Sales') }}',
-                data: {{ package_stats|tojson }},
+                label: "{{ t('Count') }} {{ t('Sales') }}",
+                data: JSON.parse('{{ package_stats|tojson }}'),
                 backgroundColor: [
                     'rgba(102, 126, 234, 0.8)',
                     'rgba(245, 87, 108, 0.8)',
@@ -320,26 +320,29 @@ function viewPackageStats(packageId, packageName) {
                     </div>
                 `,
                 icon: 'info',
-                confirmButtonText: '{{ t('حسناً') }}'
+                confirmButtonText: "{{ t('حسناً') }}"
             });
         })
         .catch(() => {
             Swal.fire({
                 icon: 'error',
-                title: '{{ t('Error') }}',
-                text: '{{ t('فشل') }} في {{ t('جلب') }} {{ t('Statistics') }}'
+                title: "{{ t('Error') }}",
+                text: "{{ t('فشل') }} في {{ t('جلب') }} {{ t('Statistics') }}"
             });
         });
 }
 
 function togglePackageStatus(packageId) {
+    var _change = "{{ t('Change') }}";
+    var _status2 = "{{ t('Status_2') }}";
+    var _plan = "{{ t('Plan') }}";
     Swal.fire({
-        title: '{{ t('Change') }} {{ t('Status_2') }} {{ t('Plan') }}',
-        text: 'هل {{ t('تريد') }} {{ t('Change') }} {{ t('Status_2') }} هذه {{ t('Plan') }} ({{ t('Active') }}/{{ t('معطل') }})؟',
+        title: _change + ' ' + _status2 + ' ' + _plan,
+        text: "هل {{ t('تريد') }} " + _change + ' ' + _status2 + ' هذه ' + _plan + " ({{ t('Active') }}/{{ t('معطل') }})؟",
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'نعم',
-        cancelButtonText: '{{ t('Cancel') }}'
+        cancelButtonText: "{{ t('Cancel') }}"
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(`/payment-vault/package/${packageId}/toggle`, {
@@ -351,9 +354,9 @@ function togglePackageStatus(packageId) {
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('تم!', 'تم {{ t('Update') }} {{ t('Status') }}', 'success').then(() => location.reload());
+                        Swal.fire('تم!', "تم {{ t('Update') }} {{ t('Status') }}", 'success').then(() => location.reload());
                     } else {
-                        Swal.fire('{{ t('Error') }}', data.error || '{{ t('تعذر') }} {{ t('Update') }} {{ t('Status') }}', 'error');
+                        Swal.fire("{{ t('Error') }}", data.error || "{{ t('تعذر') }} {{ t('Update') }} {{ t('Status') }}", 'error');
                     }
                 });
         }

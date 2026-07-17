@@ -82,7 +82,8 @@ class TestConfirmationGuards:
 class TestBundleExtraction:
     """extract_scoped_bundle — manifest, data dir, legacy export."""
 
-    def _write_bundle(self, path, members):
+    @staticmethod
+    def _write_bundle(path, members):
         with tarfile.open(path, "w:gz") as tar:
             for name, content in members.items():
                 if isinstance(content, bytes):
@@ -217,7 +218,8 @@ class TestIdRemap:
 class TestImportScopedTables:
     """import_scoped_tables — insert loop, rollback on row errors, fatal table guard."""
 
-    def _mock_engine(self, mocker):
+    @staticmethod
+    def _mock_engine(mocker):
         conn = MagicMock()
         MagicMock()
         conn.begin_nested.return_value.__enter__ = MagicMock(return_value=None)

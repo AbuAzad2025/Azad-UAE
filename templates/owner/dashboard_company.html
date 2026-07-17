@@ -356,7 +356,7 @@
 
 function updateTenantSetting(field, value) {
 
-  let btn = event && event.target ? $(event.target) : $('button:first');
+  let targetEl = event && event.target ? $(event.target) : $('button:first');
 
   btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
@@ -434,7 +434,7 @@ function toggleWarehouseNegative() {
 
     contentType: 'application/json',
 
-    data: JSON.stringify({ warehouse_id: {{ warehouses[0].id if warehouses else 0 }} }),
+    data: JSON.stringify({ warehouse_id: JSON.parse('{{ warehouses[0].id if warehouses else 0 }}') }),
 
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
 

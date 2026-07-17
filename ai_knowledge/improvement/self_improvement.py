@@ -73,7 +73,7 @@ class AzadSelfImprovement:
         return {
             "total_improvements": 0,
             "last_improvement_date": None,
-            "improvement_history": [],
+            "improvement_history": []
             "current_version": "1.0.0",
             "next_version": "1.1.0",
         }
@@ -202,7 +202,8 @@ class AzadSelfImprovement:
 
         return opportunities
 
-    def _get_area_description(self, area):
+    @staticmethod
+    def _get_area_description(area):
         """الحصول على وصف المجال"""
         descriptions = {
             "response_quality": "جودة الردود ودقتها",

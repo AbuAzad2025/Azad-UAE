@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-{% if is_en %}
-<html lang="{{ lang }}" dir="ltr">
-{% else %}
-<html lang="{{ lang }}" dir="rtl">
-{% endif %}
+<html lang="{{ lang }}" dir="{{ 'ltr' if is_en else 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

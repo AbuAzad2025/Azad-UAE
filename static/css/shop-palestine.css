@@ -21,6 +21,9 @@
   --azad-ink-2: #0A171B;
   --azad-cream: #F7F3E9;
   --azad-warm-white: #FFFDF7;
+  /* Theme brand aliases (palette-faithful to the Palestine flag tones) */
+  --theme-primary: var(--ps-green);
+  --theme-secondary: var(--ps-red);
 }
 
 *, *::before, *::after { box-sizing: border-box; }

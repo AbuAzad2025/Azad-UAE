@@ -45,30 +45,21 @@ def card_key(app):
 
 
 class TestCardPaymentImportFallback:
-    def test_init_crypto_without_library(self, monkeypatch):
-        import builtins
+    def test_fernet_stub_raises_on_instantiation(self):
+        from models.card_payment import _FernetStub
+
+        stub = _FernetStub
+        assert stub is not None
+        with pytest.raises(RuntimeError, match="cryptography module not installed"):
+            stub(b"test-key")
+
+    def test_module_level_import_succeeded(self):
         import models.card_payment as cp
 
-        real_import = builtins.__import__
-
-        def _mock(name, globals_dict=None, locals_dict=None, fromlist=(), level=0):
-            if name == "cryptography.fernet":
-                raise ImportError("no cryptography")
-            return real_import(name, globals_dict, locals_dict, fromlist, level)
-
-        monkeypatch.setattr(builtins, "__import__", _mock)
-        monkeypatch.setattr(cp, "HAS_CRYPTO", None)
-        monkeypatch.setattr(cp, "Fernet", None)
-        cp._init_crypto()
-        assert cp.HAS_CRYPTO is False
-        assert cp.Fernet is None
-
-    def test_init_crypto_idempotent(self):
-        import models.card_payment as cp
-
-        before = cp.HAS_CRYPTO
-        cp._init_crypto()
-        assert cp.HAS_CRYPTO == before
+        assert cp.HAS_CRYPTO is True
+        assert callable(cp.Fernet)
+        # Verify it's the real Fernet, not the stub
+        assert cp.Fernet.__name__ == "Fernet"
 
 
 class TestCardPaymentDisplay:

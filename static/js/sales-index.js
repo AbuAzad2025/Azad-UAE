@@ -15,6 +15,7 @@ $(document).ready(function() {
       responsive: true,
       dom: 'Bfrtip',
       buttons: SmartPrint.buildButtons(printOptions),
+      // noinspection JSUnusedGlobalSymbols
       footerCallback: function() {
         const api = this.api();
         const total = api.column(3, { page: 'current' }).data().reduce(function(a, b) {

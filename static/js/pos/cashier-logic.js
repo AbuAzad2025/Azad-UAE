@@ -2,6 +2,7 @@
  * Pure POS cashier logic (cart + quick totals).
  * Mirrors static/js/pos/index.js — testable without DOM.
  */
+/* global module */
 'use strict';
 
 function toNum(v) {

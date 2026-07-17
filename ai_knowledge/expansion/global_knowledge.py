@@ -36,7 +36,8 @@ class GlobalKnowledgeConnector:
         self.cache_duration = 3600  # ساعة واحدة
         self.cached_data = {}
 
-    def fetch_global_automotive_news(self):
+    @staticmethod
+    def fetch_global_automotive_news():
         """جلب أخبار السيارات العالمية"""
         try:
             # محاكاة جلب الأخبار (في الواقع ستحتاج APIs حقيقية)
@@ -72,7 +73,8 @@ class GlobalKnowledgeConnector:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def fetch_heavy_equipment_trends(self):
+    @staticmethod
+    def fetch_heavy_equipment_trends():
         """جلب اتجاهات المعدات الثقيلة"""
         try:
             equipment_trends = {
@@ -107,7 +109,8 @@ class GlobalKnowledgeConnector:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def fetch_tax_regulation_updates(self):
+    @staticmethod
+    def fetch_tax_regulation_updates():
         """جلب تحديثات الأنظمة الضريبية"""
         try:
             # محاكاة جلب التحديثات الضريبية
@@ -143,7 +146,8 @@ class GlobalKnowledgeConnector:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def fetch_currency_rates(self):
+    @staticmethod
+    def fetch_currency_rates():
         """جلب أسعار العملات العالمية"""
         try:
             # استخدام API حقيقي لأسعار العملات
@@ -345,7 +349,8 @@ class GlobalExpertiseUpdater:
 
         return updates
 
-    def _calculate_progress(self, current_level):
+    @staticmethod
+    def _calculate_progress(current_level):
         """حساب التقدم في الخبرة"""
         levels = ["مبتدئ", "متوسط", "متقدم", "خبير محلي", "خبير إقليمي", "خبير عالمي"]
 
@@ -356,7 +361,8 @@ class GlobalExpertiseUpdater:
         except ValueError:
             return 0.0
 
-    def _get_learning_recommendations(self, area, global_insights):
+    @staticmethod
+    def _get_learning_recommendations(area, global_insights):
         """الحصول على توصيات التعلم"""
         recommendations = []
 

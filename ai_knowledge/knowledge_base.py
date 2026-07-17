@@ -840,7 +840,8 @@ class AutomotiveECUKnowledge:
         self.knowledge_base = self._build_comprehensive_knowledge()
         logger.info("🚗 Automotive ECU Knowledge initialized")
 
-    def _build_comprehensive_knowledge(self) -> dict:
+    @staticmethod
+    def _build_comprehensive_knowledge() -> dict:
         """بناء قاعدة المعرفة الشاملة"""
         return {
             # ========== ECU - وحدة التحكم في المحرك ==========

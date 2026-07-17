@@ -146,7 +146,8 @@ class TestCreateAdvance:
 
 
 class TestProcessPayroll:
-    def _run_payroll(self, emp, **kwargs):
+    @staticmethod
+    def _run_payroll(emp, **kwargs):
         gl_entry = MagicMock(id=88)
         patches = [
             patch("services.payroll_service.GLService.ensure_core_accounts"),

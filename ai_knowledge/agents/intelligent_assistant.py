@@ -219,7 +219,8 @@ class IntelligentAssistant:
             logger.error(f"Understanding failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def _extract_entities(self, message: str) -> Dict:
+    @staticmethod
+    def _extract_entities(message: str) -> Dict:
         """استخراج الكيانات من الرسالة"""
         import re
 
@@ -489,8 +490,8 @@ class IntelligentAssistant:
             logger.error(f"Analysis failed: {e}")
             return {"insights": [], "warnings": [], "recommendations": []}
 
-    def _generate_dynamic_response(
-        self, intent: str, analysis: Dict, _entities: Dict, data: Dict
+    @staticmethod
+    def _generate_dynamic_response( intent: str, analysis: Dict, _entities: Dict, data: Dict
     ) -> str:
         """توليد رد ديناميكي - ليس مسبق الحفظ"""
         try:
@@ -652,7 +653,8 @@ class IntelligentAssistant:
         except Exception as e:
             logger.error(f"Learning failed: {e}")
 
-    def _generate_help_response(self, _message: str) -> Dict:
+    @staticmethod
+    def _generate_help_response(_message: str) -> Dict:
         """رد المساعدة عند عدم الفهم"""
         return {
             "success": True,

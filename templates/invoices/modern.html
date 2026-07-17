@@ -1,38 +1,41 @@
 <!DOCTYPE html>
-{% if is_rtl %}
-<html lang="ar" dir="rtl">
-{% else %}
-<html lang="ar" dir="ltr">
-{% endif %}
+<html lang="ar" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
-  <style>
+<style>
+    :root {
+      --header-color: {{ settings.header_color if settings else '#667eea' }};
+      --accent-color: {{ settings.accent_color if settings else '#764ba2' }};
+      --accent-gradient: linear-gradient(135deg, var(--header-color) 0%, var(--accent-color) 100%);
+    }
     body {
       font-family: 'Tajawal', 'Arial', sans-serif;
       background: #95a5a6;
     }
     .invoice {
       {% if settings and settings.paper_size == 'A5' %}
-        width: 212mm;
-        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings and settings.paper_size == 'Letter' %}
-        width: 212mm;
-        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
-        width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
-        height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+        --page-width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
+        --page-height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
       {% endif %}
+      width: var(--page-width);
+      height: var(--page-height);
       border-radius: 0;
       overflow: auto;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
       position: relative;
     }
     .header {
-      background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
+      background: var(--accent-gradient);
       color: white;
       padding: 15px 20px;
       text-align: center;
@@ -44,10 +47,10 @@
       background: #f8f9fa;
       padding: 12px 15px;
       text-align: center;
-      border-bottom: 1px solid {{ settings.accent_color if settings else '#764ba2' }};
+      border-bottom: 1px solid var(--accent-color);
     }
-    .invoice-title h2 { color: {{ settings.header_color if settings else '#667eea' }}; font-size: 16px; margin: 0; }
-    .invoice-number { color: {{ settings.accent_color if settings else '#764ba2' }}; font-size: 8px; margin-top: 5px; }
+    .invoice-title h2 { color: var(--header-color); font-size: 16px; margin: 0; }
+    .invoice-number { color: var(--accent-color); font-size: 8px; margin-top: 5px; }
     .content { padding: 15px 20px; }
     .info-grid {
       display: grid;
@@ -59,15 +62,15 @@
       background: #f8f9fa;
       padding: 10px 12px;
       border-radius: 6px;
-      border-right: 3px solid {{ settings.accent_color if settings else '#764ba2' }};
+      border-right: 3px solid var(--accent-color);
     }
-    .info-box h3 { color: {{ settings.header_color if settings else '#667eea' }}; margin-bottom: 8px; font-size: 9px; }
+    .info-box h3 { color: var(--header-color); margin-bottom: 8px; font-size: 9px; }
     .info-box p { margin: 4px 0; color: #555; font-size: 8px; }
     table {
       margin: 10px 0;
     }
     thead {
-      background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
+      background: var(--accent-gradient);
     }
     th, td {
       border-bottom: 1px solid #e0e0e0;
@@ -81,14 +84,14 @@
       border-radius: 6px;
     }
     .total-row.final {
-      border-top: 2px solid {{ settings.header_color if settings else '#667eea' }};
-      color: {{ settings.header_color if settings else '#667eea' }};
+      border-top: 2px solid var(--header-color);
+      color: var(--header-color);
     }
     .footer {
       background: #f8f9fa;
       padding: 12px 15px;
       text-align: center;
-      border-top: 2px solid {{ settings.accent_color if settings else '#764ba2' }};
+      border-top: 2px solid var(--accent-color);
     }
     .qr-code { margin: 10px 0; }
 
@@ -100,22 +103,7 @@
     .ic-5 { padding: 4px; }
     .ic-6 { padding: 4px; font-weight: bold; color: #28a745; }
     .ic-7 { padding: 4px; font-size: 8px; }
-    .ic-8 { background: #fff3cd; padding: 3px 5px; border-radius: 3px; border-right: 2px solid #ffc107; }
-    .ic-9 { font-size: 9px; margin: 3px 0; }
-    .ic-10 { margin-top: 8px; font-size: 8px; color: #666; text-align: center; }
-    .ic-11 { margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; border-right: 2px solid #ffc107; }
-    .ic-12 { font-size: 9px; color: #856404; margin: 0; }
-    .ic-13 { margin-top: 10px; font-size: 9px; }
-    .ic-14 { margin-top: 10px; text-align: center; }
-    .ic-15 { margin: 0 5px; color: #1877f2; text-decoration: none; font-size: 8px; }
-    .ic-16 { margin: 0 5px; color: #e4405f; text-decoration: none; font-size: 8px; }
-    .ic-17 { margin: 0 5px; color: #25d366; text-decoration: none; font-size: 8px; }
-    .ic-18 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
-    .ic-19 { width: 100%; max-height: 400px; }
-    .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.05); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap; }
-    .erp-invoice-accent-color { color: {{ settings.header_color if settings else '#667eea' }}; }
-    .erp-invoice-accent-border { border-right: 3px solid {{ settings.header_color if settings else '#667eea' }}; }
-  </style>
+</style>
 </head>
 <body class="invoice-print modern-invoice">
   <div class="invoice">

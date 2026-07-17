@@ -61,7 +61,8 @@ def pos_setup(
 class TestPosCheckoutAtomicity:
     """P0: POS checkout must fully roll back on any mid-transaction failure."""
 
-    def _checkout_payload(self, setup):
+    @staticmethod
+    def _checkout_payload(setup):
         return {
             "customer_id": setup["customer"].id,
             "warehouse_id": setup["warehouse"].id,

@@ -3,6 +3,8 @@
  * إدارة عمليات الحذف في كل النظام مع تأكيد وأرشفة
  */
 
+/* global Swal, toastr */
+
 (function($) {
   'use strict';
 
@@ -102,7 +104,7 @@
   // =====================================
   // حذف عنصر عام
   // =====================================
-  window.deleteItem = function(itemType, itemId, itemName, redirectUrl) {
+  window.deleteItem = function(itemType, itemId, itemName) {
     const normalizedType = normalizeType(itemType);
     const deleteUrl = resolveActionUrl(normalizedType, itemId, 'delete');
     if (!deleteUrl) {

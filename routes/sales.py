@@ -716,11 +716,11 @@ def restore(**kwargs):
     archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
-    archived = archived_query.first_or_404()
+    archived_record = archived_query.first_or_404()
 
     try:
         with atomic_transaction("sale_restore"):
-            db.session.delete(archived)
+            db.session.delete(archived_record)
             LoggingCore.log_audit("restore", "sales", record_id)
     except Exception as e:
         flash(f"❌ حدث خطأ في استعادة الفاتورة: {str(e)}", "danger")

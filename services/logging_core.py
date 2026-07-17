@@ -358,7 +358,8 @@ class _RateMonitor:
             self._prune(bucket, now)
             return sum(c for ts, c in bucket)
 
-    def _prune(self, bucket: list, now: float, window: int = 300):
+    @staticmethod
+    def _prune(bucket: list, now: float, window: int = 300):
         cutoff = now - window
         while bucket and bucket[0][0] < cutoff:
             bucket.pop(0)

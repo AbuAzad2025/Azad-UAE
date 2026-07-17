@@ -14,8 +14,8 @@ class QuickLearner:
     def __init__(self):
         pass
 
+    @staticmethod
     def learn(
-        self,
         question: str,
         answer: str,
         category: str = "general",
@@ -89,7 +89,8 @@ class QuickLearner:
         """Backward compatibility: provide dict-like access for trainer.get_stats()."""
         return {}
 
-    def _bump_access(self, row):
+    @staticmethod
+    def _bump_access(row):
         from extensions import db
 
         row.access_count = (row.access_count or 0) + 1

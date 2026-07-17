@@ -11,7 +11,8 @@ import pytest
 class TestARGLBalance:
     """_gl_balance — tenant/branch scoped debit-minus-credit."""
 
-    def _mock_scalar_chain(self, mocker, debit_val, credit_val):
+    @staticmethod
+    def _mock_scalar_chain(mocker, debit_val, credit_val):
         debit_q = MagicMock()
         debit_q.filter.return_value = debit_q
         debit_q.join.return_value = debit_q
@@ -120,7 +121,8 @@ class TestAROpsUnpaid:
 class TestARBuildReport:
     """build_report — matched rows, missing GL account, aggregate totals."""
 
-    def _patch_row(self, mocker, gl_bal, ops_bal, account=None):
+    @staticmethod
+    def _patch_row(mocker, gl_bal, ops_bal, account=None):
         from models import GLAccount
 
         acc = account or MagicMock(id=99)

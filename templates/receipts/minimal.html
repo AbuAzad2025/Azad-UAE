@@ -7,6 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" integrity="sha384-CvlNQrHy75vXbwDgh6a2UC8k1/0yTKw1CLlDbHcizKhUtcpDa41jo7OhSX4UVeb2" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
+    :root {
+      --header-color: {{ settings.header_color or '#28a745' }};
+      --accent-color: {{ settings.accent_color or '#20c997' }};
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Cairo', 'Arial', sans-serif;
@@ -26,15 +30,17 @@
     }
     .receipt {
       {% if settings.paper_size == 'A5' %}
-        width: 212mm;
-        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings.paper_size == 'Letter' %}
-        width: 212mm;
-        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
-        width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
-        height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
+        --page-width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
+        --page-height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
       {% endif %}
+      width: var(--page-width);
+      height: var(--page-height);
       margin: 0 auto;
       background: white;
       padding: 0;
@@ -42,10 +48,10 @@
       overflow: auto;
     }
     .header {
-      background: {{ settings.header_color or '#28a745' }};
+      background: var(--header-color);
       color: white;
       padding: 10px;
-      border-bottom: 4px solid {{ settings.accent_color or '#20c997' }};
+      border-bottom: 4px solid var(--accent-color);
     }
     .header-content {
       display: flex;

@@ -1745,8 +1745,8 @@ class TestInventoryQueries:
 
 
 class TestReconcileStock:
-    def _setup_reconcile_queries(
-        self, mocker, *, existing_rows, movement_rows, pws_sum_rows, products
+    @staticmethod
+    def _setup_reconcile_queries( mocker, *, existing_rows, movement_rows, pws_sum_rows, products
     ):
         session = mocker.patch("services.stock_service.db.session")
 

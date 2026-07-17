@@ -64,7 +64,8 @@ class TransformersBrain:
             f"🤖 Transformers Brain initialized - Vocab: {vocab_size}, Model: {d_model}, Heads: {n_heads}"
         )
 
-    def _build_vocabulary(self) -> dict:
+    @staticmethod
+    def _build_vocabulary() -> dict:
         """
         بناء قاموس المفردات العربية المتخصصة
         """
@@ -173,11 +174,13 @@ class TransformersBrain:
         # دمج النتائج
         return heads_output[: self.d_model]  # تقليم للحجم الصحيح
 
-    def _dot_product(self, vec1: List[float], vec2: List[float]) -> float:
+    @staticmethod
+    def _dot_product(vec1: List[float], vec2: List[float]) -> float:
         """حساب الضرب النقطي"""
         return sum(a * b for a, b in zip(vec1, vec2))
 
-    def _softmax(self, scores: List[float]) -> List[float]:
+    @staticmethod
+    def _softmax(scores: List[float]) -> List[float]:
         """دالة Softmax"""
         exp_scores = [np.exp(s) for s in scores]
         sum_exp = sum(exp_scores)
@@ -187,7 +190,8 @@ class TransformersBrain:
     # Positional Encoding - ترميز الموضع
     # ========================================================================
 
-    def positional_encoding(self, position: int, d_model: int) -> List[float]:
+    @staticmethod
+    def positional_encoding(position: int, d_model: int) -> List[float]:
         """
         ترميز الموضع
 
@@ -252,7 +256,8 @@ class TransformersBrain:
 
         return final_output
 
-    def _layer_norm(self, x: List[float]) -> List[float]:
+    @staticmethod
+    def _layer_norm(x: List[float]) -> List[float]:
         """
         تطبيع الطبقة
 
@@ -318,7 +323,8 @@ class TransformersBrain:
             "model": "transformers",
         }
 
-    def _tokenize(self, text: str) -> List[str]:
+    @staticmethod
+    def _tokenize(text: str) -> List[str]:
         """تجزئة النص لكلمات"""
         # تنظيف النص
         text = text.strip()
@@ -352,7 +358,8 @@ class TransformersBrain:
 
         return combined
 
-    def _extract_intent(self, text: str, representation: List[float]) -> str:
+    @staticmethod
+    def _extract_intent(text: str, representation: List[float]) -> str:
         """استخراج النية من النص"""
         text_lower = text.lower()
 
@@ -368,7 +375,8 @@ class TransformersBrain:
         else:
             return "statement"
 
-    def _extract_entities(self, text: str, tokens: List[str]) -> Dict[str, List[str]]:
+    @staticmethod
+    def _extract_entities(text: str, tokens: List[str]) -> Dict[str, List[str]]:
         """استخراج الكيانات المسماة"""
         entities: dict[str, list[str]] = {
             "numbers": [],

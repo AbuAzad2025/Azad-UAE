@@ -54,7 +54,8 @@ class ConversationManager:
 
         return {"conversation_id": user_id, "greeting": greeting, "status": "active"}
 
-    def _generate_greeting(self, user_info: dict) -> str:
+    @staticmethod
+    def _generate_greeting(user_info: dict) -> str:
         """توليد تحية مخصصة"""
         name = user_info.get("name", "عزيزي") if user_info else "عزيزي"
 
@@ -135,7 +136,8 @@ class ConversationManager:
             "confidence": response["confidence"],
         }
 
-    def _analyze_intent(self, message: str) -> tuple:
+    @staticmethod
+    def _analyze_intent(message: str) -> tuple:
         """تحليل النية من الرسالة"""
         message_lower = message.lower()
 
@@ -252,7 +254,8 @@ class ConversationManager:
 
         return {"text": response_text, "confidence": confidence, "style": style}
 
-    def _generate_suggestions(self, intent: str, _entities: dict) -> List[str]:
+    @staticmethod
+    def _generate_suggestions(intent: str, _entities: dict) -> List[str]:
         """توليد اقتراحات للمتابعة"""
         suggestions = []
 
@@ -282,7 +285,8 @@ class ConversationManager:
 
         return suggestions[:3]  # أول 3 فقط
 
-    def _save_to_long_term_memory(self, user_id: int, message: str, response: str):
+    @staticmethod
+    def _save_to_long_term_memory(user_id: int, message: str, response: str):
         """حفظ في الذاكرة طويلة المدى"""
         try:
             from ai_knowledge.core.memory_system import get_memory_system

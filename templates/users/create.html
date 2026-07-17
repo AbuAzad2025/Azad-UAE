@@ -354,13 +354,14 @@ $(function () {
     const confirm = $('#confirm_password').val();
     
     if (password !== confirm) {
-      e.preventDefault();
-      Swal.fire({
-        icon: 'error',
-        title: '{{ t('Error') }} في {{ t('كلمة') }} {{ t('المرور') }}',
-        text: '{{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.',
-        confirmButtonText: '{{ t('حسناً') }}'
-      });
+      e.preventDefault();        var _pwLabel = '{{ t('كلمة') }} {{ t('المرور') }}';
+        var _pwNote = '{{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.';
+        Swal.fire({
+            icon: 'error',
+            title: '{{ t('Error') }} في ' + _pwLabel,
+            text: _pwNote,
+            confirmButtonText: '{{ t('حسناً') }}'
+        });
       $('#confirm_password').focus();
       return false;
     }

@@ -26,7 +26,8 @@ class TestElasticsearchEnabled:
 class TestIndexSale:
     """index_sale — single document pipeline."""
 
-    def _inject_es(self, mock_es):
+    @staticmethod
+    def _inject_es(mock_es):
         import sys
 
         es_mod = MagicMock()

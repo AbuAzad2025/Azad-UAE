@@ -275,17 +275,18 @@
     '<div style="white-space:pre-wrap">' + text + '</div></div>' +
     (!isBot ? avatar : '') + '</div></div>'
   );
-  setTimeout(function() { $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight); }, 100);
+  setTimeout(function() { const $cb = $('#chatBox'); $cb.scrollTop($cb[0].scrollHeight); }, 100);
 }
 
 function showTyping() {
-  $('#chatBox').append(
+  const $chatBox = $('#chatBox');
+  $chatBox.append(
     '<div class="bot-message" id="typing-indicator"><div class="d-flex align-items-center">' +
     '<div class="ml-3"><div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div></div>' +
     '<div><strong>{{ t('Assistant') }} {{ t('يفكر') }}</strong><div class="typing-indicator mt-2"><span></span><span></span><span></span></div></div>' +
     '</div></div>'
   );
-  $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight);
+  $chatBox.scrollTop($chatBox[0].scrollHeight);
 }
 
 function hideTyping() { $('#typing-indicator').remove(); }
@@ -297,11 +298,13 @@ $(document).ready(function() {
 });
 
 function sendMessage() {
-  let msg = $('#userMessage').val().trim();
+  const $userMessage = $('#userMessage');
+  const $sendBtn = $('#sendBtn');
+  let msg = $userMessage.val().trim();
   if (!msg) return;
   addMessage('user', msg, false);
-  $('#userMessage').val('');
-  $('#sendBtn').prop('disabled', true);
+  $userMessage.val('');
+  $sendBtn.prop('disabled', true);
   showTyping();
   $.ajax({
     url: '{{ url_for("ai.chat") }}',
@@ -313,8 +316,8 @@ function sendMessage() {
       ai_mode: localStorage.getItem('ai_mode') || 'groq',
       context: { dialect: currentDialect, beginners_mode: beginnersMode }
     }),
-    success: function(r) { hideTyping(); addMessage('bot', r.response, true); $('#sendBtn').prop('disabled', false); $('#userMessage').focus(); },
-    error: function() { hideTyping(); addMessage('bot', '❌ {{ t("عذراً،") }} {{ t("حدث") }} {{ t("Error") }}. {{ t("حاول") }} {{ t("مرة") }} {{ t("أخرى") }}.', true); $('#sendBtn').prop('disabled', false); }
+    success: function(r) { hideTyping(); addMessage('bot', r.response, true); $sendBtn.prop('disabled', false); $userMessage.focus(); },
+    error: function() { hideTyping(); addMessage('bot', '❌ {{ t("عذراً،") }} {{ t("حدث") }} {{ t("Error") }}. {{ t("حاول") }} {{ t("مرة") }} {{ t("أخرى") }}.', true); $sendBtn.prop('disabled', false); }
   });
 }
 
@@ -334,7 +337,7 @@ window.getSummary = function() {
 
 window.toggleBeginnersMode = function() {
   beginnersMode = !beginnersMode;
-  var btn = $('#beginnersBtn');
+  const btn = $('#beginnersBtn');
   btn.toggleClass('btn-success btn-outline-success');
   addMessage('bot', beginnersMode ? '👨‍🎓 {{ t('وضع') }} {{ t('المبتدئين') }} {{ t('مفعّل') }}! {{ t('سأشرح') }} {{ t('بالتفصيل') }}.' : '⚡ {{ t('وضع') }} {{ t('المحترفين') }} {{ t('مفعّل') }}! {{ t('ردود') }} {{ t('مباشرة') }}.', true);
 };
@@ -343,10 +346,11 @@ window.setDialect = function(d) {
   currentDialect = d;
   $('.btn-group .btn').removeClass('active');
   $('#' + d + 'Btn').addClass('active');
+  const _dialectLabel = "{{ t('اللهجة') }}";
   let msgs = {
     formal: '📖 {{ t('Language') }}: {{ t('فصحى') }}',
-    palestinian: '🇵🇸 {{ t('اللهجة') }}: {{ t('Palestinian') }}',
-    gulf: '🏝️ {{ t('اللهجة') }}: {{ t('Gulf') }}'
+    palestinian: '🇵🇸 ' + _dialectLabel + ': {{ t('Palestinian') }}',
+    gulf: '🏝️ ' + _dialectLabel + ': {{ t('Gulf') }}'
   };
   addMessage('bot', msgs[d], true);
 };
@@ -373,17 +377,29 @@ window.switchAIMode = function(mode) {
   switchAIMode(savedMode);
 
 // Excel Upload
-$('#excelUploadForm').on('submit', function(e) {
+function hideExcelUploader() { 
+  $('#excelUploaderModal').css('display', 'none'); 
+  $('#excelUploadForm')[0].reset(); 
+  $('#uploadProgress').hide(); 
+}
+
+const $excelUploadForm = $('#excelUploadForm');
+$excelUploadForm.on('submit', function(e) {
   e.preventDefault();
-  var file = $('#excelFile')[0];
+  const $excelFile = $('#excelFile');
+  const file = $excelFile[0];
   if (!file.files || !file.files[0]) { alert('{{ t("اختر") }} {{ t("ملفاً") }}'); return; }
-  var fd = new FormData();
+  const fd = new FormData();
   fd.append('file', file.files[0]);
   fd.append('warehouse_id', $('#warehouseSelect').val());
-  var csrf = $(this).find('input[name="csrf_token"]').val();
+  const csrf = $excelUploadForm.find('input[name="csrf_token"]').val();
   if (csrf) fd.append('csrf_token', csrf);
-  $('#uploadExcelBtn').prop('disabled', true);
-  $('#uploadProgress').show();
+  
+  const $uploadBtn = $('#uploadExcelBtn');
+  const $progress = $('#uploadProgress');
+  $uploadBtn.prop('disabled', true);
+  $progress.show();
+  
   $.ajax({
     url: '{{ url_for("ai.upload_excel") }}',
     method: 'POST',
@@ -394,12 +410,12 @@ $('#excelUploadForm').on('submit', function(e) {
     success: function(r) {
       if (r.success) addMessage('bot', r.message, true); else addMessage('bot', '❌ ' + r.error, true);
       hideExcelUploader();
-      $('#uploadExcelBtn').prop('disabled', false);
+      $uploadBtn.prop('disabled', false);
     },
     error: function(x) {
       addMessage('bot', '❌ ' + (x.responseJSON ? x.responseJSON.error : '{{ t("Error") }}'), true);
-      $('#uploadExcelBtn').prop('disabled', false);
-      $('#uploadProgress').hide();
+      $uploadBtn.prop('disabled', false);
+      $progress.hide();
     }
   });
 });

@@ -339,7 +339,7 @@ def partners():
         summary_list = []
 
         for cust in customers:
-            paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
+            paid_query_total = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
                 Payment.direction == "outgoing",
                 Payment.payment_confirmed,
@@ -353,13 +353,13 @@ def partners():
                 Payment.payment_confirmed,
             )
             if tenant_id is not None:
-                paid_query = paid_query.filter(Payment.tenant_id == tenant_id)
+                paid_query_total = paid_query_total.filter(Payment.tenant_id == tenant_id)
                 receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
                 payment_in_query = payment_in_query.filter(
                     Payment.tenant_id == tenant_id
                 )
             if date_from:
-                paid_query = paid_query.filter(
+                paid_query_total = paid_query_total.filter(
                     func.date(Payment.payment_date) >= date_from
                 )
                 receipts_query = receipts_query.filter(
@@ -369,7 +369,7 @@ def partners():
                     func.date(Payment.payment_date) >= date_from
                 )
             if date_to:
-                paid_query = paid_query.filter(
+                paid_query_total = paid_query_total.filter(
                     func.date(Payment.payment_date) <= date_to
                 )
                 receipts_query = receipts_query.filter(
@@ -379,7 +379,7 @@ def partners():
                     func.date(Payment.payment_date) <= date_to
                 )
             if scoped_branch_id is not None:
-                paid_query = paid_query.filter(Payment.branch_id == scoped_branch_id)
+                paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
                 receipts_query = receipts_query.filter(
                     Receipt.branch_id == scoped_branch_id
                 )
@@ -387,7 +387,7 @@ def partners():
                     Payment.branch_id == scoped_branch_id
                 )
 
-            total_paid_to = paid_query.scalar() or Decimal("0")
+            total_paid_to = paid_query_total.scalar() or Decimal("0")
             total_receipts = receipts_query.scalar() or Decimal("0")
             total_payment_in = payment_in_query.scalar() or Decimal("0")
             total_received_from = total_receipts + total_payment_in
@@ -428,7 +428,7 @@ def partners():
             Purchase.status == "confirmed",
         )
         # Paid TO Supplier (Outgoing)
-        paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
+        paid_query_total = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
             Payment.tenant_id == sup.tenant_id,
             Payment.direction == "outgoing",
@@ -446,7 +446,7 @@ def partners():
             purchases_query = purchases_query.filter(
                 func.date(Purchase.purchase_date) >= date_from
             )
-            paid_query = paid_query.filter(func.date(Payment.payment_date) >= date_from)
+            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
             received_query = received_query.filter(
                 func.date(Payment.payment_date) >= date_from
             )
@@ -454,7 +454,7 @@ def partners():
             purchases_query = purchases_query.filter(
                 func.date(Purchase.purchase_date) <= date_to
             )
-            paid_query = paid_query.filter(func.date(Payment.payment_date) <= date_to)
+            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
             received_query = received_query.filter(
                 func.date(Payment.payment_date) <= date_to
             )
@@ -462,13 +462,13 @@ def partners():
             purchases_query = purchases_query.filter(
                 Purchase.branch_id == scoped_branch_id
             )
-            paid_query = paid_query.filter(Payment.branch_id == scoped_branch_id)
+            paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
             received_query = received_query.filter(
                 Payment.branch_id == scoped_branch_id
             )
 
         total_purchases = purchases_query.scalar() or Decimal("0")
-        total_paid_to = paid_query.scalar() or Decimal("0")
+        total_paid_to = paid_query_total.scalar() or Decimal("0")
         total_refunds = received_query.scalar() or Decimal("0")
 
         # Balance = Purchases - (Paid - Refunds)

@@ -140,7 +140,7 @@
             : 'دخول مستخدمي الشركات';
         }
         tabs.forEach(function (tab) {
-          var active = tab.getAttribute('data-access-mode') === mode;
+          const active = tab.getAttribute('data-access-mode') === mode;
           tab.classList.toggle('is-active', active);
           tab.setAttribute('aria-selected', active ? 'true' : 'false');
         });

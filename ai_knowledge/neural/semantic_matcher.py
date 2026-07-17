@@ -23,7 +23,8 @@ class SemanticMatcher:
         self.vocabulary = self._build_vocabulary()
         self.idf_scores = self._calculate_idf()
 
-    def _build_intents_database(self) -> Dict[str, List[str]]:
+    @staticmethod
+    def _build_intents_database() -> Dict[str, List[str]]:
         """بناء قاعدة بيانات النوايا مع أمثلة متعددة - شاملة لكل المعرفة"""
         return {
             # === النظام الأساسي ===
@@ -567,7 +568,8 @@ class SemanticMatcher:
                 vocab.update(words)
         return vocab
 
-    def _tokenize(self, text: str) -> List[str]:
+    @staticmethod
+    def _tokenize(text: str) -> List[str]:
         """تقسيم النص لكلمات"""
         # إزالة علامات الترقيم والتشكيل
         text = re.sub(r"[^\w\s]", " ", text)
@@ -579,7 +581,8 @@ class SemanticMatcher:
         words = [w for w in words if len(w) > 1]
         return words
 
-    def _calculate_tf(self, words: List[str]) -> Dict[str, float]:
+    @staticmethod
+    def _calculate_tf(words: List[str]) -> Dict[str, float]:
         """حساب Term Frequency"""
         word_count = Counter(words)
         total_words = len(words)
@@ -618,8 +621,8 @@ class SemanticMatcher:
                 tfidf[word] = tf[word] * 1.0  # IDF default
         return tfidf
 
-    def _cosine_similarity(
-        self, vec1: Dict[str, float], vec2: Dict[str, float]
+    @staticmethod
+    def _cosine_similarity( vec1: Dict[str, float], vec2: Dict[str, float]
     ) -> float:
         """حساب التشابه بين متجهين باستخدام Cosine Similarity"""
         # الكلمات المشتركة
@@ -685,7 +688,8 @@ class SemanticMatcher:
 
         return best_intent, best_score, sorted_intents
 
-    def fuzzy_match(self, word1: str, word2: str) -> float:
+    @staticmethod
+    def fuzzy_match(word1: str, word2: str) -> float:
         """
         مطابقة تقريبية (Fuzzy) بين كلمتين
         تستخدم Levenshtein Distance
@@ -793,7 +797,8 @@ class SemanticMatcher:
             "suggestion": suggestion,
         }
 
-    def _get_intent_arabic_name(self, intent: str) -> str:
+    @staticmethod
+    def _get_intent_arabic_name(intent: str) -> str:
         """تحويل اسم النية للعربية"""
         names = {
             "create_invoice": "إنشاء فاتورة",

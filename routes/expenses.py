@@ -121,13 +121,13 @@ def index():
         page=page, per_page=per_page, error_out=False
     )
 
-    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
+    expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
 
     return render_template(
         "expenses/index.html",
         expenses=pagination.items,
         pagination=pagination,
-        categories=categories,
+        categories=expense_categories,
         show_branch_columns=should_show_all_branch_columns(current_user),
     )
 
@@ -272,11 +272,11 @@ def create():
         _dc = resolve_default_currency()
     except Exception:
         _dc = get_system_default_currency()
-    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
+    expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     exchange_rates = CurrencyService.get_all_rates(_dc)
 
     return render_template(
-        "expenses/create.html", categories=categories, exchange_rates=exchange_rates
+        "expenses/create.html", categories=expense_categories, exchange_rates=exchange_rates
     )
 
 
@@ -332,7 +332,7 @@ def edit(**kwargs):
         flash("⚠️ لا يمكن تعديل مصروف مؤرشف.", "warning")
         return redirect(url_for("expenses.view", id=record_id))
 
-    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
+    expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
 
     if request.method == "POST":
         try:
@@ -417,7 +417,7 @@ def edit(**kwargs):
                 "danger",
             )
 
-    return render_template("expenses/edit.html", expense=expense, categories=categories)
+    return render_template("expenses/edit.html", expense=expense, categories=expense_categories)
 
 
 @expenses_bp.route("/<int:id>/delete", methods=["POST"])
@@ -542,13 +542,13 @@ def cancel(**kwargs):
 @login_required
 @permission_required("manage_expenses")
 def categories():
-    categories = (
+    expense_categories = (
         tenant_query(ExpenseCategory)
         .filter_by(is_active=True)
         .order_by(ExpenseCategory.name)
         .all()
     )
-    return render_template("expenses/categories.html", categories=categories)
+    return render_template("expenses/categories.html", categories=expense_categories)
 
 
 def _validate_gl_account_code(gl_account_code, tenant_id):
@@ -725,11 +725,11 @@ def restore(**kwargs):
     archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=record_id)
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
-    archived = archived_query.first_or_404()
+    archived_record = archived_query.first_or_404()
 
     try:
         with atomic_transaction("expense_restore"):
-            db.session.delete(archived)
+            db.session.delete(archived_record)
             db.session.flush()
         LoggingCore.log_audit("restore", "expenses", record_id)
     except Exception as e:

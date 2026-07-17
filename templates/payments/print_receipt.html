@@ -23,15 +23,17 @@
     }
     .receipt {
       {% if settings and settings.paper_size == 'A5' %}
-      width: 212mm;
-      min-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+      --page-width: 212mm;
+      --page-min-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings and settings.paper_size == 'Letter' %}
-      width: 212mm;
-      min-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+      --page-width: 212mm;
+      --page-min-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
-      width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
-      min-height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+      --page-width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
+      --page-min-height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
       {% endif %}
+      width: var(--page-width);
+      min-height: var(--page-min-height);
       margin: 0 auto;
       padding: 12px 14px;
       border: 1px solid #334155;

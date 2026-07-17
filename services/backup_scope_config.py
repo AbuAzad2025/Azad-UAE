@@ -585,7 +585,7 @@ def _path_from_urlish(value: str, base_dir: str) -> Optional[str]:
     if not value or not isinstance(value, str):
         return None
     v = value.strip().replace("\\", "/")
-    if v.startswith("http://") or v.startswith("https://"):
+    if "://" in v:
         return None
     if v.startswith("/static/"):
         v = v[len("/static/") :]
@@ -621,7 +621,7 @@ def collect_scoped_upload_paths(
     resolved: Set[str] = set()
     unresolved: List[str] = []
 
-    def add_column(table: str, column: str, where: str, bind: Dict[str, Any]) -> None:
+    def add_column(table: str, column: str, where: str, bind_config: Dict[str, Any]) -> None:
         if not table_exists(conn, table):
             return
         cols = {

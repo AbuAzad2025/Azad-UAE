@@ -81,7 +81,7 @@ class TestQueryResolvers:
         mocker.patch("services.graphql_service.tenant_query", return_value=chain)
         from services.graphql_service import Query
 
-        assert Query().resolve_sale(None, id=99) is None
+        assert Query().resolve_sale(None, record_id=99) is None
 
     def test_resolve_all_customers(self, mocker):
         mocker.patch("services.graphql_service._require_permission")
@@ -116,7 +116,7 @@ class TestQueryResolvers:
         mocker.patch("services.graphql_service.tenant_query", return_value=chain)
         from services.graphql_service import Query
 
-        result = Query().resolve_customer(None, id=3)
+        result = Query().resolve_customer(None, record_id=3)
         assert result.balance == 0
 
     def test_resolve_all_products(self, mocker):
@@ -154,7 +154,7 @@ class TestQueryResolvers:
         mocker.patch("services.graphql_service.tenant_query", return_value=chain)
         from services.graphql_service import Query
 
-        result = Query().resolve_product(None, id=5)
+        result = Query().resolve_product(None, record_id=5)
         assert result.regular_price == 0
 
 

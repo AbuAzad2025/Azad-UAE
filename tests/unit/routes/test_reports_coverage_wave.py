@@ -941,7 +941,7 @@ class TestEntityFragmentDirectCall:
                 ]
                 from routes.reports import entity_report_fragment
 
-                resp = entity_report_fragment("supplier", 12)
+                resp = entity_report_fragment("supplier", id=12)
                 assert resp[1] == 200 if isinstance(resp, tuple) else True
                 assert render.called
                 assert render.call_args[1].get("allocation_exact") is False
@@ -984,7 +984,7 @@ class TestEntityFragmentDirectCall:
                 )
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("supplier", 12)
+                entity_report_fragment("supplier", id=12)
                 assert render.call_args[1].get("invoices")
 
     def test_customer_transactions_direct(self, app_factory, mock_user):
@@ -1053,7 +1053,7 @@ class TestEntityFragmentDirectCall:
             ):
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("customer", 40)
+                entity_report_fragment("customer", id=40)
                 assert render.called
                 ctx = render.call_args[1]
                 assert len(ctx.get("invoices", [])) == 1
@@ -1105,7 +1105,7 @@ class TestEntityFragmentDirectCall:
                 pq.filter_by.return_value.filter.return_value.all.return_value = []
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("merchant", 51)
+                entity_report_fragment("merchant", id=51)
                 assert render.called
 
     def test_supplier_direct_allocation_branch(self, app_factory, mock_user):
@@ -1142,7 +1142,7 @@ class TestEntityFragmentDirectCall:
                 ]
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("supplier", 12)
+                entity_report_fragment("supplier", id=12)
                 assert render.call_args[1]["allocation_exact"] is True
                 assert render.call_args[1]["unallocated_supplier_credit"] == Decimal(
                     "75"
@@ -1215,7 +1215,7 @@ class TestEntityFragmentDirectCall:
             ):
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("customer", 55)
+                entity_report_fragment("customer", id=55)
                 assert len(render.call_args[1]["transactions"]) == 2
 
     def test_partner_shared_products_branch_direct(self, app_factory, mock_user):
@@ -1267,7 +1267,7 @@ class TestEntityFragmentDirectCall:
                 pq.filter_by.return_value.filter.return_value.all.return_value = []
                 from routes.reports import entity_report_fragment
 
-                entity_report_fragment("partner", 60)
+                entity_report_fragment("partner", id=60)
                 assert any(
                     "Share:" in p["name"] for p in render.call_args[1]["products"]
                 )

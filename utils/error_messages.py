@@ -38,8 +38,8 @@ class ErrorMessages:
         return "كلمتا المرور غير متطابقتين.\nتأكد من كتابة نفس كلمة المرور في الحقلين."
 
     @staticmethod
-    def user_update_failed(error):
-        return f"فشل تحديث بيانات المستخدم.\nالخطأ: {error}\nتحقق من البيانات المدخلة وحاول مرة أخرى."
+    def user_update_failed(err):
+        return f"فشل تحديث بيانات المستخدم.\nالخطأ: {err}\nتحقق من البيانات المدخلة وحاول مرة أخرى."
 
     @staticmethod
     def user_delete_self():
@@ -181,8 +181,8 @@ class ErrorMessages:
         )
 
     @staticmethod
-    def file_upload_failed(error):
-        return f"فشل رفع الملف.\nالسبب: {error}\nتأكد من الملف وحاول مرة أخرى."
+    def file_upload_failed(err):
+        return f"فشل رفع الملف.\nالسبب: {err}\nتأكد من الملف وحاول مرة أخرى."
 
     @staticmethod
     def database_error():

@@ -136,7 +136,8 @@ class TestLiquidityMode:
     """Branch CASH/BANK line uses the branch's actual liquidity account
     even when a stale tenant-level mapping exists."""
 
-    def _setup_tenant_branch(self, app, name):
+    @staticmethod
+    def _setup_tenant_branch(app, name):
         from extensions import db
         from models import Tenant, Branch
 
@@ -156,7 +157,8 @@ class TestLiquidityMode:
         db.session.flush()
         return tenant, branch
 
-    def _create_stale_mapping(self, app, tenant, concept_code):
+    @staticmethod
+    def _create_stale_mapping(app, tenant, concept_code):
         from extensions import db
         from models import GLAccountMapping, GLAccount
 
@@ -321,7 +323,8 @@ class TestLiquidityMode:
 class TestRecordMode:
     """FixedAsset depreciation/disposal posts to exact stored accounts."""
 
-    def _setup_asset(self, app, tenant, branch, asset_number, purchase_price=10000):
+    @staticmethod
+    def _setup_asset(app, tenant, branch, asset_number, purchase_price=10000):
         from extensions import db
         from models import GLAccount
         from models.fixed_asset import FixedAsset

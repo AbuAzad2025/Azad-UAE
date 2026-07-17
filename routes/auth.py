@@ -608,12 +608,12 @@ def payment_callback():
             )
             return jsonify({"error": "payment_id مطلوب"}), 400
 
-        payment_status = payment_data.get("payment_status", "")
-        if _is_duplicate_callback(str(payment_id), str(payment_status)):
+        current_status = payment_data.get("payment_status", "")
+        if _is_duplicate_callback(str(payment_id), str(current_status)):
             current_app.logger.info(
                 "NOWPayments callback ignored: duplicate payment_id=%s status=%s",
                 payment_id,
-                payment_status,
+                current_status,
             )
             return jsonify({"status": "already_processed"}), 200
 

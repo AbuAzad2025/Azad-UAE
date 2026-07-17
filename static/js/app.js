@@ -42,7 +42,7 @@
 
     ensureModalCompatStyles();
 
-    var $root = root && root.nodeType ? $(root) : $(document);
+    const $root = root && root.nodeType ? $(root) : $(document);
     $root.find(".modal").each(function () {
       normalizeModalParent($(this));
     });
@@ -52,7 +52,7 @@
 
     $(document)
       .on("show.bs.modal", ".modal", function () {
-        var $modal = $(this);
+        const $modal = $(this);
         normalizeModalParent($modal);
         $("body").addClass("azad-modal-open");
       })
@@ -106,31 +106,31 @@
   function installBootstrapCompat(root) {
     if (!$ || !$.fn) return;
 
-    var $root = root && root.nodeType ? $(root) : $(document);
+    const $root = root && root.nodeType ? $(root) : $(document);
 
     $root.find("[data-bs-toggle]").each(function () {
-      var $el = $(this);
+      const $el = $(this);
       if (!$el.attr("data-toggle")) {
         $el.attr("data-toggle", $el.attr("data-bs-toggle"));
       }
     });
 
     $root.find("[data-bs-target]").each(function () {
-      var $el = $(this);
+      const $el = $(this);
       if (!$el.attr("data-target")) {
         $el.attr("data-target", $el.attr("data-bs-target"));
       }
     });
 
     $root.find("[data-bs-dismiss]").each(function () {
-      var $el = $(this);
+      const $el = $(this);
       if (!$el.attr("data-dismiss")) {
         $el.attr("data-dismiss", $el.attr("data-bs-dismiss"));
       }
     });
 
     $root.find(".btn-close").each(function () {
-      var $btn = $(this);
+      const $btn = $(this);
       if (!$btn.hasClass("close")) {
         $btn.addClass("close");
       }
@@ -246,9 +246,9 @@
 
   function initTooltips(root) {
     if (!$.fn.tooltip) return;
-    var $root = root && root.nodeType ? $(root) : $(document);
+    const $root = root && root.nodeType ? $(root) : $(document);
     $root.find("[data-toggle=\"tooltip\"]").each(function () {
-      var $el = $(this);
+      const $el = $(this);
       if ($el.data("bs.tooltip")) return;
       $el.tooltip({ trigger: "hover", html: true });
     });
@@ -265,9 +265,8 @@
       const hasButtons = $.fn.dataTable?.Buttons;
       const pageLen = +$tbl.data("page-length") || 10;
       const orderAttr = String($tbl.data("order") || "").trim();
-      const order = orderAttr.match(/^(\d+)\s*,\s*(asc|desc)$/i)
-        ? [[+RegExp.$1, RegExp.$2.toLowerCase()]]
-        : [];
+      const matchOrder = orderAttr.match(/^(\d+)\s*,\s*(asc|desc)$/i);
+      const order = matchOrder ? [[+matchOrder[1], matchOrder[2].toLowerCase()]] : [];
 
       const noSortIdx = $tbl.find("thead th.dt-nosort").map((i, el) => i).get();
 
@@ -591,6 +590,7 @@
    * Adds .is-printing class to body before print, removes after.
    * Use with: <button onclick="AzadPrint.printPageReport()">
    */
+  // noinspection JSUnusedGlobalSymbols
   window.AzadPrint = {
     printPageReport: function() {
       document.body.classList.add('is-printing-report');
@@ -602,16 +602,18 @@
       }, 100);
     },
     printElement: function(selector, options) {
-      var $el = $(selector);
+      const $el = $(selector);
       if (!$el.length) return;
-      var $clone = $el.clone();
-      var $printWin = window.open('', '_blank', 'width=1200,height=800');
+      const $clone = $el.clone();
+      const $printWin = window.open('', '_blank', 'width=1200,height=800');
       if (!$printWin) return;
-      $printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><title>' + (options && options.title || 'طباعة') + '</title>');
-      $printWin.document.write('<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; word-break: break-word; overflow-wrap: anywhere; } thead th { background: ' + (options && options.headerColor || '#0d6efd') + '; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>');
-      $printWin.document.write($clone[0].outerHTML);
-      $printWin.document.write('</body></html>');
-      $printWin.document.close();
+      const _printDoc = $printWin.document;
+      _printDoc.open();
+      _printDoc.write('<!DOCTYPE html><html dir="rtl"><head><title>' + (options && options.title || 'طباعة') + '</title>');
+      _printDoc.write('<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; word-break: break-word; overflow-wrap: anywhere; } thead th { background: ' + (options && options.headerColor || '#0d6efd') + '; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>');
+      _printDoc.write($clone[0].outerHTML);
+      _printDoc.write('</body></html>');
+      _printDoc.close();
       setTimeout(function() { $printWin.print(); $printWin.close(); }, 500);
     }
   };
@@ -633,7 +635,6 @@
       'th, td { white-space: normal !important; overflow: visible !important; word-break: break-word; overflow-wrap: anywhere; }'
     ].join('\n');
     const style = win.document.createElement('style');
-    style.type = 'text/css';
     style.appendChild(win.document.createTextNode(css));
     win.document.head.appendChild(style);
   };

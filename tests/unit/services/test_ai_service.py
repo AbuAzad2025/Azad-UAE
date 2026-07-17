@@ -690,7 +690,8 @@ class TestChatResponse:
 
 
 class TestExecuteAiAction:
-    def _groq_json(self, action, data=None, message="msg"):
+    @staticmethod
+    def _groq_json(action, data=None, message="msg"):
         return json.dumps({"action": action, "data": data or {}, "message": message})
 
     def test_no_json(self):
@@ -1092,7 +1093,8 @@ class TestIntegrationWrappers:
 
 
 class TestNeuralAndAdvanced:
-    def _neural(self, mocker):
+    @staticmethod
+    def _neural(mocker):
         neural = MagicMock()
         mocker.patch(
             "services.ai_service.AIService.get_neural_engine", return_value=neural

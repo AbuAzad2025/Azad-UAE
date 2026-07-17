@@ -519,7 +519,8 @@ class TestDocumentGeneratorCovWave:
 
 
 class TestSelfImprovementCovWave:
-    def _make_engine(self, tmp_path):
+    @staticmethod
+    def _make_engine(tmp_path):
         with patch(
             "ai_knowledge.get_knowledge_path", side_effect=lambda n: str(tmp_path / n)
         ):
@@ -839,7 +840,8 @@ class TestQuickLearnerCovWave:
 
 
 class TestNeuralEngineCovWave:
-    def _make_engine(self):
+    @staticmethod
+    def _make_engine():
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         engine = AzadNeuralEngine.__new__(AzadNeuralEngine)
@@ -1054,7 +1056,8 @@ class TestAzadPersonalityCovWave:
 
 
 class TestAzadResponsesCovWave:
-    def _run_smart_response(self, message):
+    @staticmethod
+    def _run_smart_response(message):
         from ai_knowledge.personality.azad_responses import AzadResponses
 
         mock_ai = MagicMock()

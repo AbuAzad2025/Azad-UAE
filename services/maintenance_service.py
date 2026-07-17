@@ -13,13 +13,16 @@ class MaintenanceService:
     """Database maintenance operations for owner dashboard."""
 
     @staticmethod
-    def fix_cost_centers_index():
+    def fix_cost_centers_index() -> dict:
         """
         Drop old unique index on code and clean up NULL tenant_id cost centers.
 
         This operation:
         1. Drops the deprecated 'ix_cost_centers_code' index if it exists
         2. Deletes orphaned cost centers that still have NULL tenant_id (legacy data)
+
+        Returns:
+            dict: Result with keys 'dropped_index' (bool), 'deleted_rows' (int)
         """
         engine = create_engine(
             os.environ.get(
@@ -27,17 +30,23 @@ class MaintenanceService:
                 "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
             )
         )
+        result: dict = {"dropped_index": False, "deleted_rows": 0}
         with engine.begin() as conn:
             # Drop old unique index on code
             try:
                 conn.execute(text("DROP INDEX IF EXISTS ix_cost_centers_code"))
+                result["dropped_index"] = True
                 print("✅ Dropped old unique index on code")
             except Exception as e:
                 print(f"Note: {e}")
 
             # Delete existing cost centers (they have NULL tenant_id)
-            conn.execute(text("DELETE FROM cost_centers WHERE tenant_id IS NULL"))
+            r = conn.execute(
+                text("DELETE FROM cost_centers WHERE tenant_id IS NULL")
+            )
+            result["deleted_rows"] = r.rowcount
             print("✅ Deleted old cost centers with NULL tenant_id")
+        return result
 
     @staticmethod
     def rebuild_gl_tree(cleanup_extra=False):

@@ -177,14 +177,14 @@ const ctx = document.getElementById('cashFlowChart').getContext('2d');
 new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ['{{ t('الأنشطة') }} {{ t('التشغيلية') }}', '{{ t('الأنشطة') }} {{ t('الاستثمارية') }}', '{{ t('الأنشطة') }} {{ t('التمويلية') }}', '{{ t('Net') }} {{ t('التغير') }}'],
+        labels: ["{{ t('الأنشطة') }} {{ t('التشغيلية') }}", "{{ t('الأنشطة') }} {{ t('الاستثمارية') }}", "{{ t('الأنشطة') }} {{ t('التمويلية') }}", "{{ t('Net') }} {{ t('التغير') }}"],
         datasets: [{
-            label: '{{ t('التدفق') }} {{ t('Cash_3') }} ({{ tenant_currency_symbol }})',
+            label: "{{ t('التدفق') }} {{ t('Cash_3') }} ({{ tenant_currency_symbol }})",
             data: [
-                {{ report.operating_activities.net_cash_from_operating }},
-                {{ report.investing_activities.net_cash_from_investing }},
-                {{ report.financing_activities.net_cash_from_financing }},
-                {{ report.net_change_in_cash }}
+                JSON.parse('{{ report.operating_activities.net_cash_from_operating }}'),
+                JSON.parse('{{ report.investing_activities.net_cash_from_investing }}'),
+                JSON.parse('{{ report.financing_activities.net_cash_from_financing }}'),
+                JSON.parse('{{ report.net_change_in_cash }}')
             ],
             backgroundColor: [
                 'rgba(40, 167, 69, 0.7)',   // {{ t('أخضر') }}
@@ -210,8 +210,8 @@ new Chart(ctx, {
             },
             tooltip: {
                 callbacks: {
-                    label: function(context) {
-                        return context.parsed.y.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol }}';
+                    label: (context) => {
+                        return new Intl.NumberFormat('ar-AE').format(context.parsed.y) + ' {{ tenant_currency_symbol }}';
                     }
                 }
             }
@@ -220,8 +220,8 @@ new Chart(ctx, {
             y: {
                 beginAtZero: true,
                 ticks: {
-                    callback: function(value) {
-                        return value.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol }}';
+                    callback: (value) => {
+                        return new Intl.NumberFormat('ar-AE').format(value) + ' {{ tenant_currency_symbol }}';
                     }
                 }
             }

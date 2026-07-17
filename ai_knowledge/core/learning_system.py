@@ -32,7 +32,7 @@ class AzadLearningSystem:
         self.groq_training_log: list[Any] = []
 
     @staticmethod
-    def _default_knowledge():
+    def _default_knowledge() -> dict[str, Any]:
         return {
             "new_terms": {},
             "customer_preferences": {},
@@ -58,7 +58,7 @@ class AzadLearningSystem:
         return get_knowledge_path(f"{stem}_tenant_{tenant_id}{ext}")
 
     @staticmethod
-    def _normalize_loaded_data(data):
+    def _normalize_loaded_data(data: Any) -> dict[str, Any]:
         if not isinstance(data, dict):
             return AzadLearningSystem._default_knowledge()
         exp = data.get("expertise_areas", {})
@@ -82,7 +82,7 @@ class AzadLearningSystem:
         return data
 
     @staticmethod
-    def _empty_patterns():
+    def _empty_patterns() -> dict[str, Any]:
         return {
             "question_patterns": defaultdict(list),
             "response_patterns": defaultdict(list),
@@ -92,7 +92,7 @@ class AzadLearningSystem:
         }
 
     @staticmethod
-    def _patterns_from_storage(data: dict):
+    def _patterns_from_storage(data: dict) -> dict[str, Any]:
         patterns = AzadLearningSystem._empty_patterns()
         for key, factory in (
             ("question_patterns", list),
@@ -119,7 +119,7 @@ class AzadLearningSystem:
             )
         }
 
-    def _load_learned_knowledge(self):
+    def _load_learned_knowledge(self) -> dict[str, Any]:
         """تحميل المعرفة المكتسبة"""
         if os.path.exists(self.knowledge_file):
             try:
@@ -230,7 +230,8 @@ class AzadLearningSystem:
         else:
             self.patterns["success_patterns"][question_type] = 1.0 if success else 0.0
 
-    def _extract_keywords(self, text):
+    @staticmethod
+    def _extract_keywords(text):
         """استخراج الكلمات المفتاحية"""
         # قائمة الكلمات المهمة
         important_words = [
@@ -267,7 +268,8 @@ class AzadLearningSystem:
 
         return keywords
 
-    def _classify_question(self, question):
+    @staticmethod
+    def _classify_question(question):
         """تصنيف نوع السؤال"""
         if any(kw in question for kw in ["ضريبة", "vat", "tax"]):
             return "tax_question"
@@ -316,7 +318,7 @@ class AzadLearningSystem:
                 }
             )
 
-    def _save_tenant_data(self, tenant_id):
+    def _save_tenant_data(self, tenant_id: int) -> None:
         try:
             tenant_interactions = [
                 i
@@ -343,7 +345,7 @@ class AzadLearningSystem:
         except Exception as exc:
             logger.warning("Error saving tenant learning data: %s", exc)
 
-    def _save_data(self):
+    def _save_data(self) -> None:
         """حفظ البيانات"""
         try:
             # حفظ المعرفة المكتسبة
@@ -373,7 +375,7 @@ class AzadLearningSystem:
         except Exception as e:
             logger.warning("Error saving learning data: %s", e)
 
-    def _update_stats(self):
+    def _update_stats(self) -> None:
         """تحديث الإحصائيات"""
         total_interactions = len(self.interactions)
         successful_answers = sum(
@@ -555,7 +557,8 @@ class AzadLearningSystem:
                     "last_updated": datetime.now().isoformat(),
                 }
 
-    def _find_common_elements(self, responses):
+    @staticmethod
+    def _find_common_elements(responses: list) -> dict[str, Any]:
         """العثور على العناصر المشتركة في الردود الناجحة"""
         common_elements = {
             "emojis_used": Counter(),
@@ -625,7 +628,8 @@ class AzadLearningSystem:
 
         return base_response
 
-    def _apply_response_strategies(self, response, strategies):
+    @staticmethod
+    def _apply_response_strategies(response, strategies):
         """تطبيق استراتيجيات الرد"""
         enhanced_response = response
 
@@ -673,7 +677,8 @@ class AzadLearningSystem:
         except Exception as e:
             print(f"Groq training error: {e}")
 
-    def _analyze_improvements(self, local, groq):
+    @staticmethod
+    def _analyze_improvements(local, groq):
         """تحليل التحسينات التي قدمها Groq"""
         local_str = str(local) if local else ""
         groq_str = str(groq) if groq else ""

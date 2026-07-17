@@ -132,7 +132,8 @@ class TestAdvancedLawsWave2:
 
 
 class TestNeuralEngineTrainWave2:
-    def _engine(self, knowledge_path):
+    @staticmethod
+    def _engine(knowledge_path):
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         return AzadNeuralEngine()

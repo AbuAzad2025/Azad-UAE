@@ -306,7 +306,8 @@ class TestPosSessions:
 
 
 class TestClosePosSession:
-    def _session(self):
+    @staticmethod
+    def _session():
         s = MagicMock()
         s.id = 10
         s.tenant_id = 1

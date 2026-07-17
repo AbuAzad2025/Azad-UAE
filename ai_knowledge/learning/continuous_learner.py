@@ -66,7 +66,8 @@ class ContinuousLearner:
         if not os.path.exists(self.knowledge_dir):
             os.makedirs(self.knowledge_dir)
 
-    def _create_session(self):
+    @staticmethod
+    def _create_session():
         """إنشاء session مع إعادة محاولة تلقائية"""
         session = requests.Session()
 

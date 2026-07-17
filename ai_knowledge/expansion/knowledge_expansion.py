@@ -109,7 +109,8 @@ class KnowledgeExpander:
         except Exception as e:
             return {"success": False, "error": f"خطأ في إضافة الموقع: {str(e)}"}
 
-    def _fetch_website_content(self, url) -> dict[str, Any]:
+    @staticmethod
+    def _fetch_website_content(url) -> dict[str, Any]:
         """جلب محتوى الموقع"""
         try:
             headers = {
@@ -265,7 +266,8 @@ class KnowledgeExpander:
         except Exception as e:
             return {"success": False, "error": f"خطأ في البحث: {str(e)}"}
 
-    def _extract_snippet(self, content, query, snippet_length=200):
+    @staticmethod
+    def _extract_snippet(content, query, snippet_length=200):
         """استخراج مقتطف من المحتوى"""
         try:
             query_pos = content.lower().find(query.lower())

@@ -115,14 +115,17 @@
     const isRows = mode === 'rows';
     const isPages = mode === 'pages';
 
-    $('#smartPrintRowStart, #smartPrintRowEnd').prop('disabled', !isRows);
-    $('#smartPrintPageStart, #smartPrintPageEnd').prop('disabled', !isPages);
+    const $rowInputs = $('#smartPrintRowStart, #smartPrintRowEnd');
+    const $pageInputs = $('#smartPrintPageStart, #smartPrintPageEnd');
+    
+    $rowInputs.prop('disabled', !isRows);
+    $pageInputs.prop('disabled', !isPages);
 
     if (!isRows) {
-      $('#smartPrintRowStart, #smartPrintRowEnd').val('');
+      $rowInputs.val('');
     }
     if (!isPages) {
-      $('#smartPrintPageStart, #smartPrintPageEnd').val('');
+      $pageInputs.val('');
     }
   }
 
@@ -447,7 +450,7 @@
 
     const head = win.document.head || win.document.getElementsByTagName('head')[0];
     const styleTag = win.document.createElement('style');
-    styleTag.type = 'text/css';
+    // styleTag.type defaults to 'text/css'
     styleTag.appendChild(win.document.createTextNode(css));
     head.appendChild(styleTag);
 

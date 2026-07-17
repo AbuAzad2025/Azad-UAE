@@ -74,8 +74,8 @@ $(document).ready(function() {
     e.preventDefault();
     e.stopPropagation();
     
-    var id = $(this).data('id');
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const id = $(this).data('id');
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
     
     $.ajax({
       url: '{{ url_for("expenses.restore", id=0) }}'.replace('0', id),

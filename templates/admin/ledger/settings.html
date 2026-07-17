@@ -350,7 +350,7 @@
 {% block scripts %}
 <script>
 function createBackup() {
-  if (confirm('هل {{ t('تريد') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('الآن') }}')) {
+  if (confirm("هل {{ t('تريد') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('الآن') }}")) {
     // {{ t('Submit') }} {{ t('طلب') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
     fetch('{{ url_for("owner.backup_now") }}', {
       method: 'POST',
@@ -362,12 +362,12 @@ function createBackup() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('تم {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
+        alert("تم {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }} {{ t('بنجاح') }}!");
       } else {
-        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}: ' + data.message);
+        alert("{{ t('فشل') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}: " + data.message);
       }
     })
-    .catch(() => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}');
+    .catch(() => {      alert("{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backup Settings') }} {{ t('Backup') }}");
     });
   }
 }

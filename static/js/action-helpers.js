@@ -46,6 +46,7 @@
     window.open(url, '_blank');
   }
 
+  // noinspection JSUnusedGlobalSymbols
   window.ActionHelpers = {
     getCsrfToken,
     archivePaymentItem,

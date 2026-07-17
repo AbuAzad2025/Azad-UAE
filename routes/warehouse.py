@@ -52,8 +52,8 @@ def _annotate_visible_stock(products):
 @login_required
 @permission_required("manage_warehouse")
 def index():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 50, type=int)
+    current_page = request.args.get("page", 1, type=int)
+    items_per_page = request.args.get("per_page", 50, type=int)
     search = request.args.get("search", "", type=str)
     category_id = request.args.get("category", type=int)
     stock_filter = request.args.get("stock", "", type=str)
@@ -87,9 +87,9 @@ def index():
             product for product in products if (product.visible_stock or 0) <= 0
         ]
 
-    total = len(products)
+    total_count = len(products)
     summary = {
-        "total_products": total,
+        "total_products": total_count,
         "good_stock": sum(
             1
             for product in products
@@ -105,8 +105,8 @@ def index():
         ),
     }
 
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = (current_page - 1) * items_per_page
+    end = start + items_per_page
     page_items = products[start:end]
 
     class _Pagination:
@@ -136,7 +136,7 @@ def index():
                     yield num
                     last = num
 
-    pagination = _Pagination(page_items, page, per_page, total)
+    pagination = _Pagination(page_items, current_page, items_per_page, total_count)
 
     return render_template(
         "warehouse/index.html",
@@ -150,8 +150,8 @@ def index():
 @login_required
 @permission_required("manage_warehouse")
 def movements():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 50, type=int)
+    current_page = request.args.get("page", 1, type=int)
+    items_per_page = request.args.get("per_page", 50, type=int)
     product_id = request.args.get("product", type=int)
     movement_type = request.args.get("type", "", type=str)
     warehouse_id = request.args.get("warehouse", type=int)
@@ -193,7 +193,7 @@ def movements():
         current_warehouse = None
 
     pagination = query.order_by(StockMovement.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
+        page=current_page, per_page=items_per_page, error_out=False
     )
 
     warehouses = (

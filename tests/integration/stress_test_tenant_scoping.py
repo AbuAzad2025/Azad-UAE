@@ -39,7 +39,8 @@ class TestFullBusinessCycleTenantScoping:
     """P0 validation: each record across the full sale→GL→payment chain
     is tagged with the correct tenant_id."""
 
-    def _create_sale(self, data, user):
+    @staticmethod
+    def _create_sale(data, user):
         from models import Sale, SaleLine, Customer, Product, Warehouse
 
         # All records auto-scoped by apply_tenant_scope
@@ -97,7 +98,8 @@ class TestFullBusinessCycleTenantScoping:
             "warehouse": warehouse,
         }
 
-    def _verify_tenant_id(self, records, expected_tid, label):
+    @staticmethod
+    def _verify_tenant_id(records, expected_tid, label):
         for name, obj in records.items():
             actual = getattr(obj, "tenant_id", None)
             assert (

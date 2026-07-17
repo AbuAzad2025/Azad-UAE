@@ -814,7 +814,8 @@ class ActionDispatcher:
             )
             return ActionResult(False, f"حدث خطأ غير متوقع: {str(e)[:100]}")
 
-    def parse_chat_action(self, message: str) -> tuple[str, dict] | None:
+    @staticmethod
+    def parse_chat_action(message: str) -> tuple[str, dict] | None:
         """
         Parse a user chat message into (action_type, args).
         Returns None if no action matches.
@@ -1004,7 +1005,8 @@ class ActionDispatcher:
 
         return None
 
-    def format_help(self) -> str:
+    @staticmethod
+    def format_help() -> str:
         """Return a list of available commands."""
         return """**الأوامر المتاحة:**
 📦 **العملاء:** `عميل: الاسم, الهاتف, العنوان` | `عرض العملاء` | `رصيد: اسم العميل`

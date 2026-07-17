@@ -945,11 +945,11 @@ class GLMappingValidationService:
         name_partial = rule.get("name_partial", [])
         parent_code_hint = rule.get("parent_code_hint")
 
-        def _is_postable(account: GLAccount) -> bool:
+        def _is_postable(acct: GLAccount) -> bool:
             return (
-                account.tenant_id == tenant.id
-                and account.is_active
-                and not account.is_header
+                acct.tenant_id == tenant.id
+                and acct.is_active
+                and not acct.is_header
             )
 
         # --- Strategy 1: exact name match (highest confidence) ---

@@ -44,7 +44,8 @@ class ExternalLearningSystem:
             "📚 External Learning System initialized with massive knowledge sources"
         )
 
-    def _initialize_sources(self) -> dict:
+    @staticmethod
+    def _initialize_sources() -> dict:
         """تهيئة مصادر التعلم الضخمة"""
         return {
             # ========== موسوعات ومراجع عامة ==========
@@ -285,7 +286,8 @@ class ExternalLearningSystem:
             },
         }
 
-    def _load_learned_data(self) -> dict:
+    @staticmethod
+    def _load_learned_data() -> dict:
         """تحميل البيانات المتعلمة"""
         from ai_knowledge import get_knowledge_path
 
@@ -375,7 +377,8 @@ class ExternalLearningSystem:
             logger.error(f"Learning failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def _extract_knowledge(self, content: str, _topic: str) -> str:
+    @staticmethod
+    def _extract_knowledge(content: str, _topic: str) -> str:
         """استخراج المعرفة المهمة من المحتوى"""
         # استخراج ذكي (يمكن تطويره)
         # للآن، نأخذ أول 500 حرف

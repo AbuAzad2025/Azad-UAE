@@ -281,15 +281,15 @@ $(document).ready(function() {
 
     
 
-    var type = $(this).data('type');
+    const type = $(this).data('type');
 
-    var id = $(this).data('id');
+    const id = $(this).data('id');
 
-    var endpoint = type === 'receipt' ? '{{ url_for("payments.receipts") }}/' : '{{ url_for("payments.index") }}/';
+    const endpoint = type === 'receipt' ? '{{ url_for("payments.receipts") }}/' : '{{ url_for("payments.index") }}/';
 
-    var url = endpoint + id + '/restore';
+    const url = endpoint + id + '/restore';
 
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
     
 

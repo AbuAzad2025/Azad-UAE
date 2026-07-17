@@ -41,7 +41,7 @@
             const pid = f.querySelector('[name="product_id"]')?.value;
             const qty = f.querySelector('[name="quantity"]')?.value || 1;
             if (window.ShopCart && window.ShopCart.addToCart) {
-              window.ShopCart.addToCart(parseInt(pid), parseFloat(qty));
+              void window.ShopCart.addToCart(parseInt(pid), parseFloat(qty));
             }
           });
         });

@@ -114,7 +114,8 @@ class ReasoningEngine:
                 "error": str(e),
             }
 
-    def _analyze_problem(self, problem: str, _context: dict) -> Tuple[str, List[str]]:
+    @staticmethod
+    def _analyze_problem(problem: str, _context: dict) -> Tuple[str, List[str]]:
         """تحليل نوع المشكلة واستخراج العناصر الرئيسية"""
         problem_lower = problem.lower()
 
@@ -157,7 +158,8 @@ class ReasoningEngine:
 
         return problem_type, key_elements
 
-    def _decompose_problem(self, problem: str, _key_elements: List[str]) -> List[str]:
+    @staticmethod
+    def _decompose_problem(problem: str, _key_elements: List[str]) -> List[str]:
         """تفكيك المشكلة إلى خطوات فرعية"""
         sub_problems = []
 
@@ -202,7 +204,8 @@ class ReasoningEngine:
 
         return sub_problems
 
-    def _solve_step(self, sub_problem: str, context: dict) -> dict:
+    @staticmethod
+    def _solve_step(sub_problem: str, context: dict) -> dict:
         """حل خطوة واحدة"""
         # محاكاة التفكير المنطقي
 
@@ -246,7 +249,8 @@ class ReasoningEngine:
 
         return {"solution": solution, "reasoning": reasoning, "confidence": confidence}
 
-    def _combine_solutions(self, partial_solutions: List, problem_type: str) -> Any:
+    @staticmethod
+    def _combine_solutions(partial_solutions: List, problem_type: str) -> Any:
         """دمج الحلول الجزئية"""
         if problem_type == "pricing":
             # دمج خطوات التسعير
@@ -264,7 +268,8 @@ class ReasoningEngine:
             # دمج عام
             return partial_solutions[-1] if partial_solutions else None
 
-    def _verify_solution(self, solution: Any, problem: str, context: dict) -> dict:
+    @staticmethod
+    def _verify_solution(solution: Any, problem: str, context: dict) -> dict:
         """التحقق من منطقية الحل"""
         is_valid = True
         confidence = 0.9
@@ -294,8 +299,8 @@ class ReasoningEngine:
             "notes": verification_notes,
         }
 
-    def _generate_alternatives(
-        self, _problem: str, _context: dict, main_solution: Any
+    @staticmethod
+    def _generate_alternatives( _problem: str, _context: dict, main_solution: Any
     ) -> List[dict]:
         """توليد حلول بديلة"""
         alternatives = []
@@ -347,7 +352,8 @@ class ReasoningEngine:
             "method": "chain_of_thought",
         }
 
-    def mathematical_reasoning(self, calculation_problem: str) -> dict:
+    @staticmethod
+    def mathematical_reasoning(calculation_problem: str) -> dict:
         """
         الاستدلال الرياضي المتقدم
 
@@ -425,8 +431,8 @@ class ReasoningEngine:
                 "confidence": 0.0,
             }
 
-    def financial_reasoning(
-        self, financial_question: str, financial_data: dict
+    @staticmethod
+    def financial_reasoning( financial_question: str, financial_data: dict
     ) -> dict:
         """
         الاستدلال المالي المتقدم
@@ -519,7 +525,8 @@ class ReasoningEngine:
                 "confidence": 0.0,
             }
 
-    def technical_reasoning(self, technical_problem: str) -> dict:
+    @staticmethod
+    def technical_reasoning(technical_problem: str) -> dict:
         """
         الاستدلال التقني - مهندس الصيانة
 
@@ -549,12 +556,12 @@ class ReasoningEngine:
         ]
 
         if "محرك" in problem_lower or "engine" in problem_lower:
-            diagnosis_steps = [
+            diagnosis_steps.extend([
                 "1. فحص نظام الوقود",
                 "2. فحص نظام الإشعال",
                 "3. فحص نظام التبريد",
                 "4. فحص الضغط",
-            ]
+            ])
             possible_causes = [
                 "فلتر وقود مسدود",
                 "شمعات إشعال تالفة",
@@ -623,7 +630,8 @@ class ReasoningEngine:
             "estimated_cost": "متوسط",
         }
 
-    def business_reasoning(self, business_question: str, business_data: dict) -> dict:
+    @staticmethod
+    def business_reasoning(business_question: str, business_data: dict) -> dict:
         """
         الاستدلال التجاري - مستشار أعمال
 
@@ -673,7 +681,8 @@ class ReasoningEngine:
         """الحصول على تاريخ التفكير"""
         return self.reasoning_history[-limit:] if self.reasoning_history else []
 
-    def explain_decision(self, decision: str, factors: dict) -> str:
+    @staticmethod
+    def explain_decision(decision: str, factors: dict) -> str:
         """
         شرح قرار بطريقة مفهومة
 

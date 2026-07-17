@@ -1,5 +1,7 @@
 // Tenant currency config for unified display
 
+/* global SmartSelectors */
+
 const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || 'AED';
 const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || 'د.إ';
 
@@ -320,7 +322,7 @@ function addLine() {
 
         calculateLineTotal(lineIndex);
 
-        calculateTotals();
+        void calculateTotals();
 
       });
 
@@ -372,7 +374,7 @@ function removeLine(index) {
 
   $(`#line_${index}`).remove();
 
-  calculateTotals();
+  void calculateTotals();
 
 }
 
@@ -530,7 +532,8 @@ async function calculateTotals() {
 
 async function calculateTotalsClientSide() {
   let subtotal = 0;
-  $('.product-line').each(function() {
+  const $productLines = $('.product-line');
+  $productLines.each(function() {
     const lineId = $(this).attr('id');
     const lineNumber = lineId.split('_')[1];
     const qty = parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) || 0;
@@ -550,7 +553,7 @@ async function calculateTotalsClientSide() {
   const landedTotal = freight + insurance + customsDuty + otherLanded;
   const pricesIncludeVat = window._PRICES_INCLUDE_VAT || false;
   const lines = [];
-  $('.product-line').each(function() {
+  $productLines.each(function() {
     const lineId = $(this).attr('id');
     const lineNumber = lineId.split('_')[1];
     const qty = parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) || 0;
@@ -577,19 +580,27 @@ async function calculateTotalsClientSide() {
     });
     const data = await r.json();
     if (data.success) {
-      $('#summary_subtotal').text(data.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $('#summary_tax').text(data.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $('#summary_landed_cost').text(data.landed_cost.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $('#summary_total').text(data.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      const $summarySubtotal = $('#summary_subtotal');
+      const $summaryTax = $('#summary_tax');
+      const $summaryLandedCost = $('#summary_landed_cost');
+      const $summaryTotal = $('#summary_total');
+      $summarySubtotal.text(data.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      $summaryTax.text(data.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      $summaryLandedCost.text(data.landed_cost.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      $summaryTotal.text(data.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
       return;
     }
   } catch (_) {}
   const taxAmount = subtotal * (taxRate / 100);
   const total = subtotal + taxAmount + landedTotal;
-  $('#summary_subtotal').text(subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $('#summary_tax').text(taxAmount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $('#summary_landed_cost').text(landedTotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $('#summary_total').text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  const $summarySubtotal = $('#summary_subtotal');
+  const $summaryTax = $('#summary_tax');
+  const $summaryLandedCost = $('#summary_landed_cost');
+  const $summaryTotal = $('#summary_total');
+  $summarySubtotal.text(subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $summaryTax.text(taxAmount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $summaryLandedCost.text(landedTotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $summaryTotal.text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
 }
 
 
@@ -640,7 +651,7 @@ function updateLineCosts() {
 
     });
 
-    calculateTotals();
+    void calculateTotals();
 
 }
 
@@ -652,7 +663,10 @@ function updateLineCosts() {
 
 // =====================================
 
-$('#currency').on('change', function() {
+const $currency = $('#currency');
+const $exchangeRate = $('#exchange_rate');
+
+$currency.on('change', function() {
 
   const currency = $(this).val();
 
@@ -668,7 +682,7 @@ $('#currency').on('change', function() {
 
         if (data.rate) {
 
-          $('#exchange_rate').val(data.rate.toFixed(6));
+          $exchangeRate.val(data.rate.toFixed(6));
 
           updateLineCosts();
 
@@ -690,7 +704,7 @@ $('#currency').on('change', function() {
 
   } else {
 
-    $('#exchange_rate').val('1.000000');
+    $exchangeRate.val('1.000000');
 
     updateLineCosts();
 
@@ -700,7 +714,7 @@ $('#currency').on('change', function() {
 
 
 
-$('#exchange_rate').on('input change', function() {
+$exchangeRate.on('input change', function() {
 
     updateLineCosts();
 
@@ -754,7 +768,7 @@ $(document).on('input change keyup', '.line-quantity, .line-cost, .line-discount
 
     calculateLineTotal(lineNumber);
 
-    calculateTotals();
+    void calculateTotals();
 
   }
 
@@ -778,7 +792,7 @@ $(document).ready(function() {
 
   // حساب عند تغيير الضريبة
 
-  $('#tax_rate').on('input change', function() {    calculateTotals();
+  $('#tax_rate').on('input change', function() {    void calculateTotals();
 
   });
 
@@ -786,7 +800,7 @@ $(document).ready(function() {
 
   // زر إعادة الحساب اليدوي
 
-  $('#recalcTotalsBtn').on('click', function() {    calculateTotals();
+  $('#recalcTotalsBtn').on('click', function() {    void calculateTotals();
 
   });
 
@@ -804,7 +818,8 @@ $(document).ready(function() {
 
   $('#purchaseForm').on('submit', function(e) {    
 
-    const lineCount = $('.product-line').length;    
+    const $productLines = $('.product-line');
+    const lineCount = $productLines.length;    
 
     if (lineCount === 0) {
 
@@ -836,7 +851,7 @@ $(document).ready(function() {
 
     // طباعة بيانات كل سطر
 
-    $('.product-line').each(function(index) {
+    $productLines.each(function(index) {
 
       const lineId = $(this).attr('id');
 

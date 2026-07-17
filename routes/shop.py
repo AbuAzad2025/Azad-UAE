@@ -424,7 +424,7 @@ def account_order_detail(slug, order_id):
         order=sale,
         pay_method=pay_method,
         status_label=StoreOrderService.status_label(
-            sale.status, str(ctx.get("lang", ""))
+            sale.status, ctx.get("lang", "")
         ),
         noindex=True,
         **ctx,
@@ -1396,7 +1396,7 @@ def order_invoice(slug, sale_id):
     )
     ctx.update(
         status_label=StoreOrderService.status_label(
-            sale.status, str(ctx.get("lang", ""))
+            sale.status, ctx.get("lang", "")
         ),
         pay_method=pay_method,
     )
@@ -1422,7 +1422,7 @@ def order_track(slug):
         sale=sale,
         order_number=order_number,
         status_label=(
-            StoreOrderService.status_label(sale.status, str(ctx.get("lang", "")))
+            StoreOrderService.status_label(sale.status, ctx.get("lang", ""))
             if sale
             else None
         ),

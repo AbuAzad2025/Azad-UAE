@@ -3,6 +3,8 @@
  * نظام أزاد للكراج - الجافا سكريبت الرئيسي
  */
 
+/* global Swal, XLSX, APP_INLINE_EDIT_ENABLED, APP_INLINE_EDIT_ENDPOINT_TEMPLATE */
+
 $(document).ready(function() {
     // Initialize all components
     initializeApp();
@@ -265,6 +267,18 @@ function printElement(elementId) {
  * Copy to Clipboard
  */
 function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            showSuccess('تم النسخ بنجاح');
+        }).catch(function() {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
     const temp = $('<input>');
     $('body').append(temp);
     temp.val(text).select();
@@ -287,7 +301,6 @@ async function calculateTotals() {
     try {
         // Detect which type of form (sales or purchases)
         const isSalesForm = $('[name^="lines"][name$="[unit_price]"]').length > 0;
-        const isPurchaseForm = $('[name^="lines"][name$="[unit_cost]"]').length > 0;
         
         if (isSalesForm) {
             // Use sales API
@@ -398,65 +411,6 @@ function loadExchangeRate(fromCurrency, toCurrency = window._FX_FALLBACK_BASE ||
 }
 
 /**
- * Search Products (Autocomplete)
- */
-function initializeProductSearch() {
-    $('.product-search').autocomplete({
-        source: function(request, response) {
-            $.ajax({
-                url: '/api/search',
-                data: {
-                    q: request.term,
-                    type: 'products'
-                },
-                success: function(data) {
-                    response(data.results.map(function(item) {
-                        return {
-                            label: item.name,
-                            value: item.id,
-                            price: item.regular_price
-                        };
-                    }));
-                }
-            });
-        },
-        minLength: 2,
-        select: function(event, ui) {
-            // Handle product selection
-            $(this).data('product-id', ui.item.value);
-            $(this).val(ui.item.label);
-            return false;
-        }
-    });
-}
-
-/**
- * Search Customers (Autocomplete)
- */
-function initializeCustomerSearch() {
-    $('.customer-search').autocomplete({
-        source: function(request, response) {
-            $.ajax({
-                url: '/api/search',
-                data: {
-                    q: request.term,
-                    type: 'customers'
-                },
-                success: function(data) {
-                    response(data.results.map(function(item) {
-                        return {
-                            label: item.name + ' - ' + item.phone,
-                            value: item.id
-                        };
-                    }));
-                }
-            });
-        },
-        minLength: 2
-    });
-}
-
-/**
  * Accessibility Features
  */
 function initializeAccessibility() {
@@ -503,32 +457,13 @@ function shareOnWhatsApp(text, phone = '') {
     window.open(url, '_blank');
 }
 
-/**
- * Export to Excel
- */
-function exportToExcel(tableId, filename = 'export') {
-    const table = document.getElementById(tableId);
-    const wb = XLSX.utils.table_to_book(table);
-    XLSX.writeFile(wb, filename + '.xlsx');
-}
-
-/**
- * Check Internet Connection
- */
-function checkConnection() {
-    if (!navigator.onLine) {
-        showError('لا يوجد اتصال بالإنترنت');
-        return false;
-    }
-    return true;
-}
-
 // Global error handler
-window.onerror = function(msg, url, lineNo, columnNo, error) {    showError('حدث خطأ غير متوقع');
+window.onerror = function() {    showError('حدث خطأ غير متوقع');
     return false;
 };
 
 // Export functions for global use
+// noinspection JSUnusedGlobalSymbols
 window.azad = {
     showLoading: showLoading,
     hideLoading: hideLoading,

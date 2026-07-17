@@ -385,7 +385,7 @@ $(document).ready(function() {
   syncBranchRequirement();
   
   // التحقق من تطابق كلمة المرور
-  $('#userForm').submit(function(e) {
+  $('#userForm').on('submit', function(e) {
     const password = $('#password').val();
     const confirm = $('#confirm_password').val();
     

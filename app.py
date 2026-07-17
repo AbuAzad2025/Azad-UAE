@@ -74,7 +74,7 @@ if __name__ == "__main__":
         app.logger.info(
             "Database: %s", _mask_db_uri(app.config.get("SQLALCHEMY_DATABASE_URI"))
         )
-        app.logger.info("Starting server on http://%s:%s", host, port)
+        app.logger.info("Starting server on https://%s:%s", host, port)
 
         app.run(host=host, port=port, debug=debug_mode, use_reloader=False)
     except Exception as e:

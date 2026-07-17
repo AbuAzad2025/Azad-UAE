@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     })
     .catch(error => {
-      console.warn('{{ t('فشل') }} {{ t('Download') }} {{ t('Accounts') }}', error);
+      console.warn("{{ t('فشل') }} {{ t('Download') }} {{ t('Accounts') }}", error);
     });
 });
 
@@ -276,7 +276,7 @@ document.getElementById('accountStatementForm').addEventListener('submit', funct
     this.action = `/ledger/account/${accountId}/statement`;
   } else {
     e.preventDefault();
-    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('Account') }}');
+    alert("{{ t('يرجى') }} {{ t('Select') }} {{ t('Account') }}");
   }
 });
 </script>

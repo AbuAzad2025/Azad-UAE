@@ -94,6 +94,7 @@ async function loadFxRates() {
   } catch (e) {
     populateFxDisplay(getFallbackFx());
   }
+}
 
 function getFallbackFx() {
   return {

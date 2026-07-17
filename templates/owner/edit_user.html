@@ -199,7 +199,7 @@ $(document).ready(function() {
   syncBranchRequirement();
 
   // ?????? ?? ????? ???? ??????
-  $('#editUserForm').submit(function(e) {
+  $('#editUserForm').on('submit', function(e) {
     const newPass = $('#new_password').val();
     const confirmPass = $('#confirm_new_password').val();
     

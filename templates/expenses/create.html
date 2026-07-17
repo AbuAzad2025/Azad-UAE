@@ -290,7 +290,7 @@ if (window.PaymentFieldsManager) {
 }
 
 // {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
-$('#saveExpenseCategoryBtn').click(function() {
+$('#saveExpenseCategoryBtn').on('click', function() {
   const name = $('#expense_category_name').val().trim();
   const name_ar = $('#expense_category_name_ar').val().trim();
   

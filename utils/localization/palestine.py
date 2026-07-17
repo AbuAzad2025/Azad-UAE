@@ -29,7 +29,8 @@ class PalestineStrategy(LocalizationStrategy):
                 return sale_rate
         return self.default_vat_rate
 
-    def _sale_total(self, sale) -> Decimal:
+    @staticmethod
+    def _sale_total(sale) -> Decimal:
         for attr in ("total_aed", "amount_aed", "total_amount", "amount"):
             amount = coerce_decimal(getattr(sale, attr, None))
             if amount is not None:

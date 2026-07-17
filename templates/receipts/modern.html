@@ -7,6 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" integrity="sha384-hFO2rIEcBkgZKRO294CPboGlOE8XKpW3hGk1H8x71xs2e52QrbdK/HioDB0ZcIvS" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
+    :root {
+      --header-color: {{ settings.header_color or '#28a745' }};
+      --accent-color: {{ settings.accent_color or '#20c997' }};
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Tajawal', 'Arial', sans-serif;
@@ -25,15 +29,17 @@
     }
     .receipt {
       {% if settings.paper_size == 'A5' %}
-        width: 212mm;
-        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings.paper_size == 'Letter' %}
-        width: 212mm;
-        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
-        width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
-        height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
+        --page-width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
+        --page-height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
       {% endif %}
+      width: var(--page-width);
+      height: var(--page-height);
       margin: 0 auto;
       background: white;
       border-radius: 8px;
@@ -41,7 +47,7 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
     .header {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      background: var(--header-color);
       color: white;
       padding: 10px;
       text-align: center;
@@ -53,10 +59,10 @@
       background: linear-gradient(to right, #d4edda 0%, #c3e6cb 100%);
       padding: 8px;
       text-align: center;
-      border-bottom: 1px solid #28a745;
+      border-bottom: 1px solid var(--accent-color);
     }
-    .receipt-title h2 { color: #28a745; font-size: 9px; margin: 0; }
-    .receipt-number { color: #20c997; font-size: 9px; margin-top: 5px; font-weight: 700; }
+    .receipt-title h2 { color: var(--accent-color); font-size: 9px; margin: 0; }
+    .receipt-number { color: var(--accent-color); font-size: 9px; margin-top: 5px; font-weight: 700; }
     .content { padding: 10px; }
     .info-grid {
       display: grid;
@@ -68,12 +74,12 @@
       background: #f8f9fa;
       padding: 6px;
       border-radius: 8px;
-      border-right: 4px solid #28a745;
+      border-right: 4px solid var(--accent-color);
     }
-    .info-box h3 { color: #28a745; margin-bottom: 8px; font-size: 9px; font-weight: 700; }
+    .info-box h3 { color: var(--header-color); margin-bottom: 8px; font-size: 9px; font-weight: 700; }
     .info-box p { margin: 5px 0; font-size: 8px; }
     .amount-box {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      background: linear-gradient(135deg, var(--header-color) 0%, var(--accent-color) 100%);
       color: white;
       padding: 18px;
       border-radius: 10px;
@@ -86,10 +92,10 @@
       background: #d4edda;
       padding: 6px;
       border-radius: 8px;
-      border-right: 4px solid #28a745;
+      border-right: 4px solid var(--header-color);
       margin: 15px 0;
     }
-    .payment-method h4 { color: #28a745; font-size: 9px; margin-bottom: 8px; }
+    .payment-method h4 { color: var(--header-color); font-size: 9px; margin-bottom: 8px; }
     .cheque-box {
       background: #fff3cd;
       border: 1px solid #ffc107;

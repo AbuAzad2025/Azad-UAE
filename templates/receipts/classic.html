@@ -7,6 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" integrity="sha384-dDRz72nlSV5ma/yzwNSbMrzZHPI1KOMQ92VL3/OBGvurDa2ux91WkpYJpWvZm/of" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
+    :root {
+      --header-color: {{ settings.header_color or '#2c3e50' }};
+      --accent-color: {{ settings.accent_color or '#3498db' }};
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Amiri', 'Times New Roman', serif;
@@ -25,15 +29,17 @@
     }
     .receipt {
       {% if settings.paper_size == 'A5' %}
-        width: 212mm;
-        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings.paper_size == 'Letter' %}
-        width: 212mm;
-        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+        --page-width: 212mm;
+        --page-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
-        width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
-        height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
+        --page-width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
+        --page-height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
       {% endif %}
+      width: var(--page-width);
+      height: var(--page-height);
       margin: 0 auto;
       background: white;
       border: 3px double #333;

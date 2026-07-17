@@ -125,7 +125,7 @@ class ConceptSetupRule:
     search_names: tuple[str, ...] = ()
     expected_types: tuple[str, ...] = ()
     parent_code_hint: str | None = None
-    creation_template: dict[str, object] | None = None
+    creation_template: dict[str, str | bool] | None = None
     allow_same_as: str | None = None
 
 

@@ -35,13 +35,16 @@ class _Col:
     def __eq__(self, other):
         return MagicMock()
 
-    def between(self, a, b):
+    @staticmethod
+    def between(a, b):
         return MagicMock()
 
-    def ilike(self, *a, **kw):
+    @staticmethod
+    def ilike(*a, **kw):
         return MagicMock()
 
-    def desc(self):
+    @staticmethod
+    def desc():
         return MagicMock()
 
 
@@ -177,7 +180,8 @@ class TestWave8AzadResponses:
 
         return AzadResponses()
 
-    def _smart(self, responses, message, **ctx):
+    @staticmethod
+    def _smart(responses, message, **ctx):
         with (
             patch(
                 "ai_knowledge.personality.azad_responses.understand_message",

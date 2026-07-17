@@ -18,7 +18,8 @@ def knowledge_path(tmp_path):
 
 
 class TestNeuralEngineDeep:
-    def _engine(self, knowledge_path):
+    @staticmethod
+    def _engine(knowledge_path):
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         return AzadNeuralEngine()
@@ -35,7 +36,8 @@ class TestNeuralEngineDeep:
             result = engine.validate_accounting_entry(100, 50, 2, "Sale")
             assert result["is_correct"] is False
 
-    def _customer_row(self, total, days_ago=5):
+    @staticmethod
+    def _customer_row(total, days_ago=5):
         row = MagicMock()
         row.total_purchases = total
         row.sales_count = 8
@@ -106,7 +108,8 @@ class TestNeuralEngineDeep:
         ):
             assert engine.classify_customer_intelligence(1)["confidence"] == 0
 
-    def _product_row(self, stock, min_alert, total_sold):
+    @staticmethod
+    def _product_row(stock, min_alert, total_sold):
         row = MagicMock()
         row.current_stock = stock
         row.min_stock_alert = min_alert
@@ -205,7 +208,8 @@ class TestReasoningEngineDeep:
 
 
 class TestConversationStoreDeep:
-    def _mem(self, value='{"topic":"sales"}', hours_ago=0):
+    @staticmethod
+    def _mem(value='{"topic":"sales"}', hours_ago=0):
         mem = MagicMock()
         mem.value = value
         mem.last_accessed = datetime.now(timezone.utc) - timedelta(hours=hours_ago)

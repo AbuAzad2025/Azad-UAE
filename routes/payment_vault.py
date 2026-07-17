@@ -364,19 +364,19 @@ def dashboard():
     purchases = Donation.query.filter_by(
         tenant_id=tid, transaction_type="purchase"
     ).all()
-    donations = Donation.query.filter_by(
+    donation_list = Donation.query.filter_by(
         tenant_id=tid, transaction_type="donation"
     ).all()
 
     stats = {
         "total_purchases": len(purchases),
-        "total_donations": len(donations),
+        "total_donations": len(donation_list),
         "total_revenue": sum(
             float(p.amount_usd or 0)
-            for p in purchases + donations
+            for p in purchases + donation_list
             if p.status == "completed"
         ),
-        "pending_count": sum(1 for p in purchases + donations if p.status == "pending"),
+        "pending_count": sum(1 for p in purchases + donation_list if p.status == "pending"),
     }
 
     # إحصائيات اليوم
@@ -615,7 +615,7 @@ def donations():
     pagination = query.order_by(Donation.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
-    donations = pagination.items
+    donation_list = pagination.items
 
     total_donations = pagination.total
     completed_count = query.filter(Donation.status == "completed").count()
@@ -629,7 +629,7 @@ def donations():
 
     return render_template(
         "payment_vault/donations.html",
-        donations=donations,
+        donations=donation_list,
         pagination=pagination,
         total_donations=total_donations,
         completed_count=completed_count,
@@ -878,7 +878,7 @@ def reports():
         .all()
     )
     purchases = [t for t in all_transactions if t.transaction_type == "purchase"]
-    donations = [t for t in all_transactions if t.transaction_type == "donation"]
+    donation_list = [t for t in all_transactions if t.transaction_type == "donation"]
 
     # الملخص
     summary = {
@@ -958,17 +958,17 @@ def cards():
         return redirect(url_for("payment_vault.unlock_vault"))
 
     # جلب البطاقات
-    cards = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
+    card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
 
     # إحصائيات
-    total_cards = len(cards)
+    total_cards = len(card_list)
     total_amount = sum(float(c.amount or 0) for c in cards if c.status == "completed")
     visa_count = sum(1 for c in cards if c.card_type == "Visa")
     mastercard_count = sum(1 for c in cards if c.card_type == "Mastercard")
 
     return render_template(
         "payment_vault/cards.html",
-        cards=cards,
+        cards=card_list,
         total_cards=total_cards,
         total_amount=total_amount,
         visa_count=visa_count,
@@ -1815,12 +1815,12 @@ def export_donations():
     from flask import send_file
 
     tid = None
-    donations = (
+    donation_list = (
         Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
         .order_by(Donation.created_at.desc())
         .all()
     )
-    csv_file = ExportService.export_donations_to_csv(donations)
+    csv_file = ExportService.export_donations_to_csv(donation_list)
 
     return send_file(
         csv_file,
@@ -1837,8 +1837,8 @@ def export_cards():
     from services.export_service import ExportService
     from flask import send_file
 
-    cards = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
-    csv_file = ExportService.export_cards_to_csv(cards)
+    card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
+    csv_file = ExportService.export_cards_to_csv(card_list)
 
     return send_file(
         csv_file,

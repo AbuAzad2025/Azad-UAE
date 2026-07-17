@@ -21,10 +21,10 @@
 new Chart(document.getElementById('salesChart'), {
   type: 'bar',
   data: {
-    labels: {{ insights.daily_sales|map(attribute='date')|list|tojson }},
+    labels: JSON.parse('{{ insights.daily_sales|map(attribute='date')|list|tojson }}'),
     datasets: [{
       label: 'المبيعات اليومية',
-      data: {{ insights.daily_sales|map(attribute='total')|list|tojson }},
+      data: JSON.parse('{{ insights.daily_sales|map(attribute='total')|list|tojson }}'),
       backgroundColor: 'rgba(54, 162, 235, 0.5)'
     }]
   }

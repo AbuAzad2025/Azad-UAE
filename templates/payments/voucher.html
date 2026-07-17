@@ -219,19 +219,19 @@ function toggleChequeFields() {
 }
 
 // Parse data
-var customers = JSON.parse(document.getElementById('customers-data').textContent || '[]') || [];
-var suppliers = JSON.parse(document.getElementById('suppliers-data').textContent || '[]') || [];
+const customers = JSON.parse(document.getElementById('customers-data').textContent || '[]') || [];
+const suppliers = JSON.parse(document.getElementById('suppliers-data').textContent || '[]') || [];
 
 function updatePartyList() {
-  var type = $('#party_type').val();
-  var select = $('#party_id');
+  const type = $('#party_type').val();
+  const select = $('#party_id');
   select.empty();
   select.append('<option value="">{{ t('اختر') }} {{ t('الجهة') }}...</option>');
   
-  var list = (type === 'customer') ? customers : suppliers;
+  const list = (type === 'customer') ? customers : suppliers;
   
   list.forEach(function(item) {
-    var typeLabel = '';
+    let typeLabel = '';
     if (type === 'customer' && item.type !== 'regular') {
       typeLabel = ' (' + (item.type === 'merchant' ? '{{ t('تاجر') }}' : '{{ t('Partner') }}') + ')';
     }
@@ -246,15 +246,15 @@ function updatePartyList() {
 }
 
 async function loadVoucherRate() {
-  var currency = $('#currency').val() || 'AED';
+  const currency = $('#currency').val() || 'AED';
   $('#amount_currency_label').text(currency);
   if (currency === 'AED') {
     $('#exchange_rate').val('1.000000');
     return;
   }
   try {
-    var response = await fetch('{{ url_for("api.currency_rate", from_currency="X", to_currency="AED") }}'.replace('X', encodeURIComponent(currency)));
-    var data = await response.json();
+    const response = await fetch('{{ url_for("api.currency_rate", from_currency="X", to_currency="AED") }}'.replace('X', encodeURIComponent(currency)));
+    const data = await response.json();
     if (data.success && data.rate) {
       $('#exchange_rate').val(Number(data.rate).toFixed(6));
     }
@@ -270,12 +270,12 @@ $(document).ready(function() {
   });
   updatePartyList();
 
-  var preDirection = {{ preselected_direction|default('incoming')|tojson }};
-  var prePartyType = {{ preselected_party_type|default('customer')|tojson }};
-  var prePartyId = {{ preselected_party_id|default(none)|tojson }};
-  var preAmount = {{ preselected_amount|default(none)|tojson }};
-  var preCurrency = {{ preselected_currency|default(none)|tojson }};
-  var preExchangeRate = {{ preselected_exchange_rate|default(none)|tojson }};
+  const preDirection = {{ preselected_direction|default('incoming')|tojson }};
+  const prePartyType = {{ preselected_party_type|default('customer')|tojson }};
+  const prePartyId = {{ preselected_party_id|default(none)|tojson }};
+  const preAmount = {{ preselected_amount|default(none)|tojson }};
+  const preCurrency = {{ preselected_currency|default(none)|tojson }};
+  const preExchangeRate = {{ preselected_exchange_rate|default(none)|tojson }};
 
   if (preDirection && preDirection !== 'incoming') {
     selectDirection(preDirection);

@@ -571,7 +571,8 @@ class TestWarehouseNegativeToggle:
 
 
 class TestSupervisorOverride:
-    def _make_supervisor(self, db_session, tenant_id, branch_id):
+    @staticmethod
+    def _make_supervisor(db_session, tenant_id, branch_id):
         from models import User, Role
 
         suffix = str(uuid.uuid4())[:8]
@@ -671,7 +672,8 @@ class TestSupervisorOverride:
 
 
 class TestSuperAdminEndpoints:
-    def _make_global_owner(self, db_session):
+    @staticmethod
+    def _make_global_owner(db_session):
         """Create a platform owner user with tenant_id=None (global)."""
         from models import User, Role
 

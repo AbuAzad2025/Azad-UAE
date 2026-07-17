@@ -54,7 +54,7 @@ class TestStatementImport:
                 user_id=3,
                 filename="stmt.ofx",
                 file_content=b"OFXDATA",
-                format="ofx",
+                fmt="ofx",
             )
         assert len(lines) == 1
         mock_session.add.assert_called_once()

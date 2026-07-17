@@ -27,20 +27,20 @@
 new Chart(document.getElementById('financialChart'), {
   type: 'line',
   data: {
-    labels: {{ months_data|map(attribute='month')|list|tojson }},
+    labels: JSON.parse('{{ months_data|map(attribute='month')|list|tojson }}'),
     datasets: [{
       label: 'الإيرادات',
-      data: {{ months_data|map(attribute='revenue')|list|tojson }},
+      data: JSON.parse('{{ months_data|map(attribute='revenue')|list|tojson }}'),
       borderColor: 'rgb(75, 192, 192)',
       fill: false
     }, {
       label: 'المصروفات',
-      data: {{ months_data|map(attribute='expenses')|list|tojson }},
+      data: JSON.parse('{{ months_data|map(attribute='expenses')|list|tojson }}'),
       borderColor: 'rgb(255, 99, 132)',
       fill: false
     }, {
       label: 'الأرباح',
-      data: {{ months_data|map(attribute='profit')|list|tojson }},
+      data: JSON.parse('{{ months_data|map(attribute='profit')|list|tojson }}'),
       borderColor: 'rgb(54, 162, 235)',
       fill: true
     }]

@@ -11,7 +11,8 @@ import pytest
 class TestApprovePendingDonations:
     """approve_pending_donations — hour threshold and audit trail."""
 
-    def _donation(self, amount=100.0, hours_ago=2):
+    @staticmethod
+    def _donation(amount=100.0, hours_ago=2):
         d = MagicMock()
         d.id = 1
         d.amount_usd = amount

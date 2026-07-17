@@ -205,16 +205,16 @@
     new Chart(revenueCtx, {
         type: 'line',
         data: {
-            labels: {{ monthly_labels|tojson }},
+            labels: JSON.parse('{{ monthly_labels|tojson }}'),
             datasets: [{
-                label: '{{ t('Purchases') }}',
-                data: {{ monthly_purchases_data|tojson }},
+                label: "{{ t('Purchases') }}",
+                data: JSON.parse('{{ monthly_purchases_data|tojson }}'),
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
-                label: '{{ t('التبرعات') }}',
-                data: {{ monthly_donations_data|tojson }},
+                label: "{{ t('التبرعات') }}",
+                data: JSON.parse('{{ monthly_donations_data|tojson }}'),
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
                 tension: 0.4
@@ -231,9 +231,9 @@
     new Chart(distCtx, {
         type: 'pie',
         data: {
-            labels: ['{{ t('Purchases') }}', '{{ t('التبرعات') }}'],
+            labels: ["{{ t('Purchases') }}", "{{ t('التبرعات') }}"],
             datasets: [{
-                data: [{{ summary.total_purchases_amount|default(0) }}, {{ summary.total_donations_amount|default(0) }}],
+                data: [JSON.parse('{{ summary.total_purchases_amount|default(0) }}'), JSON.parse('{{ summary.total_donations_amount|default(0) }}')],
                 backgroundColor: ['#667eea', '#f5576c']
             }]
         }
@@ -244,9 +244,9 @@
     new Chart(pkgCtx, {
         type: 'doughnut',
         data: {
-            labels: ['{{ t('أساسية') }}', '{{ t('احترافية') }}', '{{ t('شركات') }}'],
+            labels: ["{{ t('أساسية') }}", "{{ t('احترافية') }}", "{{ t('شركات') }}"],
             datasets: [{
-                data: {{ package_stats|tojson }},
+                data: JSON.parse('{{ package_stats|tojson }}'),
                 backgroundColor: ['#667eea', '#f5576c', '#28a745']
             }]
         }
@@ -255,11 +255,12 @@
     $(document).on('click', '[data-action="export-report"]', exportReport);
 
     function exportReport() {
+        var _reportLabel = "{{ t('Report') }}";
         Swal.fire({
             icon: 'info',
-            title: '{{ t('Export') }} {{ t('Report') }}',
-            text: '{{ t('سيتم') }} {{ t('Download') }} {{ t('Report') }} {{ t('كملف') }} Excel',
-            confirmButtonText: '{{ t('حسناً') }}'
+            title: "{{ t('Export') }} " + _reportLabel,
+            text: "{{ t('سيتم') }} {{ t('Download') }} " + _reportLabel + " {{ t('كملف') }} Excel",
+            confirmButtonText: "{{ t('حسناً') }}"
         });
     }
 </script>

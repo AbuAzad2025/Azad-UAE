@@ -81,7 +81,7 @@ class KeyboardShortcuts {
             }
         }, 'إنشاء جديد');
 
-        this.register('ctrl+s', (e) => {
+        this.register('ctrl+s', () => {
             const form = document.querySelector('form');
             if (form) {
                 form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
@@ -224,6 +224,7 @@ class KeyboardShortcuts {
         $(modal).appendTo('body').modal('show');
     }
 
+    // noinspection JSUnusedGlobalSymbols
     disable() {
         this.isEnabled = false;
     }

@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-{% if is_rtl %}
-<html lang="{{ current_language or 'ar' }}" dir="rtl" data-ui-variant="palestinian" data-ui-mode="light">
-{% else %}
-<html lang="{{ current_language or 'ar' }}" dir="ltr" data-ui-variant="palestinian" data-ui-mode="light">
-{% endif %}
+<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -95,6 +91,7 @@
   window._FX_FALLBACK_BASE = '{{ tenant_default_currency or 'USD' }}';
   window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or 'درهم إماراتي' }}';
   window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol or 'د.إ' }}';
+// noinspection JSUnusedGlobalSymbols
 window.ROUTES = {
     payments: {
       view: '{{ url_for("payments.view_receipt", id=0) }}'.replace('/0', ''),

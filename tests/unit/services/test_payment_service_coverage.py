@@ -114,7 +114,8 @@ class TestPaymentServiceHelpers:
             def __eq__(self, other):
                 return MagicMock()
 
-            def asc(self):
+            @staticmethod
+            def asc():
                 return MagicMock()
 
         Sale = mocker.patch("services.payment_service.Sale")

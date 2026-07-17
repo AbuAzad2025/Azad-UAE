@@ -25,7 +25,7 @@ def metrics():
 @login_required
 @admin_required
 def dashboard():
-    health = LoggingCore.get_system_health()
-    metrics = LoggingCore.get_app_metrics()
+    system_health = LoggingCore.get_system_health()
+    app_metrics = LoggingCore.get_app_metrics()
 
-    return render_template("monitoring/dashboard.html", health=health, metrics=metrics)
+    return render_template("monitoring/dashboard.html", health=system_health, metrics=app_metrics)

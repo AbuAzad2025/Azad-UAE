@@ -107,25 +107,27 @@ $(document).ready(function() {
     // اقتراح سعر الصرف
     function suggestExchangeRate(currency) {
         if (currency === 'AED') {
-            $('#exchange_rate').val('1.00');
+            const $exchangeRate = $('#exchange_rate');
+            $exchangeRate.val('1.00');
             return;
         }
         
         $.ajax({
             url: `/ai/exchange-rate/${currency}`,
             method: 'GET',
-            success: function(suggestion) {
-                $('#exchange_rate').val(suggestion.suggested_rate.toFixed(6));
-                
+success: function(suggestion) {
+                const $exchangeRate = $('#exchange_rate');
+                $exchangeRate.val(suggestion.suggested_rate.toFixed(6));
+
                 const sourceInfo = `
                     <small class="text-muted d-block mt-1">
                         <i class="fas fa-info-circle"></i> ${suggestion.source}
                         ${suggestion.count > 0 ? `(بناءً على ${suggestion.count} معاملات)` : ''}
                     </small>
                 `;
-                
-                $('#exchange_rate').parent().find('small').remove();
-                $('#exchange_rate').after(sourceInfo);
+
+                $exchangeRate.parent().find('small').remove();
+                $exchangeRate.after(sourceInfo);
             }
         });
     }
@@ -237,8 +239,9 @@ $(document).ready(function() {
     });
     
     // Initialize
-    if ($('#currency').length) {
-        const initialCurrency = $('#currency').val();
+    const $currency = $('#currency');
+    if ($currency.length) {
+        const initialCurrency = $currency.val();
         if (initialCurrency && initialCurrency !== 'AED') {
             suggestExchangeRate(initialCurrency);
         }
@@ -247,15 +250,17 @@ $(document).ready(function() {
 
 // تطبيق السعر الموصى به
 function applyRecommendedPrice(lineIndex, price) {
-    $(`#unit_price_${lineIndex}`).val(price.toFixed(2));
-    $(`#unit_price_${lineIndex}`).trigger('change');
+    const $unitPrice = $(`#unit_price_${lineIndex}`);
+    $unitPrice.val(price.toFixed(2));
+    $unitPrice.trigger('change');
     $(`.ai-recommendation`).fadeOut();
 }
 
 // تطبيق سعر السوق العالمي
 function applyMarketPrice(lineIndex, price) {
-    $(`#unit_price_${lineIndex}`).val(price.toFixed(2));
-    $(`#unit_price_${lineIndex}`).trigger('change');
+    const $unitPrice = $(`#unit_price_${lineIndex}`);
+    $unitPrice.val(price.toFixed(2));
+    $unitPrice.trigger('change');
     $(`#market_info_${lineIndex}`).fadeOut();
 }
 

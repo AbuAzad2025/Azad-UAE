@@ -23,12 +23,14 @@ def knowledge_path(tmp_path):
 
 
 class TestNeuralEngineCoverage:
-    def _engine(self, knowledge_path):
+    @staticmethod
+    def _engine(knowledge_path):
         from ai_knowledge.neural.neural_engine import AzadNeuralEngine
 
         return AzadNeuralEngine()
 
-    def _customer_row(self, total, days_ago=5):
+    @staticmethod
+    def _customer_row(total, days_ago=5):
         row = MagicMock()
         row.total_purchases = total
         row.sales_count = 8
@@ -36,7 +38,8 @@ class TestNeuralEngineCoverage:
         row.last_purchase = datetime.now(timezone.utc) - timedelta(days=days_ago)
         return row
 
-    def _product_row(self, stock, min_alert, total_sold):
+    @staticmethod
+    def _product_row(stock, min_alert, total_sold):
         row = MagicMock()
         row.current_stock = stock
         row.min_stock_alert = min_alert
@@ -642,7 +645,8 @@ class TestCodeGeneratorCoverage:
 
 
 class TestDocumentGeneratorCoverage:
-    def _sale_mock(self):
+    @staticmethod
+    def _sale_mock():
         customer = MagicMock(name="Ali", phone="050", address="Dubai")
         payment = MagicMock(payment_method="cash")
         line = MagicMock(

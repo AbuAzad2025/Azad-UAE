@@ -415,7 +415,8 @@ class TestCreateSaleCommissionAndOptions:
 
 
 class TestFulfillSaleGlBranches:
-    def _fulfill(self, sale, **patches):
+    @staticmethod
+    def _fulfill(sale, **patches):
         from services.sale_service import SaleService
 
         defaults = {
@@ -635,7 +636,8 @@ class TestCreatePaymentFxAndGl:
 
 
 class TestCancelSale:
-    def _sale(self):
+    @staticmethod
+    def _sale():
         sale = MagicMock(
             id=1,
             sale_number="S-C",

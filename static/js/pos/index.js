@@ -202,7 +202,7 @@
         const act = btn.getAttribute('data-act');
         if (act === 'inc') state.cart[idx].qty = Number(state.cart[idx].qty) + 1;
         if (act === 'dec') state.cart[idx].qty = Math.max(0.001, Number(state.cart[idx].qty) - 1);
-        renderCart();
+        void renderCart();
     });
     const addToCart = async (p) => {
         const existing = state.cart.find(x => x.id === p.id);
@@ -275,14 +275,13 @@
         customerHint();
     });
     qs('#walkinCustomer').addEventListener('click', async () => {
-            const res = await fetchJson('/pos/api/walkin-customer');
-            if (!res.ok) return showAlert(res.error || 'تعذر تحميل عميل نقدي');
-            const c = res.data;
-            state.customer = c;
-            qs('#customerSearch').value = c.text || c.name;
-            customerHint();
-            qs('#productSearch').focus();
-        }
+        const res = await fetchJson('/pos/api/walkin-customer');
+        if (!res.ok) return showAlert(res.error || 'تعذر تحميل عميل نقدي');
+        const c = res.data;
+        state.customer = c;
+        qs('#customerSearch').value = c.text || c.name;
+        customerHint();
+        qs('#productSearch').focus();
     });
     let productTimer = null;
     let productBusy = false;
@@ -319,24 +318,23 @@
             return;
         }
         const res = await fetchJson('/pos/api/product?code=' + encodeURIComponent(q) + warehouseParam());
-            if (!res.ok) {
-                if ((state.lastProductResults || []).length) {
-                    await addToCart(state.lastProductResults[0]);
-                    qs('#productSearch').value = '';
-                    qs('#productResults').classList.add('d-none');
-                }
-                return;
-            }
-            const p = res.data;
-            if (p && p.id) {
-                if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
-                if (p.warning) showAlert(p.warning, 'warning');
-                await addToCart(p);
+        if (!res.ok) {
+            if ((state.lastProductResults || []).length) {
+                await addToCart(state.lastProductResults[0]);
                 qs('#productSearch').value = '';
                 qs('#productResults').classList.add('d-none');
-            } else {
-                showAlert(err.message || 'لم يُعثر على المنتج');
             }
+            return;
+        }
+        const p = res.data;
+        if (p && p.id) {
+            if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
+            if (p.warning) showAlert(p.warning, 'warning');
+            await addToCart(p);
+            qs('#productSearch').value = '';
+            qs('#productResults').classList.add('d-none');
+        } else {
+            showAlert(res.error || 'لم يُعثر على المنتج');
         }
     };
     const runProductSearch = async (q) => {
@@ -354,7 +352,6 @@
         else showAlert(res.error || 'فشل البحث');
         productBusy = false;
         qs('#productLoading').classList.add('d-none');
-        }
     };
     qs('#productSearch').addEventListener('input', function(){
         const q = this.value.trim();
@@ -364,12 +361,12 @@
     qs('#productSearch').addEventListener('keydown', function(e){
         if (e.key === 'Enter') {
             e.preventDefault();
-            addFirstOrLookup(this.value.trim());
+            void addFirstOrLookup(this.value.trim());
         }
     });
     qs('#warehouseId').addEventListener('change', function(){
         const q = qs('#productSearch').value.trim();
-        if (q) runProductSearch(q);
+        if (q) void runProductSearch(q);
     });
     qs('#clearProductSearch').addEventListener('click', () => {
         qs('#productSearch').value = '';
@@ -389,7 +386,7 @@
                 : state.cart[idx].price;
         }
         if (k === 'disc') state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
-        renderCart();
+        void renderCart();
     });
     qs('#cartBody').addEventListener('click', function(e){
         const btn = e.target.closest('button[data-k="del"]');
@@ -397,7 +394,7 @@
         const idx = Number(btn.getAttribute('data-i'));
         if (!Number.isFinite(idx)) return;
         state.cart.splice(idx, 1);
-        renderCart();
+        void renderCart();
     });
     qsa('#taxRate,#shippingCost,#discountAmount').forEach(el => {
         el.addEventListener('input', recalc);
@@ -513,7 +510,7 @@
             qs('#customerSearch').focus();
         } else if (e.key === 'F8') {
             e.preventDefault();
-            checkout(true);
+            void checkout(true);
         } else if (e.key === 'Escape') {
             qs('#productSearch').value = '';
             qs('#productResults').classList.add('d-none');
@@ -521,7 +518,7 @@
         }
     });
     customerHint();
-    renderCart();
+    void renderCart();
     qs('#productSearch').focus();
     state.barcodeScanner = new BarcodeScanner({
         onScan: async (code) => {
@@ -591,15 +588,14 @@
             const name = c.name_ar || c.name;
             html += `<div class="pos-cat" data-cat="${c.id}">${esc(name)}</div>`;
         });
-            box.innerHTML = html;
-            box.querySelectorAll('.pos-cat').forEach(el => {
-                el.addEventListener('click', () => {
-                    box.querySelectorAll('.pos-cat').forEach(x => x.classList.remove('active'));
-                    el.classList.add('active');
-                    loadProducts(el.getAttribute('data-cat'));
-                });
+        box.innerHTML = html;
+        box.querySelectorAll('.pos-cat').forEach(el => {
+            el.addEventListener('click', () => {
+                box.querySelectorAll('.pos-cat').forEach(x => x.classList.remove('active'));
+                el.classList.add('active');
+                void loadProducts(el.getAttribute('data-cat'));
             });
-        } catch (_) {}
+        });
     };
     const loadProducts = async (categoryId) => {
         const grid = qs('#posProductGrid');
@@ -635,8 +631,8 @@
             grid.innerHTML = '<div class="pos-cart-empty">تعذر تحميل المنتجات</div>';
         }
     };
-    loadCategories();
-    loadProducts('');
+    void loadCategories();
+    void loadProducts('');
 
     /* ---------- Ctrl+K focuses product search ---------- */
     document.addEventListener('keydown', (e) => {
@@ -849,5 +845,5 @@ const loadFloors = async () => {
         qs('#productSearch').focus();
     });
     loadOrderTypes();
-    loadSession();
+    void loadSession();
 })();

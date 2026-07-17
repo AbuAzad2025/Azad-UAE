@@ -250,7 +250,8 @@ class NOWPaymentsService:
         except Exception:
             return False
 
-    def process_payment_callback(self, payment_data):
+    @staticmethod
+    def process_payment_callback(payment_data):
         try:
             payment_id = payment_data.get("payment_id")
             status = payment_data.get("payment_status")

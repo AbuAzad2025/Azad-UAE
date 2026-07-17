@@ -47,13 +47,16 @@ class _Col:
     def __eq__(self, other):
         return MagicMock()
 
-    def between(self, a, b):
+    @staticmethod
+    def between(a, b):
         return MagicMock()
 
-    def ilike(self, *a, **kw):
+    @staticmethod
+    def ilike(*a, **kw):
         return MagicMock()
 
-    def desc(self):
+    @staticmethod
+    def desc():
         return MagicMock()
 
 
@@ -910,7 +913,8 @@ class TestIntelligentAssistantWave3:
 
         return IntelligentAssistant()
 
-    def _mock_queries(self):
+    @staticmethod
+    def _mock_queries():
         mock_q = MagicMock()
         mock_q.filter_by.return_value = mock_q
         mock_q.filter.return_value = mock_q

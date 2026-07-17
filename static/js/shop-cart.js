@@ -104,7 +104,7 @@
       e.preventDefault();
       const productId = form.querySelector('[name="product_id"]');
       const qty = form.querySelector('[name="quantity"]');
-      if (productId) addToCart(parseInt(productId.value), parseFloat((qty && qty.value) || 1));
+      if (productId) void addToCart(parseInt(productId.value), parseFloat((qty && qty.value) || 1));
     });
   }
 
@@ -114,7 +114,7 @@
       if (!btn) return;
       e.preventDefault();
       const productId = btn.getAttribute('data-product-id');
-      if (productId) removeFromCart(parseInt(productId));
+      if (productId) void removeFromCart(parseInt(productId));
     });
   }
 
@@ -142,7 +142,7 @@
       if (!btn) return;
       e.preventDefault();
       const productId = btn.getAttribute('data-product-id');
-      if (productId) wishlistToggle(parseInt(productId));
+      if (productId) void wishlistToggle(parseInt(productId));
     });
   }
 
@@ -185,6 +185,7 @@
     init();
   }
 
+  // noinspection JSUnusedGlobalSymbols
   window.ShopCart = {
     addToCart: addToCart,
     removeFromCart: removeFromCart,
@@ -336,7 +337,7 @@
     if (quickAdd) {
       e.preventDefault();
       const pid = parseInt(quickAdd.getAttribute('data-product-id'));
-      if (pid) addToCart(pid, 1);
+      if (pid) void addToCart(pid, 1);
     }
   });
   document.addEventListener('keydown', function (e) {

@@ -427,14 +427,18 @@ class BackupService:
     @classmethod
     def _alembic_info(cls) -> Tuple[Optional[str], Optional[str]]:
         try:
-            from flask import current_app
-            from flask_migrate import current as alembic_current
-            from flask_migrate import heads as alembic_heads
+            from sqlalchemy import create_engine, text
 
-            with current_app.app_context():
-                cur = alembic_current()
-                hd = alembic_heads()
-            return str(cur) if cur else None, str(hd) if hd else None
+            url = os.environ.get("DATABASE_URL") or os.environ.get(
+                "SQLALCHEMY_DATABASE_URI"
+            )
+            if not url:
+                return None, None
+            with create_engine(url).connect() as conn:
+                cur = conn.execute(
+                    text("SELECT version_num FROM alembic_version LIMIT 1")
+                ).scalar()
+            return str(cur) if cur else None, str(cur) if cur else None
         except Exception:
             return None, None
 

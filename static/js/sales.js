@@ -25,15 +25,13 @@
     if(!form) return;
     on(form,'submit', e=>{
       e.preventDefault();
-      const formData = new FormData(form);const params = new URLSearchParams();formData.forEach((v,k)=>params.append(k,v));
+      const formData = new FormData(form);const params = new URLSearchParams();formData.forEach((v,k)=>params.append(k,String(v)));
       const action = form.getAttribute('action') || window.location.pathname;
       window.location = action + '?' + params.toString();
     });
     const resetBtn = form.querySelector('button[type="reset"]');
     if(resetBtn) on(resetBtn,'click',e=>{
-      e.preventDefault();
-      const action = form.getAttribute('action') || window.location.pathname;
-      window.location = action;
+      e.preventDefault();            window.location = form.getAttribute('action') || window.location.pathname;
     });
   })();
 
@@ -125,6 +123,7 @@
       $el.empty();
       $el.select2(opts);
     }
+    // noinspection JSUnusedGlobalSymbols
     function initAjaxSelect($el, {endpoint, placeholder}){
       const build = () => ({
         theme: 'bootstrap4',
@@ -135,8 +134,7 @@
         ajax: {
           delay: 200,
           transport: function (params, success, failure) {
-            const url = (typeof endpoint === 'function') ? endpoint() : endpoint;
-            params.url = url;
+            params.url = (typeof endpoint === 'function') ? endpoint() : endpoint;
             return jQuery.ajax(params).then(success).catch(failure);
           },
           data: params => ({ q: params.term || '', limit: 50 }),
@@ -201,7 +199,7 @@
           $wh.off('change').on('change', () => {
             if ($pd.length) { $pd.val(null).trigger('change'); }
             initProducts();
-            updateAvailability(+($pd.val()),+($wh.val()),row);
+            void updateAvailability(+($pd.val()),+($wh.val()),row);
           });
         }
       });

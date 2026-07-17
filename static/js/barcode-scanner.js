@@ -97,7 +97,7 @@ class CameraBarcodeScanner {
         requestAnimationFrame(() => this.scan());
     }
     
-    detectBarcode(imageData) {
+    detectBarcode() {
         return null;
     }
 }

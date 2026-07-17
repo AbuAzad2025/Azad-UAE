@@ -32,7 +32,8 @@ class CodeGenerator:
         self.templates = self._load_templates()
         self.generated_code_history = []
 
-    def _load_templates(self):
+    @staticmethod
+    def _load_templates():
         """تحميل قوالب الأكواد"""
         return {
             "sql_select": "SELECT {columns} FROM {table} WHERE {conditions}",
@@ -49,8 +50,8 @@ def {function_name}():
     {body}""",
         }
 
-    def generate_sql_query(
-        self, intent: str, table: str, filters: Optional[dict] = None
+    @staticmethod
+    def generate_sql_query( intent: str, table: str, filters: Optional[dict] = None
     ) -> str:
         """
         توليد SQL query تلقائياً
@@ -128,8 +129,8 @@ def {function_name}():
             logger.error(f"SQL generation failed: {e}")
             return f"-- Error: {e}"
 
-    def generate_python_function(
-        self, function_name: str, purpose: str, params: Optional[List[str]] = None
+    @staticmethod
+    def generate_python_function( function_name: str, purpose: str, params: Optional[List[str]] = None
     ) -> str:
         """
         توليد دالة Python
@@ -188,8 +189,8 @@ def {function_name}():
             logger.error(f"Python generation failed: {e}")
             return f"# Error: {e}"
 
-    def generate_report_query(
-        self, report_type: str, date_range: Optional[dict] = None
+    @staticmethod
+    def generate_report_query( report_type: str, date_range: Optional[dict] = None
     ) -> str:  # nosec B608
         """
         توليد query لتقرير محدد
@@ -257,7 +258,8 @@ ORDER BY total_purchases DESC
             logger.error(f"Report query generation failed: {e}")
             return f"-- Error: {e}"
 
-    def fix_code(self, broken_code: str, error_message: str) -> dict:
+    @staticmethod
+    def fix_code(broken_code: str, error_message: str) -> dict:
         """
         إصلاح كود معطوب
 
@@ -323,7 +325,8 @@ ORDER BY total_purchases DESC
             "confidence": 0.7 if changes else 0.3,
         }
 
-    def optimize_code(self, code: str) -> dict:
+    @staticmethod
+    def optimize_code(code: str) -> dict:
         """
         تحسين وتسريع الكود
 

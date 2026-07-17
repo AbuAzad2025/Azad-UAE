@@ -397,16 +397,16 @@
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ monthly_labels|tojson }},
+            labels: JSON.parse('{{ monthly_labels|tojson }}'),
             datasets: [{
                 label: '{{ t("Purchases") }}',
-                data: {{ monthly_purchases|tojson }},
+                data: JSON.parse('{{ monthly_purchases|tojson }}'),
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
                 label: '{{ t("التبرعات") }}',
-                data: {{ monthly_donations|tojson }},
+                data: JSON.parse('{{ monthly_donations|tojson }}'),
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
                 tension: 0.4
@@ -435,12 +435,13 @@
     });
     
     function lockVault() {
+        var _lockLabel = "{{ t('قفل') }}";
         Swal.fire({
-            title: '{{ t("قفل") }} {{ t("الخزينة_2") }}',
-            text: 'هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('الخزينة') }} {{ t('السرية_2') }}',
+            title: _lockLabel + ' {{ t("الخزينة_2") }}',
+            text: 'هل أنت {{ t('متأكد') }} من ' + _lockLabel + ' {{ t('الخزينة') }} {{ t('السرية_2') }}',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: '{{ t("نعم،") }} {{ t("قفل") }}',
+            confirmButtonText: '{{ t("نعم،") }} ' + _lockLabel,
             cancelButtonText: '{{ t("Cancel") }}',
             confirmButtonColor: '#d33'
         }).then((result) => {

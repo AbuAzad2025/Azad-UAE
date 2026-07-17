@@ -156,5 +156,5 @@ async function retryQueue() {
 }
 
 self.addEventListener('message', (event) => {
-  if (event.data === 'retry-queue') retryQueue();
+  if (event.data === 'retry-queue') void retryQueue();
 });

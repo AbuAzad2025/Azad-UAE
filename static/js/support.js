@@ -13,7 +13,6 @@
 
   let selectedAmount = 0;
   let selectedMethod = '';
-  const selectedCrypto = 'btc';
   let selectedPackage = '';
   let currentTab = 'purchase';
 

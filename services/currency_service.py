@@ -16,13 +16,23 @@ from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Any
 import time
 
+class _CurrencyRatesStub:
+    """Dummy CurrencyRates when forex-python is not installed — keeps CurrencyRates always callable."""
+
+    def get_rates(self, base: str) -> dict:
+        raise RuntimeError("forex-python module not installed")
+
+    def get_rate(self, from_curr: str, to_curr: str) -> float:
+        raise RuntimeError("forex-python module not installed")
+
+
 try:
     from forex_python.converter import CurrencyRates
 
     FOREX_AVAILABLE = True
 except ImportError:
+    CurrencyRates = _CurrencyRatesStub
     FOREX_AVAILABLE = False
-    CurrencyRates = None
 
 try:
     import requests

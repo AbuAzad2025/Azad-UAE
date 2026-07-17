@@ -30,11 +30,11 @@ class SelfReflectionEngine:
     - فرص التحسين
     """
 
-    def __init__(self):
-        self.performance_log = []
-        self.errors_log = []
-        self.improvements_log = []
-        self.self_assessment = {}
+    def __init__(self) -> None:
+        self.performance_log: list[dict[str, Any]] = []
+        self.errors_log: list[dict[str, Any]] = []
+        self.improvements_log: list[dict[str, Any]] = []
+        self.self_assessment: dict[str, Any] = {}
 
     def reflect_on_performance(self) -> dict:
         """
@@ -114,7 +114,7 @@ class SelfReflectionEngine:
 
         return assessment
 
-    def log_performance(self, task: str, accuracy: float, details: dict | None = None):
+    def log_performance(self, task: str, accuracy: float, details: dict | None = None) -> None:
         """تسجيل الأداء"""
         entry = {
             "timestamp": datetime.now().isoformat(),
@@ -131,7 +131,7 @@ class SelfReflectionEngine:
 
     def log_error(
         self, error_type: str, error_message: str, context: dict | None = None
-    ):
+    ) -> None:
         """تسجيل خطأ للتعلم منه"""
         entry = {
             "timestamp": datetime.now().isoformat(),
@@ -206,7 +206,7 @@ class SelfReflectionEngine:
 
         return plan
 
-    def celebrate_success(self, achievement: str):
+    def celebrate_success(self, achievement: str) -> None:
         """
         الاحتفال بالإنجازات
 
@@ -222,7 +222,7 @@ class SelfReflectionEngine:
 
         logger.info(f"🎉 Achievement unlocked: {achievement}")
 
-    def learn_from_mistake(self, mistake: str, lesson: str):
+    def learn_from_mistake(self, mistake: str, lesson: str) -> None:
         """
         التعلم من الأخطاء
 
