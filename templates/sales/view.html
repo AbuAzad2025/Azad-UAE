@@ -907,6 +907,10 @@
 
 <script>
 
+const RETURN_CSRF_TOKEN = document.querySelector('#returnForm [name="csrf_token"]').value;
+const RETURN_QTY_ALERT = '{{ t('يرجى') }} {{ t('تحديد') }} {{ t('Qty') }} {{ t('لمنتج') }} واحد على {{ t('الأقل') }} {{ t('Return_2') }}';
+const RETURN_CONFIRM_MSG = '{{ t('متأكد') }} {{ t('Create') }} {{ t('Return_4') }} {{ t('سيتم') }} {{ t('Update') }} {{ t('Inventory') }} {{ t('والحسابات') }} {{ t('تلقائياً') }}.';
+
 $(document).on('click', '[data-action="cancel-sale"]', confirmCancel);
 $(document).on('click', '[data-action="delete-sale"]', confirmDelete);
 $(document).on('click', '[data-action="submit-return"]', submitReturn);
@@ -947,7 +951,7 @@ function submitReturn() {
 
     if (lines.length === 0) {
 
-        alert('{{ t('يرجى') }} {{ t('تحديد') }} {{ t('Qty') }} {{ t('لمنتج') }} واحد على {{ t('الأقل') }} {{ t('Return_2') }}');
+        alert(RETURN_QTY_ALERT);
 
         return;
 
@@ -955,7 +959,7 @@ function submitReturn() {
 
     
 
-    if (!confirm('هل أنت {{ t('متأكد') }} من {{ t('Create') }} {{ t('Return_4') }} {{ t('سيتم') }} {{ t('Update') }} {{ t('Inventory') }} {{ t('والحسابات') }} {{ t('تلقائياً') }}.')) {
+    if (!confirm(RETURN_CONFIRM_MSG)) {
 
         return;
 
@@ -971,7 +975,7 @@ function submitReturn() {
 
             'Content-Type': 'application/json',
 
-            'X-CSRFToken': '{{ csrf_token() }}'
+            'X-CSRFToken': RETURN_CSRF_TOKEN
 
         },
 
