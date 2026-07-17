@@ -108,6 +108,7 @@ package.json
 /*.txt
 !requirements.txt
 # Temporary files
+tmp/
 *.tmp
 *.temp
 ~$*
