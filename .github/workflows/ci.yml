@@ -185,7 +185,6 @@ jobs:
 
   # ── Security scan (no DB needed) ──
   security-scan:
-    needs: []
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
