@@ -44,7 +44,6 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname.startsWith('/pos/') || url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(request));
-    return;
   }
 });
 

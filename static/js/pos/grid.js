@@ -144,7 +144,7 @@ const handleNumpad=(key)=>{
     showAlert('أدخل '+labels[key]+' باستخدام لوحة الأرقام ثم اضغط Enter','info');
     return;
   }
-  if(key.match(/^[0-9.]$/)&&state.numpadMode){state.numpadBuffer+=key;return;}
+  if(key.match(/^[0-9.]$/)&&state.numpadMode){state.numpadBuffer+=key;}
 };
 
 const initSession=()=>{
