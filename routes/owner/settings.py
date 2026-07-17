@@ -1283,14 +1283,15 @@ def api_update_tenant_settings():
                     jsonify({"success": False, "error": "Invalid tax rate value"}),
                     400,
                 )
-        with atomic_transaction("api_update_tenant_settings"):
-            if field == "default_tax_rate":
+            with atomic_transaction("api_update_tenant_settings"):
                 tenant.default_tax_rate = parsed
-            elif field == "prices_include_vat":
-                tenant.prices_include_vat = bool(value)
-            elif field == "logo_url":
-                tenant.logo_url = str(value).strip()
-            tenant.updated_at = datetime.now(timezone.utc)
+        else:
+            with atomic_transaction("api_update_tenant_settings"):
+                if field == "prices_include_vat":
+                    tenant.prices_include_vat = bool(value)
+                elif field == "logo_url":
+                    tenant.logo_url = str(value).strip()
+                tenant.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
         _audit_owner_db_action(
             "api_update_tenant_settings", {"field": field, "tenant_id": tenant.id}
