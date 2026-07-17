@@ -209,7 +209,7 @@ class HRService:
     @staticmethod
     def list_leaves(filters, user):
         tid = HRService._tid(user)
-        query = LeaveRequest.query.filter(LeaveRequest.is_active == True)
+        query = LeaveRequest.query.filter(LeaveRequest.is_active)
         if tid is not None:
             query = query.filter(LeaveRequest.tenant_id == tid)
         if not is_global_owner_user(user):
@@ -250,7 +250,7 @@ class HRService:
         return (
             Department.query.filter(
                 Department.tenant_id == tid,
-                Department.is_active == True,
+                Department.is_active,
             )
             .order_by(Department.name)
             .all()

@@ -166,7 +166,7 @@ class TicketService:
     @staticmethod
     def search_tickets(filters, user):
         tid = get_active_tenant_id(user)
-        query = Ticket.query.filter(Ticket.is_active == True)
+        query = Ticket.query.filter(Ticket.is_active)
         if tid is not None:
             query = query.filter(Ticket.tenant_id == tid)
         if not is_global_owner_user(user):

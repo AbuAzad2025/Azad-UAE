@@ -247,9 +247,7 @@ class RealTimeAccountingListeners:
                     (
                         "success"
                         if cheque.status == "cleared"
-                        else "warning"
-                        if cheque.status == "bounced"
-                        else "info"
+                        else "warning" if cheque.status == "bounced" else "info"
                     ),
                 )
 
@@ -261,7 +259,7 @@ class RealTimeAccountingListeners:
         """تسجيل الحدث"""
         try:
             # يمكن حفظ الأحداث في قاعدة بيانات أو ملف
-            event_log = {
+            {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "event_type": event_type,
                 "data": data,

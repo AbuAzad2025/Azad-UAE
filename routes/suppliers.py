@@ -605,7 +605,7 @@ def api_search():
     """API endpoint للبحث عن الموردين"""
     try:
         query = request.args.get("q", "")
-        page = request.args.get("page", 1, type=int)
+        request.args.get("page", 1, type=int)
         per_page = 20
 
         # السماح بالبحث حتى بدون query (لعرض كل الموردين)
@@ -613,7 +613,7 @@ def api_search():
             suppliers = (
                 _scoped_supplier_query()
                 .filter(
-                    Supplier.is_active == True,
+                    Supplier.is_active,
                     db.or_(
                         Supplier.name.ilike(f"%{query}%"),
                         Supplier.phone.ilike(f"%{query}%"),

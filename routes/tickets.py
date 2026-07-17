@@ -9,21 +9,21 @@ tickets_bp = Blueprint("tickets", __name__, url_prefix="/tickets")
 
 
 def _tenant_categories(tid):
-    q = TicketCategory.query.filter(TicketCategory.is_active == True)
+    q = TicketCategory.query.filter(TicketCategory.is_active)
     if tid is not None:
         q = q.filter(TicketCategory.tenant_id == tid)
     return q.all()
 
 
 def _tenant_priorities(tid):
-    q = TicketPriority.query.filter(TicketPriority.is_active == True)
+    q = TicketPriority.query.filter(TicketPriority.is_active)
     if tid is not None:
         q = q.filter(TicketPriority.tenant_id == tid)
     return q.all()
 
 
 def _tenant_customers(tid):
-    q = Customer.query.filter(Customer.is_active == True)
+    q = Customer.query.filter(Customer.is_active)
     if tid is not None:
         q = q.filter(Customer.tenant_id == tid)
     return q.order_by(Customer.name).all()
@@ -39,7 +39,7 @@ def list_tickets():
     categories = _tenant_categories(tid)
     priorities = _tenant_priorities(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid
@@ -72,7 +72,7 @@ def create_ticket():
     priorities = _tenant_priorities(tid)
     customers = _tenant_customers(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid
@@ -100,7 +100,7 @@ def ticket_detail(ticket_id):
     categories = _tenant_categories(tid)
     priorities = _tenant_priorities(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid

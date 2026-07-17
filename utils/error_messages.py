@@ -275,9 +275,7 @@ class ErrorMessages:
 
     @staticmethod
     def invalid_number(field):
-        return (
-            f'القيمة في "{field}" يجب أن تكون رقماً.\nأدخل رقماً صحيحاً مثل: 100 أو 99.50'
-        )
+        return f'القيمة في "{field}" يجب أن تكون رقماً.\nأدخل رقماً صحيحاً مثل: 100 أو 99.50'
 
     @staticmethod
     def invalid_date():

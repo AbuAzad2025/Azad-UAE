@@ -138,7 +138,7 @@ function populateFxDisplay(data) {
   const updatedEl = document.getElementById('fx-last-updated');
   if (updatedEl && data.last_updated) {
     const d = new Date(data.last_updated);
-    const timeStr = isNaN(d) ? '--' : d.toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' });
+    const timeStr = isNaN(d.getTime()) ? '--' : d.toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' });
     updatedEl.innerHTML = '<i class="fas fa-clock mr-1"></i>آخر تحديث: ' + timeStr;
   }
 }

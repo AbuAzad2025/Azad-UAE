@@ -183,7 +183,7 @@ class CurrencyService:
                 return Decimal("1")
             return CurrencyService.FALLBACK_RATES.get(target, Decimal("1"))
 
-        base_aed_val = get_aed_value(base)  # How many Target units for 1 AED
+        get_aed_value(base)  # How many Target units for 1 AED
 
         # We want: How many Target units for 1 Base unit?
         # Rate = (1 AED in Target) / (1 AED in Base)

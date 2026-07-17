@@ -80,7 +80,7 @@ def _scoped_customers_query():
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    query = Customer.query.filter(Customer.is_active == True)
+    query = Customer.query.filter(Customer.is_active)
     if tid is not None:
         query = query.filter(Customer.tenant_id == tid)
     if scoped_branch_id is None:
@@ -107,7 +107,7 @@ def _scoped_suppliers_query():
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    query = Supplier.query.filter(Supplier.is_active == True)
+    query = Supplier.query.filter(Supplier.is_active)
     if tid is not None:
         query = query.filter(Supplier.tenant_id == tid)
     if scoped_branch_id is None:

@@ -155,7 +155,9 @@ def vat_report():
 
     tenant = Tenant.get_current()
     if tenant and not is_tax_enabled(tenant.id):
-        flash("الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم.", "info")
+        flash(
+            "الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم.", "info"
+        )
         return redirect(url_for("ledger.index"))
 
     date_from = request.args.get("date_from", type=str)
@@ -730,8 +732,8 @@ def api_search_accounts():
     accounts = (
         scope_gl_accounts(
             GLAccount.query.filter(
-                GLAccount.is_active == True,
-                GLAccount.is_header == False,
+                GLAccount.is_active,
+                not GLAccount.is_header,
                 db.or_(
                     GLAccount.code.ilike(f"%{query}%"),
                     GLAccount.name.ilike(f"%{query}%"),

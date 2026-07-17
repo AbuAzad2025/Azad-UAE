@@ -30,8 +30,8 @@ class FiscalPositionService:
         if country:
             pos = FiscalPosition.query.filter(
                 FiscalPosition.tenant_id == tenant_id,
-                FiscalPosition.is_active == True,
-                FiscalPosition.auto_apply == True,
+                FiscalPosition.is_active,
+                FiscalPosition.auto_apply,
                 FiscalPosition.country_code == country,
             ).first()
             if pos:

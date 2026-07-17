@@ -206,7 +206,7 @@ def dashboard():
             ),
         )
         .filter(
-            Product.is_active == True,
+            Product.is_active,
             Product.tenant_id == tid,
         )
         .first()
@@ -363,7 +363,9 @@ def dashboard():
         ).filter(
             func.date(Purchase.purchase_date) >= month_start,
             Purchase.status == "confirmed",
-        ).scalar() or Decimal("0")
+        ).scalar() or Decimal(
+            "0"
+        )
         stats["platform_month_purchases_amount"] = float(platform_month_purchases)
 
         platform_receivables = (
@@ -392,7 +394,7 @@ def dashboard():
                     * func.coalesce(Product.cost_price, 0)
                 ),
             )
-            .filter(Product.is_active == True)
+            .filter(Product.is_active)
             .first()
         )
         stats["platform_inventory_value"] = float(platform_inv[0] or Decimal("0"))
@@ -403,7 +405,7 @@ def dashboard():
     else:
         low_stock = (
             Product.query.filter(
-                Product.is_active == True,
+                Product.is_active,
                 Product.tenant_id == tid,
                 Product.current_stock <= Product.min_stock_alert,
             )
@@ -459,7 +461,7 @@ def dashboard():
             db.session.query(func.sum(Expense.amount_aed))
             .filter(
                 Expense.branch_id == branch.id,
-                Expense.is_reversed == False,
+                not Expense.is_reversed,
                 Expense.tenant_id == tid,
             )
             .scalar()
@@ -481,7 +483,9 @@ def dashboard():
                 func.sum(ProductWarehouseCost.total_value)
             ).filter(
                 ProductWarehouseCost.warehouse_id.in_(warehouse_ids)
-            ).scalar() or Decimal("0")
+            ).scalar() or Decimal(
+                "0"
+            )
             branch_inventory_value = float(pwc_vals)
 
         branch_stats.append(
@@ -547,7 +551,7 @@ def dashboard():
                 )
                 .filter(
                     Expense.branch_id.in_(branch_ids),
-                    Expense.is_reversed == False,
+                    not Expense.is_reversed,
                 )
                 .group_by(Expense.branch_id)
                 .all()
@@ -568,7 +572,7 @@ def dashboard():
                 )
                 .filter(
                     Warehouse.branch_id.in_(branch_ids),
-                    Warehouse.is_active == True,
+                    Warehouse.is_active,
                 )
                 .group_by(Warehouse.branch_id)
                 .all()

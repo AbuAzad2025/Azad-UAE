@@ -149,9 +149,9 @@ def scoped_user_query(
     user = _resolve_user(user)
     query = User.query
     if exclude_owners:
-        query = query.filter(User.is_owner == False)
+        query = query.filter(not User.is_owner)
     if active_only:
-        query = query.filter(User.is_active == True)
+        query = query.filter(User.is_active)
 
     tid = get_active_tenant_id(user)
     if tid is not None:

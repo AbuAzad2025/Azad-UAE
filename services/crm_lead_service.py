@@ -153,7 +153,7 @@ class CRMLeadService:
     @staticmethod
     def search_leads(filters, user):
         tid = get_active_tenant_id(user)
-        query = CRMLead.query.filter(CRMLead.is_active == True)
+        query = CRMLead.query.filter(CRMLead.is_active)
         if tid is not None:
             query = query.filter(CRMLead.tenant_id == tid)
         if not is_global_user(user):
@@ -184,7 +184,7 @@ class CRMLeadService:
         tid = get_active_tenant_id(user)
         stages = (
             CRMStage.query.filter(
-                CRMStage.is_active == True,
+                CRMStage.is_active,
                 CRMStage.tenant_id == tid,
             )
             .order_by(CRMStage.sequence)
@@ -201,7 +201,7 @@ class CRMLeadService:
         for stage in stages:
             q = CRMLead.query.filter(
                 CRMLead.stage_id == stage.id,
-                CRMLead.is_active == True,
+                CRMLead.is_active,
             )
             if tid is not None:
                 q = q.filter(CRMLead.tenant_id == tid)
@@ -210,7 +210,7 @@ class CRMLeadService:
             total = q.count()
             rev_q = db.session.query(db.func.sum(CRMLead.expected_revenue)).filter(
                 CRMLead.stage_id == stage.id,
-                CRMLead.is_active == True,
+                CRMLead.is_active,
             )
             if tid is not None:
                 rev_q = rev_q.filter(CRMLead.tenant_id == tid)
@@ -281,11 +281,11 @@ class CRMLeadService:
         won = CRMLead.query.filter(
             CRMLead.assigned_user_id == user.id,
             CRMLead.status == "won",
-            CRMLead.is_active == True,
+            CRMLead.is_active,
         )
         total_q = CRMLead.query.filter(
             CRMLead.assigned_user_id == user.id,
-            CRMLead.is_active == True,
+            CRMLead.is_active,
         )
         if tid is not None:
             won = won.filter(CRMLead.tenant_id == tid)

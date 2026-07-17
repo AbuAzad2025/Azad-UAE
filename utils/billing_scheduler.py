@@ -23,8 +23,8 @@ def run_subscription_check() -> dict:
 
     tenants = (
         db.session.query(Tenant)
-        .filter(Tenant.is_active == True)
-        .filter(Tenant.is_suspended == False)
+        .filter(Tenant.is_active)
+        .filter(not Tenant.is_suspended)
         .filter(Tenant.subscription_plan_duration != "lifetime")
         .filter(Tenant.subscription_end.isnot(None))
         .all()

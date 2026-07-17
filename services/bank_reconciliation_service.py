@@ -89,7 +89,7 @@ class BankReconciliationService:
         in_q = Cheque.query.filter(
             Cheque.cheque_type == "incoming",
             Cheque.status.in_(["pending", "deposited"]),
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.due_date <= reconciliation.period_end,
         )
         if tid:
@@ -113,7 +113,7 @@ class BankReconciliationService:
         out_q = Cheque.query.filter(
             Cheque.cheque_type == "outgoing",
             Cheque.status.in_(["pending", "deposited"]),
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.due_date <= reconciliation.period_end,
         )
         if tid:
@@ -297,7 +297,7 @@ class BankReconciliationService:
         in_q = Cheque.query.filter(
             Cheque.cheque_type == "incoming",
             Cheque.status.in_(["pending", "deposited"]),
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.due_date.between(period_start, period_end),
         )
         if tid:
@@ -307,7 +307,7 @@ class BankReconciliationService:
         out_q = Cheque.query.filter(
             Cheque.cheque_type == "outgoing",
             Cheque.status.in_(["pending", "deposited"]),
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.due_date.between(period_start, period_end),
         )
         if tid:
@@ -355,7 +355,7 @@ class BankReconciliationService:
                 GLJournalLine.account_id == bank_account_id,
                 GLJournalEntry.entry_date.between(period_start, period_end),
                 GLJournalEntry.tenant_id == tenant_id,
-                GLJournalEntry.is_posted == True,
+                GLJournalEntry.is_posted,
             )
             .all()
         )
@@ -473,7 +473,7 @@ class BankReconciliationService:
                     stmt.transaction_date + timedelta(days=date_tolerance_days),
                 ),
                 GLJournalEntry.tenant_id == tenant_id,
-                GLJournalEntry.is_posted == True,
+                GLJournalEntry.is_posted,
             )
             .all()
         )

@@ -24,7 +24,7 @@ def get_sales():
     query = optimize_query(
         Sale, relationships=["customer", "seller", "lines"], strategy="joined"
     )
-    query = query.filter(Sale.is_active == True)
+    query = query.filter(Sale.is_active)
     if tid:
         query = query.filter(Sale.tenant_id == tid)
 
@@ -114,7 +114,7 @@ def search_products():
 
     tid = get_active_tenant_id(current_user)
     products = Product.query.filter(
-        Product.is_active == True,
+        Product.is_active,
         or_(
             Product.name.ilike(f"%{query_text}%"),
             Product.name_ar.ilike(f"%{query_text}%"),

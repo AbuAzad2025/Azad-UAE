@@ -55,7 +55,7 @@ def project_detail(project_id):
     tid = get_active_tenant_id(current_user)
     members = ProjectMember.query.filter_by(project_id=project.id).all()
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid

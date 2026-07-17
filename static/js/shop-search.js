@@ -1,18 +1,18 @@
 (function () {
   'use strict';
 
-  var input = document.querySelector('input[name="q"][data-search-autocomplete]');
+  const input = document.querySelector('input[name="q"][data-search-autocomplete]');
   if (!input) return;
 
-  var form = input.closest('form');
-  var resultsWrap = document.querySelector('.ps-autocomplete-results');
+  const form = input.closest('form');
+  const resultsWrap = document.querySelector('.ps-autocomplete-results');
   if (!resultsWrap) return;
 
-  var slug = document.body.getAttribute('data-store-slug');
+  const slug = document.body.getAttribute('data-store-slug');
   if (!slug) return;
 
-  var timer = null;
-  var activeIndex = -1;
+  let timer = null;
+  let activeIndex = -1;
 
   function closeDropdown() {
     resultsWrap.style.display = 'none';
@@ -27,15 +27,15 @@
       resultsWrap.style.display = 'none';
       return;
     }
-    var list = document.createElement('div');
+    const list = document.createElement('div');
     list.setAttribute('role', 'listbox');
     data.results.forEach(function (item, i) {
-      var a = document.createElement('a');
+      const a = document.createElement('a');
       a.href = item.url;
       a.setAttribute('role', 'option');
       a.setAttribute('data-index', i);
       a.className = 'ps-autocomplete-item';
-      var html = '';
+      const html = '';
       if (item.image) {
         html += '<span class="ps-ac-img"><img src="' + item.image + '" alt="" loading="lazy"></span>';
       }
@@ -52,7 +52,7 @@
   }
 
   function escapeHtml(str) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
@@ -62,7 +62,7 @@
       closeDropdown();
       return;
     }
-    var url = '/s/' + encodeURIComponent(slug) + '/api/search?q=' + encodeURIComponent(query);
+    const url = '/s/' + encodeURIComponent(slug) + '/api/search?q=' + encodeURIComponent(query);
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) { renderResults(data); })
@@ -70,13 +70,13 @@
   }
 
   input.addEventListener('input', function () {
-    var val = input.value.trim();
+    const val = input.value.trim();
     clearTimeout(timer);
     timer = setTimeout(function () { doSearch(val); }, 300);
   });
 
   input.addEventListener('keydown', function (e) {
-    var items = resultsWrap.querySelectorAll('.ps-autocomplete-item');
+    const items = resultsWrap.querySelectorAll('.ps-autocomplete-item');
     if (e.key === 'Escape') {
       closeDropdown();
       input.blur();

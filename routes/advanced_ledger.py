@@ -201,7 +201,7 @@ def add_expense_category():
                     form_data=request.form,
                 )
 
-            parent_id = (
+            (
                 request.form.get("parent_id", type=int)
                 if request.form.get("parent_id")
                 else None

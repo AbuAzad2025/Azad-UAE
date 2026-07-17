@@ -345,7 +345,7 @@ class ActionDispatcher:
                 tid = _get_active_tenant_id()
                 low = Product.query.filter(
                     Product.tenant_id == tid,
-                    Product.is_active == True,
+                    Product.is_active,
                     Product.current_stock <= Product.min_stock_level,
                 ).all()
                 data = [

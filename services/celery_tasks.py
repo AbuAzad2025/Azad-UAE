@@ -248,7 +248,7 @@ def send_abandoned_cart_reminders():
     first_reminder = ShopAbandonedCart.query.filter(
         ShopAbandonedCart.reminder_sent_at.is_(None),
         ShopAbandonedCart.created_at <= now - timedelta(hours=1),
-        ShopAbandonedCart.recovered == False,
+        not ShopAbandonedCart.recovered,
     ).all()
 
     for ac in first_reminder:
@@ -266,7 +266,7 @@ def send_abandoned_cart_reminders():
     second_reminder = ShopAbandonedCart.query.filter(
         ShopAbandonedCart.reminder_sent_at.isnot(None),
         ShopAbandonedCart.created_at <= now - timedelta(hours=24),
-        ShopAbandonedCart.recovered == False,
+        not ShopAbandonedCart.recovered,
         ShopAbandonedCart.reminder_count == 1,
     ).all()
 

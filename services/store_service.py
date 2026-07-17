@@ -481,7 +481,7 @@ class StoreService:
         products = Product.query.filter(
             Product.id.in_(ids),
             Product.tenant_id == int(tenant_id),
-            Product.is_active == True,
+            Product.is_active,
         ).all()
         product_map = {p.id: p for p in products}
         ordered = [product_map[pid] for pid in ids if pid in product_map]

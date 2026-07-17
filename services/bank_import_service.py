@@ -37,7 +37,7 @@ class BankImportService:
         ]
 
         for item in parsed_data:
-            line_hash = BankImportService._generate_hash(
+            BankImportService._generate_hash(
                 tenant_id,
                 bank_account_id,
                 item["date"],

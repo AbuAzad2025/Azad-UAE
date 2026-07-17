@@ -1086,7 +1086,7 @@ class AzadNeuralEngine:
         X = []
         y = []
 
-        sales_dict = {sale.sale_date: sale for sale in daily_sales}
+        {sale.sale_date: sale for sale in daily_sales}
 
         # استخدام آخر 7 أيام للتوقع باليوم التالي
         for i in range(7, len(daily_sales)):
@@ -1628,9 +1628,7 @@ class AzadNeuralEngine:
                 "risk_level": (
                     "high"
                     if risk_score > 0.7
-                    else "medium"
-                    if risk_score > 0.4
-                    else "low"
+                    else "medium" if risk_score > 0.4 else "low"
                 ),
                 "reasons": reasons,
                 "recommendation": (

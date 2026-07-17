@@ -67,7 +67,7 @@
   function ensureModalCompatStyles() {
     if (document.getElementById("azad-modal-compat-style")) return;
 
-    var style = document.createElement("style");
+    const style = document.createElement("style");
     style.id = "azad-modal-compat-style";
     style.textContent = [
       ".modal-backdrop { z-index: 2040 !important; }",
@@ -85,7 +85,7 @@
   }
 
   function fixModalLayering() {
-    var modalBase = 2050;
+    const modalBase = 2050;
     $(".modal.show").each(function (index) {
       $(this).css("z-index", modalBase + (index * 20));
     });
@@ -159,7 +159,7 @@
 
       $(document)
         .on("click", "[data-bs-toggle=\"modal\"]", function (e) {
-          var target = $(this).attr("data-bs-target") || $(this).attr("href");
+          const target = $(this).attr("data-bs-target") || $(this).attr("href");
           if (!target || target === "#") return;
           e.preventDefault();
           $(target).modal("show");

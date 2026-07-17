@@ -7,24 +7,24 @@
 (function () {
   'use strict';
 
-  var cfg = window.spConfig || {};
-  var i18n = window.spI18n || {};
-  var t = function (key) { return i18n[key] || key; };
+  const cfg = window.spConfig || {};
+  const i18n = window.spI18n || {};
+  const t = function (key) { return i18n[key] || key; };
 
-  var selectedAmount = 0;
-  var selectedMethod = '';
-  var selectedCrypto = 'btc';
-  var selectedPackage = '';
-  var currentTab = 'purchase';
+  let selectedAmount = 0;
+  let selectedMethod = '';
+  const selectedCrypto = 'btc';
+  let selectedPackage = '';
+  let currentTab = 'purchase';
 
   function buildSupportMessage(kind, amountOverride, recordId) {
-    var amount = amountOverride || selectedAmount ||
+    const amount = amountOverride || selectedAmount ||
       (document.getElementById('customAmount') ? document.getElementById('customAmount').value : '') ||
       (document.getElementById('cardAmount') ? document.getElementById('cardAmount').value : '') || '';
-    var packageLabel = selectedPackage || t('not yet specified');
-    var orderRef = recordId ? ' ' + t('reference number') + ': #' + recordId + '.' : '';
+    const packageLabel = selectedPackage || t('not yet specified');
+    const orderRef = recordId ? ' ' + t('reference number') + ': #' + recordId + '.' : '';
 
-    var messages = {
+    const messages = {
       buy_code: t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('Purchase') + ' ' + t('Source Code') + ' ' + t('or') + ' ' + t('implement') + ' ' + t('customization') + ' ' + t('Specific') + ' ' + t('for the system') + '.' + orderRef,
       donation_help: t('Hello') + ' ' + cfg.brand + ', ' + t('I want') + ' ' + t('Donation') + ' ' + t('or') + ' ' + t('Sponsorship') + ' ' + t('development') + ' ' + t('feature') + ' ' + t('in') + ' ' + t('System') + '. ' + t('Amount') + ' ' + t('Expected') + ': ' + (amount || t('I will specify with you')) + ' ' + t('Dollar') + '.' + orderRef,
       payment_help: t('Hello') + ' ' + cfg.brand + ', ' + t('I need') + ' ' + t('help') + ' ' + t('in') + ' ' + t('completing') + ' ' + (currentTab === 'purchase' ? t('Purchase') + ' ' + t('System') : t('Donation')) + '.' + orderRef,
@@ -36,26 +36,26 @@
   }
 
   function buildSupportEmail(kind, amountOverride, recordId) {
-    var message = buildSupportMessage(kind, amountOverride, recordId);
-    var subjects = {
+    const message = buildSupportMessage(kind, amountOverride, recordId);
+    const subjects = {
       buy_system: t('Purchase System Request'),
       buy_code: t('Purchase Code or Customization Request'),
       donation_help: t('Donation or Sponsorship Inquiry'),
       payment_help: t('Help Completing Payment'),
       refund_help: t('Refund or Payment Status Inquiry')
     };
-    var subject = (subjects[kind] || t('inquiry')) + ' - ' + cfg.brand;
-    var body = message + '\n\n' + t('Contact Information') + ':\n' + t('WhatsApp') + ': ' + cfg.whatsappDisplay + '\n' + t('Email') + ': ' + cfg.email;
+    const subject = (subjects[kind] || t('inquiry')) + ' - ' + cfg.brand;
+    const body = message + '\n\n' + t('Contact Information') + ':\n' + t('WhatsApp') + ': ' + cfg.whatsappDisplay + '\n' + t('Email') + ': ' + cfg.email;
     return { subject: subject, body: body };
   }
 
   window.openWhatsApp = function (kind, amountOverride, recordId) {
-    var message = buildSupportMessage(kind, amountOverride, recordId);
+    const message = buildSupportMessage(kind, amountOverride, recordId);
     window.open('https://wa.me/' + cfg.whatsappLink + '?text=' + encodeURIComponent(message), '_blank');
   };
 
   window.openSupportEmail = function (kind, amountOverride, recordId) {
-    var payload = buildSupportEmail(kind, amountOverride, recordId);
+    const payload = buildSupportEmail(kind, amountOverride, recordId);
     window.location.href = 'mailto:' + cfg.email + '?subject=' + encodeURIComponent(payload.subject) + '&body=' + encodeURIComponent(payload.body);
   };
 
@@ -74,7 +74,7 @@
   }
 
   function escapeHtml(value) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.textContent = value || '';
     return div.innerHTML;
   }
@@ -115,7 +115,7 @@
     updateProgress('step-package', 'completed');
     updateProgress('step-payment', 'active');
     updateProgress('step-complete', '');
-    var el = document.getElementById('purchase-payment-methods');
+    const el = document.getElementById('purchase-payment-methods');
     if (el) {
       el.style.display = 'grid';
       setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
@@ -124,7 +124,7 @@
   window.selectPackage = selectPackage;
 
   function updateProgress(stepId, status) {
-    var step = document.getElementById(stepId);
+    const step = document.getElementById(stepId);
     if (!step) return;
     step.className = 'sp-step';
     if (status) step.classList.add(status);
@@ -134,23 +134,23 @@
   function selectMethod(method, event) {
     document.querySelectorAll('.sp-donation-form').forEach(function (f) { f.classList.remove('active'); });
     document.querySelectorAll('.sp-payment-card').forEach(function (c) { c.classList.remove('active'); });
-    var form = document.getElementById(method + '-form');
+    const form = document.getElementById(method + '-form');
     if (form) {
       form.classList.add('active');
       if (currentTab === 'purchase' && selectedAmount > 0) {
         if (method === 'card') {
-          var ci = document.getElementById('cardAmount');
+          const ci = document.getElementById('cardAmount');
           if (ci) ci.value = selectedAmount;
         } else if (method === 'crypto') {
-          var ca = document.getElementById('customAmount');
+          const ca = document.getElementById('customAmount');
           if (ca) ca.value = selectedAmount;
         }
       } else {
         if (method === 'card') {
-          var ci2 = document.getElementById('cardAmount');
+          const ci2 = document.getElementById('cardAmount');
           if (ci2) ci2.value = '';
         } else if (method === 'crypto') {
-          var ca2 = document.getElementById('customAmount');
+          const ca2 = document.getElementById('customAmount');
           if (ca2) ca2.value = '';
         }
       }
@@ -165,7 +165,7 @@
     selectedAmount = amount;
     document.querySelectorAll('.sp-amount-btn').forEach(function (b) { b.classList.remove('active'); });
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
-    var ca = document.getElementById('customAmount');
+    const ca = document.getElementById('customAmount');
     if (ca) ca.value = '';
   }
   window.selectAmount = selectAmount;
@@ -181,10 +181,10 @@
       });
     }
     document.querySelectorAll('.sp-tab-content').forEach(function (c) { c.classList.remove('active'); });
-    var tc = document.getElementById(tab + '-tab');
+    const tc = document.getElementById(tab + '-tab');
     if (tc) tc.classList.add('active');
 
-    var ppm = document.getElementById('purchase-payment-methods');
+    const ppm = document.getElementById('purchase-payment-methods');
     if (ppm && tab !== 'purchase') ppm.style.display = 'none';
 
     if (tab === 'donation') {
@@ -193,7 +193,7 @@
       selectedAmount = 0;
     }
 
-    var hi = document.querySelector('.sp-hero-section .mb-4 i');
+    const hi = document.querySelector('.sp-hero-section .mb-4 i');
     if (hi) {
       if (tab === 'purchase') {
         hi.className = 'fas fa-shopping-cart';
@@ -207,7 +207,7 @@
   window.switchTab = switchTab;
 
   async function collectSupportContactData(title) {
-    var result = await Swal.fire({
+    const result = await Swal.fire({
       title: title,
       html: '' +
         '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '">' +
@@ -236,18 +236,18 @@
   }
 
   async function generateCryptoPayment() {
-    var customAmount = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
-    var paymentAmount = customAmount || selectedAmount;
+    const customAmount = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
+    const paymentAmount = customAmount || selectedAmount;
     if (!paymentAmount || paymentAmount < 15) {
       Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation amount is') + ' $15', confirmButtonColor: '#667eea' });
       return;
     }
-    var cryptoType = document.getElementById('cryptoType') ? document.getElementById('cryptoType').value : 'btc';
+    const cryptoType = document.getElementById('cryptoType') ? document.getElementById('cryptoType').value : 'btc';
 
     Swal.fire({ title: t('Creating payment address...'), html: '<i class="fas fa-spinner fa-spin fa-3x"></i>', showConfirmButton: false, allowOutsideClick: false });
 
-    var apiEndpoint = '';
-    var requestData = {};
+    let apiEndpoint = '';
+    let requestData = {};
 
     if (currentTab === 'purchase') {
       if (!selectedPackage) {
@@ -255,14 +255,14 @@
         Swal.fire({ icon: 'warning', title: t('Alert'), text: t('Please select a package first'), confirmButtonColor: '#667eea' });
         return;
       }
-      var pcard = document.querySelector('.sp-package-card.active');
-      var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
+      const pcard = document.querySelector('.sp-package-card.active');
+      const packageId = pcard ? pcard.getAttribute('data-package-id') : null;
       if (!packageId) {
         Swal.close();
         Swal.fire({ icon: 'error', title: t('Error'), text: t('Selected plan not recognized'), confirmButtonColor: '#667eea' });
         return;
       }
-      var fv = await collectSupportContactData(t('Plan Purchase Details'));
+      const fv = await collectSupportContactData(t('Plan Purchase Details'));
       if (!fv) { Swal.close(); return; }
       apiEndpoint = '/payment-vault/api/purchase';
       requestData = {
@@ -279,7 +279,7 @@
         payment_details: { crypto_type: cryptoType, amount: paymentAmount }
       };
     } else {
-      var fv2 = await collectSupportContactData(t('Donation Details'));
+      const fv2 = await collectSupportContactData(t('Donation Details'));
       if (!fv2) { Swal.close(); return; }
       apiEndpoint = '/payment-vault/api/donation';
       requestData = {
@@ -303,9 +303,9 @@
     .then(function (data) {
       Swal.close();
       if (data.success) {
-        var recordId = data.purchase_id || data.donation_id;
-        var recordType = data.purchase_id ? t('Purchase') : t('Donation');
-        var payBtn = data.payment_url
+        const recordId = data.purchase_id || data.donation_id;
+        const recordType = data.purchase_id ? t('Purchase') : t('Donation');
+        const payBtn = data.payment_url
           ? '<a href="' + data.payment_url + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2"><i class="fas fa-external-link-alt"></i> ' + t('Open Payment Page') + '</a>'
           : '';
         if (data.payment_address) {
@@ -383,7 +383,7 @@
   window.generateCryptoPayment = generateCryptoPayment;
 
   function copyAddress() {
-    var addr = document.getElementById('walletAddress').textContent;
+    const addr = document.getElementById('walletAddress').textContent;
     navigator.clipboard.writeText(addr).then(function () {
       Swal.fire({ icon: 'success', title: t('Copied!'), text: t('Address copied to clipboard'), timer: 2000, showConfirmButton: false });
     });
@@ -391,13 +391,13 @@
   window.copyAddress = copyAddress;
 
   async function handlePayPalPayment() {
-    var ca = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
-    var paymentAmount = ca || selectedAmount || 0;
+    const ca = document.getElementById('customAmount') ? document.getElementById('customAmount').value : '';
+    const paymentAmount = ca || selectedAmount || 0;
     if (!paymentAmount || paymentAmount < 15) {
       Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation') + ' $15', confirmButtonColor: '#667eea' });
       return;
     }
-    var r = await Swal.fire({
+    const r = await Swal.fire({
       title: t('Payment Details') + ' - PayPal',
       html: '' +
         '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '" required>' +
@@ -419,11 +419,11 @@
     });
     if (!r.value || !r.value.name || !r.value.email) return;
 
-    var apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
-    var requestData = {};
+    const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
+    let requestData = {};
     if (currentTab === 'purchase') {
-      var pcard = document.querySelector('.sp-package-card.active');
-      var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
+      const pcard = document.querySelector('.sp-package-card.active');
+      const packageId = pcard ? pcard.getAttribute('data-package-id') : null;
       if (!packageId) {
         Swal.fire({ icon: 'error', title: t('Error'), text: t('Please select a package') });
         return;
@@ -450,8 +450,8 @@
     }
 
     try {
-      var resp = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) });
-      var data = await resp.json();
+      const resp = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) });
+      const data = await resp.json();
       if (data.success) {
         if (data.payment_address) {
           Swal.fire({
@@ -478,7 +478,7 @@
             cancelButtonText: t('Email us'),
             width: 600
           }).then(function (r2) {
-            var rid = data.purchase_id || data.donation_id;
+            const rid = data.purchase_id || data.donation_id;
             if (r2.isDenied) window.openWhatsApp('payment_help', paymentAmount, rid);
             else if (r2.dismiss === Swal.DismissReason.cancel) window.openSupportEmail('payment_help', paymentAmount, rid);
           });
@@ -494,7 +494,7 @@
             showDenyButton: true,
             denyButtonText: t('Email us')
           }).then(function (r2) {
-            var rid = data.purchase_id || data.donation_id;
+            const rid = data.purchase_id || data.donation_id;
             if (r2.isConfirmed) window.openWhatsApp('payment_help', paymentAmount, rid);
             else if (r2.isDenied) window.openSupportEmail('payment_help', paymentAmount, rid);
           });
@@ -509,30 +509,30 @@
   window.handlePayPalPayment = handlePayPalPayment;
 
   document.addEventListener('DOMContentLoaded', function () {
-    var urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'donation') {
       document.querySelectorAll('.sp-tab-btn').forEach(function (b, i) {
         b.classList.toggle('active', i === 1);
       });
       document.querySelectorAll('.sp-tab-content').forEach(function (c) { c.classList.remove('active'); });
-      var dt = document.getElementById('donation-tab');
+      const dt = document.getElementById('donation-tab');
       if (dt) dt.classList.add('active');
-      var hi = document.querySelector('.sp-hero-section .mb-4 i');
+      const hi = document.querySelector('.sp-hero-section .mb-4 i');
       if (hi) { hi.className = 'fas fa-heart'; hi.style.color = '#e74c3c'; }
       currentTab = 'donation';
     }
 
-    var cardForm = document.getElementById('cardPaymentForm');
+    const cardForm = document.getElementById('cardPaymentForm');
     if (cardForm) {
       cardForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        var ci = document.getElementById('cardAmount');
-        var paymentAmount = parseFloat(ci ? ci.value : '') || selectedAmount || 0;
+        const ci = document.getElementById('cardAmount');
+        const paymentAmount = parseFloat(ci ? ci.value : '') || selectedAmount || 0;
         if (!paymentAmount || paymentAmount < 15) {
           Swal.fire({ icon: 'error', title: t('Error'), text: t('Minimum donation') + ' $15', confirmButtonColor: '#667eea' });
           return;
         }
-        var r = await Swal.fire({
+        const r = await Swal.fire({
           title: t('Payment Details'),
           html: '' +
             '<input id="swal-name" class="swal2-input" placeholder="' + t('Full Name') + '" required>' +
@@ -554,11 +554,11 @@
         });
         if (!r.value || !r.value.name || !r.value.email) return;
 
-        var apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
-        var requestData = {};
+        const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
+        let requestData = {};
         if (currentTab === 'purchase') {
-          var pcard = document.querySelector('.sp-package-card.active');
-          var packageId = pcard ? pcard.getAttribute('data-package-id') : null;
+          const pcard = document.querySelector('.sp-package-card.active');
+          const packageId = pcard ? pcard.getAttribute('data-package-id') : null;
           if (!packageId) {
             Swal.fire({ icon: 'error', title: t('Error'), text: t('Please select a package') });
             return;
@@ -585,8 +585,8 @@
         }
 
         try {
-          var resp = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) });
-          var data = await resp.json();
+          const resp = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestData) });
+          const data = await resp.json();
           if (data.success) {
             if (data.payment_address) {
               Swal.fire({
@@ -614,7 +614,7 @@
                 width: 600,
                 allowOutsideClick: false
               }).then(function (r2) {
-                var rid = data.purchase_id || data.donation_id;
+                const rid = data.purchase_id || data.donation_id;
                 if (r2.isDenied) window.openWhatsApp('payment_help', paymentAmount, rid);
                 else if (r2.dismiss === Swal.DismissReason.cancel) window.openSupportEmail('payment_help', paymentAmount, rid);
               });
@@ -630,7 +630,7 @@
                 showDenyButton: true,
                 denyButtonText: t('Email us')
               }).then(function (r2) {
-                var rid = data.purchase_id || data.donation_id;
+                const rid = data.purchase_id || data.donation_id;
                 if (r2.isConfirmed) window.openWhatsApp('payment_help', paymentAmount, rid);
                 else if (r2.isDenied) window.openSupportEmail('payment_help', paymentAmount, rid);
               });

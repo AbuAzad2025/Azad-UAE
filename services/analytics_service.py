@@ -83,9 +83,7 @@ class AnalyticsService:
                     "status": (
                         "نشط"
                         if days_since_last < 30
-                        else "خامل"
-                        if days_since_last < 90
-                        else "متوقف"
+                        else "خامل" if days_since_last < 90 else "متوقف"
                     ),
                 }
             )
@@ -208,9 +206,7 @@ class AnalyticsService:
             status = (
                 "ممتاز"
                 if total_sold > high_threshold
-                else "جيد"
-                if total_sold > low_threshold
-                else "ضعيف"
+                else "جيد" if total_sold > low_threshold else "ضعيف"
             )
             performance_data.append(
                 {
@@ -272,9 +268,7 @@ class AnalyticsService:
             confidence = (
                 "عالية"
                 if volatility < 0.2
-                else "متوسطة"
-                if volatility < 0.5
-                else "منخفضة"
+                else "متوسطة" if volatility < 0.5 else "منخفضة"
             )
             forecast = {
                 "next_month": avg_revenue + trend,

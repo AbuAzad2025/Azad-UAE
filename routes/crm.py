@@ -10,21 +10,21 @@ crm_bp = Blueprint("crm", __name__, url_prefix="/crm")
 
 
 def _tenant_stages(tid):
-    q = CRMStage.query.filter(CRMStage.is_active == True)
+    q = CRMStage.query.filter(CRMStage.is_active)
     if tid is not None:
         q = q.filter(CRMStage.tenant_id == tid)
     return q.order_by(CRMStage.sequence).all()
 
 
 def _tenant_teams(tid):
-    q = CRMTeam.query.filter(CRMTeam.is_active == True)
+    q = CRMTeam.query.filter(CRMTeam.is_active)
     if tid is not None:
         q = q.filter(CRMTeam.tenant_id == tid)
     return q.all()
 
 
 def _tenant_customers(tid):
-    q = Customer.query.filter(Customer.is_active == True)
+    q = Customer.query.filter(Customer.is_active)
     if tid is not None:
         q = q.filter(Customer.tenant_id == tid)
     return q.order_by(Customer.name).all()
@@ -39,7 +39,7 @@ def pipeline():
     leads = CRMLeadService.search_leads({}, current_user)
     teams = CRMTeam.query.filter_by(tenant_id=tid).all() if tid else []
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
     )
@@ -82,7 +82,7 @@ def create_lead():
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid
@@ -110,9 +110,7 @@ def lead_detail(lead_id):
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True).all()
-        if tid
-        else []
+        User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
     )
     return render_template(
         "crm/lead_form.html", lead=lead, stages=stages, users=users, view=True
@@ -140,9 +138,7 @@ def edit_lead(lead_id):
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True).all()
-        if tid
-        else []
+        User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
     )
     teams = _tenant_teams(tid)
     return render_template(

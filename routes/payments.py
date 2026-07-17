@@ -123,7 +123,7 @@ def _scoped_customers_query():
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
-    query = tenant_query(Customer).filter(Customer.is_active == True)
+    query = tenant_query(Customer).filter(Customer.is_active)
     if scoped_branch_id is None:
         return query
 
@@ -201,7 +201,7 @@ def _scoped_suppliers_query():
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
-    query = tenant_query(Supplier).filter(Supplier.is_active == True)
+    query = tenant_query(Supplier).filter(Supplier.is_active)
     if scoped_branch_id is None:
         return query
 
@@ -1726,7 +1726,7 @@ def create_payment(purchase_id):
         .filter(
             Payment.purchase_id == purchase.id,
             Payment.tenant_id == purchase.tenant_id,
-            Payment.payment_confirmed == True,
+            Payment.payment_confirmed,
         )
         .scalar()
         or 0

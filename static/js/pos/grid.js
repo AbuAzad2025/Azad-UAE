@@ -213,7 +213,7 @@ const doCheckout=async(print=false)=>{
       qs('#doneViewBtn').href=d.view_url;
       qs('#donePrintBtn').href=d.print_url;
       $('#posDoneModal').modal('show');
-      state.cart=[];renderCart();
+      state.cart=[];await renderCart();
       if(print){window.open(d.print_url,'_blank');}
     }else{showAlert(d.error||'فشل حفظ الفاتورة');}
   }catch(_){showAlert('فشل الاتصال بالخادم');}

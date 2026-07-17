@@ -101,7 +101,6 @@ def _build_id_remap(
                 id_maps[table][old_id] = old_id  # placeholder, reassigned below
 
     # Assign new IDs for non-root tables
-    next_id: Dict[str, int] = {}
     for table in TABLE_EXPORT_ORDER:
         rows = tables.get(table) or []
         if not rows or table in ("tenants",):

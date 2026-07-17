@@ -132,7 +132,7 @@ def low_stock_products():
 
     tid = get_active_tenant_id(current_user)
     products = Product.query.filter(
-        Product.is_active == True, Product.current_stock <= Product.min_stock_alert
+        Product.is_active, Product.current_stock <= Product.min_stock_alert
     )
     if tid:
         products = products.filter(Product.tenant_id == tid)

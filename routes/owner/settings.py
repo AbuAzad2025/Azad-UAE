@@ -147,14 +147,14 @@ def reports():
             "suspended_tenants": Tenant.query.filter_by(is_suspended=True).count(),
             "total_users": User.query.filter(
                 User.tenant_id.isnot(None),
-                User.is_active == True,
-                User.is_owner == False,
+                User.is_active,
+                not User.is_owner,
             ).count(),
             "total_customers": Customer.query.filter(
-                Customer.tenant_id.isnot(None), Customer.is_active == True
+                Customer.tenant_id.isnot(None), Customer.is_active
             ).count(),
             "total_products": Product.query.filter(
-                Product.tenant_id.isnot(None), Product.is_active == True
+                Product.tenant_id.isnot(None), Product.is_active
             ).count(),
             "total_sales": Sale.query.filter(Sale.tenant_id.isnot(None)).count(),
             "total_invoices": Sale.query.filter(

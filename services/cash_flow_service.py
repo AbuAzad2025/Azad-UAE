@@ -53,8 +53,8 @@ class CashFlowService:
 
         cash_accounts_query = GLAccount.query.filter(
             GLAccount.tenant_id == int(tenant_id),
-            GLAccount.is_active == True,
-            GLAccount.is_header == False,
+            GLAccount.is_active,
+            not GLAccount.is_header,
             GLAccount.liquidity_kind.in_(["cash", "bank"]),
         )
         if branch_id:
@@ -103,7 +103,7 @@ class CashFlowService:
             and_(
                 Receipt.receipt_date >= period_start,
                 Receipt.receipt_date <= period_end,
-                Receipt.payment_confirmed == True,
+                Receipt.payment_confirmed,
                 Receipt.payment_method.in_(["cash", "bank", "bank_transfer"]),
             )
         )
@@ -118,7 +118,7 @@ class CashFlowService:
             and_(
                 Payment.payment_date >= period_start,
                 Payment.payment_date <= period_end,
-                Payment.payment_confirmed == True,
+                Payment.payment_confirmed,
                 Payment.payment_method.in_(["cash", "bank", "bank_transfer"]),
                 Payment.supplier_id.isnot(None),
             )

@@ -74,7 +74,9 @@ def {function_name}():
                     else "1=1"
                 )
 
-                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
+                query = (
+                    f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
+                )
 
                 if filters and "order_by" in filters:
                     query += f" ORDER BY {filters['order_by']}"
@@ -97,7 +99,9 @@ def {function_name}():
                     else ""
                 )
 
-                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
+                return (
+                    f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
+                )
 
             elif intent == "update":
                 updates = (

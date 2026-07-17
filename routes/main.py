@@ -156,8 +156,8 @@ def dashboard():
                 def liquidity_balance(kind):
                     account_query = GLAccount.query.filter(
                         GLAccount.tenant_id == int(tid or 0),
-                        GLAccount.is_active == True,
-                        GLAccount.is_header == False,
+                        GLAccount.is_active,
+                        not GLAccount.is_header,
                         GLAccount.liquidity_kind == kind,
                     )
                     if scoped_branch_id is not None:
@@ -340,12 +340,6 @@ def my_profile_update():
     try:
         with atomic_transaction("profile_update"):
             # Whitelist: only these fields may be changed by the user
-            allowed_fields = {
-                "full_name",
-                "full_name_ar",
-                "email",
-                "phone",
-            }
 
             # Sanitize and update allowed fields
             if "full_name" in request.form:

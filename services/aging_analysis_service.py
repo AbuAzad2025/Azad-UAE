@@ -231,7 +231,7 @@ class AgingAnalysisService:
                 Payment.supplier_id == supplier.id,
                 Payment.tenant_id == tid,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed == True,
+                Payment.payment_confirmed,
                 func.date(Payment.payment_date) <= as_of_date,
             )
             if branch_id:
@@ -366,7 +366,7 @@ class AgingAnalysisService:
                 .join(GLJournalEntry)
                 .filter(
                     GLJournalLine.account_id == ar_acc.id,
-                    GLJournalEntry.is_posted == True,
+                    GLJournalEntry.is_posted,
                 )
             )
             if tid:
@@ -407,7 +407,7 @@ class AgingAnalysisService:
                 .join(GLJournalEntry)
                 .filter(
                     GLJournalLine.account_id == ap_acc.id,
-                    GLJournalEntry.is_posted == True,
+                    GLJournalEntry.is_posted,
                 )
             )
             if tid:

@@ -27,13 +27,13 @@ class ARReconciliationService:
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), 0))
             .filter(GLJournalLine.account_id == account_id)
             .join(GLJournalEntry)
-            .filter(GLJournalEntry.is_posted == True)
+            .filter(GLJournalEntry.is_posted)
         )
         credit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.credit), 0))
             .filter(GLJournalLine.account_id == account_id)
             .join(GLJournalEntry)
-            .filter(GLJournalEntry.is_posted == True)
+            .filter(GLJournalEntry.is_posted)
         )
         if tenant_id is not None:
             debit_q = debit_q.filter(GLJournalEntry.tenant_id == int(tenant_id))
@@ -57,7 +57,7 @@ class ARReconciliationService:
             .join(Customer, Sale.customer_id == Customer.id)
             .filter(
                 Sale.status == "confirmed",
-                Sale.is_active == True,
+                Sale.is_active,
                 Customer.customer_type.in_(customer_types),
             )
         )
@@ -72,14 +72,14 @@ class ARReconciliationService:
                 func.coalesce(func.sum(Payment.amount_aed), 0)
             ).filter(
                 Payment.sale_id == sale_id,
-                Payment.payment_confirmed == True,
+                Payment.payment_confirmed,
                 Payment.direction == "incoming",
             )
             confirmed_receipts = db.session.query(
                 func.coalesce(func.sum(Receipt.amount_aed), 0)
             ).filter(
                 Receipt.customer_id == customer_id,
-                Receipt.payment_confirmed == True,
+                Receipt.payment_confirmed,
             )
             if tenant_id is not None:
                 confirmed_payments = confirmed_payments.filter(

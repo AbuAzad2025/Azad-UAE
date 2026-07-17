@@ -156,7 +156,7 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
 def _scoped_customers_query(customer_type=None):
     from models import Payment, Receipt, Sale
 
-    query = tenant_query(Customer).filter(Customer.is_active == True)
+    query = tenant_query(Customer).filter(Customer.is_active)
     if customer_type:
         query = query.filter(Customer.customer_type == customer_type)
 
@@ -421,7 +421,6 @@ def import_products():
                 error_count = 0
                 errors = []
 
-                required_cols = ["name", "price"]  # Minimal requirements
                 # Check columns (case insensitive)
                 df.columns = df.columns.str.lower().str.strip()
 
@@ -845,7 +844,9 @@ def create():
                         .first()
                     )
                     if not merchant_customer:
-                        flash("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.", "warning")
+                        flash(
+                            "⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.", "warning"
+                        )
                         warehouses = get_accessible_warehouses(current_user)
                         return render_template(
                             "products/create.html",
@@ -1199,7 +1200,9 @@ def edit(id):  # noqa: A002
                     product.cost_price = new_cost
 
             if partner_rows and not product.tenant_id:
-                flash("⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.", "warning")
+                flash(
+                    "⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.", "warning"
+                )
                 return render_template(
                     "products/edit.html",
                     form=form,
@@ -1397,7 +1400,7 @@ def delete(id):  # noqa: A002
 def api_search():
     """API endpoint للبحث عن المنتجات"""
     query = request.args.get("q", "")
-    page = request.args.get("page", 1, type=int)
+    request.args.get("page", 1, type=int)
     per_page = 20
 
     warehouse_id = request.args.get("warehouse_id", type=int)

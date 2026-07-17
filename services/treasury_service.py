@@ -75,8 +75,8 @@ class TreasuryService:
             # 2. Fallback: GLAccount liquidity_kind
             gl_q = GLAccount.query.filter(
                 GLAccount.tenant_id == tenant_id,
-                GLAccount.is_active == True,
-                GLAccount.is_header == False,
+                GLAccount.is_active,
+                not GLAccount.is_header,
                 GLAccount.liquidity_kind.in_(
                     list(TreasuryService.LIQUIDITY_KINDS.keys())
                 ),
@@ -147,7 +147,7 @@ class TreasuryService:
 
         query = Cheque.query.filter(
             Cheque.tenant_id == tenant_id,
-            Cheque.is_active == True,
+            Cheque.is_active,
             Cheque.status.in_(["pending", "deposited", "under_collection"]),
         )
         if branch_id is not None:

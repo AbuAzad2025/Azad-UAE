@@ -26,7 +26,7 @@ def get_pos_walkin_customer(tenant_id: int | None = None) -> Customer:
 
     existing = (
         tenant_query(Customer)
-        .filter(Customer.is_active == True)
+        .filter(Customer.is_active)
         .filter(
             db.or_(
                 Customer.notes.ilike(f"%{POS_WALKIN_MARKER}%"),
@@ -84,7 +84,7 @@ def search_pos_products(
     per_page = max(1, min(int(per_page or 20), 50))
     base = StockService.get_visible_products_query(user)
     if not include_inactive:
-        base = base.filter(Product.is_active == True)
+        base = base.filter(Product.is_active)
     if category_id:
         base = base.filter(Product.category_id == category_id)
 
@@ -134,7 +134,7 @@ def lookup_pos_product_exact(
 
     base = StockService.get_visible_products_query(user)
     if not include_inactive:
-        base = base.filter(Product.is_active == True)
+        base = base.filter(Product.is_active)
 
     product = base.filter(
         db.or_(

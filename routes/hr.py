@@ -23,7 +23,7 @@ def attendance():
     tid = get_active_tenant_id(current_user)
     departments = HRService.list_departments(current_user)
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid
@@ -71,7 +71,7 @@ def leaves_list():
     tid = get_active_tenant_id(current_user)
     leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
     users = (
-        User.query.filter(User.tenant_id == tid, User.is_active == True)
+        User.query.filter(User.tenant_id == tid, User.is_active)
         .order_by(User.full_name)
         .all()
         if tid

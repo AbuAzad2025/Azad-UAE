@@ -105,7 +105,7 @@ class ProjectService:
     @staticmethod
     def list_projects(user):
         tid = get_active_tenant_id(user)
-        query = Project.query.filter(Project.is_active == True)
+        query = Project.query.filter(Project.is_active)
         if tid is not None:
             query = query.filter(Project.tenant_id == tid)
         if not is_global_owner_user(user):
@@ -204,7 +204,7 @@ class ProjectService:
         tasks = (
             Task.query.filter(
                 Task.project_id == project.id,
-                Task.is_active == True,
+                Task.is_active,
             )
             .order_by(Task.sort_order)
             .all()

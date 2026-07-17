@@ -102,7 +102,7 @@ class SalesAnalytics:
         segments["regular"] = sorted_customers[vip_count:]
 
         # تحديد غير النشطين
-        three_months_ago = datetime.now() - timedelta(days=90)
+        datetime.now() - timedelta(days=90)
         # سيتم التنفيذ مع البيانات الحقيقية
 
         return segments

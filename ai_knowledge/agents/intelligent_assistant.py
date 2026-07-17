@@ -351,7 +351,7 @@ class IntelligentAssistant:
                     low_stock = (
                         _f(Product)
                         .filter(
-                            Product.is_active == True,
+                            Product.is_active,
                             Product.current_stock <= Product.min_stock_alert,
                         )
                         .all()

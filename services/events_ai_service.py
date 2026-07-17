@@ -538,7 +538,7 @@ def _neural_customer_data(mapper, connection, target):
         from models import Customer
 
         total_customers = connection.execute(
-            Customer.__table__.select().where(Customer.is_active == True)
+            Customer.__table__.select().where(Customer.is_active)
         ).fetchall()
         customers_count = len(total_customers)
         if customers_count % 50 == 0:

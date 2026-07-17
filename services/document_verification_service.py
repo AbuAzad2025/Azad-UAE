@@ -132,7 +132,9 @@ class DocumentVerificationService:
             document, "payment_number", None
         ) or getattr(document, "receipt_number", None) or getattr(
             document, "purchase_number", None
-        ) or getattr(document, "expense_number", None) or str(
+        ) or getattr(
+            document, "expense_number", None
+        ) or str(
             getattr(document, "id", "")
         )
         float(
@@ -151,13 +153,6 @@ class DocumentVerificationService:
             or getattr(document, "expense_date", None)
         )
         date_val.strftime("%Y-%m-%d") if date_val else ""
-        company = (
-            settings.company_name_ar
-            if settings
-            and settings.company_name_ar
-            and settings.company_name_ar != "None"
-            else (tenant.name_ar if tenant and tenant.name_ar else "")
-        )
         print_branch.name if print_branch else ""
 
         qr_data = verification_url

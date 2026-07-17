@@ -400,7 +400,7 @@ def api_search():
         tid = get_active_tenant_id(current_user)
         if purpose == "purchase":
             products_query = Product.query.filter(
-                Product.is_active == True, Product.tenant_id == tid
+                Product.is_active, Product.tenant_id == tid
             )
         else:
             products_query = StockService.get_visible_products_query(current_user)
@@ -449,9 +449,7 @@ def api_search():
     # ========================================
     elif search_type == "suppliers":
         base_query = (
-            _scoped_supplier_query()
-            .filter(Supplier.is_active == True)
-            .order_by(Supplier.name)
+            _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)
         )
 
         if query:
@@ -493,9 +491,7 @@ def api_search():
     # ========================================
     else:
         base_query = (
-            _scoped_customer_query()
-            .filter(Customer.is_active == True)
-            .order_by(Customer.name)
+            _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
         )
 
         if query:

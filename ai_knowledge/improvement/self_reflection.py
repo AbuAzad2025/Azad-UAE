@@ -69,7 +69,9 @@ class SelfReflectionEngine:
                 assessment["overall_score"] = avg_accuracy
 
                 if avg_accuracy > 0.9:
-                    assessment["strengths"].append(f"دقة عالية جداً: {avg_accuracy:.0%}")
+                    assessment["strengths"].append(
+                        f"دقة عالية جداً: {avg_accuracy:.0%}"
+                    )
                 elif avg_accuracy > 0.7:
                     assessment["strengths"].append(f"دقة جيدة: {avg_accuracy:.0%}")
                 else:

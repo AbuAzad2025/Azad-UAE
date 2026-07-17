@@ -665,7 +665,7 @@
                     el.classList.add('active');
                     loadTables(el.getAttribute('data-floor'));
                 }));
-                loadTables(floors[0].id);
+                await loadTables(floors[0].id);
             }
             if (window.jQuery) $('#posTablesModal').modal('show');
         } catch (_) { showAlert('تعذر تحميل الطاولات', 'warning'); }

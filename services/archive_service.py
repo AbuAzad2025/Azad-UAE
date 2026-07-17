@@ -142,7 +142,7 @@ class ArchiveService:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         old_archives = ArchivedRecord.query.filter(
-            ArchivedRecord.archived_at < cutoff, ArchivedRecord.can_restore == False
+            ArchivedRecord.archived_at < cutoff, not ArchivedRecord.can_restore
         ).all()
 
         count = 0

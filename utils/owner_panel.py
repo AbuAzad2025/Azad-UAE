@@ -60,22 +60,19 @@ def build_platform_overview(backups: list | None = None) -> dict:
     backups = backups if backups is not None else BackupService.list_backups()
     tenant_count = db.session.query(func.count(Tenant.id)).scalar() or 0
     active_tenant_count = (
-        db.session.query(func.count(Tenant.id))
-        .filter(Tenant.is_active == True)
-        .scalar()
-        or 0
+        db.session.query(func.count(Tenant.id)).filter(Tenant.is_active).scalar() or 0
     )
     suspended_tenant_count = tenant_count - active_tenant_count
 
     user_counts = dict(
         db.session.query(User.tenant_id, func.count(User.id))
-        .filter(User.is_owner == False)
+        .filter(not User.is_owner)
         .group_by(User.tenant_id)
         .all()
     )
     branch_counts = dict(
         db.session.query(Branch.tenant_id, func.count(Branch.id))
-        .filter(Branch.is_active == True)
+        .filter(Branch.is_active)
         .group_by(Branch.tenant_id)
         .all()
     )
@@ -107,7 +104,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
     warnings: list[str] = []
 
     recent_active = (
-        Tenant.query.filter(Tenant.is_active == True)
+        Tenant.query.filter(Tenant.is_active)
         .order_by(Tenant.id.desc())
         .limit(200)
         .all()
@@ -281,8 +278,8 @@ def build_company_dashboard_context(
 
     users_count = User.query.filter(
         User.tenant_id == tenant_id,
-        User.is_owner == False,
-        User.is_active == True,
+        not User.is_owner,
+        User.is_active,
     ).count()
     branches_count = Branch.query.filter_by(tenant_id=tenant_id, is_active=True).count()
 

@@ -184,9 +184,13 @@ class ReturnService:
                     db.func.sum(ProductReturnLine.quantity)
                 ).join(ProductReturn).filter(
                     ProductReturnLine.sale_line_id == sale_line.id
-                ).filter(ProductReturn.status != "rejected").filter(
+                ).filter(
+                    ProductReturn.status != "rejected"
+                ).filter(
                     ProductReturn.tenant_id == tenant_id
-                ).scalar() or Decimal("0")
+                ).scalar() or Decimal(
+                    "0"
+                )
 
                 if (previous_returned + quantity) > sale_line.quantity:
                     raise ValueError(

@@ -355,7 +355,7 @@ def _intelligent_column_detector(df):
 def _train_ai_from_excel(df, created, updated, user_id):
     """تدريب AI من بيانات Excel"""
     try:
-        learning_data = {
+        {
             "source": "excel_upload",
             "timestamp": datetime.now().isoformat(),
             "user_id": user_id,

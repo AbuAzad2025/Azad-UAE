@@ -188,9 +188,9 @@ $(document).ready(function() {
   }
   if (window._PRESELECTED_CUSTOMER) {
     (function() {
-      var customer = window._PRESELECTED_CUSTOMER;
-      var label = customer.name + (customer.phone ? ' - ' + customer.phone : '');
-      var option = new Option(label, customer.id, true, true);
+      const customer = window._PRESELECTED_CUSTOMER;
+      const label = customer.name + (customer.phone ? ' - ' + customer.phone : '');
+      const option = new Option(label, customer.id, true, true);
       $('#customer_id').append(option).trigger('change');
     })();
   }

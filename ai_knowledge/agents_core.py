@@ -47,9 +47,7 @@ def intelligent_response(
                 greeting = (
                     "صباح الخير"
                     if 5 <= h < 12
-                    else "مساء الخير"
-                    if 12 <= h < 18
-                    else "مساء النور"
+                    else "مساء الخير" if 12 <= h < 18 else "مساء النور"
                 )
                 return f"{greeting} {'👤 ' + name if name else ''}! 🌟 أنا أزاد، مساعدك الذكي. اسألني عن أي شيء!\n\n{action_dispatcher.format_help()}"
             result = action_dispatcher.dispatch(action_type, args)
@@ -65,9 +63,7 @@ def intelligent_response(
                     logger.debug(f"Train from action failed: {e}")
                 return result.message
             if result.needs_permission:
-                return (
-                    f"⚠️ {result.message}\n\nيمكنك سؤالي عن معلومات النظام بدلاً من ذلك."
-                )
+                return f"⚠️ {result.message}\n\nيمكنك سؤالي عن معلومات النظام بدلاً من ذلك."
             return result.message
 
         # Fallback to local intelligence
@@ -263,23 +259,23 @@ def ask_azad_enhanced(
                         f"  - {f}: {t}"
                         for f, t in list(info.get("fields", {}).items())[:10]
                     )
-                    result["answer"] += (
-                        f"**مودل {k['name']}** (جدول {info['table']}):\n{fields}\n\n"
-                    )
+                    result[
+                        "answer"
+                    ] += f"**مودل {k['name']}** (جدول {info['table']}):\n{fields}\n\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.85
                 elif k["type"] == "permission":
                     info = k["info"]
-                    result["answer"] += (
-                        f"**صلاحية {k['code']}**: {info['name_ar']} ({info['name']})\n"
-                    )
+                    result[
+                        "answer"
+                    ] += f"**صلاحية {k['code']}**: {info['name_ar']} ({info['name']})\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.85
                 elif k["type"] == "feature":
                     info = k["info"]
-                    result["answer"] += (
-                        f"**ميزة {k['name']}**: {info['name_ar']}\n  {info['description']}\n"
-                    )
+                    result[
+                        "answer"
+                    ] += f"**ميزة {k['name']}**: {info['name_ar']}\n  {info['description']}\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.9
     except Exception as exc:

@@ -903,12 +903,10 @@ def statement(id):  # noqa: A002
 @permission_required("manage_customers")
 def api_search():
     query = request.args.get("q", "")
-    page = request.args.get("page", 1, type=int)
+    request.args.get("page", 1, type=int)
     per_page = 20
     base_query = (
-        _scoped_customer_query()
-        .filter(Customer.is_active == True)
-        .order_by(Customer.name)
+        _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
     )
 
     # السماح بالبحث حتى بدون query (لعرض كل العملاء)

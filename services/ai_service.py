@@ -323,32 +323,6 @@ class AIService:
         message_normalized = re.sub(r"\bال(\w+)", r"\1", message_lower)
 
         # الكلمات الجذرية للمعلومات السرية (بدون ال التعريف)
-        sensitive_roots = [
-            "كلمة",
-            "كلمات",
-            "مرور",
-            "سر",
-            "باسورد",
-            "password",
-            "معلومات",
-            "بيانات",
-            "مستخدم",
-            "مستخدمين",
-            "user",
-            "صلاحيات",
-            "صلاحية",
-            "permission",
-            "role",
-            "access",
-            "مفتاح",
-            "مفاتيح",
-            "key",
-            "token",
-            "secret",
-            "حساب",
-            "حسابات",
-            "account",
-        ]
 
         # تحليل ذكي: هل الرسالة تحتوي على مجموعة من الكلمات السرية؟
         password_keywords = [
@@ -910,7 +884,7 @@ class AIService:
         """📦 تحليل صحة المخزون — يستوجب tenant_id للعزل البيني"""
         from models import Product
 
-        q = db.session.query(Product).filter(Product.is_active == True)
+        q = db.session.query(Product).filter(Product.is_active)
         if tenant_id:
             q = q.filter(Product.tenant_id == int(tenant_id))
         products = q.all()
@@ -934,9 +908,7 @@ class AIService:
                 else (
                     "جيد"
                     if health_score >= 60
-                    else "مقبول"
-                    if health_score >= 40
-                    else "ضعيف"
+                    else "مقبول" if health_score >= 40 else "ضعيف"
                 )
             ),
         }
@@ -1425,7 +1397,7 @@ class AIService:
 
             # رؤية 1: المخزون المنخفض
             low_stock_q = db.session.query(Product).filter(
-                Product.is_active == True,
+                Product.is_active,
                 Product.current_stock <= Product.min_stock_alert,
             )
             if tid is not None:
@@ -1444,7 +1416,7 @@ class AIService:
                 )
 
             # رؤية 2: العملاء المتأخرين
-            hbc_q = db.session.query(Customer).filter(Customer.is_active == True)
+            hbc_q = db.session.query(Customer).filter(Customer.is_active)
             if tid is not None:
                 hbc_q = hbc_q.filter(Customer.tenant_id == tid)
             high_balance_customers = hbc_q.all()
@@ -1510,7 +1482,7 @@ class AIService:
             low_stock = (
                 db.session.query(Product)
                 .filter(
-                    Product.is_active == True,
+                    Product.is_active,
                     Product.current_stock <= Product.min_stock_alert,
                 )
                 .all()

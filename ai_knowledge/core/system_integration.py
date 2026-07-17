@@ -137,9 +137,7 @@ class SystemIntegrator:
                             "status": (
                                 "مدفوع"
                                 if sale.paid_amount >= sale.total_amount
-                                else "جزئي"
-                                if sale.paid_amount > 0
-                                else "غير مدفوع"
+                                else "جزئي" if sale.paid_amount > 0 else "غير مدفوع"
                             ),
                         }
                         for sale in recent_sales

@@ -48,7 +48,7 @@ class EmailMarketingService:
         return (
             EmailList.query.filter(
                 EmailList.tenant_id == tid,
-                EmailList.is_active == True,
+                EmailList.is_active,
             )
             .order_by(EmailList.name)
             .all()
@@ -141,7 +141,7 @@ class EmailMarketingService:
         return (
             EmailTemplate.query.filter(
                 EmailTemplate.tenant_id == tid,
-                EmailTemplate.is_active == True,
+                EmailTemplate.is_active,
             )
             .order_by(EmailTemplate.name)
             .all()
@@ -279,7 +279,7 @@ class EmailMarketingService:
         return (
             EmailCampaign.query.filter(
                 EmailCampaign.tenant_id == tid,
-                EmailCampaign.is_active == True,
+                EmailCampaign.is_active,
             )
             .order_by(EmailCampaign.created_at.desc())
             .all()

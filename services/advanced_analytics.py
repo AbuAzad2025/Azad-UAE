@@ -122,9 +122,7 @@ class AdvancedFinancialAnalytics:
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         query = scope_gl_accounts(
-            GLAccount.query.filter(
-                GLAccount.is_active == True, GLAccount.is_header == False
-            ),
+            GLAccount.query.filter(GLAccount.is_active, not GLAccount.is_header),
             tenant_id=tenant_id,
         )
 
@@ -154,7 +152,7 @@ class AdvancedFinancialAnalytics:
         for account in accounts:
             lines_query = GLJournalLine.query.join(GLJournalEntry).filter(
                 GLJournalLine.account_id == account.id,
-                GLJournalEntry.is_posted == True,
+                GLJournalEntry.is_posted,
             )
             if tenant_id is not None:
                 lines_query = lines_query.filter(
@@ -215,7 +213,7 @@ class AdvancedFinancialAnalytics:
                     GLJournalLine.account_id == account.id,
                     GLJournalEntry.entry_date >= date_from,
                     GLJournalEntry.entry_date <= date_to,
-                    GLJournalEntry.is_posted == True,
+                    GLJournalEntry.is_posted,
                 )
                 if tenant_id is not None:
                     lines_q = lines_q.filter(GLJournalEntry.tenant_id == int(tenant_id))

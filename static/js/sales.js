@@ -25,7 +25,7 @@
     if(!form) return;
     on(form,'submit', e=>{
       e.preventDefault();
-      const params = new URLSearchParams(new FormData(form));
+      const formData = new FormData(form);const params = new URLSearchParams();formData.forEach((v,k)=>params.append(k,v));
       const action = form.getAttribute('action') || window.location.pathname;
       window.location = action + '?' + params.toString();
     });
@@ -191,7 +191,7 @@
                 if(info && toNum(info.price)>0){priceInp.value=toNum(info.price).toFixed(2);recalc();}
               }
             }
-            updateAvailability(pid,widNow,row);
+            await updateAvailability(pid,widNow,row);
           });
         };
 

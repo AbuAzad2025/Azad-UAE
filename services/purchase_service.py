@@ -398,7 +398,7 @@ class PurchaseService:
                 Payment.purchase_id == purchase.id,
                 Payment.tenant_id == purchase.tenant_id,
                 Payment.direction == "outgoing",
-                Payment.payment_confirmed == True,
+                Payment.payment_confirmed,
             )
             .scalar()
         )

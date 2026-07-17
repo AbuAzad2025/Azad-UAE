@@ -285,7 +285,7 @@ def get_visible_products_query(user=None):
     from models import Product, StockMovement
 
     query = apply_tenant_scope(
-        Product.query.filter(Product.is_active == True),
+        Product.query.filter(Product.is_active),
         Product,
         user,
     )

@@ -1,8 +1,8 @@
 (function() {
-  var STORAGE_MODE = 'ui_mode';
-  var STORAGE_VARIANT = 'ui_variant';
-  var STORAGE_SIDEBAR = 'sidebarLayout';
-  var STORAGE_SIDEBAR_DIR = 'sidebarLayoutDir';
+  const STORAGE_MODE = 'ui_mode';
+  const STORAGE_VARIANT = 'ui_variant';
+  const STORAGE_SIDEBAR = 'sidebarLayout';
+  const STORAGE_SIDEBAR_DIR = 'sidebarLayoutDir';
 
   function normalizeMode(v) {
     return v === 'dark' ? 'dark' : 'light';
@@ -21,7 +21,7 @@
   }
 
   function getInitialMode() {
-    var stored = localStorage.getItem(STORAGE_MODE);
+    const stored = localStorage.getItem(STORAGE_MODE);
     if (stored) {
       return normalizeMode(stored);
     }
@@ -33,7 +33,7 @@
   }
 
   function getInitialVariant() {
-    var stored = localStorage.getItem(STORAGE_VARIANT);
+    const stored = localStorage.getItem(STORAGE_VARIANT);
     if (stored) {
       return normalizeVariant(stored);
     }
@@ -41,9 +41,9 @@
   }
 
   function getInitialSidebarSide() {
-    var stored = normalizeSidebarSide(localStorage.getItem(STORAGE_SIDEBAR));
-    var storedDir = localStorage.getItem(STORAGE_SIDEBAR_DIR);
-    var currentDir = document.documentElement.getAttribute('dir') || 'rtl';
+    const stored = normalizeSidebarSide(localStorage.getItem(STORAGE_SIDEBAR));
+    const storedDir = localStorage.getItem(STORAGE_SIDEBAR_DIR);
+    const currentDir = document.documentElement.getAttribute('dir') || 'rtl';
 
     if (!stored) {
       return getDefaultSidebarSide();
@@ -57,19 +57,19 @@
   }
 
   function applySidebarSide(side) {
-    var body = document.body;
-    var html = document.documentElement;
+    const body = document.body;
+    const html = document.documentElement;
     if (!body) return;
-    var normalized = normalizeSidebarSide(side) || getDefaultSidebarSide();
+    const normalized = normalizeSidebarSide(side) || getDefaultSidebarSide();
     body.dataset.sidebarSide = normalized;
     localStorage.setItem(STORAGE_SIDEBAR, normalized);
     localStorage.setItem(STORAGE_SIDEBAR_DIR, html.getAttribute('dir') || 'rtl');
 
     // Force inline styles so the switch actually moves elements regardless of CSS specificity
-    var sidebar = document.querySelector('.main-sidebar');
-    var content = document.querySelector('.content-wrapper');
-    var header = document.querySelector('.main-header');
-    var footer = document.querySelector('.main-footer');
+    const sidebar = document.querySelector('.main-sidebar');
+    const content = document.querySelector('.content-wrapper');
+    const header = document.querySelector('.main-header');
+    const footer = document.querySelector('.main-footer');
     if (sidebar) {
       if (normalized === 'right') {
         sidebar.style.left = 'auto';
@@ -79,9 +79,9 @@
         sidebar.style.right = 'auto';
       }
     }
-    var marginProp = normalized === 'right' ? 'margin-right' : 'margin-left';
-    var otherProp = normalized === 'right' ? 'margin-left' : 'margin-right';
-    var width = body.classList.contains('sidebar-mini') && body.classList.contains('sidebar-collapse') ? '4.6rem' : '250px';
+    const marginProp = normalized === 'right' ? 'margin-right' : 'margin-left';
+    const otherProp = normalized === 'right' ? 'margin-left' : 'margin-right';
+    const width = body.classList.contains('sidebar-mini') && body.classList.contains('sidebar-collapse') ? '4.6rem' : '250px';
     [content, header, footer].forEach(function(el) {
       if (!el) return;
       el.style.setProperty(marginProp, width, 'important');
@@ -90,7 +90,7 @@
   }
 
   function updateModeToggle(mode) {
-    var toggle = document.querySelector('[data-ui-action="toggle-mode"]');
+    const toggle = document.querySelector('[data-ui-action="toggle-mode"]');
     if (!toggle) return;
 
     toggle.setAttribute('data-ui-mode', mode);
@@ -104,21 +104,21 @@
       toggle.setAttribute('title', 'التبديل إلى الوضع الداكن');
     }
 
-    var label = toggle.querySelector('[data-ui-role="mode-label"]');
+    const label = toggle.querySelector('[data-ui-role="mode-label"]');
     if (label) {
       label.textContent = mode === 'dark' ? 'داكن' : 'فاتح';
     }
 
-    var icon = toggle.querySelector('[data-ui-role="mode-icon"]');
+    const icon = toggle.querySelector('[data-ui-role="mode-icon"]');
     if (icon) {
       icon.className = mode === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
     }
   }
 
   function updateThemeSwitcher(variant) {
-    var buttons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option');
+    const buttons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option');
     buttons.forEach(function(btn) {
-      var btnVariant = btn.getAttribute('data-value');
+      const btnVariant = btn.getAttribute('data-value');
       if (btnVariant === variant) {
         btn.classList.add('active');
       } else {
@@ -131,7 +131,7 @@
     mode = normalizeMode(mode);
     variant = normalizeVariant(variant);
 
-    var el = document.documentElement;
+    const el = document.documentElement;
     el.dataset.uiMode = mode;
     el.dataset.uiVariant = variant;
     localStorage.setItem(STORAGE_MODE, mode);
@@ -145,38 +145,38 @@
     applyTheme(getInitialMode(), getInitialVariant());
     applySidebarSide(getInitialSidebarSide());
 
-    var toggle = document.querySelector('[data-ui-action="toggle-mode"]');
+    const toggle = document.querySelector('[data-ui-action="toggle-mode"]');
     if (toggle) {
       toggle.addEventListener('click', function(ev) {
         ev.preventDefault();
-        var current = normalizeMode(document.documentElement.dataset.uiMode || 'light');
-        var next = current === 'dark' ? 'light' : 'dark';
-        var variant = normalizeVariant(document.documentElement.dataset.uiVariant || 'palestinian');
+        const current = normalizeMode(document.documentElement.dataset.uiMode || 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        const variant = normalizeVariant(document.documentElement.dataset.uiVariant || 'palestinian');
         applyTheme(next, variant);
       });
     }
 
-    var variantButtons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option[data-ui-action="set-variant"]');
+    const variantButtons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option[data-ui-action="set-variant"]');
     variantButtons.forEach(function(btn) {
       btn.addEventListener('click', function(ev) {
         ev.preventDefault();
-        var variant = normalizeVariant(btn.getAttribute('data-value'));
-        var mode = normalizeMode(document.documentElement.dataset.uiMode || 'light');
+        const variant = normalizeVariant(btn.getAttribute('data-value'));
+        const mode = normalizeMode(document.documentElement.dataset.uiMode || 'light');
         applyTheme(mode, variant);
       });
     });
 
     window.toggleSidebarDirection = function() {
-      var body = document.body;
+      const body = document.body;
       if (!body) return;
-      var current = body.dataset.sidebarSide === 'left' ? 'left' : 'right';
-      var next = current === 'left' ? 'right' : 'left';
+      const current = body.dataset.sidebarSide === 'left' ? 'left' : 'right';
+      const next = current === 'left' ? 'right' : 'left';
       applySidebarSide(next);
     };
 
-    var flashes = document.querySelectorAll('.flash-message');
+    const flashes = document.querySelectorAll('.flash-message');
     flashes.forEach(function(el) {
-      var bar = el.querySelector('.flash-timer');
+      const bar = el.querySelector('.flash-timer');
       if (bar) {
         requestAnimationFrame(function() {
           bar.style.width = '0%';

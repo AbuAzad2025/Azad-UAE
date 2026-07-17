@@ -101,7 +101,7 @@ class MonitoringService:
 
         active_users = User.query.filter(
             User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
-            User.is_active == True,
+            User.is_active,
             User.tenant_id == tid,
         ).all()
 

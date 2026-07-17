@@ -189,9 +189,7 @@ class HealthCheckService:
                 "status": (
                     "جيد"
                     if resources.get("cpu_percent", 0) < 70
-                    else "تحذير"
-                    if resources.get("cpu_percent", 0) < 90
-                    else "خطر"
+                    else "تحذير" if resources.get("cpu_percent", 0) < 90 else "خطر"
                 ),
             },
             "memory": {
@@ -201,9 +199,7 @@ class HealthCheckService:
                 "status": (
                     "جيد"
                     if resources.get("memory_percent", 0) < 70
-                    else "تحذير"
-                    if resources.get("memory_percent", 0) < 90
-                    else "خطر"
+                    else "تحذير" if resources.get("memory_percent", 0) < 90 else "خطر"
                 ),
             },
             "disk": {
@@ -214,9 +210,7 @@ class HealthCheckService:
                 "status": (
                     "جيد"
                     if resources.get("disk_percent", 0) < 70
-                    else "تحذير"
-                    if resources.get("disk_percent", 0) < 90
-                    else "خطر"
+                    else "تحذير" if resources.get("disk_percent", 0) < 90 else "خطر"
                 ),
             },
             "database": {
@@ -224,9 +218,7 @@ class HealthCheckService:
                 "status": (
                     "جيد"
                     if db_size_mb < 500
-                    else "تحذير"
-                    if db_size_mb < 1000
-                    else "خطر"
+                    else "تحذير" if db_size_mb < 1000 else "خطر"
                 ),
             },
             "system": {
@@ -244,7 +236,7 @@ class HealthCheckService:
                 .filter(
                     User.last_seen
                     >= datetime.now(timezone.utc) - timedelta(minutes=30),
-                    User.is_active == True,
+                    User.is_active,
                 )
                 .scalar()
                 or 0
