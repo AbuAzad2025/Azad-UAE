@@ -75,8 +75,8 @@ class AdvancedJournalEntryManager:
         # 1. Balance check
         try:
             lines_data = [
-                {"debit": float(l.debit or 0), "credit": float(l.credit or 0)}
-                for l in entry.lines
+                {"debit": float(line.debit or 0), "credit": float(line.credit or 0)}
+                for line in entry.lines
             ]
             assert_balanced_lines(lines_data, currency=entry.currency)
         except Exception as exc:

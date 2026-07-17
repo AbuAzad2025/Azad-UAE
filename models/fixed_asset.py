@@ -9,6 +9,7 @@ from utils.gl_services import (
 نموذج الأصول الثابتة والاستهلاك - Fixed Assets & Depreciation Model
 """
 
+# ruff: noqa: E402
 from datetime import datetime, timezone, date
 from extensions import db
 from decimal import Decimal, ROUND_HALF_UP

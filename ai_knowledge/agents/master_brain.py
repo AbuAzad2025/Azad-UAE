@@ -72,14 +72,14 @@ class MasterBrain:
             )
 
             automotive_kb = get_automotive_ecu_knowledge().knowledge_base
-        except:
+        except Exception:
             automotive_kb = {}
 
         try:
             from ai_knowledge.learning.external_learning import get_external_learning
 
             external_sources = get_external_learning().learning_sources
-        except:
+        except Exception:
             external_sources = {}
 
         return {

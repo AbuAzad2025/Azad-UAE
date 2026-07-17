@@ -1111,8 +1111,8 @@ class GLService:
                 )
 
             opening_lines = opening_query.all()
-            opening_debit = sum(l.debit for l in opening_lines)
-            opening_credit = sum(l.credit for l in opening_lines)
+            opening_debit = sum(line.debit for line in opening_lines)
+            opening_credit = sum(line.credit for line in opening_lines)
             if account.type in ("asset", "expense"):
                 opening_balance = opening_debit - opening_credit
             else:
@@ -1205,8 +1205,8 @@ class GLService:
             )
 
         opening_lines = opening_query.all()
-        opening_debit = sum(l.debit for l in opening_lines)
-        opening_credit = sum(l.credit for l in opening_lines)
+        opening_debit = sum(line.debit for line in opening_lines)
+        opening_credit = sum(line.credit for line in opening_lines)
         opening_balance = opening_debit - opening_credit
 
         running = opening_balance

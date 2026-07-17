@@ -12,6 +12,7 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
+# ruff: noqa: E402
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 if TYPE_CHECKING:

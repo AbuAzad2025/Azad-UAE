@@ -27,6 +27,7 @@ __all__ = [
     "permission_required",
     "admin_required",
     "seller_or_above",
+    "owner_required",
     "generate_number",
     "format_currency",
     "timeago",

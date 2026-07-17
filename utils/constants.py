@@ -165,6 +165,7 @@ def normalize_payment_method_code(method):
     return PAYMENT_METHOD_ALIASES.get(value, value)
 
 
+# ruff: noqa: E402
 from models.enums import RoleEnum
 
 ROLE_LEVELS = {

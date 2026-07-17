@@ -11,6 +11,7 @@ Old import paths still work via backward-compatible shims in the original files.
 🏢 معلومات الشركة - Company Information
 شركة أزاد للأنظمة الذكية
 """
+# ruff: noqa: E402
 
 import os
 

@@ -209,7 +209,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال الرصيد!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -654,7 +654,7 @@ def _process_user_action(message, user):
 💡 **مثال:** 100
 
 🤖 اكتب الكمية الآن...""".format(price=data["price"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال السعر!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1067,7 +1067,7 @@ def _process_user_action(message, user):
 💡 **مثال:** نقد، بطاقة، شيك
 
 🤖 اكتب طريقة الدفع الآن...""".format(amount=data["amount"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال المبلغ!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1231,7 +1231,7 @@ def _process_user_action(message, user):
 💡 **مثال:** استرداد، خصم، مكافأة
 
 🤖 اكتب السبب الآن...""".format(amount=data["amount"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال المبلغ!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1378,7 +1378,7 @@ def _process_user_action(message, user):
 💡 **مثال:** مرافق، صيانة، أدوات
 
 🤖 اكتب الفئة الآن...""".format(amount=data["amount"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال المبلغ!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1549,7 +1549,7 @@ def _process_user_action(message, user):
 💬 **اكتب "تخطي" إذا لم يكن متوفراً**
 
 🤖 اكتب الرقم الضريبي الآن...""".format(balance=initial_balance)
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال الرصيد!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1721,7 +1721,7 @@ def _process_user_action(message, user):
 💡 **مثال:** 40
 
 🤖 اكتب السعر الآن...""".format(quantity=data["quantity"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال الكمية!**
 
 💡 **يرجى إدخال رقم صحيح**
@@ -1893,7 +1893,7 @@ def _process_user_action(message, user):
 💡 **مثال:** 2025-12-31
 
 🤖 اكتب التاريخ الآن...""".format(amount=data["amount"])
-                except:
+                except Exception:
                     return """❌ **خطأ في إدخال المبلغ!**
 
 💡 **يرجى إدخال رقم صحيح**

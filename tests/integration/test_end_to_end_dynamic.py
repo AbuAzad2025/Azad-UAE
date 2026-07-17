@@ -1414,8 +1414,8 @@ class TestPayrollIsolation:
         assert gl_entry is not None
         assert gl_entry.tenant_id == t.id
         # Verify GL lines balance (debit = credit)
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in gl_entry.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
         assert total_debit == total_credit
         # Verify accrual entry exists for EOS+Leave
         from utils.gl_reference_types import GLRef
@@ -1510,8 +1510,8 @@ class TestFxGainLossAutoPosting:
         assert receipt_gl is not None
         assert receipt_gl.tenant_id == t.id
         # Verify receipt GL lines balance
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in receipt_gl.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in receipt_gl.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in receipt_gl.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in receipt_gl.lines)
         assert total_debit == total_credit
 
 
@@ -1601,8 +1601,8 @@ class TestPOSSessionAndDrawerIsolation:
         ).first()
         assert gl_entry is not None
         assert gl_entry.branch_id == b.id
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in gl_entry.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
         assert total_debit == total_credit
         assert total_debit == Decimal("100")
 
@@ -1659,8 +1659,8 @@ class TestPOSSessionAndDrawerIsolation:
             tenant_id=t.id,
         ).first()
         assert gl_entry is not None
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in gl_entry.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
         assert total_debit == total_credit
         assert total_debit == Decimal("100")
 

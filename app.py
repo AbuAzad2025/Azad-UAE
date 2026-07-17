@@ -10,6 +10,7 @@ All application logic lives in app/factory.py and supporting modules:
 import os
 
 print("Starting Application...")
+# ruff: noqa: E402
 from config import _init_env
 
 _init_env()

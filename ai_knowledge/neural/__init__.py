@@ -17,6 +17,7 @@ __all__ = [
     "get_neural_engine",
     "TransformersBrain",
     "get_transformers_brain",
+    "SemanticMatcher",
     "semantic_matcher",
     "understand_message",
     "VisionProcessor",

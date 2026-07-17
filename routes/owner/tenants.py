@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 
 # Import the shared owner_bp blueprint and helpers from the package
+# ruff: noqa: E402
 from routes.owner import owner_bp
 from routes.owner.shared import _invalidate_owner_changes, _audit_owner_db_action
 from utils.db_safety import atomic_transaction

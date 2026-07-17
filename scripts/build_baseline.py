@@ -38,12 +38,12 @@ OUT = os.path.join(VERSIONS_DIR, "squash_001_baseline.py")
 # ---------------------------------------------------------------------------
 # 1. Pure-data imports (no DB, no models)
 # ---------------------------------------------------------------------------
-from models.gl_account_registry import (
+from models.gl_account_registry import (  # noqa: E402
     BASE_ACCOUNTS,
     INDUSTRY_EXTENSIONS,
     GL_MODULE_DEFINITIONS,
 )
-from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
+from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # 2. Canonical baseline config (used only to compute the schema; no tenant is

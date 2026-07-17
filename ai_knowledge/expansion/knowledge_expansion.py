@@ -283,7 +283,7 @@ class KnowledgeExpander:
 
             return snippet
 
-        except:
+        except Exception:
             return content[:snippet_length] + "..."
 
     def get_knowledge_summary(self):

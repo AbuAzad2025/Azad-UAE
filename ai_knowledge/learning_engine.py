@@ -43,6 +43,7 @@ class QuickLearner:
 
 quick_learner = QuickLearner()
 
+# ruff: noqa: E402
 from ai_knowledge.learning.auto_retraining import (
     AutoRetrainingScheduler,
     auto_retraining,

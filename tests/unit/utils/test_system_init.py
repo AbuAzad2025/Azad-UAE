@@ -230,7 +230,7 @@ class TestRoleAndPermissionBootstrap:
 
         def filter_by(**_kwargs):
             query = MagicMock()
-            slug = kwargs.get("slug")
+            slug = _kwargs.get("slug")
             query.first.return_value = super_role if slug == "super_admin" else dev_role
             return query
 

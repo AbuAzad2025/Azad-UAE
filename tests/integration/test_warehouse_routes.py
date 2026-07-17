@@ -301,12 +301,12 @@ class TestWarehouseAddStock:
         )
         assert len(lines) >= 2
 
-        debit_lines = [l for l in lines if (l.debit or 0) > 0]
-        credit_lines = [l for l in lines if (l.credit or 0) > 0]
+        debit_lines = [line for line in lines if (line.debit or 0) > 0]
+        credit_lines = [line for line in lines if (line.credit or 0) > 0]
         assert len(debit_lines) >= 1
         assert len(credit_lines) >= 1
-        total_debit = sum((l.debit or 0) for l in lines)
-        total_credit = sum((l.credit or 0) for l in lines)
+        total_debit = sum((line.debit or 0) for line in lines)
+        total_credit = sum((line.credit or 0) for line in lines)
         assert total_debit == total_credit
         assert total_debit == Decimal(
             "200"

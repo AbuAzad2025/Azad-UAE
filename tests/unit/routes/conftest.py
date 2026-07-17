@@ -9,8 +9,8 @@ warnings.filterwarnings(
     "ignore", message="coroutine 'AsyncMockMixin._execute_mock_call' was never awaited"
 )
 
-import pytest
-from flask import Flask
+import pytest  # noqa: E402
+from flask import Flask  # noqa: E402
 
 for _mod in ("numpy", "pandas"):
     if _mod not in sys.modules:

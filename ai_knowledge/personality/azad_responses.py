@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# ruff: noqa: E402
 from ai_knowledge.knowledge.company_info import get_welcome_message
 from ai_knowledge.knowledge.system_knowledge import search_knowledge
 from ai_knowledge.knowledge.tax_customs_knowledge import get_tax_info, get_customs_info

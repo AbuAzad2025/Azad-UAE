@@ -649,9 +649,9 @@ class PurchaseService:
                 if return_line.purchase_line_id:
                     pl = next(
                         (
-                            l
-                            for l in purchase.lines
-                            if l.id == return_line.purchase_line_id
+                            line
+                            for line in purchase.lines
+                            if line.id == return_line.purchase_line_id
                         ),
                         None,
                     )

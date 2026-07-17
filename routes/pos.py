@@ -1035,6 +1035,7 @@ def _accumulate_shift_totals(shift: PosShift):
     shift.total_card_sales = card
 
 
+# ruff: noqa: E402
 import queue as _queue
 import os as _os
 import urllib.request

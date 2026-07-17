@@ -244,8 +244,8 @@ class TestPOSSession:
             .first()
         )
         if gl:
-            total_dr = sum(Decimal(str(l.debit or 0)) for l in gl.lines)
-            total_cr = sum(Decimal(str(l.credit or 0)) for l in gl.lines)
+            total_dr = sum(Decimal(str(line.debit or 0)) for line in gl.lines)
+            total_cr = sum(Decimal(str(line.credit or 0)) for line in gl.lines)
             assert total_dr == total_cr
 
     def test_pos_session_close_reconciles_cash(self, app, db_session, client):
@@ -536,8 +536,8 @@ class TestPOSSession:
             tenant_id=tenant.id,
         ).first()
         assert gl is not None, "GL entry should exist for overage"
-        total_dr = sum(Decimal(str(l.debit or 0)) for l in gl.lines)
-        total_cr = sum(Decimal(str(l.credit or 0)) for l in gl.lines)
+        total_dr = sum(Decimal(str(line.debit or 0)) for line in gl.lines)
+        total_cr = sum(Decimal(str(line.credit or 0)) for line in gl.lines)
         assert total_dr == total_cr
         assert total_dr == 5
 

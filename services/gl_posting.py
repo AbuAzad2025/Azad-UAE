@@ -138,8 +138,8 @@ def assert_balanced_lines(lines, *, currency=None, tolerance=None):
         tolerance = _CURRENCY_TOLERANCE.get(
             (currency or "").upper(), _DEFAULT_TOLERANCE
         )
-    total_debit = sum(Decimal(str(l.get("debit", 0) or 0)) for l in lines)
-    total_credit = sum(Decimal(str(l.get("credit", 0) or 0)) for l in lines)
+    total_debit = sum(Decimal(str(line.get("debit", 0) or 0)) for line in lines)
+    total_credit = sum(Decimal(str(line.get("credit", 0) or 0)) for line in lines)
     if abs(total_debit - total_credit) > tolerance:
         raise UnbalancedJournalEntryError(
             f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}"

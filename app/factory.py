@@ -290,11 +290,6 @@ def create_app(config_class=Config) -> Flask:
         response.headers["Content-Security-Policy"] = csp
         return response
 
-    # Models Import (to ensure they are known to SQLAlchemy)
-    from models import (
-        User,
-    )  # noqa: F401 - side effect imports for SQLAlchemy registry
-
     try:
         from models.events import register_all_listeners
 

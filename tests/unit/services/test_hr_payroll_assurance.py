@@ -402,10 +402,10 @@ class TestPayrollBatchGLApproval:
         assert mock_post.called
 
         lines = mock_post.call_args[0][0]
-        total_debit = sum(Decimal(str(l["debit"])) for l in lines)
-        total_credit = sum(Decimal(str(l["credit"])) for l in lines)
+        total_debit = sum(Decimal(str(line["debit"])) for line in lines)
+        total_credit = sum(Decimal(str(line["credit"])) for line in lines)
         assert total_debit == total_credit
-        concepts = {l["concept_code"] for l in lines}
+        concepts = {line["concept_code"] for line in lines}
         assert "PAYROLL_EXPENSE" in concepts
         assert "PAYROLL_PAYABLE" in concepts
 

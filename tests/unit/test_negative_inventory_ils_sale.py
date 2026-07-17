@@ -334,8 +334,8 @@ class TestNegativeInventoryILSSale:
             assert revenue_entry is not None, "Revenue GL entry not found"
 
             rev_lines = GLJournalLine.query.filter_by(entry_id=revenue_entry.id).all()
-            rev_debit = sum(l.debit for l in rev_lines if l.debit)
-            rev_credit = sum(l.credit for l in rev_lines if l.credit)
+            rev_debit = sum(line.debit for line in rev_lines if line.debit)
+            rev_credit = sum(line.credit for line in rev_lines if line.credit)
             assert abs(rev_debit - rev_credit) < Decimal(
                 "0.01"
             ), f"Revenue entry NOT balanced: Dr={rev_debit} Cr={rev_credit}"
@@ -344,10 +344,14 @@ class TestNegativeInventoryILSSale:
             for entry in entries:
                 all_lines.extend(GLJournalLine.query.filter_by(entry_id=entry.id).all())
 
-            ar_line = [l for l in all_lines if _line_account_code(l) == "1130"]
-            sales_line = [l for l in all_lines if _line_account_code(l) == "4100"]
+            ar_line = [line for line in all_lines if _line_account_code(line) == "1130"]
+            sales_line = [
+                line for line in all_lines if _line_account_code(line) == "4100"
+            ]
             vat_line = [
-                l for l in all_lines if _line_account_code(l) == vat_account_code
+                line
+                for line in all_lines
+                if _line_account_code(line) == vat_account_code
             ]
 
             assert len(ar_line) == 1, "AR line missing"
@@ -369,14 +373,16 @@ class TestNegativeInventoryILSSale:
             assert cogs_entry is not None, "COGS GL entry not found"
 
             cogs_lines = GLJournalLine.query.filter_by(entry_id=cogs_entry.id).all()
-            cogs_debit = sum(l.debit for l in cogs_lines if l.debit)
-            cogs_credit = sum(l.credit for l in cogs_lines if l.credit)
+            cogs_debit = sum(line.debit for line in cogs_lines if line.debit)
+            cogs_credit = sum(line.credit for line in cogs_lines if line.credit)
             assert abs(cogs_debit - cogs_credit) < Decimal(
                 "0.01"
             ), f"COGS entry NOT balanced: Dr={cogs_debit} Cr={cogs_credit}"
 
-            cogs_dr = [l for l in cogs_lines if _line_account_code(l) == "5100"]
-            inv_cr = [l for l in cogs_lines if _line_account_code(l) == "1140"]
+            cogs_dr = [
+                line for line in cogs_lines if _line_account_code(line) == "5100"
+            ]
+            inv_cr = [line for line in cogs_lines if _line_account_code(line) == "1140"]
 
             assert len(cogs_dr) == 1, "COGS debit line missing"
             assert cogs_dr[0].debit > 0, f"COGS should be > 0: got {cogs_dr[0].debit}"

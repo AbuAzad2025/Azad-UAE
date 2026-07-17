@@ -131,7 +131,7 @@ _TEST_DATABASE_URL = _resolve_test_database_url()
 os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 os.environ["TEST_DATABASE_URL"] = _TEST_DATABASE_URL
 
-from unittest.mock import MagicMock, NonCallableMock
+from unittest.mock import MagicMock, NonCallableMock  # noqa: E402
 
 # Global Python 3.14 Introspection Safeguard — instances raise AttributeError on __name__
 if not getattr(NonCallableMock, "_azad_py314_name_guard", False):

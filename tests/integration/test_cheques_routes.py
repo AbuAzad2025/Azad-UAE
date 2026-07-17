@@ -124,7 +124,9 @@ class TestChequesCreate:
             .all()
         )
         assert len(lines) >= 2
-        accounts = [(l.account.code, l.debit or 0, l.credit or 0) for l in lines]
+        accounts = [
+            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
+        ]
         has_cuc = any("1150" in str(acc) and d > 0 for acc, d, c in accounts)
         has_ar = any(c > 0 for acc, d, c in accounts if c > 0)
         assert has_cuc, f"Expected Dr ChequesUnderCollection, got {accounts}"
@@ -246,7 +248,9 @@ class TestChequesCreate:
             )
             .all()
         )
-        accounts = [(l.account.code, l.debit or 0, l.credit or 0) for l in lines]
+        accounts = [
+            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
+        ]
         has_deferred = any("2130" in str(acc) and c > 0 for acc, d, c in accounts)
         assert has_deferred, f"Expected Cr DeferredCheques, got {accounts}"
 
@@ -516,7 +520,9 @@ class TestChequesLifecycle:
             )
             .all()
         )
-        accounts = [(l.account.code, l.debit or 0, l.credit or 0) for l in lines]
+        accounts = [
+            (line.account.code, line.debit or 0, line.credit or 0) for line in lines
+        ]
         has_ar_debit = any("1130" in str(acc) and d > 0 for acc, d, c in accounts)
         has_cuc_credit = any("1150" in str(acc) and c > 0 for acc, d, c in accounts)
         assert has_ar_debit, f"Expected Dr AR on bounce, got {accounts}"

@@ -4,7 +4,7 @@ Every fixture mocks auth, DB, and service layers so tests run instantly.
 """
 
 # Re-export DB fixtures from parent conftest for --confcutdir=tests/unit runs.
-from tests.conftest import (  # noqa: F401
+from tests.conftest import (
     _reset_rate_limiter,
     _restore_session_app_config,
     app,
@@ -36,6 +36,39 @@ from tests.conftest import (  # noqa: F401
     sample_user,
     sample_warehouse,
 )
+
+__all__ = [
+    "_reset_rate_limiter",
+    "_restore_session_app_config",
+    "app",
+    "auth_client",
+    "auto_cleanup_isolation",
+    "client",
+    "db_session",
+    "logged_in_client",
+    "owner_client",
+    "runner",
+    "sample_branch",
+    "sample_cheque",
+    "sample_currency_aed",
+    "sample_customer",
+    "sample_employee",
+    "sample_expense",
+    "sample_expense_category",
+    "sample_gl_accounts",
+    "sample_owner",
+    "sample_payroll_transaction",
+    "sample_permissions",
+    "sample_product",
+    "sample_product_with_stock",
+    "sample_purchase",
+    "sample_role",
+    "sample_sale",
+    "sample_supplier",
+    "sample_tenant",
+    "sample_user",
+    "sample_warehouse",
+]
 
 import pytest
 from flask import Flask
@@ -94,7 +127,9 @@ def app_factory():
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
 
-        app = Flask(__name__, template_folder=os.path.join(project_root, "templates"))
+        app = Flask(  # noqa: F811
+            __name__, template_folder=os.path.join(project_root, "templates")
+        )
         app.config.from_object(TestConfig)
         if config_overrides:
             app.config.update(config_overrides)
@@ -178,7 +213,7 @@ def bypass_owner_auth(mocker, mock_owner_user):
 def mock_owner_client(app_factory, bypass_owner_auth):
     from routes.owner import owner_bp
 
-    app = app_factory(owner_bp)
+    app = app_factory(owner_bp)  # noqa: F811
     return app.test_client()
 
 
@@ -209,7 +244,7 @@ def bypass_company_admin_auth(mocker, mock_owner_user):
 def mock_company_admin_client(app_factory, bypass_company_admin_auth):
     from routes.owner import owner_bp
 
-    app = app_factory(owner_bp)
+    app = app_factory(owner_bp)  # noqa: F811
     return app.test_client()
 
 
@@ -222,7 +257,7 @@ def mock_company_admin_client(app_factory, bypass_company_admin_auth):
 def mock_vault_owner_client(app_factory, bypass_owner_auth):
     from routes.payment_vault import payment_vault_bp
 
-    app = app_factory(payment_vault_bp)
+    app = app_factory(payment_vault_bp)  # noqa: F811
     return app.test_client()
 
 
@@ -252,7 +287,7 @@ def bypass_product_auth(mocker):
 def product_client(app_factory, bypass_product_auth):
     from routes.products import products_bp
 
-    app = app_factory(products_bp)
+    app = app_factory(products_bp)  # noqa: F811
     return app.test_client()
 
 
@@ -457,5 +492,5 @@ def ai_client(app_factory, bypass_ai_access):
     """Test client with the ``ai`` blueprint registered."""
     from routes.ai_routes import ai_bp
 
-    app = app_factory(ai_bp)
+    app = app_factory(ai_bp)  # noqa: F811
     return app.test_client()

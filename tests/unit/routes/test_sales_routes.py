@@ -32,7 +32,7 @@ def _mock_sale(**kwargs):
     sale.seller = kwargs.get(
         "seller",
         MagicMock(
-            full_name="Seller", username="seller", get_display_name=lambda l: "Seller"
+            full_name="Seller", username="seller", get_display_name=lambda _: "Seller"
         ),
     )
     sale.customer = kwargs.get("customer", MagicMock(name="Customer"))

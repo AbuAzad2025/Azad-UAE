@@ -1,6 +1,7 @@
 """Comprehensive unit tests for routes/ai.py."""
 
 import io
+import json
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 

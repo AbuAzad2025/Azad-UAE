@@ -101,8 +101,8 @@ class TestSaleGlIntegration:
         ).first()
         assert gl_entry is not None, "No SALE GL entry created"
 
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in gl_entry.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in gl_entry.lines)
         assert (
             total_debit == total_credit
         ), f"SALE GL entry unbalanced: debit={total_debit}, credit={total_credit}"
@@ -119,8 +119,8 @@ class TestSaleGlIntegration:
         ).first()
         assert cogs_entry is not None, "No SALE_COGS GL entry created"
 
-        cogs_debit = sum(Decimal(str(l.debit or 0)) for l in cogs_entry.lines)
-        cogs_credit = sum(Decimal(str(l.credit or 0)) for l in cogs_entry.lines)
+        cogs_debit = sum(Decimal(str(line.debit or 0)) for line in cogs_entry.lines)
+        cogs_credit = sum(Decimal(str(line.credit or 0)) for line in cogs_entry.lines)
         assert (
             cogs_debit == cogs_credit
         ), f"COGS GL entry unbalanced: debit={cogs_debit}, credit={cogs_credit}"

@@ -8,12 +8,6 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.unit.routes.conftest import (  # noqa: F401
-    app_factory,
-    bypass_permission_auth,
-    mock_user,
-)
-
 
 @pytest.fixture
 def treasury_client(app_factory, bypass_permission_auth):

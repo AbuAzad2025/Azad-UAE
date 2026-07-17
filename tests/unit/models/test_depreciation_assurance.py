@@ -197,8 +197,8 @@ class TestDepreciationRunMonthly:
         assert schedule.depreciation_amount == Decimal("100.00")
         mock_gl.assert_called_once()
         lines = mock_gl.call_args[1]["lines"]
-        debit = sum(Decimal(str(l["debit"])) for l in lines)
-        credit = sum(Decimal(str(l["credit"])) for l in lines)
+        debit = sum(Decimal(str(line["debit"])) for line in lines)
+        credit = sum(Decimal(str(line["credit"])) for line in lines)
         assert debit == credit
 
 

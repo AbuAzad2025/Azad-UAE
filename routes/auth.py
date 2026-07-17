@@ -520,6 +520,7 @@ def payment_status(payment_id):
         )
 
 
+# ruff: noqa: E402
 import ipaddress
 
 _payment_callback_cache: dict[str, float] = {}

@@ -226,8 +226,8 @@ def _verify_gl(_db, ctx, sale):
     assert entries, "No GL journal entries found for the sale"
 
     for entry in entries:
-        total_debit = sum(Decimal(str(l.debit or 0)) for l in entry.lines)
-        total_credit = sum(Decimal(str(l.credit or 0)) for l in entry.lines)
+        total_debit = sum(Decimal(str(line.debit or 0)) for line in entry.lines)
+        total_credit = sum(Decimal(str(line.credit or 0)) for line in entry.lines)
         diff = abs(total_debit - total_credit)
         assert diff <= Decimal(
             "0.001"

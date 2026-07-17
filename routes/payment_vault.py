@@ -165,6 +165,7 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
 # Idempotency-key cache for public API endpoints
 # ---------------------------------------------------------------------------
 
+# ruff: noqa: E402
 import threading
 
 _idempotency_lock = threading.Lock()

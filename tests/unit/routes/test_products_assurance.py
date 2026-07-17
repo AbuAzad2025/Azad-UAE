@@ -1241,7 +1241,7 @@ class TestProductsIndexAndEditGaps:
                 data={"name": "X", "regular_price": "10", "merchant_customer_id": "9"},
             )
         assert resp.status_code == 200
-        assert render.call_args[0][0] == "products/edit.html"
+        assert _render.call_args[0][0] == "products/edit.html"
 
 
 class TestProductsRemainingCoverage:

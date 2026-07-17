@@ -444,7 +444,7 @@ class GLJournalLine(db.Model):
         return f"<GLLine acc={self.account_id} d={self.debit} c={self.credit}>"
 
 
-from models._constants import (
+from models._constants import (  # noqa: E402
     VALID_GL_CONCEPT_CODES,
     _GL_CONCEPT_CODE_CHECK,
 )

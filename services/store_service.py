@@ -467,7 +467,7 @@ class StoreService:
         return {
             "lines": lines,
             "subtotal": subtotal,
-            "count": sum(l["quantity"] for l in lines),
+            "count": sum(line["quantity"] for line in lines),
         }
 
     @staticmethod

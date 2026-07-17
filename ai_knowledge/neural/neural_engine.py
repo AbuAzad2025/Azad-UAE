@@ -2273,7 +2273,7 @@ class AzadNeuralEngine:
         try:
             # محاولة التحميل
             return self._load_model(model_name)
-        except:
+        except Exception:
             return False
 
     def load_all_models(self):

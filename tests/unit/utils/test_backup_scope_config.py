@@ -312,9 +312,9 @@ def test_export_scoped_database_happy_path(
         conn, scope, tenant_id=tenant_id, **kwargs
     )
     assert len(tables) > 0
-    assert "tenants" in tables or any("tenants" in t for t in included)
-    assert isinstance(counts, dict)
-    assert isinstance(unresolved, list)
+    assert "tenants" in tables or any("tenants" in t for t in _included)
+    assert isinstance(_counts, dict)
+    assert isinstance(_unresolved, list)
 
 
 def test_export_scoped_database_unknown_scope(patch_export_helpers):
@@ -389,10 +389,10 @@ def test_read_data_directory_empty_dir(tmp_path):
     assert tables == {}
 
 
-import json
-from unittest.mock import MagicMock
+import json  # noqa: E402
+from unittest.mock import MagicMock  # noqa: E402
 
-from services.backup_scope_config import (
+from services.backup_scope_config import (  # noqa: E402
     build_tenant_uploads_archive,
     collect_scoped_upload_paths,
     collect_tenant_upload_paths,

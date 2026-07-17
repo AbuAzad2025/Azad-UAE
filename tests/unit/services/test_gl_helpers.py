@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from models import GLAccount
+from models import GLAccount, GLPeriod
 from services.gl_helpers import (
     assert_period_open,
     get_account,

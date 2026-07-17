@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+# ruff: noqa: E402
 # Import base agents from their dedicated modules
 from ai_knowledge.agents.intelligent_assistant import (
     intelligent_assistant,

@@ -1365,7 +1365,7 @@ def reorder(slug, sale_id):
         return redirect(url_for("shop.account_orders", slug=store.store_slug))
     cart = StoreService.get_cart(session, store.tenant_id)
     stock_map = StoreService.online_stock_map(
-        store.tenant_id, [l.product_id for l in lines]
+        store.tenant_id, [line.product_id for line in lines]
     )
     for line in lines:
         available = float(stock_map.get(line.product_id, 0))

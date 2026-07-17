@@ -3,6 +3,7 @@ from typing import Any
 from flask import abort, flash, redirect, url_for, request
 from flask_login import current_user
 
+from extensions import db
 from models.enums import RoleEnum, PermissionEnum
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user

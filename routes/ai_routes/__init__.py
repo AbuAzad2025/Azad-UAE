@@ -1,7 +1,5 @@
 """AI Routes Package — Modular sub-blueprint structure."""
 
-import re
-import pandas as pd
 from flask import (
     Blueprint,
     render_template,
@@ -120,13 +118,10 @@ def _audit_ai_requests(response):
     return response
 
 
-from ai_knowledge.core.conversation_store import (
-    get_context as _get_conversation_context,
-)
-from ai_knowledge.core.conversation_store import (
+from ai_knowledge.core.conversation_store import (  # noqa: E402
     set_context as _set_conversation_context,
 )
-from ai_knowledge.core.conversation_store import (
+from ai_knowledge.core.conversation_store import (  # noqa: E402
     clear_context as _clear_conversation_context,
 )
 
@@ -176,16 +171,46 @@ from . import system  # noqa: E402
 from . import specialized  # noqa: E402
 
 # Re-export symbols for backward compatibility with routes.ai namespace
-from .shared import (
+from .shared import (  # noqa: E402
     smart_listener,
     train_local_ai,
     apply_smart_listeners,
     create_final_options,
     _conversation_ctx,
 )
-from .actions import _process_user_action, _user_can_ai_execute_actions
-from .assistant import (
+from .actions import _process_user_action, _user_can_ai_execute_actions  # noqa: E402
+from .assistant import (  # noqa: E402
     _intelligent_column_detector,
     _process_excel_intelligently,
     _train_ai_from_excel,
 )
+
+__all__ = [
+    "ai_bp",
+    "shared",
+    "chat",
+    "actions",
+    "assistant",
+    "analytics",
+    "knowledge",
+    "system",
+    "specialized",
+    "smart_listener",
+    "train_local_ai",
+    "apply_smart_listeners",
+    "create_final_options",
+    "_conversation_ctx",
+    "_process_user_action",
+    "_user_can_ai_execute_actions",
+    "_intelligent_column_detector",
+    "_process_excel_intelligently",
+    "_train_ai_from_excel",
+    "render_template",
+    "db",
+    "limiter",
+    "get_active_tenant_id",
+    "assign_tenant_id",
+    "LoggingCore",
+    "AIService",
+    "StockService",
+]

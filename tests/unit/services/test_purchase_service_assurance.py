@@ -457,7 +457,7 @@ class TestCreatePurchaseGL:
             )
         gl_lines = post.call_args[0][0]
         inventory = next(
-            l for l in gl_lines if l.get("concept_code") == "INVENTORY_ASSET"
+            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
         )
         assert inventory["debit"] >= Decimal("100")
 
@@ -479,7 +479,7 @@ class TestCreatePurchaseGL:
                 other_landed_cost=2,
             )
         gl_lines = post.call_args[0][0]
-        concepts = {l.get("concept_code") for l in gl_lines}
+        concepts = {line.get("concept_code") for line in gl_lines}
         assert "FREIGHT_IN" in concepts
         assert "CUSTOMS_DUTY" in concepts
         assert "INVENTORY_ASSET" in concepts
@@ -498,7 +498,7 @@ class TestCreatePurchaseGL:
                 tax_rate=5,
             )
         gl_lines = post.call_args[0][0]
-        assert any(l.get("concept_code") == "VAT_INPUT" for l in gl_lines)
+        assert any(line.get("concept_code") == "VAT_INPUT" for line in gl_lines)
 
     def test_vat_gl_skipped_when_disabled(self, app, mocker):
         _, _, _, _, post = _patch_create_common(mocker)
@@ -514,7 +514,7 @@ class TestCreatePurchaseGL:
                 tax_rate=5,
             )
         gl_lines = post.call_args[0][0]
-        assert not any(l.get("concept_code") == "VAT_INPUT" for l in gl_lines)
+        assert not any(line.get("concept_code") == "VAT_INPUT" for line in gl_lines)
 
     def test_landed_cost_allocation_to_lines(self, app, mocker):
         _, state, _, _, _ = _patch_create_common(mocker)
@@ -547,7 +547,7 @@ class TestCreatePurchaseGL:
             )
         gl_lines = post.call_args[0][0]
         inventory = next(
-            l for l in gl_lines if l.get("concept_code") == "INVENTORY_ASSET"
+            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
         )
         assert inventory["debit"] == Decimal("0")
 
@@ -740,7 +740,7 @@ class TestCreatePurchaseReturn:
             )
         gl_lines = post.call_args[0][0]
         inventory = next(
-            l for l in gl_lines if l.get("concept_code") == "INVENTORY_ASSET"
+            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
         )
         assert inventory["credit"] < Decimal("105")
 
@@ -789,7 +789,7 @@ class TestCreatePurchaseReturn:
             )
         gl_lines = post.call_args[0][0]
         inventory = next(
-            l for l in gl_lines if l.get("concept_code") == "INVENTORY_ASSET"
+            line for line in gl_lines if line.get("concept_code") == "INVENTORY_ASSET"
         )
         assert inventory["credit"] > Decimal("100")
 
@@ -812,7 +812,7 @@ class TestCreatePurchaseReturn:
                 ],
             )
         gl_lines = post.call_args[0][0]
-        assert any(l.get("concept_code") == "VAT_INPUT" for l in gl_lines)
+        assert any(line.get("concept_code") == "VAT_INPUT" for line in gl_lines)
 
     def test_vat_gl_skipped_on_return(self, app, mocker):
         purchase = _purchase(subtotal=Decimal("100"), tax_amount=Decimal("5"))
@@ -833,7 +833,7 @@ class TestCreatePurchaseReturn:
                 ],
             )
         gl_lines = post.call_args[0][0]
-        assert not any(l.get("concept_code") == "VAT_INPUT" for l in gl_lines)
+        assert not any(line.get("concept_code") == "VAT_INPUT" for line in gl_lines)
 
     def test_supplier_adjustment_on_return(self, app, mocker):
         purchase = _purchase(tax_amount=None)

@@ -349,7 +349,7 @@ class TestReturnsApiCreate:
 
         rev_lines = GLJournalLine.query.filter_by(entry_id=revenue_entry.id).all()
         assert len(rev_lines) >= 2
-        debits = [l.debit for l in rev_lines if (l.debit or 0) > 0]
+        debits = [line.debit for line in rev_lines if (line.debit or 0) > 0]
         assert Decimal("5") in debits, f"Expected VAT debit 5 in {debits}"
 
     def test_return_full_quantity_reverses_entire_sale(self, app, db_session, client):

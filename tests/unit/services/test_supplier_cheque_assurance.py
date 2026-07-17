@@ -135,7 +135,7 @@ class TestChequeClearanceGL:
         assert mock_gl.called
         args, kwargs = mock_gl.call_args
         lines = kwargs.get("lines", args[0] if args else [])
-        concepts = {l["concept_code"] for l in lines if l.get("concept_code")}
+        concepts = {line["concept_code"] for line in lines if line.get("concept_code")}
         assert "CHEQUES_UNDER_COLLECTION" in concepts
         assert mock_liquidity.called
 
