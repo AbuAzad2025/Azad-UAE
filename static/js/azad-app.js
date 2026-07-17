@@ -825,7 +825,8 @@ $(document).on('dblclick', '.editable', function() {
     
     const input = $(`<input type="text" class="form-control form-control-sm" value="${originalValue}">`);
     $this.html(input);
-    input.focus().select();
+    input.focus();
+    input.select();
     
     input.on('blur', async function() {
         const newValue = $(this).val();

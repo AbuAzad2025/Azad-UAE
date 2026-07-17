@@ -4,8 +4,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('tajawal-regular.woff2') format('woff2'),
-       url('tajawal-regular.ttf') format('truetype');
+  src: url('tajawal-regular.woff2') format('woff2');
 }
 
 @font-face {
@@ -13,8 +12,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('tajawal-medium.woff2') format('woff2'),
-       url('tajawal-medium.ttf') format('truetype');
+  src: url('tajawal-medium.woff2') format('woff2');
 }
 
 @font-face {
@@ -22,6 +20,5 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('tajawal-bold.woff2') format('woff2'),
-       url('tajawal-bold.ttf') format('truetype');
+  src: url('tajawal-bold.woff2') format('woff2');
 }

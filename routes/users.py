@@ -395,7 +395,6 @@ def delete(**kwargs):
                 user.is_active = False
                 LoggingCore.log_audit("deactivate", "users", id)
             else:
-                user.username
                 db.session.delete(user)
                 LoggingCore.log_audit("delete", "users", id)
 

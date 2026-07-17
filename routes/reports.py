@@ -1825,10 +1825,10 @@ def api_entity_search():
     return jsonify(results)
 
 
-@reports_bp.route("/entity_report_fragment/<type>/<id>")
+@reports_bp.route("/entity_report_fragment/<entity_type>/<id>")
 @login_required
 @permission_required("view_reports")
-def entity_report_fragment(type, **kwargs):
+def entity_report_fragment(entity_type, **kwargs):
     record_id = kwargs.pop("id")
     try:
         from models import Receipt, Payment, PurchaseLine, Supplier
@@ -1846,7 +1846,7 @@ def entity_report_fragment(type, **kwargs):
             "transactions": [],
         }
 
-        if type == "supplier":
+        if entity_type == "supplier":
             entity = tenant_get_or_404(Supplier, record_id)
             if (
                 report_branch_scope_id() is not None

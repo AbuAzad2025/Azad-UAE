@@ -14,9 +14,8 @@ from flask_babel import Babel
 
 try:
     from flask_compress import Compress
-
-    COMPRESS_AVAILABLE = True
 except ImportError:
+    Compress = None
     COMPRESS_AVAILABLE = False
     logging.warning(
         "Flask-Compress not available - install with: pip install Flask-Compress Brotli"

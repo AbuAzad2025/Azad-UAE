@@ -320,7 +320,7 @@ def edit_warehouse(**kwargs):
             flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', "success")
             return redirect(url_for("warehouse.list_warehouses"))
         except Exception as e:
-            current_app.logger.error(f"Error editing warehouse {id}: {e}")
+            current_app.logger.error(f"Error editing warehouse {record_id}: {e}")
             flash(ErrorMessages.update_failed("warehouse"), "error")
             return render_template(
                 "warehouse/edit_warehouse.html",

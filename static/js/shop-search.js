@@ -35,7 +35,7 @@
       a.setAttribute('role', 'option');
       a.setAttribute('data-index', i);
       a.className = 'ps-autocomplete-item';
-      const html = '';
+      let html = '';
       if (item.image) {
         html += '<span class="ps-ac-img"><img src="' + item.image + '" alt="" loading="lazy"></span>';
       }

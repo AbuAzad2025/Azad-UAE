@@ -58,10 +58,10 @@ class DatabaseOptimizer:
 
     @staticmethod
     def optimize_all():
-        results = {}
-
-        results["vacuum"] = DatabaseOptimizer.vacuum_postgres()
-        results["analyze"] = DatabaseOptimizer.analyze_tables()
-        results["sizes"] = DatabaseOptimizer.get_table_sizes()
+        results = {
+            "vacuum": DatabaseOptimizer.vacuum_postgres(),
+            "analyze": DatabaseOptimizer.analyze_tables(),
+            "sizes": DatabaseOptimizer.get_table_sizes(),
+        }
 
         return results

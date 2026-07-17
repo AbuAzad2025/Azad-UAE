@@ -328,49 +328,14 @@ class ReasoningEngine:
 
         يفكر خطوة بخطوة بصوت عالٍ
         """
-        thought_chain = []
-
-        # الخطوة 1: فهم السؤال
-        thought_chain.append(
-            {
-                "step": 1,
-                "thought": f"فهم السؤال: {question}",
-                "action": "analyzing question",
-            }
-        )
-
-        # الخطوة 2: تحديد المعطيات
         available_data = list(data.keys()) if data else []
-        thought_chain.append(
-            {
-                "step": 2,
-                "thought": f"المعطيات المتاحة: {', '.join(available_data)}",
-                "action": "identifying data",
-            }
-        )
-
-        # الخطوة 3: تحديد المطلوب
-        thought_chain.append(
-            {
-                "step": 3,
-                "thought": "تحديد ما هو المطلوب بالضبط",
-                "action": "identifying goal",
-            }
-        )
-
-        # الخطوة 4: التفكير في الحل
-        thought_chain.append(
-            {
-                "step": 4,
-                "thought": "تطبيق المنطق والمعرفة للوصول للحل",
-                "action": "applying logic",
-            }
-        )
-
-        # الخطوة 5: التحقق
-        thought_chain.append(
-            {"step": 5, "thought": "التحقق من منطقية الحل", "action": "verification"}
-        )
+        thought_chain = [
+            {"step": 1, "thought": f"فهم السؤال: {question}", "action": "analyzing question"},
+            {"step": 2, "thought": f"المعطيات المتاحة: {', '.join(available_data)}", "action": "identifying data"},
+            {"step": 3, "thought": "تحديد ما هو المطلوب بالضبط", "action": "identifying goal"},
+            {"step": 4, "thought": "تطبيق المنطق والمعرفة للوصول للحل", "action": "applying logic"},
+            {"step": 5, "thought": "التحقق من منطقية الحل", "action": "verification"},
+        ]
 
         # الحل النهائي
         final_solution = self.think(question, data)
@@ -563,19 +528,31 @@ class ReasoningEngine:
         - الأسباب الجذرية
         - الحلول التقنية
         """
-        diagnosis_steps = []
-        possible_causes = []
-        solutions = []
-
         problem_lower = technical_problem.lower()
 
-        # تشخيص الأعطال الشائعة
-        if "محرك" in problem_lower or "engine" in problem_lower:
-            diagnosis_steps.append("1. فحص نظام الوقود")
-            diagnosis_steps.append("2. فحص نظام الإشعال")
-            diagnosis_steps.append("3. فحص نظام التبريد")
-            diagnosis_steps.append("4. فحص الضغط")
+        possible_causes = [
+            "فلتر وقود مسدود",
+            "شمعات إشعال تالفة",
+            "مشكلة في مضخة الوقود",
+            "ارتفاع حرارة المحرك",
+            "مشكلة في الكمبيوتر",
+        ]
 
+        solutions = [
+            "استبدال فلتر الوقود",
+            "تنظيف أو استبدال الشمعات",
+            "فحص مضخة الوقود",
+            "فحص نظام التبريد",
+            "فحص كمبيوتر المحرك",
+        ]
+
+        if "محرك" in problem_lower or "engine" in problem_lower:
+            diagnosis_steps = [
+                "1. فحص نظام الوقود",
+                "2. فحص نظام الإشعال",
+                "3. فحص نظام التبريد",
+                "4. فحص الضغط",
+            ]
             possible_causes = [
                 "فلتر وقود مسدود",
                 "شمعات إشعال تالفة",
@@ -583,7 +560,6 @@ class ReasoningEngine:
                 "ارتفاع حرارة المحرك",
                 "مشكلة في الكمبيوتر",
             ]
-
             solutions = [
                 "استبدال فلتر الوقود",
                 "تنظيف أو استبدال الشمعات",
@@ -656,47 +632,38 @@ class ReasoningEngine:
         """
         analysis: dict[str, Any] = {
             "question": business_question,
-            "swot": {},
-            "recommendations": [],
-            "action_plan": [],
-        }
-
-        # SWOT Analysis
-        analysis["swot"] = {
-            "strengths": ["نظام محاسبي متقدم", "مساعد ذكي متطور", "إدارة مخزون فعالة"],
-            "weaknesses": ["يحتاج تدريب النماذج بشكل دوري"],
-            "opportunities": [
-                "توسع في الأسواق الجديدة",
-                "إضافة منتجات جديدة",
-                "تحسين تجربة العملاء",
+            "swot": {
+                "strengths": ["نظام محاسبي متقدم", "مساعد ذكي متطور", "إدارة مخزون فعالة"],
+                "weaknesses": ["يحتاج تدريب النماذج بشكل دوري"],
+                "opportunities": [
+                    "توسع في الأسواق الجديدة",
+                    "إضافة منتجات جديدة",
+                    "تحسين تجربة العملاء",
+                ],
+                "threats": ["المنافسة", "تغيرات السوق"],
+            },
+            "recommendations": [
+                "1. استثمر في التسويق الرقمي",
+                "2. حسّن خدمة العملاء",
+                "3. وسّع نطاق المنتجات",
+                "4. درّب الفريق على النظام",
+                "5. راقب المنافسين باستمرار",
             ],
-            "threats": ["المنافسة", "تغيرات السوق"],
+            "action_plan": [
+                {
+                    "action": "تدريب جميع النماذج العصبية",
+                    "priority": "high",
+                    "timeline": "هذا الأسبوع",
+                    "responsible": "مدير النظام",
+                },
+                {
+                    "action": "مراجعة الأسعار بناءً على AI",
+                    "priority": "medium",
+                    "timeline": "نهاية الشهر",
+                    "responsible": "مدير المبيعات",
+                },
+            ],
         }
-
-        # التوصيات
-        analysis["recommendations"] = [
-            "1. استثمر في التسويق الرقمي",
-            "2. حسّن خدمة العملاء",
-            "3. وسّع نطاق المنتجات",
-            "4. درّب الفريق على النظام",
-            "5. راقب المنافسين باستمرار",
-        ]
-
-        # خطة العمل
-        analysis["action_plan"] = [
-            {
-                "action": "تدريب جميع النماذج العصبية",
-                "priority": "high",
-                "timeline": "هذا الأسبوع",
-                "responsible": "مدير النظام",
-            },
-            {
-                "action": "مراجعة الأسعار بناءً على AI",
-                "priority": "medium",
-                "timeline": "نهاية الشهر",
-                "responsible": "مدير المبيعات",
-            },
-        ]
 
         return analysis
 

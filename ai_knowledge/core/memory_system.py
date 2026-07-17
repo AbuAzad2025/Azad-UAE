@@ -304,15 +304,12 @@ class LongTermMemory:
                 'procedures': [...]
             }
         """
-        results = {"conversations": [], "facts": [], "procedures": []}
+        results = {
+            "conversations": self.recall_similar_conversations(query, limit),
+            "facts": self.recall_fact(query)[:limit],
+            "procedures": [],
+        }
 
-        # البحث في المحادثات
-        results["conversations"] = self.recall_similar_conversations(query, limit)
-
-        # البحث في المعلومات
-        results["facts"] = self.recall_fact(query)[:limit]
-
-        # البحث في الإجراءات
         for memory in self.procedural_memory["memories"]:
             if query.lower() in memory.get("procedure", "").lower():
                 results["procedures"].append(memory)

@@ -22,6 +22,7 @@ try:
     FOREX_AVAILABLE = True
 except ImportError:
     FOREX_AVAILABLE = False
+    CurrencyRates = None
 
 try:
     import requests

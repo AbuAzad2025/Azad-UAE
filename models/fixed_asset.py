@@ -291,10 +291,16 @@ class FixedAsset(db.Model):
 
         # إنشاء قيد محاسبي للتخلص
 
-        lines = []
+        bank_account = None
+        if self.disposal_price > 0:
+            # بيع
+            bank_account = gl_get_default_liquidity_account(
+                "bank",
+                branch_id=self.branch_id,
+                tenant_id=getattr(self, "tenant_id", None),
+            )
 
-        # إزالة الأصل من الدفاتر
-        lines.append(
+        lines = [
             {
                 "account": str(self.depreciation_account.code),
                 "concept_code": "ACCUMULATED_DEPRECIATION",
@@ -303,18 +309,12 @@ class FixedAsset(db.Model):
                 "credit": 0,
                 "description": f"إقفال مجمع استهلاك - {self.name_ar}",
             }
-        )
+        ]
 
         if self.disposal_price > 0:
-            # بيع
-            bank_account = gl_get_default_liquidity_account(
-                "bank",
-                branch_id=self.branch_id,
-                tenant_id=getattr(self, "tenant_id", None),
-            )
             lines.append(
                 {
-                    "account": bank_account,  # البنك (أو الصندوق)
+                    "account": bank_account,
                     "concept_code": "BANK",
                     "debit": self.disposal_price,
                     "credit": 0,
@@ -322,12 +322,10 @@ class FixedAsset(db.Model):
                 }
             )
 
-        # ربح أو خسارة
         if self.disposal_gain_loss > 0:
-            # ربح بيع
             lines.append(
                 {
-                    "account": "4500",  # إيرادات أخرى
+                    "account": "4500",
                     "concept_code": "FIXED_ASSET_GAIN",
                     "debit": 0,
                     "credit": self.disposal_gain_loss,
@@ -335,10 +333,9 @@ class FixedAsset(db.Model):
                 }
             )
         elif self.disposal_gain_loss < 0:
-            # خسارة بيع
             lines.append(
                 {
-                    "account": "6990",  # مصروفات متنوعة
+                    "account": "6990",
                     "concept_code": "FIXED_ASSET_LOSS",
                     "debit": abs(self.disposal_gain_loss),
                     "credit": 0,

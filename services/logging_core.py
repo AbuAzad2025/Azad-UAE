@@ -47,6 +47,7 @@ try:
 
     colorama_init(autoreset=True)
 except ImportError:
+    colorama_init = None
 
     class _Fore:
         BLUE = CYAN = GREEN = YELLOW = RED = MAGENTA = WHITE = ""

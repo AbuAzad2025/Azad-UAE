@@ -259,7 +259,7 @@ class RealTimeAccountingListeners:
         """تسجيل الحدث"""
         try:
             # يمكن حفظ الأحداث في قاعدة بيانات أو ملف
-            {
+            event = {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "event_type": event_type,
                 "data": data,

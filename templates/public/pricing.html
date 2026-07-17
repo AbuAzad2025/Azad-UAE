@@ -52,7 +52,7 @@
         .azad-nav-links a { color: var(--azad-text-muted); padding: 8px 12px; font-size: 0.85rem; font-weight: 500; border-radius: 10px; transition: all 0.2s; }
         .azad-nav-links a:hover { color: var(--azad-accent-light); background: rgba(212,160,23,0.08); }
         .azad-nav-links a.active { color: var(--azad-accent-light); }
-        .azad-nav-actions { display: flex; align-items: center; gap: 8px; margin-{{ 'left' if not is_rtl else 'right' }}: auto; }
+        .azad-nav-actions { display: flex; align-items: center; gap: 8px; {% if not is_rtl %}margin-left{% else %}margin-right{% endif %}: auto; }
         .btn-nav-ghost { padding: 8px 18px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; color: var(--azad-text); border: 1px solid rgba(212,160,23,0.15); transition: all 0.2s; }
         .btn-nav-ghost:hover { border-color: var(--azad-accent); color: var(--azad-accent-light); background: rgba(212,160,23,0.06); }
         .btn-nav-cta { padding: 8px 20px; border-radius: 12px; font-size: 0.82rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #25D366, #128C7E); transition: all 0.25s; box-shadow: 0 4px 14px rgba(37,211,102,0.2); }

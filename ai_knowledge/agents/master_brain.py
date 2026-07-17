@@ -435,38 +435,17 @@ class MasterBrain:
         self, question: str, _intent: str, knowledge: dict, context: dict
     ) -> dict:
         """التفكير المنطقي العميق"""
-        steps = []
-
-        # خطوة 1: فهم المطلوب
-        steps.append(
-            {
-                "step": 1,
-                "thought": f"فهمت السؤال: {question[:50]}...",
-                "action": "understanding",
-            }
-        )
-
-        # خطوة 2: تحليل المعطيات
         available_data = list(context.keys()) if context else []
-        steps.append(
-            {
-                "step": 2,
-                "thought": f"البيانات المتاحة: {', '.join(available_data) if available_data else 'لا يوجد'}",
-                "action": "data_analysis",
-            }
-        )
+        steps = [
+            {"step": 1, "thought": f"فهمت السؤال: {question[:50]}...", "action": "understanding"},
+            {"step": 2, "thought": f"البيانات المتاحة: {', '.join(available_data) if available_data else 'لا يوجد'}", "action": "data_analysis"},
+        ]
 
-        # خطوة 3: استخدام المعرفة
         if knowledge:
             steps.append(
-                {
-                    "step": 3,
-                    "thought": "استخدام المعرفة المتخصصة في المجال",
-                    "action": "applying_knowledge",
-                }
+                {"step": 3, "thought": "استخدام المعرفة المتخصصة في المجال", "action": "applying_knowledge"}
             )
 
-        # خطوة 4: الاستنتاج
         steps.append(
             {"step": 4, "thought": "الوصول للحل الأمثل", "action": "conclusion"}
         )

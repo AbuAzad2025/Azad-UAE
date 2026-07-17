@@ -152,8 +152,8 @@ class DocumentVerificationService:
             or getattr(document, "purchase_date", None)
             or getattr(document, "expense_date", None)
         )
-        date_val.strftime("%Y-%m-%d") if date_val else ""
-        print_branch.name if print_branch else ""
+        date_str = date_val.strftime("%Y-%m-%d") if date_val else ""
+        branch_name = print_branch.name if print_branch else ""
 
         qr_data = verification_url
 

@@ -61,6 +61,9 @@ class AdvancedJournalEntryManager:
         Sets status='validated' on success, 'error' on failure.
 
         Args:
+            entry_id: ID of the journal entry to validate.
+            validated_by: User ID performing the validation.
+            tenant_id: Optional tenant ID for multi-tenant scoping.
             commit: If False, changes stay in the session without committing.
                     Caller is responsible for committing. Used by
                     reverse_entry_advanced to group validate+post atomically.
@@ -174,7 +177,15 @@ class AdvancedJournalEntryManager:
 
     @staticmethod
     def update_entry(entry_id, updates, updated_by, reason=None, commit=True):
-        """تحديث قيد محاسبي — only draft entries."""
+        """تحديث قيد محاسبي — only draft entries.
+
+        Args:
+            entry_id: ID of the journal entry to update.
+            updates: Dictionary of fields to update (e.g., lines, description).
+            updated_by: User ID performing the update.
+            reason: Optional reason for the update (audit log).
+            commit: If False, changes stay in the session without committing.
+        """
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status not in ("draft", "error"):
             raise ValueError(f"لا يمكن تعديل قيد بحالة: {entry.status}")
@@ -217,6 +228,9 @@ class AdvancedJournalEntryManager:
         """Post a validated entry to the GL.
 
         Args:
+            entry_id: ID of the journal entry to post.
+            posted_by: User ID performing the posting.
+            post_notes: Optional notes for the posting audit log.
             commit: If True (default), performs db.session.flush().
                     If False, performs db.session.flush() instead, letting
                     the caller own the transaction boundary. Used by
@@ -319,6 +333,11 @@ class AdvancedJournalEntryManager:
 
         Financial documents are immutable. Physical deletes are forbidden
         for any entry that has been posted or reversed.
+
+        Args:
+            entry_id: ID of the journal entry to cancel.
+            deleted_by: User ID performing the cancellation.
+            reason: Reason for the cancellation (audit log).
         """
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         if entry.status in ("posted", "reversed"):
@@ -348,7 +367,13 @@ class AdvancedJournalEntryManager:
 
     @staticmethod
     def approve_entry(entry_id, approved_by, approval_notes=None):
-        """الموافقة على قيد — routes through validate_entry for state-machine compliance."""
+        """Approve a journal entry — routes through validate_entry for state-machine compliance.
+
+        Args:
+            entry_id: ID of the journal entry to approve.
+            approved_by: User ID performing the approval.
+            approval_notes: Optional notes for the approval (currently unused, kept for compatibility).
+        """
         return AdvancedJournalEntryManager.validate_entry(
             entry_id,
             validated_by=approved_by,
@@ -356,7 +381,15 @@ class AdvancedJournalEntryManager:
 
     @staticmethod
     def get_entry_history(entry_id, tenant_id=None):
-        """الحصول على تاريخ القيد"""
+        """الحصول على تاريخ القيد — audit trail.
+
+        Args:
+            entry_id: ID of the journal entry.
+            tenant_id: Optional tenant ID for multi-tenant scoping.
+
+        Returns:
+            List of JournalEntryAudit records ordered by performed_at desc.
+        """
         from utils.gl_tenant import gl_entry_query, active_tenant_id
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
@@ -373,7 +406,16 @@ class AdvancedJournalEntryManager:
 
     @staticmethod
     def _log_audit(entry_id, action, old_values, new_values, reason, user_id):
-        """تسجيل تدقيق"""
+        """تسجيل تدقيق — internal helper.
+
+        Args:
+            entry_id: Journal entry ID.
+            action: Audit action type (create, update, post, reverse, cancel, validate).
+            old_values: Previous state (dict or None).
+            new_values: New state (dict or None).
+            reason: Human-readable reason for the action.
+            user_id: User ID who performed the action.
+        """
         if user_id is None:
             return
         entry = GLJournalEntry.query.get(entry_id)

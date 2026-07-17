@@ -935,20 +935,20 @@ class AzadNeuralEngine:
 
         self.training_status["price_optimizer"] = {
             "trained": True,
-            "r2_score": r2,
-            "cv_r2_score": avg_r2,
+            "r2_score": float(r2),
+            "cv_r2_score": float(avg_r2),
             "samples": len(sales_data),
             "trained_at": datetime.now().isoformat(),
         }
 
         logger.info(
-            f"💵 Price optimizer trained: R²={r2:.2%}, CV-R²={avg_r2:.2%} on {len(sales_data)} samples"
+            f"💵 Price optimizer trained: R²={float(r2):.2%}, CV-R²={float(avg_r2):.2%} on {len(sales_data)} samples"
         )
 
         return {
             "success": True,
-            "r2_score": r2,
-            "cv_r2_score": avg_r2,
+            "r2_score": float(r2),
+            "cv_r2_score": float(avg_r2),
             "samples": len(sales_data),
         }
 
@@ -1086,7 +1086,7 @@ class AzadNeuralEngine:
         X = []
         y = []
 
-        {sale.sale_date: sale for sale in daily_sales}
+        # يمكن تخزين خريطة تاريخ المبيعات إذا لزم الأمر: {sale.sale_date: sale for sale in daily_sales}
 
         # استخدام آخر 7 أيام للتوقع باليوم التالي
         for i in range(7, len(daily_sales)):

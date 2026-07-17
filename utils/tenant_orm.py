@@ -72,7 +72,7 @@ def _discover_tenant_models() -> list[type]:
 
     classes: list[type] = []
     try:
-        registry = cast(Any, db.Model).registry
+        registry = db.Model.registry
         for mapper in registry.mappers:
             cls = mapper.class_
             if cls.__tablename__ == "tenants":

@@ -269,8 +269,8 @@
       return;
     }
 
-    const html = '';
-    const total = 0;
+    let html = '';
+    let total = 0;
     items.forEach(function (item) {
       const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
       const qty = parseFloat(item.qty) || 1;

@@ -903,11 +903,11 @@ class GLAccountingSetupService:
             ).first()
 
         if "code_suffix" in tmpl:
-            base = rule.parent_code_hint or f"{tmpl.get('code_near', '')}"
+            base = rule.parent_code_hint or str(tmpl.get("code_near", ""))
             code = GLAccountingSetupService._next_child_code(tenant.id, base)
         elif "code_near" in tmpl:
             code = GLAccountingSetupService._next_available_code(
-                tenant.id, f"{tmpl['code_near']}"
+                tenant.id, str(tmpl["code_near"])
             )
         else:
             raise ValueError(f"No code strategy for concept {concept_code}")
@@ -916,10 +916,10 @@ class GLAccountingSetupService:
         return GLAccount(
             tenant_id=tenant.id,
             code=code,
-            name=f"{tmpl.get('name', concept_code)}",
-            name_ar=f"{tmpl.get('name_ar', '')}",
+            name=str(tmpl.get("name", concept_code)),
+            name_ar=str(tmpl.get("name_ar", "")),
             parent_id=parent.id if parent else None,
-            type=f"{tmpl.get('type', 'asset')}",
+            type=str(tmpl.get("type", "asset")),
             is_active=True,
             is_header=False,
             level=level,

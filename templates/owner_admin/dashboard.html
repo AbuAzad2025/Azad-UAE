@@ -83,7 +83,7 @@
     overflow: hidden;
     display: inline-block;
     vertical-align: middle;
-    margin-{{ 'left' if not is_rtl else 'right' }}: 8px;
+    {% if not is_rtl %}margin-left: 8px;{% else %}margin-right: 8px;{% endif %}
 }
 .sa-usage-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
 /* purgecss start ignore */

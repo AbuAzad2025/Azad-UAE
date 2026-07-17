@@ -252,7 +252,7 @@ class AzadResponses:
                 return apply_dialect(beginner_response, dialect)
 
         # ترحيب مع دعم اللهجات
-        elif any(
+        if any(
             kw in msg_lower
             for kw in [
                 "مرحبا",
