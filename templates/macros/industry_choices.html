@@ -18,6 +18,6 @@
     ('clothing', 'ملابس / Clothing'),
   ] %}
   {% for code, label in industries %}
-    <option value="{{ code }}" {% if selected == code %}selected{% endif %}>{{ label }}</option>
+    <option value="{{ code }}" {% if selected is equalto code %}selected{% endif %}>{{ label }}</option>
   {% endfor %}
 {% endmacro %}
