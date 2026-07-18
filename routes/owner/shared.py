@@ -15,20 +15,74 @@ logger = logging.getLogger(__name__)
 
 _TABLE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$", re.IGNORECASE)
 
-_TRUNCATE_BLOCKED_TABLES = frozenset(
+# Tables the platform owner may NEVER read, browse, export, convert, or
+# truncate through the database console / maintenance tools. This covers both
+# system/security tables and every tenant operational / transactional table so
+# the platform plane cannot reach tenant business data.
+_TENANT_BUSINESS_TABLES = frozenset(
     {
+        # Tenant operational / transactional data
+        "sale",
+        "sale_line",
+        "customer",
+        "product",
+        "purchase",
+        "ledger_entry",
+        "gl_journal_entry",
+        "expense",
+        "receipt",
+        "donation",
+        "payment",
+        "branch",
+        "warehouse",
+        "audit_log",
+        "cheque",
+        "product_warehouse_cost",
+        "stock_movement",
+        "product_return",
+        "supplier",
+        "pos_session",
+        "pos_kds_order",
+        "card_vault",
+        # Platform / security tables
         "users",
         "roles",
         "permissions",
         "tenants",
+        "tenant_stores",
+        "tenant_store",
         "alembic_version",
         "payment_vault",
-        "card_vault",
         "api_keys",
+        "api_key",
+        "login_history",
+        "security_alert",
+        "system_settings",
+        "integration_settings",
+        "archived_record",
     }
 )
 
-_STATS_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
+# Aliases some tools use by entity name rather than raw table name.
+_TENANT_BUSINESS_ENTITIES = frozenset(
+    {
+        "customers",
+        "products",
+        "sales",
+        "expenses",
+        "purchases",
+        "receipts",
+        "donations",
+        "payments",
+        "branches",
+        "warehouses",
+        "ledger",
+        "cheques",
+        "suppliers",
+    }
+)
+
+_BLOCKED_SQL_TABLES = _TENANT_BUSINESS_TABLES | _TENANT_BUSINESS_ENTITIES
 
 _FORBIDDEN_SQL_KEYWORDS = (
     "DROP ",
@@ -52,11 +106,11 @@ _FORBIDDEN_SQL_KEYWORDS = (
     "DUMPFILE",
 )
 
-_CONVERT_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
-
 _EXPORT_FORMATS = frozenset({"sql", "json"})
 
-_EXPORT_EXCEL_ENTITIES = frozenset({"customers", "products", "sales", "expenses"})
+
+def _is_blocked_table(identifier: str) -> bool:
+    return (identifier or "").strip().lower() in _BLOCKED_SQL_TABLES
 
 
 def _owner_branch_scope():
@@ -93,13 +147,13 @@ def _backup_created_by_payload():
 
 
 def _is_sensitive_stats_table(table_name: str) -> bool:
-    return (table_name or "").strip().lower() in _STATS_BLOCKED_TABLES
+    return _is_blocked_table(table_name)
 
 
 def _resolve_browsable_table(table_name: str) -> str | None:
-    """Known table safe to browse/edit in owner DB tools (excludes sensitive tables)."""
+    """Known table safe to browse/edit in owner DB tools (excludes blocked tables)."""
     safe_table = _resolve_known_table(table_name)
-    if not safe_table or _is_sensitive_stats_table(safe_table):
+    if not safe_table or _is_blocked_table(safe_table):
         return None
     return safe_table
 
@@ -121,13 +175,24 @@ def _resolve_known_table(table_name: str) -> str | None:
 def _resolve_truncatable_table(table_name: str) -> str | None:
     """Return canonical DB table name if safe to truncate, else None."""
     safe_table = _resolve_known_table(table_name)
-    if not safe_table or safe_table.lower() in _TRUNCATE_BLOCKED_TABLES:
+    if not safe_table or _is_blocked_table(safe_table):
         return None
     return safe_table
 
 
+def _sql_references_blocked_table(sql_query: str) -> str | None:
+    """Return the first blocked table identifier referenced in the query, else None."""
+    if not sql_query:
+        return None
+    lowered = sql_query.lower()
+    for token in _TABLE_NAME_RE.findall(lowered):
+        if token in _BLOCKED_SQL_TABLES:
+            return token
+    return None
+
+
 def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
-    """Allow a single SELECT statement; block stacked queries and mutations."""
+    """Allow a single read-only SELECT that references no blocked tenant table."""
     if not sql_query or not sql_query.strip():
         return False, "❌ استعلام فارغ."
     stripped = sql_query.strip()
@@ -138,6 +203,9 @@ def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
         return False, "❌ مسموح باستعلامات SELECT للقراءة فقط."
     if any(kw in sql_upper for kw in _FORBIDDEN_SQL_KEYWORDS):
         return False, "❌ استعلام غير مسموح — قراءة فقط (SELECT)."
+    blocked = _sql_references_blocked_table(sql_query)
+    if blocked:
+        return False, "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables)."
     return True, None
 
 

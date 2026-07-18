@@ -35,6 +35,8 @@ from routes.owner.shared import (
     _inspector_column_names,
     _validate_postgresql_uri,
     _owner_branch_scope,
+    _is_blocked_table,
+    _sql_references_blocked_table,
 )
 
 import logging
@@ -45,47 +47,7 @@ from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
-# Shared constants for database tools
-_TABLE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$", re.IGNORECASE)
-
-_TRUNCATE_BLOCKED_TABLES = frozenset(
-    {
-        "users",
-        "roles",
-        "permissions",
-        "tenants",
-        "alembic_version",
-        "payment_vault",
-        "card_vault",
-        "api_keys",
-    }
-)
-
-_STATS_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
-_CONVERT_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
 _EXPORT_FORMATS = frozenset({"sql", "json"})
-_EXPORT_EXCEL_ENTITIES = frozenset({"customers", "products", "sales", "expenses"})
-_FORBIDDEN_SQL_KEYWORDS = (
-    "DROP ",
-    "TRUNCATE ",
-    "DELETE ",
-    "UPDATE ",
-    "INSERT ",
-    "ALTER ",
-    "CREATE ",
-    "GRANT ",
-    "REVOKE ",
-    "COPY ",
-    "EXEC ",
-    "EXECUTE ",
-    "CALL ",
-    "INTO OUTFILE",
-    "INTO DUMPFILE",
-    "LOAD_FILE",
-    "SELECT INTO",
-    "OUTFILE",
-    "DUMPFILE",
-)
 
 
 @owner_bp.route("/database-tools")
