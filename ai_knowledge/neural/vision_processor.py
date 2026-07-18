@@ -36,7 +36,7 @@ class VisionProcessor:
     def _check_ocr_availability():
         """التحقق من توفر OCR"""
         try:
-            # التحقق من Pillow (متوفرة)
+            from PIL import Image  # noqa: F401
             return True
         except ImportError:
             logger.warning("Pillow not available - OCR disabled")
@@ -112,7 +112,7 @@ class VisionProcessor:
         return []
 
     @staticmethod
-    def analyze_part_image(image_path: str) -> dict:
+    def analyze_part_image(self, image_path: str) -> dict:
         """
         تحليل صورة قطعة غيار
 

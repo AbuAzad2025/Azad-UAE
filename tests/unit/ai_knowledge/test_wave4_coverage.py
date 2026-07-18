@@ -1124,9 +1124,8 @@ class TestAgentsCoreWave4:
                 "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
                 return_value="help",
             ),
-            patch("datetime.datetime") as dt,
+            patch("datetime.datetime.now", return_value=datetime(2025, 6, 1, 8, 0, 0)),
         ):
-            dt.utcnow.return_value = datetime(2025, 6, 1, 8, 0, 0)
             assert "صباح" in intelligent_response("مرحبا")
         with (
             patch(
@@ -1607,6 +1606,7 @@ class TestSecondaryWave4:
                 "ai_knowledge.neural.semantic_matcher.understand_message",
                 return_value={"intent": "sales_analysis", "confidence": 0.9},
             ),
+            patch("extensions.db"),
             patch("models.Sale", mock_q),
             patch("models.Customer", mock_q),
             patch("models.Product", mock_q),
@@ -1622,7 +1622,7 @@ class TestSecondaryWave4:
         ):
             mock_q.all.return_value = [sale] * 10
             mock_q.count.return_value = 10
-            assert assistant.process("حلل المبيعات", user_id=1)["success"] is True
+            assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
         debt_payload = {
             "success": True,
             "customer": {"name": "Debtor"},
@@ -1648,7 +1648,7 @@ class TestSecondaryWave4:
             ),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            assert assistant.process("رصيد العميل", user_id=1)["success"] is True
+            assert assistant.process("رصيد العميل", user_id=1, context={})["success"] is True
 
     def test_master_brain_and_expansion(self, knowledge_path):
         from ai_knowledge.agents.master_brain import get_master_brain
@@ -1862,6 +1862,7 @@ class TestWave4Extended:
                 patch("models.Sale", mock_q),
                 patch("models.Customer", mock_q),
                 patch("models.Product", mock_q),
+                patch("extensions.db"),
                 patch.object(assistant, "_learn_from_interaction"),
             ):
                 um = patch("ai_knowledge.neural.semantic_matcher.understand_message")
@@ -1873,7 +1874,7 @@ class TestWave4Extended:
                     mock_q.all.return_value = []
                     mock_q.count.return_value = 0
                     assert (
-                        assistant.process("حلل المبيعات", user_id=1)["success"] is True
+                        assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
                     )
                     understand.return_value = {
                         "intent": "sales_analysis",
@@ -1881,7 +1882,7 @@ class TestWave4Extended:
                     }
                     mock_q.all.return_value = [sale] * 3
                     assert (
-                        assistant.process("حلل المبيعات", user_id=1)["success"] is True
+                        assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
                     )
                     understand.return_value = {
                         "intent": "sales_analysis",
@@ -1895,7 +1896,7 @@ class TestWave4Extended:
                         create=True,
                     ):
                         assert (
-                            assistant.process("حلل المبيعات", user_id=1)["success"]
+                            assistant.process("حلل المبيعات", user_id=1, context={})["success"]
                             is True
                         )
                     understand.return_value = {
@@ -1903,9 +1904,9 @@ class TestWave4Extended:
                         "confidence": 0.9,
                     }
                     mock_q.filter.return_value.all.return_value = []
-                    assert assistant.process("مخزون", user_id=1)["success"] is True
+                    assert assistant.process("مخزون", user_id=1, context={})["success"] is True
                     mock_q.filter.return_value.all.return_value = [product] * 6
-                    assert assistant.process("مخzون", user_id=1)["success"] is True
+                    assert assistant.process("مخzون", user_id=1, context={})["success"] is True
                     understand.return_value = {
                         "intent": "customer_balance",
                         "confidence": 0.9,
@@ -1924,7 +1925,7 @@ class TestWave4Extended:
                             },
                         ):
                             assert (
-                                assistant.process("رصيد Ali", user_id=1)["success"]
+                                assistant.process("رصيد Ali", user_id=1, context={})["success"]
                                 is True
                             )
                         with patch.object(
@@ -1939,7 +1940,7 @@ class TestWave4Extended:
                             },
                         ):
                             assert (
-                                assistant.process("رصيد Ali", user_id=1)["success"]
+                                assistant.process("رصيد Ali", user_id=1, context={})["success"]
                                 is True
                             )
         finally:

@@ -109,7 +109,7 @@ class TestIntelligentAssistant:
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             return_value="إجابة سريعة",
         ):
-            result = assistant.process("سؤال")
+            result = assistant.process("سؤال", user_id=1, context={})
             assert result["method"] == "quick_learner"
 
     def test_understand_failure_help(self, assistant):
@@ -121,7 +121,7 @@ class TestIntelligentAssistant:
                 "ai_knowledge.neural.semantic_matcher.understand_message",
                 side_effect=RuntimeError(),
             ):
-                result = assistant.process("x")
+                result = assistant.process("x", user_id=1, context={})
                 assert result.get("method") == "help" or "response" in result
 
     def test_greeting_response(self, assistant):
@@ -137,7 +137,7 @@ class TestIntelligentAssistant:
                     with patch.object(
                         assistant, "_analyze_and_reason", return_value={}
                     ):
-                        result = assistant.process("مرحبا")
+                        result = assistant.process("مرحبا", user_id=1, context={})
                         assert "response" in result
 
     def test_intelligent_response_helper(self):

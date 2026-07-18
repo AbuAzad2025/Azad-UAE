@@ -741,7 +741,7 @@ class TestIntelligentAssistantCoverage:
             patch.object(assistant, "_analyze_and_reason", return_value=analysis),
             patch.object(assistant, "_learn_from_interaction") as learn,
         ):
-            result = assistant.process("حلل المبيعات", user_id=5)
+            result = assistant.process("حلل المبيعات", user_id=5, context={})
             assert result["success"] is True
             assert result["method"] == "intelligent_ai"
             learn.assert_called_once()

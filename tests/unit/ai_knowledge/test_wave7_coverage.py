@@ -1002,7 +1002,7 @@ class TestWave8FinalPush:
             assert rel.get("part_name") or rel.get("error")
         finally:
             os.chdir(old)
-        with patch("PIL.Image.open", side_effect=OSError("bad")):
+        with patch("os.path.exists", return_value=False):
             assert "error" in vp.analyze_part_image(str(img))
         gen = CodeGenerator()
         bad_params = MagicMock()

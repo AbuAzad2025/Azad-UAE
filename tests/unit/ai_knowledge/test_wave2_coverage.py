@@ -374,7 +374,7 @@ class TestIntelligentAssistantWave2:
             MockSale.query = mock_q
             MockCustomer.query = mock_q
             MockProduct.query = mock_q
-            result = assistant.process("حلل المبيعات", user_id=1)
+            result = assistant.process("حلل المبيعات", user_id=1, context={})
             assert result["success"] is True
             assert result["method"] == "intelligent_ai"
 

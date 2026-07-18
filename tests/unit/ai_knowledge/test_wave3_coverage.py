@@ -967,33 +967,33 @@ class TestIntelligentAssistantWave3:
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("حلل المبيعات", user_id=1)["success"] is True
+            assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
             um.return_value = {
                 "intent": "inventory_check",
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("وين المخزون الناقص", user_id=1)["success"] is True
+            assert assistant.process("وين المخزون الناقص", user_id=1, context={})["success"] is True
             um.return_value = {
                 "intent": "greeting",
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("مرحبا", user_id=1)["success"] is True
+            assert assistant.process("مرحبا", user_id=1, context={})["success"] is True
             um.return_value = {
                 "intent": "who_are_you",
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("من أنت", user_id=1)["success"] is True
+            assert assistant.process("من أنت", user_id=1, context={})["success"] is True
             um.return_value = {"intent": "praise", "confidence": 0.9, "all_scores": []}
-            assert assistant.process("شكرا", user_id=1)["success"] is True
+            assert assistant.process("شكرا", user_id=1, context={})["success"] is True
             um.return_value = {
                 "intent": "complaint",
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("سيء جدا", user_id=1)["success"] is True
+            assert assistant.process("سيء جدا", user_id=1, context={})["success"] is True
 
     def test_customer_balance_with_debt(self, assistant):
         debt = {
@@ -1014,7 +1014,7 @@ class TestIntelligentAssistantWave3:
             patch.object(assistant, "_collect_real_data", return_value=payload),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            result = assistant.process("رصيد العميل أحمد", user_id=1)
+            result = assistant.process("رصيد العميل أحمد", user_id=1, context={})
             assert result["success"] is True
             assert "Ahmed" in result["response"]
 
@@ -1023,7 +1023,7 @@ class TestIntelligentAssistantWave3:
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             return_value="جواب سريع",
         ):
-            assert assistant.process("سؤال")["method"] == "quick_learner"
+            assert assistant.process("سؤال", user_id=1, context={})["method"] == "quick_learner"
         with (
             patch(
                 "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
@@ -1033,7 +1033,7 @@ class TestIntelligentAssistantWave3:
                 assistant, "_understand_message", return_value={"success": False}
             ),
         ):
-            assert assistant.process("غامض")["method"] == "help"
+            assert assistant.process("غامض", user_id=1, context={})["method"] == "help"
         with patch(
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             side_effect=RuntimeError("fail"),
@@ -1079,6 +1079,7 @@ class TestAgentsCoreWave3:
     def test_greeting_evening(self, mock_ai_user):
         from ai_knowledge.agents_core import intelligent_response
 
+        evening_dt = datetime(2025, 6, 1, 20, 0, 0)
         with (
             patch(
                 "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
@@ -1088,9 +1089,8 @@ class TestAgentsCoreWave3:
                 "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
                 return_value="help",
             ),
-            patch("datetime.datetime") as dt,
+            patch("datetime.datetime.now", return_value=evening_dt),
         ):
-            dt.utcnow.return_value = datetime(2025, 6, 1, 20, 0, 0)
             assert "مساء" in intelligent_response("مرحبا")
 
     def test_ask_azad_enhanced_paths(self):
@@ -1531,12 +1531,13 @@ class TestWave3Extended:
                 "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
                 return_value=None,
             ),
-            patch(
-                "ai_knowledge.neural.semantic_matcher.understand_message",
-                return_value={"intent": "inventory_check", "confidence": 0.9},
+            patch.object(
+                assistant,
+                "_understand_message",
+                return_value={"success": True, "intent": "inventory_check", "confidence": 0.9, "entities": {}, "context": {}},
             ),
             patch.object(assistant, "_collect_real_data", return_value=payload),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            result = assistant.process("وين المخزون الناقص", user_id=1)
+            result = assistant.process("وين المخزون الناقص", user_id=1, context={})
             assert result["success"] is True

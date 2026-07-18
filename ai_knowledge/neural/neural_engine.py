@@ -682,7 +682,7 @@ class AzadNeuralEngine:
         self.models["financial_planner"].fit(x_scaled, y)
 
         # الدقة (R²)
-        r2 = self.models["financial_planner"].score(X_scaled, y)
+        r2 = self.models["financial_planner"].score(x_scaled, y)
 
         self._save_model("financial_planner")
 
@@ -1122,7 +1122,7 @@ class AzadNeuralEngine:
         self.models["sales_forecaster"].fit(x_scaled, y)
 
         # الدقة
-        r2 = self.models["sales_forecaster"].score(X_scaled, y)
+        r2 = self.models["sales_forecaster"].score(x_scaled, y)
 
         self._save_model("sales_forecaster")
 
@@ -1321,7 +1321,7 @@ class AzadNeuralEngine:
             # التصنيف
             classification = customer.customer_classification or "regular"
 
-            X.append(features)
+            x.append(features)
             y.append(classification)
 
         x = np.array(x)
@@ -1553,7 +1553,7 @@ class AzadNeuralEngine:
         x_scaled = self.scalers["fraud_detector"].fit_transform(x)
         self.models["fraud_detector"].fit(x_scaled, y)
 
-        accuracy = self.models["fraud_detector"].score(X_scaled, y)
+        accuracy = self.models["fraud_detector"].score(x_scaled, y)
 
         self._save_model("fraud_detector")
 
@@ -1724,7 +1724,7 @@ class AzadNeuralEngine:
         x_scaled = self.scalers["inventory_optimizer"].fit_transform(x)
         self.models["inventory_optimizer"].fit(x_scaled, y)
 
-        r2 = self.models["inventory_optimizer"].score(X_scaled, y)
+        r2 = self.models["inventory_optimizer"].score(x_scaled, y)
 
         self._save_model("inventory_optimizer")
 
@@ -1930,7 +1930,7 @@ class AzadNeuralEngine:
         x_scaled = self.scalers["demand_predictor"].fit_transform(x)
         self.models["demand_predictor"].fit(x_scaled, y)
 
-        r2 = self.models["demand_predictor"].score(X_scaled, y)
+        r2 = self.models["demand_predictor"].score(x_scaled, y)
 
         self._save_model("demand_predictor")
 

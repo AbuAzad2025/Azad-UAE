@@ -1201,6 +1201,7 @@ class TestIntelligentAssistantWave5:
                 patch("models.Customer") as Customer,
                 patch("models.Product") as Product,
                 patch("models.Payment"),
+                patch("extensions.db") as mock_db,
                 patch("flask.has_request_context", return_value=True),
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
                 patch(
@@ -1260,7 +1261,7 @@ class TestIntelligentAssistantWave5:
             patch.object(assistant, "_collect_real_data", return_value={}),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            result = assistant.process("سؤال غامض", user_id=1)
+            result = assistant.process("سؤال غامض", user_id=1, context={})
             assert isinstance(result, dict)
 
 
