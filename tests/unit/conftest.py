@@ -354,7 +354,7 @@ def model_patch(mocker):
         Partner.query.filter_by.return_value.all.return_value = partners
     """
 
-    def _patch(model_path: str, _count: int = 0):
+    def _patch(model_path: str, count: int = 0):
         return mocker.patch(model_path)
 
     return _patch

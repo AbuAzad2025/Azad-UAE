@@ -52,7 +52,7 @@ class TestFrontendSecurityAudit:
         issues = []
         for path, text in js_files.items():
             if "localStorage.setItem" in text:
-                lines = text.split("\r\n")
+                lines = text.splitlines()
                 for i, line in enumerate(lines, 1):
                     if "localStorage.setItem" in line:
                         if any(
@@ -79,7 +79,7 @@ class TestFrontendSecurityAudit:
                 )
                 if not has_csrf:
                     # Check line by line for POST
-                    for i, line in enumerate(text.split("\r\n"), 1):
+                    for i, line in enumerate(text.splitlines(), 1):
                         if ("$.ajax" in line or "fetch(" in line) and (
                             "POST" in line or "post" in line
                         ):

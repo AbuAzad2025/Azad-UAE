@@ -324,7 +324,7 @@ class TestArchivedRecordToDict:
 
 
 # ---------------------------------------------------------------------------
-# 7. models/card_vault.py lines 10-12: ImportError fallback for cryptography
+# 7. models/card_vault.py lines 10-16: ImportError fallback for cryptography
 # ---------------------------------------------------------------------------
 
 
@@ -342,7 +342,7 @@ class TestCardVaultImportError:
             lines = f.readlines()
 
         padding = "\n" * 6
-        block = padding + "".join(lines[6:12])
+        block = padding + "".join(lines[9:16])
 
         import builtins
 
