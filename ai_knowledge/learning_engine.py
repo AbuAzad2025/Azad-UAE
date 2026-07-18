@@ -33,9 +33,9 @@ class QuickLearner:
     @staticmethod
     def _impl():
         if QuickLearner._klass is None:
-            from ai_knowledge.learning.quick_learner import QuickLearner as _QL
+            from ai_knowledge.learning.quick_learner import QuickLearner as _QuickLearner
 
-            QuickLearner._klass = _QL
+            QuickLearner._klass = _QuickLearner
         return QuickLearner._klass()
 
     def learn(

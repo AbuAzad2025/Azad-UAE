@@ -245,11 +245,16 @@ class TestTimeago:
         assert h.timeago(naive) != ""
 
     def test_exception_returns_str(self):
-        bad = MagicMock(spec=[])
-        bad.tzinfo = timezone.utc
-        bad.__sub__ = MagicMock(side_effect=TypeError("bad"))
-        bad.__str__ = MagicMock(return_value="bad datetime")
-        assert h.timeago(bad) == "bad datetime"
+        class BadDate:
+            tzinfo = timezone.utc
+
+            def __sub__(self, other):
+                raise TypeError("bad")
+
+            def __str__(self):
+                return "bad datetime"
+
+        assert h.timeago(BadDate()) == "bad datetime"
 
 
 class TestCreateAuditLog:

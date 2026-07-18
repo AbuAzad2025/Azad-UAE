@@ -247,7 +247,18 @@ class TestBuildSystemHealthSummary:
         assert "migration" in summary
 
     def test_migration_with_app(self, app, mocker):
-        mocker.patch("flask_migrate.current", return_value="abc123")
+        fake_conn = MagicMock()
+        fake_conn.__enter__ = MagicMock(return_value=fake_conn)
+        fake_conn.__exit__ = MagicMock(return_value=False)
+        fake_result = MagicMock()
+        fake_result.scalar.return_value = "abc123"
+        fake_conn.execute.return_value = fake_result
+        fake_engine = MagicMock()
+        fake_engine.connect.return_value = fake_conn
+        mocker.patch("sqlalchemy.create_engine", return_value=fake_engine)
+        mocker.patch.dict(
+            "os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False
+        )
         from utils.owner_panel import build_system_health_summary
 
         with app.app_context():

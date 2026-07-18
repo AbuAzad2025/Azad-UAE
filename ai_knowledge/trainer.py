@@ -3,7 +3,10 @@ trainer.py - Local AI training pipeline.
 Seeds, learns, and improves the local assistant from real interactions.
 """
 
+import glob
+import json
 import logging
+import os
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -428,10 +431,6 @@ class Trainer:
                 count += 1
         # Also seed from expertise JSON files
         try:
-            import glob
-            import json
-            import os
-
             training_dir: str = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                 "ai_training",

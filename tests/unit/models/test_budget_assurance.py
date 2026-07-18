@@ -53,7 +53,7 @@ def _budget(**kwargs):
     return b
 
 
-def _line(account_type="expense", budgeted=Decimal("100")):
+def _line(budgeted=Decimal("100"), account_type="expense"):
     account = SimpleNamespace(type=account_type, code="6100")
     line = BudgetLine(
         tenant_id=1,
@@ -108,6 +108,8 @@ class TestBudgetUpdateActuals:
             "50"
         )
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
+        import sys
+        print("DEBUG account", budget.lines[0].account, "type", getattr(budget.lines[0].account, "type", "NONE"), file=sys.stderr)
         budget.update_actuals()
         line = budget.lines[0]
         assert line.actual_amount == Decimal("100")

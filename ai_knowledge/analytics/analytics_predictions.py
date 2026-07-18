@@ -185,9 +185,9 @@ class InventoryAnalytics:
         if annual_demand == 0 or unit_cost == 0:
             return {"eoq": 0, "orders_per_year": 0}
 
-        H = unit_cost * holding_cost
+        h = unit_cost * holding_cost
 
-        eoq = ((2 * annual_demand * ordering_cost) / H) ** 0.5
+        eoq = ((2 * annual_demand * ordering_cost) / h) ** 0.5
         orders_per_year = annual_demand / eoq if eoq > 0 else 0
 
         return {

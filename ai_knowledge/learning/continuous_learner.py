@@ -300,12 +300,12 @@ def get_continuous_learner():
 
 def evaluate_and_learn(qa_tests: list, ai_service=None):
     """Run QA tests, evaluate by keyword heuristics, and learn from outcomes."""
-    DefaultAIService: Any = None
+    default_ai_service: Any = None
     try:
-        from services.ai_service import AIService as DefaultAIService
+        from services.ai_service import AIService as default_ai_service
     except ImportError:
-        DefaultAIService = None
-    svc = ai_service or DefaultAIService
+        default_ai_service = None
+    svc = ai_service or default_ai_service
     results: List[Dict[str, Any]] = []
     if not svc:
         return results

@@ -236,7 +236,7 @@ class AzadNeuralEngine:
             }
 
         # تحضير البيانات
-        X = []
+        x = []
         y = []
 
         for product in products:
@@ -263,18 +263,18 @@ class AzadNeuralEngine:
                 1 if (usage_frequency > 50 and days_since_sale < 30) else 0
             )
 
-            X.append(features)
+            x.append(features)
             y.append(needs_maintenance)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["maintenance_predictor"].fit_transform(X)
-        self.models["maintenance_predictor"].fit(X_scaled, y)
+        x_scaled = self.scalers["maintenance_predictor"].fit_transform(x)
+        self.models["maintenance_predictor"].fit(x_scaled, y)
 
         # الدقة
-        accuracy = self.models["maintenance_predictor"].score(X_scaled, y)
+        accuracy = self.models["maintenance_predictor"].score(x_scaled, y)
 
         # حفظ النموذج
         self._save_model("maintenance_predictor")
@@ -429,7 +429,7 @@ class AzadNeuralEngine:
         if len(entries) < 10:
             return {"success": False, "error": "Not enough accounting data"}
 
-        X = []
+        x = []
         y = []
 
         for entry in entries:
@@ -451,10 +451,10 @@ class AzadNeuralEngine:
             # التصنيف (قيد صحيح = 1، خاطئ = 0)
             is_correct = is_balanced
 
-            X.append(features)
+            x.append(features)
             y.append(is_correct)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # تدريب نموذج التصنيف المحاسبي
@@ -468,10 +468,10 @@ class AzadNeuralEngine:
             )
             self.scalers["accounting_classifier"] = StandardScaler()
 
-        X_scaled = self.scalers["accounting_classifier"].fit_transform(X)
-        self.models["accounting_classifier"].fit(X_scaled, y)
+        x_scaled = self.scalers["accounting_classifier"].fit_transform(x)
+        self.models["accounting_classifier"].fit(x_scaled, y)
 
-        accuracy = self.models["accounting_classifier"].score(X_scaled, y)
+        accuracy = self.models["accounting_classifier"].score(x_scaled, y)
 
         self._save_model("accounting_classifier")
 
@@ -651,7 +651,7 @@ class AzadNeuralEngine:
             )
 
         # تحضير للتدريب (always 12 months from the loop above)
-        X = []
+        x = []
         y = []
 
         for i in range(len(monthly_data) - 1):
@@ -671,15 +671,15 @@ class AzadNeuralEngine:
             # الهدف: التدفق النقدي الشهر القادم
             target = next_month["net_cash_flow"]
 
-            X.append(features)
+            x.append(features)
             y.append(target)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["financial_planner"].fit_transform(X)
-        self.models["financial_planner"].fit(X_scaled, y)
+        x_scaled = self.scalers["financial_planner"].fit_transform(x)
+        self.models["financial_planner"].fit(x_scaled, y)
 
         # الدقة (R²)
         r2 = self.models["financial_planner"].score(X_scaled, y)
@@ -885,7 +885,7 @@ class AzadNeuralEngine:
                 "samples": len(sales_data),
             }
 
-        X = []
+        x = []
         y = []
 
         for sale in sales_data:
@@ -910,24 +910,24 @@ class AzadNeuralEngine:
             # الهدف: السعر الناجح
             target_price = float(sale.unit_price)
 
-            X.append(features)
+            x.append(features)
             y.append(target_price)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["price_optimizer"].fit_transform(X)
-        self.models["price_optimizer"].fit(X_scaled, y)
+        x_scaled = self.scalers["price_optimizer"].fit_transform(x)
+        self.models["price_optimizer"].fit(x_scaled, y)
 
         # الدقة
-        r2 = self.models["price_optimizer"].score(X_scaled, y)
+        r2 = self.models["price_optimizer"].score(x_scaled, y)
 
         # Cross-validation للتأكد
         from sklearn.model_selection import cross_val_score
 
         cv_scores = cross_val_score(
-            self.models["price_optimizer"], X_scaled, y, cv=5, scoring="r2"
+            self.models["price_optimizer"], x_scaled, y, cv=5, scoring="r2"
         )
         avg_r2 = np.mean(cv_scores)
 
@@ -1083,7 +1083,7 @@ class AzadNeuralEngine:
             return {"success": False, "error": "Not enough daily sales data"}
 
         # تحضير البيانات الزمنية
-        X = []
+        x = []
         y = []
 
         # يمكن تخزين خريطة تاريخ المبيعات إذا لزم الأمر: {sale.sale_date: sale for sale in daily_sales}
@@ -1111,15 +1111,15 @@ class AzadNeuralEngine:
             # الهدف: مبيعات اليوم الحالي
             target = float(daily_sales[i].total_amount or 0)
 
-            X.append(features)
+            x.append(features)
             y.append(target)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["sales_forecaster"].fit_transform(X)
-        self.models["sales_forecaster"].fit(X_scaled, y)
+        x_scaled = self.scalers["sales_forecaster"].fit_transform(x)
+        self.models["sales_forecaster"].fit(x_scaled, y)
 
         # الدقة
         r2 = self.models["sales_forecaster"].score(X_scaled, y)
@@ -1297,7 +1297,7 @@ class AzadNeuralEngine:
         if len(customers_data) < 20:
             return {"success": False, "error": "Not enough customer data"}
 
-        X = []
+        x = []
         y = []
 
         for customer in customers_data:
@@ -1324,18 +1324,18 @@ class AzadNeuralEngine:
             X.append(features)
             y.append(classification)
 
-        X = np.array(X)
+        x = np.array(x)
 
         # ترميز التصنيفات
         self.encoders["customer_classifier"].fit(y)
         y_encoded = self.encoders["customer_classifier"].transform(y)
 
         # التدريب
-        X_scaled = self.scalers["customer_classifier"].fit_transform(X)
-        self.models["customer_classifier"].fit(X_scaled, y_encoded)
+        x_scaled = self.scalers["customer_classifier"].fit_transform(x)
+        self.models["customer_classifier"].fit(x_scaled, y_encoded)
 
         # الدقة
-        accuracy = self.models["customer_classifier"].score(X_scaled, y_encoded)
+        accuracy = self.models["customer_classifier"].score(x_scaled, y_encoded)
 
         self._save_model("customer_classifier")
 
@@ -1514,7 +1514,7 @@ class AzadNeuralEngine:
         if len(sales) < 50:
             return {"success": False, "error": "Not enough sales for fraud detection"}
 
-        X = []
+        x = []
         y = []
 
         for sale in sales:
@@ -1543,15 +1543,15 @@ class AzadNeuralEngine:
             # الاحتيال = مبلغ كبير + خصم كبير + وقت غريب
             is_fraud = 1 if (sale.amount_aed > 100000 and discount_percent > 50) else 0
 
-            X.append(features)
+            x.append(features)
             y.append(is_fraud)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["fraud_detector"].fit_transform(X)
-        self.models["fraud_detector"].fit(X_scaled, y)
+        x_scaled = self.scalers["fraud_detector"].fit_transform(x)
+        self.models["fraud_detector"].fit(x_scaled, y)
 
         accuracy = self.models["fraud_detector"].score(X_scaled, y)
 
@@ -1693,7 +1693,7 @@ class AzadNeuralEngine:
         if len(products_data) < 20:
             return {"success": False, "error": "Not enough inventory data"}
 
-        X = []
+        x = []
         y = []
 
         for product in products_data:
@@ -1714,15 +1714,15 @@ class AzadNeuralEngine:
                 product.min_stock_alert or 10, sales_rate * 14
             )  # مخزون 14 يوم
 
-            X.append(features)
+            x.append(features)
             y.append(float(optimal_reorder))
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["inventory_optimizer"].fit_transform(X)
-        self.models["inventory_optimizer"].fit(X_scaled, y)
+        x_scaled = self.scalers["inventory_optimizer"].fit_transform(x)
+        self.models["inventory_optimizer"].fit(x_scaled, y)
 
         r2 = self.models["inventory_optimizer"].score(X_scaled, y)
 
@@ -1893,7 +1893,7 @@ class AzadNeuralEngine:
                 {"date": demand.sale_date, "quantity": float(demand.total_quantity)}
             )
 
-        X = []
+        x = []
         y = []
 
         # لكل منتج له بيانات كافية
@@ -1917,18 +1917,18 @@ class AzadNeuralEngine:
 
                 target = demands_sorted[i]["quantity"]
 
-                X.append(features)
+                x.append(features)
                 y.append(target)
 
-        if len(X) < 20:
+        if len(x) < 20:
             return {"success": False, "error": "Not enough training samples"}
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["demand_predictor"].fit_transform(X)
-        self.models["demand_predictor"].fit(X_scaled, y)
+        x_scaled = self.scalers["demand_predictor"].fit_transform(x)
+        self.models["demand_predictor"].fit(x_scaled, y)
 
         r2 = self.models["demand_predictor"].score(X_scaled, y)
 
@@ -1936,7 +1936,7 @@ class AzadNeuralEngine:
 
         logger.info(f"📊 Demand predictor trained: R²={r2:.2%}")
 
-        return {"success": True, "r2_score": r2, "samples": len(X)}
+        return {"success": True, "r2_score": r2, "samples": len(x)}
 
     def predict_product_demand(self, product_id, days_ahead=7, from_app_context=None):
         """
@@ -2097,7 +2097,7 @@ class AzadNeuralEngine:
         if len(sales) < 50:
             return {"success": False, "error": "Not enough profit data"}
 
-        X = []
+        x = []
         y = []
 
         for sale in sales:
@@ -2117,17 +2117,17 @@ class AzadNeuralEngine:
             ]
 
             # الهدف: هامش الربح
-            X.append(features)
+            x.append(features)
             y.append(float(margin_percent))
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["profit_optimizer"].fit_transform(X)
-        self.models["profit_optimizer"].fit(X_scaled, y)
+        x_scaled = self.scalers["profit_optimizer"].fit_transform(x)
+        self.models["profit_optimizer"].fit(x_scaled, y)
 
-        r2 = self.models["profit_optimizer"].score(X_scaled, y)
+        r2 = self.models["profit_optimizer"].score(x_scaled, y)
 
         self._save_model("profit_optimizer")
 
@@ -2182,7 +2182,7 @@ class AzadNeuralEngine:
         if len(customers) < 30:
             return {"success": False, "error": "Not enough customer data for churn"}
 
-        X = []
+        x = []
         y = []
 
         for customer in customers:
@@ -2204,17 +2204,17 @@ class AzadNeuralEngine:
             # التصنيف (churned = فقدنا العميل)
             churned = 1 if days_since > 120 else 0
 
-            X.append(features)
+            x.append(features)
             y.append(churned)
 
-        X = np.array(X)
+        x = np.array(x)
         y = np.array(y)
 
         # التدريب
-        X_scaled = self.scalers["churn_predictor"].fit_transform(X)
-        self.models["churn_predictor"].fit(X_scaled, y)
+        x_scaled = self.scalers["churn_predictor"].fit_transform(x)
+        self.models["churn_predictor"].fit(x_scaled, y)
 
-        accuracy = self.models["churn_predictor"].score(X_scaled, y)
+        accuracy = self.models["churn_predictor"].score(x_scaled, y)
 
         self._save_model("churn_predictor")
 

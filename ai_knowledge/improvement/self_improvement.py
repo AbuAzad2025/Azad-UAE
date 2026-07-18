@@ -73,7 +73,7 @@ class AzadSelfImprovement:
         return {
             "total_improvements": 0,
             "last_improvement_date": None,
-            "improvement_history": []
+            "improvement_history": [],
             "current_version": "1.0.0",
             "next_version": "1.1.0",
         }

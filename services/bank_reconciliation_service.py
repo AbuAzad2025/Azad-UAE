@@ -450,7 +450,7 @@ class BankReconciliationService:
         journal line.  Returns the match dict on success, or ``None`` if
         no unique match is found (caller should route to Suspense).
         """
-        from decimal import Decimal as _D
+        from decimal import Decimal as _decimal
 
         stmt = db.session.get(BankStatementLine, stmt_line_id)
         if (
@@ -461,7 +461,7 @@ class BankReconciliationService:
         ):
             return None
 
-        stmt_amount = _D(str(stmt.amount))
+        stmt_amount = _decimal(str(stmt.amount))
 
         gl_lines = (
             db.session.query(GLJournalLine)
@@ -480,7 +480,7 @@ class BankReconciliationService:
 
         candidates = []
         for gl in gl_lines:
-            gl_amount = _D(str(gl.debit or 0)) - _D(str(gl.credit or 0))
+            gl_amount = _decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0))
             if abs(stmt_amount - gl_amount) <= amount_tolerance:
                 date_diff = abs((stmt.transaction_date - gl.entry.entry_date).days)
                 candidates.append((date_diff, gl))
@@ -491,8 +491,8 @@ class BankReconciliationService:
         date_diff, gl = candidates[0]
         match_type = (
             "exact"
-            if abs(stmt_amount - _D(str(gl.debit or 0)) - _D(str(gl.credit or 0)))
-            < _D("0.001")
+            if abs(stmt_amount - _decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0)))
+            < _decimal("0.001")
             else "amount_date"
         )
         return {
@@ -500,7 +500,7 @@ class BankReconciliationService:
             "journal_line_id": gl.id,
             "match_type": match_type,
             "amount_diff": float(
-                abs(stmt_amount - (_D(str(gl.debit or 0)) - _D(str(gl.credit or 0))))
+                abs(stmt_amount - (_decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0))))
             ),
             "date_diff": date_diff,
         }
