@@ -48,6 +48,20 @@ def get_active_tenant_id(user=None) -> int | None:
     """
     user = _resolve_user(user)
     if not user or not getattr(user, "is_authenticated", False):
+        # Fall back to the per-request tenant set by the factory's
+        # before_request (g.active_tenant_id). This is the authoritative value
+        # for the whole request and avoids resolving current_user again at
+        # query-execution time (which can otherwise yield None and silently
+        # empty every tenant-scoped list).
+        try:
+            if has_request_context():
+                from flask import g
+
+                g_tid = getattr(g, "active_tenant_id", None)
+                if g_tid is not None:
+                    return int(g_tid)
+        except Exception:
+            pass
         return None
 
     if not is_platform_owner(user):

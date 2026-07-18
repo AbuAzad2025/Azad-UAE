@@ -109,15 +109,6 @@ def index():
     per_page = request.args.get("per_page", 20, type=int)
     search = request.args.get("search", "", type=str)
 
-    from utils.tenanting import get_active_tenant_id
-
-    current_app.logger.warning(
-        "DIAG users.index resolved tid=%s session_tid=%s is_owner=%s user_tid=%s",
-        get_active_tenant_id(current_user),
-        session.get("active_tenant_id"),
-        getattr(current_user, "is_owner", None),
-        getattr(current_user, "tenant_id", None),
-    )
     query = scoped_user_query(exclude_owners=True, active_only=True)
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is not None:

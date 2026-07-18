@@ -115,18 +115,45 @@ def tenant_scope_enabled() -> bool:
 
 
 def _active_tenant_for_orm() -> int | None:
+    # Prefer the per-request value set by the factory's before_request
+    # (g.active_tenant_id), which is stable for the whole request. Re-resolving
+    # current_user at ORM-execute time can return None for lazy loads / nested
+    # queries, which previously made the listener inject `tenant_id < 0`
+    # (i.e. WHERE false) and emptied every tenant-scoped list.
+    try:
+        from flask import g
+
+        if getattr(g, "active_tenant_id", None) is not None:
+            return int(g.active_tenant_id)
+    except Exception:
+        pass
     from utils.tenanting import get_active_tenant_id
 
     return get_active_tenant_id()
 
 
 def _criteria_for_model(tid: int | None):
+    # When no active tenant is resolved for a scoped request, platform owners
+    # legitimately operate across all tenants ("all companies" scope) and must
+    # NOT have every row hidden. Non-owner company users cannot reach a scoped
+    # blueprint with tid=None (the factory aborts 403); their manual query
+    # helpers already apply the correct filter. So we substitute tid=-1 for the
+    # "hide everything" case and tid=0 for the "show all" case, keeping the
+    # lambda closure free of non-SQL variables.
+    from utils.tenanting import is_platform_owner
+
+    effective_tid = tid
+    if tid is None:
+        effective_tid = 0 if is_platform_owner() else -1
+
     def _criteria(cls):
         if not hasattr(cls, "tenant_id"):
             return sql_true()
-        if tid is None:
+        if effective_tid == -1:
             return cls.tenant_id < 0
-        return cls.tenant_id == tid
+        if effective_tid == 0:
+            return sql_true()
+        return cls.tenant_id == effective_tid
 
     return _criteria
 
@@ -186,6 +213,8 @@ def _inject_tenant_criteria(execute_state):
     statement = execute_state.statement
 
     for model_cls in _discover_tenant_models():
+        if model_cls.__name__ in _ORM_EXEMPT_MODELS:
+            continue
         statement = statement.options(
             with_loader_criteria(
                 model_cls,
