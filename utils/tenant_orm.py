@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from flask import g, has_request_context, request
 from sqlalchemy import event, inspect as sa_inspect, true as sql_true
-from sqlalchemy.orm import with_loader_criteria
+from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
 
