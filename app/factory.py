@@ -28,6 +28,7 @@ from app.context import register_context_processors
 from app.integrity import run_system_integrity_check
 
 try:
+    from flask_compress import Compress  # noqa: F401
     COMPRESS_AVAILABLE = True
 except ImportError:
     COMPRESS_AVAILABLE = False
@@ -297,8 +298,11 @@ def create_app(config_class=Config) -> Flask:
         pass
 
     if register_all_listeners is not None:
-        with app.app_context():
-            register_all_listeners()
+        try:
+            with app.app_context():
+                register_all_listeners()
+        except ImportError:
+            app.logger.warning("Event listeners not available")
     else:
         app.logger.warning("Event listeners not available")
 
@@ -318,8 +322,11 @@ def create_app(config_class=Config) -> Flask:
         pass
 
     if register_cli_commands is not None:
-        register_cli_commands(app)
-        app.logger.info("[OK] Enhanced CLI commands registered")
+        try:
+            register_cli_commands(app)
+            app.logger.info("[OK] Enhanced CLI commands registered")
+        except ImportError:
+            app.logger.info("CLI commands not available - skipping")
     else:
         app.logger.info("CLI commands not available - skipping")
 
