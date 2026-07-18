@@ -339,10 +339,14 @@ class BackupService:
         )
 
     @classmethod
+    def _is_windows(cls) -> bool:
+        return os.name == "nt"
+
+    @classmethod
     def _which(cls, exe_name: str) -> Optional[str]:
         exe = str(exe_name)
         path_env = os.environ.get("PATH") or ""
-        exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if os.name == "nt" else ("",)
+        exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if cls._is_windows() else ("",)
         for directory in path_env.split(os.pathsep):
             if not directory:
                 continue
@@ -360,7 +364,7 @@ class BackupService:
         found = cls._which(exe_name)
         if found:
             return found
-        if os.name != "nt":
+        if not cls._is_windows():
             return None
         candidates: List[str] = []
         for pf in filter(
