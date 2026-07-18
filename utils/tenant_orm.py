@@ -187,7 +187,16 @@ def _patch_session_get():
 
     def _get_with_tenant(self, entity, ident, *args, **kwargs):
         obj = _orig_get(self, entity, ident, *args, **kwargs)
-        if obj is None or not tenant_scope_enabled():
+        if obj is None:
+            return obj
+        # Exempt models (User, Package, PackagePurchase): login bootstrap
+        # accesses current_user, which calls _load_user, which calls
+        # Session.get — that would recurse through tenant_scope_enabled()
+        # → current_user → _load_user → Session.get.  Skip the scope
+        # check entirely for these models.
+        if hasattr(entity, "__name__") and entity.__name__ in _ORM_EXEMPT_MODELS:
+            return obj
+        if not tenant_scope_enabled():
             return obj
         if kwargs.get("execution_options", {}).get("skip_tenant_scope"):
             return obj
