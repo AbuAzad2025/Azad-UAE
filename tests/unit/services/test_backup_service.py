@@ -2237,13 +2237,12 @@ class TestFullCoverage:
         )
 
     def test_resolve_pg_tool_non_windows_no_candidate(self, mocker, monkeypatch):
-        monkeypatch.setattr(os, "name", "posix")
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
         mocker.patch("shutil.which", return_value=None)
         assert BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH") is None
 
     def test_resolve_pg_tool_windows_no_install(self, mocker, monkeypatch):
-        monkeypatch.setattr(os, "name", "nt")
+        mocker.patch.object(BackupService, "_is_windows", return_value=True)
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
         mocker.patch("shutil.which", return_value=None)
         mocker.patch("glob.glob", return_value=[])
