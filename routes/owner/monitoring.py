@@ -362,12 +362,23 @@ def error_audit_logs():
     category = request.args.get("category", "").strip()
     level = request.args.get("level", "").strip()
     is_resolved = request.args.get("resolved", "")
+    source = request.args.get("source", "").strip()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
+    search = request.args.get("search", "").strip()
     page = request.args.get("page", 1, type=int)
     per_page = 50
 
-    items, pagination, categories, levels, stats = LoggingCore.get_error_logs(
-        category, level, is_resolved, page, per_page
+    items, pagination, categories, levels, sources, stats = LoggingCore.get_error_logs(
+        category, level, is_resolved, source, from_date, to_date, search, page, per_page
     )
+
+    from models.user import User
+    user_ids = {log.user_id for log in items if log.user_id}
+    user_map = {}
+    if user_ids:
+        for u in User.query.filter(User.id.in_(user_ids)).all():
+            user_map[u.id] = u.display_name or u.username or f"User #{u.id}"
 
     error_log_data = {}
     for log in items:
@@ -387,6 +398,7 @@ def error_audit_logs():
             "method": log.method or "",
             "ip_address": log.ip_address or "",
             "user_id": log.user_id,
+            "user_name": user_map.get(log.user_id, "") if log.user_id else "",
             "tenant_id": log.tenant_id,
             "message": log.message,
             "exception_type": log.exception_type or "",
@@ -401,9 +413,14 @@ def error_audit_logs():
         pagination=pagination,
         categories=categories,
         levels=levels,
+        sources=sources,
         selected_category=category,
         selected_level=level,
         selected_resolved=is_resolved,
+        selected_source=source,
+        from_date=from_date,
+        to_date=to_date,
+        search=search,
         stats=stats,
     )
 
@@ -429,10 +446,14 @@ def export_error_audit_logs():
     category = request.args.get("category", "").strip()
     level = request.args.get("level", "").strip()
     is_resolved = request.args.get("resolved", "")
+    source = request.args.get("source", "").strip()
+    from_date = request.args.get("from_date", "").strip()
+    to_date = request.args.get("to_date", "").strip()
+    search = request.args.get("search", "").strip()
 
     try:
         payload, mimetype, filename = LoggingCore.export_error_logs(
-            category, level, is_resolved, fmt
+            category, level, is_resolved, source, from_date, to_date, search, fmt
         )
         return (
             payload,

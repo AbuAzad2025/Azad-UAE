@@ -1025,6 +1025,10 @@ class LoggingCore:
         category: str = "",
         level: str = "",
         is_resolved: str = "",
+        source: str = "",
+        from_date: str = "",
+        to_date: str = "",
+        search: str = "",
         page: int = 1,
         per_page: int = 50,
     ):
@@ -1040,7 +1044,29 @@ class LoggingCore:
             query = query.filter_by(is_resolved=True)
         elif is_resolved == "0":
             query = query.filter_by(is_resolved=False)
-        query = query.order_by(ErrorAuditLog.created_at.desc())
+        if source:
+            query = query.filter(ErrorAuditLog.source.ilike(f"%{source}%"))
+        if from_date:
+            try:
+                fd = datetime.strptime(from_date, "%Y-%m-%d")
+                query = query.filter(ErrorAuditLog.created_at >= fd)
+            except Exception:
+                pass
+        if to_date:
+            try:
+                td = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+                query = query.filter(ErrorAuditLog.created_at < td)
+            except Exception:
+                pass
+        if search:
+            query = query.filter(
+                db.or_(
+                    ErrorAuditLog.message.ilike(f"%{search}%"),
+                    ErrorAuditLog.exception_type.ilike(f"%{search}%"),
+                    ErrorAuditLog.url.ilike(f"%{search}%"),
+                )
+            )
+        query = query.order_by(ErrorAuditLog.last_seen_at.desc())
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         categories = [
@@ -1057,13 +1083,20 @@ class LoggingCore:
             .order_by(ErrorAuditLog.level)
             .all()
         ]
+        sources = [
+            r[0]
+            for r in db.session.query(ErrorAuditLog.source)
+            .distinct()
+            .order_by(ErrorAuditLog.source)
+            .all()
+        ]
         stats = {
             "total": ErrorAuditLog.query.count(),
             "unresolved": ErrorAuditLog.query.filter_by(is_resolved=False).count(),
             "critical": ErrorAuditLog.query.filter_by(level="CRITICAL").count(),
         }
 
-        return pagination.items, pagination, categories, levels, stats
+        return pagination.items, pagination, categories, levels, sources, stats
 
     @classmethod
     def export_error_logs(
@@ -1071,6 +1104,10 @@ class LoggingCore:
         category: str = "",
         level: str = "",
         is_resolved: str = "",
+        source: str = "",
+        from_date: str = "",
+        to_date: str = "",
+        search: str = "",
         fmt: str = "json",
     ):
         from models.error_audit_log import ErrorAuditLog
@@ -1085,7 +1122,31 @@ class LoggingCore:
             query = query.filter_by(is_resolved=True)
         elif is_resolved == "0":
             query = query.filter_by(is_resolved=False)
-        logs = query.order_by(ErrorAuditLog.created_at.desc()).all()
+        if source:
+            query = query.filter(ErrorAuditLog.source.ilike(f"%{source}%"))
+        if from_date:
+            try:
+                fd = datetime.strptime(from_date, "%Y-%m-%d")
+                query = query.filter(ErrorAuditLog.created_at >= fd)
+            except Exception:
+                pass
+        if to_date:
+            try:
+                td = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+                query = query.filter(ErrorAuditLog.created_at < td)
+            except Exception:
+                pass
+        if search:
+            from extensions import db
+
+            query = query.filter(
+                db.or_(
+                    ErrorAuditLog.message.ilike(f"%{search}%"),
+                    ErrorAuditLog.exception_type.ilike(f"%{search}%"),
+                    ErrorAuditLog.url.ilike(f"%{search}%"),
+                )
+            )
+        logs = query.order_by(ErrorAuditLog.last_seen_at.desc()).all()
 
         if fmt == "json":
             data = [log.to_dict() for log in logs]
@@ -1235,7 +1296,8 @@ class LoggingCore:
         user_agent: str = "",
         severity: str = "medium",
     ) -> None:
-        """Log security events to file + security_alerts table.
+        """Log security events to file + security_alerts table +
+        ErrorAuditLog for CRITICAL / ERROR severity.
 
         Replaces:
           - utils/enhanced_logging.py → SecurityLogger
@@ -1263,6 +1325,18 @@ class LoggingCore:
                 db.session.flush()
         except Exception:
             pass
+
+        if severity in ("critical", "high"):
+            try:
+                cls.log_error(
+                    message=f"[SECURITY] {event_type}: {message}",
+                    category="SECURITY",
+                    level="CRITICAL" if severity == "critical" else "ERROR",
+                    source=f"security.{event_type}",
+                    extra={"event_type": event_type, "ip": ip, "username": str(user)},
+                )
+            except Exception:
+                pass
 
     # ──────────────────────────────────────────────────────────────
     #  HEALTH CHECKS

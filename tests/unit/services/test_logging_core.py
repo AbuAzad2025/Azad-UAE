@@ -244,7 +244,7 @@ class TestErrorQueries:
         ).return_value.distinct.return_value.order_by.return_value.all.return_value = [
             ("BACKEND",)
         ]
-        items, pagination, cats, levels, stats = LoggingCore.get_error_logs(
+        items, pagination, cats, levels, srcs, stats = LoggingCore.get_error_logs(
             category="BACKEND", level="ERROR", is_resolved="0"
         )
         assert items == pag.items

@@ -187,8 +187,15 @@ class User(UserMixin, db.Model):
         return f"<User {self.username}>"
 
     def set_password(self, password):
-        """Hash and set password"""
-        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+        """Hash and set password.
+
+        Uses pbkdf2:sha256 with a fixed, security-appropriate iteration count.
+        Older hashes stored with a different count still verify via
+        werkzeug's check_password_hash (which reads the count from the hash).
+        """
+        self.password_hash = generate_password_hash(
+            password, method="pbkdf2:sha256:260000", salt_length=16
+        )
 
     def check_password(self, password):
         """Verify password"""

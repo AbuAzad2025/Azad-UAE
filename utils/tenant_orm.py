@@ -18,6 +18,7 @@ class TenantIsolationError(Exception):
     """Raised when a write operation violates tenant isolation."""
 
 
+
 _SKIP_BLUEPRINTS = frozenset(
     {
         "auth",  # Login/logout/register — platform-level auth, not tenant data
@@ -155,6 +156,30 @@ def _criteria_for_model(tid: int | None):
     return _criteria
 
 
+# Per-request cache of the (tid -> criteria closure) so we don't rebuild /
+# re-resolve current_user on every single query execution within a request.
+_CRITERIA_CACHE: dict = {}
+
+
+def _get_criteria(tid: int | None):
+    try:
+        from flask import g
+
+        cache = getattr(g, "_tenant_criteria_cache", None)
+        if cache is None:
+            cache = {}
+            g._tenant_criteria_cache = cache
+        key = -1 if tid is None else int(tid)
+        cached = cache.get(key)
+        if cached is None:
+            cached = _criteria_for_model(tid)
+            cache[key] = cached
+        return cached
+    except Exception:
+        # Outside request context: fall back to a plain (uncached) build.
+        return _criteria_for_model(tid)
+
+
 
 
 @event.listens_for(Session, "do_orm_execute")
@@ -166,8 +191,13 @@ def _inject_tenant_criteria(execute_state):
     if not tenant_scope_enabled():
         return
 
+    # Skip if loader criteria already applied (e.g. nested/lazy loads on an
+    # already-scoped statement) to avoid redundant statement re-optioning.
+    if execute_state.execution_options.get("tenant_criteria_applied"):
+        return
+
     tid = _active_tenant_for_orm()
-    criteria = _criteria_for_model(tid)
+    criteria = _get_criteria(tid)
     statement = execute_state.statement
 
     for model_cls in _discover_tenant_models():

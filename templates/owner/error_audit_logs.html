@@ -62,45 +62,72 @@
     {# Filters #}
     <div class="card card-outline card-secondary mt-3">
       <div class="card-body">
-        <form class="needs-validation form-inline" method="get" action="{{ url_for('owner.error_audit_logs') }}">
-          <div class="form-group mr-3 mb-2">
-            <label for="category" class="mr-2">{{ t('الفئة') }}</label>
-            <select name="category" id="category" class="form-control form-control-sm" aria-label="category">
-              <option value="">{{ t('All') }}</option>
-              {% for cat in categories %}
-              <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
-              {% endfor %}
-            </select>
+        <form class="needs-validation" method="get" action="{{ url_for('owner.error_audit_logs') }}">
+          <div class="form-row align-items-end">
+            <div class="form-group col-md-2 mb-2">
+              <label for="category" class="mb-1">{{ t('الفئة') }}</label>
+              <select name="category" id="category" class="form-control form-control-sm" aria-label="category">
+                <option value="">{{ t('All') }}</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group col-md-2 mb-2">
+              <label for="level" class="mb-1">{{ t('المستوى') }}</label>
+              <select name="level" id="level" class="form-control form-control-sm" aria-label="level">
+                <option value="">{{ t('All') }}</option>
+                {% for lvl in levels %}
+                <option value="{{ lvl }}" {% if lvl == selected_level %}selected{% endif %}>{{ lvl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group col-md-2 mb-2">
+              <label for="source" class="mb-1">{{ t('المصدر') }}</label>
+              <select name="source" id="source" class="form-control form-control-sm" aria-label="source">
+                <option value="">{{ t('All') }}</option>
+                {% for src in sources %}
+                <option value="{{ src }}" {% if src == selected_source %}selected{% endif %}>{{ src }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group col-md-2 mb-2">
+              <label for="resolved" class="mb-1">{{ t('Status') }}</label>
+              <select name="resolved" id="resolved" class="form-control form-control-sm" aria-label="resolved">
+                <option value="" {% if selected_resolved == '' %}selected{% endif %}>{{ t('All') }}</option>
+                <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>غير محلول</option>
+                <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>
+              </select>
+            </div>
+            <div class="form-group col-md-2 mb-2">
+              <label for="from_date" class="mb-1">من تاريخ</label>
+              <input type="date" name="from_date" id="from_date" class="form-control form-control-sm" value="{{ from_date }}" aria-label="from_date">
+            </div>
+            <div class="form-group col-md-2 mb-2">
+              <label for="to_date" class="mb-1">إلى تاريخ</label>
+              <input type="date" name="to_date" id="to_date" class="form-control form-control-sm" value="{{ to_date }}" aria-label="to_date">
+            </div>
           </div>
-          <div class="form-group mr-3 mb-2">
-            <label for="level" class="mr-2">{{ t('المستوى') }}</label>
-            <select name="level" id="level" class="form-control form-control-sm" aria-label="level">
-              <option value="">{{ t('All') }}</option>
-              {% for lvl in levels %}
-              <option value="{{ lvl }}" {% if lvl == selected_level %}selected{% endif %}>{{ lvl }}</option>
-              {% endfor %}
-            </select>
+          <div class="form-row align-items-end">
+            <div class="form-group col-md-4 mb-2">
+              <label for="search" class="mb-1">بحث في الرسالة / النوع</label>
+              <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="كلمة بحث..." value="{{ search }}" aria-label="search">
+            </div>
+            <div class="form-group col-md-8 mb-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary mr-2">
+                <i class="fas fa-filter"></i> تصفية
+              </button>
+              <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary mr-2">
+                <i class="fas fa-times"></i> إلغاء
+              </a>
+              <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}" class="btn btn-success mr-2">
+                <i class="fas fa-file-code"></i> تصدير JSON
+              </a>
+              <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}" class="btn btn-outline-success">
+                <i class="fas fa-file-alt"></i> تصدير TXT
+              </a>
+            </div>
           </div>
-          <div class="form-group mr-3 mb-2">
-            <label for="resolved" class="mr-2">{{ t('Status') }}</label>
-            <select name="resolved" id="resolved" class="form-control form-control-sm" aria-label="resolved">
-              <option value="" {% if selected_resolved == '' %}selected{% endif %}>{{ t('All') }}</option>
-              <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>غير محلول</option>
-              <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary mb-2 mr-2">
-            <i class="fas fa-filter"></i> تصفية
-          </button>
-          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary mb-2 mr-2">
-            <i class="fas fa-times"></i> إلغاء
-          </a>
-          <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-success mb-2 mr-2">
-            <i class="fas fa-file-code"></i> تصدير JSON
-          </a>
-          <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-outline-success mb-2">
-            <i class="fas fa-file-alt"></i> تصدير TXT
-          </a>
         </form>
       </div>
     </div>
@@ -159,7 +186,14 @@
               </td>
               <td class="small">{{ log.source }}</td>
               <td class="small">
-                {% if log.user_id %}{{ log.user_id }}{% else %}-{% endif %}
+                {% if log.user_id %}
+                  {% set user_name = error_log_data.get(log.id|string, {}).get('user_name', '') %}
+                  {% if user_name %}
+                    {{ user_name }}
+                  {% else %}
+                    {{ t('User') }} #{{ log.user_id }}
+                  {% endif %}
+                {% else %}-{% endif %}
                 {% if log.tenant_id %}
                 <div class="text-muted ic-9">tenant:{{ log.tenant_id }}</div>
                 {% endif %}
@@ -177,19 +211,19 @@
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="note" value="" aria-label="note">
-                  <button type="submit" class="btn btn-success" title="تحديد كمحلول" aria-label="تحديد كمحلول">
+                  <button type="submit" class="btn btn-success btn-sm" title="تحديد كمحلول" aria-label="تحديد كمحلول">
                     <i class="fas fa-check"></i>
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل" aria-label="تفاصيل">
+                <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل" aria-label="تفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="9" class="text-center text-muted py-4">
+              <td colspan="10" class="text-center text-muted py-4">
                 <i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>
                 لا توجد أخطاء مطابقة للتصفية.
               </td>
@@ -203,15 +237,15 @@
         <nav>
           <ul class="pagination pagination-sm justify-content-center mb-0">{%- if pagination.has_prev %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ t('السابق') }}</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ t('السابق') }}</a>
             </li>{%- endif -%}{%- for page_num in pagination.iter_pages() -%}{%- if page_num -%}{%- if page_num != pagination.page %}
                 <li class="page-item">
-                  <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ page_num }}</a>
+                  <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ page_num }}</a>
                 </li>{%- else %}
                 <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>{%- endif -%}{%- else %}
                 <li class="page-item disabled"><span class="page-link">...</span></li>{%- endif -%}{%- endfor -%}{%- if pagination.has_next %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ t('التالي') }}</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved, source=selected_source, from_date=from_date, to_date=to_date, search=search) }}">{{ t('التالي') }}</a>
             </li>{%- endif %}
           </ul>
         </nav>
@@ -247,7 +281,6 @@
 {{ super() }}
 <script>
 (function() {
-  // Inline data for the current page (safe — no secrets, all server-side rendered)
   window.ERROR_LOG_DATA = {{ error_log_data | tojson }};
 
   let modalEl = document.getElementById('errorDetailModal');
@@ -256,8 +289,6 @@
     return;
   }
 
-  // Bootstrap modals must live under <body>. Keeping this modal inside
-  // AdminLTE's content-wrapper can put the backdrop above it and block clicks.
   if (modalEl.parentNode !== document.body) {
     document.body.appendChild(modalEl);
   }
@@ -284,7 +315,7 @@
       '<dt class="col-sm-3">{{ t('الرابط') }}</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
       '<dt class="col-sm-3">{{ t('الطريقة') }}</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
       '<dt class="col-sm-3">IP</dt><dd class="col-sm-9">' + esc(data.ip_address || '-') + '</dd>' +
-      '<dt class="col-sm-3">{{ t('User') }}</dt><dd class="col-sm-9">' + (data.user_id || '-') + '</dd>' +
+      '<dt class="col-sm-3">{{ t('User') }}</dt><dd class="col-sm-9">' + esc(data.user_name || data.user_id || '-') + '</dd>' +
       '<dt class="col-sm-3">{{ t('التينانت') }}</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
       '</dl><hr><h6>{{ t('الرسالة') }}</h6>' +
       '<pre class="bg-light p-2 small ic-10">' + esc(data.message) + '</pre>';
@@ -309,9 +340,6 @@
     }
   }
 
-  // Bootstrap 4: populate shared modal when it is about to show.
-  // Using show.bs.modal ensures Bootstrap registers all internal
-  // close / escape / backdrop handlers correctly.
   $modal.on('show.bs.modal', function(e) {
     $('body').addClass('error-audit-modal-open');
     try {
@@ -344,4 +372,3 @@
 </script>
 
 {% endblock %}
-

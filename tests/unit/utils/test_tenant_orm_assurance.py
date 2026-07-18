@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from sqlalchemy.orm import Session
-
 
 class TestTenantScopeEnabled:
     def test_false_without_request_context(self):
@@ -91,88 +89,7 @@ class TestCriteriaAndValidation:
         crit = _criteria_for_model(7)
         assert crit(M) == (M.tenant_id == 7)
 
-    def test_validate_none_is_ok(self):
-        from utils.tenant_orm import _validate_instance_tenant
 
-        assert _validate_instance_tenant(None) is True
-
-    def test_validate_exempt_user_model(self):
-        from utils.tenant_orm import _validate_instance_tenant
-
-        user = MagicMock()
-        user.__class__.__name__ = "User"
-        assert _validate_instance_tenant(user) is True
-
-    def test_validate_no_tenant_column(self, mocker):
-        from utils.tenant_orm import _validate_instance_tenant
-
-        obj = MagicMock()
-        obj.__class__.__name__ = "Plain"
-        mocker.patch("utils.tenant_orm.sa_inspect", return_value=None)
-        assert _validate_instance_tenant(obj) is True
-
-    def test_validate_platform_owner_null_tenant_record(self, mocker):
-        from utils.tenant_orm import _validate_instance_tenant
-
-        obj = MagicMock(tenant_id=None)
-        obj.__class__.__name__ = "Sale"
-        mapper = MagicMock()
-        mapper.columns = {"tenant_id": object()}
-        mocker.patch("utils.tenant_orm.sa_inspect", return_value=mapper)
-        mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=1)
-        mocker.patch("utils.tenanting.is_platform_owner", return_value=True)
-        assert _validate_instance_tenant(obj) is True
-
-    def test_validate_mismatch_returns_false(self, mocker):
-        from utils.tenant_orm import _validate_instance_tenant
-
-        obj = MagicMock(tenant_id=2)
-        obj.__class__.__name__ = "Sale"
-        mapper = MagicMock()
-        mapper.columns = {"tenant_id": object()}
-        mocker.patch("utils.tenant_orm.sa_inspect", return_value=mapper)
-        mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=1)
-        assert _validate_instance_tenant(obj) is False
-
-    def test_validate_no_active_tenant(self, mocker):
-        from utils.tenant_orm import _validate_instance_tenant
-
-        obj = MagicMock(tenant_id=1)
-        obj.__class__.__name__ = "Sale"
-        mapper = MagicMock()
-        mapper.columns = {"tenant_id": object()}
-        mocker.patch("utils.tenant_orm.sa_inspect", return_value=mapper)
-        mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=None)
-        assert _validate_instance_tenant(obj) is False
-
-
-class TestSessionGetPatch:
-    def test_cross_tenant_get_returns_none(self, mocker):
-        import utils.tenant_orm as torm
-
-        torm._SESSION_GET_PATCHED = False
-        obj = MagicMock(tenant_id=99)
-        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
-        mocker.patch("utils.tenant_orm._validate_instance_tenant", return_value=False)
-        mocker.patch.object(Session, "get", return_value=obj)
-        torm._patch_session_get()
-        session = object.__new__(Session)
-        assert session.get("Sale", 1) is None
-        torm._SESSION_GET_PATCHED = False
-
-    def test_skip_scope_execution_option(self, mocker):
-        import utils.tenant_orm as torm
-
-        torm._SESSION_GET_PATCHED = False
-        obj = MagicMock()
-        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
-        mocker.patch("utils.tenant_orm._validate_instance_tenant", return_value=False)
-        mocker.patch.object(Session, "get", return_value=obj)
-        torm._patch_session_get()
-        session = object.__new__(Session)
-        result = session.get("Sale", 1, execution_options={"skip_tenant_scope": True})
-        assert result is obj
-        torm._SESSION_GET_PATCHED = False
 
 
 class TestOrmExecuteListener:
@@ -243,15 +160,13 @@ class TestDiscoveryAndRegistration:
         mocker.patch.object(torm.db.Model, "registry", _BrokenRegistry(), create=True)
         assert torm._discover_tenant_models() == []
 
-    def test_register_logs_and_patches(self, app, mocker):
+    def test_register_discovers_models(self, app, mocker):
         import utils.tenant_orm as torm
 
-        torm._SESSION_GET_PATCHED = False
-        torm._TENANT_MODELS = []
-        mocker.patch.object(torm, "_discover_tenant_models", return_value=[])
-        mocker.patch.object(torm, "_patch_session_get")
+        torm._TENANT_MODELS = None
+        spy = mocker.patch.object(torm, "_discover_tenant_models", return_value=[])
         torm.register_tenant_orm_scoping(app)
-        torm._patch_session_get.assert_called_once()
+        assert spy.called
 
     def test_shims_delegate(self, mocker):
         mocker.patch("utils.tenanting.tenant_query", return_value="q")
@@ -290,38 +205,7 @@ class TestDiscoveryAndRegistration:
         crit = _criteria_for_model(1)
         assert crit(Plain) is not None
 
-    def test_session_get_returns_obj_when_scope_disabled(self, mocker):
-        import utils.tenant_orm as torm
 
-        torm._SESSION_GET_PATCHED = False
-        obj = MagicMock()
-        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=False)
-        mocker.patch.object(Session, "get", return_value=obj)
-        torm._patch_session_get()
-        session = object.__new__(Session)
-        assert session.get("Sale", 1) is obj
-        torm._SESSION_GET_PATCHED = False
-
-    def test_session_get_returns_obj_when_valid(self, mocker):
-        import utils.tenant_orm as torm
-
-        torm._SESSION_GET_PATCHED = False
-        obj = MagicMock()
-        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
-        mocker.patch("utils.tenant_orm._validate_instance_tenant", return_value=True)
-        mocker.patch.object(Session, "get", return_value=obj)
-        torm._patch_session_get()
-        session = object.__new__(Session)
-        assert session.get("Sale", 1) is obj
-        torm._SESSION_GET_PATCHED = False
-
-    def test_patch_session_get_idempotent(self, mocker):
-        import utils.tenant_orm as torm
-
-        torm._SESSION_GET_PATCHED = True
-        mocker.patch.object(Session, "get")
-        torm._patch_session_get()
-        torm._SESSION_GET_PATCHED = False
 
     def test_login_import_failure_in_scope(self, mocker):
         mocker.patch("utils.tenant_orm.has_request_context", return_value=True)

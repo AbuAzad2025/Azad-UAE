@@ -99,6 +99,7 @@ class ErrorAuditLog(db.Model):
             "source": self.source,
             "message": self.message,
             "exception_type": self.exception_type,
+            "stack_trace": self.stack_trace,
             "request_id": self.request_id,
             "url": self.url,
             "method": self.method,

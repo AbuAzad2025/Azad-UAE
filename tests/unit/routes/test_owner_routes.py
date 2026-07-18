@@ -282,7 +282,7 @@ def _service_contexts():
             "stats": {},
         },
         "performance": {"cpu": 0},
-        "error_logs": ([], MagicMock(items=[]), [], [], {}),
+        "error_logs": ([], MagicMock(items=[]), [], [], [], {}),
         "integrations": {},
         "backups_list": {
             "backups": [],
