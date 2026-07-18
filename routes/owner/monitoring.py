@@ -51,10 +51,7 @@ def system_health():
 def activity_monitor():
     from services.logging_core import LoggingCore
 
-    tid = get_active_tenant_id(current_user)
-    scoped_branch_id = _owner_branch_scope()
-
-    ctx = LoggingCore.get_activity_context(tid, scoped_branch_id)
+    ctx = LoggingCore.get_activity_context(None, None)
 
     return render_template(
         "owner/activity_monitor.html",

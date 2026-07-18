@@ -19,59 +19,59 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_users }}</h4>
-                        <p class="mb-0">{{ t('Users') }}</p>
+                        <h4 class="mb-0">{{ stats.tenant_count }}</h4>
+                        <p class="mb-0">إجمالي الشركات</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-users fa-2x"></i>
+                        <i class="fas fa-building fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-success text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_customers }}</h4>
-                        <p class="mb-0">{{ t('Customers_2') }}</p>
+                        <h4 class="mb-0">{{ stats.active_tenant_count }}</h4>
+                        <p class="mb-0">شركات نشطة</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-user-friends fa-2x"></i>
+                        <i class="fas fa-check-circle fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_products }}</h4>
-                        <p class="mb-0">{{ t('Products') }}</p>
+                        <h4 class="mb-0">{{ "{:,.0f}".format(stats.mrr_aed) }}</h4>
+                        <p class="mb-0">MRR (AED)</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-box fa-2x"></i>
+                        <i class="fas fa-coins fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-warning text-dark">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_sales }}</h4>
-                        <p class="mb-0">{{ t('Sales') }}</p>
+                        <h4 class="mb-0">{{ stats.new_tenants_month }}</h4>
+                        <p class="mb-0">اشتراكات جديدة (الشهر)</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-shopping-cart fa-2x"></i>
+                        <i class="fas fa-user-plus fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -85,43 +85,43 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_invoices }}</h4>
-                        <p class="mb-0">{{ t('Invoices') }}</p>
+                        <h4 class="mb-0">{{ stats.suspended_tenant_count }}</h4>
+                        <p class="mb-0">شركات معلقة/موقوفة</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-file-invoice fa-2x"></i>
+                        <i class="fas fa-pause-circle fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card bg-dark text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_receipts }}</h4>
-                        <p class="mb-0">الإيصالات</p>
+                        <h4 class="mb-0">{{ stats.trial_tenant_count }}</h4>
+                        <p class="mb-0">اشتراكات تجريبية</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-receipt fa-2x"></i>
+                        <i class="fas fa-flask fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card bg-danger text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">{{ stats.total_donations }}</h4>
-                        <p class="mb-0">{{ t('التبرعات') }}</p>
+                        <h4 class="mb-0">{{ stats.expired_subscription_count }}</h4>
+                        <p class="mb-0">اشتراكات منتهية</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-heart fa-2x"></i>
+                        <i class="fas fa-calendar-times fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -141,7 +141,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="mb-1">الخزينة السرية</h6>
-                        <p class="text-muted mb-0">حالة أمان الدفع والتبرعات</p>
+                        <p class="text-muted mb-0">حالة أمان الدفع (بنية المنصة)</p>
                     </div>
                     <div>
                         {% if stats.vault_status %}
@@ -154,23 +154,23 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-pie mr-2"></i>إحصائيات الدفع
+                    <i class="fas fa-chart-pie mr-2"></i>نمو المستأجرين
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-6">
-                        <h4 class="text-primary">{{ stats.total_donations }}</h4>
-                        <p class="mb-0">{{ t('التبرعات') }}</p>
+                        <h4 class="text-primary">{{ stats.new_tenants_week }}</h4>
+                        <p class="mb-0">هذا الأسبوع</p>
                     </div>
                     <div class="col-6">
-                        <h4 class="text-success">{{ stats.total_payments }}</h4>
-                        <p class="mb-0">{{ t('Payments') }}</p>
+                        <h4 class="text-success">{{ stats.new_tenants_today }}</h4>
+                        <p class="mb-0">اليوم</p>
                     </div>
                 </div>
             </div>
@@ -183,55 +183,44 @@
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-bar mr-2"></i>التقارير المفصلة
+                    <i class="fas fa-chart-bar mr-2"></i>توزيع الباقات
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
                         <div class="info-box">
-                            <span class="info-box-icon bg-primary">
-                                <i class="fas fa-users"></i>
-                            </span>
+                            <span class="info-box-icon bg-primary"><i class="fas fa-layer-group"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">{{ t('Users') }}</span>
+                                <span class="info-box-text">الشركات النشطة</span>
+                                <span class="info-box-number">{{ stats.active_tenant_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-success"><i class="fas fa-hourglass-half"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">تنتهي قريباً (7 أيام)</span>
+                                <span class="info-box-number">{{ stats.expiring_soon_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-info"><i class="fas fa-sitemap"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">الفروع النشطة</span>
+                                <span class="info-box-number">{{ stats.total_branches }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-warning"><i class="fas fa-users"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">المستخدمون (غير المالك)</span>
                                 <span class="info-box-number">{{ stats.total_users }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <div class="info-box">
-                            <span class="info-box-icon bg-success">
-                                <i class="fas fa-user-friends"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">{{ t('Customers_2') }}</span>
-                                <span class="info-box-number">{{ stats.total_customers }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <div class="info-box">
-                            <span class="info-box-icon bg-info">
-                                <i class="fas fa-box"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">{{ t('Products') }}</span>
-                                <span class="info-box-number">{{ stats.total_products }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <div class="info-box">
-                            <span class="info-box-icon bg-warning">
-                                <i class="fas fa-shopping-cart"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">{{ t('Sales') }}</span>
-                                <span class="info-box-number">{{ stats.total_sales }}</span>
                             </div>
                         </div>
                     </div>

@@ -5,15 +5,32 @@ Owner / company admin panel data builders — display-only, no schema changes.
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func
 
 from extensions import db
-from models import Branch, Sale, SaleLine, User, Warehouse
+from models import Branch, User, Warehouse
 from models.tenant import Tenant
 from utils.tenant_branding import resolve_tenant_branding, branding_path_warnings
+
+
+# Platform-level monthly price per subscription plan (telemetry only, not
+# tenant business data). Used to derive indicative MRR for the owner plane.
+_PLAN_MONTHLY_PRICE_AED = {
+    "basic": 199,
+    "standard": 499,
+    "professional": 999,
+    "enterprise": 2499,
+    "trial": 0,
+}
+
+
+def _plan_monthly_price(plan: str | None) -> Decimal:
+    if not plan:
+        return Decimal("0")
+    return Decimal(str(_PLAN_MONTHLY_PRICE_AED.get(plan.lower(), 0)))
 
 
 def _tenant_logo_display_url(tenant: Tenant, branding: dict) -> str:
@@ -78,26 +95,6 @@ def build_platform_overview(backups: list | None = None) -> dict:
     )
 
     month_start = datetime.now(timezone.utc).date().replace(day=1)
-    sales_by_tenant = dict(
-        db.session.query(Sale.tenant_id, func.sum(Sale.amount_aed))
-        .filter(
-            Sale.status == "confirmed",
-            func.date(Sale.sale_date) >= month_start,
-        )
-        .group_by(Sale.tenant_id)
-        .all()
-    )
-
-    try:
-        from models.gl import GLJournalEntry
-
-        gl_by_tenant = dict(
-            db.session.query(GLJournalEntry.tenant_id, func.count(GLJournalEntry.id))
-            .group_by(GLJournalEntry.tenant_id)
-            .all()
-        )
-    except Exception:
-        gl_by_tenant = {}
 
     backup_by_tenant = _latest_backup_by_tenant(backups)
     sys_backup = _system_backup_status(backups)
@@ -136,9 +133,68 @@ def build_platform_overview(backups: list | None = None) -> dict:
         "warnings": warnings,
         "user_counts": user_counts,
         "branch_counts": branch_counts,
-        "sales_by_tenant": sales_by_tenant,
-        "gl_by_tenant": gl_by_tenant,
         "backup_by_tenant": backup_by_tenant,
+    }
+
+
+def build_platform_telemetry() -> dict:
+    """Owner-plane-only telemetry: SaaS growth, subscription lifecycle, MRR, health."""
+    today = datetime.now(timezone.utc).date()
+    month_start = today.replace(day=1)
+    week_start = today - timedelta(days=today.weekday())
+    day_start = today
+
+    tenants = Tenant.query.all()
+    total = len(tenants)
+    active = sum(1 for t in tenants if getattr(t, "is_active", False))
+    suspended = total - active
+
+    trial = sum(1 for t in tenants if getattr(t, "is_trial", False))
+    expired = 0
+    expiring_soon = 0
+    new_this_month = 0
+    new_this_week = 0
+    new_today = 0
+    mrr = Decimal("0")
+    plan_distribution: dict[str, int] = {}
+
+    for t in tenants:
+        plan = (getattr(t, "subscription_plan", None) or "basic") or "basic"
+        plan_distribution[plan] = plan_distribution.get(plan, 0) + 1
+        mrr += _plan_monthly_price(plan)
+
+        end = getattr(t, "subscription_end", None)
+        if end is not None:
+            end_d = end.date() if hasattr(end, "date") else end
+            if end_d < today:
+                expired += 1
+            elif (end_d - today).days <= 7:
+                expiring_soon += 1
+
+        created = getattr(t, "created_at", None)
+        if created is not None:
+            cd = created.date() if hasattr(created, "date") else created
+            if cd >= month_start:
+                new_this_month += 1
+            if cd >= week_start:
+                new_this_week += 1
+            if cd >= day_start:
+                new_today += 1
+
+    return {
+        "tenant_count": total,
+        "active_tenant_count": active,
+        "suspended_tenant_count": suspended,
+        "trial_tenant_count": trial,
+        "expired_subscription_count": expired,
+        "expiring_soon_count": expiring_soon,
+        "new_tenants_month": new_this_month,
+        "new_tenants_week": new_this_week,
+        "new_tenants_today": new_today,
+        "mrr_aed": float(mrr),
+        "plan_distribution": plan_distribution,
+        "total_branches": Branch.query.filter_by(is_active=True).count(),
+        "total_users": User.query.filter_by(is_owner=False).count(),
     }
 
 
@@ -174,8 +230,7 @@ def build_tenant_management_rows(
                 "logo_url": _tenant_logo_display_url(tenant, branding),
                 "user_count": uc,
                 "branch_count": int(overview["branch_counts"].get(tid) or 0),
-                "month_sales": float(overview["sales_by_tenant"].get(tid) or 0),
-                "gl_entries": int(overview["gl_by_tenant"].get(tid) or 0),
+                "plan": (getattr(tenant, "subscription_plan", None) or "—"),
                 "country": tenant.country or "—",
                 "backup_status": backup_status,
                 "backup_label": backup_label,
@@ -240,6 +295,8 @@ def build_company_dashboard_context(
     tenant_id: int, branch_id: int | None = None
 ) -> dict:
     """KPIs and readiness for tenant company admin (single tenant only)."""
+    from models import Customer, Product, Sale, SaleLine
+
     tenant = db.session.get(Tenant, int(tenant_id))
     if not tenant:
         return {}
@@ -266,8 +323,6 @@ def build_company_dashboard_context(
 
     today_sales = sales_q.filter(func.date(Sale.sale_date) == today).first()
     month_sales = sales_q.filter(func.date(Sale.sale_date) >= month_start).first()
-
-    from models import Product, Customer
 
     prod_q = Product.query.filter_by(tenant_id=tenant_id, is_active=True)
     cust_q = Customer.query.filter_by(tenant_id=tenant_id, is_active=True)

@@ -477,6 +477,27 @@ def _owner_route_patches(mock_db=None, **overrides):
             patch("models.PaymentVault", _payment_vault_class(vault)),
         ),
         (
+            "utils.owner_panel.build_platform_telemetry",
+            patch(
+                "utils.owner_panel.build_platform_telemetry",
+                return_value={
+                    "tenant_count": 0,
+                    "active_tenant_count": 0,
+                    "suspended_tenant_count": 0,
+                    "trial_tenant_count": 0,
+                    "expired_subscription_count": 0,
+                    "expiring_soon_count": 0,
+                    "new_tenants_month": 0,
+                    "new_tenants_week": 0,
+                    "new_tenants_today": 0,
+                    "mrr_aed": 0.0,
+                    "plan_distribution": {},
+                    "total_branches": 0,
+                    "total_users": 0,
+                },
+            ),
+        ),
+        (
             "routes.owner.IntegrationSettings",
             patch("routes.owner.IntegrationSettings", _integration_settings_class()),
         ),
@@ -1180,6 +1201,24 @@ class TestOwnerExtendedCoverage:
         with (
             _owner_route_patches(),
             patch("routes.owner.get_active_tenant_id", return_value=None),
+            patch(
+                "utils.owner_panel.build_platform_telemetry",
+                return_value={
+                    "tenant_count": 0,
+                    "active_tenant_count": 0,
+                    "suspended_tenant_count": 0,
+                    "trial_tenant_count": 0,
+                    "expired_subscription_count": 0,
+                    "expiring_soon_count": 0,
+                    "new_tenants_month": 0,
+                    "new_tenants_week": 0,
+                    "new_tenants_today": 0,
+                    "mrr_aed": 0.0,
+                    "plan_distribution": {},
+                    "total_branches": 0,
+                    "total_users": 0,
+                },
+            ),
             patch("routes.owner.db") as mock_db,
         ):
             mock_db.session.query.side_effect = lambda *a, **k: db_q
@@ -1200,6 +1239,24 @@ class TestOwnerExtendedCoverage:
         with (
             _owner_route_patches(),
             patch("utils.decorators.branch_scope_id", return_value=2),
+            patch(
+                "utils.owner_panel.build_platform_telemetry",
+                return_value={
+                    "tenant_count": 0,
+                    "active_tenant_count": 0,
+                    "suspended_tenant_count": 0,
+                    "trial_tenant_count": 0,
+                    "expired_subscription_count": 0,
+                    "expiring_soon_count": 0,
+                    "new_tenants_month": 0,
+                    "new_tenants_week": 0,
+                    "new_tenants_today": 0,
+                    "mrr_aed": 0.0,
+                    "plan_distribution": {},
+                    "total_branches": 0,
+                    "total_users": 0,
+                },
+            ),
             patch("routes.owner.get_visible_products_query", return_value=visible_q),
             patch("routes.owner.Branch.query", new=_model_query(all=[branch])),
         ):
@@ -1415,28 +1472,34 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_browse_table_valid(self, owner_client):
-        resp = owner_client.get("/owner/browse-table/customers")
-        assert resp.status_code == 200
+        resp = owner_client.get(
+            "/owner/browse-table/customers", follow_redirects=False
+        )
+        assert resp.status_code in (302, 303)
 
     def test_browse_table_invalid(self, owner_client):
         resp = owner_client.get("/owner/browse-table/users", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_edit_table_data(self, owner_client):
-        resp = owner_client.get("/owner/edit-table-data/customers")
-        assert resp.status_code in (200, 302)
+        resp = owner_client.get(
+            "/owner/edit-table-data/customers", follow_redirects=False
+        )
+        assert resp.status_code in (302, 303)
 
     def test_update_row_success(self, owner_client):
         resp = owner_client.post(
             "/owner/update-row/customers/1",
             json={"name": "updated"},
+            follow_redirects=False,
         )
-        assert resp.status_code == 200
-        assert resp.get_json()["success"] is True
+        assert resp.status_code == 403
 
     def test_update_row_no_data(self, owner_client):
-        resp = owner_client.post("/owner/update-row/customers/1", json={})
-        assert resp.status_code == 400
+        resp = owner_client.post(
+            "/owner/update-row/customers/1", json={}, follow_redirects=False
+        )
+        assert resp.status_code == 403
 
     def test_update_row_blocked_table(self, owner_client):
         resp = owner_client.post("/owner/update-row/users/1", json={"name": "x"})
@@ -2123,15 +2186,11 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_export_excel_customers(self, owner_client):
-        item = MagicMock()
-        item.to_dict.return_value = {"id": 1, "name": "Cust"}
-        product_q = _model_query(all=[item])
-        with (
-            patch("routes.owner.Customer.query", new=product_q),
-            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
-        ):
-            resp = owner_client.get("/owner/export-excel/customers")
-        assert resp.status_code == 200
+        with patch("flask.send_file", return_value=make_response(b"xlsx", 200)):
+            resp = owner_client.get(
+                "/owner/export-excel/customers", follow_redirects=False
+            )
+        assert resp.status_code in (302, 303)
 
     def test_export_excel_invalid_table(self, owner_client):
         resp = owner_client.get("/owner/export-excel/invalid", follow_redirects=False)
@@ -2249,6 +2308,24 @@ class TestOwnerExtendedCoverage:
         app = app_factory(owner_bp)
         with (
             _owner_route_patches(),
+            patch(
+                "utils.owner_panel.build_platform_telemetry",
+                return_value={
+                    "tenant_count": 0,
+                    "active_tenant_count": 0,
+                    "suspended_tenant_count": 0,
+                    "trial_tenant_count": 0,
+                    "expired_subscription_count": 0,
+                    "expiring_soon_count": 0,
+                    "new_tenants_month": 0,
+                    "new_tenants_week": 0,
+                    "new_tenants_today": 0,
+                    "mrr_aed": 0.0,
+                    "plan_distribution": {},
+                    "total_branches": 0,
+                    "total_users": 0,
+                },
+            ),
             patch("utils.decorators.branch_scope_id", return_value=3),
         ):
             resp = app.test_client().get("/owner/reports")
@@ -2312,84 +2389,16 @@ class TestOwnerHelpers:
         assert ok is False
         ok, err = _validate_select_only_sql("SELECT 1")
         assert ok is True
+        ok, err = _validate_select_only_sql("SELECT * FROM sale")
+        assert ok is False
+        assert "tenant" in (err or "").lower()
+        ok, err = _validate_select_only_sql("SELECT id FROM customer WHERE id=1")
+        assert ok is False
+        ok, err = _validate_select_only_sql("SELECT name FROM tenants")
+        assert ok is False
 
 
 class TestOwnerGapClosure:
-    def test_dashboard_top_products_exception(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp
-
-        app = app_factory(owner_bp)
-        db_q = _dashboard_db_query()
-        call_count = {"n": 0}
-
-        def query_side_effect(*args, **kwargs):
-            call_count["n"] += 1
-            if call_count["n"] >= 9:
-                raise RuntimeError("top products fail")
-            return db_q
-
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db:
-            mock_db.session.query.side_effect = query_side_effect
-            mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
-            mock_db.engine = MagicMock()
-            resp = app.test_client().get("/owner/dashboard")
-        assert resp.status_code == 200
-
-    def test_dashboard_branch_inventory_value(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp
-
-        branch = _mock_branch()
-        wh = MagicMock()
-        wh.id = 5
-        wh.branch_id = branch.id
-        wh.is_active = True
-        wh_q = _model_class(all=[wh])
-        db_q = _dashboard_db_query()
-        db_q.scalar.return_value = Decimal("1500")
-        app = app_factory(owner_bp)
-        with (
-            _owner_route_patches(),
-            patch("utils.decorators.branch_scope_id", return_value=branch.id),
-            patch("routes.owner.Branch", _model_class(all=[branch])),
-            patch("routes.owner.Warehouse", wh_q),
-            patch("routes.owner.db") as mock_db,
-        ):
-            mock_db.session.query.side_effect = lambda *a, **k: db_q
-            mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
-            mock_db.engine = MagicMock()
-            resp = app.test_client().get("/owner/dashboard")
-        assert resp.status_code == 200
-
-    def test_dashboard_platform_branch_stats(self, app_factory, bypass_owner_auth):
-        from routes.owner import owner_bp
-
-        branch_row = MagicMock()
-        branch_row.id = 1
-        branch_row.name = "B1"
-        branch_row.code = "B1"
-        branch_row.tenant_id = 2
-        branch_row.sale_count = 1
-        branch_row.sale_total = Decimal("100")
-        branch_row.sale_month = Decimal("50")
-        db_q = _dashboard_db_query()
-        db_q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            branch_row
-        ]
-        tenant = _mock_tenant(id=2)
-        tenant_cls = _tenant_class(tenant)
-        app = app_factory(owner_bp)
-        with (
-            _owner_route_patches(),
-            patch("routes.owner.get_active_tenant_id", return_value=None),
-            patch("routes.owner.Tenant", tenant_cls),
-            patch("routes.owner.db") as mock_db,
-        ):
-            mock_db.session.query.side_effect = lambda *a, **k: db_q
-            mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
-            mock_db.engine = MagicMock()
-            resp = app.test_client().get("/owner/dashboard")
-        assert resp.status_code == 200
-
     def test_user_create_branch_required(self, owner_client):
         role = _mock_role(slug="seller")
         role_cls = _model_class(all=[role])
@@ -2811,13 +2820,13 @@ class TestOwnerGapClosure:
             resp = owner_client.post(
                 "/owner/update-row/customers/1", json={"name": "x"}
             )
-        assert resp.status_code == 400
+        assert resp.status_code == 403
         inspector.get_pk_constraint.return_value = {"constrained_columns": ["id"]}
         with patch("routes.owner.database.inspect", return_value=inspector):
             resp2 = owner_client.post(
                 "/owner/update-row/customers/1", json={"id": "hack"}
             )
-        assert resp2.status_code == 400
+        assert resp2.status_code == 403
         with (
             patch("routes.owner.database.inspect", return_value=inspector),
             patch("routes.owner.database.db") as mock_db,
@@ -2827,7 +2836,7 @@ class TestOwnerGapClosure:
             resp3 = owner_client.post(
                 "/owner/update-row/customers/1", json={"name": "x"}
             )
-        assert resp3.status_code == 500
+        assert resp3.status_code == 403
 
     def test_edit_table_data_exception(self, owner_client):
         with patch("routes.owner.database.db") as mock_db:
@@ -2835,7 +2844,7 @@ class TestOwnerGapClosure:
             resp = owner_client.get(
                 "/owner/edit-table-data/customers", follow_redirects=False
             )
-        assert resp.status_code in (302, 303, 200)
+        assert resp.status_code in (302, 303)
 
     def test_export_database_json_and_failure(self, owner_client, tmp_path):
         exec_result = _execute_result(rows=[(1, "a")], columns=["id", "name"])
@@ -3100,38 +3109,15 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
 
     def test_export_excel_paths(self, owner_client):
-        item = MagicMock()
-        item.to_dict.return_value = {"id": 1}
-        with (
-            patch("routes.owner.database.Customer", _model_class(all=[item])),
-            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
-        ):
-            resp = owner_client.get("/owner/export-excel/customers")
-        assert resp.status_code == 200
-        plain = MagicMock()
-        col = MagicMock(name="id")
-        plain.__table__ = MagicMock(columns=[col])
-        del plain.to_dict
-        with (
-            patch("routes.owner.database.Product", _model_class(all=[plain])),
-            patch("utils.decorators.branch_scope_id", return_value=1),
-            patch("flask.send_file", return_value=make_response(b"xlsx", 200)),
-        ):
-            resp2 = owner_client.get("/owner/export-excel/products")
-        assert resp2.status_code in (200, 302)
-        with patch("routes.owner.database.Customer", _model_class(all=[])):
-            resp3 = owner_client.get(
-                "/owner/export-excel/customers", follow_redirects=False
+        for entity in ("customers", "products", "sales", "expenses"):
+            resp = owner_client.get(
+                f"/owner/export-excel/{entity}", follow_redirects=False
             )
-        assert resp3.status_code in (302, 303)
-        with (
-            patch("routes.owner.database.Customer", _model_class(all=[item])),
-            patch("pandas.DataFrame", side_effect=RuntimeError("xlsx fail")),
-        ):
-            resp4 = owner_client.get(
-                "/owner/export-excel/customers", follow_redirects=False
-            )
-        assert resp4.status_code in (302, 303)
+            assert resp.status_code in (302, 303)
+        resp_invalid = owner_client.get(
+            "/owner/export-excel/invalid_entity", follow_redirects=False
+        )
+        assert resp_invalid.status_code in (302, 303)
 
     def test_tenant_create_validation_and_error(self, owner_client):
         resp = owner_client.post(
@@ -3592,26 +3578,8 @@ class TestOwnerGapClosure:
     ):
         from routes.owner import owner_bp
 
-        branch = _mock_branch()
-        wh = MagicMock()
-        wh.id = 5
-        wh.branch_id = branch.id
-        wh.is_active = True
-        branch_cls = _model_class(all=[branch])
-        wh_cls = _model_class(all=[wh])
-        pwc_cls = _model_class()
-        db_q = _dashboard_db_query()
         app = app_factory(owner_bp)
-        with (
-            _owner_route_patches(),
-            patch("routes.owner.get_active_tenant_id", return_value=1),
-            patch("models.Branch", branch_cls),
-            patch("models.Warehouse", wh_cls),
-            patch("models.ProductWarehouseCost", pwc_cls),
-            patch("models.StockMovement", _model_class()),
-            patch("routes.owner.db") as mock_db,
-        ):
-            mock_db.session.query.side_effect = lambda *a, **k: db_q
+        with _owner_route_patches(), patch("routes.owner.db") as mock_db:
             mock_db.session.get.side_effect = lambda m, pk: _mock_tenant(id=pk)
             mock_db.engine = MagicMock()
             resp = app.test_client().get("/owner/dashboard")

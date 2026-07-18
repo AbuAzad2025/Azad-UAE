@@ -64,7 +64,7 @@
           <th>{{ t('الدولة') }}</th>
           <th class="text-center">مستخدمون</th>
           <th class="text-center">فروع</th>
-          <th class="text-center">مبيعات الشهر</th>
+          <th class="text-center">الباقة</th>
           <th class="text-center">{{ t('نسخة') }}</th>
           <th class="text-center">{{ t('Status') }}</th>
           <th>{{ t('Actions') }}</th>
@@ -90,7 +90,7 @@
           <td>{{ row.country }}</td>
           <td class="text-center">{{ row.user_count }}</td>
           <td class="text-center">{{ row.branch_count }}</td>
-          <td class="text-center">{{ "{:,.0f}".format(row.month_sales) }}</td>
+          <td class="text-center"><span class="badge badge-info">{{ row.plan }}</span></td>
           <td class="text-center"><span class="badge owner-badge-{{ row.backup_status }}">{{ row.backup_label }}</span></td>
           <td class="text-center"><span class="badge owner-badge-{{ row.status }}">{{ row.status_label }}</span></td>
           <td class="text-nowrap">

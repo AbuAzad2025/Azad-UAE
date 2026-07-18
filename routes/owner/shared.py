@@ -14,6 +14,7 @@ import re
 logger = logging.getLogger(__name__)
 
 _TABLE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$", re.IGNORECASE)
+_SQL_TOKEN_RE = re.compile(r"[a-z_][a-z0-9_]*", re.IGNORECASE)
 
 # Tables the platform owner may NEVER read, browse, export, convert, or
 # truncate through the database console / maintenance tools. This covers both
@@ -185,7 +186,7 @@ def _sql_references_blocked_table(sql_query: str) -> str | None:
     if not sql_query:
         return None
     lowered = sql_query.lower()
-    for token in _TABLE_NAME_RE.findall(lowered):
+    for token in _SQL_TOKEN_RE.findall(lowered):
         if token in _BLOCKED_SQL_TABLES:
             return token
     return None

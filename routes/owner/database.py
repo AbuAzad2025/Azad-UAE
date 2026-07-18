@@ -1,7 +1,5 @@
 """Database tools, SQL console, and maintenance routes for the owner blueprint."""
 
-from models import Customer, Product, Sale, Expense
-
 from routes.owner import (
     render_template,
     request,
@@ -17,7 +15,6 @@ from routes.owner import (
     AuditLog,
     ArchivedRecord,
     owner_required,
-    get_active_tenant_id,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
@@ -34,7 +31,6 @@ from routes.owner.shared import (
     _is_sensitive_stats_table,
     _inspector_column_names,
     _validate_postgresql_uri,
-    _owner_branch_scope,
     _is_blocked_table,
     _sql_references_blocked_table,
 )
@@ -434,6 +430,8 @@ def export_database():
 
             export_data = {}
             for table_name in _known_tables_map().values():
+                if _is_blocked_table(table_name):
+                    continue
                 result = db.session.execute(
                     text(f"SELECT * FROM {table_name}")
                 )  # nosec B608
@@ -496,7 +494,7 @@ def convert_database():
 
             with target_engine.begin() as conn:
                 for table_name in _known_tables_map().values():
-                    if table_name.lower() in _CONVERT_BLOCKED_TABLES:
+                    if _is_blocked_table(table_name):
                         continue
 
                     allowed_columns = _inspector_column_names(table_name)
@@ -666,77 +664,18 @@ def import_export_tools():
 @owner_bp.route("/export-excel/<table_name>")
 @owner_required
 def export_excel(table_name):
-    try:
-        import pandas as pd
-        from io import BytesIO
-        from flask import send_file
-
-        today_str = datetime.now().strftime("%Y-%m-%d")
-
-        model_map = {
-            "customers": Customer,
-            "products": Product,
-            "sales": Sale,
-            "expenses": Expense,
-        }
-
-        normalized = (table_name or "").strip().lower()
-        if normalized not in _EXPORT_EXCEL_ENTITIES or normalized not in model_map:
-            flash("جدول غير موجود", "danger")
-            return redirect(url_for("owner.import_export_tools"))
-
-        model = model_map[normalized]
-        tid = get_active_tenant_id(current_user)
-        scoped_branch_id = _owner_branch_scope()
-
-        query = model.query.filter_by(tenant_id=tid)
-        if hasattr(model, "branch_id") and scoped_branch_id is not None:
-            query = query.filter_by(branch_id=scoped_branch_id)
-
-        data = query.all()
-
-        df_data = []
-        for item in data:
-            if hasattr(item, "to_dict"):
-                df_data.append(item.to_dict())
-            else:
-                df_data.append(
-                    {
-                        col.name: getattr(item, col.name)
-                        for col in item.__table__.columns
-                    }
-                )
-
-        if not df_data:
-            flash("لا توجد بيانات للتصدير", "warning")
-            return redirect(url_for("owner.import_export_tools"))
-
-        df = pd.DataFrame(df_data)
-
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name=normalized)
-        output.seek(0)
-
-        _audit_owner_db_action(
-            "export_excel", {"entity": normalized, "row_count": len(df_data)}
-        )
-
-        return send_file(
-            output,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            as_attachment=True,
-            download_name=f"{normalized}_{today_str}.xlsx",
-        )
-    except Exception as e:
-        current_app.logger.error(
-            "export_excel failed user_id=%s entity=%r: %s",
-            current_user.id,
+    normalized = (table_name or "").strip().lower()
+    if _is_blocked_table(normalized) or _is_blocked_table(table_name):
+        current_app.logger.warning(
+            "export_excel rejected entity=%r user_id=%s (tenant business table)",
             table_name,
-            e,
+            current_user.id,
         )
-        flash(f"خطأ في التصدير: {str(e)}", "danger")
+        flash("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك", "danger")
         return redirect(url_for("owner.import_export_tools"))
+
+    flash("❌ جدول غير موجود", "danger")
+    return redirect(url_for("owner.import_export_tools"))
 
 
 @owner_bp.route("/api/recent-audit-logs")

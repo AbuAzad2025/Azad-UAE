@@ -1674,13 +1674,16 @@ class LoggingCore:
             User.tenant_id == tenant_id,
         ).all()
 
-        recent_sales = Sale.query.filter(
-            Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
-            Sale.tenant_id == tenant_id,
-        )
-        if branch_id is not None:
-            recent_sales = recent_sales.filter(Sale.branch_id == branch_id)
-        recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(20).all()
+        if tenant_id is None:
+            recent_sales = []
+        else:
+            recent_sales = Sale.query.filter(
+                Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+                Sale.tenant_id == tenant_id,
+            )
+            if branch_id is not None:
+                recent_sales = recent_sales.filter(Sale.branch_id == branch_id)
+            recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(20).all()
 
         return {
             "recent_audits": recent_audits,

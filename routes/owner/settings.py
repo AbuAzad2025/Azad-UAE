@@ -25,14 +25,12 @@ from routes.owner import (
     get_active_tenant_id,
     get_system_default_currency,
     resolve_default_currency,
-    get_visible_products_query,
 )
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
 from routes.owner.shared import (
     _invalidate_owner_changes,
     _audit_owner_db_action,
-    _owner_branch_scope,
     _get_developer_from_settings,
 )
 from utils.db_safety import atomic_transaction
@@ -122,111 +120,30 @@ def update_integration(service):
 @owner_bp.route("/reports")
 @owner_required
 def reports():
-    """صفحة التقارير — platform-level when owner has no active tenant."""
-    from models import (
-        User,
-        Customer,
-        Product,
-        Sale,
-        Receipt,
-        PaymentVault,
-        Donation,
-        Payment,
-    )
-    from models.tenant import Tenant
+    """Platform telemetry only — the owner plane never exposes tenant business data."""
+    from utils.owner_panel import build_platform_telemetry
+    from services.backup_service import BackupService
+    from models import PaymentVault
 
-    tid = get_active_tenant_id(current_user)
+    telemetry = build_platform_telemetry()
     vault = PaymentVault.get_platform_vault()
-    scoped_branch_id = _owner_branch_scope()
 
-    is_platform_view = tid is None
-
-    if is_platform_view:
-        stats = {
-            "total_tenants": Tenant.query.filter_by(is_active=True).count(),
-            "suspended_tenants": Tenant.query.filter_by(is_suspended=True).count(),
-            "total_users": User.query.filter(
-                User.tenant_id.isnot(None),
-                User.is_active,
-                not User.is_owner,
-            ).count(),
-            "total_customers": Customer.query.filter(
-                Customer.tenant_id.isnot(None), Customer.is_active
-            ).count(),
-            "total_products": Product.query.filter(
-                Product.tenant_id.isnot(None), Product.is_active
-            ).count(),
-            "total_sales": Sale.query.filter(Sale.tenant_id.isnot(None)).count(),
-            "total_invoices": Sale.query.filter(
-                Sale.tenant_id.isnot(None), Sale.payment_status == "paid"
-            ).count(),
-            "total_receipts": Receipt.query.filter(
-                Receipt.tenant_id.isnot(None)
-            ).count(),
-            "total_donations": Donation.query.filter(
-                Donation.tenant_id.isnot(None), Donation.transaction_type == "donation"
-            ).count(),
-            "total_payments": Payment.query.filter(
-                Payment.tenant_id.isnot(None)
-            ).count(),
-            "vault_status": vault.is_locked if vault else True,
-            "is_platform_view": True,
-        }
-    else:
-        customers_stats_query = Customer.query.filter_by(tenant_id=tid, is_active=True)
-        if scoped_branch_id is not None:
-            customers_stats_query = (
-                customers_stats_query.join(Sale, Customer.id == Sale.customer_id)
-                .filter(Sale.branch_id == scoped_branch_id)
-                .distinct()
-            )
-
-        base_sale_q = Sale.query.filter_by(tenant_id=tid)
-        base_receipt_q = Receipt.query.filter_by(tenant_id=tid)
-        base_payment_q = Payment.query.filter_by(tenant_id=tid)
-        base_product_q = Product.query.filter_by(tenant_id=tid, is_active=True)
-        base_donation_q = Donation.query.filter_by(
-            tenant_id=tid, transaction_type="donation"
-        )
-
-        if scoped_branch_id is not None:
-            stats = {
-                "total_users": User.query.filter_by(
-                    tenant_id=tid, is_active=True, is_owner=False
-                ).count(),
-                "total_customers": customers_stats_query.count(),
-                "total_products": get_visible_products_query(current_user).count(),
-                "total_sales": base_sale_q.filter(
-                    Sale.branch_id == scoped_branch_id
-                ).count(),
-                "total_invoices": base_sale_q.filter(
-                    Sale.payment_status == "paid", Sale.branch_id == scoped_branch_id
-                ).count(),
-                "total_receipts": base_receipt_q.filter(
-                    Receipt.branch_id == scoped_branch_id
-                ).count(),
-                "total_donations": base_donation_q.count(),
-                "total_payments": base_payment_q.filter(
-                    Payment.branch_id == scoped_branch_id
-                ).count(),
-                "vault_status": vault.is_locked if vault else True,
-                "is_platform_view": False,
-            }
-        else:
-            stats = {
-                "total_users": User.query.filter_by(
-                    tenant_id=tid, is_active=True, is_owner=False
-                ).count(),
-                "total_customers": customers_stats_query.count(),
-                "total_products": base_product_q.count(),
-                "total_sales": base_sale_q.count(),
-                "total_invoices": base_sale_q.filter_by(payment_status="paid").count(),
-                "total_receipts": base_receipt_q.count(),
-                "total_donations": base_donation_q.count(),
-                "total_payments": base_payment_q.count(),
-                "vault_status": vault.is_locked if vault else True,
-                "is_platform_view": False,
-            }
+    stats = {
+        "tenant_count": telemetry["tenant_count"],
+        "active_tenant_count": telemetry["active_tenant_count"],
+        "suspended_tenant_count": telemetry["suspended_tenant_count"],
+        "trial_tenant_count": telemetry["trial_tenant_count"],
+        "expired_subscription_count": telemetry["expired_subscription_count"],
+        "expiring_soon_count": telemetry["expiring_soon_count"],
+        "new_tenants_month": telemetry["new_tenants_month"],
+        "new_tenants_week": telemetry["new_tenants_week"],
+        "mrr_aed": telemetry["mrr_aed"],
+        "plan_distribution": telemetry["plan_distribution"],
+        "total_users": telemetry["total_users"],
+        "total_branches": telemetry["total_branches"],
+        "vault_status": vault.is_locked if vault else True,
+        "is_platform_view": True,
+    }
 
     return render_template("owner/reports.html", stats=stats)
 
