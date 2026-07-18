@@ -206,6 +206,129 @@ class TestDiscoveryAndRegistration:
         assert crit(Plain) is not None
 
 
+class TestValidateInstanceTenant:
+    def test_none_returns_true(self):
+        from utils.tenant_orm import _validate_instance_tenant
+
+        assert _validate_instance_tenant(None) is True
+
+    def test_exempt_model_returns_true(self):
+        from utils.tenant_orm import _validate_instance_tenant
+
+        class User:
+            __name__ = "User"
+
+        assert _validate_instance_tenant(User()) is True
+
+    def test_model_no_tenant_id_returns_true(self):
+        from utils.tenant_orm import _validate_instance_tenant
+
+        class Plain:
+            pass
+
+        assert _validate_instance_tenant(Plain()) is True
+
+    def test_tenant_id_matches_active(self, mocker):
+        mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=5)
+        mock_mapper = mocker.MagicMock()
+        mock_mapper.columns = {"tenant_id": object()}
+        mocker.patch("utils.tenant_orm.sa_inspect", return_value=mock_mapper)
+        from utils.tenant_orm import _validate_instance_tenant
+
+        class M:
+            __name__ = "Sale"
+
+        m = M()
+        m.tenant_id = 5
+        assert _validate_instance_tenant(m) is True
+
+    def test_tenant_id_mismatch_returns_false(self, mocker):
+        mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=5)
+        mock_mapper = mocker.MagicMock()
+        mock_mapper.columns = {"tenant_id": object()}
+        mocker.patch("utils.tenant_orm.sa_inspect", return_value=mock_mapper)
+        from utils.tenant_orm import _validate_instance_tenant
+
+        class M:
+            __name__ = "Sale"
+
+        m = M()
+        m.tenant_id = 99
+        assert _validate_instance_tenant(m) is False
+
+
+class TestPatchSessionGet:
+    def test_patches_session_get(self):
+        import utils.tenant_orm as torm
+
+        torm._SESSION_GET_PATCHED = False
+        torm._patch_session_get()
+        assert torm._SESSION_GET_PATCHED is True
+        # Second call should be a no-op
+        torm._patch_session_get()
+        assert torm._SESSION_GET_PATCHED is True
+
+    def test_get_with_tenant_exempt_model(self, mocker):
+        import utils.tenant_orm as torm
+
+        torm._SESSION_GET_PATCHED = False
+        mock_obj = mocker.Mock(__name__="User")
+        orig_get = mocker.Mock(return_value=mock_obj)
+        mocker.patch.object(torm.Session, "get", orig_get)
+        torm._patch_session_get()
+
+        entity = mocker.Mock(__name__="User")
+        result = torm.Session.get(mocker.Mock(), entity, 1)
+        assert result is mock_obj
+
+    def test_get_with_tenant_skip_scope_option(self, mocker):
+        import utils.tenant_orm as torm
+
+        torm._SESSION_GET_PATCHED = False
+        mock_obj = mocker.Mock(__name__="Branch")
+        mock_obj.tenant_id = 5
+        orig_get = mocker.Mock(return_value=mock_obj)
+        mocker.patch.object(torm.Session, "get", orig_get)
+        torm._patch_session_get()
+
+        entity = mocker.Mock(__name__="Branch")
+        result = torm.Session.get(
+            mocker.Mock(), entity, 1, execution_options={"skip_tenant_scope": True}
+        )
+        assert result is mock_obj
+
+    def test_get_with_tenant_validated_ok(self, mocker):
+        import utils.tenant_orm as torm
+
+        torm._SESSION_GET_PATCHED = False
+        mock_obj = mocker.Mock(__name__="Branch")
+        mock_obj.tenant_id = 5
+        orig_get = mocker.Mock(return_value=mock_obj)
+        mocker.patch.object(torm.Session, "get", orig_get)
+        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
+        mocker.patch("utils.tenant_orm._validate_instance_tenant", return_value=True)
+        torm._patch_session_get()
+
+        entity = mocker.Mock(__name__="Branch")
+        result = torm.Session.get(mocker.Mock(), entity, 1)
+        assert result is mock_obj
+
+    def test_get_with_tenant_validated_rejected(self, mocker):
+        import utils.tenant_orm as torm
+
+        torm._SESSION_GET_PATCHED = False
+        mock_obj = mocker.Mock(__name__="Branch")
+        mock_obj.tenant_id = 99
+        orig_get = mocker.Mock(return_value=mock_obj)
+        mocker.patch.object(torm.Session, "get", orig_get)
+        mocker.patch("utils.tenant_orm.tenant_scope_enabled", return_value=True)
+        mocker.patch("utils.tenant_orm._validate_instance_tenant", return_value=False)
+        torm._patch_session_get()
+
+        entity = mocker.Mock(__name__="Branch")
+        result = torm.Session.get(mocker.Mock(), entity, 1)
+        assert result is None
+
 
     def test_login_import_failure_in_scope(self, mocker):
         mocker.patch("utils.tenant_orm.has_request_context", return_value=True)
