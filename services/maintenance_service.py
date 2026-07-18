@@ -264,10 +264,14 @@ class MaintenanceService:
     @staticmethod
     def regenerate_default_backup(dry_run: bool = False) -> str:
         """Create a fresh, schema-current scoped backup of the default tenant."""
-        from app import create_app
+        from flask import current_app
         from services.backup_service import BackupService
 
-        app = create_app()
+        app = current_app._get_current_object() if current_app else None
+        if app is None:
+            from app import create_app
+
+            app = create_app()
         with app.app_context():
             BackupService.initialize()
             if dry_run:
