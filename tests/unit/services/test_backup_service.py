@@ -1516,7 +1516,7 @@ class TestFullCoverage:
         assert BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH") == str(tool)
 
     def test_resolve_pg_tool_windows_glob(self, mocker, monkeypatch):
-        monkeypatch.setattr(os, "name", "nt")
+        mocker.patch("services.backup_service.os.name", "nt")
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
         mocker.patch("shutil.which", return_value=None)
         win_path = r"C:\PostgreSQL\16\bin\pg_dump.exe"

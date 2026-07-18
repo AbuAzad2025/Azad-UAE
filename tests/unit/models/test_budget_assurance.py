@@ -53,7 +53,7 @@ def _budget(**kwargs):
     return b
 
 
-def _line(budgeted=Decimal("100"), account_type="expense"):
+def _line(account_type="expense", budgeted=Decimal("100")):
     account = SimpleNamespace(type=account_type, code="6100")
     line = BudgetLine(
         tenant_id=1,
@@ -98,7 +98,7 @@ class TestBudgetProperties:
 
 class TestBudgetUpdateActuals:
     def test_update_actuals_expense_account(self, mocker, mock_gl_columns, mock_db):
-        budget = _budget(lines=[_line(Decimal("200"))])
+        budget = _budget(lines=[_line(budgeted=Decimal("200"))])
         debit_q = MagicMock()
         debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
             "150"
@@ -108,8 +108,6 @@ class TestBudgetUpdateActuals:
             "50"
         )
         mocker.patch("models.budget.db.session.query", side_effect=[debit_q, credit_q])
-        import sys
-        print("DEBUG account", budget.lines[0].account, "type", getattr(budget.lines[0].account, "type", "NONE"), file=sys.stderr)
         budget.update_actuals()
         line = budget.lines[0]
         assert line.actual_amount == Decimal("100")
@@ -135,7 +133,7 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_zero_budgeted_variance_pct(
         self, mocker, mock_gl_columns, mock_db
     ):
-        budget = _budget(total_budgeted=Decimal("0"), lines=[_line(Decimal("0"))])
+        budget = _budget(total_budgeted=Decimal("0"), lines=[_line(budgeted=Decimal("0"))])
         debit_q = MagicMock()
         debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
             "10"
@@ -178,7 +176,7 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_sets_budget_variance_percentage(
         self, mocker, mock_gl_columns, mock_db
     ):
-        budget = _budget(total_budgeted=Decimal("200"), lines=[_line(Decimal("200"))])
+        budget = _budget(total_budgeted=Decimal("200"), lines=[_line(budgeted=Decimal("200"))])
         debit_q = MagicMock()
         debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
             "100"
