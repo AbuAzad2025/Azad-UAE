@@ -24,6 +24,11 @@ from utils.db_safety import atomic_transaction
 main_bp = Blueprint("main", __name__)
 
 
+@main_bp.route("/login")
+def login_alias():
+    return redirect(url_for("auth.login"))
+
+
 @main_bp.route("/app")
 def index():
     return redirect(url_for("main.dashboard"))

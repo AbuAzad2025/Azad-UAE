@@ -7,11 +7,9 @@ Automatic ORM-level tenant isolation:
 from __future__ import annotations
 
 
-from typing import Any, cast
-
 from flask import g, has_request_context, request
 from sqlalchemy import event, inspect as sa_inspect, true as sql_true
-from sqlalchemy.orm import Session, with_loader_criteria
+from sqlalchemy.orm import with_loader_criteria
 
 from extensions import db
 
@@ -62,7 +60,6 @@ _ORM_EXEMPT_MODELS = frozenset({"User", "Package", "PackagePurchase"})
 # approach explicitly scopes every query and is tested.
 # ────────────────────────────────────────────────────────────────────────────
 _TENANT_MODELS: list[type] | None = None
-_SESSION_GET_PATCHED = False
 
 
 def _discover_tenant_models() -> list[type]:
@@ -158,54 +155,6 @@ def _criteria_for_model(tid: int | None):
     return _criteria
 
 
-def _validate_instance_tenant(obj) -> bool:
-    if obj is None:
-        return True
-    if obj.__class__.__name__ in _ORM_EXEMPT_MODELS:
-        return True
-    mapper = sa_inspect(obj.__class__, raiseerr=False)
-    if mapper is None or "tenant_id" not in mapper.columns:
-        return True
-
-    tid = _active_tenant_for_orm()
-    rec_tid = getattr(obj, "tenant_id", None)
-    if rec_tid is None:
-        from utils.tenanting import is_platform_owner
-
-        return is_platform_owner()
-    if tid is None:
-        return False
-    return int(rec_tid or 0) == int(tid or 0)
-
-
-def _patch_session_get():
-    global _SESSION_GET_PATCHED
-    if _SESSION_GET_PATCHED:
-        return
-
-    _orig_get = Session.get
-
-    def _get_with_tenant(self, entity, ident, *args, **kwargs):
-        obj = _orig_get(self, entity, ident, *args, **kwargs)
-        if obj is None:
-            return obj
-        # Exempt models (User, Package, PackagePurchase): login bootstrap
-        # accesses current_user, which calls _load_user, which calls
-        # Session.get — that would recurse through tenant_scope_enabled()
-        # → current_user → _load_user → Session.get.  Skip the scope
-        # check entirely for these models.
-        if hasattr(entity, "__name__") and entity.__name__ in _ORM_EXEMPT_MODELS:
-            return obj
-        if not tenant_scope_enabled():
-            return obj
-        if kwargs.get("execution_options", {}).get("skip_tenant_scope"):
-            return obj
-        if not _validate_instance_tenant(obj):
-            return None
-        return obj
-
-    cast(Any, Session).get = _get_with_tenant
-    _SESSION_GET_PATCHED = True
 
 
 @event.listens_for(Session, "do_orm_execute")
@@ -328,7 +277,6 @@ def register_tenant_orm_scoping(app):
     """Call once during app startup (after db.init_app)."""
     with app.app_context():
         _discover_tenant_models()
-        _patch_session_get()
     app.logger.info(
         "[OK] Tenant ORM scoping active (%s models)",
         len(_discover_tenant_models()),

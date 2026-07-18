@@ -365,7 +365,7 @@ $(document).ready(function() {
 function adjustStock(productId, productName) {
   $('#product_id').val(productId);
   $('#product_name').text(productName);
-  $('#adjustStockForm').attr('action', '{{ url_for("products.adjust_stock", product_id=0) }}'.replace('0', productId));
+  $('#adjustStockForm').attr('action', '{{ url_for("products.adjust_stock", id=0) }}'.replace('0', productId));
   $('#adjustStockModal').modal('show');
 }
 
