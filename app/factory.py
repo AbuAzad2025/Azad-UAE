@@ -327,6 +327,8 @@ def create_app(config_class=Config) -> Flask:
             app.logger.info("[OK] Enhanced CLI commands registered")
         except ImportError:
             app.logger.info("CLI commands not available - skipping")
+        except Exception as e:
+            app.logger.warning(f"CLI commands not registered: {e}")
     else:
         app.logger.info("CLI commands not available - skipping")
 
