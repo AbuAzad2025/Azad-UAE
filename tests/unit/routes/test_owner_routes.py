@@ -1111,13 +1111,14 @@ class TestOwnerPostRoutes:
         assert resp.status_code == 400
 
     def test_execute_query_valid_select(self, owner_client):
+        # Owner SQL console must reject SELECT against tenant/business tables.
         resp = owner_client.post(
             "/owner/execute-query",
             data={"query": "SELECT id FROM users"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 400
         data = resp.get_json()
-        assert data["success"] is True
+        assert "error" in data
 
     def test_api_tenant_toggle_status(self, owner_client):
         resp = owner_client.post(

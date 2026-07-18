@@ -116,7 +116,6 @@ class TestBuildPlatformOverview:
         assert overview["tenant_count"] == 5
         assert overview["active_tenant_count"] == 4
         assert overview["suspended_tenant_count"] == 1
-        assert overview["gl_by_tenant"] == {1: 5}
 
     def test_gl_import_failure(self, app, mocker):
         session = mocker.patch("utils.owner_panel.db.session")
@@ -148,7 +147,8 @@ class TestBuildPlatformOverview:
 
         with app.app_context():
             overview = build_platform_overview(backups=[])
-        assert overview["gl_by_tenant"] == {}
+        assert "gl_by_tenant" not in overview
+        assert "sales_by_tenant" not in overview
 
     def test_nasrallah_zero_users_warning(self, app, mocker):
         session = mocker.patch("utils.owner_panel.db.session")
@@ -188,8 +188,6 @@ class TestBuildTenantManagementRows:
         overview = {
             "user_counts": {1: 2},
             "branch_counts": {1: 1},
-            "sales_by_tenant": {1: Decimal("500")},
-            "gl_by_tenant": {1: 10},
             "backup_by_tenant": {1: {"filename": "b.zip"}},
         }
         from utils.owner_panel import build_tenant_management_rows
@@ -210,8 +208,6 @@ class TestBuildTenantManagementRows:
         overview = {
             "user_counts": {1: 1},
             "branch_counts": {1: 1},
-            "sales_by_tenant": {},
-            "gl_by_tenant": {},
             "backup_by_tenant": {},
         }
         from utils.owner_panel import build_tenant_management_rows
