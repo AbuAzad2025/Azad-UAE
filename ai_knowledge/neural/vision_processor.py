@@ -112,7 +112,7 @@ class VisionProcessor:
         return []
 
     @staticmethod
-    def analyze_part_image(self, image_path: str) -> dict:
+    def analyze_part_image(image_path: str) -> dict:
         """
         تحليل صورة قطعة غيار
 

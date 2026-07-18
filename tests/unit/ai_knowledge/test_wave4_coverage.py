@@ -1115,18 +1115,19 @@ class TestAgentsCoreWave4:
                 success=False, message="فشل", needs_permission=""
             )
             assert "فشل" in intelligent_response("عميل Ali")
-        with (
-            patch(
-                "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
-                return_value=("greeting", {"name": "Ali"}),
-            ),
-            patch(
-                "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
-                return_value="help",
-            ),
-            patch("datetime.datetime.now", return_value=datetime(2025, 6, 1, 8, 0, 0)),
-        ):
-            assert "صباح" in intelligent_response("مرحبا")
+        with patch("datetime.datetime") as mock_dt:
+            mock_dt.now.return_value = datetime(2025, 6, 1, 8, 0, 0)
+            with (
+                patch(
+                    "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
+                    return_value=("greeting", {"name": "Ali"}),
+                ),
+                patch(
+                    "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
+                    return_value="help",
+                ),
+            ):
+                assert "صباح" in intelligent_response("مرحبا")
         with (
             patch(
                 "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",

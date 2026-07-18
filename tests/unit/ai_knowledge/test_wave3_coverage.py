@@ -1080,18 +1080,19 @@ class TestAgentsCoreWave3:
         from ai_knowledge.agents_core import intelligent_response
 
         evening_dt = datetime(2025, 6, 1, 20, 0, 0)
-        with (
-            patch(
-                "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
-                return_value=("greeting", {}),
-            ),
-            patch(
-                "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
-                return_value="help",
-            ),
-            patch("datetime.datetime.now", return_value=evening_dt),
-        ):
-            assert "مساء" in intelligent_response("مرحبا")
+        with patch("datetime.datetime") as mock_dt:
+            mock_dt.now.return_value = evening_dt
+            with (
+                patch(
+                    "ai_knowledge.action_dispatcher.action_dispatcher.parse_chat_action",
+                    return_value=("greeting", {}),
+                ),
+                patch(
+                    "ai_knowledge.action_dispatcher.action_dispatcher.format_help",
+                    return_value="help",
+                ),
+            ):
+                assert "مساء" in intelligent_response("مرحبا")
 
     def test_ask_azad_enhanced_paths(self):
         from ai_knowledge import agents_core as ac
