@@ -1199,7 +1199,7 @@ class TestIntelligentAssistantWave5:
                 patch("models.Customer") as Customer,
                 patch("models.Product") as Product,
                 patch("models.Payment"),
-                patch("extensions.db") as mock_db,
+                patch("extensions.db"),
                 patch("flask.has_request_context", return_value=True),
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
                 patch(

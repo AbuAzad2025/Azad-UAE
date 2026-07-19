@@ -261,12 +261,6 @@ class RealTimeAccountingListeners:
         """تسجيل الحدث"""
         try:
             # يمكن حفظ الأحداث في قاعدة بيانات أو ملف
-            event = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "event_type": event_type,
-                "data": data,
-            }
-
             # طباعة للاختبار (يمكن استبدالها بحفظ في قاعدة البيانات)
             print(
                 f"🔔 حدث محاسبي: {event_type} - {json.dumps(data, ensure_ascii=False)}"

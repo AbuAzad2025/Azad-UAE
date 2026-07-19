@@ -5,13 +5,13 @@ from typing import Any
 
 from flask_login import current_user
 
-logger = logging.getLogger(__name__)
-
 from extensions import db
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from utils.auth_helpers import is_global_owner_user
 from utils.tenanting import get_active_tenant_id
+
+logger = logging.getLogger(__name__)
 
 
 def get_tenant_ai_level(tenant_id: int | None, default: str = "execute") -> str:

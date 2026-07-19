@@ -143,16 +143,6 @@ class DocumentVerificationService:
         getattr(document, "currency", None) or (
             tenant.default_currency if tenant else "AED"
         )
-        date_val = (
-            getattr(document, "sale_date", None)
-            or getattr(document, "payment_date", None)
-            or getattr(document, "receipt_date", None)
-            or getattr(document, "purchase_date", None)
-            or getattr(document, "expense_date", None)
-        )
-        date_str = date_val.strftime("%Y-%m-%d") if date_val else ""
-        branch_name = print_branch.name if print_branch else ""
-
         qr_data = verification_url
 
         return qr_data

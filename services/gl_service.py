@@ -2,9 +2,8 @@ import logging
 from decimal import Decimal
 from datetime import datetime, timezone
 from typing import Any
-from extensions import db
 
-logger = logging.getLogger(__name__)
+from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine
 from models.tenant import Tenant
 from models._constants import (
@@ -22,6 +21,8 @@ from services.gl_account_resolver import (
 )
 from services.gl_tree_builder import GLTreeBuilder
 from utils.currency_utils import resolve_tenant_base_currency
+
+logger = logging.getLogger(__name__)
 
 _JE_SEQ: dict[str, int] = {}
 

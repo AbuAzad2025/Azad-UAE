@@ -17,6 +17,8 @@ import time
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Any
 
+from utils.currency_utils import get_system_default_currency
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,8 +46,6 @@ try:
     REQUESTS_AVAILABLE = True
 except Exception:
     REQUESTS_AVAILABLE = False
-
-from utils.currency_utils import get_system_default_currency
 
 
 class CurrencyService:

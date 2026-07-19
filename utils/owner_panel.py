@@ -94,8 +94,6 @@ def build_platform_overview(backups: list | None = None) -> dict:
         .all()
     )
 
-    month_start = datetime.now(timezone.utc).date().replace(day=1)
-
     backup_by_tenant = _latest_backup_by_tenant(backups)
     sys_backup = _system_backup_status(backups)
     warnings: list[str] = []
