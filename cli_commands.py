@@ -336,9 +336,7 @@ def _do_seed_demo(_app):
         # resolved names against the live schema and quote them with the engine's
         # dialect so only real, identifier-safe table names reach the statement.
         quote_ident = db.engine.dialect.identifier_preparer.quote_identifier
-        quoted_tables = [
-            quote_ident(t) for t in tenant_tables if t in inspector_tables
-        ]
+        quoted_tables = [quote_ident(t) for t in tenant_tables if t in inspector_tables]
         db.session.execute(text("SET session_replication_role = 'replica'"))
         try:
             for qt in quoted_tables:
