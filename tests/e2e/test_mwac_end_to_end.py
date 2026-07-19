@@ -270,7 +270,8 @@ def main():
                 ),
             ]:
                 try:
-                    db.session.execute(sa.text(f"DELETE FROM {table} WHERE {cond}"))
+                    tbl = sa.table(table)
+                    db.session.execute(sa.delete(tbl).where(sa.text(cond)))
                 except Exception as e:
                     print(f"  Cleanup warning for {table}: {e}")
             db.session.commit()
