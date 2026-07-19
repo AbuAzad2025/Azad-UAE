@@ -10,14 +10,14 @@ def read_file(path):
 
 def test_purchases_js_has_recalc_event_listener():
     js = read_file("static/js/purchases/create.js")
-    assert "$('#recalcTotalsBtn').on('click'" in js, (
+    assert '$("#recalcTotalsBtn").on("click"' in js, (
         "purchases/create.js should have recalcTotalsBtn click listener"
     )
 
 
 def test_purchases_js_has_addline_event_listener():
     js = read_file("static/js/purchases/create.js")
-    assert "$('#addLineBtn').on('click'" in js, (
+    assert '$("#addLineBtn").on("click"' in js, (
         "purchases/create.js should have addLineBtn click listener"
     )
 
