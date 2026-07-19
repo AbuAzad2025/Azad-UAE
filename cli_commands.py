@@ -324,26 +324,16 @@ def _do_seed_demo(_app):
         # FK enforcement for the session so the delete order doesn't trip over
         # ON DELETE NO ACTION constraints (e.g. stock_movements -> warehouses).
         # This is a demo-reset utility, not production runtime.
-        eng_meta = sa_inspect(db.engine)
-        assert eng_meta is not None, "SQLAlchemy inspector unavailable"
-        inspector_tables = set(eng_meta.get_table_names())
-        tenant_tables = [
-            t
-            for t in inspector_tables
-            if any(c["name"] == "tenant_id" for c in eng_meta.get_columns(t))
-        ]
-        # Table identifiers cannot be passed as bind parameters.  Whitelist the
-        # resolved names against the live schema and quote them with the engine's
-        # dialect so only real, identifier-safe table names reach the statement.
-        quote_ident = db.engine.dialect.identifier_preparer.quote_identifier
-        quoted_tables = [quote_ident(t) for t in tenant_tables if t in inspector_tables]
+        # Use the ORM metadata (reflected, mapped tables) so deletions are built
+        # with SQLAlchemy's parameterized query builder — no raw string / table
+        # name concatenation reaches the database.
         db.session.execute(text("SET session_replication_role = 'replica'"))
         try:
-            for qt in quoted_tables:
-                db.session.execute(
-                    text(f"DELETE FROM {qt} WHERE tenant_id = :tid"),  # nosec B608 -- qt is whitelisted against the live schema and quoted via dialect.identifier_preparer; never user input
-                    {"tid": tid},
-                )
+            for table in db.metadata.sorted_tables:
+                if "tenant_id" in table.c:
+                    db.session.execute(
+                        table.delete().where(table.c.tenant_id == tid)
+                    )
         finally:
             db.session.execute(text("SET session_replication_role = 'origin'"))
         db.session.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tid})

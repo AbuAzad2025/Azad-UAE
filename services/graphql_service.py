@@ -144,7 +144,7 @@ class CreateSale(graphene.Mutation):
     success = graphene.Boolean()
 
     @staticmethod
-    def mutate(info, customer_id, total_amount):
+    def mutate(info, **data):
         _require_permission("manage_sales")
         from utils.helpers import generate_number
         from decimal import Decimal
@@ -153,16 +153,17 @@ class CreateSale(graphene.Mutation):
         if not seller_id:
             raise PermissionError("Authentication required")
 
-        customer = tenant_query(Customer).filter_by(id=customer_id).first()
+        customer = tenant_query(Customer).filter_by(id=data["customer_id"]).first()
         if customer is None:
             raise ValueError("Customer not found or not accessible")
 
+        total_amount = Decimal(str(data["total_amount"]))
         sale = Sale(
             sale_number=generate_number("INV", Sale, "sale_number"),
             customer_id=customer.id,
             seller_id=seller_id,
-            total_amount=Decimal(str(total_amount)),
-            amount_aed=Decimal(str(total_amount)),
+            total_amount=total_amount,
+            amount_aed=total_amount,
             status="pending",
         )
         assign_tenant_id(sale)

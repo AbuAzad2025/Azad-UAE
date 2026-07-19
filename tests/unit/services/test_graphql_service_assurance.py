@@ -178,7 +178,7 @@ class TestCreateSaleMutation:
         from services.graphql_service import CreateSale
 
         with app.app_context():
-            result = CreateSale.mutate(None, None, customer_id=7, total_amount=150.0)
+            result = CreateSale.mutate(None, customer_id=7, total_amount=150.0)
         assert result.success is True
         session.add.assert_called_once()
         session.flush.assert_called_once()
@@ -193,7 +193,7 @@ class TestCreateSaleMutation:
         from services.graphql_service import CreateSale
 
         with pytest.raises(ValueError, match="Customer not found"):
-            CreateSale.mutate(None, None, customer_id=1, total_amount=10.0)
+            CreateSale.mutate(None, customer_id=1, total_amount=10.0)
 
     def test_mutate_unauthenticated_seller(self, mocker):
         user = MagicMock(is_authenticated=False, id=None)
@@ -206,7 +206,7 @@ class TestCreateSaleMutation:
         from services.graphql_service import CreateSale
 
         with pytest.raises(PermissionError, match="Authentication"):
-            CreateSale.mutate(None, None, customer_id=1, total_amount=10.0)
+            CreateSale.mutate(None, customer_id=1, total_amount=10.0)
 
     def test_mutate_commit_failure_rolls_back(self, mocker, app):
         user = MagicMock(is_authenticated=True, id=1)
@@ -224,7 +224,7 @@ class TestCreateSaleMutation:
 
         with app.app_context():
             with pytest.raises(RuntimeError, match="commit failed"):
-                CreateSale.mutate(None, None, customer_id=1, total_amount=10.0)
+                CreateSale.mutate(None, customer_id=1, total_amount=10.0)
 
 
 class TestBuildSchema:

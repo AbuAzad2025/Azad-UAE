@@ -30,7 +30,7 @@ from utils.db_safety import atomic_transaction
 from utils.helpers import generate_number
 import queue as _queue
 import os as _os
-import urllib.request
+import requests
 from utils.pos_helpers import (
     POS_QA_MARKER,
     create_pos_session,
@@ -1232,16 +1232,16 @@ def hardware_print_receipt():
     """توجيه طباعة الفاتورة إلى وكيل الأجهزة المحلي"""
     try:
         body = request.get_data()
-        req = urllib.request.Request(
+        resp = requests.post(
             f"{_HARDWARE_AGENT_URL}/print-receipt",
             data=body,
             headers={"Content-Type": "application/json"},
-            method="POST",
+            timeout=10,
+            verify=True,
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-        return jsonify(result), resp.status
-    except urllib.error.URLError:
+        result = resp.json()
+        return jsonify(result), resp.status_code
+    except requests.RequestException:
         return (
             jsonify(
                 {"error": "وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"}
@@ -1259,16 +1259,16 @@ def hardware_open_drawer():
     """فتح درج النقود"""
     try:
         body = request.get_data()
-        req = urllib.request.Request(
+        resp = requests.post(
             f"{_HARDWARE_AGENT_URL}/open-drawer",
             data=body,
             headers={"Content-Type": "application/json"},
-            method="POST",
+            timeout=5,
+            verify=True,
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-        return jsonify(result), resp.status
-    except urllib.error.URLError:
+        result = resp.json()
+        return jsonify(result), resp.status_code
+    except requests.RequestException:
         return jsonify({"error": "وكيل الأجهزة غير متصل"}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1280,11 +1280,14 @@ def hardware_open_drawer():
 def hardware_status():
     """حالة وكيل الأجهزة"""
     try:
-        req = urllib.request.Request(f"{_HARDWARE_AGENT_URL}/status")
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
+        resp = requests.get(
+            f"{_HARDWARE_AGENT_URL}/status",
+            timeout=3,
+            verify=True,
+        )
+        result = resp.json()
         return jsonify(result)
-    except urllib.error.URLError:
+    except requests.RequestException:
         return jsonify({"status": "disconnected", "error": "غير متصل"}), 200
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)}), 200

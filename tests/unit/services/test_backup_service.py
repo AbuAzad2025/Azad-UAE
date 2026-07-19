@@ -1219,12 +1219,16 @@ class TestExtendedHelpers:
         assert summary["tables_count"] == 10
         assert summary["checks"][-1] == "basic_integrity: OK"
 
-    def test_alembic_info(self, mocker):
-        mocker.patch("flask_migrate.current", return_value="rev_a")
-        mocker.patch("flask_migrate.heads", return_value="rev_b")
+    def test_alembic_info(self, mocker, monkeypatch):
+        monkeypatch.setenv("DATABASE_URL", "postgresql://localhost/test")
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.scalar.return_value = "rev_a"
+        mock_engine = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+        mocker.patch("sqlalchemy.create_engine", return_value=mock_engine)
         cur, heads = BackupService._alembic_info()
         assert cur == "rev_a"
-        assert heads == "rev_b"
+        assert heads == "rev_a"
 
     def test_upload_roots_extra_folder(self, backup_root, app):
         extra = Path(BackupService._BASEDIR) / "custom_uploads"
@@ -1518,7 +1522,7 @@ class TestFullCoverage:
     def test_resolve_pg_tool_windows_glob(self, mocker, monkeypatch):
         mocker.patch.object(BackupService, "_is_windows", return_value=True)
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
-        mocker.patch("shutil.which", return_value=None)
+        mocker.patch.object(BackupService, "_which", return_value=None)
         win_path = r"C:\PostgreSQL\16\bin\pg_dump.exe"
         mocker.patch("glob.glob", return_value=[win_path])
         mocker.patch("os.path.isfile", return_value=True)
@@ -2230,7 +2234,7 @@ class TestFullCoverage:
 
     def test_resolve_pg_tool_via_which(self, mocker, monkeypatch):
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
-        mocker.patch("shutil.which", return_value="/usr/bin/pg_dump")
+        mocker.patch.object(BackupService, "_which", return_value="/usr/bin/pg_dump")
         assert (
             BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
             == "/usr/bin/pg_dump"
@@ -2238,13 +2242,15 @@ class TestFullCoverage:
 
     def test_resolve_pg_tool_non_windows_no_candidate(self, mocker, monkeypatch):
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
-        mocker.patch("shutil.which", return_value=None)
+        mocker.patch.object(BackupService, "_which", return_value=None)
+        mocker.patch("glob.glob", return_value=[])
+        mocker.patch("os.path.isfile", return_value=False)
         assert BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH") is None
 
     def test_resolve_pg_tool_windows_no_install(self, mocker, monkeypatch):
         mocker.patch.object(BackupService, "_is_windows", return_value=True)
         monkeypatch.delenv("PG_DUMP_PATH", raising=False)
-        mocker.patch("shutil.which", return_value=None)
+        mocker.patch.object(BackupService, "_which", return_value=None)
         mocker.patch("glob.glob", return_value=[])
         assert BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH") is None
 

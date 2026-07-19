@@ -703,6 +703,10 @@ class LoggingCore:
         cls._alert_callbacks.append(fn)
 
     @classmethod
+    def _log(cls, level: int, msg: str, *args, **kwargs):
+        logging.log(level, msg, *args, **kwargs)
+
+    @classmethod
     def _fire_alert_callbacks(cls, category: str, level: str, message: str, count: int):
         if not cls._alert_callbacks:
             return

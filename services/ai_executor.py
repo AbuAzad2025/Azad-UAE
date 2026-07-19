@@ -665,9 +665,9 @@ class AIExecutor:
                 tenant_id=getattr(flask_user, "tenant_id", None),
             )
         except Exception:
-            import random
+            import secrets
 
-            return f"{prefix}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{random.randint(100, 999)}"
+            return f"{prefix}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{secrets.randbelow(900) + 100}"
 
 
 # Convenience singleton-pattern factory

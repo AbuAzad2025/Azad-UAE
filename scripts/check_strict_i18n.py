@@ -130,6 +130,12 @@ def main():
         "--fix", action="store_true", help="Not implemented: auto-wrap strings"
     )
     parser.add_argument(
+        "--exclude-dirs",
+        nargs="*",
+        default=[],
+        help="Additional directory basenames to exclude (e.g. services)",
+    )
+    parser.add_argument(
         "paths",
         nargs="*",
         default=["templates", "routes", "services"],
@@ -137,8 +143,12 @@ def main():
     )
     args = parser.parse_args()
 
+    skip_dirs = IGNORE_DIRS | set(args.exclude_dirs)
+
     scan_dirs = []
     for p in args.paths:
+        if os.path.basename(p) in skip_dirs and os.path.isdir(os.path.join(REPO_ROOT, p)):
+            continue
         full = os.path.join(REPO_ROOT, p)
         if os.path.isdir(full):
             scan_dirs.append(full)
@@ -154,7 +164,7 @@ def main():
                 all_issues.append((rel, lineno, text, ctx))
         else:
             for root, dirs, files in os.walk(target):
-                dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+                dirs[:] = [d for d in dirs if d not in skip_dirs]
                 for fname in files:
                     ext = os.path.splitext(fname)[1].lower()
                     if ext not in {".html", ".py", ".svg"}:

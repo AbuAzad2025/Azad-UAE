@@ -739,7 +739,7 @@ def test_ensure_target_schema_runs_core_data(mocker):
     ctx.__exit__ = mocker.MagicMock(return_value=False)
     app.app_context.return_value = ctx
     mocker.patch("app.create_app", return_value=app)
-    mock_core = mocker.patch("utils.system_init.ensure_core_data", create=True)
+    mock_core = mocker.patch("utils.system_init._ensure_core_data")
     ok, err = ensure_target_schema("postgres://target")
     assert ok is True
     mock_core.assert_called_once()
