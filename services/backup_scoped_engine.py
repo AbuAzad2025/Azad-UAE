@@ -274,9 +274,7 @@ def _new_id(conn, table: str) -> int:
         return int(conn.execute(nextval_query(conn, str(seq))).scalar())
     table_obj = _table(conn, table, ["id"])
     return int(
-        conn.execute(
-            select(func.coalesce(func.max(table_obj.c.id), 0) + 1)
-        ).scalar()
+        conn.execute(select(func.coalesce(func.max(table_obj.c.id), 0) + 1)).scalar()
     )
 
 
@@ -688,9 +686,7 @@ def _restore_scoped_table(
             )
         }
         if "tenant_id" in table_cols:
-            conn.execute(
-                delete_where_query(conn, table, "tenant_id", src_tid)
-            )
+            conn.execute(delete_where_query(conn, table, "tenant_id", src_tid))
     elif not remap and scope == SCOPE_BRANCH and table not in ("tenants", "branches"):
         bid = int(manifest.get("branch_id") or manifest.get("source_branch_id") or 0)
         branch_cols = {
@@ -704,9 +700,7 @@ def _restore_scoped_table(
             )
         }
         if "branch_id" in branch_cols:
-            conn.execute(
-                delete_where_query(conn, table, "branch_id", bid)
-            )
+            conn.execute(delete_where_query(conn, table, "branch_id", bid))
 
     inserted = 0
     table_errors = 0

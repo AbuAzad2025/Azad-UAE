@@ -20,9 +20,7 @@ class TestCompatPatches:
 
         ser = BaseSerializer()
         ser._warn = MagicMock()
-        with patch(
-            "utils.compat_patches.json.dumps", side_effect=ValueError("bad")
-        ):
+        with patch("utils.compat_patches.json.dumps", side_effect=ValueError("bad")):
             assert ser.dumps({"x": 1}) is None
         ser._warn.assert_called_once()
 

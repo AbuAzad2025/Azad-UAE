@@ -16,7 +16,13 @@ class BankImportService:
 
     @staticmethod
     def import_bank_statement(
-        tenant_id, bank_account_id, user_id, filename, file_content, fmt="ofx", format=None
+        tenant_id,
+        bank_account_id,
+        user_id,
+        filename,
+        file_content,
+        fmt="ofx",
+        format=None,
     ):
         """
         Parse and import bank statement lines

@@ -37,7 +37,9 @@ _PG_TOOL_BASENAMES = frozenset(
     }
 )
 _GIT_BASENAMES = frozenset({"git", "git.exe"})
-_PYTHON_BASENAMES = frozenset({os.path.basename(sys.executable), "python", "python.exe"})
+_PYTHON_BASENAMES = frozenset(
+    {os.path.basename(sys.executable), "python", "python.exe"}
+)
 
 
 def _executable_basename(path: str) -> str:

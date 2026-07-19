@@ -1666,8 +1666,7 @@ class LoggingCore:
                     restricted_count += 1
                     continue
                 count: int = (
-                    db.session.execute(count_query(db.engine, safe_table)).scalar()
-                    or 0
+                    db.session.execute(count_query(db.engine, safe_table)).scalar() or 0
                 )
                 db_stats[safe_table] = count
         except Exception:

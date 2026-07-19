@@ -26,6 +26,7 @@ from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 def resolve_tenant_base_currency(tenant_id=None, tenant=None):
     from utils.currency_utils import resolve_tenant_base_currency as _resolve
+
     return _resolve(tenant_id=tenant_id, tenant=tenant)
 
 
@@ -33,6 +34,7 @@ class PurchaseService:
     @classmethod
     def resolve_tenant_base_currency(cls, tenant_id=None, tenant=None):
         import services.purchase_service as _ps
+
         return _ps.resolve_tenant_base_currency(tenant_id=tenant_id, tenant=tenant)
 
     @staticmethod
@@ -143,7 +145,9 @@ class PurchaseService:
             tenant_id=tenant_id, branch_id=purchase_branch_id
         )
 
-        base_currency = PurchaseService.resolve_tenant_base_currency(tenant_id=tenant_id)
+        base_currency = PurchaseService.resolve_tenant_base_currency(
+            tenant_id=tenant_id
+        )
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
             base_currency,

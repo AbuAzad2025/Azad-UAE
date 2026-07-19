@@ -80,9 +80,7 @@ class MonitoringService:
                 if is_sensitive_table_fn(safe_table):
                     restricted_count += 1
                     continue
-                count = db.session.execute(
-                    count_query(db.engine, safe_table)
-                ).scalar()
+                count = db.session.execute(count_query(db.engine, safe_table)).scalar()
                 db_stats[safe_table] = count or 0
         except Exception:
             logger.warning("Failed to collect database table stats", exc_info=True)

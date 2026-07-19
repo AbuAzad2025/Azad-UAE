@@ -124,9 +124,7 @@ class TestCreatePayment:
 
         def fake_post(url, json=None, headers=None, timeout=None):
             captured.update(json or {})
-            return _ok_post()(
-                url, json=json, headers=headers, timeout=timeout
-            )
+            return _ok_post()(url, json=json, headers=headers, timeout=timeout)
 
         mocker.patch(
             "services.nowpayments_service.requests.post", side_effect=fake_post

@@ -121,9 +121,7 @@ def {function_name}():
                 tbl = sa_table(table_name)
                 if filters and filters.get("values"):
                     cols = [_col(table_name, _ident(c)) for c in filters["columns"]]
-                    values = {
-                        c.name: v for c, v in zip(cols, filters["values"])
-                    }
+                    values = {c.name: v for c, v in zip(cols, filters["values"])}
                     istmt = insert(tbl).values(values)
                 else:
                     istmt = insert(tbl).values({})

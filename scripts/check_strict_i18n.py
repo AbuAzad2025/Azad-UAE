@@ -147,7 +147,9 @@ def main():
 
     scan_dirs = []
     for p in args.paths:
-        if os.path.basename(p) in skip_dirs and os.path.isdir(os.path.join(REPO_ROOT, p)):
+        if os.path.basename(p) in skip_dirs and os.path.isdir(
+            os.path.join(REPO_ROOT, p)
+        ):
             continue
         full = os.path.join(REPO_ROOT, p)
         if os.path.isdir(full):

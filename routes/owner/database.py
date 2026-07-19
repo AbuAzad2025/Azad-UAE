@@ -70,9 +70,7 @@ def database_tools():
 
         columns = inspector.get_columns(safe_table)
         indexes = inspector.get_indexes(safe_table)
-        row_count = db.session.execute(
-            count_query(db.engine, safe_table)
-        ).scalar()
+        row_count = db.session.execute(count_query(db.engine, safe_table)).scalar()
 
         tables_info.append(
             {
@@ -312,9 +310,7 @@ def edit_table_data(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        result = db.session.execute(
-            select_all_query(db.engine, safe_table, limit=100)
-        )
+        result = db.session.execute(select_all_query(db.engine, safe_table, limit=100))
         rows = result.fetchall()
         columns = result.keys()
 

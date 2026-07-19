@@ -134,11 +134,7 @@ def select_where_query(
     """
     tbl = _table(bind, table_name, [column_name])
     assert_known_column(bind, table_name, column_name)
-    stmt: Any = (
-        select(sa_text("*"))
-        .select_from(tbl)
-        .where(tbl.c[column_name] == value)
-    )
+    stmt: Any = select(sa_text("*")).select_from(tbl).where(tbl.c[column_name] == value)
     if limit is not None:
         stmt = stmt.limit(limit)
     return stmt
@@ -154,15 +150,9 @@ def select_in_query(
     tbl = _table(bind, table_name, [column_name])
     assert_known_column(bind, table_name, column_name)
     if not values:
-        return (
-            select(sa_text("*"))
-            .select_from(tbl)
-            .where(sa_column("__never__") == 1)
-        )
+        return select(sa_text("*")).select_from(tbl).where(sa_column("__never__") == 1)
     stmt: Any = (
-        select(sa_text("*"))
-        .select_from(tbl)
-        .where(tbl.c[column_name].in_(values))
+        select(sa_text("*")).select_from(tbl).where(tbl.c[column_name].in_(values))
     )
     return stmt
 
@@ -200,11 +190,7 @@ def update_row_query(
         assert_known_column(bind, table_name, col)
         safe_updates[col] = val if val != "" else None
     tbl = _table(bind, table_name, [pk_column, *safe_updates.keys()])
-    return (
-        update(tbl)
-        .where(tbl.c[pk_column] == row_id)
-        .values(**safe_updates)
-    )
+    return update(tbl).where(tbl.c[pk_column] == row_id).values(**safe_updates)
 
 
 def insert_query(
@@ -230,15 +216,15 @@ def insert_query(
     if on_conflict_do_nothing:
         try:
             pk = (
-                inspect(bind).get_pk_constraint(table_name).get(
-                    "constrained_columns"
-                )
+                inspect(bind).get_pk_constraint(table_name).get("constrained_columns")
                 or []
             )
         except Exception:
             pk = []
-        return postgresql.insert(tbl).values(dict(payload)).on_conflict_do_nothing(
-            index_elements=pk
+        return (
+            postgresql.insert(tbl)
+            .values(dict(payload))
+            .on_conflict_do_nothing(index_elements=pk)
         )
     return insert(tbl).values(dict(payload))
 

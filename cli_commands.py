@@ -331,9 +331,7 @@ def _do_seed_demo(_app):
         try:
             for table in db.metadata.sorted_tables:
                 if "tenant_id" in table.c:
-                    db.session.execute(
-                        table.delete().where(table.c.tenant_id == tid)
-                    )
+                    db.session.execute(table.delete().where(table.c.tenant_id == tid))
         finally:
             db.session.execute(text("SET session_replication_role = 'origin'"))
         db.session.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tid})
