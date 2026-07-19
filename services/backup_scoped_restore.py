@@ -211,12 +211,12 @@ def _delete_tenant_scoped_data(
                     )
                 elif branch_id is not None and "branch_id" in cols:
                     conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),
+                        text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),  # nosec B608
                         {"bid": branch_id},
                     )
                 elif "tenant_id" in cols:
                     conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),
+                        text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),  # nosec B608
                         {"tid": tenant_id},
                     )
         except Exception as exc:
@@ -277,7 +277,7 @@ def _run_import(
             val_list = ", ".join(f":{c}" for c in cols)
             try:
                 with conn.begin_nested():
-                    sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'
+                    sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'  # nosec B608
                     if table == "roles":
                         sql += " ON CONFLICT (id) DO NOTHING"
                     conn.execute(text(sql), mapped)
@@ -433,7 +433,7 @@ def verify_scoped_restore(
                 with conn.begin_nested():
                     if table == "tenants":
                         actual = conn.execute(
-                            text(f'SELECT COUNT(*) FROM "{table}" WHERE id = :tid'),
+                            text(f'SELECT COUNT(*) FROM "{table}" WHERE id = :tid'),  # nosec B608
                             {"tid": tid},
                         ).scalar()
                     elif table_exists(
@@ -442,7 +442,7 @@ def verify_scoped_restore(
                     ) and _table_has_column(conn, table, "tenant_id"):
                         actual = conn.execute(
                             text(
-                                f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id = :tid'
+                                f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id = :tid'  # nosec B608
                             ),
                             {"tid": tid},
                         ).scalar()

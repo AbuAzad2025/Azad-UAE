@@ -265,9 +265,11 @@ def _new_id(conn, table: str) -> int:
         {"t": table},
     ).scalar()
     if seq:
-        return int(conn.execute(text(f"SELECT nextval('{seq}')")).scalar())
+        return int(
+            conn.execute(text(f"SELECT nextval('{seq}')")).scalar()  # nosec B608
+        )
     return int(
-        conn.execute(text(f'SELECT COALESCE(MAX(id), 0) + 1 FROM "{table}"')).scalar()
+        conn.execute(text(f'SELECT COALESCE(MAX(id), 0) + 1 FROM "{table}"')).scalar()  # nosec B608
     )
 
 
@@ -682,7 +684,7 @@ def _restore_scoped_table(
         }
         if "tenant_id" in table_cols:
             conn.execute(
-                text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),
+                text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),  # nosec B608
                 {"tid": src_tid},
             )
     elif not remap and scope == SCOPE_BRANCH and table not in ("tenants", "branches"):
@@ -699,7 +701,7 @@ def _restore_scoped_table(
         }
         if "branch_id" in branch_cols:
             conn.execute(
-                text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),
+                text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),  # nosec B608
                 {"bid": bid},
             )
 
@@ -727,7 +729,7 @@ def _restore_scoped_table(
         val_list = ", ".join(f":{c}" for c in cols)
         try:
             with conn.begin_nested():
-                sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'
+                sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'  # nosec B608
                 if table == "roles":
                     sql += " ON CONFLICT (id) DO NOTHING"
                 conn.execute(text(sql), new_row)

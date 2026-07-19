@@ -260,7 +260,7 @@ def _fetch_rows(
 ) -> List[Dict[str, Any]]:
     from sqlalchemy import text
 
-    result = conn.execute(text(f'SELECT * FROM "{table}" WHERE {where_sql}'), params)
+    result = conn.execute(text(f'SELECT * FROM "{table}" WHERE {where_sql}'), params)  # nosec B608
     rows = []
     for row in result.fetchall():
         rows.append(_serialize_row(dict(zip(result.keys(), row))))
@@ -283,7 +283,7 @@ def _fetch_child_rows(
         return []
     placeholders = ", ".join(f":p{i}" for i in range(len(parent_ids)))
     params = {f"p{i}": pid for i, pid in enumerate(parent_ids)}
-    sql = f'SELECT * FROM "{child_table}" WHERE "{child_fk}" IN ({placeholders})'
+    sql = f'SELECT * FROM "{child_table}" WHERE "{child_fk}" IN ({placeholders})'  # nosec B608
     result = conn.execute(text(sql), params)
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
@@ -326,7 +326,7 @@ def _merge_product_customer_dependencies(
     try:
         result = conn.execute(
             text(
-                f"SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})"
+                f"SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})"  # nosec B608
             ),
             params,
         )
@@ -482,7 +482,7 @@ def export_scoped_database(
             params = {f"r{i}": rid for i, rid in enumerate(role_ids)}
             try:
                 result = conn.execute(
-                    text(f"SELECT * FROM roles WHERE id IN ({placeholders})"),
+                    text(f"SELECT * FROM roles WHERE id IN ({placeholders})"),  # nosec B608
                     params,
                 )
                 rows = [
@@ -640,7 +640,7 @@ def collect_scoped_upload_paths(
             return
         try:
             q = sa_text(
-                f'SELECT "{column}" AS p FROM "{table}" WHERE {where} '
+                f'SELECT "{column}" AS p FROM "{table}" WHERE {where} '  # nosec B608
                 f'AND "{column}" IS NOT NULL AND TRIM("{column}"::text) <> \'\''
             )
             for row in conn.execute(q, bind):

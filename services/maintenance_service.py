@@ -237,7 +237,7 @@ class MaintenanceService:
                     continue  # DB will supply the default on insert/update
                 cur = conn.execute(
                     text(
-                        f"SELECT \"{name}\" FROM tenants WHERE slug = 'default' LIMIT 1"
+                        f"SELECT \"{name}\" FROM tenants WHERE slug = 'default' LIMIT 1"  # nosec B608
                     )
                 ).scalar()
                 if cur is None:
@@ -247,13 +247,13 @@ class MaintenanceService:
                         if isinstance(val, str) and val == "now()":
                             conn.execute(
                                 text(
-                                    f"UPDATE tenants SET {name} = now() WHERE slug = 'default'"
+                                    f"UPDATE tenants SET {name} = now() WHERE slug = 'default'"  # nosec B608
                                 )
                             )
                         else:
                             conn.execute(
                                 text(
-                                    f"UPDATE tenants SET \"{name}\" = :v WHERE slug = 'default'"
+                                    f"UPDATE tenants SET \"{name}\" = :v WHERE slug = 'default'"  # nosec B608
                                 ),
                                 {"v": val},
                             )

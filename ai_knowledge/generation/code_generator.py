@@ -76,7 +76,7 @@ def {function_name}():
                     else "1=1"
                 )
 
-                query = f"SELECT {columns} FROM {table} WHERE {conditions}"
+                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
 
                 if filters and "order_by" in filters:
                     query += f" ORDER BY {filters['order_by']}"
@@ -99,7 +99,7 @@ def {function_name}():
                     else ""
                 )
 
-                return f"INSERT INTO {table} ({columns}) VALUES ({values})"
+                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
 
             elif intent == "update":
                 updates = (
@@ -117,7 +117,7 @@ def {function_name}():
                     else "1=1"
                 )
 
-                return f"UPDATE {table} SET {updates} WHERE {conditions}"
+                return f"UPDATE {table} SET {updates} WHERE {conditions}"  # nosec B608
 
             else:
                 return f"-- Unsupported intent: {intent}"

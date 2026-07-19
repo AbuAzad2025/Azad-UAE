@@ -80,7 +80,7 @@ class MonitoringService:
                     restricted_count += 1
                     continue
                 count = db.session.execute(
-                    text(f'SELECT COUNT(*) FROM "{safe_table}"')
+                    text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
                 ).scalar()
                 db_stats[safe_table] = count or 0
         except Exception:

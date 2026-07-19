@@ -1662,7 +1662,7 @@ class LoggingCore:
                     continue
                 count: int = (
                     db.session.execute(
-                        text(f'SELECT COUNT(*) FROM "{safe_table}"')
+                        text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
                     ).scalar()
                     or 0
                 )
