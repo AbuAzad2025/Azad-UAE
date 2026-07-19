@@ -282,7 +282,7 @@ jobs:
       - name: Hadolint Dockerfile Audit
         run: |
           echo "=== RUNNING DOCKERFILE LINT ==="
-          docker run --rm -i hadolint/hadolint < scripts/lint/Dockerfile.ci
+          docker run --rm -i -v "${PWD}/scripts/.hadolint.yaml:/root/.hadolint.yaml" hadolint/hadolint < scripts/lint/Dockerfile.ci
 
   # ── API fuzz testing (Schemathesis) ──
   api-fuzz:
