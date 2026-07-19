@@ -148,7 +148,7 @@ def _export_state(app, users, tenant):
                 flask_session["language"] = "ar"
                 state = {
                     "cookies": {
-                        "session": flask_session.sid or "",
+                        "session": "",
                     },
                     "session": dict(flask_session),
                     "user": {
