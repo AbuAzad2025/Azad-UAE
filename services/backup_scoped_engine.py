@@ -22,7 +22,6 @@ from utils.safe_sql import (
     delete_where_query,
     insert_query,
     nextval_query,
-    sa_table,
     _table,
 )
 

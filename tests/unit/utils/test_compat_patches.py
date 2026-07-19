@@ -6,7 +6,9 @@ from unittest.mock import MagicMock, patch
 
 class TestCompatPatches:
     def test_dumps_serializes_value(self):
-        import utils.compat_patches  # applies the JSON serializer patch
+        _compat_patches = __import__(
+            "utils.compat_patches"
+        )  # applies the JSON serializer patch
         from cachelib.serializers import BaseSerializer
 
         ser = BaseSerializer()

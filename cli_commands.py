@@ -124,7 +124,7 @@ def register_seed_demo_command(app):
 def _do_seed_demo(_app):
     from extensions import db
     from decimal import Decimal
-    from sqlalchemy import inspect as sa_inspect, text
+    from sqlalchemy import text
     from models.tenant import Tenant
     from models.branch import Branch
     from models.warehouse import Warehouse
