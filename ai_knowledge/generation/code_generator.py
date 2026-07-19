@@ -13,7 +13,7 @@
 
 import logging
 import re
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from sqlalchemy import and_, column, insert, select, table as sa_table, update
 
@@ -106,7 +106,7 @@ def {function_name}():
                     if filters and filters.get("columns")
                     else [column("*")]
                 )
-                stmt = select(*cols).select_from(tbl)
+                stmt: Any = select(*cols).select_from(tbl)
                 where_expr = _build_where(table_name, filters, "w")
                 if where_expr is not None:
                     stmt = stmt.where(where_expr)
