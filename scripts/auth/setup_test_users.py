@@ -36,7 +36,6 @@ def _setup():
 
 def _seed(db):
     from models import Tenant, Branch, Warehouse, Role, User
-    from models.system_settings import SystemSettings
 
     uid = uuid.uuid4().hex[:8]
 

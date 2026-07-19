@@ -9,7 +9,6 @@ Simulates a complete business loop:
 """
 
 import pytest
-from decimal import Decimal
 
 
 BASE_URL = "http://localhost:5000"
@@ -82,7 +81,10 @@ class TestPOSCashierFlowTour:
         assert status in (302, 403, 200)
         if status == 200:
             body = page.content()
+            # Cashier should NOT see admin dashboard content
             assert "لوحة التحكم" not in page.title()
+            assert "admin-panel" not in body.lower()
+            assert "dashboard-header" not in body.lower()
         page.close()
 
     def test_manager_can_access_reports(self, manager_context):
