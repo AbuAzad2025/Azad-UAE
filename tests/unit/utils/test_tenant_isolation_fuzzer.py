@@ -15,8 +15,8 @@ from datetime import datetime, timezone, timedelta
 import pytest
 
 from extensions import db
-from utils.tenanting import tenant_query, apply_tenant_scope
-from utils.exceptions import TenantSecurityViolation
+from utils.tenanting import tenant_query
+from utils.exceptions import SecurityBoundaryViolation as TenantSecurityViolation
 from utils.db_safety import atomic_transaction
 
 
@@ -27,7 +27,7 @@ from utils.db_safety import atomic_transaction
 @pytest.fixture(scope="module")
 def _tenants(app):
     """Create two completely isolated tenants with identical schemas."""
-    from models import Tenant, Branch, Warehouse, Role, User, Customer, Product
+    from models import Tenant, Branch, Warehouse, Customer
 
     uid_a = uuid.uuid4().hex[:8]
     uid_b = uuid.uuid4().hex[:8]

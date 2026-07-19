@@ -76,7 +76,7 @@ def {function_name}():
                     else "1=1"
                 )
 
-                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
+                query = f"SELECT {columns} FROM {table} WHERE {conditions}"
 
                 if filters and "order_by" in filters:
                     query += f" ORDER BY {filters['order_by']}"
@@ -99,7 +99,7 @@ def {function_name}():
                     else ""
                 )
 
-                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
+                return f"INSERT INTO {table} ({columns}) VALUES ({values})"
 
             elif intent == "update":
                 updates = (
@@ -117,7 +117,7 @@ def {function_name}():
                     else "1=1"
                 )
 
-                return f"UPDATE {table} SET {updates} WHERE {conditions}"  # nosec B608
+                return f"UPDATE {table} SET {updates} WHERE {conditions}"
 
             else:
                 return f"-- Unsupported intent: {intent}"
@@ -190,7 +190,7 @@ def {function_name}():
     @staticmethod
     def generate_report_query(
         report_type: str, date_range: Optional[dict] = None
-    ) -> str:  # nosec B608
+    ) -> str:
         """
         توليد query لتقرير محدد
 
@@ -206,7 +206,7 @@ def {function_name}():
                 if not date_range:
                     return "-- Missing date range"
                 sales_sql = "\n".join(
-                    [  # nosec B608
+                    [
                         "SELECT",
                         "    DATE(sale_date) as date,",
                         "    COUNT(*) as sales_count,",

@@ -64,7 +64,7 @@ def database_tools():
         columns = inspector.get_columns(safe_table)
         indexes = inspector.get_indexes(safe_table)
         row_count = db.session.execute(
-            text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
+            text(f'SELECT COUNT(*) FROM "{safe_table}"')
         ).scalar()
 
         tables_info.append(
@@ -219,12 +219,12 @@ def browse_table(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))  # nosec B608
+        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))
         total = count_result.scalar()
 
         offset = (page - 1) * per_page
         result = db.session.execute(
-            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')  # nosec B608
+            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')
         )
 
         rows = result.fetchall()
@@ -312,7 +312,7 @@ def edit_table_data(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))  # nosec B608
+        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))
         rows = result.fetchall()
         columns = result.keys()
 

@@ -248,6 +248,9 @@ jobs:
   # ── Git & repository scanning ──
   repo-security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -266,7 +269,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-fs'
@@ -274,6 +277,9 @@ jobs:
   # ── Docker infrastructure audit (Hadolint) ──
   docker-infra-audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v7
       - name: Hadolint Dockerfile audit
@@ -284,7 +290,7 @@ jobs:
           format: sarif
           output-file: hadolint-results.sarif
       - name: Upload Hadolint results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: hadolint-results.sarif
           category: hadolint
