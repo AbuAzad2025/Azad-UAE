@@ -15,7 +15,7 @@ import logging
 import re
 from typing import List, Optional
 
-from sqlalchemy import and_, column, select, table as sa_table
+from sqlalchemy import and_, column, insert, select, table as sa_table, update
 
 logger = logging.getLogger(__name__)
 
@@ -120,22 +120,35 @@ def {function_name}():
                 table_name = _ident(table)
                 if filters and filters.get("values") and filters.get("columns"):
                     col_names = [_ident(c) for c in filters["columns"]]
-                    cols_str = ", ".join(col_names)
-                    vals = ", ".join(repr(v) for v in filters["values"])
-                    return f"INSERT INTO {table_name} ({cols_str}) VALUES ({vals})"
+                    row = dict(zip(col_names, filters["values"]))
+                    # Build a lightweight table carrying exactly the declared
+                    # columns so the Core construct can render without touching
+                    # the live schema (this is display SQL for an AI assistant).
+                    tbl = sa_table(table_name, *[column(c) for c in col_names])
+                    stmt = insert(tbl).values(**row)
                 else:
-                    return f"INSERT INTO {table_name} DEFAULT VALUES"
+                    stmt = insert(sa_table(table_name))
+                return str(stmt)
 
             elif intent == "update":
                 table_name = _ident(table)
-                set_parts = []
+                set_kwargs = {}
                 if filters and filters.get("set"):
                     for k, v in filters["set"].items():
-                        set_parts.append(f"{_ident(k)} = {repr(v)}")
-                set_str = ", ".join(set_parts)
+                        set_kwargs[_ident(k)] = v
+                col_names = list(set_kwargs.keys())
+                tbl = (
+                    sa_table(table_name, *[column(c) for c in col_names])
+                    if col_names
+                    else sa_table(table_name)
+                )
+                stmt = update(tbl)
+                if set_kwargs:
+                    stmt = stmt.values(**set_kwargs)
                 where_expr = _build_where(table_name, filters, "u")
-                where_str = f" WHERE {where_expr}" if where_expr is not None else ""
-                return f"UPDATE {table_name} SET {set_str}{where_str}"
+                if where_expr is not None:
+                    stmt = stmt.where(where_expr)
+                return str(stmt)
 
             else:
                 return f"-- Unsupported intent: {intent}"
