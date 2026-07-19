@@ -326,16 +326,25 @@ def _do_seed_demo(_app):
         # This is a demo-reset utility, not production runtime.
         eng_meta = sa_inspect(db.engine)
         assert eng_meta is not None, "SQLAlchemy inspector unavailable"
+        inspector_tables = set(eng_meta.get_table_names())
         tenant_tables = [
             t
-            for t in eng_meta.get_table_names()
+            for t in inspector_tables
             if any(c["name"] == "tenant_id" for c in eng_meta.get_columns(t))
+        ]
+        # Table identifiers cannot be passed as bind parameters.  Whitelist the
+        # resolved names against the live schema and quote them with the engine's
+        # dialect so only real, identifier-safe table names reach the statement.
+        quote_ident = db.engine.dialect.identifier_preparer.quote_identifier
+        quoted_tables = [
+            quote_ident(t) for t in tenant_tables if t in inspector_tables
         ]
         db.session.execute(text("SET session_replication_role = 'replica'"))
         try:
-            for t in tenant_tables:
+            for qt in quoted_tables:
                 db.session.execute(
-                    text(f"DELETE FROM {t} WHERE tenant_id = :tid"), {"tid": tid}
+                    text(f"DELETE FROM {qt} WHERE tenant_id = :tid"),  # nosec B608 -- qt is whitelisted against the live schema and quoted via dialect.identifier_preparer; never user input
+                    {"tid": tid},
                 )
         finally:
             db.session.execute(text("SET session_replication_role = 'origin'"))

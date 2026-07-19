@@ -1,4 +1,4 @@
-import pickle
+import pickle  # nosec B403 -- trusted cache serializer shim; only serializes internal cache values, never untrusted input
 
 try:
     from cachelib.serializers import BaseSerializer

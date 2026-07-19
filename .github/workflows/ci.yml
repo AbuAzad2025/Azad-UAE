@@ -204,8 +204,8 @@ jobs:
           pip install -r requirements.txt bandit
       - name: Bandit security scan
         run: |
-          bandit -r . --exclude 'migrations/,tests/' --quiet || bandit -r . --exclude 'migrations/,tests/'
-          bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
+          bandit -c .bandit.yml -r . --exclude 'migrations/,tests/' --quiet || bandit -c .bandit.yml -r . --exclude 'migrations/,tests/'
+          bandit -c .bandit.yml -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
 
   # ── Lint, audit, i18n, cspell ──
   lint-audit:

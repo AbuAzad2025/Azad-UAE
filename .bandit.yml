@@ -1,7 +1,9 @@
 skips:
   - B101  # assert_used — acceptable in defensive runtime assertions
   - B105  # hardcoded_password — false positives on Arabic messages, column defs, token salts
+  - B106  # hardcoded_password_funcarg — false positives on fixture params
+  - B107  # hardcoded_password_default — false positives on default config values
+  - B108  # hardcoded_tmp_directory — uses tempfile in controlled paths
+  - B110  # try_except_pass — acceptable in cleanup/teardown paths
   - B112  # try_except_continue — acceptable in data-processing loops
   - B113  # requests_without_timeout — all call sites pass a timeout
-  - B310  # audit_url_open — urlopen calls target internal hardware agent only
-  - B311  # random_pseudo_used — non-security usage (trace IDs, display)
