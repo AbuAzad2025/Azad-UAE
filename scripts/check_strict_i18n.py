@@ -115,7 +115,7 @@ def _strip_triple_quotes(line):
                 cleaned.append(line[i:])
                 i = n
                 break
-            cleaned.append(line[i:opened[1]])
+            cleaned.append(line[i : opened[1]])
             i = opened[1] + 3
             in_block = True
             open_quote = opened[0]
