@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 
-logger = logging.getLogger(__name__)
-
 from models import PartnerCommissionEntry
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
 from utils.gl_reference_types import GLRef
+
+logger = logging.getLogger(__name__)
 
 
 def post_sale_commissions(sale):

@@ -3,9 +3,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from flask import current_app
 from flask_login import current_user
-
-logger = logging.getLogger(__name__)
 from sqlalchemy.exc import OperationalError
+
 from extensions import db
 from models import (
     Product,
@@ -17,6 +16,8 @@ from models import (
 from models.warehouse import ProductWarehouseStock
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
+
+logger = logging.getLogger(__name__)
 
 _MAX_LOCK_RETRIES = 3
 

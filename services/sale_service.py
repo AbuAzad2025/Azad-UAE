@@ -775,7 +775,7 @@ class SaleService:
                 tenant_id=tenant_id,
             )
         elif cogs_total_aed == Decimal("0") and any(
-            line.get("quantity", 0) > 0 for line in data.get("items", [])
+            line.quantity > 0 for line in sale.lines
         ):
             current_app.logger.warning(
                 "COGS = 0 for sale %s — stock decreased but no cost recorded. "

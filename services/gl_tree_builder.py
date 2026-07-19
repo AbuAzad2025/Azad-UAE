@@ -1,13 +1,13 @@
 import logging
-
-from extensions import db
 from typing import Any
-from utils.db_safety import atomic_transaction
 
-logger = logging.getLogger(__name__)
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
+from extensions import db
+from utils.db_safety import atomic_transaction
 from utils.currency_utils import resolve_default_currency
+
+logger = logging.getLogger(__name__)
 
 
 def _template_to_tuple(tmpl):

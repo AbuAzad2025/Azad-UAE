@@ -4,8 +4,6 @@ from datetime import datetime, timezone
 
 from flask import current_app
 
-logger = logging.getLogger(__name__)
-
 from extensions import db
 from models import (
     Sale,
@@ -23,6 +21,8 @@ from utils.gl_reference_types import GLRef
 from utils.tax_settings import should_post_vat_gl
 from utils.tenanting import get_active_tenant_id, is_platform_owner
 from utils.branching import branch_scope_id_for
+
+logger = logging.getLogger(__name__)
 
 
 class ReturnService:
