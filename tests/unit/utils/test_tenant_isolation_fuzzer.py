@@ -23,6 +23,7 @@ from utils.db_safety import atomic_transaction
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module")
 def _tenants(app):
     """Create two completely isolated tenants with identical schemas."""
@@ -33,37 +34,63 @@ def _tenants(app):
 
     with app.app_context():
         tenant_a = Tenant(
-            name=f"FuzzA {uid_a}", name_ar=f"FuzzA {uid_a}", slug=f"fuzz-a-{uid_a}",
-            default_currency="AED", base_currency="AED",
-            enable_tax=True, default_tax_rate=Decimal("5.00"),
-            enable_pos=True, is_active=True, is_suspended=False,
-            subscription_plan="pro", subscription_plan_duration="monthly",
+            name=f"FuzzA {uid_a}",
+            name_ar=f"FuzzA {uid_a}",
+            slug=f"fuzz-a-{uid_a}",
+            default_currency="AED",
+            base_currency="AED",
+            enable_tax=True,
+            default_tax_rate=Decimal("5.00"),
+            enable_pos=True,
+            is_active=True,
+            is_suspended=False,
+            subscription_plan="pro",
+            subscription_plan_duration="monthly",
             subscription_end=datetime.now(timezone.utc) + timedelta(days=30),
-            max_users=10, max_branches=2,
+            max_users=10,
+            max_branches=2,
         )
         tenant_b = Tenant(
-            name=f"FuzzB {uid_b}", name_ar=f"FuzzB {uid_b}", slug=f"fuzz-b-{uid_b}",
-            default_currency="AED", base_currency="AED",
-            enable_tax=True, default_tax_rate=Decimal("5.00"),
-            enable_pos=True, is_active=True, is_suspended=False,
-            subscription_plan="pro", subscription_plan_duration="monthly",
+            name=f"FuzzB {uid_b}",
+            name_ar=f"FuzzB {uid_b}",
+            slug=f"fuzz-b-{uid_b}",
+            default_currency="AED",
+            base_currency="AED",
+            enable_tax=True,
+            default_tax_rate=Decimal("5.00"),
+            enable_pos=True,
+            is_active=True,
+            is_suspended=False,
+            subscription_plan="pro",
+            subscription_plan_duration="monthly",
             subscription_end=datetime.now(timezone.utc) + timedelta(days=30),
-            max_users=10, max_branches=2,
+            max_users=10,
+            max_branches=2,
         )
         db.session.add_all([tenant_a, tenant_b])
         db.session.flush()
 
         for t in (tenant_a, tenant_b):
-            b = Branch(tenant_id=t.id, name=f"Main {t.id}", code=f"M{t.id}", is_active=True)
+            b = Branch(
+                tenant_id=t.id, name=f"Main {t.id}", code=f"M{t.id}", is_active=True
+            )
             db.session.add(b)
             w = Warehouse(tenant_id=t.id, name=f"WH {t.id}", is_active=True)
             db.session.add(w)
         db.session.flush()
 
-        customer_a = Customer(tenant_id=tenant_a.id, name="A-Customer",
-                              phone="+97150000001", balance=Decimal("100.00"))
-        customer_b = Customer(tenant_id=tenant_b.id, name="B-Customer",
-                              phone="+97150000002", balance=Decimal("99999.00"))
+        customer_a = Customer(
+            tenant_id=tenant_a.id,
+            name="A-Customer",
+            phone="+97150000001",
+            balance=Decimal("100.00"),
+        )
+        customer_b = Customer(
+            tenant_id=tenant_b.id,
+            name="B-Customer",
+            phone="+97150000002",
+            balance=Decimal("99999.00"),
+        )
         db.session.add_all([customer_a, customer_b])
         db.session.flush()
 
@@ -81,12 +108,14 @@ def _tenants(app):
 # Direct-model isolation tests
 # ---------------------------------------------------------------------------
 
+
 class TestTenantQueryBoundary:
     """tenant_query() must never return rows from a different tenant."""
 
     def test_customer_isolation(self, app, _tenants):
         from models import Customer
         from flask import g
+
         with app.test_request_context():
             g.active_tenant_id = _tenants["tenant_a"].id
             rows_a = tenant_query(Customer).all()
@@ -100,16 +129,16 @@ class TestTenantQueryBoundary:
 
     def test_forced_tenant_id_injection(self, app, _tenants):
         from models import Customer
+
         with app.app_context():
-            rows = (Customer.query
-                    .filter(Customer.id == _tenants["customer_b"].id)
-                    .all())
+            rows = Customer.query.filter(Customer.id == _tenants["customer_b"].id).all()
             for row in rows:
                 assert row.tenant_id == _tenants["tenant_b"].id
 
     def test_tenant_query_no_tenant_unscoped(self, app, _tenants):
         from models import Customer
         from flask import g
+
         # Production contract: tenant_query() does NOT raise when no tenant is
         # resolved.  It returns an *unscoped* result set — which is precisely
         # why every tenant-facing route must call require_active_tenant_id()
@@ -126,6 +155,7 @@ class TestTenantQueryBoundary:
 
     def test_cross_tenant_write_blocked(self, app, _tenants):
         from models import Customer as M
+
         with app.app_context(), atomic_transaction():
             target = db.session.get(M, _tenants["customer_b"].id)
             if target and target.tenant_id != _tenants["tenant_a"].id:
@@ -136,6 +166,7 @@ class TestTenantQueryBoundary:
     def test_balance_not_exposed(self, app, _tenants):
         from models import Customer
         from flask import g
+
         with app.test_request_context():
             g.active_tenant_id = _tenants["tenant_a"].id
             rows_a = tenant_query(Customer).all()
@@ -150,6 +181,7 @@ class TestTenantQueryBoundary:
 # ---------------------------------------------------------------------------
 # Application-layer isolation (route-level with test client)
 # ---------------------------------------------------------------------------
+
 
 class TestRouteLevelIsolation:
     """API endpoints must enforce tenant boundaries via the test client."""
@@ -176,9 +208,16 @@ class TestRouteLevelIsolation:
         )
         if resp.status_code == 200:
             data = resp.get_json(silent=True) or {}
-            items = data if isinstance(data, list) else data.get("data", data.get("results", []))
+            items = (
+                data
+                if isinstance(data, list)
+                else data.get("data", data.get("results", []))
+            )
             for item in items:
-                if isinstance(item, dict) and item.get("id") == _tenants["customer_b"].id:
+                if (
+                    isinstance(item, dict)
+                    and item.get("id") == _tenants["customer_b"].id
+                ):
                     pytest.fail("customer_b leaked into tenant_a listing")
 
     def test_no_tenant_header_rejected(self, client):
@@ -189,6 +228,7 @@ class TestRouteLevelIsolation:
 # ---------------------------------------------------------------------------
 # Corrupted / malicious payload tests
 # ---------------------------------------------------------------------------
+
 
 class TestMaliciousRequestIsolation:
     """Malformed or malicious requests must not bypass tenant scoping."""

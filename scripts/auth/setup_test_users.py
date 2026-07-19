@@ -120,7 +120,9 @@ def _seed(db):
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
-        users.append({"slug": slug, "email": email, "password": password, "user_id": user.id})
+        users.append(
+            {"slug": slug, "email": email, "password": password, "user_id": user.id}
+        )
 
     db.session.commit()
     return tenant, branch, warehouse, users
@@ -137,6 +139,7 @@ def _export_state(app, users, tenant):
     with app.app_context():
         for u in users:
             from models import User as UserModel
+
             user = UserModel.query.get(u["user_id"])
             with app.test_request_context():
                 login_user(user)

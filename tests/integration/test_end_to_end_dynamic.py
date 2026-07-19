@@ -949,7 +949,9 @@ class TestSecurityAuditFixes:
                 # User has branch b1, so wh1 is accessible, wh2 is NOT
                 resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
                 assert resp_ok.status_code == 200
-                resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
+                resp_forbidden = client.get(
+                    f"/api/products/{p.id}/info?warehouse_id={wh2.id}"
+                )
                 assert resp_forbidden.status_code == 403
 
     def test_user_edit_requires_manage_users_permission(self, app, db_session):

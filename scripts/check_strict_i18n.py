@@ -18,44 +18,56 @@ import sys
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 ALLOWED_CONTEXTS = {
-    "html", "svg", "py",
+    "html",
+    "svg",
+    "py",
 }
 
 IGNORE_DIRS = {
-    ".venv", "node_modules", "migrations", "static/adminlte",
-    "static/vendor", "__pycache__", ".git", ".pytest-temp",
+    ".venv",
+    "node_modules",
+    "migrations",
+    "static/adminlte",
+    "static/vendor",
+    "__pycache__",
+    ".git",
+    ".pytest-temp",
 }
 
 IGNORE_PATTERNS = [
     # HTML attribute values that are never user-facing
-    re.compile(r'(id|class|name|type|value|placeholder|data-\w+|aria-\w+|href|src|action|method|rel|target|style|onclick|onchange|oninput|onfocus|onblur|onsubmit)\s*=\s*["\'][^"\']*["\']'),
+    re.compile(
+        r'(id|class|name|type|value|placeholder|data-\w+|aria-\w+|href|src|action|method|rel|target|style|onclick|onchange|oninput|onfocus|onblur|onsubmit)\s*=\s*["\'][^"\']*["\']'
+    ),
     # Jinja / template syntax
-    re.compile(r'\{[{%#].*?[}%#]\}'),
-    re.compile(r'\{\{.*?\}\}'),
+    re.compile(r"\{[{%#].*?[}%#]\}"),
+    re.compile(r"\{\{.*?\}\}"),
     # CSS / style blocks
-    re.compile(r'<\s*style\b[^>]*>.*?<\s*/\s*style\s*>', re.DOTALL),
-    re.compile(r'<\s*script\b[^>]*>.*?<\s*/\s*script\s*>', re.DOTALL),
+    re.compile(r"<\s*style\b[^>]*>.*?<\s*/\s*style\s*>", re.DOTALL),
+    re.compile(r"<\s*script\b[^>]*>.*?<\s*/\s*script\s*>", re.DOTALL),
     # Comments
-    re.compile(r'<!--.*?-->', re.DOTALL),
-    re.compile(r'#.*?$', re.MULTILINE),
+    re.compile(r"<!--.*?-->", re.DOTALL),
+    re.compile(r"#.*?$", re.MULTILINE),
     # Numbers, currency amounts, dates
-    re.compile(r'^-?\d+(?:[.,]\d+)?%?$'),
-    re.compile(r'^\d{4}-\d{2}-\d{2}$'),
+    re.compile(r"^-?\d+(?:[.,]\d+)?%?$"),
+    re.compile(r"^\d{4}-\d{2}-\d{2}$"),
     # Single characters, punctuation, symbols
-    re.compile(r'^[\s\W]+$'),
-    re.compile(r'^[\w\-]+$'),
+    re.compile(r"^[\s\W]+$"),
+    re.compile(r"^[\w\-]+$"),
 ]
 
 SKIP_RAW_TAGS = {"code", "pre", "samp", "kbd", "script", "style"}
 
-RTL_CONTENT_MARKER = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}')
+RTL_CONTENT_MARKER = re.compile(
+    r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]{2,}"
+)
 
 TRANSLATION_CALL = re.compile(
-    r'(?:\{\{?\s*_\s*\(|gettext|lazy_gettext|lazy_pgettext|ngettext)\s*\('
+    r"(?:\{\{?\s*_\s*\(|gettext|lazy_gettext|lazy_pgettext|ngettext)\s*\("
 )
 
 FLASK_ROUTE_BARE_STRING = re.compile(
-    r'return\s+(?:render_template|redirect|jsonify|make_response)\s*\('
+    r"return\s+(?:render_template|redirect|jsonify|make_response)\s*\("
 )
 
 
@@ -75,9 +87,9 @@ def _is_translation_wrapped(text):
 def _is_likely_user_facing(text):
     if len(text) < 3:
         return False
-    if re.match(r'^[\s\d\W]+$', text):
+    if re.match(r"^[\s\d\W]+$", text):
         return False
-    if re.match(r'^[a-z_][a-z0-9_]*$', text, re.IGNORECASE):
+    if re.match(r"^[a-z_][a-z0-9_]*$", text, re.IGNORECASE):
         return False
     if "{{" in text or "{%" in text:
         return False
@@ -111,10 +123,18 @@ def scan_file(filepath):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Strict i18n linter for RTL translation enforcement")
-    parser.add_argument("--fix", action="store_true", help="Not implemented: auto-wrap strings")
-    parser.add_argument("paths", nargs="*", default=["templates", "routes", "services"],
-                        help="Directories or files to scan")
+    parser = argparse.ArgumentParser(
+        description="Strict i18n linter for RTL translation enforcement"
+    )
+    parser.add_argument(
+        "--fix", action="store_true", help="Not implemented: auto-wrap strings"
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        default=["templates", "routes", "services"],
+        help="Directories or files to scan",
+    )
     args = parser.parse_args()
 
     scan_dirs = []
@@ -148,7 +168,7 @@ def main():
     if all_issues:
         print("❌ STRICT I18N FAILURE: Un-wrapped user-facing strings detected\n")
         for rel, lineno, text, ctx in sorted(all_issues):
-            print(f"  {rel}:{lineno}  [{ctx}] \"{text[:80]}\"")
+            print(f'  {rel}:{lineno}  [{ctx}] "{text[:80]}"')
         print(f"\nTotal: {len(all_issues)} issue(s)")
         sys.exit(1)
 
