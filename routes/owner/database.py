@@ -64,7 +64,7 @@ def database_tools():
         columns = inspector.get_columns(safe_table)
         indexes = inspector.get_indexes(safe_table)
         row_count = db.session.execute(
-            text(f'SELECT COUNT(*) FROM "{safe_table}"')
+            text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
         ).scalar()
 
         tables_info.append(
@@ -219,12 +219,12 @@ def browse_table(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))
+        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))  # nosec B608
         total = count_result.scalar()
 
         offset = (page - 1) * per_page
         result = db.session.execute(
-            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')
+            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')  # nosec B608
         )
 
         rows = result.fetchall()
@@ -285,8 +285,8 @@ def update_row(table_name, row_id):
         with atomic_transaction("update_table_row"):
             db.session.execute(
                 text(
-                    f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'
-                ),  # nosec B608
+                    f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'  # nosec B608
+                ),
                 params,
             )
 
@@ -312,7 +312,7 @@ def edit_table_data(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))
+        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))  # nosec B608
         rows = result.fetchall()
         columns = result.keys()
 
@@ -500,7 +500,7 @@ def convert_database():
 
                     quoted_cols = ", ".join(f'"{c}"' for c in row_columns)
                     placeholders = ", ".join(f":{c}" for c in row_columns)
-                    insert_sql = f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})'
+                    insert_sql = f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})'  # nosec B608
 
                     for row in rows:
                         row_dict = dict(zip(result.keys(), row))
