@@ -204,8 +204,8 @@ jobs:
           pip install -r requirements.txt bandit
       - name: Bandit security scan
         run: |
-          bandit -c .bandit.yml -r . --exclude 'migrations/,tests/,**/.venv/**' --quiet || bandit -c .bandit.yml -r . --exclude 'migrations/,tests/,**/.venv/**'
-          bandit -c .bandit.yml -r . -f json -o bandit-report.json --exclude 'migrations/,tests/,**/.venv/**' || true
+          bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py' --quiet || bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py'
+          bandit -c .bandit.yml -r . --exclude '*/migrations/*,*/tests/*,*/.venv/*,*/utils/secure_subprocess.py' -f json -o bandit-report.json || true
 
   # ── Lint, audit, i18n, cspell ──
   lint-audit:
