@@ -2,6 +2,9 @@
 	"version": "0.2",
 	"language": "en",
 	"allowCompoundWords": true,
+	"ignoreRegExpList": [
+		"/[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]+/"
+	],
 	"ignorePaths": [
 		".venv/**",
 		"node_modules/**",
