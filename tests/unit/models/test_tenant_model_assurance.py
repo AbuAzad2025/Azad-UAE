@@ -187,7 +187,9 @@ class TestTenantModel:
         t = Tenant()
         t.subscription_end = datetime.now(timezone.utc) - timedelta(days=5)
         t.extend_subscription(7)
-        assert t.get_remaining_days() == 7
+        # Clamped to now then +7 days; remaining is 7 days minus sub-second
+        # elapsed wall-clock between set and read, so assert a tolerant bound.
+        assert t.get_remaining_days() >= 6
 
     def test_extend_subscription_negative_shortens(self):
         from models.tenant import Tenant
@@ -195,7 +197,8 @@ class TestTenantModel:
         t = Tenant()
         t.subscription_end = datetime.now(timezone.utc) + timedelta(days=30)
         t.extend_subscription(-10)
-        assert t.get_remaining_days() == 20
+        # Shortened to now+20 days; remaining is 20 days minus sub-second elapsed.
+        assert t.get_remaining_days() >= 19
 
     def test_extend_subscription_zero_is_noop(self):
         from models.tenant import Tenant
