@@ -171,11 +171,12 @@ def _export_state(app, users, tenant):
 def main():
     print("=== Auth Test Users Setup ===\n")
     app, db = _setup()
-    tenant, branch, warehouse, users = _seed(db)
-    print(f"  Tenant: {tenant.slug} (id={tenant.id})")
-    for u in users:
-        print(f"  User: {u['slug']:20s} email={u['email']}")
-    _export_state(app, users, tenant)
+    with app.app_context():
+        tenant, branch, warehouse, users = _seed(db)
+        print(f"  Tenant: {tenant.slug} (id={tenant.id})")
+        for u in users:
+            print(f"  User: {u['slug']:20s} email={u['email']}")
+        _export_state(app, users, tenant)
     print("\nDone. Run: cp scripts/auth/*_state.json tests/e2e/tours/")
 
 
