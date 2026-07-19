@@ -122,7 +122,7 @@ class AdvancedFinancialAnalytics:
 
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         query = scope_gl_accounts(
-            GLAccount.query.filter(GLAccount.is_active, not GLAccount.is_header),
+            GLAccount.query.filter(GLAccount.is_active, GLAccount.is_header.is_(False)),
             tenant_id=tenant_id,
         )
 

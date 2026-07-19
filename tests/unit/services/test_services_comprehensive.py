@@ -156,14 +156,12 @@ class TestUserService:
 
         with (
             patch("services.user_service.Role") as mock_role,
-            patch("services.user_service.Permission") as mock_perm,
             patch("services.user_service.User") as mock_user,
             patch("services.user_service.Tenant") as mock_tenant,
             patch("services.user_service.scoped_user_query") as mock_scoped,
             patch("services.user_service.joinedload", return_value=lambda x: x),
         ):
             mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
-            mock_perm.query.order_by.return_value.all.return_value = []
             mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = []
 
             q = MagicMock()
@@ -189,14 +187,12 @@ class TestUserService:
 
         with (
             patch("services.user_service.Role") as mock_role,
-            patch("services.user_service.Permission") as mock_perm,
             patch("services.user_service.User") as mock_user,
             patch("services.user_service.Tenant") as mock_tenant,
             patch("services.user_service.scoped_user_query") as mock_scoped,
             patch("services.user_service.joinedload", return_value=lambda x: x),
         ):
             mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
-            mock_perm.query.order_by.return_value.all.return_value = []
             mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = []
 
             user_mock = MagicMock(id=1, username="testuser")

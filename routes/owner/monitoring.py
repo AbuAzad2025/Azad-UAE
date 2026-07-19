@@ -105,7 +105,7 @@ def login_history():
         )
     stats = {
         "total_logins": base_stats.filter(LoginHistory.success).count(),
-        "failed_logins": base_stats.filter(not LoginHistory.success).count(),
+        "failed_logins": base_stats.filter(LoginHistory.success.is_(False)).count(),
         "today_logins": base_stats.filter(
             LoginHistory.login_time
             >= datetime.now(timezone.utc).replace(hour=0, minute=0)

@@ -83,7 +83,7 @@ def build_platform_overview(backups: list | None = None) -> dict:
 
     user_counts = dict(
         db.session.query(User.tenant_id, func.count(User.id))
-        .filter(not User.is_owner)
+        .filter(User.is_owner.is_(False))
         .group_by(User.tenant_id)
         .all()
     )
@@ -339,7 +339,7 @@ def build_company_dashboard_context(
 
     users_count = User.query.filter(
         User.tenant_id == tenant_id,
-        not User.is_owner,
+        User.is_owner.is_(False),
         User.is_active,
     ).count()
     branches_count = Branch.query.filter_by(tenant_id=tenant_id, is_active=True).count()

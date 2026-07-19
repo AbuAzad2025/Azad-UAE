@@ -99,7 +99,7 @@ class PartnerService:
 
         q = db.session.query(func.sum(Expense.amount_aed)).filter(
             Expense.tenant_id == tenant_id,
-            not Expense.is_reversed,
+            Expense.is_reversed.is_(False),
             func.date(Expense.expense_date) >= period_start,
             func.date(Expense.expense_date) <= period_end,
         )
