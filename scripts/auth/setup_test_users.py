@@ -93,7 +93,6 @@ def _seed(db):
                 name_ar=label,
                 slug=slug,
                 description=f"Automated test role: {slug}",
-                is_system=True,
             )
             db.session.add(role)
             db.session.flush()
