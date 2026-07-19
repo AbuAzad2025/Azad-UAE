@@ -153,8 +153,8 @@ def main():
         if errors:
             print(f"TREASURY QA FAILED — {len(errors)} check(s) failed")
             print("=" * 70)
-            for e in errors:
-                print(f"  • {e}")
+            for err in errors:
+                print(f"  • {err}")
             return 1
         else:
             print("ALL TREASURY CHECKS PASSED")

@@ -18,7 +18,7 @@ def get_strategy(country_code: str):
     """Return strategy instance for country_code, or NullStrategy if unsupported."""
     code = (country_code or "").strip().upper()
     cls = _STRATEGIES.get(code, NullStrategy)
-    return cls()
+    return cls()  # type: ignore[abstract]
 
 
 def list_supported_countries() -> list:

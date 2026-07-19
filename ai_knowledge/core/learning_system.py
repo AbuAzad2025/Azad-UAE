@@ -560,7 +560,7 @@ class AzadLearningSystem:
     @staticmethod
     def _find_common_elements(responses: list) -> dict[str, Any]:
         """العثور على العناصر المشتركة في الردود الناجحة"""
-        common_elements = {
+        common_elements: dict[str, Any] = {
             "emojis_used": Counter(),
             "keywords_used": Counter(),
             "response_length": [],

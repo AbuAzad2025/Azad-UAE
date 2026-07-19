@@ -26,6 +26,7 @@ The generator emits:
 import os
 import sys
 import re
+from typing import Any
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -75,7 +76,7 @@ def flag_on(name):
 # ---------------------------------------------------------------------------
 # 3. Compute gl_accounts to create
 # ---------------------------------------------------------------------------
-accounts = {}
+accounts: dict[str, Any] = {}
 
 
 def add_acc(tmpl, industry_code=None, module_code=None):

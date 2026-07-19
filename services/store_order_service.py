@@ -245,7 +245,7 @@ class StoreOrderService:
         """Return list of product names with insufficient stock (empty if OK)."""
         issues = []
         warehouse_id = sale.warehouse_id
-        for line in sale.lines:
+        for line in sale.lines:  # type: ignore[attr-defined]
             available, msg = StockService.check_availability_in_warehouse(
                 line.product_id, line.quantity, warehouse_id
             )

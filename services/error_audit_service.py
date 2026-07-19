@@ -290,12 +290,12 @@ class ErrorAuditService:
         extra: dict[str, Any] | None = None,
     ) -> int | None:
         exc_type = type(exception).__name__ if exception else None
-        trace = stack_trace
+        trace: str | None = stack_trace
         if exception and not trace:
-            trace = traceback.format_exception(
+            trace_list = traceback.format_exception(
                 type(exception), exception, exception.__traceback__
             )
-            trace = "".join(trace)
+            trace = "".join(trace_list)
 
         # Request context
         _url = url

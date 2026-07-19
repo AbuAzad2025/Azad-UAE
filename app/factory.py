@@ -107,7 +107,7 @@ def create_app(config_class=Config) -> Flask:
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
         run_default_tenant_maintenance_api = None
         try:
-            from services.maintenance_service import run_default_tenant_maintenance_api
+            from services.maintenance_service import run_default_tenant_maintenance_api  # type: ignore[assignment]
         except ImportError:
             pass
 
@@ -296,7 +296,7 @@ def create_app(config_class=Config) -> Flask:
 
     register_all_listeners = None
     try:
-        from models.events import register_all_listeners
+        from models.events import register_all_listeners  # type: ignore[assignment]
     except ImportError:
         pass
 
@@ -343,7 +343,7 @@ def create_app(config_class=Config) -> Flask:
     # Register CLI Commands
     register_cli_commands = None
     try:
-        from cli_commands import register_cli_commands
+        from cli_commands import register_cli_commands  # type: ignore[assignment]
     except ImportError:
         pass
 

@@ -30,7 +30,7 @@ try:
 
     HAS_CRYPTO = True
 except ImportError:
-    Fernet = _FernetStub
+    Fernet = _FernetStub  # type: ignore[misc,assignment]
     HAS_CRYPTO = False
 
 

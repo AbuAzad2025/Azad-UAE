@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone, date
 from decimal import Decimal
+from typing import Any
 from extensions import db
 from models import (
     Department,
@@ -301,7 +302,7 @@ class HRService:
 
 class PayrollEngine:
     LOCKED_STATUSES = ("approved", "paid")
-    _debt_registry = []
+    _debt_registry: list[Any] = []
 
     @staticmethod
     def assert_mutable(transaction):

@@ -609,7 +609,7 @@ class GLMappingValidationService:
             tenant = Tenant.query.filter_by(id=tenant_id).first()
             tenants = [tenant] if tenant else []
 
-        rows: list[dict[str, object]] = []
+        rows: list[dict[str, Any]] = []
         for tenant in tenants:
             rows.extend(GLMappingValidationService._preview_seed_for_tenant(tenant))
 
@@ -781,7 +781,7 @@ class GLMappingValidationService:
             tenant = Tenant.query.filter_by(id=tenant_id).first()
             tenants = [tenant] if tenant else []
 
-        rows: list[dict[str, object]] = []
+        rows: list[dict[str, Any]] = []
         for tenant in tenants:
             rows.extend(GLMappingValidationService._discover_for_tenant(tenant))
 
@@ -1024,7 +1024,6 @@ class GLMappingValidationService:
                 defaults_by_concept[mapping.concept_code].append(mapping)
 
         for concept_code in sorted(REQUIRED_GL_CONCEPTS):
-            concept_code: str = concept_code
             if not _is_mapping_owned(concept_code):
                 continue
             default_mappings = defaults_by_concept.get(concept_code, [])

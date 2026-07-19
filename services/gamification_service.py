@@ -15,7 +15,7 @@ class GamificationService:
         "fast_payment": 8,
     }
 
-    BADGES = {
+    BADGES: dict[str, dict[str, int | str]] = {
         "newbie": {"points": 0, "name_ar": "مبتدئ", "icon": "🌱"},
         "bronze": {"points": 100, "name_ar": "برونزي", "icon": "🥉"},
         "silver": {"points": 500, "name_ar": "فضي", "icon": "🥈"},
@@ -67,7 +67,7 @@ class GamificationService:
     def get_user_badge(points: int) -> Dict:
         for badge_key in reversed(list(GamificationService.BADGES.keys())):
             badge = GamificationService.BADGES[badge_key]
-            if points >= badge["points"]:
+            if points >= badge["points"]:  # type: ignore[operator]
                 return {
                     "key": badge_key,
                     "name_ar": badge["name_ar"],
@@ -124,7 +124,7 @@ class GamificationService:
 
         next_badge = None
         for badge_key in GamificationService.BADGES.keys():
-            if GamificationService.BADGES[badge_key]["points"] > points:
+            if GamificationService.BADGES[badge_key]["points"] > points:  # type: ignore[operator]
                 next_badge = GamificationService.BADGES[badge_key]
                 break
 
@@ -133,7 +133,7 @@ class GamificationService:
             "points": points,
             "current_badge": badge,
             "next_badge": next_badge,
-            "points_to_next": (next_badge["points"] - points) if next_badge else 0,
+            "points_to_next": (int(next_badge["points"]) - points) if next_badge else 0,  # type: ignore[operator]
             "total_sales": total_sales,
             "total_amount": float(total_amount),
         }

@@ -464,7 +464,7 @@ class ExchangeRateService:
             }
 
         # 5. Online rate — fetch, then auto-save to exchange_rate_records for next time
-        online_rate = ExchangeRateService._fetch_and_store_online_rate(
+        online_rate = ExchangeRateService._fetch_and_store_online_rate(  # type: ignore[attr-defined]
             from_currency, to_currency, tenant_id
         )
         if online_rate:
@@ -479,7 +479,7 @@ class ExchangeRateService:
             }
 
         # 6. Last known rate from exchange_rate_records (any date, any source)
-        last_rate = ExchangeRateService._get_last_known_rate(
+        last_rate = ExchangeRateService._get_last_known_rate(  # type: ignore[attr-defined]
             from_currency, to_currency, tenant_id
         )
         if last_rate:

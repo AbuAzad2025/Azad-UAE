@@ -10,6 +10,6 @@ try:
             self._warn(e)
             return None
 
-    BaseSerializer.dumps = _patched_dumps
+    BaseSerializer.dumps = _patched_dumps  # type: ignore[method-assign]
 except ImportError:
     pass

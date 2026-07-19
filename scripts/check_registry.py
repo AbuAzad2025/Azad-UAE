@@ -30,11 +30,11 @@ with app.app_context():
     # Try using registry.set
     sess = Session()
     try:
-        db.session.registry.set(sess)
+        db.session.registry.set(sess)  # type: ignore[attr-defined,arg-type]
         print("registry.set(sess) worked!")
     except Exception:
         try:
-            db.session.registry().set(sess)
+            db.session.registry().set(sess)  # type: ignore[attr-defined,misc]
             print("registry().set(sess) worked!")
         except Exception as e2:
             print(f"registry().set error: {e2}")

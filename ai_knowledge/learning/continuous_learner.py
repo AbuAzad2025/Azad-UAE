@@ -21,11 +21,10 @@ from urllib.parse import quote
 import requests
 from requests.adapters import HTTPAdapter
 
-Retry: Any
 try:
     from urllib3.util.retry import Retry
 except ImportError:
-    from requests.packages.urllib3.util.retry import Retry
+    from requests.packages.urllib3.util.retry import Retry  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 

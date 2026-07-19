@@ -75,12 +75,12 @@ class BackupOptimizer:
                 return any(m in text for m in markers)
 
             if backup_path.endswith(".gz"):
-                with gzip.open(backup_path, "rb") as f:
-                    data = f.read()
+                with gzip.open(backup_path, "rb") as gz:
+                    data = gz.read()
                 return check_sql_dump(data)
             else:
-                with open(backup_path, "rb") as f:
-                    data = f.read()
+                with open(backup_path, "rb") as fh:
+                    data = fh.read()
                 return check_sql_dump(data)
         except Exception as e:
             logger.error(f"❌ Verification failed: {e}")
@@ -89,7 +89,7 @@ class BackupOptimizer:
     @staticmethod
     def get_backup_info(backup_dir: str) -> dict:
         try:
-            backups = []
+            backups: list[dict[str, Any]] = []
             for backup_file in Path(backup_dir).glob("*.sql*"):
                 stat = os.stat(backup_file)
                 backups.append(

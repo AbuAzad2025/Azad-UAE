@@ -265,7 +265,7 @@ class MaintenanceService:
         from flask import current_app
         from services.backup_service import BackupService
 
-        app = current_app._get_current_object() if current_app else None
+        app = current_app._get_current_object() if current_app else None  # type: ignore[attr-defined]
         if app is None:
             from app import create_app
 

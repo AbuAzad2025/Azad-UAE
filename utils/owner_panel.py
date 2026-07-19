@@ -322,6 +322,9 @@ def build_company_dashboard_context(
     today_sales = sales_q.filter(func.date(Sale.sale_date) == today).first()
     month_sales = sales_q.filter(func.date(Sale.sale_date) >= month_start).first()
 
+    _ts = today_sales or (0, 0)
+    _ms = month_sales or (0, 0)
+
     prod_q = Product.query.filter_by(tenant_id=tenant_id, is_active=True)
     cust_q = Customer.query.filter_by(tenant_id=tenant_id, is_active=True)
     if branch_id is not None:
@@ -392,13 +395,13 @@ def build_company_dashboard_context(
         "branding": branding,
         "logo_url": _tenant_logo_display_url(tenant, branding),
         "readiness_warnings": readiness,
-        "today_sales_count": today_sales[0] or 0,
-        "today_sales_amount": float(today_sales[1] or 0),
-        "month_sales_count": month_sales[0] or 0,
-        "month_sales_amount": float(month_sales[1] or 0),
+        "today_sales_count": _ts[0],
+        "today_sales_amount": float(_ts[1]),
+        "month_sales_count": _ms[0],
+        "month_sales_amount": float(_ms[1]),
         "month_cogs": month_cogs,
         "month_commissions": month_commissions,
-        "month_net_profit": float(month_sales[1] or 0) - month_cogs - month_commissions,
+        "month_net_profit": float(_ms[1]) - month_cogs - month_commissions,
         "products_count": prod_q.count(),
         "customers_count": cust_q.count(),
         "users_count": users_count,

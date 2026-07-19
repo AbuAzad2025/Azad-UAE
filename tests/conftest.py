@@ -155,7 +155,7 @@ if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
                 return getattr(self, "_mock_name", None) or type(self).__name__
         return _orig_mock_getattr(self, name)
 
-    NonCallableMock.__getattr__ = _safe_mock_getattr
+    NonCallableMock.__getattr__ = _safe_mock_getattr  # type: ignore[method-assign]
     NonCallableMock._azad_py314_name_guard = True
 
 _LOGGING_CORE_METHODS = ("log_audit", "_fallback_write", "log_error", "log_security")

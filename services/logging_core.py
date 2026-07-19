@@ -710,7 +710,7 @@ class LoggingCore:
             try:
                 fn(category, level, message, count)
             except Exception:
-                cls._log(logging.WARNING, "Alert callback %s failed", fn.__name__)
+                cls._log(logging.WARNING, "Alert callback %s failed", fn.__name__)  # type: ignore[attr-defined]
 
     # ──────────────────────────────────────────────────────────────
     #  TRACE ID PROPAGATION
