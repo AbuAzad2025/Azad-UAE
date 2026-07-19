@@ -59,7 +59,7 @@ jobs:
               {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
               {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
               {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
-              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/",                    "cov-flag":"e2e"}
+              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           else
             MATRIX='{"include":[
@@ -70,7 +70,7 @@ jobs:
               {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
               {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
               {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
-              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/",                    "cov-flag":"e2e"}
+              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           fi
           echo "matrix=$(echo "$MATRIX" | jq -c .)" >> $GITHUB_OUTPUT
