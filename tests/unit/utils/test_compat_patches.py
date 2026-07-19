@@ -1,24 +1,25 @@
 import importlib
-import pickle
+import json
 import sys
 from unittest.mock import MagicMock, patch
 
 
 class TestCompatPatches:
     def test_dumps_serializes_value(self):
+        import utils.compat_patches  # applies the JSON serializer patch
         from cachelib.serializers import BaseSerializer
 
         ser = BaseSerializer()
         payload = ser.dumps({"key": "value"})
-        assert pickle.loads(payload) == {"key": "value"}
+        assert json.loads(payload.decode("utf-8")) == {"key": "value"}
 
-    def test_dumps_returns_none_on_pickling_error(self):
+    def test_dumps_returns_none_on_encode_error(self):
         from cachelib.serializers import BaseSerializer
 
         ser = BaseSerializer()
         ser._warn = MagicMock()
         with patch(
-            "utils.compat_patches.pickle.dumps", side_effect=pickle.PicklingError("bad")
+            "utils.compat_patches.json.dumps", side_effect=ValueError("bad")
         ):
             assert ser.dumps({"x": 1}) is None
         ser._warn.assert_called_once()
