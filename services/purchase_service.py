@@ -578,7 +578,6 @@ class PurchaseService:
                         if cost_history
                         else unit_cost
                     )
-                    quantity * original_unit_cost
 
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value

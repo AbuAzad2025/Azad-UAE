@@ -4,6 +4,8 @@
 
 const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || 'AED';
 const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || 'د.إ';
+/* purchaseLineIndex scoped per file to avoid cross-page collision with sales */
+let purchaseLineIndex = 0;
 
 // Escape untrusted server-provided fields before interpolation into Select2
 // option/template HTML (defense against stored XSS via product names/SKUs).
@@ -18,7 +20,7 @@ function azadEsc(v) {
 
 
 
-let lineIndex = 0;
+let purchaseLineIndex = 0;
 
 
 
@@ -32,7 +34,7 @@ function addLine() {
 
   const html = `
 
-    <div class="product-line mb-3 p-3 ic-1" id="line_${lineIndex}">
+    <div class="product-line mb-3 p-3 ic-1" id="line_${purchaseLineIndex}">
 
       <div class="row align-items-end">
 
@@ -40,15 +42,15 @@ function addLine() {
 
         <div class="col-md-4">
 
-          <label class="small" for="line_${lineIndex}_product_id"><i class="fas fa-box"></i> المنتج</label>
+          <label class="small" for="line_${purchaseLineIndex}_product_id"><i class="fas fa-box"></i> المنتج</label>
 
-          <select name="lines[${lineIndex}][product_id]" 
+          <select name="lines[${purchaseLineIndex}][product_id]" 
 
-                  id="line_${lineIndex}_product_id"
+                  id="line_${purchaseLineIndex}_product_id"
 
                   class="form-control product-select line-product" 
 
-                  data-line="${lineIndex}" required aria-label="lines[${lineIndex}][product id]">
+                  data-line="${purchaseLineIndex}" required aria-label="lines[${purchaseLineIndex}][product id]">
 
             <option value="">بلا</option>
 
@@ -62,13 +64,13 @@ function addLine() {
 
         <div class="col-md-2">
 
-          <label class="small" for="line_${lineIndex}_quantity"><i class="fas fa-sort-numeric-up"></i> الكمية</label>
+          <label class="small" for="line_${purchaseLineIndex}_quantity"><i class="fas fa-sort-numeric-up"></i> الكمية</label>
 
-          <input type="number" name="lines[${lineIndex}][quantity]" 
+          <input type="number" name="lines[${purchaseLineIndex}][quantity]" 
 
-                 id="line_${lineIndex}_quantity"
+                 id="line_${purchaseLineIndex}_quantity"
 
-                 class="form-control line-quantity" data-line="${lineIndex}"
+                 class="form-control line-quantity" data-line="${purchaseLineIndex}"
 
                  placeholder="{{ t('Quantity') }}" value="1" step="0.01" min="0.01" required>
 
@@ -80,13 +82,13 @@ function addLine() {
 
         <div class="col-md-2">
 
-          <label class="small" for="line_${lineIndex}_unit_cost"><i class="fas fa-dollar-sign"></i> التكلفة</label>
+          <label class="small" for="line_${purchaseLineIndex}_unit_cost"><i class="fas fa-dollar-sign"></i> التكلفة</label>
 
-          <input type="number" name="lines[${lineIndex}][unit_cost]" 
+          <input type="number" name="lines[${purchaseLineIndex}][unit_cost]" 
 
-                 id="line_${lineIndex}_unit_cost"
+                 id="line_${purchaseLineIndex}_unit_cost"
 
-                 class="form-control line-cost" data-line="${lineIndex}"
+                 class="form-control line-cost" data-line="${purchaseLineIndex}"
 
                  placeholder="0.00" step="0.01" min="0" required>
 
@@ -98,13 +100,13 @@ function addLine() {
 
         <div class="col-md-2">
 
-          <label class="small" for="line_${lineIndex}_discount"><i class="fas fa-percentage"></i> خصم%</label>
+          <label class="small" for="line_${purchaseLineIndex}_discount"><i class="fas fa-percentage"></i> خصم%</label>
 
-          <input type="number" name="lines[${lineIndex}][discount_percent]" 
+          <input type="number" name="lines[${purchaseLineIndex}][discount_percent]" 
 
-                 id="line_${lineIndex}_discount"
+                 id="line_${purchaseLineIndex}_discount"
 
-                 class="form-control line-discount" data-line="${lineIndex}"
+                 class="form-control line-discount" data-line="${purchaseLineIndex}"
 
                  placeholder="0" value="0" step="0.01" min="0" max="100">
 
@@ -116,11 +118,11 @@ function addLine() {
 
         <div class="col-md-1">
 
-          <label class="small" for="line_total_${lineIndex}"><i class="fas fa-equals"></i> المجموع</label>
+          <label class="small" for="line_total_${purchaseLineIndex}"><i class="fas fa-equals"></i> المجموع</label>
 
           <input type="text" class="form-control line-total bg-light" 
 
-                 id="line_total_${lineIndex}" data-line="${lineIndex}" value="0.00" readonly aria-label="line total ${lineIndex}">
+                 id="line_total_${purchaseLineIndex}" data-line="${purchaseLineIndex}" value="0.00" readonly aria-label="line total ${purchaseLineIndex}">
 
         </div>
 
@@ -132,7 +134,7 @@ function addLine() {
 
           <button type="button" class="btn btn-danger btn-block" 
 
-                  onclick="removeLine(${lineIndex})" title="{{ t('Delete') }}">
+                  onclick="removeLine(${purchaseLineIndex})" title="{{ t('Delete') }}">
 
             <i class="fas fa-trash"></i>
 
@@ -142,17 +144,17 @@ function addLine() {
 
       </div>
 
-      <div class="row mt-2 serial-row" id="serial_row_${lineIndex}" style="display:none;">
+      <div class="row mt-2 serial-row" id="serial_row_${purchaseLineIndex}" style="display:none;">
 
         <div class="col-md-12">
 
           <label class="small"><i class="fas fa-barcode"></i> أرقام السيريال / IMEI <small class="text-muted">(واحد لكل سطر)</small></label>
 
-          <textarea name="lines[${lineIndex}][serials]" id="line_${lineIndex}_serials"
+          <textarea name="lines[${purchaseLineIndex}][serials]" id="line_${purchaseLineIndex}_serials"
 
                     class="form-control serial-textarea" rows="2"
 
-                    placeholder="SN001&#10;SN002" data-line="${lineIndex}"></textarea>
+                    placeholder="SN001&#10;SN002" data-line="${purchaseLineIndex}"></textarea>
 
         </div>
 
@@ -170,7 +172,7 @@ function addLine() {
 
   // تفعيل Select2 للمنتج باستخدام الفلتر الذكي
 
-  const $productSelect = $(`select[name="lines[${lineIndex}][product_id]"]`);
+  const $productSelect = $(`select[name="lines[${purchaseLineIndex}][product_id]"]`);
 
   
 
@@ -313,7 +315,7 @@ function addLine() {
 
   setTimeout(function() {
 
-    $(`.line-quantity[data-line="${lineIndex}"], .line-cost[data-line="${lineIndex}"], .line-discount[data-line="${lineIndex}"]`)
+    $(`.line-quantity[data-line="${purchaseLineIndex}"], .line-cost[data-line="${purchaseLineIndex}"], .line-discount[data-line="${purchaseLineIndex}"]`)
 
       .on('input change keyup', function() {
 
@@ -329,7 +331,7 @@ function addLine() {
 
         }
 
-        calculateLineTotal(lineIndex);
+        calculateLineTotal(purchaseLineIndex);
 
         void calculateTotals();
 
@@ -345,7 +347,7 @@ function addLine() {
 
     if (data && data.cost_price) {
 
-      $(`.line-cost[data-line="${lineIndex}"]`).data('base-cost', parseFloat(data.cost_price) || 0);
+      $(`.line-cost[data-line="${purchaseLineIndex}"]`).data('base-cost', parseFloat(data.cost_price) || 0);
 
       updateLineCosts();
 
@@ -353,11 +355,11 @@ function addLine() {
 
     if (data && data.has_serial_number) {
 
-      $(`#serial_row_${lineIndex}`).show();
+      $(`#serial_row_${purchaseLineIndex}`).show();
 
     } else {
 
-      $(`#serial_row_${lineIndex}`).hide();
+      $(`#serial_row_${purchaseLineIndex}`).hide();
 
     }
 
@@ -365,9 +367,9 @@ function addLine() {
 
   
 
-  lineIndex++;
+  purchaseLineIndex++;
 
-  $('#line_count').val(lineIndex);
+  $('#line_count').val(purchaseLineIndex);
 
 }
 

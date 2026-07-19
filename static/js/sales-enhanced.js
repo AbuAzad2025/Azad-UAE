@@ -3,7 +3,8 @@
  * تحسينات خاصة بالمبيعات
  */
 
-let lineIndex = 0;
+/* salesLineIndex scoped per file to avoid cross-page collision with purchases */
+let salesLineIndex = 0;
 
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
@@ -15,15 +16,15 @@ function getCsrfToken() {
  */
 function addLine() {
     const html = `
-        <div class="product-line mb-3 p-3" id="line_${lineIndex}" style="background: #f8f9fa; border-radius: 8px; border-right: 4px solid #667eea;">
+        <div class="product-line mb-3 p-3" id="line_${salesLineIndex}" style="background: #f8f9fa; border-radius: 8px; border-right: 4px solid #667eea;">
             <div class="row">
                 <div class="col-md-5">
                     <label class="font-weight-bold mb-1">
                         <i class="fas fa-box text-primary"></i> المنتج
                         <span class="text-danger">*</span>
                     </label>
-                    <select name="lines[${lineIndex}][product_id]" class="form-control product-select" required 
-                            data-index="${lineIndex}" onchange="loadProductPrice(${lineIndex})">
+                    <select name="lines[${salesLineIndex}][product_id]" class="form-control product-select" required 
+                            data-index="${salesLineIndex}" onchange="loadProductPrice(${salesLineIndex})">
                         <option value="">بلا</option>
                     </select>
                     <small class="text-muted">ابحث بالاسم أو رقم القطعة</small>
@@ -33,7 +34,7 @@ function addLine() {
                         <i class="fas fa-sort-numeric-up text-info"></i> الكمية
                         <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="lines[${lineIndex}][quantity]" class="form-control quantity-input" 
+                    <input type="number" name="lines[${salesLineIndex}][quantity]" class="form-control quantity-input" 
                            placeholder="الكمية" value="1" step="0.01" min="0.01" required 
                            onchange="calculateTotals()" onkeyup="calculateTotals()">
                     <small class="text-muted">عدد الوحدات</small>
@@ -43,9 +44,9 @@ function addLine() {
                         <i class="fas fa-money-bill text-success"></i> السعر
                         <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="lines[${lineIndex}][unit_price]" class="form-control price-input" 
+                    <input type="number" name="lines[${salesLineIndex}][unit_price]" class="form-control price-input" 
                            placeholder="السعر" step="0.01" min="0" required 
-                           id="price_${lineIndex}" onchange="calculateTotals()" onkeyup="calculateTotals()"
+                           id="price_${salesLineIndex}" onchange="calculateTotals()" onkeyup="calculateTotals()"
                            title="سعر الوحدة بالعملة الأساسية">
                     <small class="text-muted">${window._CURRENCY_SYMBOL || 'AED'}/وحدة</small>
                 </div>
@@ -53,31 +54,31 @@ function addLine() {
                     <label class="font-weight-bold mb-1">
                         <i class="fas fa-percent text-warning"></i> خصم
                     </label>
-                    <input type="number" name="lines[${lineIndex}][discount_percent]" class="form-control discount-input" 
+                    <input type="number" name="lines[${salesLineIndex}][discount_percent]" class="form-control discount-input" 
                            placeholder="خصم%" value="0" step="0.01" min="0" max="100" 
                            onchange="calculateTotals()" onkeyup="calculateTotals()">
                     <small class="text-muted">نسبة الخصم %</small>
                 </div>
-                <div class="col-md-2 text-center" id="serial_btn_container_${lineIndex}" style="display:none;">
+                <div class="col-md-2 text-center" id="serial_btn_container_${salesLineIndex}" style="display:none;">
                     <label class="font-weight-bold mb-1">&nbsp;</label>
-                    <button type="button" class="btn btn-warning btn-sm btn-block" id="serial_btn_${lineIndex}" 
-                            onclick="triggerSerialModal(${lineIndex})">
+                    <button type="button" class="btn btn-warning btn-sm btn-block" id="serial_btn_${salesLineIndex}" 
+                            onclick="triggerSerialModal(${salesLineIndex})">
                         <i class="fas fa-fingerprint"></i> سيريال
                     </button>
                     <small class="text-muted">مطلوب إدخال السيريال</small>
                 </div>
                 <div class="col-md-1">
                     <label class="font-weight-bold mb-1">&nbsp;</label>
-                    <button type="button" class="btn btn-danger btn-sm btn-block" onclick="removeLine(${lineIndex})" title="حذف الصنف">
+                    <button type="button" class="btn btn-danger btn-sm btn-block" onclick="removeLine(${salesLineIndex})" title="حذف الصنف">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
-            <div class="row mt-2" id="line_info_${lineIndex}" style="display:none;">
+            <div class="row mt-2" id="line_info_${salesLineIndex}" style="display:none;">
                 <div class="col-12">
                     <small class="text-muted">
-                        <i class="fas fa-box mr-1"></i>المخزون: <span id="stock_${lineIndex}">-</span> |
-                        <i class="fas fa-dollar-sign mr-1"></i>التكلفة: <span id="cost_${lineIndex}">-</span>
+                        <i class="fas fa-box mr-1"></i>المخزون: <span id="stock_${salesLineIndex}">-</span> |
+                        <i class="fas fa-dollar-sign mr-1"></i>التكلفة: <span id="cost_${salesLineIndex}">-</span>
                     </small>
                 </div>
             </div>
@@ -86,7 +87,7 @@ function addLine() {
     
     $('#linesContainer').append(html);
     
-    const newSelect = $(`select[name="lines[${lineIndex}][product_id]"]`);
+    const newSelect = $(`select[name="lines[${salesLineIndex}][product_id]"]`);
     
     // استخدام الفلتر الذكي الموحد
     if (window.SmartSelectors) {
@@ -190,8 +191,8 @@ function addLine() {
         void calculateTotals();
     });
     
-    lineIndex++;
-    $('#line_count').val(lineIndex);
+    salesLineIndex++;
+    $('#line_count').val(salesLineIndex);
 }
 
 /**
@@ -279,15 +280,15 @@ function loadProductPrice(index) {
 /**
  * Trigger Serial Modal
  */
-function triggerSerialModal(lineIndex) {
-    const btn = $(`#serial_btn_${lineIndex}`);
+function triggerSerialModal(salesLineIndex) {
+    const btn = $(`#serial_btn_${salesLineIndex}`);
     if (!btn.data('needed')) return;
     
     const productName = btn.data('product-name');
-    const qty = $(`input[name="lines[${lineIndex}][quantity]"]`).val();
+    const qty = $(`input[name="lines[${salesLineIndex}][quantity]"]`).val();
     
     if (typeof openSerialModal === 'function') {
-        openSerialModal(lineIndex, productName, qty);
+        openSerialModal(salesLineIndex, productName, qty);
     }
 }
 

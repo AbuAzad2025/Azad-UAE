@@ -118,6 +118,9 @@ class ErrorLogger:
             db.session.flush()
         except Exception:
             logger.debug("Failed to write error audit log", exc_info=True)
+
+
+class MetricsCollector:
     """Collect application metrics"""
 
     @staticmethod

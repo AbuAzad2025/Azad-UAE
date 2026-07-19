@@ -133,22 +133,30 @@ class SystemIntegrator:
     @staticmethod
     def get_customer_sales_summary(customer_id):
         """ملخص مبيعات العميل"""
+        tid = _active_tid()
+        if tid is None:
+            return {"success": False, "error": "لا يوجد سياق مستأجر نشط"}
+
         try:
-            from models import Customer
+            from models import Customer, Sale
 
-            customer = Customer.query.get(customer_id)
+            customer = Customer.query.filter_by(
+                id=customer_id, tenant_id=tid
+            ).first()
             if not customer:
-                return {"success": False, "error": "العميل غير موجود"}
+                return {"success": False, "error": "العميل غير موجود في هذا السياق"}
 
-            tid = _active_tid()
-            sales = customer.sales.all()
+            sales = (
+                Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
+                .order_by(Sale.created_at.desc())
+                .all()
+            )
             total_sales = len(sales)
             total_amount = sum(float(sale.total_amount) for sale in sales)
             paid_amount = sum(float(sale.paid_amount) for sale in sales)
             balance_due = total_amount - paid_amount
 
-            # آخر 5 مبيعات
-            recent_sales = sales[-5:] if sales else []
+            recent_sales = sales[:5]
 
             return {
                 "success": True,
