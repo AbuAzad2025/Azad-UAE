@@ -16,7 +16,7 @@ import pytest
 
 from extensions import db
 from utils.tenanting import tenant_query
-from utils.exceptions import SecurityBoundaryViolation as TenantSecurityViolation
+from utils.exceptions import SecurityBoundaryViolation
 from utils.db_safety import atomic_transaction
 
 
@@ -34,7 +34,7 @@ def _tenants(app):
 
     with app.app_context():
         tenant_a = Tenant(
-            name=f"FuzzA {uid_a}", slug=f"fuzz-a-{uid_a}",
+            name=f"FuzzA {uid_a}", name_ar=f"FuzzA {uid_a}", slug=f"fuzz-a-{uid_a}",
             default_currency="AED", base_currency="AED",
             enable_tax=True, default_tax_rate=Decimal("5.00"),
             enable_pos=True, is_active=True, is_suspended=False,
@@ -43,7 +43,7 @@ def _tenants(app):
             max_users=10, max_branches=2,
         )
         tenant_b = Tenant(
-            name=f"FuzzB {uid_b}", slug=f"fuzz-b-{uid_b}",
+            name=f"FuzzB {uid_b}", name_ar=f"FuzzB {uid_b}", slug=f"fuzz-b-{uid_b}",
             default_currency="AED", base_currency="AED",
             enable_tax=True, default_tax_rate=Decimal("5.00"),
             enable_pos=True, is_active=True, is_suspended=False,
@@ -55,7 +55,7 @@ def _tenants(app):
         db.session.flush()
 
         for t in (tenant_a, tenant_b):
-            b = Branch(tenant_id=t.id, name=f"Main {t.id}", is_active=True)
+            b = Branch(tenant_id=t.id, name=f"Main {t.id}", code=f"M{t.id}", is_active=True)
             db.session.add(b)
             w = Warehouse(tenant_id=t.id, name=f"WH {t.id}", is_active=True)
             db.session.add(w)
@@ -108,7 +108,7 @@ class TestTenantQueryBoundary:
     def test_tenant_query_rejects_none(self, app):
         from models import Customer
         with app.app_context():
-            with pytest.raises((TypeError, ValueError, TenantSecurityViolation)):
+            with pytest.raises((TypeError, ValueError, SecurityBoundaryViolation)):
                 tenant_query(Customer, tenant_id=None).all()
 
     def test_cross_tenant_write_blocked(self, app, _tenants):
