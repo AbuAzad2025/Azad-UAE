@@ -200,6 +200,36 @@ jobs:
           bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
           bandit -r . --exclude 'migrations/,tests/' || true
 
+  # ── Lint & audit (ruff, mypy, biome, pip-audit) ──
+  lint-audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt ruff mypy pip-audit
+          npm install -g @biomejs/biome
+      - name: Ruff check
+        continue-on-error: true
+        run: ruff check . --output-format github
+      - name: Ruff format
+        continue-on-error: true
+        run: ruff format . --check --diff
+      - name: Mypy
+        continue-on-error: true
+        run: mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases
+      - name: Biome check (JS/CSS/JSON/HTML)
+        continue-on-error: true
+        run: biome check . --reporter github
+      - name: pip-audit
+        continue-on-error: true
+        run: python -m pip_audit -r requirements.txt
+
   # ── Comprehensive coverage report (backend + frontend) ──
   coverage-report:
     needs: [test]
