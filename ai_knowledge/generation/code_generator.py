@@ -15,7 +15,7 @@ import logging
 import re
 from typing import List, Optional
 
-from sqlalchemy import and_, column, insert, select, table as sa_table, update
+from sqlalchemy import and_, column, select, table as sa_table
 
 logger = logging.getLogger(__name__)
 
@@ -118,29 +118,24 @@ def {function_name}():
 
             elif intent == "insert":
                 table_name = _ident(table)
-                tbl = sa_table(table_name)
-                if filters and filters.get("values"):
-                    cols = [_col(table_name, _ident(c)) for c in filters["columns"]]
-                    values = {c.name: v for c, v in zip(cols, filters["values"])}
-                    istmt = insert(tbl).values(values)
+                if filters and filters.get("values") and filters.get("columns"):
+                    col_names = [_ident(c) for c in filters["columns"]]
+                    cols_str = ", ".join(col_names)
+                    vals = ", ".join(repr(v) for v in filters["values"])
+                    return f"INSERT INTO {table_name} ({cols_str}) VALUES ({vals})"
                 else:
-                    istmt = insert(tbl).values({})
-                return str(istmt)
+                    return f"INSERT INTO {table_name} DEFAULT VALUES"
 
             elif intent == "update":
                 table_name = _ident(table)
-                tbl = sa_table(table_name)
-                set_clauses: dict = {}
+                set_clauses = []
                 if filters and filters.get("set"):
                     for k, v in filters["set"].items():
-                        set_clauses[_ident(k)] = v
-                ustmt = update(tbl)
-                if set_clauses:
-                    ustmt = ustmt.values(set_clauses)
+                        set_clauses.append(f"{_ident(k)} = {repr(v)}")
+                set_str = ", ".join(set_clauses) if set_clauses else ""
                 where_expr = _build_where(table_name, filters, "u")
-                if where_expr is not None:
-                    ustmt = ustmt.where(where_expr)
-                return str(ustmt)
+                where_str = "" if where_expr is None else f" WHERE {where_expr}"
+                return f"UPDATE {table_name} SET {set_str}{where_str}"
 
             else:
                 return f"-- Unsupported intent: {intent}"
