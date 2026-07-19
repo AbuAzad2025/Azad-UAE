@@ -5,7 +5,7 @@
 
 	function updateOption($select, cat) {
 		const label = optionLabel(cat);
-		let $opt = $select.find('option[value="' + cat.id + '"]');
+		let $opt = $select.find(`option[value="${cat.id}"]`);
 		if ($opt.length) {
 			$opt
 				.text(label)
@@ -26,26 +26,20 @@
 
 	function toggleActions($wrap, categoryId) {
 		const enabled = categoryId && String(categoryId) !== "0";
-		$wrap
-			.find(".js-category-edit, .js-category-delete")
-			.prop("disabled", !enabled);
+		$wrap.find(".js-category-edit, .js-category-delete").prop("disabled", !enabled);
 	}
 
 	function resetModal($modal) {
 		$modal.removeData("edit-id");
 		$modal.find(".js-category-modal-title").text("إضافة فئة منتجات");
 		$modal.find(".js-category-save-label").text("حفظ الفئة");
-		$modal
-			.find("#category_name, #category_name_ar, #category_description")
-			.val("");
+		$modal.find("#category_name, #category_name_ar, #category_description").val("");
 	}
 
 	function fillModalFromOption($modal, $opt) {
 		$modal.find("#category_name").val($opt.attr("data-name") || $opt.text());
 		$modal.find("#category_name_ar").val($opt.attr("data-name-ar") || "");
-		$modal
-			.find("#category_description")
-			.val($opt.attr("data-description") || "");
+		$modal.find("#category_description").val($opt.attr("data-description") || "");
 	}
 
 	window.initProductCategoryControls = (opts) => {
@@ -61,7 +55,7 @@
 		function selectedOption() {
 			const id = selectedId();
 			if (!id || id === "0") return $();
-			return $select.find('option[value="' + id + '"]');
+			return $select.find(`option[value="${id}"]`);
 		}
 
 		$select.on("change", () => {
@@ -89,10 +83,7 @@
 			const id = selectedId();
 			if (!id || id === "0") return;
 			const label = selectedOption().text();
-			if (
-				!confirm("حذف الفئة «" + label + "»؟\nلن يُسمح إذا كانت مرتبطة بمنتجات.")
-			)
-				return;
+			if (!confirm(`حذف الفئة «${label}»؟\nلن يُسمح إذا كانت مرتبطة بمنتجات.`)) return;
 
 			$.ajax({
 				url: opts.deleteUrl(id),
@@ -103,14 +94,12 @@
 						alert(res.error || "فشل الحذف");
 						return;
 					}
-					$select.find('option[value="' + id + '"]').remove();
+					$select.find(`option[value="${id}"]`).remove();
 					$select.val("0").trigger("change");
-					$(".pc-empty-categories").toggle(
-						$select.find('option[value!="0"]').length === 0,
-					);
+					$(".pc-empty-categories").toggle($select.find('option[value!="0"]').length === 0);
 				},
 				error: (xhr) => {
-					alert((xhr.responseJSON && xhr.responseJSON.error) || "خطأ في الحذف");
+					alert(xhr.responseJSON?.error || "خطأ في الحذف");
 				},
 			});
 		});
@@ -148,7 +137,7 @@
 				},
 				error: (xhr) => {
 					$btn.prop("disabled", false);
-					alert((xhr.responseJSON && xhr.responseJSON.error) || "خطأ في الحفظ");
+					alert(xhr.responseJSON?.error || "خطأ في الحفظ");
 				},
 			});
 		});
@@ -178,7 +167,7 @@
 			const $btn = $(this);
 			const id = $btn.data("id");
 			const label = $btn.data("label") || "";
-			if (!confirm("حذف الفئة «" + label + "»؟")) return;
+			if (!confirm(`حذف الفئة «${label}»؟`)) return;
 			$.ajax({
 				url: opts.deleteUrl(id),
 				method: "POST",
@@ -193,7 +182,7 @@
 					});
 				},
 				error: (xhr) => {
-					alert((xhr.responseJSON && xhr.responseJSON.error) || "خطأ في الحذف");
+					alert(xhr.responseJSON?.error || "خطأ في الحذف");
 				},
 			});
 		});
@@ -223,7 +212,7 @@
 				},
 				error: (xhr) => {
 					$btn.prop("disabled", false);
-					alert((xhr.responseJSON && xhr.responseJSON.error) || "خطأ في الحفظ");
+					alert(xhr.responseJSON?.error || "خطأ في الحفظ");
 				},
 			});
 		});

@@ -95,9 +95,7 @@ class KeyboardShortcuts {
 		this.register(
 			"ctrl+n",
 			() => {
-				const createBtn = document.querySelector(
-					'.btn-primary[href*="create"]',
-				);
+				const createBtn = document.querySelector('.btn-primary[href*="create"]');
 				if (createBtn) {
 					createBtn.click();
 				} else {
@@ -112,9 +110,7 @@ class KeyboardShortcuts {
 			() => {
 				const form = document.querySelector("form");
 				if (form) {
-					form.dispatchEvent(
-						new Event("submit", { cancelable: true, bubbles: true }),
-					);
+					form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
 				}
 			},
 			"حفظ النموذج",
@@ -132,7 +128,7 @@ class KeyboardShortcuts {
 
 				// Close notifications
 				const toasts = document.querySelectorAll(".toast");
-				toasts.forEach((toast) => toast.remove());
+				toasts.forEach((toast) => void toast.remove());
 			},
 			"إغلاق/إلغاء",
 		);
@@ -156,9 +152,7 @@ class KeyboardShortcuts {
 		this.register(
 			"ctrl+e",
 			() => {
-				const exportBtn = document.querySelector(
-					".buttons-excel, .buttons-csv",
-				);
+				const exportBtn = document.querySelector(".buttons-excel, .buttons-csv");
 				if (exportBtn) {
 					exportBtn.click();
 					notify.success("جاري تصدير البيانات...");

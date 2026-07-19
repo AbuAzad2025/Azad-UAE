@@ -25,20 +25,16 @@ $(document).ready(() => {
 					.data()
 					.reduce((a, b) => {
 						const val = parseFloat(b.replace(/[^\d.-]/g, ""));
-						return a + (isNaN(val) ? 0 : val);
+						return a + (Number.isNaN(val) ? 0 : val);
 					}, 0);
 				const paid = api
 					.column(4, { page: "current" })
 					.data()
 					.reduce((a, b) => {
 						const val = parseFloat((b.match(/[\d.]+/) || [0])[0]);
-						return a + (isNaN(val) ? 0 : val);
+						return a + (Number.isNaN(val) ? 0 : val);
 					}, 0);
-				UI.toast(
-					`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`,
-					"info",
-					2000,
-				);
+				UI.toast(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`, "info", 2000);
 			},
 		});
 	}

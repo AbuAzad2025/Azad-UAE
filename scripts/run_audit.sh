@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Azad-UAE DevSecOps Audit Runner (Linux / WSL / macOS)
-# Stages: Auto-Fix -> Read-Only Diagnostics -> Vulnerability Scan
+# Stages: Auto-Fix -> Read-Only Diagnostics -> Vulnerability Scan -> Infra
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -62,6 +62,62 @@ if python -m pip_audit --version &>/dev/null; then
   python -m pip_audit -r requirements.txt 2>&1 | tail -20 || fail "pip-audit found vulnerabilities"
 else
   warn "pip-audit not found - install with: pip install pip-audit"
+fi
+
+# --- Stage 3: i18n & Translation Guard ---
+echo -e "\n${YELLOW}--- Stage 3: i18n & Localization Audit ---${NC}\n"
+
+info "Strict i18n lint ..."
+python scripts/check_strict_i18n.py templates routes services || fail "Strict i18n check failed"
+
+if command -v cspell &>/dev/null; then
+  info "Cspell spell check ..."
+  npx cspell --config scripts/lint/.cspell.json "templates/**/*.html" "static/js/**/*.js" "docs/**/*.md" || fail "cspell found typos"
+else
+  warn "cspell not found - install with: npm install -g cspell"
+fi
+
+# --- Stage 4: Gitleaks (if available) ---
+echo -e "\n${YELLOW}--- Stage 4: Secret Scanning ---${NC}\n"
+
+if command -v gitleaks &>/dev/null; then
+  info "Gitleaks secret scan ..."
+  gitleaks detect --source . --no-git --verbose 2>&1 | tail -20 || warn "gitleaks found potential secrets"
+else
+  warn "gitleaks not found - install from https://github.com/gitleaks/gitleaks"
+fi
+
+# --- Stage 5: Docker audit (if Dockerfile present) ---
+echo -e "\n${YELLOW}--- Stage 5: Docker Infrastructure Audit ---${NC}\n"
+
+if [ -f scripts/lint/Dockerfile.ci ]; then
+  if command -v hadolint &>/dev/null; then
+    info "Hadolint Dockerfile audit ..."
+    hadolint scripts/lint/Dockerfile.ci --config scripts/.hadolint.yaml || warn "hadolint found issues"
+  else
+    warn "hadolint not found - install from https://github.com/hadolint/hadolint"
+  fi
+fi
+
+if command -v trivy &>/dev/null; then
+  info "Trivy filesystem scan ..."
+  trivy fs --severity HIGH,CRITICAL --exit-code 1 --no-progress . 2>&1 | tail -20 || fail "trivy found high/critical vulnerabilities"
+else
+  warn "trivy not found - install from https://github.com/aquasecurity/trivy"
+fi
+
+# --- Stage 6: Tenant isolation fuzzer ---
+echo -e "\n${YELLOW}--- Stage 6: Tenant Isolation Fuzzer ---${NC}\n"
+
+if python -m pytest --version &>/dev/null; then
+  if [ -n "${DATABASE_URL:-}" ]; then
+    info "Running tenant isolation fuzzer ..."
+    python -m pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short 2>&1 | tail -20 || fail "Tenant isolation tests failed"
+  else
+    warn "DATABASE_URL not set — skipping tenant isolation fuzzer (needs DB)"
+  fi
+else
+  warn "pytest not found — skipping tenant isolation fuzzer"
 fi
 
 # --- Done ---

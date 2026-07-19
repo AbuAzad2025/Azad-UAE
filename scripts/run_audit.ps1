@@ -2,7 +2,7 @@
 .SYNOPSIS
     Azad-UAE DevSecOps Audit Runner (Windows PowerShell)
 .DESCRIPTION
-    Stages: Auto-Fix -> Read-Only Diagnostics -> Vulnerability Scan
+    Stages: Auto-Fix -> Read-Only Diagnostics -> Vulnerability Scan -> Infra Audit
     All operations are safe - no destructive overrides.
 #>
 $ErrorActionPreference = "Stop"
@@ -67,11 +67,75 @@ try {
 }
 
 try {
-info "pip-audit vulnerability scan ..."
-exec-py -m pip_audit -r requirements.txt 2>&1 | Select-Object -Last 20
+    info "pip-audit vulnerability scan ..."
+    exec-py -m pip_audit -r requirements.txt 2>&1 | Select-Object -Last 20
     if ($LASTEXITCODE -ne 0) { fail "pip-audit found vulnerabilities" }
 } catch {
     warn "pip-audit not found - install with: pip install pip-audit"
+}
+
+# --- Stage 3: i18n & Localization ---
+Write-Host "`n=== Stage 3: i18n & Localization Guard ===`n" -ForegroundColor Yellow
+
+try {
+    info "Strict i18n lint ..."
+    exec-py scripts/check_strict_i18n.py templates routes services
+    if ($LASTEXITCODE -ne 0) { fail "Strict i18n check failed" }
+} catch { fail "Strict i18n check error: $_" }
+
+$cspell = Get-Command cspell -ErrorAction SilentlyContinue
+if ($cspell) {
+    info "Cspell spell check ..."
+    & npx cspell --config scripts/lint/.cspell.json "templates/**/*.html", "static/js/**/*.js" 2>&1 | Select-Object -Last 20
+    if ($LASTEXITCODE -ne 0) { fail "cspell found typos" }
+} else {
+    warn "cspell not found - install with: npm install -g cspell"
+}
+
+# --- Stage 4: Gitleaks ---
+Write-Host "`n=== Stage 4: Secret Scanning ===`n" -ForegroundColor Yellow
+
+$gitleaks = Get-Command gitleaks -ErrorAction SilentlyContinue
+if ($gitleaks) {
+    info "Gitleaks secret scan ..."
+    & gitleaks detect --source . --no-git --verbose 2>&1 | Select-Object -Last 20
+} else {
+    warn "gitleaks not found - install from https://github.com/gitleaks/gitleaks"
+}
+
+# --- Stage 5: Docker Infra Audit ---
+Write-Host "`n=== Stage 5: Docker Infrastructure Audit ===`n" -ForegroundColor Yellow
+
+if (Test-Path scripts/lint/Dockerfile.ci) {
+    $hadolint = Get-Command hadolint -ErrorAction SilentlyContinue
+    if ($hadolint) {
+        info "Hadolint Dockerfile audit ..."
+        & hadolint scripts/lint/Dockerfile.ci --config scripts/.hadolint.yaml 2>&1 | Select-Object -Last 20
+    } else {
+        warn "hadolint not found - install from https://github.com/hadolint/hadolint"
+    }
+}
+
+$trivy = Get-Command trivy -ErrorAction SilentlyContinue
+if ($trivy) {
+    info "Trivy filesystem scan ..."
+    & trivy fs --severity HIGH,CRITICAL --exit-code 1 --no-progress . 2>&1 | Select-Object -Last 20
+    if ($LASTEXITCODE -ne 0) { fail "trivy found high/critical vulnerabilities" }
+} else {
+    warn "trivy not found - install from https://github.com/aquasecurity/trivy"
+}
+
+# --- Stage 6: Tenant Isolation Fuzzer ---
+Write-Host "`n=== Stage 6: Tenant Isolation Fuzzer ===`n" -ForegroundColor Yellow
+
+if ($env:DATABASE_URL) {
+    try {
+        info "Running tenant isolation fuzzer ..."
+        exec-py -m pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short 2>&1 | Select-Object -Last 20
+        if ($LASTEXITCODE -ne 0) { fail "Tenant isolation tests failed" }
+    } catch { warn "Tenant isolation tests skipped: $_" }
+} else {
+    warn "DATABASE_URL not set — skipping tenant isolation fuzzer"
 }
 
 # --- Done ---

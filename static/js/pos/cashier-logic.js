@@ -54,12 +54,7 @@ function createCashierLogic(baseCurrency = "AED") {
 				barcode: product.barcode || "",
 				qty: 1,
 				basePrice: toNum(product.price),
-				price: priceForCurrency(
-					toNum(product.price),
-					baseCurrency,
-					baseCurrency,
-					1,
-				),
+				price: priceForCurrency(toNum(product.price), baseCurrency, baseCurrency, 1),
 				discountPercent: toNum(product.discountPercent),
 			});
 			return { action: "added", qty: 1 };
@@ -92,10 +87,7 @@ function createCashierLogic(baseCurrency = "AED") {
 				discount += lineDisc;
 			});
 			const quickTax = pricesIncludeVat ? 0 : subtotal * (toNum(taxRate) / 100);
-			const quickTotal = Math.max(
-				0,
-				subtotal + quickTax + toNum(shipping) - toNum(discountAmount),
-			);
+			const quickTotal = Math.max(0, subtotal + quickTax + toNum(shipping) - toNum(discountAmount));
 			return {
 				subtotal: fmt(subtotal),
 				discount: fmt(discount + toNum(discountAmount)),

@@ -34,10 +34,7 @@ $(document).ready(() => {
 				const priceInput = $(`#unit_price_${lineIndex}`);
 				const currentPrice = parseFloat(priceInput.val()) || 0;
 
-				if (
-					currentPrice === 0 ||
-					Math.abs(currentPrice - response.recommended_price) > 0.01
-				) {
+				if (currentPrice === 0 || Math.abs(currentPrice - response.recommended_price) > 0.01) {
 					// إظهار توصية
 					const badge = `
                         <span class="badge badge-info ai-recommendation" style="margin-right: 5px;">
@@ -160,7 +157,7 @@ $(document).ready(() => {
                             <span class="badge badge-primary">${result.average_price_usd} USD</span>
                             <span class="badge badge-info">${result.suggested_price_aed.toFixed(2)} AED</span><br>
                             <small>${esc(result.notes || "")}</small>
-                            ${result.markets ? "<br><small>الأسواق: " + result.markets.map(esc).join(", ") + "</small>" : ""}
+                            ${result.markets ? `<br><small>الأسواق: ${result.markets.map(esc).join(", ")}</small>` : ""}
                             <button type="button" class="btn btn-xs btn-success mt-1" onclick="applyMarketPrice(${lineIndex}, ${result.suggested_price_aed})">
                                 تطبيق السعر
                             </button>
@@ -242,9 +239,7 @@ $(document).ready(() => {
 
 	$(document).on("change", ".quantity-input", function () {
 		const lineIndex = $(this).data("line-index");
-		const productId = $(
-			`.product-select[data-line-index="${lineIndex}"]`,
-		).val();
+		const productId = $(`.product-select[data-line-index="${lineIndex}"]`).val();
 		const quantity = parseFloat($(this).val()) || 0;
 
 		if (productId && quantity > 0) {
@@ -268,7 +263,7 @@ $(document).ready(() => {
 });
 
 // تطبيق السعر الموصى به
-function applyRecommendedPrice(lineIndex, price) {
+function _applyRecommendedPrice(lineIndex, price) {
 	const $unitPrice = $(`#unit_price_${lineIndex}`);
 	$unitPrice.val(price.toFixed(2));
 	$unitPrice.trigger("change");
@@ -276,7 +271,7 @@ function applyRecommendedPrice(lineIndex, price) {
 }
 
 // تطبيق سعر السوق العالمي
-function applyMarketPrice(lineIndex, price) {
+function _applyMarketPrice(lineIndex, price) {
 	const $unitPrice = $(`#unit_price_${lineIndex}`);
 	$unitPrice.val(price.toFixed(2));
 	$unitPrice.trigger("change");

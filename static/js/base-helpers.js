@@ -37,10 +37,7 @@ document.querySelectorAll('a[href^="/"]').forEach((link) => {
 });
 
 document.querySelectorAll(".flash-message").forEach((alert) => {
-	if (
-		!alert.classList.contains("alert-permanent") &&
-		!alert.classList.contains("alert-danger")
-	) {
+	if (!alert.classList.contains("alert-permanent") && !alert.classList.contains("alert-danger")) {
 		const progressBar = alert.querySelector(".flash-timer");
 		setTimeout(() => {
 			if (progressBar) progressBar.style.width = "0%";
@@ -100,7 +97,7 @@ async function loadFxRates() {
 		fxDisplayCache = data;
 		fxDisplayCacheTime = now;
 		populateFxDisplay(data);
-	} catch (e) {
+	} catch (_e) {
 		populateFxDisplay(getFallbackFx());
 	}
 }
@@ -166,11 +163,10 @@ function populateFxDisplay(data) {
 	const updatedEl = document.getElementById("fx-last-updated");
 	if (updatedEl && data.last_updated) {
 		const d = new Date(data.last_updated);
-		const timeStr = isNaN(d.getTime())
+		const timeStr = Number.isNaN(d.getTime())
 			? "--"
 			: d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" });
-		updatedEl.innerHTML =
-			'<i class="fas fa-clock mr-1"></i>آخر تحديث: ' + timeStr;
+		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>آخر تحديث: ${timeStr}`;
 	}
 }
 
@@ -211,7 +207,7 @@ function safeEval(expr) {
 		const val = Function(`"use strict"; return (${normalized});`)();
 		if (!Number.isFinite(val)) return "ERR";
 		return String(Math.round((val + Number.EPSILON) * 100000000) / 100000000);
-	} catch (e) {
+	} catch (_e) {
 		return "ERR";
 	}
 }
@@ -237,8 +233,7 @@ function wirePad(container, display, buttons) {
 			return;
 		}
 		if (v === "DEL") {
-			display.value =
-				display.value.length > 1 ? display.value.slice(0, -1) : "0";
+			display.value = display.value.length > 1 ? display.value.slice(0, -1) : "0";
 			return;
 		}
 		display.value = display.value === "0" ? v : display.value + v;
@@ -307,37 +302,23 @@ function initNavbarCalculator() {
 	const btnMarginCalc = document.getElementById("btnMarginCalc");
 	if (btnLoanCalc) {
 		btnLoanCalc.addEventListener("click", () => {
-			const p = parseFloat(
-				document.getElementById("loanPrincipal").value || "0",
-			);
-			const annual = parseFloat(
-				document.getElementById("loanRate").value || "0",
-			);
-			const months = parseInt(
-				document.getElementById("loanMonths").value || "0",
-				10,
-			);
+			const p = parseFloat(document.getElementById("loanPrincipal").value || "0");
+			const annual = parseFloat(document.getElementById("loanRate").value || "0");
+			const months = parseInt(document.getElementById("loanMonths").value || "0", 10);
 			const out = document.getElementById("loanResult");
 			if (!(p > 0) || !(months > 0)) {
 				out.textContent = "أدخل قيم صحيحة.";
 				return;
 			}
 			const r = annual / 100 / 12;
-			const emi =
-				r > 0
-					? (p * r * (1 + r) ** months) / ((1 + r) ** months - 1)
-					: p / months;
+			const emi = r > 0 ? (p * r * (1 + r) ** months) / ((1 + r) ** months - 1) : p / months;
 			out.textContent = `القسط الشهري: ${emi.toFixed(2)}`;
 		});
 	}
 	if (btnMarginCalc) {
 		btnMarginCalc.addEventListener("click", () => {
-			const cost = parseFloat(
-				document.getElementById("costValue").value || "0",
-			);
-			const sell = parseFloat(
-				document.getElementById("sellValue").value || "0",
-			);
+			const cost = parseFloat(document.getElementById("costValue").value || "0");
+			const sell = parseFloat(document.getElementById("sellValue").value || "0");
 			const out = document.getElementById("marginResult");
 			if (!(cost >= 0) || !(sell > 0)) {
 				out.textContent = "أدخل قيم صحيحة.";
@@ -411,7 +392,7 @@ if (window._DEBUG)
 		"[Azad] View mode:",
 		currentMode,
 		"| Screen:",
-		window.innerWidth + "x" + window.innerHeight,
+		`${window.innerWidth}x${window.innerHeight}`,
 	);
 setViewMode(currentMode);
 
@@ -444,8 +425,7 @@ setViewMode(currentMode);
 		try {
 			const parsed = new URL(url, window.location.href);
 			return (
-				parsed.pathname.indexOf("/api/") === 0 ||
-				parsed.pathname.indexOf("/api_enhanced/") === 0
+				parsed.pathname.indexOf("/api/") === 0 || parsed.pathname.indexOf("/api_enhanced/") === 0
 			);
 		} catch (_) {
 			return false;
@@ -454,7 +434,7 @@ setViewMode(currentMode);
 	function getClientContext() {
 		const root = document.documentElement;
 		return {
-			viewport: window.innerWidth + "x" + window.innerHeight,
+			viewport: `${window.innerWidth}x${window.innerHeight}`,
 			pixel_ratio: window.devicePixelRatio || 1,
 			online: navigator.onLine !== false,
 			active_requests: activeRequests,
@@ -492,9 +472,7 @@ setViewMode(currentMode);
 			];
 			const key = [
 				typeForKey,
-				variableMetricTypes.indexOf(typeForKey) === -1
-					? payload.message || ""
-					: "",
+				variableMetricTypes.indexOf(typeForKey) === -1 ? payload.message || "" : "",
 				payload.source || "",
 				payload.request_url || "",
 				payload.status || "",
@@ -520,8 +498,7 @@ setViewMode(currentMode);
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"X-CSRFToken":
-						document.querySelector('meta[name="csrf-token"]')?.content || "",
+					"X-CSRFToken": document.querySelector('meta[name="csrf-token"]')?.content || "",
 				},
 				body: JSON.stringify(payload),
 				credentials: "same-origin",
@@ -535,11 +512,10 @@ setViewMode(currentMode);
 		(ev) => {
 			const target = ev.target;
 			if (target && target !== window && target.tagName) {
-				const resourceUrl =
-					target.src || target.href || target.currentSrc || "";
+				const resourceUrl = target.src || target.href || target.currentSrc || "";
 				sendError({
 					type: "resource",
-					message: "Resource load failed: " + target.tagName,
+					message: `Resource load failed: ${target.tagName}`,
 					source: resourceUrl || target.tagName,
 					request_url: resourceUrl,
 					lineno: 0,
@@ -555,7 +531,7 @@ setViewMode(currentMode);
 				source: ev.filename || "unknown",
 				lineno: ev.lineno || 0,
 				colno: ev.colno || 0,
-				stack: ev.error && ev.error.stack ? ev.error.stack : null,
+				stack: ev.error?.stack ? ev.error.stack : null,
 				url: window.location.href,
 			});
 		},
@@ -568,7 +544,7 @@ setViewMode(currentMode);
 		let stack = null;
 		if (typeof reason === "string") {
 			msg = reason;
-		} else if (reason && reason.message) {
+		} else if (reason?.message) {
 			msg = reason.message;
 			stack = reason.stack || null;
 		}
@@ -586,23 +562,19 @@ setViewMode(currentMode);
 	if (window.fetch) {
 		const originalFetch = window.fetch;
 		window.fetch = function (input, init) {
-			const requestUrl = typeof input === "string" ? input : input && input.url;
-			const method = (init && init.method) || (input && input.method) || "GET";
+			const requestUrl = typeof input === "string" ? input : input?.url;
+			const method = init?.method || input?.method || "GET";
 			const absoluteUrl = toAbsoluteUrl(requestUrl);
 			const requestIsApi = isApiRequest(absoluteUrl);
-			const startedAt =
-				window.performance && performance.now ? performance.now() : Date.now();
+			const startedAt = window.performance && performance.now ? performance.now() : Date.now();
 			activeRequests += 1;
-			if (
-				activeRequests >= CONCURRENCY_WARN_AT &&
-				!shouldSkipRequest(absoluteUrl)
-			) {
+			if (activeRequests >= CONCURRENCY_WARN_AT && !shouldSkipRequest(absoluteUrl)) {
 				const now = Date.now();
 				if (now - concurrencyNoticeAt > DUPLICATE_WINDOW_MS) {
 					concurrencyNoticeAt = now;
 					sendError({
 						type: "concurrency",
-						message: "High concurrent browser requests: " + activeRequests,
+						message: `High concurrent browser requests: ${activeRequests}`,
 						source: "fetch.concurrency",
 						request_url: absoluteUrl,
 						method: method,
@@ -614,50 +586,33 @@ setViewMode(currentMode);
 				.apply(this, arguments)
 				.then((response) => {
 					const duration = Math.round(
-						(window.performance && performance.now
-							? performance.now()
-							: Date.now()) - startedAt,
+						(window.performance && performance.now ? performance.now() : Date.now()) - startedAt,
 					);
 					if (response && !response.ok && !shouldSkipRequest(requestUrl)) {
 						sendError({
 							type: requestIsApi ? "api" : "fetch",
 							message:
-								(requestIsApi ? "API failed: HTTP " : "Fetch failed: HTTP ") +
-								response.status,
+								(requestIsApi ? "API failed: HTTP " : "Fetch failed: HTTP ") + response.status,
 							source: requestIsApi ? "fetch.api" : "fetch",
 							request_url: absoluteUrl,
 							method: method,
 							status: response.status,
 							duration_ms: duration,
 							active_requests: activeRequests,
-							request_id:
-								response.headers && response.headers.get
-									? response.headers.get("X-Request-Id")
-									: "",
+							request_id: response.headers?.get ? response.headers.get("X-Request-Id") : "",
 							url: window.location.href,
 						});
-					} else if (
-						response &&
-						duration >= SLOW_REQUEST_MS &&
-						!shouldSkipRequest(requestUrl)
-					) {
+					} else if (response && duration >= SLOW_REQUEST_MS && !shouldSkipRequest(requestUrl)) {
 						sendError({
 							type: requestIsApi ? "api_slow" : "fetch_slow",
-							message:
-								(requestIsApi ? "Slow API request" : "Slow fetch request") +
-								": " +
-								duration +
-								"ms",
+							message: `${requestIsApi ? "Slow API request" : "Slow fetch request"}: ${duration}ms`,
 							source: requestIsApi ? "fetch.api.slow" : "fetch.slow",
 							request_url: absoluteUrl,
 							method: method,
 							status: response.status,
 							duration_ms: duration,
 							active_requests: activeRequests,
-							request_id:
-								response.headers && response.headers.get
-									? response.headers.get("X-Request-Id")
-									: "",
+							request_id: response.headers?.get ? response.headers.get("X-Request-Id") : "",
 							url: window.location.href,
 						});
 					}
@@ -667,21 +622,17 @@ setViewMode(currentMode);
 				.catch((err) => {
 					if (!shouldSkipRequest(requestUrl)) {
 						const duration = Math.round(
-							(window.performance && performance.now
-								? performance.now()
-								: Date.now()) - startedAt,
+							(window.performance && performance.now ? performance.now() : Date.now()) - startedAt,
 						);
 						sendError({
 							type: requestIsApi ? "api" : "fetch",
-							message:
-								(err && err.message) ||
-								(requestIsApi ? "API network error" : "Fetch network error"),
+							message: err?.message || (requestIsApi ? "API network error" : "Fetch network error"),
 							source: requestIsApi ? "fetch.api" : "fetch",
 							request_url: absoluteUrl,
 							method: method,
 							duration_ms: duration,
 							active_requests: activeRequests,
-							stack: err && err.stack ? err.stack : null,
+							stack: err?.stack ? err.stack : null,
 							url: window.location.href,
 						});
 					}
@@ -693,7 +644,7 @@ setViewMode(currentMode);
 
 	if (window.jQuery) {
 		window.jQuery(document).ajaxError((_event, xhr, settings, thrownError) => {
-			const requestUrl = settings && settings.url;
+			const requestUrl = settings?.url;
 			if (shouldSkipRequest(requestUrl)) return;
 			const absoluteUrl = toAbsoluteUrl(requestUrl);
 			const requestIsApi = isApiRequest(absoluteUrl);
@@ -701,13 +652,12 @@ setViewMode(currentMode);
 				type: requestIsApi ? "api" : "ajax",
 				message:
 					thrownError ||
-					(requestIsApi ? "API AJAX failed: HTTP " : "AJAX failed: HTTP ") +
-						(xhr && xhr.status),
+					(requestIsApi ? "API AJAX failed: HTTP " : "AJAX failed: HTTP ") + xhr?.status,
 				source: requestIsApi ? "jquery.ajax.api" : "jquery.ajax",
 				request_url: absoluteUrl,
-				method: settings && settings.type,
-				status: xhr && xhr.status,
-				response_size: xhr && xhr.responseText ? xhr.responseText.length : 0,
+				method: settings?.type,
+				status: xhr?.status,
+				response_size: xhr?.responseText ? xhr.responseText.length : 0,
 				url: window.location.href,
 			});
 		});
@@ -720,8 +670,7 @@ setViewMode(currentMode);
 					if (entry.duration >= LONG_TASK_MS) {
 						sendError({
 							type: "longtask",
-							message:
-								"Main thread long task: " + Math.round(entry.duration) + "ms",
+							message: `Main thread long task: ${Math.round(entry.duration)}ms`,
 							source: "performance.longtask",
 							duration_ms: Math.round(entry.duration),
 							url: window.location.href,
@@ -740,16 +689,11 @@ setViewMode(currentMode);
 				list.getEntries().forEach((entry) => {
 					if (entry.hadRecentInput) return;
 					cumulativeLayoutShift += entry.value || 0;
-					if (
-						!layoutNoticeSent &&
-						cumulativeLayoutShift >= LAYOUT_SHIFT_WARN_AT
-					) {
+					if (!layoutNoticeSent && cumulativeLayoutShift >= LAYOUT_SHIFT_WARN_AT) {
 						layoutNoticeSent = true;
 						sendError({
 							type: "layout",
-							message:
-								"High cumulative layout shift: " +
-								cumulativeLayoutShift.toFixed(3),
+							message: `High cumulative layout shift: ${cumulativeLayoutShift.toFixed(3)}`,
 							source: "performance.layout_shift",
 							cls: Number(cumulativeLayoutShift.toFixed(3)),
 							url: window.location.href,
@@ -765,10 +709,7 @@ setViewMode(currentMode);
 			const root = document.documentElement;
 			const mode = root.dataset.uiMode || "";
 			const variant = root.dataset.uiVariant || "";
-			if (
-				VALID_THEME_MODES.indexOf(mode) === -1 ||
-				VALID_THEME_VARIANTS.indexOf(variant) === -1
-			) {
+			if (VALID_THEME_MODES.indexOf(mode) === -1 || VALID_THEME_VARIANTS.indexOf(variant) === -1) {
 				sendError({
 					type: "theme",
 					message: "Invalid UI theme state",

@@ -37,11 +37,11 @@
 	}
 
 	function initModalStacking(root) {
-		if (!$ || !$.fn || !$.fn.modal) return;
+		if (!$?.fn?.modal) return;
 
 		ensureModalCompatStyles();
 
-		const $root = root && root.nodeType ? $(root) : $(document);
+		const $root = root?.nodeType ? $(root) : $(document);
 		$root.find(".modal").each(function () {
 			normalizeModalParent($(this));
 		});
@@ -77,7 +77,7 @@
 	}
 
 	function normalizeModalParent($modal) {
-		if (!$modal || !$modal.length) return;
+		if (!$modal?.length) return;
 		if ($modal.parent()[0] !== document.body) {
 			$modal.appendTo(document.body);
 		}
@@ -96,18 +96,16 @@
 	function cleanupModalArtifacts() {
 		if ($(".modal.show").length === 0) {
 			$(".modal-backdrop").remove();
-			$("body")
-				.removeClass("modal-open azad-modal-open")
-				.css("padding-right", "");
+			$("body").removeClass("modal-open azad-modal-open").css("padding-right", "");
 			return;
 		}
 		fixModalLayering();
 	}
 
 	function installBootstrapCompat(root) {
-		if (!$ || !$.fn) return;
+		if (!$?.fn) return;
 
-		const $root = root && root.nodeType ? $(root) : $(document);
+		const $root = root?.nodeType ? $(root) : $(document);
 
 		$root.find("[data-bs-toggle]").each(function () {
 			const $el = $(this);
@@ -153,7 +151,7 @@
 	}
 
 	function installBootstrapFacade() {
-		if (!$ || !$.fn) return;
+		if (!$?.fn) return;
 
 		if (!window.__bootstrapCompatDelegatesBound) {
 			window.__bootstrapCompatDelegatesBound = true;
@@ -173,14 +171,10 @@
 					e.preventDefault();
 					$(this).closest(".alert").alert("close");
 				})
-				.on(
-					"click",
-					'[data-bs-toggle="tab"], [data-bs-toggle="pill"]',
-					function (e) {
-						e.preventDefault();
-						$(this).tab("show");
-					},
-				);
+				.on("click", '[data-bs-toggle="tab"], [data-bs-toggle="pill"]', function (e) {
+					e.preventDefault();
+					$(this).tab("show");
+				});
 		}
 
 		window.bootstrap = window.bootstrap || {};
@@ -201,8 +195,7 @@
 			Modal.prototype.dispose = function () {
 				$(this._element).modal("hide");
 			};
-			Modal.getInstance = (element) =>
-				$(element).data("bs.modal") ? new Modal(element) : null;
+			Modal.getInstance = (element) => ($(element).data("bs.modal") ? new Modal(element) : null);
 			Modal.getOrCreateInstance = (element) => new Modal(element);
 			window.bootstrap.Modal = Modal;
 		}
@@ -226,8 +219,7 @@
 			};
 			Tooltip.getInstance = (element) =>
 				$(element).data("bs.tooltip") ? new Tooltip(element) : null;
-			Tooltip.getOrCreateInstance = (element, options) =>
-				new Tooltip(element, options);
+			Tooltip.getOrCreateInstance = (element, options) => new Tooltip(element, options);
 			window.bootstrap.Tooltip = Tooltip;
 		}
 
@@ -238,8 +230,7 @@
 			Tab.prototype.show = function () {
 				$(this._element).tab("show");
 			};
-			Tab.getInstance = (element) =>
-				$(element).data("bs.tab") ? new Tab(element) : null;
+			Tab.getInstance = (element) => ($(element).data("bs.tab") ? new Tab(element) : null);
 			Tab.getOrCreateInstance = (element) => new Tab(element);
 			window.bootstrap.Tab = Tab;
 		}
@@ -251,8 +242,7 @@
 			Alert.prototype.close = function () {
 				$(this._element).alert("close");
 			};
-			Alert.getInstance = (element) =>
-				$(element).data("bs.alert") ? new Alert(element) : null;
+			Alert.getInstance = (element) => ($(element).data("bs.alert") ? new Alert(element) : null);
 			Alert.getOrCreateInstance = (element) => new Alert(element);
 			window.bootstrap.Alert = Alert;
 		}
@@ -260,7 +250,7 @@
 
 	function initTooltips(root) {
 		if (!$.fn.tooltip) return;
-		const $root = root && root.nodeType ? $(root) : $(document);
+		const $root = root?.nodeType ? $(root) : $(document);
 		$root.find('[data-toggle="tooltip"]').each(function () {
 			const $el = $(this);
 			if ($el.data("bs.tooltip")) return;
@@ -282,13 +272,11 @@
 				const pageLen = +$tbl.data("page-length") || 10;
 				const orderAttr = String($tbl.data("order") || "").trim();
 				const matchOrder = orderAttr.match(/^(\d+)\s*,\s*(asc|desc)$/i);
-				const order = matchOrder
-					? [[+matchOrder[1], matchOrder[2].toLowerCase()]]
-					: [];
+				const order = matchOrder ? [[+matchOrder[1], matchOrder[2].toLowerCase()]] : [];
 
 				const noSortIdx = $tbl
 					.find("thead th.dt-nosort")
-					.map((i, el) => i)
+					.map((i, _el) => i)
 					.get();
 
 				$tbl.DataTable({
@@ -313,9 +301,7 @@
 					autoWidth: false,
 					language: { url: "/static/datatables/Arabic.json" },
 					order,
-					columnDefs: noSortIdx.length
-						? [{ orderable: false, targets: noSortIdx }]
-						: [],
+					columnDefs: noSortIdx.length ? [{ orderable: false, targets: noSortIdx }] : [],
 				});
 			});
 	}
@@ -341,9 +327,7 @@
 		if (!$.fn.select2) return;
 		// تجنب التداخل مع customer-select.js و supplier-select
 		$(root)
-			.find(
-				"select.select2:not(.ajax-select):not(.customer-select):not(.supplier-select)",
-			)
+			.find("select.select2:not(.ajax-select):not(.customer-select):not(.supplier-select)")
 			.not(".select2-hidden-accessible")
 			.each(function () {
 				const $el = $(this);
@@ -398,10 +382,7 @@
 						cache: true,
 						data: (params) => ({ q: params.term || "", limit }),
 						processResults: (data) => ({
-							results: (Array.isArray(data)
-								? data
-								: data.results || data.data || []
-							).map((x) => ({
+							results: (Array.isArray(data) ? data : data.results || data.data || []).map((x) => ({
 								id: x.id,
 								text: x.text || x.name || String(x.id),
 							})),
@@ -411,7 +392,7 @@
 
 				const val = $el.val();
 				const txt = $el.data("initial-text");
-				if (val && txt && !$el.find('option[value="' + val + '"]').length) {
+				if (val && txt && !$el.find(`option[value="${val}"]`).length) {
 					$el.append(new Option(txt, val, true, true));
 					$el.trigger("change");
 				}
@@ -452,10 +433,7 @@
 						);
 					setTimeout(() => {
 						if (!$btn.closest("form").length) {
-							$btn
-								.prop("disabled", false)
-								.attr("aria-busy", "false")
-								.html(original);
+							$btn.prop("disabled", false).attr("aria-busy", "false").html(original);
 						}
 					}, 10000);
 				});
@@ -466,7 +444,7 @@
 	function initPerformanceOptimizations(root) {
 		// Lazy loading for images
 		if ("IntersectionObserver" in window) {
-			const imageObserver = new IntersectionObserver((entries, observer) => {
+			const imageObserver = new IntersectionObserver((entries, _observer) => {
 				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
 						const img = entry.target;
@@ -513,15 +491,13 @@
 		if (query.length < 2) return;
 
 		const $container = $(`[data-search-target="${target}"]`);
-		$container.html(
-			'<div class="text-center"><div class="spinner-border"></div></div>',
-		);
+		$container.html('<div class="text-center"><div class="spinner-border"></div></div>');
 
 		$.get("/api/search", { type: target, q: query })
 			.done((data) => {
 				if (data.html) {
 					$container.html(data.html);
-				} else if (data.results && data.results.length) {
+				} else if (data.results?.length) {
 					$container.html(
 						'<ul class="list-group">' +
 							data.results
@@ -529,11 +505,7 @@
 									(r) =>
 										'<li class="list-group-item d-flex justify-content-between align-items-center">' +
 										(r.text || r.name || "") +
-										(r.phone
-											? '<span class="badge badge-secondary">' +
-												r.phone +
-												"</span>"
-											: "") +
+										(r.phone ? `<span class="badge badge-secondary">${r.phone}</span>` : "") +
 										"</li>",
 								)
 								.join("") +
@@ -708,13 +680,11 @@
 			const _printDoc = $printWin.document;
 			_printDoc.open();
 			_printDoc.write(
-				'<!DOCTYPE html><html dir="rtl"><head><title>' +
-					((options && options.title) || "طباعة") +
-					"</title>",
+				`<!DOCTYPE html><html dir="rtl"><head><title>${options?.title || "طباعة"}</title>`,
 			);
 			_printDoc.write(
 				'<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; word-break: break-word; overflow-wrap: anywhere; } thead th { background: ' +
-					((options && options.headerColor) || "#0d6efd") +
+					(options?.headerColor || "#0d6efd") +
 					"; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>",
 			);
 			_printDoc.write($clone[0].outerHTML);
@@ -729,7 +699,7 @@
 
 	// Shared print styles for DataTables print windows
 	window.applyDataTablePrintStyles = (win) => {
-		if (!win || !win.document) return;
+		if (!win?.document) return;
 		const css = [
 			"@page { size: A4 landscape; margin: 10mm; }",
 			'body { font-size: 9pt; direction: rtl; font-family: "Cairo", "Tahoma", sans-serif; -webkit-print-color-adjust: exact; background: #fff; }',

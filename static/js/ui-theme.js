@@ -17,9 +17,7 @@
 	}
 
 	function getDefaultSidebarSide() {
-		return document.documentElement.getAttribute("dir") === "rtl"
-			? "right"
-			: "left";
+		return document.documentElement.getAttribute("dir") === "rtl" ? "right" : "left";
 	}
 
 	function getInitialMode() {
@@ -28,11 +26,8 @@
 			return normalizeMode(stored);
 		}
 		try {
-			return window.matchMedia &&
-				window.matchMedia("(prefers-color-scheme: dark)").matches
-				? "dark"
-				: "light";
-		} catch (e) {
+			return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+		} catch (_e) {
 			return "light";
 		}
 	}
@@ -68,10 +63,7 @@
 		const normalized = normalizeSidebarSide(side) || getDefaultSidebarSide();
 		body.dataset.sidebarSide = normalized;
 		localStorage.setItem(STORAGE_SIDEBAR, normalized);
-		localStorage.setItem(
-			STORAGE_SIDEBAR_DIR,
-			html.getAttribute("dir") || "rtl",
-		);
+		localStorage.setItem(STORAGE_SIDEBAR_DIR, html.getAttribute("dir") || "rtl");
 
 		// Force inline styles so the switch actually moves elements regardless of CSS specificity
 		const sidebar = document.querySelector(".main-sidebar");
@@ -90,8 +82,7 @@
 		const marginProp = normalized === "right" ? "margin-right" : "margin-left";
 		const otherProp = normalized === "right" ? "margin-left" : "margin-right";
 		const width =
-			body.classList.contains("sidebar-mini") &&
-			body.classList.contains("sidebar-collapse")
+			body.classList.contains("sidebar-mini") && body.classList.contains("sidebar-collapse")
 				? "4.6rem"
 				: "250px";
 		[content, header, footer].forEach((el) => {
@@ -128,9 +119,7 @@
 	}
 
 	function updateThemeSwitcher(variant) {
-		const buttons = document.querySelectorAll(
-			".erp-theme-switcher .erp-theme-option",
-		);
+		const buttons = document.querySelectorAll(".erp-theme-switcher .erp-theme-option");
 		buttons.forEach((btn) => {
 			const btnVariant = btn.getAttribute("data-value");
 			if (btnVariant === variant) {
@@ -163,9 +152,7 @@
 		if (toggle) {
 			toggle.addEventListener("click", (ev) => {
 				ev.preventDefault();
-				const current = normalizeMode(
-					document.documentElement.dataset.uiMode || "light",
-				);
+				const current = normalizeMode(document.documentElement.dataset.uiMode || "light");
 				const next = current === "dark" ? "light" : "dark";
 				const variant = normalizeVariant(
 					document.documentElement.dataset.uiVariant || "palestinian",
@@ -181,9 +168,7 @@
 			btn.addEventListener("click", (ev) => {
 				ev.preventDefault();
 				const variant = normalizeVariant(btn.getAttribute("data-value"));
-				const mode = normalizeMode(
-					document.documentElement.dataset.uiMode || "light",
-				);
+				const mode = normalizeMode(document.documentElement.dataset.uiMode || "light");
 				applyTheme(mode, variant);
 			});
 		});
@@ -206,12 +191,12 @@
 			}
 			window.setTimeout(() => {
 				try {
-					if (window.jQuery && window.jQuery.fn && window.jQuery.fn.alert) {
+					if (window.jQuery?.fn?.alert) {
 						window.jQuery(el).alert("close");
 					} else {
 						el.remove();
 					}
-				} catch (e) {}
+				} catch (_e) {}
 			}, 20000);
 		});
 	}

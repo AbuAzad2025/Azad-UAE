@@ -5,7 +5,7 @@
 const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || "AED";
 const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || "د.إ";
 /* purchaseLineIndex scoped per file to avoid cross-page collision with sales */
-const purchaseLineIndex = 0;
+const _purchaseLineIndex = 0;
 
 // Escape untrusted server-provided fields before interpolation into Select2
 // option/template HTML (defense against stored XSS via product names/SKUs).
@@ -163,9 +163,7 @@ function addLine() {
 
 	// تفعيل Select2 للمنتج باستخدام الفلتر الذكي
 
-	const $productSelect = $(
-		`select[name="lines[${purchaseLineIndex}][product_id]"]`,
-	);
+	const $productSelect = $(`select[name="lines[${purchaseLineIndex}][product_id]"]`);
 
 	// استخدام نفس التكوين من customer-select.js
 
@@ -234,8 +232,7 @@ function addLine() {
 
 				const stockIcon = (p.current_stock || 0) > 0 ? "✅" : "❌";
 
-				const stockClass =
-					(p.current_stock || 0) > 0 ? "text-success" : "text-danger";
+				const stockClass = (p.current_stock || 0) > 0 ? "text-success" : "text-danger";
 
 				return $(`
 
@@ -285,9 +282,7 @@ function addLine() {
 
 				$(this).data(
 					"base-cost",
-					currency !== TENANT_BASE_CURRENCY && rate > 0
-						? enteredCost * rate
-						: enteredCost,
+					currency !== TENANT_BASE_CURRENCY && rate > 0 ? enteredCost * rate : enteredCost,
 				);
 			}
 
@@ -300,7 +295,7 @@ function addLine() {
 	$productSelect.on("select2:select", (e) => {
 		const data = e.params.data;
 
-		if (data && data.cost_price) {
+		if (data?.cost_price) {
 			$(`.line-cost[data-line="${purchaseLineIndex}"]`).data(
 				"base-cost",
 				parseFloat(data.cost_price) || 0,
@@ -309,7 +304,7 @@ function addLine() {
 			updateLineCosts();
 		}
 
-		if (data && data.has_serial_number) {
+		if (data?.has_serial_number) {
 			$(`#serial_row_${purchaseLineIndex}`).show();
 		} else {
 			$(`#serial_row_${purchaseLineIndex}`).hide();
@@ -327,7 +322,7 @@ function addLine() {
 
 // =====================================
 
-function removeLine(index) {
+function _removeLine(index) {
 	$(`#line_${index}`).remove();
 
 	void calculateTotals();
@@ -344,8 +339,7 @@ function calculateLineTotal(index) {
 
 	const cost = parseFloat($(`.line-cost[data-line="${index}"]`).val()) || 0;
 
-	const discount =
-		parseFloat($(`.line-discount[data-line="${index}"]`).val()) || 0;
+	const discount = parseFloat($(`.line-discount[data-line="${index}"]`).val()) || 0;
 
 	const subtotal = qty * cost;
 
@@ -373,14 +367,11 @@ async function calculateTotals() {
 
 			const lineNumber = lineId.split("_")[1];
 
-			const qty =
-				parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+			const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
 
-			const cost =
-				parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+			const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
 
-			const discount =
-				parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
+			const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
 
 			if (qty > 0 || cost > 0) {
 				lines.push({
@@ -424,29 +415,23 @@ async function calculateTotals() {
 		if (result.success) {
 			// تحديث الواجهة
 
-			$("#summary_subtotal").text(
-				result.subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
+			$("#summary_subtotal").text(`${result.subtotal.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
 
-			$("#summary_tax").text(
-				result.tax_amount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
+			$("#summary_tax").text(`${result.tax_amount.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
 
 			if (result.landed_cost !== undefined) {
 				$("#summary_landed_cost").text(
-					result.landed_cost.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+					`${result.landed_cost.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`,
 				);
 			}
 
-			$("#summary_total").text(
-				result.total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
+			$("#summary_total").text(`${result.total.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
 		} else {
 			// Fallback to client-side
 
 			await calculateTotalsClientSide();
 		}
-	} catch (error) {
+	} catch (_error) {
 		// Fallback to client-side
 
 		await calculateTotalsClientSide();
@@ -461,18 +446,13 @@ async function calculateTotalsClientSide() {
 	$productLines.each(function () {
 		const lineId = $(this).attr("id");
 		const lineNumber = lineId.split("_")[1];
-		const qty =
-			parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) ||
-			0;
-		const cost =
-			parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
-		const discount =
-			parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) ||
-			0;
+		const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+		const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+		const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
 		const lineSubtotal = qty * cost;
 		const lineDiscountAmount = lineSubtotal * (discount / 100);
 		const lineTotal = lineSubtotal - lineDiscountAmount;
-		$("#line_total_" + lineNumber).val(lineTotal.toFixed(2));
+		$(`#line_total_${lineNumber}`).val(lineTotal.toFixed(2));
 		subtotal += lineTotal;
 	});
 	const taxRate = parseFloat($("#tax_rate").val()) || 0;
@@ -486,14 +466,9 @@ async function calculateTotalsClientSide() {
 	$productLines.each(function () {
 		const lineId = $(this).attr("id");
 		const lineNumber = lineId.split("_")[1];
-		const qty =
-			parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) ||
-			0;
-		const cost =
-			parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
-		const discount =
-			parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) ||
-			0;
+		const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+		const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+		const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
 		if (qty > 0 && cost > 0) {
 			lines.push({
 				quantity: qty,
@@ -523,16 +498,10 @@ async function calculateTotalsClientSide() {
 			const $summaryTax = $("#summary_tax");
 			const $summaryLandedCost = $("#summary_landed_cost");
 			const $summaryTotal = $("#summary_total");
-			$summarySubtotal.text(
-				data.subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
-			$summaryTax.text(
-				data.tax_amount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
-			$summaryLandedCost.text(
-				data.landed_cost.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-			);
-			$summaryTotal.text(data.total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
+			$summarySubtotal.text(`${data.subtotal.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+			$summaryTax.text(`${data.tax_amount.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+			$summaryLandedCost.text(`${data.landed_cost.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+			$summaryTotal.text(`${data.total.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
 			return;
 		}
 	} catch (_) {}
@@ -542,12 +511,10 @@ async function calculateTotalsClientSide() {
 	const $summaryTax = $("#summary_tax");
 	const $summaryLandedCost = $("#summary_landed_cost");
 	const $summaryTotal = $("#summary_total");
-	$summarySubtotal.text(subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
-	$summaryTax.text(taxAmount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
-	$summaryLandedCost.text(
-		landedTotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
-	);
-	$summaryTotal.text(total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
+	$summarySubtotal.text(`${subtotal.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+	$summaryTax.text(`${taxAmount.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+	$summaryLandedCost.text(`${landedTotal.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
+	$summaryTotal.text(`${total.toFixed(2)} ${TENANT_CURRENCY_SYMBOL}`);
 }
 
 // =====================================
@@ -564,7 +531,7 @@ function updateLineCosts() {
 	$(".line-cost").each(function () {
 		const baseCost = parseFloat($(this).data("base-cost"));
 
-		if (!isNaN(baseCost)) {
+		if (!Number.isNaN(baseCost)) {
 			let finalCost = baseCost;
 
 			if (currency !== TENANT_BASE_CURRENCY && rate > 0) {
@@ -653,19 +620,15 @@ $("#supplier_id").on("change", function () {
 
 // =====================================
 
-$(document).on(
-	"input change keyup",
-	".line-quantity, .line-cost, .line-discount",
-	function () {
-		const lineNumber = $(this).data("line");
+$(document).on("input change keyup", ".line-quantity, .line-cost, .line-discount", function () {
+	const lineNumber = $(this).data("line");
 
-		if (lineNumber !== undefined) {
-			calculateLineTotal(lineNumber);
+	if (lineNumber !== undefined) {
+		calculateLineTotal(lineNumber);
 
-			void calculateTotals();
-		}
-	},
-);
+		void calculateTotals();
+	}
+});
 
 // =====================================
 
@@ -724,18 +687,18 @@ $(document).ready(() => {
 
 		// طباعة بيانات كل سطر
 
-		$productLines.each(function (index) {
+		$productLines.each(function (_index) {
 			const lineId = $(this).attr("id");
 
 			const lineNumber = lineId.split("_")[1];
 
-			const productId = $(`.line-product[data-line="${lineNumber}"]`).val();
+			const _productId = $(`.line-product[data-line="${lineNumber}"]`).val();
 
-			const quantity = $(`.line-quantity[data-line="${lineNumber}"]`).val();
+			const _quantity = $(`.line-quantity[data-line="${lineNumber}"]`).val();
 
-			const cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
+			const _cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
 
-			const discount = $(`.line-discount[data-line="${lineNumber}"]`).val();
+			const _discount = $(`.line-discount[data-line="${lineNumber}"]`).val();
 		});
 	});
 });

@@ -1,0 +1,48 @@
+{
+	"$schema": "https://playwright.dev/schemas/config.json",
+	"name": "Azad-UAE E2E Tours",
+	"testDir": "../tests/e2e/tours",
+	"testMatch": ["**/test_*.py"],
+	"timeout": 60000,
+	"expect": { "timeout": 10000 },
+	"fullyParallel": false,
+	"forbidOnly": true,
+	"retries": 1,
+	"workers": 1,
+	"reporter": [["html", { "outputFolder": "playwright-report" }], ["list"]],
+	"use": {
+		"baseURL": "http://localhost:5000",
+		"locale": "ar-AE",
+		"viewport": { "width": 1440, "height": 900 },
+		"actionTimeout": 10000,
+		"navigationTimeout": 30000,
+		"screenshot": "only-on-failure",
+		"trace": "retain-on-failure"
+	},
+	"projects": [
+		{
+			"name": "cashier",
+			"use": {
+				"storageState": "scripts/auth/cashier_state.json"
+			}
+		},
+		{
+			"name": "store_manager",
+			"use": {
+				"storageState": "scripts/auth/store_manager_state.json"
+			}
+		},
+		{
+			"name": "tenant_owner",
+			"use": {
+				"storageState": "scripts/auth/tenant_owner_state.json"
+			}
+		},
+		{
+			"name": "super_admin",
+			"use": {
+				"storageState": "scripts/auth/super_admin_state.json"
+			}
+		}
+	]
+}

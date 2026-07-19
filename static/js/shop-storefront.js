@@ -2,9 +2,7 @@
 	document.addEventListener("click", (e) => {
 		const btn = e.target.closest("[data-qty-minus], [data-qty-plus]");
 		if (!btn) return;
-		const input = btn
-			.closest(".ps-qty-wrap")
-			?.querySelector('input[type="number"]');
+		const input = btn.closest(".ps-qty-wrap")?.querySelector('input[type="number"]');
 		if (!input) return;
 		const step = parseFloat(input.step || "1") || 1;
 		const min = parseFloat(input.min || "1") || 1;
@@ -23,14 +21,14 @@
 		navToggle.addEventListener("click", () => {
 			const isOpen = nav.classList.contains("is-open");
 			if (isOpen) {
-				nav.style.height = nav.scrollHeight + "px";
+				nav.style.height = `${nav.scrollHeight}px`;
 				requestAnimationFrame(() => {
 					nav.classList.remove("is-open");
 					nav.style.height = "0";
 				});
 			} else {
 				nav.classList.add("is-open");
-				nav.style.height = nav.scrollHeight + "px";
+				nav.style.height = `${nav.scrollHeight}px`;
 				nav.addEventListener("transitionend", function handler() {
 					nav.style.height = "";
 					nav.removeEventListener("transitionend", handler);
@@ -74,25 +72,25 @@
 				formData.forEach((value, key) => {
 					data[key] = value;
 				});
-				if (window.ShopCart && window.ShopCart.updateCart) {
+				if (window.ShopCart?.updateCart) {
 					void window.ShopCart.updateCart(data);
 				}
 			});
 		});
 	}
 
-	let deferredPrompt;
+	let _deferredPrompt;
 	window.addEventListener("beforeinstallprompt", (e) => {
 		e.preventDefault();
-		deferredPrompt = e;
+		_deferredPrompt = e;
 		const banner = document.getElementById("ps-install-banner");
 		if (banner) banner.style.display = "flex";
 	});
 
 	const sentinel = document.querySelector(".ps-infinite-sentinel");
 	if (sentinel) {
-		let currentPage = parseInt(sentinel.getAttribute("data-page") || "1");
-		const totalPages = parseInt(sentinel.getAttribute("data-total") || "1");
+		let currentPage = parseInt(sentinel.getAttribute("data-page") || "1", 10);
+		const totalPages = parseInt(sentinel.getAttribute("data-total") || "1", 10);
 		let loading = false;
 		const observer = new IntersectionObserver(
 			(entries) => {

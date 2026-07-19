@@ -30,12 +30,9 @@
 					')</h5><div class="row">';
 				data.fields.forEach((f) => {
 					const label =
-						(document.dir === "rtl" ? f.field_name_ar : f.field_name_en) ||
-						f.field_code;
+						(document.dir === "rtl" ? f.field_name_ar : f.field_name_en) || f.field_code;
 					const requiredAttr = f.is_required ? " required" : "";
-					const reqStar = f.is_required
-						? ' <span class="text-danger">*</span>'
-						: "";
+					const reqStar = f.is_required ? ' <span class="text-danger">*</span>' : "";
 					const code = esc(f.field_code);
 					html += '<div class="col-md-6 col-lg-4">';
 					html += '<div class="form-group">';
@@ -52,16 +49,11 @@
 							requiredAttr +
 							"></textarea>";
 					} else if (f.field_type === "select" && f.field_options) {
-						html +=
-							'<select name="extra_' +
-							code +
-							'" class="form-control"' +
-							requiredAttr +
-							">";
+						html += `<select name="extra_${code}" class="form-control"${requiredAttr}>`;
 						html += '<option value="">-- اختر --</option>';
 						f.field_options.split(",").forEach((opt) => {
 							const o = opt.trim();
-							html += '<option value="' + esc(o) + '">' + esc(o) + "</option>";
+							html += `<option value="${esc(o)}">${esc(o)}</option>`;
 						});
 						html += "</select>";
 					} else if (f.field_type === "number") {

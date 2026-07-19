@@ -11,9 +11,7 @@
 			window.close();
 		}
 	});
-	if (
-		new URLSearchParams(window.location.search).get("auto_print") === "true"
-	) {
+	if (new URLSearchParams(window.location.search).get("auto_print") === "true") {
 		window.addEventListener("DOMContentLoaded", () => {
 			setTimeout(() => {
 				window.print();

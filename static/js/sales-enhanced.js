@@ -144,15 +144,11 @@ function addLine() {
 						$(`#price_${currentIndex}`).val(parseFloat(data.price).toFixed(2));
 					}
 					if (data.current_stock !== undefined) {
-						$(`#stock_${currentIndex}`).text(
-							data.current_stock + " " + (data.unit || ""),
-						);
+						$(`#stock_${currentIndex}`).text(`${data.current_stock} ${data.unit || ""}`);
 						$(`#line_info_${currentIndex}`).show();
 
 						if (data.current_stock < 1) {
-							$(`#stock_${currentIndex}`).addClass(
-								"text-danger font-weight-bold",
-							);
+							$(`#stock_${currentIndex}`).addClass("text-danger font-weight-bold");
 							if (typeof azad !== "undefined") {
 								azad.showWarning("⚠️ تنبيه: المخزون منخفض للمنتج");
 							}
@@ -160,9 +156,7 @@ function addLine() {
 					}
 					if (data.cost_price) {
 						$(`#cost_${currentIndex}`).text(
-							parseFloat(data.cost_price).toFixed(2) +
-								" " +
-								(window._CURRENCY_SYMBOL || "AED"),
+							`${parseFloat(data.cost_price).toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"}`,
 						);
 					}
 					void calculateTotals();
@@ -170,9 +164,7 @@ function addLine() {
 				error: () => {
 					// Fallback to selected data
 					if (selectedData.price) {
-						$(`#price_${currentIndex}`).val(
-							parseFloat(selectedData.price).toFixed(2),
-						);
+						$(`#price_${currentIndex}`).val(parseFloat(selectedData.price).toFixed(2));
 					}
 					void calculateTotals();
 				},
@@ -180,24 +172,18 @@ function addLine() {
 		} else {
 			// Use default price from search result
 			if (selectedData.price) {
-				$(`#price_${currentIndex}`).val(
-					parseFloat(selectedData.price).toFixed(2),
-				);
+				$(`#price_${currentIndex}`).val(parseFloat(selectedData.price).toFixed(2));
 			}
 		}
 
 		if (selectedData.stock !== undefined) {
-			$(`#stock_${currentIndex}`).text(
-				selectedData.stock + " " + (selectedData.unit || ""),
-			);
+			$(`#stock_${currentIndex}`).text(`${selectedData.stock} ${selectedData.unit || ""}`);
 			$(`#line_info_${currentIndex}`).show();
 		}
 
 		if (selectedData.cost) {
 			$(`#cost_${currentIndex}`).text(
-				parseFloat(selectedData.cost).toFixed(2) +
-					" " +
-					(window._CURRENCY_SYMBOL || "AED"),
+				`${parseFloat(selectedData.cost).toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"}`,
 			);
 		}
 
@@ -212,7 +198,7 @@ function addLine() {
 /**
  * Remove Product Line
  */
-function removeLine(index) {
+function _removeLine(index) {
 	$(`#line_${index}`).remove();
 	void calculateTotals();
 }
@@ -220,7 +206,7 @@ function removeLine(index) {
 /**
  * Load Product Price based on Customer Type
  */
-function loadProductPrice(index) {
+function _loadProductPrice(index) {
 	const customerId = $("#customer_id").val();
 	const productId = $(`select[name="lines[${index}][product_id]"]`).val();
 
@@ -252,7 +238,7 @@ function loadProductPrice(index) {
 			$(`#price_${index}`).val(finalPrice.toFixed(2));
 
 			if (data.current_stock !== undefined) {
-				$(`#stock_${index}`).text(data.current_stock + " " + (data.unit || ""));
+				$(`#stock_${index}`).text(`${data.current_stock} ${data.unit || ""}`);
 
 				if (data.current_stock < 1) {
 					$(`#stock_${index}`).addClass("text-danger font-weight-bold");
@@ -262,7 +248,7 @@ function loadProductPrice(index) {
 
 			if (data.cost_price && data.cost_price > 0) {
 				$(`#cost_${index}`).text(
-					data.cost_price.toFixed(2) + " " + (window._CURRENCY_SYMBOL || "AED"),
+					`${data.cost_price.toFixed(2)} ${window._CURRENCY_SYMBOL || "AED"}`,
 				);
 			}
 
@@ -273,18 +259,12 @@ function loadProductPrice(index) {
 				$(`#serial_btn_${index}`).data("needed", true);
 
 				// Adjust column width to fit button
-				$(`#serial_btn_container_${index}`)
-					.prev()
-					.removeClass("col-md-2")
-					.addClass("col-md-1"); // Discount
+				$(`#serial_btn_container_${index}`).prev().removeClass("col-md-2").addClass("col-md-1"); // Discount
 				// $(`#serial_btn_container_${index}`).prev().prev().removeClass('col-md-2').addClass('col-md-2'); // Price
 			} else {
 				$(`#serial_btn_container_${index}`).hide();
 				$(`#serial_btn_${index}`).data("needed", false);
-				$(`#serial_btn_container_${index}`)
-					.prev()
-					.removeClass("col-md-1")
-					.addClass("col-md-2"); // Restore Discount
+				$(`#serial_btn_container_${index}`).prev().removeClass("col-md-1").addClass("col-md-2"); // Restore Discount
 			}
 
 			$(`#line_info_${index}`).show();
@@ -302,7 +282,7 @@ function loadProductPrice(index) {
 /**
  * Trigger Serial Modal
  */
-function triggerSerialModal(salesLineIndex) {
+function _triggerSerialModal(salesLineIndex) {
 	const btn = $(`#serial_btn_${salesLineIndex}`);
 	if (!btn.data("needed")) return;
 
@@ -328,7 +308,7 @@ function updateLinePrices() {
 		const $priceInput = $(`#price_${index}`);
 		const basePrice = parseFloat($priceInput.data("base-price"));
 
-		if (!isNaN(basePrice)) {
+		if (!Number.isNaN(basePrice)) {
 			let finalPrice = basePrice;
 			if (currency !== (window._FX_FALLBACK_BASE || "AED") && rate > 0) {
 				finalPrice = basePrice / rate;
@@ -361,8 +341,7 @@ async function calculateTotals() {
 			const $line = $(this).closest(".product-line");
 			const qty = parseFloat($(this).val()) || 0;
 			const price = parseFloat($line.find('[name$="[unit_price]"]').val()) || 0;
-			const discount =
-				parseFloat($line.find('[name$="[discount_percent]"]').val()) || 0;
+			const discount = parseFloat($line.find('[name$="[discount_percent]"]').val()) || 0;
 
 			if (qty > 0 || price > 0) {
 				lines.push({
@@ -373,8 +352,7 @@ async function calculateTotals() {
 			}
 		});
 
-		const discount_amount =
-			parseFloat($('[name="discount_amount"]').val()) || 0;
+		const discount_amount = parseFloat($('[name="discount_amount"]').val()) || 0;
 		const shipping_cost = parseFloat($('[name="shipping_cost"]').val()) || 0;
 		const tax_rate = parseFloat($('[name="tax_rate"]').val()) || 0;
 
@@ -414,7 +392,7 @@ async function calculateTotals() {
 			// Fallback to client-side calculation
 			return calculateTotalsClientSide();
 		}
-	} catch (error) {
+	} catch (_error) {
 		// Fallback to client-side calculation
 		return calculateTotalsClientSide();
 	}
@@ -428,16 +406,9 @@ function calculateTotalsClientSide() {
 	$('[name^="lines"][name$="[quantity]"]').each(function () {
 		const qty = parseFloat($(this).val()) || 0;
 		const price =
-			parseFloat(
-				$(this).closest(".product-line").find('[name$="[unit_price]"]').val(),
-			) || 0;
+			parseFloat($(this).closest(".product-line").find('[name$="[unit_price]"]').val()) || 0;
 		const discount =
-			parseFloat(
-				$(this)
-					.closest(".product-line")
-					.find('[name$="[discount_percent]"]')
-					.val(),
-			) || 0;
+			parseFloat($(this).closest(".product-line").find('[name$="[discount_percent]"]').val()) || 0;
 
 		if (qty > 0 && price > 0) {
 			const lineTotal = qty * price * (1 - discount / 100);
@@ -530,8 +501,7 @@ $("#currency").on("change", function () {
 // Audit manual exchange rate changes
 $("#exchange_rate").on("change", function () {
 	const manualRate = parseFloat($(this).val());
-	const serverRate =
-		parseFloat($(this).data("server-rate")) || serverExchangeRate;
+	const serverRate = parseFloat($(this).data("server-rate")) || serverExchangeRate;
 
 	if (!manualRate || manualRate <= 0) {
 		azad.showError("⚠️ سعر الصرف يجب أن يكون أكبر من صفر");
@@ -572,9 +542,7 @@ $("#exchange_rate").on("change", function () {
 		$(this).css("background-color", "#fff3cd");
 		const $saleForm = $("#saleForm");
 		$saleForm.find('input[name="exchange_rate_manual"]').remove();
-		$saleForm.append(
-			`<input type="hidden" name="exchange_rate_manual" value="true">`,
-		);
+		$saleForm.append(`<input type="hidden" name="exchange_rate_manual" value="true">`);
 	}
 
 	updateLinePrices();
@@ -677,7 +645,7 @@ $(document).ready(() => {
 		minimumInputLength: 0,
 		templateResult: (customer) => {
 			if (customer.loading) return customer.text;
-			return $("<span>" + customer.text + "</span>");
+			return $(`<span>${customer.text}</span>`);
 		},
 		templateSelection: (customer) => customer.text,
 	});

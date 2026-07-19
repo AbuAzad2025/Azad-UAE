@@ -40,9 +40,9 @@ $(document).ready(() => {
 	}
 
 	// Generate and insert serial for quantity
-	function generateSerials(lineIndex, productId, qty) {
+	function generateSerials(lineIndex, _productId, qty) {
 		$serialsContainer.empty();
-		const count = parseInt(qty) || 1;
+		const count = parseInt(qty, 10) || 1;
 		addSerialInput(lineIndex, count);
 	}
 
@@ -73,7 +73,7 @@ $(document).ready(() => {
 	$("#add_serial_btn").on("click", () => {
 		const lineIndex = $("#serial_line_index").val();
 		const productId = $("#product_id").val();
-		const productName = $("#product_name").val();
+		const _productName = $("#product_name").val();
 		const quantity = $("#quantity").val();
 
 		if (!productId) {
@@ -87,8 +87,8 @@ $(document).ready(() => {
 
 	$("#generate_serial_btn").on("click", () => {
 		const productId = $("#product_id").val() || "";
-		const count = parseInt($("#serials_count").text()) || 1;
-		$(".serial-input").each(function (index) {
+		const _count = parseInt($("#serials_count").text(), 10) || 1;
+		$(".serial-input").each(function (_index) {
 			if (!$(this).val()) {
 				$(this).val(generateSerialNumber(productId));
 			}
@@ -115,7 +115,7 @@ $(document).ready(() => {
 		_printDoc.write("</head><body>");
 		_printDoc.write('<h2 style="text-align:center">الأرقام التسلسلية</h2>');
 		serials.forEach((s) => {
-			_printDoc.write('<div class="serial">' + s + "</div>");
+			_printDoc.write(`<div class="serial">${s}</div>`);
 		});
 		_printDoc.write("</body></html>");
 		_printDoc.close();

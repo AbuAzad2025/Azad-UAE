@@ -10,7 +10,7 @@
 	const t = (key) => i18n[key] || key;
 
 	let selectedAmount = 0;
-	let selectedMethod = "";
+	let _selectedMethod = "";
 	let selectedPackage = "";
 	let currentTab = "purchase";
 
@@ -21,14 +21,10 @@
 			(document.getElementById("customAmount")
 				? document.getElementById("customAmount").value
 				: "") ||
-			(document.getElementById("cardAmount")
-				? document.getElementById("cardAmount").value
-				: "") ||
+			(document.getElementById("cardAmount") ? document.getElementById("cardAmount").value : "") ||
 			"";
 		const packageLabel = selectedPackage || t("not yet specified");
-		const orderRef = recordId
-			? " " + t("reference number") + ": #" + recordId + "."
-			: "";
+		const orderRef = recordId ? ` ${t("reference number")}: #${recordId}.` : "";
 
 		const messages = {
 			buy_code:
@@ -96,9 +92,7 @@
 				" " +
 				t("completing") +
 				" " +
-				(currentTab === "purchase"
-					? t("Purchase") + " " + t("System")
-					: t("Donation")) +
+				(currentTab === "purchase" ? `${t("Purchase")} ${t("System")}` : t("Donation")) +
 				"." +
 				orderRef,
 			refund_help:
@@ -132,9 +126,7 @@
 			t("Purchase") +
 			" " +
 			t("System") +
-			(currentTab === "purchase"
-				? " " + t("current package") + ": " + packageLabel
-				: "") +
+			(currentTab === "purchase" ? ` ${t("current package")}: ${packageLabel}` : "") +
 			". " +
 			t("Amount") +
 			" " +
@@ -158,7 +150,7 @@
 			payment_help: t("Help Completing Payment"),
 			refund_help: t("Refund or Payment Status Inquiry"),
 		};
-		const subject = (subjects[kind] || t("inquiry")) + " - " + cfg.brand;
+		const subject = `${subjects[kind] || t("inquiry")} - ${cfg.brand}`;
 		const body =
 			message +
 			"\n\n" +
@@ -176,13 +168,7 @@
 
 	window.openWhatsApp = (kind, amountOverride, recordId) => {
 		const message = buildSupportMessage(kind, amountOverride, recordId);
-		window.open(
-			"https://wa.me/" +
-				cfg.whatsappLink +
-				"?text=" +
-				encodeURIComponent(message),
-			"_blank",
-		);
+		window.open(`https://wa.me/${cfg.whatsappLink}?text=${encodeURIComponent(message)}`, "_blank");
 	};
 
 	window.openSupportEmail = (kind, amountOverride, recordId) => {
@@ -236,13 +222,7 @@
 		return div.innerHTML;
 	}
 
-	function showSupportAssistanceModal(
-		title,
-		introHtml,
-		kind,
-		amountOverride,
-		recordId,
-	) {
+	function showSupportAssistanceModal(title, introHtml, kind, amountOverride, recordId) {
 		Swal.fire({
 			icon: "info",
 			title: title,
@@ -283,8 +263,7 @@
 		document.querySelectorAll(".sp-package-card").forEach((c) => {
 			c.classList.remove("active");
 		});
-		if (event && event.currentTarget)
-			event.currentTarget.classList.add("active");
+		if (event?.currentTarget) event.currentTarget.classList.add("active");
 		updateProgress("step-package", "completed");
 		updateProgress("step-payment", "active");
 		updateProgress("step-complete", "");
@@ -313,7 +292,7 @@
 		document.querySelectorAll(".sp-payment-card").forEach((c) => {
 			c.classList.remove("active");
 		});
-		const form = document.getElementById(method + "-form");
+		const form = document.getElementById(`${method}-form`);
 		if (form) {
 			form.classList.add("active");
 			if (currentTab === "purchase" && selectedAmount > 0) {
@@ -335,9 +314,8 @@
 			}
 			form.scrollIntoView({ behavior: "smooth", block: "center" });
 		}
-		if (event && event.currentTarget)
-			event.currentTarget.classList.add("active");
-		selectedMethod = method;
+		if (event?.currentTarget) event.currentTarget.classList.add("active");
+		_selectedMethod = method;
 	}
 	window.selectMethod = selectMethod;
 
@@ -346,8 +324,7 @@
 		document.querySelectorAll(".sp-amount-btn").forEach((b) => {
 			b.classList.remove("active");
 		});
-		if (event && event.currentTarget)
-			event.currentTarget.classList.add("active");
+		if (event?.currentTarget) event.currentTarget.classList.add("active");
 		const ca = document.getElementById("customAmount");
 		if (ca) ca.value = "";
 	}
@@ -358,21 +335,18 @@
 		document.querySelectorAll(".sp-tab-btn").forEach((b) => {
 			b.classList.remove("active");
 		});
-		if (event && event.target) {
+		if (event?.target) {
 			event.target.classList.add("active");
 		} else {
 			document.querySelectorAll(".sp-tab-btn").forEach((b, idx) => {
-				if (
-					(tab === "purchase" && idx === 0) ||
-					(tab === "donation" && idx === 1)
-				)
+				if ((tab === "purchase" && idx === 0) || (tab === "donation" && idx === 1))
 					b.classList.add("active");
 			});
 		}
 		document.querySelectorAll(".sp-tab-content").forEach((c) => {
 			c.classList.remove("active");
 		});
-		const tc = document.getElementById(tab + "-tab");
+		const tc = document.getElementById(`${tab}-tab`);
 		if (tc) tc.classList.add("active");
 
 		const ppm = document.getElementById("purchase-payment-methods");
@@ -430,10 +404,7 @@
 			}),
 		});
 		if (!result.value) return null;
-		if (
-			currentTab === "purchase" &&
-			(!result.value.name || !result.value.email)
-		) {
+		if (currentTab === "purchase" && (!result.value.name || !result.value.email)) {
 			Swal.fire({
 				icon: "error",
 				title: t("Error"),
@@ -454,7 +425,7 @@
 			Swal.fire({
 				icon: "error",
 				title: t("Error"),
-				text: t("Minimum donation amount is") + " $15",
+				text: `${t("Minimum donation amount is")} $15`,
 				confirmButtonColor: "#667eea",
 			});
 			return;
@@ -503,7 +474,7 @@
 			}
 			apiEndpoint = "/payment-vault/api/purchase";
 			requestData = {
-				package_id: parseInt(packageId),
+				package_id: parseInt(packageId, 10),
 				customer_name: fv.name,
 				customer_email: fv.email,
 				customer_phone: fv.phone || "",
@@ -512,7 +483,7 @@
 				amount_paid: paymentAmount,
 				currency: "USD",
 				crypto_currency: cryptoType,
-				transaction_id: "CRYPTO_" + Date.now(),
+				transaction_id: `CRYPTO_${Date.now()}`,
 				payment_details: { crypto_type: cryptoType, amount: paymentAmount },
 			};
 		} else {
@@ -530,7 +501,7 @@
 				donor_name: fv2.name || null,
 				donor_email: fv2.email || null,
 				message: fv2.extra || null,
-				transaction_id: "DONATION_" + Date.now(),
+				transaction_id: `DONATION_${Date.now()}`,
 			};
 		}
 
@@ -555,7 +526,7 @@
 					if (data.payment_address) {
 						Swal.fire({
 							icon: "success",
-							title: t("Created") + " " + recordType + " " + t("successfully"),
+							title: `${t("Created")} ${recordType} ${t("successfully")}`,
 							html:
 								"" +
 								'<div class="sp-result-center">' +
@@ -609,14 +580,9 @@
 							width: 650,
 							allowOutsideClick: false,
 						}).then((r) => {
-							if (r.isDenied)
-								window.openWhatsApp("payment_help", paymentAmount, recordId);
+							if (r.isDenied) window.openWhatsApp("payment_help", paymentAmount, recordId);
 							else if (r.dismiss === Swal.DismissReason.cancel)
-								window.openSupportEmail(
-									"payment_help",
-									paymentAmount,
-									recordId,
-								);
+								window.openSupportEmail("payment_help", paymentAmount, recordId);
 						});
 					} else {
 						Swal.fire({
@@ -657,27 +623,17 @@
 							denyButtonText: t("Email us"),
 							allowOutsideClick: false,
 						}).then((r) => {
-							if (r.isConfirmed)
-								window.openWhatsApp("payment_help", paymentAmount, recordId);
-							else if (r.isDenied)
-								window.openSupportEmail(
-									"payment_help",
-									paymentAmount,
-									recordId,
-								);
+							if (r.isConfirmed) window.openWhatsApp("payment_help", paymentAmount, recordId);
+							else if (r.isDenied) window.openSupportEmail("payment_help", paymentAmount, recordId);
 						});
 					}
 				} else {
 					showSupportAssistanceModal(
 						t("Could not create order"),
 						"<p>" +
-							escapeHtml(
-								data.error || t("Error occurred while creating the order"),
-							) +
+							escapeHtml(data.error || t("Error occurred while creating the order")) +
 							".</p><p>" +
-							t(
-								"You can retry or complete the process directly with Azad Company",
-							) +
+							t("You can retry or complete the process directly with Azad Company") +
 							".</p>",
 						"payment_help",
 						paymentAmount,
@@ -691,15 +647,11 @@
 					"<p>" +
 						t("We could not create") +
 						" " +
-						(currentTab === "purchase"
-							? t("Purchase order")
-							: t("Donation order")) +
+						(currentTab === "purchase" ? t("Purchase order") : t("Donation order")) +
 						" " +
 						t("now") +
 						".</p><p>" +
-						t(
-							"You can follow up directly with Azad via WhatsApp or email for the same amount",
-						) +
+						t("You can follow up directly with Azad via WhatsApp or email for the same amount") +
 						": <strong>$" +
 						paymentAmount +
 						"</strong>.</p>",
@@ -733,13 +685,13 @@
 			Swal.fire({
 				icon: "error",
 				title: t("Error"),
-				text: t("Minimum donation") + " $15",
+				text: `${t("Minimum donation")} $15`,
 				confirmButtonColor: "#667eea",
 			});
 			return;
 		}
 		const r = await Swal.fire({
-			title: t("Payment Details") + " - PayPal",
+			title: `${t("Payment Details")} - PayPal`,
 			html:
 				"" +
 				'<input id="swal-name" class="swal2-input" placeholder="' +
@@ -774,12 +726,10 @@
 						: "",
 			}),
 		});
-		if (!r.value || !r.value.name || !r.value.email) return;
+		if (!r.value?.name || !r.value.email) return;
 
 		const apiEndpoint =
-			currentTab === "purchase"
-				? "/payment-vault/api/purchase"
-				: "/payment-vault/api/donation";
+			currentTab === "purchase" ? "/payment-vault/api/purchase" : "/payment-vault/api/donation";
 		let requestData = {};
 		if (currentTab === "purchase") {
 			const pcard = document.querySelector(".sp-package-card.active");
@@ -793,7 +743,7 @@
 				return;
 			}
 			requestData = {
-				package_id: parseInt(packageId),
+				package_id: parseInt(packageId, 10),
 				customer_name: r.value.name,
 				customer_email: r.value.email,
 				customer_phone: r.value.phone,
@@ -801,7 +751,7 @@
 				payment_method: "paypal",
 				amount_paid: paymentAmount,
 				currency: "USD",
-				transaction_id: "PAYPAL_PENDING_" + Date.now(),
+				transaction_id: `PAYPAL_PENDING_${Date.now()}`,
 			};
 		} else {
 			requestData = {
@@ -809,7 +759,7 @@
 				payment_method: "paypal",
 				donor_name: r.value.name,
 				donor_email: r.value.email,
-				transaction_id: "PAYPAL_DONATION_" + Date.now(),
+				transaction_id: `PAYPAL_DONATION_${Date.now()}`,
 			};
 		}
 
@@ -872,8 +822,7 @@
 						width: 600,
 					}).then((r2) => {
 						const rid = data.purchase_id || data.donation_id;
-						if (r2.isDenied)
-							window.openWhatsApp("payment_help", paymentAmount, rid);
+						if (r2.isDenied) window.openWhatsApp("payment_help", paymentAmount, rid);
 						else if (r2.dismiss === Swal.DismissReason.cancel)
 							window.openSupportEmail("payment_help", paymentAmount, rid);
 					});
@@ -889,9 +838,7 @@
 								t("Pending coordination with Azad team"),
 							) +
 							'<p class="sp-result-actions">' +
-							t(
-								"You can now choose WhatsApp or email to complete payment or inquire",
-							) +
+							t("You can now choose WhatsApp or email to complete payment or inquire") +
 							".</p>",
 						confirmButtonText: t("Azad WhatsApp"),
 						confirmButtonColor: "#25D366",
@@ -899,19 +846,15 @@
 						denyButtonText: t("Email us"),
 					}).then((r2) => {
 						const rid = data.purchase_id || data.donation_id;
-						if (r2.isConfirmed)
-							window.openWhatsApp("payment_help", paymentAmount, rid);
-						else if (r2.isDenied)
-							window.openSupportEmail("payment_help", paymentAmount, rid);
+						if (r2.isConfirmed) window.openWhatsApp("payment_help", paymentAmount, rid);
+						else if (r2.isDenied) window.openSupportEmail("payment_help", paymentAmount, rid);
 					});
 				}
 			} else {
 				showSupportAssistanceModal(
 					t("Could not complete PayPal order"),
 					"<p>" +
-						escapeHtml(
-							data.error || t("Could not save PayPal order currently"),
-						) +
+						escapeHtml(data.error || t("Could not save PayPal order currently")) +
 						".</p><p>" +
 						t("You can follow up directly with Azad via WhatsApp or email") +
 						".</p>",
@@ -919,15 +862,13 @@
 					paymentAmount,
 				);
 			}
-		} catch (e) {
+		} catch (_e) {
 			showSupportAssistanceModal(
 				t("Connection failed during PayPal"),
 				"<p>" +
 					t("Could not connect to server while preparing the order") +
 					".</p><p>" +
-					t(
-						"Use WhatsApp or email to complete the purchase or donation with the same details",
-					) +
+					t("Use WhatsApp or email to complete the purchase or donation with the same details") +
 					".</p>",
 				"payment_help",
 				paymentAmount,
@@ -960,13 +901,12 @@
 			cardForm.addEventListener("submit", async (e) => {
 				e.preventDefault();
 				const ci = document.getElementById("cardAmount");
-				const paymentAmount =
-					parseFloat(ci ? ci.value : "") || selectedAmount || 0;
+				const paymentAmount = parseFloat(ci ? ci.value : "") || selectedAmount || 0;
 				if (!paymentAmount || paymentAmount < 15) {
 					Swal.fire({
 						icon: "error",
 						title: t("Error"),
-						text: t("Minimum donation") + " $15",
+						text: `${t("Minimum donation")} $15`,
 						confirmButtonColor: "#667eea",
 					});
 					return;
@@ -1007,18 +947,14 @@
 								: "",
 					}),
 				});
-				if (!r.value || !r.value.name || !r.value.email) return;
+				if (!r.value?.name || !r.value.email) return;
 
 				const apiEndpoint =
-					currentTab === "purchase"
-						? "/payment-vault/api/purchase"
-						: "/payment-vault/api/donation";
+					currentTab === "purchase" ? "/payment-vault/api/purchase" : "/payment-vault/api/donation";
 				let requestData = {};
 				if (currentTab === "purchase") {
 					const pcard = document.querySelector(".sp-package-card.active");
-					const packageId = pcard
-						? pcard.getAttribute("data-package-id")
-						: null;
+					const packageId = pcard ? pcard.getAttribute("data-package-id") : null;
 					if (!packageId) {
 						Swal.fire({
 							icon: "error",
@@ -1028,7 +964,7 @@
 						return;
 					}
 					requestData = {
-						package_id: parseInt(packageId),
+						package_id: parseInt(packageId, 10),
 						customer_name: r.value.name,
 						customer_email: r.value.email,
 						customer_phone: r.value.phone,
@@ -1036,7 +972,7 @@
 						payment_method: "card",
 						amount_paid: paymentAmount,
 						currency: "USD",
-						transaction_id: "CARD_PENDING_" + Date.now(),
+						transaction_id: `CARD_PENDING_${Date.now()}`,
 					};
 				} else {
 					requestData = {
@@ -1044,7 +980,7 @@
 						payment_method: "card",
 						donor_name: r.value.name,
 						donor_email: r.value.email,
-						transaction_id: "CARD_DONATION_" + Date.now(),
+						transaction_id: `CARD_DONATION_${Date.now()}`,
 					};
 				}
 
@@ -1108,8 +1044,7 @@
 								allowOutsideClick: false,
 							}).then((r2) => {
 								const rid = data.purchase_id || data.donation_id;
-								if (r2.isDenied)
-									window.openWhatsApp("payment_help", paymentAmount, rid);
+								if (r2.isDenied) window.openWhatsApp("payment_help", paymentAmount, rid);
 								else if (r2.dismiss === Swal.DismissReason.cancel)
 									window.openSupportEmail("payment_help", paymentAmount, rid);
 							});
@@ -1122,14 +1057,10 @@
 									buildSupportStatusHtml(
 										data.purchase_id || data.donation_id,
 										paymentAmount,
-										t(
-											"Order registered pending confirmation or manual follow-up",
-										),
+										t("Order registered pending confirmation or manual follow-up"),
 									) +
 									'<p class="sp-result-actions">' +
-									t(
-										"You can follow up directly with Azad Company via WhatsApp or email",
-									) +
+									t("You can follow up directly with Azad Company via WhatsApp or email") +
 									".</p>",
 								confirmButtonText: t("Azad WhatsApp"),
 								confirmButtonColor: "#25D366",
@@ -1137,29 +1068,23 @@
 								denyButtonText: t("Email us"),
 							}).then((r2) => {
 								const rid = data.purchase_id || data.donation_id;
-								if (r2.isConfirmed)
-									window.openWhatsApp("payment_help", paymentAmount, rid);
-								else if (r2.isDenied)
-									window.openSupportEmail("payment_help", paymentAmount, rid);
+								if (r2.isConfirmed) window.openWhatsApp("payment_help", paymentAmount, rid);
+								else if (r2.isDenied) window.openSupportEmail("payment_help", paymentAmount, rid);
 							});
 						}
 					} else {
 						showSupportAssistanceModal(
 							t("Could not prepare card order"),
 							"<p>" +
-								escapeHtml(
-									data.error || t("Could not save card order currently"),
-								) +
+								escapeHtml(data.error || t("Could not save card order currently")) +
 								".</p><p>" +
-								t(
-									"You can complete the process directly with Azad via WhatsApp or email",
-								) +
+								t("You can complete the process directly with Azad via WhatsApp or email") +
 								".</p>",
 							"payment_help",
 							paymentAmount,
 						);
 					}
-				} catch (e) {
+				} catch (_e) {
 					showSupportAssistanceModal(
 						t("Connection failed during payment"),
 						"<p>" +

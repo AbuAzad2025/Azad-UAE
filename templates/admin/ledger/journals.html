@@ -41,7 +41,7 @@
           <tr>
             <td>
               {% if current_user.has_permission('view_ledger') %}
-              <a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="text-primary">
+              <a href="{{ url_for('ledger.view_entry', entry_id=entry.id) }}" class="text-primary">
                 {{ entry.entry_number }}
               </a>
               {% else %}
@@ -77,7 +77,7 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View Entry') }}">
+                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', entry_id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View Entry') }}">
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}

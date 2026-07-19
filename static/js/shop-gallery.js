@@ -7,7 +7,7 @@
 		const rect = gallery.getBoundingClientRect();
 		const x = ((e.clientX - rect.left) / rect.width) * 100;
 		const y = ((e.clientY - rect.top) / rect.height) * 100;
-		mainImg.style.transformOrigin = x + "% " + y + "%";
+		mainImg.style.transformOrigin = `${x}% ${y}%`;
 		mainImg.style.transform = "scale(2)";
 	});
 	gallery.addEventListener("mouseleave", () => {

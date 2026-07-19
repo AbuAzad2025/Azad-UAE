@@ -464,7 +464,7 @@ class ExchangeRateService:
             }
 
         # 5. Online rate — fetch, then auto-save to exchange_rate_records for next time
-        online_rate = ExchangeRateService._fetch_and_store_online_rate(  # type: ignore[attr-defined]
+        online_rate = ExchangeRateService._fetch_and_store_online_rate(
             from_currency, to_currency, tenant_id
         )
         if online_rate:
@@ -479,7 +479,7 @@ class ExchangeRateService:
             }
 
         # 6. Last known rate from exchange_rate_records (any date, any source)
-        last_rate = ExchangeRateService._get_last_known_rate(  # type: ignore[attr-defined]
+        last_rate = ExchangeRateService._get_last_known_rate(
             from_currency, to_currency, tenant_id
         )
         if last_rate:
@@ -604,6 +604,34 @@ class ExchangeRateService:
                 exc_info=True,
             )
         return None
+
+    @staticmethod
+    def _fetch_and_store_online_rate(
+        from_currency: str,
+        to_currency: str,
+        tenant_id: int | None = None,
+    ) -> float | None:
+        """Fetch online rate, auto-save to exchange_rate_records, return the rate.
+
+        Delegates to the public get_online_rate implementation.
+        """
+        return ExchangeRateService.get_online_rate(
+            from_currency, to_currency, tenant_id
+        )
+
+    @staticmethod
+    def _get_last_known_rate(
+        from_currency: str,
+        to_currency: str,
+        tenant_id: int | None = None,
+    ) -> float | None:
+        """Get the most recent exchange_rate_record regardless of date or source.
+
+        Delegates to the public get_latest_rate implementation.
+        """
+        return ExchangeRateService.get_latest_rate(
+            from_currency, to_currency, tenant_id
+        )
 
     @staticmethod
     def _save_rate_record(

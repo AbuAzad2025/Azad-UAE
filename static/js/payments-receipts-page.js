@@ -12,13 +12,12 @@
 	}
 
 	function initTableAndSmartPrint() {
-		if (!window.jQuery || !window.jQuery.fn.DataTable) return;
+		if (!window.jQuery?.fn.DataTable) return;
 		const $ = window.jQuery;
 		const $tableEl = $("#receiptsTable");
 		if (!$tableEl.length) return;
 
-		const languageUrl =
-			$tableEl.data("langUrl") || "/static/datatables/Arabic.json";
+		const languageUrl = $tableEl.data("langUrl") || "/static/datatables/Arabic.json";
 		const printOptions = {
 			title: "جميع المدفوعات",
 			headerColor: "#198754",
@@ -33,9 +32,7 @@
 				order: [[2, "desc"]],
 				pageLength: 25,
 				dom: "Bfrtip",
-				buttons: window.SmartPrint
-					? window.SmartPrint.buildButtons(printOptions)
-					: [],
+				buttons: window.SmartPrint ? window.SmartPrint.buildButtons(printOptions) : [],
 			});
 		}
 

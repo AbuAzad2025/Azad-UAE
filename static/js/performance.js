@@ -32,26 +32,26 @@ $(document).ready(() => {
 	}
 
 	// Optimize search inputs
-	$(
-		'input[type="search"], input[placeholder*="بحث"], input[placeholder*="search"]',
-	).each(function () {
-		const $input = $(this);
-		const originalHandler = $input.data("events");
+	$('input[type="search"], input[placeholder*="بحث"], input[placeholder*="search"]').each(
+		function () {
+			const $input = $(this);
+			const originalHandler = $input.data("events");
 
-		if (originalHandler) {
-			$input.off("input keyup");
-			$input.on(
-				"input keyup",
-				debounce(function () {
-					if (originalHandler.input) {
-						originalHandler.input.forEach((handler) =>
-							handler.handler.call(this),
-						);
-					}
-				}, 300),
-			);
-		}
-	});
+			if (originalHandler) {
+				$input.off("input keyup");
+				$input.on(
+					"input keyup",
+					debounce(function () {
+						if (originalHandler.input) {
+							originalHandler.input.forEach((handler) => {
+								void handler.handler.call(this);
+							});
+						}
+					}, 300),
+				);
+			}
+		},
+	);
 
 	// Preload critical pages
 	function preloadPage(url) {
@@ -64,8 +64,7 @@ $(document).ready(() => {
 	$(".nav-link, .btn").hover(function () {
 		const href = $(this).attr("href");
 		if (
-			href &&
-			href.startsWith("/") &&
+			href?.startsWith("/") &&
 			!href.includes("#") &&
 			!/\/\d+\/?$/.test(href) &&
 			!/^\/(reports|owner|store|pos|api)\//.test(href) &&
@@ -104,9 +103,7 @@ $(document).ready(() => {
 	// Optimize form submissions
 	$("form").on("submit", function () {
 		const $form = $(this);
-		const $submitBtn = $form.find(
-			'button[type="submit"], input[type="submit"]',
-		);
+		const $submitBtn = $form.find('button[type="submit"], input[type="submit"]');
 
 		// Disable submit button to prevent double submission
 		$submitBtn.prop("disabled", true);
@@ -130,13 +127,9 @@ $(document).ready(() => {
 	$.ajaxSetup({
 		timeout: 10000,
 		cache: false,
-		beforeSend: (xhr, settings) => {
+		beforeSend: (_xhr, settings) => {
 			// Add loading indicator
-			if (
-				settings.type === "POST" ||
-				settings.type === "PUT" ||
-				settings.type === "DELETE"
-			) {
+			if (settings.type === "POST" || settings.type === "PUT" || settings.type === "DELETE") {
 				$("body").addClass("loading");
 			}
 		},
@@ -214,10 +207,7 @@ $(document).ready(() => {
 	});
 
 	// Add performance monitoring - تحسين
-	if (
-		window.performance &&
-		(window.performance.timing || window.performance.getEntriesByType)
-	) {
+	if (window.performance && (window.performance.timing || window.performance.getEntriesByType)) {
 		window.addEventListener("load", () => {
 			setTimeout(() => {
 				// Use Navigation Timing API (modern) with timing fallback

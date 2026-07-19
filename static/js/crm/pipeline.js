@@ -26,12 +26,11 @@
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
-						.content,
+					"X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
 				},
 				body: JSON.stringify({
-					lead_id: parseInt(leadId),
-					stage_id: parseInt(stageId),
+					lead_id: parseInt(leadId, 10),
+					stage_id: parseInt(stageId, 10),
 				}),
 			})
 				.then((r) => r.json())

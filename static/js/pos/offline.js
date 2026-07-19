@@ -13,7 +13,7 @@
 			'<div><i class="fas fa-wifi-slash mr-1"></i> أنت غير متصل — الفواتير سيتم حفظها محلياً وإرسالها لاحقاً</div>' +
 			'<button id="retryQueueBtn" class="btn btn-sm btn-light">إعادة المحاولة</button>';
 		const sessionBar = document.getElementById("posSessionBar");
-		if (sessionBar && sessionBar.parentNode) {
+		if (sessionBar?.parentNode) {
 			sessionBar.parentNode.insertBefore(bar, sessionBar.nextSibling);
 		}
 		offlineStatusBar = bar;
@@ -39,7 +39,7 @@
 	}
 
 	function retryQueue() {
-		if (swRegistration && swRegistration.active) {
+		if (swRegistration?.active) {
 			swRegistration.active.postMessage("retry-queue");
 		}
 	}

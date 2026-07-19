@@ -302,6 +302,5 @@ window.notify = new NotificationManager();
 
 // jQuery integration
 if (typeof $ !== "undefined") {
-	$.notify = (message, type = "info", title = "") =>
-		window.notify.show({ type, title, message });
+	$.notify = (message, type = "info", title = "") => window.notify.show({ type, title, message });
 }

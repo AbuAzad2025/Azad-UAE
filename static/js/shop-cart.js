@@ -30,7 +30,7 @@
 	}
 
 	function apiPost(path, data) {
-		return fetch("/s/" + SLUG + path, {
+		return fetch(`/s/${SLUG}${path}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -42,12 +42,12 @@
 	}
 
 	function apiGet(path) {
-		return fetch("/s/" + SLUG + path, {
+		return fetch(`/s/${SLUG}${path}`, {
 			headers: { "X-Requested-With": "XMLHttpRequest" },
 		}).then((r) => r.json());
 	}
 
-	function addToCart(productId, quantity) {
+	let addToCart = (productId, quantity) => {
 		quantity = quantity || 1;
 		return apiPost("/cart/add", {
 			product_id: productId,
@@ -61,10 +61,10 @@
 			}
 			return data;
 		});
-	}
+	};
 
 	function removeFromCart(productId) {
-		return apiPost("/cart/remove/" + productId, {}).then((data) => {
+		return apiPost(`/cart/remove/${productId}`, {}).then((data) => {
 			if (data.success) {
 				updateCartBadge(data.cart_count);
 				showToast("Removed from cart", "success");
@@ -113,11 +113,7 @@
 			e.preventDefault();
 			const productId = form.querySelector('[name="product_id"]');
 			const qty = form.querySelector('[name="quantity"]');
-			if (productId)
-				void addToCart(
-					parseInt(productId.value),
-					parseFloat((qty && qty.value) || 1),
-				);
+			if (productId) void addToCart(parseInt(productId.value, 10), parseFloat(qty?.value || 1));
 		});
 	}
 
@@ -127,18 +123,14 @@
 			if (!btn) return;
 			e.preventDefault();
 			const productId = btn.getAttribute("data-product-id");
-			if (productId) void removeFromCart(parseInt(productId));
+			if (productId) void removeFromCart(parseInt(productId, 10));
 		});
 	}
 
 	function wishlistToggle(productId) {
-		const btn = document.querySelector(
-			'[data-wishlist-toggle][data-product-id="' + productId + '"]',
-		);
-		const isOn = btn && btn.querySelector(".fas.fa-heart");
-		const path = isOn
-			? "/wishlist/remove/" + productId
-			: "/wishlist/add/" + productId;
+		const btn = document.querySelector(`[data-wishlist-toggle][data-product-id="${productId}"]`);
+		const isOn = btn?.querySelector(".fas.fa-heart");
+		const path = isOn ? `/wishlist/remove/${productId}` : `/wishlist/add/${productId}`;
 		return apiPost(path, { product_id: productId }).then((data) => {
 			if (data.success) {
 				if (data.wishlisted) {
@@ -159,7 +151,7 @@
 			if (!btn) return;
 			e.preventDefault();
 			const productId = btn.getAttribute("data-product-id");
-			if (productId) void wishlistToggle(parseInt(productId));
+			if (productId) void wishlistToggle(parseInt(productId, 10));
 		});
 	}
 
@@ -175,9 +167,7 @@
 				});
 				updateCart(data).then((res) => {
 					if (res.success && res.totals) {
-						const totalEl = document.querySelector(
-							".ps-summary-row.total span:last-child",
-						);
+						const totalEl = document.querySelector(".ps-summary-row.total span:last-child");
 						if (totalEl && res.totals.subtotal) {
 							totalEl.textContent =
 								parseFloat(res.totals.subtotal).toFixed(2) +
@@ -250,7 +240,7 @@
 	function refreshCartDrawer() {
 		const body = document.getElementById("psCartDrawerBody");
 		const footer = document.getElementById("psCartDrawerFooter");
-		const totalEl = document.getElementById("psCartDrawerTotal");
+		const _totalEl = document.getElementById("psCartDrawerTotal");
 		if (!body) return;
 
 		body.innerHTML =
@@ -261,27 +251,20 @@
 			// Fallback: fetch cart page HTML and extract items OR use /cart/count + separate fetch
 			// The cart/count endpoint returns count only; we need the cart contents.
 			// Fetch the cart page HTML and parse items from it.
-			return fetch("/s/" + SLUG + "/cart", {
+			return fetch(`/s/${SLUG}/cart`, {
 				headers: { "X-Requested-With": "XMLHttpRequest" },
 			})
 				.then((r) => r.text())
 				.then((html) => {
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, "text/html");
-					const rows = doc.querySelectorAll(
-						".ps-cart-item-row, tr[data-product-id]",
-					);
+					const rows = doc.querySelectorAll(".ps-cart-item-row, tr[data-product-id]");
 					const items = [];
 					rows.forEach((row) => {
-						const pid =
-							row.getAttribute("data-product-id") ||
-							row.getAttribute("data-product-id");
+						const pid = row.getAttribute("data-product-id") || row.getAttribute("data-product-id");
 						const name =
-							row.querySelector(".ps-cart-item-name, td:nth-child(2)") ||
-							row.querySelector("a");
-						const price = row.querySelector(
-							".ps-cart-item-price, td:nth-child(4)",
-						);
+							row.querySelector(".ps-cart-item-name, td:nth-child(2)") || row.querySelector("a");
+						const price = row.querySelector(".ps-cart-item-price, td:nth-child(4)");
 						const qtyInput = row.querySelector('input[name^="qty_"]');
 						items.push({
 							el: row,
@@ -300,7 +283,7 @@
 		});
 	}
 
-	function renderCartDrawerItems(items, doc) {
+	function renderCartDrawerItems(items, _doc) {
 		const body = document.getElementById("psCartDrawerBody");
 		const footer = document.getElementById("psCartDrawerFooter");
 		const totalEl = document.getElementById("psCartDrawerTotal");
@@ -364,17 +347,16 @@
 				const pid = this.getAttribute("data-cart-remove");
 				const itemEl = this.closest(".ps-cart-item");
 				if (itemEl) itemEl.classList.add("removing");
-				removeFromCart(parseInt(pid)).then(() => {
+				removeFromCart(parseInt(pid, 10)).then(() => {
 					refreshCartDrawer();
 				});
 			});
 		});
 		body.querySelectorAll("[data-cart-inc]").forEach((btn) => {
 			btn.addEventListener("click", function () {
-				const pid = parseInt(this.getAttribute("data-cart-inc"));
+				const pid = parseInt(this.getAttribute("data-cart-inc"), 10);
 				const updates = {};
-				updates["qty_" + pid] =
-					(parseFloat(this.previousElementSibling.textContent) || 1) + 1;
+				updates[`qty_${pid}`] = (parseFloat(this.previousElementSibling.textContent) || 1) + 1;
 				updateCart(updates).then(() => {
 					refreshCartDrawer();
 				});
@@ -382,11 +364,11 @@
 		});
 		body.querySelectorAll("[data-cart-dec]").forEach((btn) => {
 			btn.addEventListener("click", function () {
-				const pid = parseInt(this.getAttribute("data-cart-dec"));
+				const pid = parseInt(this.getAttribute("data-cart-dec"), 10);
 				const qtyEl = this.nextElementSibling;
 				const newQty = (parseFloat(qtyEl.textContent) || 1) - 1;
 				const updates = {};
-				updates["qty_" + pid] = newQty;
+				updates[`qty_${pid}`] = newQty;
 				updateCart(updates).then(() => {
 					refreshCartDrawer();
 				});
@@ -417,7 +399,7 @@
 		const quickAdd = e.target.closest("[data-quick-add]");
 		if (quickAdd) {
 			e.preventDefault();
-			const pid = parseInt(quickAdd.getAttribute("data-product-id"));
+			const pid = parseInt(quickAdd.getAttribute("data-product-id"), 10);
 			if (pid) void addToCart(pid, 1);
 		}
 	});

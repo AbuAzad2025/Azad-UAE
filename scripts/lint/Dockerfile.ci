@@ -1,0 +1,32 @@
+FROM python:3.11-slim-bookworm AS base
+LABEL org.opencontainers.image.source="https://github.com/AbuAzad2025/Azad-UAE"
+LABEL org.opencontainers.image.description="Azad-UAE production image for CI audit scanning"
+LABEL org.opencontainers.image.licenses="Proprietary"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r azad && useradd -r -g azad -d /app azad
+
+WORKDIR /app
+COPY --chown=azad:azad requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --chown=azad:azad . .
+RUN mkdir -p /app/data /app/logs && chown -R azad:azad /app/data /app/logs
+
+USER azad
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl --fail http://localhost:5000/health || exit 1
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "wsgi:app"]

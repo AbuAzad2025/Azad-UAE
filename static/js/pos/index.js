@@ -1,8 +1,5 @@
 (() => {
-	const csrf =
-		document
-			.querySelector('meta[name="csrf-token"]')
-			?.getAttribute("content") || "";
+	const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
 	const state = {
 		customer: null,
 		cart: [],
@@ -17,9 +14,7 @@
 		return Number.isFinite(n) ? n : 0;
 	};
 	const baseCurrency =
-		document
-			.querySelector('meta[name="pos-base-currency"]')
-			?.getAttribute("content") ||
+		document.querySelector('meta[name="pos-base-currency"]')?.getAttribute("content") ||
 		window._FX_FALLBACK_BASE ||
 		"";
 	const selectedCurrency = () => qs("#currency").value || baseCurrency;
@@ -68,7 +63,7 @@
 	};
 	const showAlert = (msg, level = "danger") => {
 		const el = qs("#posAlert");
-		el.className = "alert alert-" + level;
+		el.className = `alert alert-${level}`;
 		el.textContent = msg;
 		el.classList.remove("d-none");
 		setTimeout(() => {
@@ -76,12 +71,12 @@
 		}, 5000);
 	};
 	const showModalAlert = (modalId, msg, level = "danger") => {
-		const el = qs("#" + modalId + "Alert");
+		const el = qs(`#${modalId}Alert`);
 		if (!el) {
 			showAlert(msg, level);
 			return;
 		}
-		el.className = "alert alert-" + level + " mb-3";
+		el.className = `alert alert-${level} mb-3`;
 		el.textContent = msg;
 		el.classList.remove("d-none");
 		setTimeout(() => {
@@ -89,13 +84,13 @@
 		}, 6000);
 	};
 	const hideModalAlert = (modalId) => {
-		const el = qs("#" + modalId + "Alert");
+		const el = qs(`#${modalId}Alert`);
 		if (el) el.classList.add("d-none");
 	};
 	const customerHint = () => {
 		const el = qs("#customerSelectedHint");
 		if (state.customer) {
-			el.textContent = "العميل المختار: " + state.customer.text;
+			el.textContent = `العميل المختار: ${state.customer.text}`;
 			el.className = "text-success mt-2";
 		} else {
 			el.textContent = "لم يتم اختيار عميل بعد";
@@ -103,18 +98,15 @@
 		}
 	};
 	const pricesIncludeVatMeta =
-		document
-			.querySelector('meta[name="pos-prices-include-vat"]')
-			?.getAttribute("content") === "true";
+		document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute("content") ===
+		"true";
 	const CURRENCY_SYMBOLS = {
 		USD: "$",
 		ILS: "₪",
 		JOD: "د.أ",
 		EUR: "€",
 		AED:
-			document
-				.querySelector('meta[name="pos-currency-symbol"]')
-				?.getAttribute("content") || "د.إ",
+			document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute("content") || "د.إ",
 		SAR: "ر.س",
 		EGP: "ج.م",
 		GBP: "£",
@@ -158,10 +150,7 @@
 		});
 		// Quick local estimate (for responsive UI)
 		const quickTax = pricesIncludeVatMeta ? 0 : subtotal * (taxRate / 100);
-		const quickTotal = Math.max(
-			0,
-			subtotal + quickTax + shipping - discountAmount,
-		);
+		const quickTotal = Math.max(0, subtotal + quickTax + shipping - discountAmount);
 		qs("#kpiSubtotal").textContent = fmt(subtotal);
 		qs("#kpiDiscount").textContent = fmt(discount + discountAmount);
 		qs("#kpiTotal").textContent = fmt(quickTotal);
@@ -193,9 +182,7 @@
 					qs("#kpiSubtotal").textContent = fmt(data.subtotal);
 					qs("#kpiDiscount").textContent = fmt(data.discount);
 					qs("#kpiTotal").textContent = fmt(data.total);
-					qs("#kpiCurrency").textContent = currencySymbolFor(
-						selectedCurrency(),
-					);
+					qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 					return {
 						subtotal: data.subtotal,
 						tax: data.tax_amount,
@@ -234,8 +221,7 @@
 			const tr = document.createElement("tr");
 			const lineTotal = it.qty * it.price * (1 - it.discountPercent / 100);
 			const meta =
-				(it.sku ? "SKU: " + esc(it.sku) : "") +
-				(it.barcode ? " | " + esc(it.barcode) : "");
+				(it.sku ? `SKU: ${esc(it.sku)}` : "") + (it.barcode ? ` | ${esc(it.barcode)}` : "");
 			tr.innerHTML = `
                 <td>
                     <div class="pos-cart-item">
@@ -267,8 +253,7 @@
 		if (!Number.isFinite(idx) || !state.cart[idx]) return;
 		const act = btn.getAttribute("data-act");
 		if (act === "inc") state.cart[idx].qty = Number(state.cart[idx].qty) + 1;
-		if (act === "dec")
-			state.cart[idx].qty = Math.max(0.001, Number(state.cart[idx].qty) - 1);
+		if (act === "dec") state.cart[idx].qty = Math.max(0.001, Number(state.cart[idx].qty) - 1);
 		void renderCart();
 	});
 	const addToCart = async (p) => {
@@ -291,7 +276,7 @@
 	};
 	const warehouseParam = () => {
 		const w = qs("#warehouseId").value;
-		return w ? "&warehouse_id=" + encodeURIComponent(w) : "";
+		return w ? `&warehouse_id=${encodeURIComponent(w)}` : "";
 	};
 	const fetchJson = async (url) => {
 		const r = await fetch(url, {
@@ -304,7 +289,7 @@
 		}
 		if (!r.ok) {
 			const j = await r.json().catch(() => ({}));
-			return { ok: false, error: j.error || "HTTP " + r.status };
+			return { ok: false, error: j.error || `HTTP ${r.status}` };
 		}
 		const data = await r.json();
 		return { ok: true, data };
@@ -318,9 +303,7 @@
 				qs("#customerResults").classList.add("d-none");
 				return;
 			}
-			const res = await fetchJson(
-				"/pos/api/customers?q=" + encodeURIComponent(q),
-			);
+			const res = await fetchJson(`/pos/api/customers?q=${encodeURIComponent(q)}`);
 			if (!res.ok) return;
 			const box = qs("#customerResults");
 			box.innerHTML = "";
@@ -394,7 +377,7 @@
 			return;
 		}
 		const res = await fetchJson(
-			"/pos/api/product?code=" + encodeURIComponent(q) + warehouseParam(),
+			`/pos/api/product?code=${encodeURIComponent(q)}${warehouseParam()}`,
 		);
 		if (!res.ok) {
 			if ((state.lastProductResults || []).length) {
@@ -405,7 +388,7 @@
 			return;
 		}
 		const p = res.data;
-		if (p && p.id) {
+		if (p?.id) {
 			if (p.is_inactive) {
 				showAlert(p.warning || "المنتج غير نشط.", "warning");
 				return;
@@ -428,9 +411,7 @@
 		if (productBusy) return;
 		productBusy = true;
 		qs("#productLoading").classList.remove("d-none");
-		const res = await fetchJson(
-			"/pos/api/products?q=" + encodeURIComponent(q) + warehouseParam(),
-		);
+		const res = await fetchJson(`/pos/api/products?q=${encodeURIComponent(q)}${warehouseParam()}`);
 		if (res.ok) renderProductResults(res.data);
 		else showAlert(res.error || "فشل البحث");
 		productBusy = false;
@@ -469,11 +450,7 @@
 					? state.cart[idx].price * currentRate()
 					: state.cart[idx].price;
 		}
-		if (k === "disc")
-			state.cart[idx].discountPercent = Math.max(
-				0,
-				Math.min(100, toNum(t.value)),
-			);
+		if (k === "disc") state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
 		void renderCart();
 	});
 	qs("#cartBody").addEventListener("click", (e) => {
@@ -502,7 +479,7 @@
 			showAlert("السلة فارغة.", "warning");
 			return;
 		}
-		const totals = await recalc();
+		const _totals = await recalc();
 		const payload = {
 			customer_id: state.customer.id,
 			quick_customer: !!state.customer.is_walkin,
@@ -544,7 +521,7 @@
 			});
 			const j = await r.json().catch(() => ({}));
 			if (!r.ok || !j.success) {
-				showError(j.error || "HTTP " + r.status);
+				showError(j.error || `HTTP ${r.status}`);
 				return;
 			}
 			qs("#doneSaleNumber").textContent = j.sale_number;
@@ -563,7 +540,7 @@
 			if (typeof syncPay === "function") syncPay();
 			if (selectedTable && j.sale_id) {
 				try {
-					await fetch("/pos/api/tables/" + selectedTable.id + "/assign", {
+					await fetch(`/pos/api/tables/${selectedTable.id}/assign`, {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
@@ -592,11 +569,7 @@
 	qs("#checkoutBtn").addEventListener("click", () => checkout(false));
 	qs("#checkoutPrintBtn").addEventListener("click", () => checkout(true));
 	document.addEventListener("keydown", (e) => {
-		if (
-			e.target.matches("input, textarea, select") &&
-			e.key !== "Escape" &&
-			!e.altKey
-		) {
+		if (e.target.matches("input, textarea, select") && e.key !== "Escape" && !e.altKey) {
 			if (e.key === "F2" || e.key === "F4" || e.key === "F8") {
 			} else return;
 		}
@@ -620,15 +593,13 @@
 	qs("#productSearch").focus();
 	state.barcodeScanner = new BarcodeScanner({
 		onScan: async (code) => {
-			if (!code || !code.trim()) return;
+			if (!code?.trim()) return;
 			const res = await fetchJson(
-				"/pos/api/product?code=" +
-					encodeURIComponent(code.trim()) +
-					warehouseParam(),
+				`/pos/api/product?code=${encodeURIComponent(code.trim())}${warehouseParam()}`,
 			);
 			if (!res.ok) return;
 			const p = res.data;
-			if (p && p.id) {
+			if (p?.id) {
 				if (p.is_inactive) {
 					showAlert(p.warning || "المنتج غير نشط.", "warning");
 					return;
@@ -636,7 +607,7 @@
 				await addToCart(p);
 				qs("#productSearch").value = "";
 				qs("#productResults").classList.add("d-none");
-				showAlert("تمت إضافة " + p.name, "success");
+				showAlert(`تمت إضافة ${p.name}`, "success");
 			}
 		},
 	});
@@ -645,8 +616,7 @@
 	/* ---------- Calculator (edits #paidAmount) ---------- */
 	const paidEl = qs("#paidAmount");
 	const calcGrid = qs("#posCalc");
-	const curPaid = () =>
-		paidEl.value === "" || paidEl.value == null ? "0" : String(paidEl.value);
+	const curPaid = () => (paidEl.value === "" || paidEl.value == null ? "0" : String(paidEl.value));
 	if (calcGrid && paidEl) {
 		calcGrid.addEventListener("click", (e) => {
 			const b = e.target.closest("button[data-act]");
@@ -663,9 +633,7 @@
 			} else if (act === "clear") {
 				cur = "0";
 			} else if (act === "add") {
-				cur = (toNum(cur) + toNum(b.getAttribute("data-val")))
-					.toFixed(2)
-					.replace(/\.00$/, "");
+				cur = (toNum(cur) + toNum(b.getAttribute("data-val"))).toFixed(2).replace(/\.00$/, "");
 			}
 			paidEl.value = cur;
 			if (typeof recalc === "function") recalc();
@@ -680,9 +648,9 @@
 	const refField = qs("#refField");
 	const syncPay = () => {
 		const v = paySel ? paySel.value : "";
-		qsa("#posPayMethod .pm").forEach((pm) =>
-			pm.classList.toggle("active", pm.getAttribute("data-method") === v),
-		);
+		qsa("#posPayMethod .pm").forEach((pm) => {
+			pm.classList.toggle("active", pm.getAttribute("data-method") === v);
+		});
 		if (refField) refField.classList.toggle("show", !!v);
 	};
 	qsa("#posPayMethod .pm").forEach((pm) => {
@@ -710,9 +678,7 @@
 		box.innerHTML = html;
 		box.querySelectorAll(".pos-cat").forEach((el) => {
 			el.addEventListener("click", () => {
-				box
-					.querySelectorAll(".pos-cat")
-					.forEach((x) => x.classList.remove("active"));
+				box.querySelectorAll(".pos-cat").forEach((x) => void x.classList.remove("active"));
 				el.classList.add("active");
 				void loadProducts(el.getAttribute("data-cat"));
 			});
@@ -726,17 +692,17 @@
 		try {
 			const url =
 				"/pos/api/products?per_page=60" +
-				(categoryId ? "&category_id=" + encodeURIComponent(categoryId) : "") +
+				(categoryId ? `&category_id=${encodeURIComponent(categoryId)}` : "") +
 				warehouseParam();
 			const res = await fetchJson(url);
-			if (!res.ok || !res.data || !res.data.length) {
+			if (!res.ok || !res.data?.length) {
 				grid.innerHTML = '<div class="pos-cart-empty">لا توجد منتجات</div>';
 				return;
 			}
 			grid.innerHTML = "";
 			res.data.forEach((p) => {
 				const card = document.createElement("div");
-				card.className = "pos-card" + (p.is_out_of_stock ? " out" : "");
+				card.className = `pos-card${p.is_out_of_stock ? " out" : ""}`;
 				const badge = p.is_inactive
 					? '<span class="badge danger">غير نشط</span>'
 					: p.is_out_of_stock
@@ -762,7 +728,7 @@
 				});
 				grid.appendChild(card);
 			});
-		} catch (err) {
+		} catch (_err) {
 			grid.innerHTML = '<div class="pos-cart-empty">تعذر تحميل المنتجات</div>';
 		}
 	};
@@ -785,41 +751,34 @@
 	const tablesBtn = qs("#posTablesBtn");
 	const holdBtn = qs("#posHoldBtn");
 	let selectedTable = null;
-	if (POS_CONFIG.enable_tables && tablesBtn)
-		tablesBtn.classList.remove("d-none");
+	if (POS_CONFIG.enable_tables && tablesBtn) tablesBtn.classList.remove("d-none");
 	if (POS_CONFIG.enable_hold && holdBtn) holdBtn.classList.remove("d-none");
 
 	const loadFloors = async () => {
 		const box = qs("#posFloors");
-		const grid = qs("#posTablesGrid");
+		const _grid = qs("#posTablesGrid");
 		const res = await fetchJson("/pos/api/floors");
 		if (!res.ok) return;
 		const floors = res.data;
-		if (!floors || !floors.length) {
+		if (!floors?.length) {
 			box.innerHTML = '<div class="pos-cart-empty">لا توجد أرضيات</div>';
 		} else {
 			box.innerHTML = floors
-				.map(
-					(f) =>
-						`<div class="pos-cat" data-floor="${f.id}">${esc(f.name_ar || f.name)}</div>`,
-				)
+				.map((f) => `<div class="pos-cat" data-floor="${f.id}">${esc(f.name_ar || f.name)}</div>`)
 				.join("");
-			box.querySelectorAll(".pos-cat").forEach((el) =>
+			box.querySelectorAll(".pos-cat").forEach((el) => {
 				el.addEventListener("click", () => {
-					box
-						.querySelectorAll(".pos-cat")
-						.forEach((x) => x.classList.remove("active"));
+					box.querySelectorAll(".pos-cat").forEach((x) => void x.classList.remove("active"));
 					el.classList.add("active");
-					loadTables(el.getAttribute("data-floor"));
-				}),
-			);
+					void loadTables(el.getAttribute("data-floor"));
+				});
+			});
 		}
 	};
 	const loadTables = async (floorId) => {
 		const grid = qs("#posTablesGrid");
-		grid.innerHTML =
-			'<div class="pos-cart-empty"><i class="fas fa-spinner fa-spin"></i></div>';
-		const res = await fetchJson("/pos/api/floors/" + floorId + "/tables");
+		grid.innerHTML = '<div class="pos-cart-empty"><i class="fas fa-spinner fa-spin"></i></div>';
+		const res = await fetchJson(`/pos/api/floors/${floorId}/tables`);
 		if (!res.ok) {
 			grid.innerHTML = '<div class="pos-cart-empty">تعذر التحميل</div>';
 			return;
@@ -833,13 +792,13 @@
 		tables.forEach((t) => {
 			const occupied = t.status && t.status !== "free";
 			const card = document.createElement("div");
-			card.className = "pos-card" + (occupied ? " out" : "");
+			card.className = `pos-card${occupied ? " out" : ""}`;
 			card.innerHTML = `<div class="icon">🪑</div><div class="name">${esc(t.label)}</div><div class="meta"><span class="price">${esc(t.status || "free")}</span></div>`;
 			card.addEventListener("click", () => {
 				selectedTable = { id: t.id, label: t.label };
 				const sel = qs("#posTableSelected");
-				if (sel) sel.textContent = "الطاولة المحددة: " + t.label;
-				if (tablesBtn) tablesBtn.title = "الطاولة: " + t.label;
+				if (sel) sel.textContent = `الطاولة المحددة: ${t.label}`;
+				if (tablesBtn) tablesBtn.title = `الطاولة: ${t.label}`;
 				if (window.jQuery) $("#posTablesModal").modal("hide");
 			});
 			grid.appendChild(card);
@@ -895,7 +854,7 @@
 			state.cart = [];
 			await renderCart();
 			if (qs("#orderNote")) qs("#orderNote").value = "";
-			showAlert("تم تعليق الفاتورة (" + heldCount() + " معلّقة)", "success");
+			showAlert(`تم تعليق الفاتورة (${heldCount()} معلّقة)`, "success");
 		});
 	}
 
@@ -914,8 +873,7 @@
 				qs("#sessionNumber").textContent = s.number;
 				qs("#sessionBalance").textContent = fmt(s.opening_balance);
 				qs("#sessionTotal").textContent = fmt(s.total_sales);
-				qs("#sessionTime").textContent =
-					"مفتوحة منذ " + s.duration_minutes + " دقيقة";
+				qs("#sessionTime").textContent = `مفتوحة منذ ${s.duration_minutes} دقيقة`;
 				qs("#closeOpening").textContent = fmt(s.opening_balance);
 			} else {
 				bar.classList.add("d-none");
@@ -952,7 +910,7 @@
 			}
 			$("#openSessionModal").modal("hide");
 			await loadSession();
-			showAlert("تم فتح الجلسة: " + j.session.number, "success");
+			showAlert(`تم فتح الجلسة: ${j.session.number}`, "success");
 		} catch (err) {
 			showModalAlert("openSession", err.message, "danger");
 		} finally {
@@ -977,7 +935,7 @@
 		} catch (err) {
 			showModalAlert(
 				"closeSession",
-				"تعذر تحميل بيانات الجلسة: " + (err.message || "خطأ غير معروف"),
+				`تعذر تحميل بيانات الجلسة: ${err.message || "خطأ غير معروف"}`,
 				"warning",
 			);
 		}
@@ -1014,10 +972,7 @@
 			await loadSession();
 			const diff = j.session.difference;
 			if (Math.abs(diff) > 0.01) {
-				showAlert(
-					"تم إغلاق الجلسة. فرق الرصيد: " + fmt(diff),
-					diff < 0 ? "danger" : "warning",
-				);
+				showAlert(`تم إغلاق الجلسة. فرق الرصيد: ${fmt(diff)}`, diff < 0 ? "danger" : "warning");
 			} else {
 				showAlert("تم إغلاق الجلسة بنجاح. الرصيد مطابق.", "success");
 			}

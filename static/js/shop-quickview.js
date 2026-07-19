@@ -10,7 +10,7 @@
 			'<div class="ps-modal-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 		modal.style.display = "flex";
 		document.body.style.overflow = "hidden";
-		fetch("/s/" + slug + "/quick-view/" + productId, {
+		fetch(`/s/${slug}/quick-view/${productId}`, {
 			headers: { "X-Requested-With": "XMLHttpRequest" },
 		})
 			.then((r) => r.text())
@@ -20,9 +20,7 @@
 				const plusBtns = body.querySelectorAll("[data-qty-plus]");
 				minusBtns.forEach((btn) => {
 					btn.addEventListener("click", () => {
-						const input = btn
-							.closest(".ps-qty-wrap")
-							?.querySelector('input[type="number"]');
+						const input = btn.closest(".ps-qty-wrap")?.querySelector('input[type="number"]');
 						if (!input) return;
 						const val = parseFloat(input.value || "1");
 						const min = parseFloat(input.min || "1");
@@ -31,9 +29,7 @@
 				});
 				plusBtns.forEach((btn) => {
 					btn.addEventListener("click", () => {
-						const input = btn
-							.closest(".ps-qty-wrap")
-							?.querySelector('input[type="number"]');
+						const input = btn.closest(".ps-qty-wrap")?.querySelector('input[type="number"]');
 						if (!input) return;
 						const val = parseFloat(input.value || "1");
 						const max = parseFloat(input.max || "9999");
@@ -46,8 +42,8 @@
 						e.preventDefault();
 						const pid = f.querySelector('[name="product_id"]')?.value;
 						const qty = f.querySelector('[name="quantity"]')?.value || 1;
-						if (window.ShopCart && window.ShopCart.addToCart) {
-							void window.ShopCart.addToCart(parseInt(pid), parseFloat(qty));
+						if (window.ShopCart?.addToCart) {
+							void window.ShopCart.addToCart(parseInt(pid, 10), parseFloat(qty));
 						}
 					});
 				});
@@ -67,7 +63,7 @@
 		if (!btn) return;
 		e.preventDefault();
 		const pid = btn.getAttribute("data-product-id");
-		if (pid) openModal(parseInt(pid));
+		if (pid) openModal(parseInt(pid, 10));
 	});
 	window.ShopQuickView = { open: openModal, close: closeModal };
 })();

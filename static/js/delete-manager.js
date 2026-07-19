@@ -88,18 +88,13 @@
 
 	function csrfToken() {
 		return (
-			$('input[name="csrf_token"]').val() ||
-			$('meta[name="csrf-token"]').attr("content") ||
-			""
+			$('input[name="csrf_token"]').val() || $('meta[name="csrf-token"]').attr("content") || ""
 		);
 	}
 
 	function isSupportedAction(itemType, action) {
 		const normalized = normalizeType(itemType);
-		return Boolean(
-			ENDPOINTS[normalized] &&
-				typeof ENDPOINTS[normalized][action] === "function",
-		);
+		return Boolean(ENDPOINTS[normalized] && typeof ENDPOINTS[normalized][action] === "function");
 	}
 
 	function resolveActionUrl(itemType, itemId, action) {
@@ -239,9 +234,7 @@
 			preConfirm: async () => {
 				const normalizedType = normalizeType(itemType);
 				if (!isSupportedAction(normalizedType, "delete")) {
-					Swal.showValidationMessage(
-						"هذا النوع لا يدعم الحذف المتعدد من هذه الشاشة.",
-					);
+					Swal.showValidationMessage("هذا النوع لا يدعم الحذف المتعدد من هذه الشاشة.");
 					return false;
 				}
 
@@ -285,10 +278,7 @@
 	// =====================================
 	// حذف سطر (في الجداول)
 	// =====================================
-	window.deleteTableRow = (
-		rowElement,
-		confirmMessage = "هل أنت متأكد من الحذف؟",
-	) => {
+	window.deleteTableRow = (rowElement, confirmMessage = "هل أنت متأكد من الحذف؟") => {
 		Swal.fire({
 			title: "تأكيد الحذف",
 			text: confirmMessage,
@@ -383,8 +373,7 @@
 		e.preventDefault();
 		const $btn = $(this);
 		const rowElement = $btn.closest("tr, .product-line, [data-row]");
-		const confirmMessage =
-			$btn.data("confirm-message") || "هل أنت متأكد من حذف هذا السطر؟";
+		const confirmMessage = $btn.data("confirm-message") || "هل أنت متأكد من حذف هذا السطر؟";
 
 		deleteTableRow(rowElement, confirmMessage);
 	});

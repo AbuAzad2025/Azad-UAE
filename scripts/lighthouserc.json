@@ -1,0 +1,32 @@
+{
+	"ci": {
+		"collect": {
+			"startServerCommand": "gunicorn --bind 0.0.0.0:5000 wsgi:app 2>/dev/null || python -m flask run --port=5000 --host=0.0.0.0 &",
+			"startServerReadyPattern": "Running on",
+			"url": ["http://localhost:5000/login", "http://localhost:5000/"],
+			"numberOfRuns": 2,
+			"settings": {
+				"preset": "desktop",
+				"locale": "ar-AE",
+				"onlyCategories": [
+					"performance",
+					"accessibility",
+					"best-practices",
+					"seo"
+				],
+				"chromeFlags": "--headless --no-sandbox --disable-gpu"
+			}
+		},
+		"assert": {
+			"assertions": {
+				"categories:performance": ["error", { "minScore": 0.5 }],
+				"categories:accessibility": ["error", { "minScore": 0.8 }],
+				"categories:seo": ["error", { "minScore": 0.8 }],
+				"categories:best-practices": ["warn", { "minScore": 0.8 }]
+			}
+		},
+		"upload": {
+			"target": "temporary-public-storage"
+		}
+	}
+}

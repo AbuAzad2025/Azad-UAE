@@ -459,7 +459,7 @@ function printPDF() {
 
 function printExcel() {
   // {{ t('Create') }} {{ t('ملف') }} Excel
-  const data = [];trial_balance_json | tojson .forEach(function (item) {
+  const data = [];trial_balance_json | tojson .forEach((item) => {
     data.push([
       item.code,
       item.full_name,

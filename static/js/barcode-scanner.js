@@ -64,7 +64,7 @@ class CameraBarcodeScanner {
 			this.video.play();
 			this.isScanning = true;
 			this.scan();
-		} catch (error) {
+		} catch (_error) {
 			alert("لا يمكن الوصول إلى الكاميرا");
 		}
 	}
@@ -72,7 +72,7 @@ class CameraBarcodeScanner {
 	stop() {
 		this.isScanning = false;
 		if (this.stream) {
-			this.stream.getTracks().forEach((track) => track.stop());
+			this.stream.getTracks().forEach((track) => void track.stop());
 		}
 		this.video.srcObject = null;
 	}
@@ -86,12 +86,7 @@ class CameraBarcodeScanner {
 			const ctx = this.canvas.getContext("2d");
 			ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-			const imageData = ctx.getImageData(
-				0,
-				0,
-				this.canvas.width,
-				this.canvas.height,
-			);
+			const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 			const code = this.detectBarcode(imageData);
 
 			if (code) {

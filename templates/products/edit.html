@@ -373,7 +373,7 @@ $(() => {
   const addPartnerBtn = $('#addPartnerBtn');
   
   // {{ t('List') }} {{ t('Partners') }} {{ t('المتاحين') }}
-  let partnerOptions = '<option value="">{{ t('اختر') }} {{ t('Partner_2') }}...</option>';partners_json | tojson .forEach(function (partner) {
+  let partnerOptions = '<option value="">{{ t('اختر') }} {{ t('Partner_2') }}...</option>';partners_json | tojson .forEach((partner) => {
     partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
   });
 
@@ -416,7 +416,7 @@ $(() => {
   $(document).on('click', '.remove-partner-btn', function() {
     const rowId = $(this).data('row');
     $('#' + rowId).remove();
-  });partner_shares_json | tojson .forEach(function (share) {
+  });partner_shares_json | tojson .forEach((share) => {
     addPartnerRow(String(share.partner_customer_id), String(share.percentage));
   });
   

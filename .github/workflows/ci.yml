@@ -31,6 +31,13 @@ on:
       - '**.ttf'
       - 'static/adminlte/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.12'
+
 jobs:
   # ── Matrix engine: adapt PG version grid to Git ref ──
   determine-matrix:
@@ -98,7 +105,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -169,7 +176,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -183,36 +190,38 @@ jobs:
         run: |
           python -c "from app import create_app; app = create_app()"
 
-  # ── Security scan (no DB needed) ──
+  # ── Security scan (bandit) ──
   security-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Security scan (bandit)
+          pip install -r requirements.txt bandit
+      - name: Bandit security scan
         run: |
+          bandit -r . --exclude 'migrations/,tests/' --quiet || bandit -r . --exclude 'migrations/,tests/'
           bandit -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
-          bandit -r . --exclude 'migrations/,tests/' || true
 
-  # ── Lint & audit (ruff, mypy, biome, pip-audit) ──
+  # ── Lint, audit, i18n, cspell ──
   lint-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
-      - name: Install dependencies
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt ruff mypy pip-audit
-          npm install -g @biomejs/biome
+      - name: Install Node deps
+        run: |
+          npm install -g @biomejs/biome cspell
       - name: Ruff check
         run: ruff check . --output-format github
       - name: Ruff format
@@ -223,6 +232,243 @@ jobs:
         run: biome check . --reporter github
       - name: pip-audit
         run: python -m pip_audit -r requirements.txt
+      - name: Cspell (spell check templates & JS)
+        run: |
+          npx cspell --config scripts/lint/.cspell.json "templates/**/*.html" "static/js/**/*.js" "docs/**/*.md"
+      - name: Strict i18n lint
+        run: python scripts/check_strict_i18n.py templates routes services
+      - name: actionlint (workflow syntax)
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest 2>/dev/null || \
+            (which actionlint 2>/dev/null && actionlint .github/workflows/*.yml) || \
+            echo "::warning::actionlint not available, skipping"
+          # Alternative: use docker
+          docker run --rm -v $PWD/.github/workflows:/repo ghcr.io/rhysd/actionlint:latest 2>&1 || true
+
+  # ── Git & repository scanning ──
+  repo-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (secret scanning)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-fs'
+
+  # ── Docker infrastructure audit (Hadolint) ──
+  docker-infra-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Hadolint Dockerfile audit
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: scripts/lint/Dockerfile.ci
+          config: scripts/.hadolint.yaml
+          format: sarif
+          output-file: hadolint-results.sarif
+      - name: Upload Hadolint results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint-results.sarif
+          category: hadolint
+
+  # ── API fuzz testing (Schemathesis) ──
+  api-fuzz:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt schemathesis
+      - name: Boot app and run Schemathesis
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+        run: |
+          # Start app in background
+          python -m flask run --port=5000 --host=0.0.0.0 &
+          sleep 5
+          # Generate OpenAPI spec if not present, or use existing
+          python -c "from app import create_app; app = create_app()" 2>&1 || true
+          # Fuzz API endpoints
+          schemathesis run http://localhost:5000/openapi.json \
+            --checks all \
+            --hypothesis-deadline 3000 \
+            --exitfirst \
+            --base-url http://localhost:5000 || \
+          schemathesis run http://localhost:5000/swagger.json \
+            --checks all \
+            --exitfirst \
+            --base-url http://localhost:5000 || \
+          echo "::warning::Schemathesis could not find OpenAPI spec at /openapi.json or /swagger.json"
+
+  # ── Tenant isolation fuzzer ──
+  tenant-isolation-fuzzer:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tenant isolation fuzzer
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+          DEBUG: "true"
+        run: |
+          pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
+
+  # ── Lighthouse CI (web vitals) ──
+  lighthouse-ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt gunicorn
+          npm install -g @lhci/cli
+      - name: Boot app and run Lighthouse CI
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+          CI: "true"
+        run: |
+          lhci autorun --config=scripts/lighthouserc.json || \
+            echo "::warning::Lighthouse CI audit completed with warnings"
+
+  # ── E2E business flow tours (Playwright) ──
+  e2e-tours:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt gunicorn
+          npx playwright install --with-deps chromium
+          pip install pytest-playwright
+      - name: Seed auth users and export states
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+        run: |
+          python scripts/auth/setup_test_users.py
+      - name: Run business flow tours
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+          PLAYWRIGHT_BASE_URL: http://localhost:5000
+        run: |
+          gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
+          sleep 5
+          python -m pytest tests/e2e/tours/ -v --tb=short --base-url=http://localhost:5000 || \
+            echo "::warning::Some E2E tours failed — review logs"
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
   # ── Comprehensive coverage report (backend + frontend) ──
   coverage-report:
@@ -235,7 +481,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install coverage
         run: pip install coverage

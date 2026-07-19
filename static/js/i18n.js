@@ -103,7 +103,6 @@ const translations = {
 		en: "Cannot Change Account Code",
 	},
 	"Back to Reports": { ar: "العودة للتقارير", en: "Back to Reports" },
-	"Back to Dashboard": { ar: "العودة للوحة التحكم", en: "Back to Dashboard" },
 	"Filter Date": { ar: "تصفية التاريخ", en: "Filter Date" },
 	"Update Report": { ar: "تحديث التقرير", en: "Update Report" },
 	"Summary Balance": { ar: "ملخص التوازن", en: "Summary Balance" },
@@ -126,7 +125,6 @@ const translations = {
 		ar: "عذراً، ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة.",
 		en: "Sorry, you do not have sufficient permissions to access this page.",
 	},
-	"Entry Number": { ar: "رقم القيد", en: "Entry Number" },
 	"Entry Details": { ar: "تفاصيل القيد", en: "Entry Details" },
 	"Debit Total": { ar: "إجمالي المدين", en: "Debit Total" },
 	"Credit Total": { ar: "إجمالي الدائن", en: "Credit Total" },
@@ -271,7 +269,6 @@ const translations = {
 	"Reorder Level": { ar: "حد إعادة الطلب", en: "Reorder Level" },
 	"Cost Price": { ar: "سعر التكلفة", en: "Cost Price" },
 	"Selling Price": { ar: "سعر البيع", en: "Selling Price" },
-	"Profit Margin": { ar: "هامش الربح", en: "Profit Margin" },
 	"Transaction Date": { ar: "تاريخ المعاملة", en: "Transaction Date" },
 	"Transaction Type": { ar: "نوع المعاملة", en: "Transaction Type" },
 	"Transaction Details": { ar: "تفاصيل المعاملة", en: "Transaction Details" },
@@ -804,11 +801,10 @@ const translations = {
 		en: "All Accounting Journals",
 	},
 	"Entry Number": { ar: "رقم القيد", en: "Entry Number" },
-	"Are you sure you want to reverse this entry? This action cannot be undone.":
-		{
-			ar: "هل أنت متأكد من عكس هذا القيد؟ لا يمكن التراجع عن هذا الإجراء.",
-			en: "Are you sure you want to reverse this entry? This action cannot be undone.",
-		},
+	"Are you sure you want to reverse this entry? This action cannot be undone.": {
+		ar: "هل أنت متأكد من عكس هذا القيد؟ لا يمكن التراجع عن هذا الإجراء.",
+		en: "Are you sure you want to reverse this entry? This action cannot be undone.",
+	},
 	"Failed to reverse entry:": {
 		ar: "فشل في عكس القيد:",
 		en: "Failed to reverse entry:",
@@ -917,11 +913,10 @@ const translations = {
 	"Payment Address": { ar: "عنوان الدفع", en: "Payment Address" },
 	"Copy Address": { ar: "نسخ العنوان", en: "Copy Address" },
 	"Open Payment Page": { ar: "فتح صفحة الدفع", en: "Open Payment Page" },
-	"Send the amount to the address above and the status will be confirmed automatically":
-		{
-			ar: "أرسل المبلغ إلى العنوان أعلاه وسيتم تأكيد الحالة تلقائياً",
-			en: "Send the amount to the address above and the status will be confirmed automatically",
-		},
+	"Send the amount to the address above and the status will be confirmed automatically": {
+		ar: "أرسل المبلغ إلى العنوان أعلاه وسيتم تأكيد الحالة تلقائياً",
+		en: "Send the amount to the address above and the status will be confirmed automatically",
+	},
 	"Waiting for your transfer to payment address": {
 		ar: "بانتظار تحويلك إلى عنوان الدفع",
 		en: "Waiting for your transfer to payment address",
@@ -957,11 +952,10 @@ const translations = {
 	"Purchase order": { ar: "طلب شراء", en: "Purchase order" },
 	"Donation order": { ar: "طلب تبرع", en: "Donation order" },
 	now: { ar: "الآن", en: "now" },
-	"You can follow up directly with Azad via WhatsApp or email for the same amount":
-		{
-			ar: "يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ",
-			en: "You can follow up directly with Azad via WhatsApp or email for the same amount",
-		},
+	"You can follow up directly with Azad via WhatsApp or email for the same amount": {
+		ar: "يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ",
+		en: "You can follow up directly with Azad via WhatsApp or email for the same amount",
+	},
 	"Copied!": { ar: "تم النسخ!", en: "Copied!" },
 	"Address copied to clipboard": {
 		ar: "تم نسخ العنوان إلى الحافظة",
@@ -1014,11 +1008,10 @@ const translations = {
 		ar: "تعذر التواصل مع الخادم أثناء تجهيز الطلب",
 		en: "Could not connect to server while preparing the order",
 	},
-	"Use WhatsApp or email to complete the purchase or donation with the same details":
-		{
-			ar: "استخدم واتساب أو بريد لإتمام الشراء أو التبرع بنفس التفاصيل",
-			en: "Use WhatsApp or email to complete the purchase or donation with the same details",
-		},
+	"Use WhatsApp or email to complete the purchase or donation with the same details": {
+		ar: "استخدم واتساب أو بريد لإتمام الشراء أو التبرع بنفس التفاصيل",
+		en: "Use WhatsApp or email to complete the purchase or donation with the same details",
+	},
 	"Please select a package": {
 		ar: "الرجاء اختيار باقة",
 		en: "Please select a package",
@@ -1097,7 +1090,7 @@ function t(key, params = {}) {
 		return key;
 	}
 
-	let text = translation[lang] || translation["ar"] || key;
+	let text = translation[lang] || translation.ar || key;
 
 	// Replace parameters {param}
 	Object.keys(params).forEach((param) => {
@@ -1135,8 +1128,8 @@ function getDataTablesLanguage() {
 		sInfoEmpty: `${t("Showing")} 0 ${t("to")} 0 ${t("of")} 0 ${t("entries")}`,
 		sInfoFiltered: `(${t("entries (filtered from")} _MAX_ ${t("total entries)")})`,
 		sLengthMenu: `${t("Show")} _MENU_ ${t("entries")}`,
-		sLoadingRecords: t("Loading") + "...",
-		sProcessing: t("Processing") + "...",
+		sLoadingRecords: `${t("Loading")}...`,
+		sProcessing: `${t("Processing")}...`,
 		sSearch: t("Search:"),
 		sZeroRecords: t("No records found"),
 		oPaginate: {

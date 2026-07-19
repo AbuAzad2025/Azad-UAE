@@ -89,8 +89,7 @@ function initializeDataTables() {
 					text: '<i class="fas fa-print"></i> طباعة',
 					className: "btn btn-info btn-sm",
 					customize: (win) => {
-						if (window.applyDataTablePrintStyles)
-							window.applyDataTablePrintStyles(win);
+						if (window.applyDataTablePrintStyles) window.applyDataTablePrintStyles(win);
 					},
 				},
 			],
@@ -162,7 +161,7 @@ function initializeFormValidation() {
 function initializeNumberFormatting() {
 	$(".number-format").each(function () {
 		const value = parseFloat($(this).text());
-		if (!isNaN(value)) {
+		if (!Number.isNaN(value)) {
 			$(this).text(formatNumber(value));
 		}
 	});
@@ -239,11 +238,7 @@ function showAlert(message, type = "info") {
 	const $container = $("#flash-messages-container");
 	if ($container.length) {
 		const cls =
-			normalized === "success"
-				? "success"
-				: normalized === "error"
-					? "danger"
-					: normalized;
+			normalized === "success" ? "success" : normalized === "error" ? "danger" : normalized;
 		const erpClass =
 			cls === "success"
 				? "erp-flash-success"
@@ -293,7 +288,7 @@ function printElement(elementId) {
  * Copy to Clipboard
  */
 function copyToClipboard(text) {
-	if (navigator.clipboard && navigator.clipboard.writeText) {
+	if (navigator.clipboard?.writeText) {
 		navigator.clipboard
 			.writeText(text)
 			.then(() => {
@@ -337,10 +332,8 @@ async function calculateTotals() {
 			$('[name^="lines"][name$="[quantity]"]').each(function () {
 				const $line = $(this).closest(".product-line");
 				const qty = parseFloat($(this).val()) || 0;
-				const price =
-					parseFloat($line.find('[name$="[unit_price]"]').val()) || 0;
-				const discount =
-					parseFloat($line.find('[name$="[discount_percent]"]').val()) || 0;
+				const price = parseFloat($line.find('[name$="[unit_price]"]').val()) || 0;
+				const discount = parseFloat($line.find('[name$="[discount_percent]"]').val()) || 0;
 
 				if (qty > 0 || price > 0) {
 					lines.push({
@@ -382,7 +375,7 @@ async function calculateTotals() {
 
 		// Fallback to client-side
 		return calculateTotalsClientSide();
-	} catch (error) {
+	} catch (_error) {
 		return calculateTotalsClientSide();
 	}
 }
@@ -394,16 +387,9 @@ function calculateTotalsClientSide() {
 	$('[name^="lines"][name$="[quantity]"]').each(function () {
 		const qty = parseFloat($(this).val()) || 0;
 		const price =
-			parseFloat(
-				$(this).closest(".product-line").find('[name$="[unit_price]"]').val(),
-			) || 0;
+			parseFloat($(this).closest(".product-line").find('[name$="[unit_price]"]').val()) || 0;
 		const discount =
-			parseFloat(
-				$(this)
-					.closest(".product-line")
-					.find('[name$="[discount_percent]"]')
-					.val(),
-			) || 0;
+			parseFloat($(this).closest(".product-line").find('[name$="[discount_percent]"]').val()) || 0;
 		const lineTotal = qty * price * (1 - discount / 100);
 		subtotal += lineTotal;
 	});
@@ -431,10 +417,7 @@ function calculateTotalsClientSide() {
 /**
  * Load Exchange Rate
  */
-function loadExchangeRate(
-	fromCurrency,
-	toCurrency = window._FX_FALLBACK_BASE || "AED",
-) {
+function loadExchangeRate(fromCurrency, toCurrency = window._FX_FALLBACK_BASE || "AED") {
 	if (fromCurrency === toCurrency) {
 		$("#exchange_rate").val("1.00");
 		return;
@@ -609,10 +592,7 @@ window.initAutoSave = () => {
 		$form.find("input, textarea").on("input", () => {
 			clearTimeout(autoSaveTimer);
 			autoSaveTimer = setTimeout(() => {
-				sessionStorage.setItem(
-					"autosave_" + $form.attr("id"),
-					$form.serialize(),
-				);
+				sessionStorage.setItem(`autosave_${$form.attr("id")}`, $form.serialize());
 				if (window.Swal)
 					Swal.fire({
 						toast: true,
@@ -642,7 +622,7 @@ window.initProgressIndicators = () => {
 				return $(this).val() !== "";
 			}).length;
 			const pct = (filled / $required.length) * 100;
-			$("#prog-bar").css("width", pct + "%");
+			$("#prog-bar").css("width", `${pct}%`);
 		}
 		$required.on("input change", update);
 		update();
@@ -705,9 +685,7 @@ if ("IntersectionObserver" in window) {
 		});
 	});
 
-	document
-		.querySelectorAll("img[data-src]")
-		.forEach((img) => imgObserver.observe(img));
+	document.querySelectorAll("img[data-src]").forEach((img) => void imgObserver.observe(img));
 }
 
 // =====================================
@@ -721,7 +699,7 @@ window.submitWithFallback = async (url, data, method = "POST") => {
 			body: JSON.stringify(data),
 		});
 		return await response.json();
-	} catch (error) {
+	} catch (_error) {
 		// Fallback: create form and submit
 		const form = document.createElement("form");
 		form.method = method;
@@ -815,9 +793,7 @@ $(document).on("dblclick", ".editable", function () {
 	const entityType = $this.data("entity");
 	const entityId = $this.data("id");
 	const field = $this.data("field");
-	const inlineEditEndpointTemplate = (
-		window.APP_INLINE_EDIT_ENDPOINT_TEMPLATE || ""
-	).trim();
+	const inlineEditEndpointTemplate = (window.APP_INLINE_EDIT_ENDPOINT_TEMPLATE || "").trim();
 	if (!inlineEditEndpointTemplate) {
 		$this.text(originalValue);
 		return;

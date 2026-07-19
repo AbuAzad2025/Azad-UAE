@@ -342,7 +342,7 @@
 <script>
 $(() => {
   const partnersList = $('#partnersList');
-  let partnerOptions = '<option value="">اختر شريكاً...</option>';partners_json | tojson .forEach(function (partner) {
+  let partnerOptions = '<option value="">اختر شريكاً...</option>';partners_json | tojson .forEach((partner) => {
     partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
   });
 

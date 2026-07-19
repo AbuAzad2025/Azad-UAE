@@ -94,7 +94,7 @@
             <tr>
               <td>{{ trans.date.strftime('%Y-%m-%d') }}</td>
               <td>
-                <a href="{{ url_for('ledger.view_entry', id=trans.entry_number.split('-')[1]) }}" class="badge badge-primary">
+                <a href="{{ url_for('ledger.view_entry', entry_id=trans.entry_number.split('-')[1]) }}" class="badge badge-primary">
                   {{ trans.entry_number }}
                 </a>
               </td>

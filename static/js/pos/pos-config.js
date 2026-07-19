@@ -3,7 +3,7 @@
 	if (m) {
 		try {
 			window.POS_CONFIG = JSON.parse(m.getAttribute("content"));
-		} catch (e) {}
+		} catch (_e) {}
 	}
 	window.POS_CONFIG = window.POS_CONFIG || {
 		enable_tables: false,

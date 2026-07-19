@@ -1,7 +1,5 @@
 (() => {
-	const input = document.querySelector(
-		'input[name="q"][data-search-autocomplete]',
-	);
+	const input = document.querySelector('input[name="q"][data-search-autocomplete]');
 	if (!input) return;
 
 	const form = input.closest("form");
@@ -70,11 +68,7 @@
 			closeDropdown();
 			return;
 		}
-		const url =
-			"/s/" +
-			encodeURIComponent(slug) +
-			"/api/search?q=" +
-			encodeURIComponent(query);
+		const url = `/s/${encodeURIComponent(slug)}/api/search?q=${encodeURIComponent(query)}`;
 		fetch(url)
 			.then((r) => r.json())
 			.then((data) => {

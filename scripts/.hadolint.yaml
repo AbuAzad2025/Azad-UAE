@@ -1,0 +1,25 @@
+---
+# Hadolint configuration for Azad-UAE Dockerfile auditing
+# https://github.com/hadolint/hadolint
+
+failure-threshold: warning
+
+override:
+  # DL3008: Pin versions in apt-get install (we use --no-install-recommends)
+  warning:
+    - DL3008
+    - DL3009
+    - DL3013
+    - DL3045
+  # DL3042: Use COPY instead of ADD for non-remote paths
+  info:
+    - DL3042
+  # DL3059: Multiple consecutive RUN-s — acceptable for multi-stage
+  style:
+    - DL3059
+
+ignored:
+  # DL3007: Using latest tag is acceptable in CI-only scan context
+  - DL3007
+  # DL4006: SHELL is not needed since we use default /bin/sh
+  - DL4006

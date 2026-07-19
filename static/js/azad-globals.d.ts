@@ -114,26 +114,12 @@ interface JQueryStatic {
 }
 
 interface JQueryXHR {
-	done(
-		callback: (data: any, textStatus: string, jqXHR: JQueryXHR) => void,
-	): this;
-	fail(
-		callback: (
-			jqXHR: JQueryXHR,
-			textStatus: string,
-			errorThrown: string,
-		) => void,
-	): this;
-	always(
-		callback: (data: any, textStatus: string, jqXHR: JQueryXHR) => void,
-	): this;
+	done(callback: (data: any, textStatus: string, jqXHR: JQueryXHR) => void): this;
+	fail(callback: (jqXHR: JQueryXHR, textStatus: string, errorThrown: string) => void): this;
+	always(callback: (data: any, textStatus: string, jqXHR: JQueryXHR) => void): this;
 	then(
 		doneCallback: (data: any, textStatus: string, jqXHR: JQueryXHR) => void,
-		failCallback?: (
-			jqXHR: JQueryXHR,
-			textStatus: string,
-			errorThrown: string,
-		) => void,
+		failCallback?: (jqXHR: JQueryXHR, textStatus: string, errorThrown: string) => void,
 	): this;
 	status: number;
 	responseJSON?: any;
@@ -158,11 +144,7 @@ interface DataTableButton {
 interface Window {
 	SmartPrint?: {
 		buildButtons(options: Record<string, any>): DataTableButton[];
-		attachTrigger(
-			table: any,
-			triggerSelector: string,
-			options: Record<string, any>,
-		): void;
+		attachTrigger(table: any, triggerSelector: string, options: Record<string, any>): void;
 	};
 	ActionHelpers?: {
 		archivePaymentItem(type: string, id: string, number: string): void;
@@ -173,34 +155,17 @@ interface Window {
 		minLength?: number;
 	}) => { start(): void };
 	notify?: {
-		show(options: {
-			type: string;
-			title?: string;
-			message: string;
-			duration?: number;
-		}): void;
+		show(options: { type: string; title?: string; message: string; duration?: number }): void;
 	};
 	azad?: Record<string, any>;
 	UI?: Record<string, any>;
-	submitWithFallback?: (
-		url: string,
-		data: any,
-		method?: string,
-	) => Promise<any>;
-	fetchWithRetry?: (
-		url: string,
-		options?: RequestInit,
-		retries?: number,
-	) => Promise<Response>;
+	submitWithFallback?: (url: string, data: any, method?: string) => Promise<any>;
+	fetchWithRetry?: (url: string, options?: RequestInit, retries?: number) => Promise<Response>;
 	saveFormState?: () => void;
 	undoForm?: () => void;
 	redoForm?: () => void;
 	deleteItem?: (itemType: string, itemId: string, itemName?: string) => void;
-	deleteMultiple?: (
-		itemIds: string[],
-		itemType: string,
-		redirectUrl?: string,
-	) => void;
+	deleteMultiple?: (itemIds: string[], itemType: string, redirectUrl?: string) => void;
 	deleteTableRow?: (rowElement: HTMLElement, confirmMessage?: string) => void;
 	restoreItem?: (itemId: string, itemType: string, itemName?: string) => void;
 	AzadPrint?: {
@@ -223,7 +188,7 @@ interface Window {
 	_PURCHASE_CALC_URL?: string;
 	_PRICES_INCLUDE_VAT?: boolean;
 	_EMPTY_CART_TEXT?: string;
-	Sortable?: new (element: HTMLElement, options: Record<string, any>) => void;
+	Sortable?: new (element: HTMLElement, options: Record<string, any>) => undefined;
 	_mutationPending?: boolean;
 	__azadModalStackingBound?: boolean;
 	__bootstrapCompatDelegatesBound?: boolean;

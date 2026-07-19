@@ -1,11 +1,10 @@
 (() => {
 	function initTable() {
-		if (!window.jQuery || !window.jQuery.fn.DataTable) return;
+		if (!window.jQuery?.fn.DataTable) return;
 		const $ = window.jQuery;
 		const $table = $("#receiptsTable");
 		if (!$table.length) return;
-		const languageUrl =
-			$table.data("langUrl") || "/static/datatables/Arabic.json";
+		const languageUrl = $table.data("langUrl") || "/static/datatables/Arabic.json";
 		$table.DataTable({
 			language: { url: languageUrl },
 			order: [[2, "desc"]],

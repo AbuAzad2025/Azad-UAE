@@ -2,8 +2,7 @@
 (() => {
 	const qs = (s, el = document) => el.querySelector(s);
 	const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
-	const on = (el, ev, cb) =>
-		el && el.addEventListener(ev, cb, { passive: false });
+	const on = (el, ev, cb) => el?.addEventListener(ev, cb, { passive: false });
 	const toNum = (v) => {
 		const n = parseFloat((v ?? "").toString().replace(/[^\d.-]/g, ""));
 		return Number.isFinite(n) ? n : 0;
@@ -63,16 +62,15 @@
 			e.preventDefault();
 			const formData = new FormData(form);
 			const params = new URLSearchParams();
-			formData.forEach((v, k) => params.append(k, String(v)));
+			formData.forEach((v, k) => void params.append(k, String(v)));
 			const action = form.getAttribute("action") || window.location.pathname;
-			window.location = action + "?" + params.toString();
+			window.location = `${action}?${params.toString()}`;
 		});
 		const resetBtn = form.querySelector('button[type="reset"]');
 		if (resetBtn)
 			on(resetBtn, "click", (e) => {
 				e.preventDefault();
-				window.location =
-					form.getAttribute("action") || window.location.pathname;
+				window.location = form.getAttribute("action") || window.location.pathname;
 			});
 	})();
 
@@ -84,7 +82,7 @@
 		// تاريخ افتراضي
 		const saleDateEl = form.querySelector('input[name="sale_date"]');
 		if (saleDateEl && !saleDateEl.value) {
-			const pad = (n) => (n < 10 ? "0" + n : n);
+			const pad = (n) => (n < 10 ? `0${n}` : n);
 			const d = new Date();
 			saleDateEl.value =
 				d.getFullYear() +
@@ -102,9 +100,7 @@
 		const select2Ready = wantsSelect2
 			? loadJQueryOnce()
 					.then(() =>
-						loadCssOnce(
-							"https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css",
-						),
+						loadCssOnce("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"),
 					)
 					.then(() =>
 						loadCssOnce(
@@ -119,9 +115,7 @@
 			: Promise.resolve();
 
 		// Sortable
-		loadScriptOnce(
-			"https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js",
-		).then(() => {
+		loadScriptOnce("https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js").then(() => {
 			const cont = qs("#saleLines");
 			if (cont && window.Sortable) {
 				new window.Sortable(cont, {
@@ -152,9 +146,8 @@
 		function renumberRow(row, i) {
 			row.dataset.index = i;
 			qsa("input,select,textarea", row).forEach((el) => {
-				if (el.name)
-					el.name = el.name.replace(/lines-\d+-/, "lines-" + i + "-");
-				if (el.id) el.id = el.id.replace(/lines-\d+-/, "lines-" + i + "-");
+				if (el.name) el.name = el.name.replace(/lines-\d+-/, `lines-${i}-`);
+				if (el.id) el.id = el.id.replace(/lines-\d+-/, `lines-${i}-`);
 			});
 		}
 
@@ -192,16 +185,14 @@
 				return;
 			}
 			row.remove();
-			qsa(".sale-line", wrap).forEach((r, i) => renumberRow(r, i));
+			qsa(".sale-line", wrap).forEach((r, i) => void renumberRow(r, i));
 			recalc();
 		}
 
 		// ----- Select2 helpers -----
 		function isSelect2($el) {
 			try {
-				return !!(
-					$el.data("select2") || $el.hasClass("select2-hidden-accessible")
-				);
+				return !!($el.data("select2") || $el.hasClass("select2-hidden-accessible"));
 			} catch (_) {
 				return false;
 			}
@@ -230,7 +221,7 @@
 					data: (params) => ({ q: params.term || "", limit: 50 }),
 					// يقبل {results: [...]} أو Array مباشرة
 					processResults: (data) => ({
-						results: data && data.results ? data.results : data,
+						results: data?.results ? data.results : data,
 					}),
 				},
 			});
@@ -250,18 +241,14 @@
 				});
 			}
 
-			const nums = qsa(
-				".quantity-input,.price-input,.discount-input,.tax-input",
-				row,
-			);
+			const nums = qsa(".quantity-input,.price-input,.discount-input,.tax-input", row);
 			nums.forEach((el) => {
 				on(el, "input", recalcDebounced);
 				on(el, "change", recalcDebounced);
 			});
 
 			select2Ready.then(() => {
-				if (!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2))
-					return;
+				if (!window.jQuery?.fn?.select2) return;
 				const $ = window.jQuery;
 				const $wh = $(row).find("select.warehouse-select");
 				const $pd = $(row).find("select.product-select");
@@ -329,7 +316,7 @@
 			}
 			const data = await fetchProductInfo(pid, wid);
 			const avail = Number.isFinite(+data.available) ? +data.available : null;
-			badge.textContent = avail === null ? "" : "متاح: " + avail;
+			badge.textContent = avail === null ? "" : `متاح: ${avail}`;
 		}
 
 		function bindAll() {
@@ -374,8 +361,7 @@
 
 		// تهيئة Select2 للعناصر الرأسية
 		select2Ready.then(() => {
-			if (!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2))
-				return;
+			if (!window.jQuery?.fn?.select2) return;
 			const $ = window.jQuery;
 			$("#saleForm select.ajax-select").each(function () {
 				const $el = $(this);

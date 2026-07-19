@@ -1,8 +1,5 @@
 (() => {
-	const csrf =
-		document
-			.querySelector('meta[name="csrf-token"]')
-			?.getAttribute("content") || "";
+	const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
 	const state = {
 		customer: null,
 		cart: [],
@@ -21,24 +18,19 @@
 		return Number.isFinite(n) ? n : 0;
 	};
 	const baseCurrency =
-		document
-			.querySelector('meta[name="pos-base-currency"]')
-			?.getAttribute("content") ||
+		document.querySelector('meta[name="pos-base-currency"]')?.getAttribute("content") ||
 		window._FX_FALLBACK_BASE ||
 		"";
 	const pricesIncludeVatMeta =
-		document
-			.querySelector('meta[name="pos-prices-include-vat"]')
-			?.getAttribute("content") === "true";
+		document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute("content") ===
+		"true";
 	const CURRENCY_SYMBOLS = {
 		USD: "$",
 		ILS: "₪",
 		JOD: "د.أ",
 		EUR: "€",
 		AED:
-			document
-				.querySelector('meta[name="pos-currency-symbol"]')
-				?.getAttribute("content") || "د.إ",
+			document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute("content") || "د.إ",
 		SAR: "ر.س",
 		EGP: "ج.م",
 		GBP: "£",
@@ -64,7 +56,7 @@
 			el.className = "alert d-none";
 			document.querySelector(".pos-cart-panel").prepend(el);
 		}
-		el.className = "alert alert-" + level;
+		el.className = `alert alert-${level}`;
 		el.innerHTML = msg;
 		el.classList.remove("d-none");
 		setTimeout(() => {
@@ -89,10 +81,7 @@
 		}
 		try {
 			const r = await fetch(
-				"/api/currency-rate/" +
-					encodeURIComponent(cur) +
-					"/" +
-					encodeURIComponent(baseCurrency),
+				`/api/currency-rate/${encodeURIComponent(cur)}/${encodeURIComponent(baseCurrency)}`,
 			);
 			const d = await r.json();
 			if (d.success && d.rate && qs("#exchangeRate")) {
@@ -124,10 +113,7 @@
 			lineDiscount += lineDisc;
 		});
 		const quickTax = pricesIncludeVatMeta ? 0 : subtotal * (taxRate / 100);
-		const quickTotal = Math.max(
-			0,
-			subtotal + quickTax + shipping - discountAmount,
-		);
+		const quickTotal = Math.max(0, subtotal + quickTax + shipping - discountAmount);
 		qs("#kpiSubtotal").textContent = fmt(subtotal);
 		qs("#kpiTax").textContent = fmt(quickTax);
 		qs("#kpiDiscount").textContent = fmt(lineDiscount + discountAmount);
@@ -167,9 +153,7 @@
 					qs("#kpiTax").textContent = fmt(data.tax_amount);
 					qs("#kpiDiscount").textContent = fmt(data.discount);
 					qs("#kpiTotal").textContent = fmt(data.total);
-					qs("#kpiCurrency").textContent = currencySymbolFor(
-						selectedCurrency(),
-					);
+					qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 					return {
 						subtotal: data.subtotal,
 						tax: data.tax_amount,
@@ -200,15 +184,13 @@
 		container.innerHTML = "";
 		state.cart.forEach((it, idx) => {
 			const div = document.createElement("div");
-			div.className =
-				"pos-cart-item" + (state.selectedLine === idx ? " selected" : "");
+			div.className = `pos-cart-item${state.selectedLine === idx ? " selected" : ""}`;
 			div.dataset.idx = String(idx);
-			const lineTotal =
-				it.qty * it.price * (1 - (it.discountPercent || 0) / 100);
-			div.innerHTML = `<div class="item-info"><div class="item-name">${esc(it.name)}</div><div class="item-price">${fmt(it.price)} x ${it.qty}${it.discountPercent ? " (" + it.discountPercent + "% خصم)" : ""}</div></div><div class="item-qty"><button class="qty-minus" data-idx="${idx}">-</button><span>${it.qty}</span><button class="qty-plus" data-idx="${idx}">+</button></div><div class="item-total">${fmt(lineTotal)}</div><div class="item-remove" data-idx="${idx}"><i class="fas fa-times"></i></div>`;
+			const lineTotal = it.qty * it.price * (1 - (it.discountPercent || 0) / 100);
+			div.innerHTML = `<div class="item-info"><div class="item-name">${esc(it.name)}</div><div class="item-price">${fmt(it.price)} x ${it.qty}${it.discountPercent ? ` (${it.discountPercent}% خصم)` : ""}</div></div><div class="item-qty"><button class="qty-minus" data-idx="${idx}">-</button><span>${it.qty}</span><button class="qty-plus" data-idx="${idx}">+</button></div><div class="item-total">${fmt(lineTotal)}</div><div class="item-remove" data-idx="${idx}"><i class="fas fa-times"></i></div>`;
 			container.appendChild(div);
 		});
-		qsa(".qty-minus").forEach((b) =>
+		qsa(".qty-minus").forEach((b) => {
 			b.addEventListener("click", async (e) => {
 				const idx = Number(e.target.dataset.idx);
 				if (state.cart[idx]?.qty > 1) {
@@ -220,9 +202,9 @@
 					await renderCart();
 					await recalc();
 				}
-			}),
-		);
-		qsa(".qty-plus").forEach((b) =>
+			});
+		});
+		qsa(".qty-plus").forEach((b) => {
 			b.addEventListener("click", async (e) => {
 				const idx = Number(e.target.dataset.idx);
 				if (state.cart[idx]) {
@@ -230,22 +212,22 @@
 					await renderCart();
 					await recalc();
 				}
-			}),
-		);
-		qsa(".item-remove").forEach((b) =>
+			});
+		});
+		qsa(".item-remove").forEach((b) => {
 			b.addEventListener("click", async (e) => {
 				const idx = Number(e.target.closest(".item-remove").dataset.idx);
 				state.cart.splice(idx, 1);
 				await renderCart();
 				await recalc();
-			}),
-		);
-		qsa(".pos-cart-item").forEach((item) =>
+			});
+		});
+		qsa(".pos-cart-item").forEach((item) => {
 			item.addEventListener("click", (e) => {
 				state.selectedLine = Number(e.currentTarget.dataset.idx);
 				void renderCart();
-			}),
-		);
+			});
+		});
 		await recalc();
 	};
 
@@ -276,8 +258,7 @@
 		grid.innerHTML = "";
 		products.forEach((p) => {
 			const card = document.createElement("div");
-			card.className =
-				"pos-product-card" + (p.is_out_of_stock ? " out-of-stock" : "");
+			card.className = `pos-product-card${p.is_out_of_stock ? " out-of-stock" : ""}`;
 			card.dataset.id = p.id;
 			const img = p.image_url
 				? `<img src="${esc(p.image_url)}" class="prod-img" alt="">`
@@ -304,7 +285,7 @@
 				div.dataset.catId = cat.id;
 				div.innerHTML = `<i class="fas fa-tag mr-2"></i>${esc(cat.name_ar || cat.name)}`;
 				div.addEventListener("click", () => {
-					qsa(".cat-item").forEach((c) => c.classList.remove("active"));
+					qsa(".cat-item").forEach((c) => void c.classList.remove("active"));
 					div.classList.add("active");
 					state.selectedCategory = cat.id;
 					void loadProducts();
@@ -319,12 +300,11 @@
 		try {
 			const params = new URLSearchParams();
 			if (q) params.append("q", q);
-			if (state.selectedCategory)
-				params.append("category_id", state.selectedCategory);
+			if (state.selectedCategory) params.append("category_id", state.selectedCategory);
 			const wid = qs("#warehouseId")?.value;
 			if (wid) params.append("warehouse_id", wid);
 			params.append("per_page", "40");
-			const r = await fetch("/pos/api/products?" + params.toString());
+			const r = await fetch(`/pos/api/products?${params.toString()}`);
 			const data = await r.json();
 			state.lastProductResults = data;
 			if (data.length > 0) {
@@ -343,12 +323,7 @@
 			state.numpadBuffer = state.numpadBuffer.slice(0, -1);
 			return;
 		}
-		if (
-			key === "Enter" &&
-			state.numpadMode &&
-			state.numpadBuffer &&
-			state.selectedLine !== null
-		) {
+		if (key === "Enter" && state.numpadMode && state.numpadBuffer && state.selectedLine !== null) {
 			const val = toNum(state.numpadBuffer);
 			const line = state.cart[state.selectedLine];
 			if (!line) return;
@@ -374,10 +349,7 @@
 			state.numpadMode = key;
 			state.numpadBuffer = "";
 			const labels = { qty: "الكمية", disc: "نسبة الخصم", price: "السعر" };
-			showAlert(
-				"أدخل " + labels[key] + " باستخدام لوحة الأرقام ثم اضغط Enter",
-				"info",
-			);
+			showAlert(`أدخل ${labels[key]} باستخدام لوحة الأرقام ثم اضغط Enter`, "info");
 			return;
 		}
 		if (key.match(/^[0-9.]$/) && state.numpadMode) {
@@ -420,7 +392,7 @@
 			return;
 		}
 		try {
-			const r = await fetch("/pos/api/customers?q=" + encodeURIComponent(q));
+			const r = await fetch(`/pos/api/customers?q=${encodeURIComponent(q)}`);
 			const data = await r.json();
 			const list = qs("#customerResults");
 			list.innerHTML = "";
@@ -451,7 +423,7 @@
 				const r = await fetch("/pos/api/walkin-customer");
 				const d = await r.json();
 				if (d.success) state.customer = d;
-			} catch (e) {
+			} catch (_e) {
 				showAlert("تعذر اختيار عميل نقدي");
 				return;
 			}
@@ -546,11 +518,11 @@
 			customerHint();
 		});
 
-		qsa(".pos-numpad button").forEach((b) =>
+		qsa(".pos-numpad button").forEach((b) => {
 			b.addEventListener("click", (e) => {
 				handleNumpad(e.currentTarget.dataset.key);
-			}),
-		);
+			});
+		});
 
 		qs("#checkoutBtn").addEventListener("click", () => doCheckout(false));
 		qs("#checkoutPrintBtn")?.addEventListener("click", () => doCheckout(true));
@@ -559,12 +531,12 @@
 			void renderCart();
 		});
 
-		qsa(
-			"#taxRate,#shippingCost,#discountAmount,#paidAmount,#paymentMethod,#warehouseId",
-		).forEach((el) => {
-			if (el) el.addEventListener("change", recalc);
-			if (el) el.addEventListener("input", recalc);
-		});
+		qsa("#taxRate,#shippingCost,#discountAmount,#paidAmount,#paymentMethod,#warehouseId").forEach(
+			(el) => {
+				if (el) el.addEventListener("change", recalc);
+				if (el) el.addEventListener("input", recalc);
+			},
+		);
 		qs("#currency")?.addEventListener("change", loadRateForCurrency);
 		qs("#exchangeRate")?.addEventListener("input", updateCartPrices);
 		qs("#exchangeRate")?.addEventListener("change", updateCartPrices);
@@ -604,9 +576,7 @@
 					if (d.success && d.session) {
 						qs("#closeOpening").textContent = fmt(d.session.opening_balance);
 						qs("#closeCashSales").textContent = fmt(d.session.total_cash_sales);
-						qs("#closeExpected").textContent = fmt(
-							d.session.expected_balance || 0,
-						);
+						qs("#closeExpected").textContent = fmt(d.session.expected_balance || 0);
 						$("#closeSessionModal").modal("show");
 					}
 				})
@@ -638,7 +608,7 @@
 			state.barcodeScanner = new BarcodeScanner({
 				onScan: (code) => {
 					qs("#productSearch").value = code;
-					fetch("/pos/api/product?code=" + encodeURIComponent(code))
+					fetch(`/pos/api/product?code=${encodeURIComponent(code)}`)
 						.then((r) => r.json())
 						.then((d) => {
 							if (d.success !== false) {
@@ -655,11 +625,7 @@
 		}
 
 		document.addEventListener("keydown", (e) => {
-			if (
-				e.target.matches("input,textarea,select") &&
-				e.key !== "Escape" &&
-				e.key !== "Enter"
-			)
+			if (e.target.matches("input,textarea,select") && e.key !== "Escape" && e.key !== "Enter")
 				return;
 			if (e.key === "Enter" && state.numpadMode) {
 				handleNumpad("Enter");

@@ -837,7 +837,7 @@ class TestSecurityAuditFixes:
             as_text=True
         )
 
-    def test_print_settings_rejects_cashier(self, client, db_session):
+    def test_print_settings_rejects_cashier(self, app, db_session):
         """print_settings must reject non-admin users (e.g., cashier)."""
         from models import Tenant, Branch, Role, User
         import uuid
@@ -870,12 +870,16 @@ class TestSecurityAuditFixes:
         )
         db_session.add(u)
         db_session.flush()
-        with client.session_transaction() as sess:
-            sess["_user_id"] = str(u.id)
-        resp = client.get("/printing/settings")
+        db_session.commit()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
+
+                login_user(u)
+                resp = client.get("/printing/settings")
         assert resp.status_code == 403
 
-    def test_api_product_info_rejects_cross_warehouse(self, client, db_session):
+    def test_api_product_info_rejects_cross_warehouse(self, app, db_session):
         """api_product_info must reject warehouse_id outside user's accessible scope."""
         from models import Tenant, Branch, Warehouse, Product, Role, User
         import uuid
@@ -934,16 +938,21 @@ class TestSecurityAuditFixes:
         )
         db_session.add(u)
         db_session.flush()
-        with client.session_transaction() as sess:
-            sess["_user_id"] = str(u.id)
-            sess["active_tenant_id"] = t.id
-        # User has branch b1, so wh1 is accessible, wh2 is NOT
-        resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
-        assert resp_ok.status_code == 200
-        resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
-        assert resp_forbidden.status_code == 403
+        db_session.commit()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
 
-    def test_user_edit_requires_manage_users_permission(self, client, db_session):
+                login_user(u)
+                with client.session_transaction() as sess:
+                    sess["active_tenant_id"] = t.id
+                # User has branch b1, so wh1 is accessible, wh2 is NOT
+                resp_ok = client.get(f"/api/products/{p.id}/info?warehouse_id={wh1.id}")
+                assert resp_ok.status_code == 200
+                resp_forbidden = client.get(f"/api/products/{p.id}/info?warehouse_id={wh2.id}")
+                assert resp_forbidden.status_code == 403
+
+    def test_user_edit_requires_manage_users_permission(self, app, db_session):
         """User edit and toggle-active must require manage_users permission."""
         from models import Tenant, Branch, Role, User
         import uuid
@@ -995,13 +1004,18 @@ class TestSecurityAuditFixes:
         )
         db_session.add(cashier)
         db_session.flush()
-        with client.session_transaction() as sess:
-            sess["_user_id"] = str(cashier.id)
-            sess["active_tenant_id"] = t.id
-        resp_edit = client.get(f"/users/{target.id}/edit")
-        assert resp_edit.status_code == 403
-        resp_toggle = client.post(f"/users/{target.id}/toggle-active")
-        assert resp_toggle.status_code == 403
+        db_session.commit()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
+
+                login_user(cashier)
+                with client.session_transaction() as sess:
+                    sess["active_tenant_id"] = t.id
+                resp_edit = client.get(f"/users/{target.id}/edit")
+                assert resp_edit.status_code == 403
+                resp_toggle = client.post(f"/users/{target.id}/toggle-active")
+                assert resp_toggle.status_code == 403
 
 
 class TestInvoicePrintEngineIsolation:

@@ -92,7 +92,7 @@
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-2"></i>
       هذا {{ t('القيد') }} هو {{ t('عكس') }} {{ t('للقيد') }} {{ t('رقم') }}: 
-      <a href="{{ url_for('ledger.view_entry', id=entry.reversed_entry_id) }}">
+      <a href="{{ url_for('ledger.view_entry', entry_id=entry.reversed_entry_id) }}">
         JE-{{ entry.reversed_entry_id }}
       </a>
     </div>

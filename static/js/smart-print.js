@@ -1,20 +1,13 @@
 ((window, $) => {
 	const hasPrintExtension =
-		$ &&
-		$.fn &&
-		$.fn.dataTable &&
-		$.fn.dataTable.Buttons &&
-		$.fn.dataTable.ext &&
-		$.fn.dataTable.ext.buttons &&
-		$.fn.dataTable.ext.buttons.print &&
+		$?.fn?.dataTable?.Buttons &&
+		$.fn.dataTable.ext?.buttons?.print &&
 		typeof $.fn.dataTable.ext.buttons.print.action === "function";
 
 	let defaultPrintAction = null;
 
 	if (!hasPrintExtension) {
-		console.warn(
-			"SmartPrint: DataTables Buttons with print extension is required.",
-		);
+		console.warn("SmartPrint: DataTables Buttons with print extension is required.");
 	} else {
 		defaultPrintAction = $.fn.dataTable.ext.buttons.print.action;
 	}
@@ -107,9 +100,7 @@
 	function resetModal() {
 		$("#smartPrintError").addClass("d-none").text("");
 		$("#smartPrintAll").prop("checked", true);
-		$(
-			"#smartPrintRowStart, #smartPrintRowEnd, #smartPrintPageStart, #smartPrintPageEnd",
-		)
+		$("#smartPrintRowStart, #smartPrintRowEnd, #smartPrintPageStart, #smartPrintPageEnd")
 			.prop("disabled", true)
 			.val("");
 	}
@@ -153,10 +144,7 @@
 	}
 
 	function buildRowsSelector(mode, table, values) {
-		const appliedIndexes = table
-			.rows({ search: "applied" })
-			.indexes()
-			.toArray();
+		const appliedIndexes = table.rows({ search: "applied" }).indexes().toArray();
 		if (!appliedIndexes.length) {
 			showError("لا توجد صفوف مطابقة للطباعة.");
 			return null;
@@ -169,10 +157,7 @@
 		}
 
 		if (mode === "page") {
-			const currentIndexes = table
-				.rows({ page: "current" })
-				.indexes()
-				.toArray();
+			const currentIndexes = table.rows({ page: "current" }).indexes().toArray();
 			if (!currentIndexes.length) {
 				showError("لا توجد صفوف في الصفحة الحالية.");
 				return null;
@@ -181,8 +166,7 @@
 		}
 
 		const pageInfo = table.page.info();
-		const rowsPerPage =
-			pageInfo.length === -1 ? appliedIndexes.length : pageInfo.length;
+		const rowsPerPage = pageInfo.length === -1 ? appliedIndexes.length : pageInfo.length;
 
 		if (mode === "rows") {
 			const start = parseInt(values.rowStart, 10);
@@ -234,10 +218,7 @@
 			}
 			const cappedEndPage = Math.min(endPage, totalPages);
 			const startPos = (startPage - 1) * rowsPerPage;
-			const endPos = Math.min(
-				cappedEndPage * rowsPerPage - 1,
-				appliedIndexes.length - 1,
-			);
+			const endPos = Math.min(cappedEndPage * rowsPerPage - 1, appliedIndexes.length - 1);
 			return (idx) => {
 				const position = appliedIndexes.indexOf(idx);
 				return position !== -1 && position >= startPos && position <= endPos;
@@ -279,8 +260,7 @@
 				// If we want all data, we might need to use dt.rows().data()
 				// config.exportOptions usually specifies modifier: { page: 'all' }
 
-				const modifier = (config.exportOptions &&
-					config.exportOptions.modifier) || { page: "all" };
+				const modifier = config.exportOptions?.modifier || { page: "all" };
 				const rows = dt.rows(modifier).nodes();
 
 				if (rows.length === 0) {
@@ -339,7 +319,7 @@
 		if (config.header) {
 			html += "<thead><tr>";
 			for (let i = 0; i < data.header.length; i++) {
-				html += "<th>" + data.header[i] + "</th>";
+				html += `<th>${data.header[i]}</th>`;
 			}
 			html += "</tr></thead>";
 		}
@@ -349,7 +329,7 @@
 		for (let i = 0; i < data.body.length; i++) {
 			html += "<tr>";
 			for (let j = 0; j < data.body[i].length; j++) {
-				html += "<td>" + data.body[i][j] + "</td>";
+				html += `<td>${data.body[i][j]}</td>`;
 			}
 			html += "</tr>";
 		}
@@ -359,7 +339,7 @@
 		if (config.footer && data.footer) {
 			html += "<tfoot><tr>";
 			for (let i = 0; i < data.footer.length; i++) {
-				html += "<th>" + data.footer[i] + "</th>";
+				html += `<th>${data.footer[i]}</th>`;
 			}
 			html += "</tr></tfoot>";
 		}
@@ -374,48 +354,32 @@
 
 		const title = opts.title || config.title || document.title;
 
-		win.document.write(
-			'<!DOCTYPE html><html dir="rtl"><head><title>' + title + "</title>",
-		);
+		win.document.write(`<!DOCTYPE html><html dir="rtl"><head><title>${title}</title>`);
 		win.document.write("<style>");
 		win.document.write(
 			'body { font-family: "Tajawal", sans-serif; direction: rtl; padding: 20px; }',
 		);
-		win.document.write(
-			"table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }",
-		);
+		win.document.write("table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }");
 		win.document.write(
 			"th, td { border: 1px solid #dee2e6; padding: 0.75rem; text-align: right; }",
 		);
 		win.document.write("th { background-color: #f8f9fa; font-weight: bold; }");
-		win.document.write(
-			".print-header { text-align: center; margin-bottom: 20px; }",
-		);
-		win.document.write(
-			".print-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }",
-		);
-		win.document.write(
-			"@media print { body { -webkit-print-color-adjust: exact; } }",
-		);
+		win.document.write(".print-header { text-align: center; margin-bottom: 20px; }");
+		win.document.write(".print-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }");
+		win.document.write("@media print { body { -webkit-print-color-adjust: exact; } }");
 		win.document.write("</style>");
 		win.document.write("</head><body>");
 
 		win.document.write('<div class="print-header">');
-		if (info.title)
-			win.document.write('<h1 class="print-title">' + info.title + "</h1>");
-		if (info.messageTop)
-			win.document.write(
-				'<div class="message-top">' + info.messageTop + "</div>",
-			);
+		if (info.title) win.document.write(`<h1 class="print-title">${info.title}</h1>`);
+		if (info.messageTop) win.document.write(`<div class="message-top">${info.messageTop}</div>`);
 		win.document.write("</div>");
 
 		win.document.write(html);
 
 		if (info.messageBottom)
 			win.document.write(
-				'<div class="message-bottom" style="margin-top: 20px;">' +
-					info.messageBottom +
-					"</div>",
+				`<div class="message-bottom" style="margin-top: 20px;">${info.messageBottom}</div>`,
 			);
 
 		win.document.write("</body></html>");
@@ -451,14 +415,9 @@
 		}
 
 		const buttonNode = state.buttonApi.node();
-		const originalConfig = $.extend(
-			true,
-			{},
-			$(buttonNode).data("smartPrintConfig") || {},
-		);
+		const originalConfig = $.extend(true, {}, $(buttonNode).data("smartPrintConfig") || {});
 		originalConfig.exportOptions = originalConfig.exportOptions || {};
-		originalConfig.exportOptions.columns =
-			originalConfig.exportOptions.columns || ":visible";
+		originalConfig.exportOptions.columns = originalConfig.exportOptions.columns || ":visible";
 		originalConfig.exportOptions.rows = rowsSelector;
 
 		$("#smartPrintModal").modal("hide");
@@ -506,8 +465,7 @@
 			"th, td { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; word-break: break-word; overflow-wrap: anywhere; }",
 		].join("\n");
 
-		const head =
-			win.document.head || win.document.getElementsByTagName("head")[0];
+		const head = win.document.head || win.document.getElementsByTagName("head")[0];
 		const styleTag = win.document.createElement("style");
 		// styleTag.type defaults to 'text/css'
 		styleTag.appendChild(win.document.createTextNode(css));
@@ -568,10 +526,10 @@
 					customize: (win) => {
 						applyPrintStyles(win, opts);
 					},
-					action: function (e, dt, button, config) {
+					action: function (_e, dt, _button, config) {
 						openModal(dt, this, config.smartPrintOptions || opts);
 					},
-					init: (dt, node, config) => {
+					init: (_dt, node, config) => {
 						$(node).data("smartPrintConfig", config);
 					},
 				},
@@ -586,10 +544,7 @@
 
 			const $trigger = $(triggerSelector);
 			if (!$trigger.length) {
-				console.warn(
-					"SmartPrint: trigger button not found for selector",
-					triggerSelector,
-				);
+				console.warn("SmartPrint: trigger button not found for selector", triggerSelector);
 				return;
 			}
 
@@ -613,16 +568,16 @@
 			}
 
 			let buttonApi = table.button(".smart-print-button");
-			if (!buttonApi || !buttonApi.length) {
+			if (!buttonApi?.length) {
 				// Fallback: find by name if set, or use last button
 				buttonApi = table.button("smart-print:name");
-				if (!buttonApi || !buttonApi.length) {
+				if (!buttonApi?.length) {
 					const allButtons = table.buttons();
 					if (allButtons && allButtons.count() > 0) {
 						buttonApi = table.button(allButtons.count() - 1);
 					}
 				}
-				if (!buttonApi || !buttonApi.length) {
+				if (!buttonApi?.length) {
 					console.warn("SmartPrint: hidden print button not available.");
 					return;
 				}

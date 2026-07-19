@@ -489,7 +489,7 @@ def statement(**kwargs):
     purchases_q = supplier.purchases.filter_by(status="confirmed", tenant_id=tid)
     # Include both outgoing payments (credit) and incoming refunds (debit) so
     # the statement balance matches the supplier's ledger balance.
-    payments_q = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
+    payments_q = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
     if branch_scope_id() is not None:
         purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
         payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())

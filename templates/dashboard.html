@@ -356,7 +356,7 @@
 {% include 'partials/datatables_assets.html' %}
 <script>
 // Initialize DataTable for recent sales
-$(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length > 0 %
+$(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length > 0 %}
   $('#recentSalesTable').DataTable({
     language: { url: '{{ url_for("static", filename="datatables/Arabic.json") }}' },
     pageLength: 10,
@@ -367,7 +367,7 @@ $(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length >
       targets: -1,
       orderable: false
     }]
-  });% endif %
+  });{% endif %}
 
   $('#supervisorOverrideForm').on('submit', (e) => {
     e.preventDefault();

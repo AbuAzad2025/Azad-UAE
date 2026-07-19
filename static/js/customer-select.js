@@ -41,7 +41,7 @@
 									id: item.id,
 									text: item.text
 										? SmartSearch.esc(item.text)
-										: `${SmartSearch.esc(item.name)}${item.phone ? " - " + SmartSearch.esc(item.phone) : ""}`,
+										: `${SmartSearch.esc(item.name)}${item.phone ? ` - ${SmartSearch.esc(item.phone)}` : ""}`,
 									name: SmartSearch.esc(item.name),
 									phone: SmartSearch.esc(item.phone || ""),
 									balance: item.balance || 0,
@@ -88,7 +88,7 @@
 									id: item.id,
 									text: item.text
 										? SmartSearch.esc(item.text)
-										: `${SmartSearch.esc(item.name)}${item.phone ? " - " + SmartSearch.esc(item.phone) : ""}`,
+										: `${SmartSearch.esc(item.name)}${item.phone ? ` - ${SmartSearch.esc(item.phone)}` : ""}`,
 									name: SmartSearch.esc(item.name),
 									phone: SmartSearch.esc(item.phone || ""),
 									balance: item.balance || 0,
@@ -187,7 +187,7 @@
 
 		formatCustomerSelection: (item) => {
 			if (!item.id) return item.text;
-			return item.name + (item.phone ? " - " + item.phone : "");
+			return item.name + (item.phone ? ` - ${item.phone}` : "");
 		},
 
 		formatSupplierResult: (item) => {
@@ -216,7 +216,7 @@
 
 		formatSupplierSelection: (item) => {
 			if (!item.id) return item.text;
-			return item.name + (item.phone ? " - " + item.phone : "");
+			return item.name + (item.phone ? ` - ${item.phone}` : "");
 		},
 
 		formatProductResult: (item) => {
@@ -244,7 +244,7 @@
 
 		formatProductSelection: (item) => {
 			if (!item.id) return item.text;
-			return item.name + (item.code ? " (" + item.code + ")" : "");
+			return item.name + (item.code ? ` (${item.code})` : "");
 		},
 
 		// =====================================

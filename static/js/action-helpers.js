@@ -5,9 +5,7 @@
 (() => {
 	function getCsrfToken() {
 		return (
-			document
-				.querySelector('meta[name="csrf-token"]')
-				?.getAttribute("content") ||
+			document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
 			document.querySelector('input[name="csrf_token"]')?.value ||
 			""
 		);
@@ -16,13 +14,10 @@
 	function archivePaymentItem(type, id, number) {
 		const normalizedType = type === "receipt" ? "receipt" : "payment";
 		const baseEndpoint =
-			normalizedType === "receipt"
-				? "/payments/receipts/"
-				: "/payments/payments/";
-		const reason = window.prompt(`أدخل سبب أرشفة السند ${number || "#" + id}:`);
+			normalizedType === "receipt" ? "/payments/receipts/" : "/payments/payments/";
+		const reason = window.prompt(`أدخل سبب أرشفة السند ${number || `#${id}`}:`);
 		if (!reason) return;
-		if (!window.confirm(`هل أنت متأكد من أرشفة السند ${number || "#" + id}؟`))
-			return;
+		if (!window.confirm(`هل أنت متأكد من أرشفة السند ${number || `#${id}`}؟`)) return;
 
 		fetch(`${baseEndpoint}${id}/archive`, {
 			method: "POST",
@@ -37,9 +32,7 @@
 				if (!resp.ok) {
 					return resp
 						.json()
-						.then((j) =>
-							Promise.reject(j?.message || j?.error || "فشلت عملية الأرشفة"),
-						)
+						.then((j) => Promise.reject(j?.message || j?.error || "فشلت عملية الأرشفة"))
 						.catch(() => Promise.reject("فشلت عملية الأرشفة"));
 				}
 				window.location.reload();
