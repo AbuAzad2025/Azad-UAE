@@ -277,23 +277,12 @@ jobs:
   # ── Docker infrastructure audit (Hadolint) ──
   docker-infra-audit:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
     steps:
       - uses: actions/checkout@v7
-      - name: Hadolint Dockerfile audit
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: scripts/lint/Dockerfile.ci
-          config: scripts/.hadolint.yaml
-          format: sarif
-          output-file: hadolint-results.sarif
-      - name: Upload Hadolint results
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: hadolint-results.sarif
-          category: hadolint
+      - name: Hadolint Dockerfile Audit
+        run: |
+          echo "=== RUNNING DOCKERFILE LINT ==="
+          docker run --rm -i hadolint/hadolint < scripts/lint/Dockerfile.ci
 
   # ── API fuzz testing (Schemathesis) ──
   api-fuzz:
