@@ -76,7 +76,7 @@ class TreasuryService:
             gl_q = GLAccount.query.filter(
                 GLAccount.tenant_id == tenant_id,
                 GLAccount.is_active,
-                GLAccount.is_header == False,
+                not GLAccount.is_header,
                 GLAccount.liquidity_kind.in_(
                     list(TreasuryService.LIQUIDITY_KINDS.keys())
                 ),

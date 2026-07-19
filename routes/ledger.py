@@ -757,7 +757,7 @@ def api_search_accounts():
         scope_gl_accounts(
             GLAccount.query.filter(
                 GLAccount.is_active,
-                GLAccount.is_header == False,
+                not GLAccount.is_header,
                 db.or_(
                     GLAccount.code.ilike(f"%{query}%"),
                     GLAccount.name.ilike(f"%{query}%"),

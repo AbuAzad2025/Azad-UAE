@@ -163,7 +163,7 @@ def dashboard():
                     account_query = GLAccount.query.filter(
                         GLAccount.tenant_id == int(tid or 0),
                         GLAccount.is_active,
-                        GLAccount.is_header == False,
+                        not GLAccount.is_header,
                         GLAccount.liquidity_kind == kind,
                     )
                     if scoped_branch_id is not None:

@@ -54,7 +54,7 @@ class CashFlowService:
         cash_accounts_query = GLAccount.query.filter(
             GLAccount.tenant_id == int(tenant_id),
             GLAccount.is_active,
-            GLAccount.is_header == False,
+            not GLAccount.is_header,
             GLAccount.liquidity_kind.in_(["cash", "bank"]),
         )
         if branch_id:
