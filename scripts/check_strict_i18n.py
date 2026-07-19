@@ -203,7 +203,7 @@ def scan_file(filepath):
             continue
         if ext == ".html":
             for s in _extract_string_literals(code):
-                if _is_likely_user_facing(s) and not RTL_CONTENT_MARKER.match(s):
+                if _is_likely_user_facing(s) and RTL_CONTENT_MARKER.match(s):
                     issues.append((lineno, s, "template string"))
         elif ext == ".py":
             for s in _extract_string_literals(code):
