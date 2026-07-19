@@ -15,7 +15,7 @@ import logging
 import re
 from typing import List, Optional
 
-from sqlalchemy import and_, column, insert, select, table as sa_table, update
+from sqlalchemy import and_, column, select, table as sa_table
 
 logger = logging.getLogger(__name__)
 
@@ -118,30 +118,24 @@ def {function_name}():
 
             elif intent == "insert":
                 table_name = _ident(table)
-                tbl = sa_table(table_name)
                 if filters and filters.get("values") and filters.get("columns"):
                     col_names = [_ident(c) for c in filters["columns"]]
-                    row = {name: val for name, val in zip(col_names, filters["values"])}
-                    stmt = insert(tbl).values(**row)
-                    return str(stmt)
+                    cols_str = ", ".join(col_names)
+                    vals = ", ".join(repr(v) for v in filters["values"])
+                    return f"INSERT INTO {table_name} ({cols_str}) VALUES ({vals})"
                 else:
-                    stmt = insert(tbl).default_values()
-                    return str(stmt)
+                    return f"INSERT INTO {table_name} DEFAULT VALUES"
 
             elif intent == "update":
                 table_name = _ident(table)
-                tbl = sa_table(table_name)
-                set_kwargs = {}
+                set_parts = []
                 if filters and filters.get("set"):
                     for k, v in filters["set"].items():
-                        set_kwargs[_ident(k)] = v
-                stmt = update(tbl)
-                if set_kwargs:
-                    stmt = stmt.values(**set_kwargs)
+                        set_parts.append(f"{_ident(k)} = {repr(v)}")
+                set_str = ", ".join(set_parts)
                 where_expr = _build_where(table_name, filters, "u")
-                if where_expr is not None:
-                    stmt = stmt.where(where_expr)
-                return str(stmt)
+                where_str = f" WHERE {where_expr}" if where_expr is not None else ""
+                return f"UPDATE {table_name} SET {set_str}{where_str}"
 
             else:
                 return f"-- Unsupported intent: {intent}"
