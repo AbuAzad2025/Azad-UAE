@@ -425,7 +425,7 @@ class TestBackupExecGaps:
             pytest.skip("script missing")
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
         mock_run = mocker.patch(
-            "services.backup_exec.subprocess.run", return_value=completed
+            "utils.secure_subprocess.subprocess.run", return_value=completed
         )
         from services.backup_exec import run_repo_python_script
 

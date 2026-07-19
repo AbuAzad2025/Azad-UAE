@@ -40,7 +40,7 @@ class TestRunPgTool:
     def test_successful_pg_dump_invocation(self, mocker):
         completed = subprocess.CompletedProcess(["pg_dump"], 0, stdout="ok", stderr="")
         mock_run = mocker.patch(
-            "services.backup_exec.subprocess.run", return_value=completed
+            "utils.secure_subprocess.subprocess.run", return_value=completed
         )
 
         from services.backup_exec import run_pg_tool
@@ -54,7 +54,7 @@ class TestRunPgTool:
 
     def test_permission_denied_propagates(self, mocker):
         mocker.patch(
-            "services.backup_exec.subprocess.run",
+            "utils.secure_subprocess.subprocess.run",
             side_effect=PermissionError("filesystem write denied"),
         )
 
@@ -75,7 +75,7 @@ class TestRunGit:
 
     def test_git_success(self, mocker):
         completed = subprocess.CompletedProcess(["git"], 0, stdout="abc123", stderr="")
-        mocker.patch("services.backup_exec.subprocess.run", return_value=completed)
+        mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
 
         from services.backup_exec import run_git
 
@@ -102,7 +102,7 @@ class TestRunRepoPythonScript:
             pytest.skip("verify_backup.py not in repo")
 
         completed = subprocess.CompletedProcess([], 0, stdout="", stderr="")
-        mocker.patch("services.backup_exec.subprocess.run", return_value=completed)
+        mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
 
         from services.backup_exec import run_repo_python_script
 
@@ -110,7 +110,7 @@ class TestRunRepoPythonScript:
         assert result.returncode == 0
 
     def test_rejects_path_outside_repo(self, mocker):
-        mocker.patch("services.backup_exec.os.path.isfile", return_value=True)
+        mocker.patch("utils.secure_subprocess.os.path.isfile", return_value=True)
 
         from services.backup_exec import run_repo_python_script
 
@@ -136,7 +136,7 @@ class TestRunPythonModule:
     def test_module_invocation_success(self, mocker):
         completed = subprocess.CompletedProcess([], 0, stdout="done", stderr="")
         mock_run = mocker.patch(
-            "services.backup_exec.subprocess.run", return_value=completed
+            "utils.secure_subprocess.subprocess.run", return_value=completed
         )
 
         from services.backup_exec import run_python_module
@@ -161,7 +161,7 @@ class TestRunPythonModule:
             script_rel = os.path.relpath(script_abs, root).replace("\\", "/")
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
         mock_run = mocker.patch(
-            "services.backup_exec.subprocess.run", return_value=completed
+            "utils.secure_subprocess.subprocess.run", return_value=completed
         )
         from services.backup_exec import run_repo_python_script
 
