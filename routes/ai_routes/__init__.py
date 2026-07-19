@@ -149,7 +149,12 @@ def _audit_ai_requests(response):
             },
         )
     except Exception:
-        pass
+        LoggingCore.log_error(
+            message="Failed to write AI audit trail",
+            category="AI",
+            source="routes.ai._audit_ai_requests",
+            level="WARNING",
+        )
     return response
 
 

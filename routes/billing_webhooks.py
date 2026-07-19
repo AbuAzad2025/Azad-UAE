@@ -32,7 +32,7 @@ def _reject_stale_timestamp(data: dict | None):
             logger.warning("Billing webhook rejected: stale timestamp %s", ts)
             return jsonify({"error": "Stale event"}), 400
     except (ValueError, TypeError):
-        pass
+        logger.debug("Could not parse webhook timestamp: %s", ts)
     return None
 
 

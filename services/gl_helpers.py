@@ -61,7 +61,7 @@ def resolve_tenant_id(branch_id=None, user_id=None):
                     exception=e,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log tenant ID resolution error via LoggingCore", exc_info=True)
 
     if tenant_id is None:
         try:
@@ -135,7 +135,7 @@ def next_entry_number(tenant_id, entry_date=None):
                     exception=err,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log journal entry number parse error via LoggingCore", exc_info=True)
     return f"JE-{y}-{last_num + 1:04d}"
 
 

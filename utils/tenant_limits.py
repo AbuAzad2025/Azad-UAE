@@ -10,7 +10,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from flask_login import current_user
 from extensions import db
+import logging
+
 from utils.tenanting import get_active_tenant_id
+
+logger = logging.getLogger(__name__)
 
 
 class TenantLimitError(Exception):
@@ -43,8 +47,7 @@ class TenantLimitError(Exception):
                         link = f"https://wa.me/{link}"
                     TenantLimitError.wa_upgrade_link = link
             except Exception:
-                pass
-        if TenantLimitError.wa_upgrade_link:
+                logger.debug("Failed to resolve developer WhatsApp upgrade link", exc_info=True)
             msg += (
                 f"\n\nيمكنك التواصل مع المطور للترقية إلى باقة أعلى عبر "
                 f'<a href="{TenantLimitError.wa_upgrade_link}" target="_blank" class="alert-link">واتساب</a>.'
@@ -61,8 +64,7 @@ def _active_tenant():
         if tid:
             return db.session.get(Tenant, int(tid))
     except Exception:
-        pass
-    return None
+        logger.debug("Failed to resolve active tenant for limit check", exc_info=True)
 
 
 def _month_start():

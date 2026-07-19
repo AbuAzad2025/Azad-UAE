@@ -64,7 +64,10 @@ if __name__ == "__main__":
                         exception=exc,
                     )
                 except Exception:
-                    pass
+                    import logging
+                    logging.getLogger(__name__).exception(
+                        "Failed to log DB URI masking warning"
+                    )
                 return uri
 
         app.logger.info("Starting UAE-Sale System")

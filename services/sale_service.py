@@ -774,6 +774,14 @@ class SaleService:
                 branch_id=sale.branch_id,
                 tenant_id=tenant_id,
             )
+        elif cogs_total_aed == Decimal("0") and any(
+            line.get("quantity", 0) > 0 for line in data.get("items", [])
+        ):
+            current_app.logger.warning(
+                "COGS = 0 for sale %s — stock decreased but no cost recorded. "
+                "Inventory GL may be overstated.",
+                sale.sale_number,
+            )
 
         post_sale_commissions(sale)
 

@@ -1144,6 +1144,48 @@ class TestOwnerPostRoutes:
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
+    def test_api_tenant_extend_subscription(self, owner_client):
+        resp = owner_client.post(
+            "/owner/api/tenant/2/extend-subscription",
+            json={"days": 30, "subscription_plan": "standard"},
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+
+    def test_api_tenant_extend_subscription_invalid_days(self, owner_client):
+        resp = owner_client.post(
+            "/owner/api/tenant/2/extend-subscription",
+            json={"days": "abc"},
+        )
+        assert resp.status_code == 400
+        assert resp.get_json()["success"] is False
+
+    def test_tenant_extend_subscription_form(self, owner_client):
+        resp = owner_client.post(
+            "/owner/tenants/2/extend-subscription",
+            data={"days": "15", "subscription_plan": "basic"},
+            follow_redirects=False,
+        )
+        assert resp.status_code in (302, 303)
+
+    def test_api_tenant_extend_subscription_not_json(self, owner_client):
+        resp = owner_client.post(
+            "/owner/api/tenant/2/extend-subscription",
+            data={"days": "30"},
+        )
+        assert resp.status_code == 400
+        assert resp.get_json()["success"] is False
+
+    def test_api_tenant_extend_subscription_explicit_end(self, owner_client):
+        resp = owner_client.post(
+            "/owner/api/tenant/2/extend-subscription",
+            json={"subscription_end": "2030-12-31T00:00:00", "subscription_plan": "enterprise"},
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+
     def test_backup_info_json(self, owner_client):
         resp = owner_client.get("/owner/backups/info/backup.sql.gz")
         assert resp.status_code == 200

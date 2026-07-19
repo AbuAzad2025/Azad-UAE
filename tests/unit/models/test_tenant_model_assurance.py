@@ -161,3 +161,89 @@ class TestTenantModel:
         t = Tenant()
         t.name = "Acme"
         assert "Acme" in repr(t)
+
+    def test_extend_subscription_from_none(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = None
+        t.extend_subscription(30)
+        assert t.subscription_end is not None
+        assert t.get_remaining_days() >= 29
+
+    def test_extend_subscription_from_future(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        base = datetime.now(timezone.utc) + timedelta(days=10)
+        t.subscription_end = base
+        t.extend_subscription(15)
+        delta = t.subscription_end - base
+        assert delta.days == 15
+
+    def test_extend_subscription_expired_clamps_to_now(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) - timedelta(days=5)
+        t.extend_subscription(7)
+        assert t.get_remaining_days() == 7
+
+    def test_extend_subscription_negative_shortens(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) + timedelta(days=30)
+        t.extend_subscription(-10)
+        assert t.get_remaining_days() == 20
+
+    def test_extend_subscription_zero_is_noop(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) + timedelta(days=30)
+        before = t.subscription_end
+        t.extend_subscription(0)
+        assert t.subscription_end == before
+
+    def test_set_subscription_end_none_clears(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) + timedelta(days=5)
+        t.set_subscription_end(None)
+        assert t.subscription_end is None
+
+    def test_set_subscription_end_iso_string(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        iso = "2030-01-15T00:00:00"
+        t.set_subscription_end(iso)
+        assert t.subscription_end.year == 2030
+        assert t.subscription_end.month == 1
+
+    def test_apply_subscription_plan(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.apply_subscription_plan("enterprise", "annual", True)
+        assert t.subscription_plan == "enterprise"
+        assert t.subscription_plan_duration == "annual"
+        assert t.is_trial is True
+
+    def test_immediate_expiration_alert_when_expired(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) - timedelta(days=1)
+        assert t.is_subscription_active() is False
+        assert t.get_remaining_days() == 0
+
+    def test_immediate_expiration_alert_when_expiring_soon(self):
+        from models.tenant import Tenant
+
+        t = Tenant()
+        t.subscription_end = datetime.now(timezone.utc) + timedelta(days=3)
+        assert t.is_subscription_active() is True
+        assert 0 < t.get_remaining_days() <= 7

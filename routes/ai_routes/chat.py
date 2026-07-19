@@ -250,7 +250,7 @@ def chat():
         with atomic_transaction("chat_interaction_log"):
             db.session.add(log)
     except Exception:
-        pass
+        logger.exception("Failed to log AI chat interaction to database")
 
     try:
         from ai_knowledge.trainer import trainer
@@ -263,7 +263,7 @@ def chat():
             tenant_id=getattr(current_user, "tenant_id", None),
         )
     except Exception:
-        pass
+        logger.exception("Failed to learn from AI chat interaction")
 
     state = get_ai_access_state(current_user)
     return jsonify(

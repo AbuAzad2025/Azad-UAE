@@ -9,6 +9,9 @@ import sys
 from logging.handlers import RotatingFileHandler
 
 
+_logger = logging.getLogger(__name__)
+
+
 def _ensure_utf8_stream(stream):
     """تغليف المجرى لضمان UTF-8"""
     if hasattr(stream, "reconfigure"):
@@ -16,12 +19,12 @@ def _ensure_utf8_stream(stream):
             stream.reconfigure(encoding="utf-8", errors="replace")
             return stream
         except Exception:
-            pass
+            _logger.debug("Failed to reconfigure stream for UTF-8", exc_info=True)
     if hasattr(stream, "buffer"):
         try:
             return io.TextIOWrapper(stream.buffer, encoding="utf-8", errors="replace")
         except Exception:
-            pass
+            _logger.debug("Failed to wrap stream buffer for UTF-8", exc_info=True)
     return stream
 
 
@@ -122,8 +125,7 @@ def setup_enhanced_logging(app):
             try:
                 h.close()
             except Exception:
-                pass
-
+                _logger.debug("Failed to close log handler", exc_info=True)
     utf8_stdout = _ensure_utf8_stream(sys.stdout)
     utf8_stderr = _ensure_utf8_stream(sys.stderr)
 

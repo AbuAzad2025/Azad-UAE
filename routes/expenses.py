@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import Expense, ExpenseCategory, Cheque
@@ -173,7 +173,7 @@ def create():
                         cheque_date_str, "%Y-%m-%d"
                     ).date()
                 except ValueError:
-                    pass
+                    current_app.logger.debug("Invalid cheque date format: %s", cheque_date_str)
 
             with atomic_transaction("expense_create"):
                 expense = Expense(
@@ -707,9 +707,12 @@ def archive(**kwargs):
                 "expenses", expense, reason="تم أرشفة المصروف"
             )
             LoggingCore.log_audit("archive", "expenses", expense.id)
-    except Exception:
-        pass
+    except Exception as exc:
+        current_app.logger.error("Failed to archive expense %s: %s", expense.id, exc)
+        flash("تعذر أرشفة المصروف. يرجى المحاولة مرة أخرى.", "danger")
+        return redirect(url_for("expenses.index"))
 
+    flash("تم أرشفة المصروف بنجاح.", "success")
     return redirect(url_for("expenses.index"))
 
 

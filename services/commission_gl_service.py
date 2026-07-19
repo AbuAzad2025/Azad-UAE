@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 from models import PartnerCommissionEntry
 from services.gl_posting import post_or_fail
@@ -33,7 +36,7 @@ def post_sale_commissions(sale):
             resolve_tenant_base_currency(tenant_id=sale.tenant_id) or base_currency
         )
     except Exception:
-        pass
+        logger.warning("Failed to resolve tenant base currency for commission GL, using default", exc_info=True)
 
     GLService.ensure_core_accounts(tenant_id=getattr(sale, "tenant_id", None))
     return post_or_fail(

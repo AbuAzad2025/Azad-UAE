@@ -137,7 +137,7 @@ class BackupService:
                     exception=e,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log load JSON file error via LoggingCore for %s", file_path, exc_info=True)
             return None
 
     @classmethod
@@ -166,7 +166,7 @@ class BackupService:
                     exception=e,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log write JSON file error via LoggingCore for %s", file_path, exc_info=True)
             return False
 
     @classmethod

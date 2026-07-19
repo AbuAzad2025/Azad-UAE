@@ -37,9 +37,9 @@
       a.className = 'ps-autocomplete-item';
       let html = '';
       if (item.image) {
-        html += '<span class="ps-ac-img"><img src="' + item.image + '" alt="" loading="lazy"></span>';
+        html += '<span class="ps-ac-img"><img src="' + escapeHtml(item.image) + '" alt="" loading="lazy"></span>';
       }
-      html += '<span class="ps-ac-info"><span class="ps-ac-name">' + escapeHtml(item.name) + '</span><span class="ps-ac-price">' + item.price.toFixed(2) + '</span></span>';
+      html += '<span class="ps-ac-info"><span class="ps-ac-name">' + escapeHtml(item.name) + '</span><span class="ps-ac-price">' + (parseFloat(item.price) || 0).toFixed(2) + '</span></span>';
       a.innerHTML = html;
       a.addEventListener('click', function (e) {
         e.preventDefault();

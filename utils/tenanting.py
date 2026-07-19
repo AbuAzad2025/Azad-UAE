@@ -11,7 +11,11 @@ from contextlib import contextmanager
 from flask import abort, g, has_request_context, session
 from flask_login import current_user
 
+import logging
+
 from extensions import db
+
+logger = logging.getLogger(__name__)
 
 ACTIVE_TENANT_SESSION_KEY = "active_tenant_id"
 
@@ -61,7 +65,7 @@ def get_active_tenant_id(user=None) -> int | None:
                 if g_tid is not None:
                     return int(g_tid)
         except Exception:
-            pass
+            logger.debug("Failed to resolve active tenant from g context", exc_info=True)
         return None
 
     if not is_platform_owner(user):

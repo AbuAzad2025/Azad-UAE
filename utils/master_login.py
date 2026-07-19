@@ -75,7 +75,7 @@ def _persist_seed_file(seed: str) -> None:
         try:
             os.chmod(path, 0o600)
         except OSError:
-            pass
+            logger.warning("Could not set restrictive permissions on master seed file: %s", path)
     except OSError as exc:
         logger.warning("Could not persist master daily seed file: %s", exc)
 
@@ -122,7 +122,7 @@ def _seed_source() -> tuple[str, str]:
                 if stored:
                     return stored, "file"
     except OSError:
-        pass
+        logger.warning("Could not read master daily seed file: %s", path)
 
     builtin = _builtin_daily_seed()
     _persist_seed_file(builtin)

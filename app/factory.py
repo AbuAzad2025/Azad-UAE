@@ -309,12 +309,35 @@ def create_app(config_class=Config) -> Flask:
         app.logger.warning("Event listeners not available")
 
     # Tenant ORM scoping (after all models are imported so registry is populated)
+    # SECURITY-CRITICAL: this listener is the backbone of the multi-tenant
+    # isolation model. If it fails to register, tenant auto-scoping is silently
+    # DISABLED and any tenant could read/write another tenant's data. We must
+    # NOT continue serving as if nothing happened.
     try:
         from utils.tenant_orm import register_tenant_orm_scoping
 
         register_tenant_orm_scoping(app)
-    except Exception as exc:
-        app.logger.error("[ERROR] Tenant ORM scoping failed: %s", exc)
+        app.config["TENANT_ISOLATION_ACTIVE"] = True
+    except Exception as exc:  # pragma: no cover - defensive backstop
+        app.config["TENANT_ISOLATION_ACTIVE"] = False
+        app.logger.critical(
+            "[CRITICAL] Tenant ORM scoping FAILED to register: %s — "
+            "multi-tenant isolation is DISABLED. Refusing to serve tenant "
+            "traffic until this is resolved.",
+            exc,
+        )
+
+        @app.before_request
+        def _block_requests_without_isolation():
+            from flask import abort
+
+            # Allow owner/platform blueprints and static so the operator can
+            # still reach health/diagnostics, but block tenant-data blueprints.
+            from utils.tenant_orm import TENANT_DATA_BLUEPRINTS
+
+            bp = (request.blueprint or "") if request else ""
+            if bp in TENANT_DATA_BLUEPRINTS:
+                abort(503, description="Tenant isolation unavailable")
 
     # Register CLI Commands
     register_cli_commands = None

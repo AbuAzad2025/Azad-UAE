@@ -170,7 +170,7 @@ def create():
                         exception=e,
                     )
                 except Exception:
-                    pass
+                    current_app.logger.exception("Failed to log currency resolution error for sale creation")
                 default_currency = get_system_default_currency()
             currency_value = request.form.get("currency")
             currency = currency_value if currency_value else default_currency

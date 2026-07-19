@@ -5,6 +5,17 @@
 const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || 'AED';
 const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || 'د.إ';
 
+// Escape untrusted server-provided fields before interpolation into Select2
+// option/template HTML (defense against stored XSS via product names/SKUs).
+function azadEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 
 
 let lineIndex = 0;
@@ -208,11 +219,11 @@ function addLine() {
 
               id: p.id,
 
-              text: p.name,
+              text: azadEsc(p.name),
 
-              name: p.name,
+              name: azadEsc(p.name),
 
-              sku: p.sku,
+              sku: azadEsc(p.sku),
 
               cost_price: p.cost_price || 0,
 
@@ -290,9 +301,7 @@ function addLine() {
 
         return p.id ? `📦 ${p.text}` : p.text;
 
-      },
-
-      escapeMarkup: function(m) { return m; }
+      }
 
     });
 

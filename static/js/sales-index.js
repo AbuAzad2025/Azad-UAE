@@ -9,7 +9,7 @@ $(document).ready(function() {
     table = $tableEl.DataTable();
   } else {
     table = $tableEl.DataTable({
-      language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+      language: { url: window._DATATABLES_LANG_URL || '/static/datatables/Arabic.json' },
       order: [[2, 'desc']],
       pageLength: 25,
       responsive: true,

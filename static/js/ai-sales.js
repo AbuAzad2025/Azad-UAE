@@ -7,6 +7,17 @@ $(document).ready(function() {
         return document.querySelector('meta[name="csrf-token"]')?.content || '';
     }
 
+    // Escape untrusted server/AI-provided strings before injecting into HTML
+    // (defense against stored-XSS / prompt-injection-to-XSS).
+    function esc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // توصية السعر عند اختيار منتج وعميل
     function checkPriceRecommendation(productId, customerId, lineIndex) {
         if (!productId || !customerId) return;
@@ -63,13 +74,13 @@ $(document).ready(function() {
                 if (response.type === 'error') {
                     alertContainer.html(`
                         <div class="alert alert-danger alert-sm mt-2">
-                            <i class="fas fa-exclamation-triangle"></i> ${response.message}
+                            <i class="fas fa-exclamation-triangle"></i> ${esc(response.message)}
                         </div>
                     `);
                 } else if (response.type === 'warning') {
                     alertContainer.html(`
                         <div class="alert alert-warning alert-sm mt-2">
-                            <i class="fas fa-exclamation-circle"></i> ${response.message}
+                            <i class="fas fa-exclamation-circle"></i> ${esc(response.message)}
                         </div>
                     `);
                 }
@@ -94,7 +105,7 @@ $(document).ready(function() {
                         <h5><i class="fas fa-chart-line"></i> تحليل العميل</h5>
                         <p><strong>الرصيد الحالي:</strong> ${analysis.current_balance.toFixed(2)} درهم</p>
                         <p><strong>متوسط تأخير الدفع:</strong> ${analysis.avg_payment_delay_days} يوم</p>
-                        <p><strong>التوصية:</strong> ${analysis.recommendation}</p>
+                        <p><strong>التوصية:</strong> ${esc(analysis.recommendation)}</p>
                     </div>
                 `;
                 
@@ -121,7 +132,7 @@ success: function(suggestion) {
 
                 const sourceInfo = `
                     <small class="text-muted d-block mt-1">
-                        <i class="fas fa-info-circle"></i> ${suggestion.source}
+                        <i class="fas fa-info-circle"></i> ${esc(suggestion.source)}
                         ${suggestion.count > 0 ? `(بناءً على ${suggestion.count} معاملات)` : ''}
                     </small>
                 `;
@@ -146,8 +157,8 @@ success: function(suggestion) {
                             <strong>💰 سعر السوق العالمي:</strong><br>
                             <span class="badge badge-primary">${result.average_price_usd} USD</span>
                             <span class="badge badge-info">${result.suggested_price_aed.toFixed(2)} AED</span><br>
-                            <small>${result.notes || ''}</small>
-                            ${result.markets ? '<br><small>الأسواق: ' + result.markets.join(', ') + '</small>' : ''}
+                            <small>${esc(result.notes || '')}</small>
+                            ${result.markets ? '<br><small>الأسواق: ' + result.markets.map(esc).join(', ') + '</small>' : ''}
                             <button type="button" class="btn btn-xs btn-success mt-1" onclick="applyMarketPrice(${lineIndex}, ${result.suggested_price_aed})">
                                 تطبيق السعر
                             </button>
@@ -172,8 +183,8 @@ success: function(suggestion) {
                     let vehiclesHtml = '<div class="alert alert-info mt-2"><h6><i class="fas fa-car"></i> متوافقة مع:</h6><ul class="mb-0">';
                     
                     result.vehicles.slice(0, 5).forEach(v => {
-                        vehiclesHtml += `<li><strong>${v.brand}</strong>: ${v.models.join(', ')} (${v.years})`;
-                        if (v.engine) vehiclesHtml += ` - ${v.engine}`;
+                        vehiclesHtml += `<li><strong>${esc(v.brand)}</strong>: ${v.models.map(esc).join(', ')} (${esc(v.years)})`;
+                        if (v.engine) vehiclesHtml += ` - ${esc(v.engine)}`;
                         vehiclesHtml += '</li>';
                     });
                     
@@ -182,12 +193,12 @@ success: function(suggestion) {
                     }
                     
                     vehiclesHtml += '</ul>';
-                    if (result.notes) vehiclesHtml += `<small class="text-muted">${result.notes}</small>`;
+                    if (result.notes) vehiclesHtml += `<small class="text-muted">${esc(result.notes)}</small>`;
                     vehiclesHtml += '</div>';
                     
                     $('#compatible_vehicles').html(vehiclesHtml);
                 } else if (result.raw_response) {
-                    $('#compatible_vehicles').html(`<div class="alert alert-info mt-2">${result.raw_response}</div>`);
+                    $('#compatible_vehicles').html(`<div class="alert alert-info mt-2">${esc(result.raw_response)}</div>`);
                 }
             },
             error: function() {            }

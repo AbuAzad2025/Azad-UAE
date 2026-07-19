@@ -276,15 +276,16 @@
       const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
       const qty = parseFloat(item.qty) || 1;
       total += priceNum * qty;
-      html += '<div class="ps-cart-item" data-product-id="' + item.pid + '">'
-        + '<button class="ps-cart-item-remove" data-cart-remove="' + item.pid + '"><i class="fas fa-times"></i></button>'
+      var _esc = function(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+      html += '<div class="ps-cart-item" data-product-id="' + _esc(item.pid) + '">'
+        + '<button class="ps-cart-item-remove" data-cart-remove="' + _esc(item.pid) + '"><i class="fas fa-times"></i></button>'
         + '<div class="ps-cart-item-info">'
-        + '<div class="ps-cart-item-name">' + item.name + '</div>'
-        + '<div class="ps-cart-item-price">' + item.price + '</div>'
+        + '<div class="ps-cart-item-name">' + _esc(item.name) + '</div>'
+        + '<div class="ps-cart-item-price">' + _esc(item.price) + '</div>'
         + '<div class="ps-cart-item-qty">'
-        + '<button data-cart-dec="' + item.pid + '">−</button>'
-        + '<span>' + qty + '</span>'
-        + '<button data-cart-inc="' + item.pid + '">+</button>'
+        + '<button data-cart-dec="' + _esc(item.pid) + '">−</button>'
+        + '<span>' + _esc(qty) + '</span>'
+        + '<button data-cart-inc="' + _esc(item.pid) + '">+</button>'
         + '</div></div></div>';
     });
     body.innerHTML = html;

@@ -280,7 +280,9 @@ class GLJournalEntry(db.Model):
 
     def is_balanced(self):
         """Check if entry is balanced"""
-        return self.total_debit == self.total_credit
+        from decimal import Decimal
+
+        return abs(self.total_debit - self.total_credit) <= Decimal("0.001")
 
     @property
     def entry_type_ar(self):
@@ -314,6 +316,7 @@ class GLJournalEntry(db.Model):
             total_credit=self.total_debit,
             reversed_entry_id=self.id,
             created_by=self.created_by,
+            status="posted",
         )
         db.session.add(reversed_entry)
         db.session.flush()

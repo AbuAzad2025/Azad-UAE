@@ -496,3 +496,119 @@ def api_tenant_update_package(tenant_id):
         )
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@owner_bp.route("/tenants/<int:tenant_id>/extend-subscription", methods=["POST"])
+@owner_required
+def tenant_extend_subscription(tenant_id):
+    """Manually extend (or shorten) a tenant's subscription duration."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    days_raw = str(request.form.get("days", "0") or "0").strip()
+    try:
+        days = int(days_raw)
+    except (ValueError, TypeError):
+        flash("عدد الأيام غير صالح.", "danger")
+        return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
+
+    explicit_end = (request.form.get("subscription_end") or "").strip() or None
+    plan = (request.form.get("subscription_plan") or "").strip() or None
+    duration = (request.form.get("subscription_plan_duration") or "").strip() or None
+    is_trial = request.form.get("is_trial")
+    is_trial = None if is_trial in (None, "") else (is_trial == "1" or is_trial == "on")
+
+    try:
+        with atomic_transaction("tenant_extend_subscription"):
+            if explicit_end:
+                tenant.set_subscription_end(explicit_end)
+            elif days != 0:
+                tenant.extend_subscription(days)
+            if plan or duration or is_trial is not None:
+                tenant.apply_subscription_plan(plan, duration, is_trial)
+        _invalidate_owner_changes()
+        _audit_owner_db_action(
+            "tenant_extend_subscription",
+            {
+                "tenant_id": tenant_id,
+                "days": days,
+                "subscription_end": explicit_end,
+                "plan": plan,
+                "duration": duration,
+                "is_trial": is_trial,
+            },
+        )
+        flash(
+            f'تم تحديث اشتراك التينانت "{tenant.name_ar or tenant.name}" بنجاح.',
+            "success",
+        )
+    except Exception as e:
+        flash(f"خطأ في تمديد الاشتراك: {e}", "danger")
+    return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
+
+
+@owner_bp.route("/api/tenant/<int:tenant_id>/extend-subscription", methods=["POST"])
+@owner_required
+def api_tenant_extend_subscription(tenant_id):
+    """AJAX endpoint to extend or adjust a tenant subscription."""
+    if not request.is_json:
+        return jsonify({"success": False, "error": "JSON required"}), 400
+    data = request.get_json(silent=True) or {}
+    tenant = db.session.get(Tenant, tenant_id)
+    if not tenant:
+        return jsonify({"success": False, "error": "Tenant not found"}), 404
+
+    days_raw = str(data.get("days", "0") or "0").strip()
+    try:
+        days = int(days_raw)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid days value"}), 400
+
+    explicit_end = data.get("subscription_end") or None
+    plan = data.get("subscription_plan") or None
+    duration = data.get("subscription_plan_duration") or None
+    is_trial = data.get("is_trial")
+
+    try:
+        with atomic_transaction("api_tenant_extend_subscription"):
+            if explicit_end:
+                tenant.set_subscription_end(explicit_end)
+            elif days != 0:
+                tenant.extend_subscription(days)
+            if plan or duration or is_trial is not None:
+                tenant.apply_subscription_plan(plan, duration, is_trial)
+        _invalidate_owner_changes()
+        _audit_owner_db_action(
+            "api_tenant_extend_subscription",
+            {
+                "tenant_id": tenant_id,
+                "days": days,
+                "subscription_end": explicit_end,
+                "plan": plan,
+                "duration": duration,
+                "is_trial": is_trial,
+            },
+        )
+        return jsonify(
+            {
+                "success": True,
+                "subscription_end": (
+                    tenant.subscription_end.isoformat()
+                    if isinstance(tenant.subscription_end, datetime)
+                    else None
+                ),
+                "subscription_plan": (
+                    tenant.subscription_plan
+                    if isinstance(tenant.subscription_plan, str)
+                    else None
+                ),
+                "subscription_plan_duration": (
+                    tenant.subscription_plan_duration
+                    if isinstance(tenant.subscription_plan_duration, str)
+                    else None
+                ),
+                "is_trial": bool(tenant.is_trial),
+                "message": f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'",
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

@@ -5,7 +5,18 @@
   // =====================================
   
   const SmartSearch = {
-  
+    // Escape untrusted server-provided fields before they are interpolated
+    // into Select2 option/template HTML (defense against stored XSS via
+    // customer/supplier/product names, phones and codes).
+    esc: function(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
+
   // =====================================
     // CUSTOMER SEARCH
   // =====================================
@@ -29,9 +40,9 @@
               return {
                 results: items.map(item => ({
                   id: item.id,
-                  text: item.text || `${item.name}${item.phone ? ' - ' + item.phone : ''}`,
-                  name: item.name,
-                  phone: item.phone || '',
+                  text: item.text ? SmartSearch.esc(item.text) : `${SmartSearch.esc(item.name)}${item.phone ? ' - ' + SmartSearch.esc(item.phone) : ''}`,
+                  name: SmartSearch.esc(item.name),
+                  phone: SmartSearch.esc(item.phone || ''),
                   balance: item.balance || 0
                 })),
                 pagination: { more: false }
@@ -45,8 +56,7 @@
       dir: 'rtl',
       width: '100%',
           templateResult: SmartSearch.formatCustomerResult,
-          templateSelection: SmartSearch.formatCustomerSelection,
-          escapeMarkup: function(markup) { return markup; }
+          templateSelection: SmartSearch.formatCustomerSelection
         });      });
     },
     
@@ -73,9 +83,9 @@
               return {
                 results: items.map(item => ({
                   id: item.id,
-                  text: item.text || `${item.name}${item.phone ? ' - ' + item.phone : ''}`,
-                  name: item.name,
-                  phone: item.phone || '',
+                  text: item.text ? SmartSearch.esc(item.text) : `${SmartSearch.esc(item.name)}${item.phone ? ' - ' + SmartSearch.esc(item.phone) : ''}`,
+                  name: SmartSearch.esc(item.name),
+                  phone: SmartSearch.esc(item.phone || ''),
                   balance: item.balance || 0
                 })),
                 pagination: { more: false }
@@ -89,8 +99,7 @@
           dir: 'rtl',
           width: '100%',
           templateResult: SmartSearch.formatSupplierResult,
-          templateSelection: SmartSearch.formatSupplierSelection,
-          escapeMarkup: function(markup) { return markup; }
+          templateSelection: SmartSearch.formatSupplierSelection
         });      });
     },
   
@@ -117,9 +126,9 @@
               const results = {
                 results: items.map(item => ({
                   id: item.id,
-                  text: item.text || `${item.name} (${item.code || ''})`,
-                  name: item.name,
-                  code: item.code || '',
+                  text: item.text ? SmartSearch.esc(item.text) : `${SmartSearch.esc(item.name)} (${SmartSearch.esc(item.code || '')})`,
+                  name: SmartSearch.esc(item.name),
+                  code: SmartSearch.esc(item.code || ''),
                   price: item.price || 0,
                   stock: item.stock || 0
                 })),
@@ -134,8 +143,7 @@
       dir: 'rtl',
       width: '100%',
           templateResult: SmartSearch.formatProductResult,
-          templateSelection: SmartSearch.formatProductSelection,
-          escapeMarkup: function(markup) { return markup; }
+          templateSelection: SmartSearch.formatProductSelection
         });      });
     },
     

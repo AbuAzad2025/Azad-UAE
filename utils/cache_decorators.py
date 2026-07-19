@@ -1,8 +1,11 @@
+import logging
 from functools import wraps
 from flask import current_app, g, has_request_context
 from extensions import cache
 import hashlib
 import json
+
+logger = logging.getLogger(__name__)
 
 
 def _tenant_cache_salt() -> str:
@@ -55,4 +58,4 @@ def invalidate_cache(key_pattern):
         elif hasattr(cache, "delete"):
             cache.delete(key_pattern)
     except Exception:
-        pass
+        logger.warning("Failed to invalidate cache for pattern: %s", key_pattern, exc_info=True)

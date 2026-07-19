@@ -328,7 +328,7 @@ class AnalyticsService:
                         ):
                             month_purchases += float(d.amount_usd or 0)
                     except Exception:
-                        pass
+                        logger.warning("Failed to process purchase donation date for analytics", exc_info=True)
 
             # حساب التبرعات
             month_donations = 0
@@ -347,7 +347,7 @@ class AnalyticsService:
                         ):
                             month_donations += float(d.amount_usd or 0)
                     except Exception:
-                        pass
+                        logger.warning("Failed to process donation amount for analytics", exc_info=True)
 
             labels.append(month_label)
             purchases_data.append(round(month_purchases, 2))

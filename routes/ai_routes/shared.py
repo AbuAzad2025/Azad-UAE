@@ -1,5 +1,6 @@
 """Shared helpers and sanitization utilities for AI routes."""
 
+import logging
 import re
 from flask import jsonify
 from flask_login import current_user
@@ -15,6 +16,8 @@ from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 from utils.ai_access import get_ai_access_state
 from datetime import datetime, timezone
 from utils.db_safety import atomic_transaction
+
+logger = logging.getLogger(__name__)
 
 
 def _conversation_ctx(user_id: int, tenant_id: int | None = None):
@@ -334,7 +337,7 @@ def _stream_ai_response(message, context, ai_mode):
         with atomic_transaction("ai_interaction_log"):
             db.session.add(log)
     except Exception:
-        pass
+        logger.exception("Failed to log AI interaction to database")
 
     try:
         from ai_knowledge.trainer import trainer
@@ -347,4 +350,4 @@ def _stream_ai_response(message, context, ai_mode):
             tenant_id=getattr(current_user, "tenant_id", None),
         )
     except Exception:
-        pass
+        logger.exception("Failed to learn from AI interaction")

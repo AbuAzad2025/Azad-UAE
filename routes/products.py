@@ -604,7 +604,7 @@ def import_products():
                     try:
                         os.remove(filepath)
                     except Exception:
-                        pass
+                        current_app.logger.exception("Failed to remove uploaded temp file")
 
     return render_template("products/import.html")
 
@@ -1812,7 +1812,7 @@ def print_label(**kwargs):
 
         branch_id = report_branch_scope_id()
     except Exception:
-        pass
+        current_app.logger.exception("Failed to resolve branch scope for single label print")
     return get_single_label_html(product, branch_id=branch_id, tenant_id=tenant_id)
 
 
@@ -1838,5 +1838,5 @@ def print_labels():
 
         branch_id = report_branch_scope_id()
     except Exception:
-        pass
+        current_app.logger.exception("Failed to resolve branch scope for batch label print")
     return get_product_labels_html(ids, tenant_id, branch_id=branch_id)

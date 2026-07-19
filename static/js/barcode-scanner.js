@@ -6,16 +6,17 @@ class BarcodeScanner {
         this.scanDelay = options.scanDelay || 100;
         this.minLength = options.minLength || 3;
         this.active = false;
+        this._boundHandleKeyPress = this.handleKeyPress.bind(this);
     }
     
     start() {
         this.active = true;
-        document.addEventListener('keypress', this.handleKeyPress.bind(this));
+        document.addEventListener('keypress', this._boundHandleKeyPress);
     }
     
     stop() {
         this.active = false;
-        document.removeEventListener('keypress', this.handleKeyPress.bind(this));
+        document.removeEventListener('keypress', this._boundHandleKeyPress);
     }
     
     handleKeyPress(e) {

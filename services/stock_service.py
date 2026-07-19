@@ -1,7 +1,10 @@
+import logging
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from flask import current_app
 from flask_login import current_user
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.exc import OperationalError
 from extensions import db
 from models import (
@@ -86,7 +89,7 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
             if resolved:
                 return resolved.account_code
         except Exception:
-            pass
+            logger.warning("Dynamic GL mapping failed for concept %s, falling back to static", concept_code, exc_info=True)
     concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
     if concept_key and concept_key in GL_ACCOUNTS:
         return GL_ACCOUNTS[concept_key]
@@ -428,7 +431,7 @@ class StockService:
                     f"Stock movement: {movement_type} {quantity} of product #{product_id}"
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log stock movement info for product #%s", product_id, exc_info=True)
 
             return movement
 
@@ -1241,17 +1244,20 @@ class StockService:
                         if pwc.average_cost is not None
                         else Decimal("0")
                     )
-                    qty * original_unit_cost
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, -qty, original_unit_cost
                     )
 
-                    pwc.total_quantity = new_qty if new_qty >= 0 else Decimal("0")
-                    pwc.total_value = new_value if new_value >= 0 else Decimal("0")
+                    # Preserve the MWAC cost even when the reversal drives stock
+                    # to zero/negative so subsequent purchases can apply the
+                    # retrospective cost adjustment. Zeroing average_cost here
+                    # destroyed cost history for later transactions (H01).
+                    pwc.total_quantity = new_qty
+                    pwc.total_value = new_value
                     pwc.average_cost = (
                         new_avg.quantize(Decimal("0.0001"))
                         if new_qty > 0
-                        else Decimal("0")
+                        else (original_unit_cost or new_avg).quantize(Decimal("0.0001"))
                     )
                     pwc.last_updated = datetime.now(timezone.utc)
 

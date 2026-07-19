@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 import re
@@ -6,6 +7,8 @@ from decimal import Decimal
 from werkzeug.utils import secure_filename
 from flask import current_app, request
 from extensions import db
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_branch_code(branch_code):
@@ -32,7 +35,7 @@ def _resolve_branch_code(branch_code=None, branch_id=None):
             if normalized:
                 return normalized
     except Exception:
-        pass
+        logger.debug("Failed to resolve branch code from Branch model", exc_info=True)
 
     return f"BR{int(branch_id):02d}"
 
@@ -180,7 +183,7 @@ def _resolve_format_currency_settings():
         ).strip() or None
         settings_decimals = getattr(settings, "decimal_places", None)
     except Exception:
-        pass
+        logger.debug("Failed to load currency format settings from SystemSettings", exc_info=True)
     try:
         from models.tenant import Tenant
 
@@ -188,7 +191,7 @@ def _resolve_format_currency_settings():
         if tenant and tenant.default_currency:
             settings_currency = settings_currency or tenant.default_currency
     except Exception:
-        pass
+        logger.debug("Failed to load tenant default currency for formatting", exc_info=True)
     return settings_currency, settings_symbol, settings_position, settings_decimals
 
 
@@ -314,7 +317,7 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
             else:
                 print(f"Failed to create audit log: {e}")
         except Exception:
-            pass
+            logger.debug("Failed to write audit log to stderr/file", exc_info=True)
 
 
 def allowed_file(filename, allowed_extensions=None):

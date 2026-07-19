@@ -154,7 +154,7 @@ class Config:
     LOGIN_BLOCK_DURATION = _int("LOGIN_BLOCK_DURATION_MINUTES", 15) * 60
 
     WTF_CSRF_ENABLED = _bool(os.environ.get("WTF_CSRF_ENABLED"), True)
-    WTF_CSRF_TIME_LIMIT = None
+    WTF_CSRF_TIME_LIMIT = 3600
 
     CORS_ORIGINS = os.environ.get(
         "CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000"

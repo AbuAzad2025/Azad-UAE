@@ -1,6 +1,10 @@
+import logging
+
 from extensions import db
 from typing import Any
 from utils.db_safety import atomic_transaction
+
+logger = logging.getLogger(__name__)
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from utils.currency_utils import resolve_default_currency
@@ -76,7 +80,7 @@ class GLTreeBuilder:
             if tenant and tenant.business_type:
                 industry_tree = _get_industry_tree(tenant.business_type)
         except Exception:
-            pass
+            logger.warning("Failed to load industry tree for tenant %s", tenant_id, exc_info=True)
         full_tree = core_tree + industry_tree
         for (
             code,

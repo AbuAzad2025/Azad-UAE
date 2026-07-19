@@ -257,7 +257,7 @@ document.addEventListener('click', function(e) {
 });
 
 const currentMode = getSavedViewMode();
-console.log('[Azad] View mode:', currentMode, '| Screen:', window.innerWidth + 'x' + window.innerHeight);
+if (window._DEBUG) console.log('[Azad] View mode:', currentMode, '| Screen:', window.innerWidth + 'x' + window.innerHeight);
 setViewMode(currentMode);
 
 (function() {

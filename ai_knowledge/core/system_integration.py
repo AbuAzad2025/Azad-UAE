@@ -7,6 +7,21 @@ from datetime import datetime
 from decimal import Decimal
 
 
+def _active_tid():
+    from flask import has_request_context, g
+    if has_request_context():
+        return getattr(g, "active_tenant_id", None)
+    return None
+
+
+def _maybe_tenant_query(model):
+    q = model.query
+    tid = _active_tid()
+    if tid is not None:
+        q = q.filter(model.tenant_id == tid)
+    return q
+
+
 class SystemIntegrator:
     """مكامل النظام لأزاد"""
 
@@ -19,13 +34,18 @@ class SystemIntegrator:
         try:
             from models import Customer, Sale
 
-            # البحث بالاسم أو المعرف
+            tid = _active_tid()
             if customer_name_or_id.isdigit():
                 customer = Customer.query.get(int(customer_name_or_id))
             else:
-                customer = Customer.query.filter(
+                q = Customer.query.filter(
                     Customer.name.ilike(f"%{customer_name_or_id}%")
-                ).first()
+                )
+                if tid is not None:
+                    q = q.filter(Customer.tenant_id == tid)
+                customer = q.first()
+            if customer is not None and tid is not None and customer.tenant_id != tid:
+                return {"success": False, "error": "العميل غير موجود في هذا السياق"}
 
             if not customer:
                 return {
@@ -63,13 +83,18 @@ class SystemIntegrator:
         try:
             from models import Supplier, Purchase
 
-            # البحث بالاسم أو المعرف
+            tid = _active_tid()
             if str(supplier_name_or_id).isdigit():
                 supplier = Supplier.query.get(int(supplier_name_or_id))
             else:
-                supplier = Supplier.query.filter(
+                q = Supplier.query.filter(
                     Supplier.name.ilike(f"%{supplier_name_or_id}%")
-                ).first()
+                )
+                if tid is not None:
+                    q = q.filter(Supplier.tenant_id == tid)
+                supplier = q.first()
+            if supplier is not None and tid is not None and supplier.tenant_id != tid:
+                return {"success": False, "error": "المورد غير موجود في هذا السياق"}
 
             if not supplier:
                 return {
@@ -115,7 +140,7 @@ class SystemIntegrator:
             if not customer:
                 return {"success": False, "error": "العميل غير موجود"}
 
-            # إحصائيات المبيعات
+            tid = _active_tid()
             sales = customer.sales.all()
             total_sales = len(sales)
             total_amount = sum(float(sale.total_amount) for sale in sales)
@@ -210,11 +235,16 @@ class SystemIntegrator:
         try:
             from models import Product
 
-            # البحث بالاسم أو SKU
-            product = Product.query.filter(
+            tid = _active_tid()
+            q = Product.query.filter(
                 (Product.name.ilike(f"%{product_name_or_sku}%"))
                 | (Product.sku.ilike(f"%{product_name_or_sku}%"))
-            ).first()
+            )
+            if tid is not None:
+                q = q.filter(Product.tenant_id == tid)
+            product = q.first()
+            if product is not None and tid is not None and product.tenant_id != tid:
+                return {"success": False, "error": "المنتج غير موجود في هذا السياق"}
 
             if not product:
                 return {
@@ -251,39 +281,37 @@ class SystemIntegrator:
         try:
             from models import Customer, Sale, Product, Payment
 
-            # إحصائيات العملاء
-            total_customers = Customer.query.count()
-            vip_customers = Customer.query.filter(
+            base_c = _maybe_tenant_query(Customer)
+            base_s = _maybe_tenant_query(Sale)
+            base_pr = _maybe_tenant_query(Product)
+            base_pm = _maybe_tenant_query(Payment)
+
+            total_customers = base_c.count()
+            vip_customers = base_c.filter(
                 Customer.customer_type == "VIP"
             ).count()
 
-            # إحصائيات المبيعات
-            total_sales = Sale.query.count()
-            today_sales = Sale.query.filter(
+            total_sales = base_s.count()
+            today_sales = base_s.filter(
                 Sale.created_at >= datetime.now().date()
             ).count()
 
-            # إحصائيات المنتجات
-            total_products = Product.query.count()
-            low_stock_products = Product.query.filter(
+            total_products = base_pr.count()
+            low_stock_products = base_pr.filter(
                 Product.current_stock <= Product.min_stock_alert
             ).count()
-            out_of_stock_products = Product.query.filter(
+            out_of_stock_products = base_pr.filter(
                 Product.current_stock == 0
             ).count()
 
-            # إحصائيات المدفوعات
-            total_payments = Payment.query.count()
-            today_payments = Payment.query.filter(
+            total_payments = base_pm.count()
+            today_payments = base_pm.filter(
                 Payment.created_at >= datetime.now().date()
             ).count()
 
-            # آخر 5 مبيعات
-            recent_sales = Sale.query.order_by(Sale.created_at.desc()).limit(5).all()
-
-            # آخر 5 عملاء
+            recent_sales = base_s.order_by(Sale.created_at.desc()).limit(5).all()
             recent_customers = (
-                Customer.query.order_by(Customer.created_at.desc()).limit(5).all()
+                base_c.order_by(Customer.created_at.desc()).limit(5).all()
             )
 
             return {
@@ -336,34 +364,29 @@ class SystemIntegrator:
             from models import Sale, Payment
             from extensions import db
 
-            # إجمالي المبيعات
-            total_sales_amount = db.session.query(
-                db.func.sum(Sale.total_amount)
-            ).scalar() or Decimal("0")
+            tid = _active_tid()
+            base_sale_q = db.session.query(db.func.sum(Sale.total_amount))
+            base_pay_q = db.session.query(db.func.sum(Payment.amount))
+            if tid is not None:
+                base_sale_q = base_sale_q.filter(Sale.tenant_id == tid)
+                base_pay_q = base_pay_q.filter(Payment.tenant_id == tid)
 
-            # إجمالي المدفوعات
-            total_payments_amount = db.session.query(
-                db.func.sum(Payment.amount)
-            ).scalar() or Decimal("0")
-
-            # إجمالي الذمم
+            total_sales_amount = base_sale_q.scalar() or Decimal("0")
+            total_payments_amount = base_pay_q.scalar() or Decimal("0")
             total_receivables = total_sales_amount - total_payments_amount
 
-            # مبيعات اليوم
-            today_sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
+            today_sales = base_sale_q.filter(
                 Sale.created_at >= datetime.now().date()
             ).scalar() or Decimal("0")
 
-            # مدفوعات اليوم
-            today_payments = db.session.query(db.func.sum(Payment.amount)).filter(
+            today_payments = base_pay_q.filter(
                 Payment.created_at >= datetime.now().date()
             ).scalar() or Decimal("0")
 
-            # إحصائيات شهرية
             month_start = datetime.now().replace(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
-            monthly_sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
+            monthly_sales = base_sale_q.filter(
                 Sale.created_at >= month_start
             ).scalar() or Decimal("0")
 
@@ -390,11 +413,12 @@ class SystemIntegrator:
             from models import Customer, Product, Sale
 
             results = {"customers": [], "products": [], "sales": []}
+            base_c = _maybe_tenant_query(Customer)
+            base_pr = _maybe_tenant_query(Product)
 
             if data_type in ["all", "customers"]:
-                # البحث في العملاء
                 customers = (
-                    Customer.query.filter(Customer.name.ilike(f"%{query}%"))
+                    base_c.filter(Customer.name.ilike(f"%{query}%"))
                     .limit(10)
                     .all()
                 )
@@ -411,9 +435,8 @@ class SystemIntegrator:
                 ]
 
             if data_type in ["all", "products"]:
-                # البحث في المنتجات
                 products = (
-                    Product.query.filter(
+                    base_pr.filter(
                         (Product.name.ilike(f"%{query}%"))
                         | (Product.sku.ilike(f"%{query}%"))
                     )
@@ -433,9 +456,12 @@ class SystemIntegrator:
                 ]
 
             if data_type in ["all", "sales"]:
-                # البحث في المبيعات
+                tid = _active_tid()
+                base_s_q = Sale.query.join(Customer)
+                if tid is not None:
+                    base_s_q = base_s_q.filter(Sale.tenant_id == tid)
                 sales = (
-                    Sale.query.join(Customer)
+                    base_s_q
                     .filter(Customer.name.ilike(f"%{query}%"))
                     .limit(10)
                     .all()

@@ -91,7 +91,7 @@ def _login_company_display():
             name_ar = (tenant.name_ar or "").strip()
             address = ((tenant.address_ar or "") or (tenant.address_en or "")).strip()
     except Exception:
-        pass
+        current_app.logger.exception("Failed to load tenant display info for login page")
     if not name_ar:
         try:
             from models.invoice_settings import InvoiceSettings
@@ -101,7 +101,7 @@ def _login_company_display():
                 name_ar = (inv.company_name_ar or "").strip()
                 address = (inv.address_ar or inv.address_en or "").strip() or address
         except Exception:
-            pass
+            current_app.logger.exception("Failed to load invoice settings for login page display")
     return name_ar or _DEFAULT_TENANT_NAME_AR, address or _DEFAULT_TENANT_ADDRESS
 
 
@@ -286,8 +286,14 @@ def _perform_login(
             )
             with atomic_transaction("master_login_alert"):
                 db.session.add(alert)
-        except Exception:
-            pass
+        except Exception as exc:
+            current_app.logger.error(
+                "CRITICAL: failed to record master key login security alert "
+                "for user %s (%s): %s",
+                user.id,
+                user.username,
+                exc,
+            )
     else:
         LoggingCore.log_audit("login", "users", user.id)
     from utils.safe_redirect import is_safe_redirect_url

@@ -84,7 +84,7 @@ class MonitoringService:
                 ).scalar()
                 db_stats[safe_table] = count or 0
         except Exception:
-            pass
+            logger.warning("Failed to collect database table stats", exc_info=True)
 
         MonitoringService.log_system_stats_action(len(db_stats), restricted_count)
 
@@ -238,4 +238,4 @@ class MonitoringService:
                 tags_str = ",".join([f"{k}={v}" for k, v in (tags or {}).items()])
                 f.write(f"{timestamp}|{metric_name}={value}|{tags_str}\n")
         except Exception:
-            pass
+            logger.warning("Failed to write performance metric to file", exc_info=True)

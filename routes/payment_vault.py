@@ -235,7 +235,11 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
             api_key.last_used = datetime.now(timezone.utc)
             api_key.usage_count = (api_key.usage_count or 0) + 1
     except Exception:
-        pass
+        from flask import current_app
+
+        current_app.logger.exception(
+            "Failed to track API key %s usage", api_key_id
+        )
 
     return None
 

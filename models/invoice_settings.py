@@ -167,7 +167,8 @@ class InvoiceSettings(db.Model):
 
                     tenant_id = get_active_tenant_id()
             except Exception:
-                pass
+                import logging
+                logging.getLogger(__name__).debug("Failed to resolve tenant_id from current_user", exc_info=True)
 
         if tenant_id is not None:
             tid = int(tenant_id)

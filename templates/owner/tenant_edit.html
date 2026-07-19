@@ -185,6 +185,76 @@
           </ul>
         </div>
       </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+          <i class="bi bi-calendar-plus me-2"></i>إدارة مدة الاشتراك
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>الباقة</span>
+              <span class="badge bg-primary">{{ tenant.subscription_plan or '—' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>نوع المدة</span>
+              <span class="badge bg-info text-dark">{{ tenant.get_subscription_duration_display() or '—' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>تاريخ الانتهاء</span>
+              <span class="text-muted">{{ tenant.subscription_end.strftime('%Y-%m-%d') if tenant.subscription_end else '—' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>أيام متبقية</span>
+              <span class="badge bg-{{ 'success' if tenant.get_remaining_days() > 7 else ('warning' if tenant.get_remaining_days() > 0 else 'danger') }}">{{ tenant.get_remaining_days() }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>فترة تجريبية</span>
+              {% if tenant.is_trial %}<span class="badge bg-warning text-dark">نعم</span>{% else %}<span class="badge bg-secondary">لا</span>{% endif %}
+            </li>
+          </ul>
+
+          <form method="POST" action="{{ url_for('owner.tenant_extend_subscription', tenant_id=tenant.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="input_extend_days">تمديد (أيام)</label>
+              <input type="number" name="days" id="input_extend_days" class="form-control" value="30" min="-365" max="3650" aria-label="extend days">
+              <div class="form-text">رقم موجب للتمديد، سالب للتقصير.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="input_sub_end">أو تحديد تاريخ انتهاء صريح</label>
+              <input type="date" name="subscription_end" id="input_sub_end" class="form-control" aria-label="subscription end">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold" for="input_plan">الباقة</label>
+                <select name="subscription_plan" id="input_plan" class="form-select" aria-label="subscription plan">
+                  <option value="">— بدون تغيير —</option>
+                  <option value="basic" {% if tenant.subscription_plan == 'basic' %}selected{% endif %}>Basic</option>
+                  <option value="standard" {% if tenant.subscription_plan == 'standard' %}selected{% endif %}>Standard</option>
+                  <option value="professional" {% if tenant.subscription_plan == 'professional' %}selected{% endif %}>Professional</option>
+                  <option value="enterprise" {% if tenant.subscription_plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                  <option value="trial" {% if tenant.subscription_plan == 'trial' %}selected{% endif %}>Trial</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold" for="input_duration">نوع المدة</label>
+                <select name="subscription_plan_duration" id="input_duration" class="form-select" aria-label="subscription duration">
+                  <option value="">— بدون تغيير —</option>
+                  <option value="monthly" {% if tenant.subscription_plan_duration == 'monthly' %}selected{% endif %}>شهري</option>
+                  <option value="annual" {% if tenant.subscription_plan_duration == 'annual' %}selected{% endif %}>سنوي</option>
+                  <option value="lifetime" {% if tenant.subscription_plan_duration == 'lifetime' %}selected{% endif %}>مدى الحياة</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="is_trial" id="input_is_trial" value="1" {% if tenant.is_trial %}checked{% endif %} aria-label="is trial">
+              <label class="form-check-label" for="input_is_trial">تفعيل وضع التجربة</label>
+            </div>
+            <button type="submit" class="btn btn-warning w-100"><i class="bi bi-calendar-check me-1"></i>تطبيق تحديث الاشتراك</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>

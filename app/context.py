@@ -106,7 +106,12 @@ def register_context_processors(app):
                     exception=e,
                 )
             except Exception:
-                pass
+                LoggingCore.log_error(
+                    message="Context processor tenant_settings inner guard failed",
+                    category="SYSTEM",
+                    level="WARNING",
+                    source="app.context_processor.tenant_settings",
+                )
 
         try:
             from models.system_settings import SystemSettings
@@ -174,7 +179,12 @@ def register_context_processors(app):
                     exception=e,
                 )
             except Exception:
-                pass
+                LoggingCore.log_error(
+                    message="Context processor system_settings inner guard failed",
+                    category="SYSTEM",
+                    level="WARNING",
+                    source="app.context_processor.system_settings",
+                )
             developer_name_ar = app.config.get("DEVELOPER_NAME_AR", "")
             developer_name = app.config.get("DEVELOPER_NAME", "")
             developer_credit = app.config.get("DEVELOPER_CREDIT", "")
@@ -254,7 +264,12 @@ def register_context_processors(app):
                     exception=e,
                 )
             except Exception:
-                pass
+                LoggingCore.log_error(
+                    message="Context processor available_tenants inner guard failed",
+                    category="SYSTEM",
+                    level="WARNING",
+                    source="app.context_processor.available_tenants",
+                )
         app_enums = {
             "permissions": PERMISSIONS,
             "permission_codes": PERMISSION_CODES,
@@ -354,7 +369,12 @@ def register_context_processors(app):
                     developer_whatsapp or developer_phone
                 )
         except Exception:
-            pass
+            LoggingCore.log_error(
+                message="Context processor WhatsApp upgrade link resolution failed",
+                category="SYSTEM",
+                level="WARNING",
+                source="app.context_processor.whatsapp_link",
+            )
 
         return {
             "format_currency": format_currency,

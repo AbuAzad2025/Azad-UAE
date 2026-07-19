@@ -36,8 +36,7 @@ def _get_user_context():
                 "is_owner": getattr(current_user, "is_owner", False),
             }
     except Exception:
-        pass
-    return {}
+        logger.debug("Failed to extract user context for structured log", exc_info=True)
 
 
 def _resolve_id(value):

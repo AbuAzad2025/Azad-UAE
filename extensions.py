@@ -38,6 +38,7 @@ login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 login_manager.login_message = "الرجاء تسجيل الدخول للوصول لهذه الصفحة"
 login_manager.login_message_category = "warning"
+login_manager.session_protection = "strong"
 
 csrf = CSRFProtect()
 
@@ -53,7 +54,10 @@ def _rate_limit_key():
         if getattr(current_user, "is_authenticated", False):
             return f"user:{current_user.get_id()}"
     except Exception:
-        pass
+        import logging
+        logging.getLogger(__name__).debug(
+            "Rate-limit key resolution: current_user not available, falling back to IP"
+        )
     return get_remote_address()
 
 

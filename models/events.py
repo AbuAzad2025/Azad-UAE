@@ -57,7 +57,7 @@ def register_sale_listeners():
                 f"Sale {target.sale_number} changed for customer {target.customer_id}"
             )
         except Exception:
-            pass
+            logger.debug("Sale after_insert event listener failed", exc_info=True)
 
     @event.listens_for(Sale, "after_delete")
     def _h2(mapper, connection, target):
@@ -99,7 +99,7 @@ def register_purchase_listeners():
                 f"Purchase {target.purchase_number} changed for supplier {target.supplier_id}"
             )
         except Exception:
-            pass
+            logger.debug("Purchase after_insert event listener failed", exc_info=True)
 
 
 def register_payment_listeners():

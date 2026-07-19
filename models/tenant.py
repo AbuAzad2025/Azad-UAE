@@ -181,7 +181,9 @@ class Tenant(db.Model):
                         return rel
                     return None
         except Exception:
-            pass
+            import logging
+            logger = logging.getLogger("azad.security")
+            logger.debug("Failed to resolve active tenant from user relationship", exc_info=True)
 
         import logging
         from flask import has_request_context, request
@@ -220,6 +222,57 @@ class Tenant(db.Model):
         return labels.get(
             self.subscription_plan_duration, self.subscription_plan_duration
         )
+
+    def extend_subscription(self, days: int) -> "Tenant":
+        """Extend (or set, if unset) the subscription end date by ``days``.
+
+        Pure ORM mutation — the caller must wrap this in an atomic transaction.
+        A negative ``days`` value shortens the subscription.
+        """
+        from datetime import timedelta
+
+        if days == 0:
+            return self
+        now = datetime.now(timezone.utc)
+        base = self.subscription_end
+        if not isinstance(base, datetime):
+            base = now
+        elif base < now:
+            base = now
+        self.subscription_end = base + timedelta(days=days)
+        self.updated_at = now
+        return self
+
+    def set_subscription_end(self, end_value) -> "Tenant":
+        """Set an explicit subscription end. ``end_value`` may be a datetime,
+        ISO string, or None (clear). Pure ORM — caller wraps in a transaction.
+        """
+        if end_value is None or end_value == "":
+            self.subscription_end = None
+        elif isinstance(end_value, str):
+            from datetime import datetime as _dt
+
+            self.subscription_end = _dt.fromisoformat(end_value)
+        else:
+            self.subscription_end = end_value
+        self.updated_at = datetime.now(timezone.utc)
+        return self
+
+    def apply_subscription_plan(
+        self, plan: str | None, duration: str | None = None, is_trial: bool | None = None
+    ) -> "Tenant":
+        """Update the subscription plan label / duration / trial flag.
+
+        Pure ORM — caller wraps in an atomic transaction.
+        """
+        if plan is not None:
+            self.subscription_plan = plan
+        if duration is not None:
+            self.subscription_plan_duration = duration
+        if is_trial is not None:
+            self.is_trial = bool(is_trial)
+        self.updated_at = datetime.now(timezone.utc)
+        return self
 
     def to_dict(self):
         return {

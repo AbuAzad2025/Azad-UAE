@@ -951,7 +951,7 @@ class AIService:
                 )
                 system_context = "\n📘 **معلومات النظام:**\n" + ctx_text[:2000]
         except Exception:
-            pass
+            logger.debug("Failed to build system context for AI chat", exc_info=True)
 
         # ========== المرحلة 2: مسار التنفيذ المباشر (للأوامر الواضحة) ==========
         try:
@@ -966,7 +966,7 @@ class AIService:
                         f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
                     )
         except Exception:
-            pass
+            logger.debug("Action dispatcher failed for chat message", exc_info=True)
 
         # ========== المرحلة 3: مسار المعرفة المضمنة (للأسئلة المعرفية) ==========
         try:
@@ -980,7 +980,7 @@ class AIService:
             ):
                 return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
         except Exception:
-            pass
+            logger.debug("Knowledge agents failed for chat message", exc_info=True)
 
         # ========== المرحلة 4: التعاون مع Groq ==========
         api_key = AIService.get_api_key()
@@ -1102,7 +1102,7 @@ class AIService:
                         exception=e,
                     )
                 except Exception:
-                    pass
+                    logger.warning("Failed to log AI chat response error via LoggingCore", exc_info=True)
 
         return f"{local_response}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
 
@@ -1214,7 +1214,7 @@ class AIService:
                     exception=e,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log AI action execution error via LoggingCore", exc_info=True)
             return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
 
     @staticmethod
@@ -1691,7 +1691,7 @@ class AIService:
                     exception=e,
                 )
             except Exception:
-                pass
+                logger.warning("Failed to log AI chat message processing error via LoggingCore", exc_info=True)
             try:
                 from ai_knowledge.personality.azad_responses import AzadResponses
 

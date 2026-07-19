@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_nowpayments_ipn_url() -> str:
     """Canonical IPN callback URL for per-payment NOWPayments requests."""
@@ -28,7 +32,6 @@ def resolve_nowpayments_ipn_secret(vault=None) -> str:
             if secret:
                 return secret
     except Exception:
-        pass
-    from services.payments.nowpayments_provider import NowPaymentsProvider
+        logger.debug("Failed to load NOWPayments IPN secret from PaymentVault", exc_info=True)
 
     return (NowPaymentsProvider().ipn_secret or "").strip()

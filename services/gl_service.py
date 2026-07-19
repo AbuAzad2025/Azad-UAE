@@ -1,7 +1,10 @@
+import logging
 from decimal import Decimal
 from datetime import datetime, timezone
 from typing import Any
 from extensions import db
+
+logger = logging.getLogger(__name__)
 from models import GLAccount, GLJournalEntry, GLJournalLine
 from models.tenant import Tenant
 from models._constants import (

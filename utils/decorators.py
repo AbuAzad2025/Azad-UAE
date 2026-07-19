@@ -138,7 +138,10 @@ def owner_required(f):
 
 
 def owner_only(f):
-    """قفل صلاحيات المالك فقط - Owner-only access control."""
+    """قفل صلاحيات المالك فقط - Owner-only access control.
+    Returns 403 (not redirect) for unauthenticated requests so the
+    owner-panel URL space is not revealed to anonymous clients.
+    """
 
     @wraps(f)
     def decorated_function(*args, **kwargs):

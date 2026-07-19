@@ -196,7 +196,8 @@ class SystemSettings(db.Model):
             try:
                 custom = json.loads(self.custom_settings)
             except Exception:
-                pass
+                import logging
+                logging.getLogger(__name__).debug("Failed to parse custom_settings JSON", exc_info=True)
         custom[key] = value
         self.custom_settings = json.dumps(custom, ensure_ascii=False)
 

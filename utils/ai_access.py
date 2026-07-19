@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from flask_login import current_user
+
+logger = logging.getLogger(__name__)
 
 from extensions import db
 from models.system_settings import SystemSettings
@@ -22,8 +25,7 @@ def get_tenant_ai_level(tenant_id: int | None, default: str = "execute") -> str:
         if raw in ("basic", "advanced", "execute"):
             return raw
     except Exception:
-        pass
-    return level
+        logger.debug("Failed to resolve tenant AI level for tenant %s", tenant_id, exc_info=True)
 
 
 def set_tenant_ai_level(tenant_id: int, level: str) -> str:

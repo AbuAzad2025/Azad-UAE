@@ -124,12 +124,13 @@ class AdvancedJournalEntryManager:
         description, lines, entry_date=None, notes=None, created_by=None, **kwargs
     ):
         """إنشاء قيد — defaults to 'draft' so it must be validated before posting."""
+        from decimal import Decimal
         from services.gl_service import GLService
 
         # Inline balance check (fast-fail before DB round-trip)
-        total_debit = sum(line.get("debit", 0) for line in lines)
-        total_credit = sum(line.get("credit", 0) for line in lines)
-        if abs(total_debit - total_credit) > 0.01:
+        total_debit = sum(Decimal(str(line.get("debit", 0))) for line in lines)
+        total_credit = sum(Decimal(str(line.get("credit", 0))) for line in lines)
+        if abs(total_debit - total_credit) > Decimal("0.001"):
             raise ValueError(
                 f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}"
             )

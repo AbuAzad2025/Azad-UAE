@@ -12,9 +12,12 @@ CurrencyService remains as the low-level provider that those methods call
 when a system rate is needed. Do NOT call it directly from routes/forms.
 """
 
+import logging
+import time
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Any
-import time
+
+logger = logging.getLogger(__name__)
 
 class _CurrencyRatesStub:
     """Dummy CurrencyRates when forex-python is not installed — keeps CurrencyRates always callable."""
@@ -326,7 +329,7 @@ class CurrencyService:
                     "age_seconds": 0,
                 }
             except Exception:
-                pass
+                logger.warning("forex-python conversion failed for %s -> %s", from_currency, to_currency, exc_info=True)
 
         def get_aed_value(target):
             if target == "AED":

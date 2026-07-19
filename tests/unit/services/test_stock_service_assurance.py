@@ -1424,7 +1424,7 @@ class TestReversePurchase:
             app.config["ENABLE_MWAC"] = True
             StockService.reverse_purchase(_purchase(id=50))
 
-    def test_mwac_clamps_negative_qty(self, mocker, app):
+    def test_mwac_preserves_cost_on_negative_qty(self, mocker, app):
         mocker.patch("services.stock_service.StockService.remove_stock")
         pwc = _pwc(
             total_quantity=Decimal("1"),
@@ -1445,11 +1445,14 @@ class TestReversePurchase:
         mocker.patch("services.stock_service.db.session")
         from services.stock_service import StockService
 
+        # Reversing a 5-unit purchase when only 1 is in stock drives the
+        # balance negative; cost history must be preserved (H01), not zeroed.
         purchase = _purchase(lines=[_purchase_line(quantity=Decimal("5"))])
         with app.app_context():
             app.config["ENABLE_MWAC"] = True
             StockService.reverse_purchase(purchase)
-        assert pwc.total_quantity >= Decimal("0")
+        assert pwc.total_quantity == Decimal("-4")
+        assert pwc.average_cost == Decimal("10")
 
     def test_lock_fallback(self, mocker, app):
         mocker.patch("services.stock_service.StockService.remove_stock")

@@ -13,7 +13,11 @@ from flask import g, has_request_context, request
 from sqlalchemy import event, inspect as sa_inspect, true as sql_true
 from sqlalchemy.orm import Session, with_loader_criteria
 
+import logging
+
 from extensions import db
+
+logger = logging.getLogger(__name__)
 
 
 class TenantIsolationError(Exception):
@@ -31,7 +35,41 @@ _SKIP_BLUEPRINTS = frozenset(
     }
 )
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
-_ORM_EXEMPT_MODELS = frozenset({"User", "Package", "PackagePurchase"})
+_ORM_EXEMPT_MODELS = frozenset({
+    "User",
+    "Package",
+    "PackagePurchase",
+    "ErrorAuditLog",
+})
+
+# Blueprints that serve tenant business data. If ORM scoping fails to register
+# we block only these (not owner/platform/static) so operators can still reach
+# diagnostics while tenant isolation is restored.
+TENANT_DATA_BLUEPRINTS = frozenset(
+    {
+        "sales",
+        "purchases",
+        "customers",
+        "suppliers",
+        "inventory",
+        "products",
+        "warehouses",
+        "branches",
+        "expenses",
+        "receipts",
+        "payments",
+        "ledger",
+        "pos",
+        "hr",
+        "manufacturing",
+        "cheques",
+        "assets",
+        "donations",
+        "packages",
+        "returns",
+        "cashier",
+    }
+)
 
 # ── shop blueprint exemption rationale ─────────────────────────────────────
 # The 'shop' blueprint (/s/<slug>/...) displays tenant-store pages and is
@@ -83,7 +121,7 @@ def _discover_tenant_models() -> list[type]:
             if "tenant_id" in mapper.columns:
                 classes.append(cls)
     except Exception:
-        pass
+        logger.debug("Failed to discover tenant-scoped ORM models", exc_info=True)
 
     if not classes:
         # Don't cache an empty result — the registry may not have been
@@ -127,9 +165,9 @@ def _active_tenant_for_orm() -> int | None:
         if getattr(g, "active_tenant_id", None) is not None:
             return int(g.active_tenant_id)
     except Exception:
-        pass
-    from utils.tenanting import get_active_tenant_id
+        logger.debug("Failed to resolve active tenant ID from g context", exc_info=True)
 
+    from utils.tenanting import get_active_tenant_id
     return get_active_tenant_id()
 
 
@@ -347,7 +385,7 @@ def _log_cross_tenant_warning(model_name: str, obj_tid, active_tid):
             active_tid,
         )
     except Exception:
-        pass
+        logger.debug("Failed to log cross-tenant write warning", exc_info=True)
 
 
 def register_tenant_orm_scoping(app):

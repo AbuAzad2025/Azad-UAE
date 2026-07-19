@@ -2,6 +2,14 @@
     const INDUSTRY_SELECT = '#product_industry';
     const CONTAINER = '#industryFieldsContainer';
     const API_URL = '/api/industry-fields';
+    function esc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
     function loadFields(industryCode) {
         const container = document.querySelector(CONTAINER);
         if (!container) return;
@@ -13,29 +21,31 @@
                 container.innerHTML = '';
                 return;
             }
-            let html = '<hr><h5 class="text-info"><i class="fas fa-cogs"></i> حقول إضافية (' + data.industry + ')</h5><div class="row">';
+            let html = '<hr><h5 class="text-info"><i class="fas fa-cogs"></i> حقول إضافية (' + esc(data.industry) + ')</h5><div class="row">';
             data.fields.forEach(function(f) {
                 const label = (document.dir === 'rtl' ? f.field_name_ar : f.field_name_en) || f.field_code;
                 const requiredAttr = f.is_required ? ' required' : '';
                 const reqStar = f.is_required ? ' <span class="text-danger">*</span>' : '';
+                const code = esc(f.field_code);
                 html += '<div class="col-md-6 col-lg-4">';
                 html += '<div class="form-group">';
-                html += '<label><i class="fas fa-sliders-h text-muted"></i> ' + label + reqStar + '</label>';
+                html += '<label><i class="fas fa-sliders-h text-muted"></i> ' + esc(label) + reqStar + '</label>';
                 if (f.field_type === 'textarea') {
-                    html += '<textarea name="extra_' + f.field_code + '" class="form-control" rows="2"' + requiredAttr + '></textarea>';
+                    html += '<textarea name="extra_' + code + '" class="form-control" rows="2"' + requiredAttr + '></textarea>';
                 } else if (f.field_type === 'select' && f.field_options) {
-                    html += '<select name="extra_' + f.field_code + '" class="form-control"' + requiredAttr + '>';
+                    html += '<select name="extra_' + code + '" class="form-control"' + requiredAttr + '>';
                     html += '<option value="">-- اختر --</option>';
                     f.field_options.split(',').forEach(function(opt) {
-                        html += '<option value="' + opt.trim() + '">' + opt.trim() + '</option>';
+                        const o = opt.trim();
+                        html += '<option value="' + esc(o) + '">' + esc(o) + '</option>';
                     });
                     html += '</select>';
                 } else if (f.field_type === 'number') {
-                    html += '<input type="number" name="extra_' + f.field_code + '" class="form-control" step="0.01"' + requiredAttr + '>';
+                    html += '<input type="number" name="extra_' + code + '" class="form-control" step="0.01"' + requiredAttr + '>';
                 } else if (f.field_type === 'date') {
-                    html += '<input type="date" name="extra_' + f.field_code + '" class="form-control"' + requiredAttr + '>';
+                    html += '<input type="date" name="extra_' + code + '" class="form-control"' + requiredAttr + '>';
                 } else {
-                    html += '<input type="text" name="extra_' + f.field_code + '" class="form-control"' + requiredAttr + '>';
+                    html += '<input type="text" name="extra_' + code + '" class="form-control"' + requiredAttr + '>';
                 }
                 html += '</div></div>';
             });

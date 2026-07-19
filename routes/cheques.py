@@ -288,7 +288,7 @@ def create():
                         exception=e,
                     )
                 except Exception:
-                    pass
+                    current_app.logger.exception("Failed to log currency resolution error for cheque creation")
                 default_currency = get_system_default_currency()
             currency = request.form.get("currency") or default_currency
 
@@ -478,7 +478,7 @@ def edit(**kwargs):
                             exception=e,
                         )
                     except Exception:
-                        pass
+                        current_app.logger.exception("Failed to log currency resolution error for cheque update")
                     default_currency = get_system_default_currency()
                 cheque.currency = request.form.get("currency") or default_currency
 

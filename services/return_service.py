@@ -1,7 +1,10 @@
+import logging
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 
 from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 from extensions import db
 from models import (
@@ -318,7 +321,7 @@ class ReturnService:
                                 Decimal(str(cost_hist.movement_unit_cost))
                             )
                     except Exception:
-                        pass
+                        logger.warning("Failed to fetch cost history for return cost calculation, product %s sale %s", sale_line.product_id, sale.id, exc_info=True)
                     if original_cost <= Decimal("0"):
                         original_cost = Decimal(str(sale_line.cost_price or 0))
                     if original_cost <= Decimal("0"):

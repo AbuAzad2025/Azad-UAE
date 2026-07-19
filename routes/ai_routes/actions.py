@@ -3132,5 +3132,5 @@ http://localhost:5000/ai/assistant
                 exception=e,
             )
         except Exception:
-            pass
+            logger.exception("Failed to log AI action error via LoggingCore")
         return f"❌ خطأ في التنفيذ: {str(e)}"

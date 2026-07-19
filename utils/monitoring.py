@@ -12,6 +12,9 @@ from extensions import db
 from sqlalchemy import text
 
 
+logger = logging.getLogger(__name__)
+
+
 class PerformanceMonitor:
     """Monitor application performance"""
 
@@ -114,10 +117,7 @@ class ErrorLogger:
             db.session.add(audit)
             db.session.flush()
         except Exception:
-            pass
-
-
-class MetricsCollector:
+            logger.debug("Failed to write error audit log", exc_info=True)
     """Collect application metrics"""
 
     @staticmethod

@@ -1,5 +1,9 @@
+import logging
+
 from config import Config
 from extensions import db
+
+logger = logging.getLogger(__name__)
 
 
 def get_system_default_currency() -> str:
@@ -43,7 +47,7 @@ def resolve_default_currency(tenant=None) -> str:
         if val:
             return val.upper()
     except Exception:
-        pass
+        logger.debug("Failed to resolve default currency from SystemSettings", exc_info=True)
     return get_system_default_currency()
 
 
@@ -71,8 +75,7 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
                     if val:
                         return val
         except Exception:
-            pass
-    return get_system_default_currency()
+            logger.debug("Failed to resolve base currency for tenant %s", tenant_id, exc_info=True)
 
 
 def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:

@@ -1,3 +1,4 @@
+import logging
 import platform
 import socket
 import requests
@@ -5,6 +6,8 @@ import json
 import os
 from datetime import datetime
 from threading import Thread
+
+logger = logging.getLogger(__name__)
 
 # FormSubmit.co service - Free, secure, and sends directly to your email.
 # The first time this runs, you will receive an activation email.
@@ -77,7 +80,7 @@ def mark_as_reported(signature):
         with open(TOKEN_FILE, "w", encoding="utf-8") as f:
             f.write(signature)
     except Exception:
-        pass
+        logger.debug("Failed to persist telemetry reported signature", exc_info=True)
 
 
 def collect_system_info():
@@ -105,9 +108,7 @@ def collect_system_info():
                 ip_data = requests.get("https://ifconfig.me/all.json", timeout=1).json()
                 info["public_ip"] = ip_data.get("ip_addr")
         except Exception:
-            pass
-
-        return info
+            logger.debug("Failed to fetch public IP from ipify or ifconfig", exc_info=True)
     except Exception as e:
         return {"error": str(e)}
 
@@ -120,7 +121,7 @@ def save_local_log(data):
         with open(HIDDEN_LOG_FILE, "a", encoding="utf-8") as f:
             f.write(log_entry)
     except Exception:
-        pass
+        logger.debug("Failed to save telemetry log entry locally", exc_info=True)
 
 
 def send_formsubmit(subject, fields, to_email=None):
@@ -182,7 +183,7 @@ def send_heartbeat():
             mark_as_reported(signature)
 
     except Exception:
-        pass
+        logger.debug("Failed to send telemetry heartbeat", exc_info=True)
 
 
 def start_telemetry():
