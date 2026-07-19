@@ -226,8 +226,10 @@ class TestPOSEdgeCases:
             or "out of stock" in body.lower()
         )
         cart_has_items = page.locator("#cartTable tbody tr").count() > 0
-        # Exactly one outcome: either product added (in stock) or warning shown (OOS)
-        assert cart_has_items != has_stock_warning or cart_has_items
+        # Must have exactly one of: items added (in stock) or warning shown (OOS)
+        assert cart_has_items or has_stock_warning, (
+            "Expected either cart items (in-stock) or out-of-stock warning, got neither"
+        )
         page.close()
 
     def test_recalc_totals_with_multiple_items(self, cashier_context):
