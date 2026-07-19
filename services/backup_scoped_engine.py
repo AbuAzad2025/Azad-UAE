@@ -18,7 +18,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import func, select, text
-from utils.safe_sql import delete_where_query, insert_query, nextval_query, sa_table
+from utils.safe_sql import (
+    delete_where_query,
+    insert_query,
+    nextval_query,
+    sa_table,
+    _table,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
@@ -266,8 +272,8 @@ def _new_id(conn, table: str) -> int:
         {"t": table},
     ).scalar()
     if seq:
-        return int(conn.execute(nextval_query(conn, seq)).scalar())
-    table_obj = sa_table(table)
+        return int(conn.execute(nextval_query(conn, str(seq))).scalar())
+    table_obj = _table(conn, table, ["id"])
     return int(
         conn.execute(
             select(func.coalesce(func.max(table_obj.c.id), 0) + 1)

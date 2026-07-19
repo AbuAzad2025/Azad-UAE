@@ -233,11 +233,11 @@ class MaintenanceService:
                     "AND table_name='tenants' AND is_nullable='NO'"
                 )
             ).fetchall()
+            tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
             for name, dtype, default in cols:
                 if default is not None and str(default).upper() != "NULL":
                     continue  # DB will supply the default on insert/update
                 assert_known_column(engine, "tenants", name)
-                tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
                 cur = conn.execute(
                     select(tenants_tbl.c[name])
                     .where(tenants_tbl.c.slug == "default")

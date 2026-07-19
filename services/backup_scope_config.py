@@ -13,7 +13,7 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 from sqlalchemy import Text, func, select, text
-from utils.safe_sql import assert_known_column, sa_table
+from utils.safe_sql import assert_known_column, _table
 
 logger = logging.getLogger(__name__)
 
@@ -263,11 +263,13 @@ def _fetch_rows(
 ) -> List[Dict[str, Any]]:
     from sqlalchemy import text
 
-    tbl = sa_table(table)
+    tbl = _table(conn, table)
     if where_sql:
-        result = conn.execute(select(tbl).where(text(where_sql)), params)
+        result = conn.execute(
+            select(text("*")).select_from(tbl).where(text(where_sql)), params
+        )
     else:
-        result = conn.execute(select(tbl))
+        result = conn.execute(select(text("*")).select_from(tbl))
     rows = []
     for row in result.fetchall():
         rows.append(_serialize_row(dict(zip(result.keys(), row))))
@@ -287,8 +289,10 @@ def _fetch_child_rows(
     if not table_exists(conn, child_table):
         return []
     assert_known_column(conn, child_table, child_fk)
-    tbl = sa_table(child_table)
-    result = conn.execute(select(tbl).where(tbl.c[child_fk].in_(parent_ids)))
+    tbl = _table(conn, child_table, [child_fk])
+    result = conn.execute(
+        select(text("*")).select_from(tbl).where(tbl.c[child_fk].in_(parent_ids))
+    )
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
 
@@ -323,11 +327,12 @@ def _merge_product_customer_dependencies(
     if not missing:
         return
     try:
-        tbl = sa_table("customers")
+        tbl = _table(conn, "customers", ["id", "tenant_id"])
         result = conn.execute(
-            select(tbl).where(tbl.c.tenant_id == tenant_id).where(
-                tbl.c.id.in_(missing)
-            )
+            select(text("*"))
+            .select_from(tbl)
+            .where(tbl.c.tenant_id == tenant_id)
+            .where(tbl.c.id.in_(missing))
         )
         extra = [
             _serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()
@@ -476,10 +481,11 @@ def export_scoped_database(
         }
         if role_ids:
             try:
+                roles_tbl = _table(conn, "roles", ["id"])
                 result = conn.execute(
-                    select(sa_table("roles")).where(
-                        sa_table("roles").c.id.in_(list(role_ids))
-                    )
+                    select(text("*"))
+                    .select_from(roles_tbl)
+                    .where(roles_tbl.c["id"].in_(list(role_ids)))
                 )
                 rows = [
                     _serialize_row(dict(zip(result.keys(), row)))
@@ -636,7 +642,7 @@ def collect_scoped_upload_paths(
             return
         try:
             assert_known_column(conn, table, column)
-            tbl = sa_table(table)
+            tbl = _table(conn, table, [column])
             q = (
                 select(tbl.c[column].label("p"))
                 .where(text(where))

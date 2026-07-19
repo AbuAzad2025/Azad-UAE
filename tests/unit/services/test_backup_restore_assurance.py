@@ -262,7 +262,7 @@ class TestImportScopedTables:
 
         def execute_side_effect(*args, **kwargs):
             sql = str(args[0]) if args else ""
-            if 'INSERT INTO "products"' in sql:
+            if "INSERT INTO products" in sql:
                 call_count["n"] += 1
                 if call_count["n"] >= 2:
                     raise RuntimeError("constraint violation")

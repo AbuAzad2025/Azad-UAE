@@ -12,9 +12,41 @@
 """
 
 import logging
+import re
 from typing import List, Optional
 
+from sqlalchemy import and_, column, insert, select, table as sa_table, update
+
 logger = logging.getLogger(__name__)
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _ident(name: str) -> str:
+    """Validate a SQL identifier (table/column name); raise if unsafe."""
+    if not isinstance(name, str) or not _IDENT_RE.match(name):
+        raise ValueError(f"unsafe SQL identifier: {name!r}")
+    return name
+
+
+def _col(table_name: str, col_name: str):
+    """Return a bound column expression for ``col_name`` on ``table_name``."""
+    return column(col_name)
+
+
+def _build_where(table_name: str, filters: Optional[dict], prefix: str):
+    """Build an SQLAlchemy boolean expression for a WHERE clause (literal values).
+
+    Values are embedded as SQL literals (this helper produces display SQL for an
+    AI assistant, not an executed statement), while table/column identifiers are
+    validated to prevent injection of arbitrary SQL.
+    """
+    if not filters or "where" not in filters:
+        return None
+    clauses = []
+    for _i, (k, v) in enumerate(filters["where"].items()):
+        clauses.append(_col(table_name, _ident(k)) == v)
+    return and_(*clauses) if len(clauses) > 1 else clauses[0]
 
 
 class CodeGenerator:
@@ -67,57 +99,50 @@ def {function_name}():
         """
         try:
             if intent == "select":
-                columns = filters.get("columns", "*") if filters else "*"
-                conditions = (
-                    " AND ".join(
-                        [f"{k} = '{v}'" for k, v in filters.get("where", {}).items()]
-                    )
-                    if filters and "where" in filters
-                    else "1=1"
+                table_name = _ident(table)
+                tbl = sa_table(table_name)
+                cols = (
+                    [_col(table_name, _ident(c)) for c in filters.get("columns", [])]
+                    if filters and filters.get("columns")
+                    else [column("*")]
                 )
-
-                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
-
+                stmt = select(*cols).select_from(tbl)
+                where_expr = _build_where(table_name, filters, "w")
+                if where_expr is not None:
+                    stmt = stmt.where(where_expr)
                 if filters and "order_by" in filters:
-                    query += f" ORDER BY {filters['order_by']}"
-
+                    stmt = stmt.order_by(_col(table_name, _ident(filters["order_by"])))
                 if filters and "limit" in filters:
-                    query += f" LIMIT {filters['limit']}"
-
-                return query
+                    stmt = stmt.limit(int(filters["limit"]))
+                return str(stmt)
 
             elif intent == "insert":
-                columns = ", ".join(filters.get("columns", [])) if filters else ""
-                values = (
-                    ", ".join(
-                        [
-                            f"'{v}'" if isinstance(v, str) else str(v)
-                            for v in filters.get("values", [])
-                        ]
-                    )
-                    if filters
-                    else ""
-                )
-
-                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
+                table_name = _ident(table)
+                tbl = sa_table(table_name)
+                if filters and filters.get("values"):
+                    cols = [_col(table_name, _ident(c)) for c in filters["columns"]]
+                    values = {
+                        c.name: v for c, v in zip(cols, filters["values"])
+                    }
+                    istmt = insert(tbl).values(values)
+                else:
+                    istmt = insert(tbl).values({})
+                return str(istmt)
 
             elif intent == "update":
-                updates = (
-                    ", ".join(
-                        [f"{k} = '{v}'" for k, v in filters.get("set", {}).items()]
-                    )
-                    if filters
-                    else ""
-                )
-                conditions = (
-                    " AND ".join(
-                        [f"{k} = '{v}'" for k, v in filters.get("where", {}).items()]
-                    )
-                    if filters
-                    else "1=1"
-                )
-
-                return f"UPDATE {table} SET {updates} WHERE {conditions}"  # nosec B608
+                table_name = _ident(table)
+                tbl = sa_table(table_name)
+                set_clauses: dict = {}
+                if filters and filters.get("set"):
+                    for k, v in filters["set"].items():
+                        set_clauses[_ident(k)] = v
+                ustmt = update(tbl)
+                if set_clauses:
+                    ustmt = ustmt.values(set_clauses)
+                where_expr = _build_where(table_name, filters, "u")
+                if where_expr is not None:
+                    ustmt = ustmt.where(where_expr)
+                return str(ustmt)
 
             else:
                 return f"-- Unsupported intent: {intent}"
