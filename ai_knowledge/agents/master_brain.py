@@ -434,18 +434,31 @@ class MasterBrain:
         return {}
 
     @staticmethod
-    def _think_logically( question: str, _intent: str, knowledge: dict, context: dict
+    def _think_logically(
+        question: str, _intent: str, knowledge: dict, context: dict
     ) -> dict:
         """التفكير المنطقي العميق"""
         available_data = list(context.keys()) if context else []
         steps = [
-            {"step": 1, "thought": f"فهمت السؤال: {question[:50]}...", "action": "understanding"},
-            {"step": 2, "thought": f"البيانات المتاحة: {', '.join(available_data) if available_data else 'لا يوجد'}", "action": "data_analysis"},
+            {
+                "step": 1,
+                "thought": f"فهمت السؤال: {question[:50]}...",
+                "action": "understanding",
+            },
+            {
+                "step": 2,
+                "thought": f"البيانات المتاحة: {', '.join(available_data) if available_data else 'لا يوجد'}",
+                "action": "data_analysis",
+            },
         ]
 
         if knowledge:
             steps.append(
-                {"step": 3, "thought": "استخدام المعرفة المتخصصة في المجال", "action": "applying_knowledge"}
+                {
+                    "step": 3,
+                    "thought": "استخدام المعرفة المتخصصة في المجال",
+                    "action": "applying_knowledge",
+                }
             )
 
         steps.append(

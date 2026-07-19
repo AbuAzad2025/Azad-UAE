@@ -87,5 +87,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script>$(document).ready(function(){if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#attendanceTable')){$('#attendanceTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
+<script>$(document).ready(()=> {if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#attendanceTable')){$('#attendanceTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
 {% endblock %}

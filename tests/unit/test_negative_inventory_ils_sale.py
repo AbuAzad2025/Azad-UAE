@@ -243,9 +243,9 @@ class TestNegativeInventoryILSSale:
             vat_acct = GLAccount.query.filter_by(
                 tenant_id=ils_tenant.id, code=vat_account_code
             ).first()
-            assert all(
-                [ar_acct, sales_acct, vat_acct, cogs_acct, inv_acct]
-            ), "Key accounts missing"
+            assert all([ar_acct, sales_acct, vat_acct, cogs_acct, inv_acct]), (
+                "Key accounts missing"
+            )
 
             # Step 2: Create the sale
             quantity = 1
@@ -336,9 +336,9 @@ class TestNegativeInventoryILSSale:
             rev_lines = GLJournalLine.query.filter_by(entry_id=revenue_entry.id).all()
             rev_debit = sum(line.debit for line in rev_lines if line.debit)
             rev_credit = sum(line.credit for line in rev_lines if line.credit)
-            assert abs(rev_debit - rev_credit) < Decimal(
-                "0.01"
-            ), f"Revenue entry NOT balanced: Dr={rev_debit} Cr={rev_credit}"
+            assert abs(rev_debit - rev_credit) < Decimal("0.01"), (
+                f"Revenue entry NOT balanced: Dr={rev_debit} Cr={rev_credit}"
+            )
 
             all_lines = []
             for entry in entries:
@@ -359,15 +359,15 @@ class TestNegativeInventoryILSSale:
             assert len(vat_line) == 1, "VAT line missing"
 
             # Amounts are in base currency (ILS), so exact match expected
-            assert (
-                ar_line[0].debit == expected_total
-            ), f"AR debit should be {expected_total}: got {ar_line[0].debit}"
-            assert (
-                sales_line[0].credit == expected_subtotal
-            ), f"Sales credit should be {expected_subtotal}: got {sales_line[0].credit}"
-            assert (
-                vat_line[0].credit == expected_vat
-            ), f"VAT credit should be {expected_vat}: got {vat_line[0].credit}"
+            assert ar_line[0].debit == expected_total, (
+                f"AR debit should be {expected_total}: got {ar_line[0].debit}"
+            )
+            assert sales_line[0].credit == expected_subtotal, (
+                f"Sales credit should be {expected_subtotal}: got {sales_line[0].credit}"
+            )
+            assert vat_line[0].credit == expected_vat, (
+                f"VAT credit should be {expected_vat}: got {vat_line[0].credit}"
+            )
 
             # Step 7: Verify COGS entry
             assert cogs_entry is not None, "COGS GL entry not found"
@@ -375,9 +375,9 @@ class TestNegativeInventoryILSSale:
             cogs_lines = GLJournalLine.query.filter_by(entry_id=cogs_entry.id).all()
             cogs_debit = sum(line.debit for line in cogs_lines if line.debit)
             cogs_credit = sum(line.credit for line in cogs_lines if line.credit)
-            assert abs(cogs_debit - cogs_credit) < Decimal(
-                "0.01"
-            ), f"COGS entry NOT balanced: Dr={cogs_debit} Cr={cogs_credit}"
+            assert abs(cogs_debit - cogs_credit) < Decimal("0.01"), (
+                f"COGS entry NOT balanced: Dr={cogs_debit} Cr={cogs_credit}"
+            )
 
             cogs_dr = [
                 line for line in cogs_lines if _line_account_code(line) == "5100"
@@ -386,21 +386,21 @@ class TestNegativeInventoryILSSale:
 
             assert len(cogs_dr) == 1, "COGS debit line missing"
             assert cogs_dr[0].debit > 0, f"COGS should be > 0: got {cogs_dr[0].debit}"
-            assert cogs_dr[0].debit == Decimal(
-                "50.00"
-            ), f"COGS should be 50 (fallback cost): got {cogs_dr[0].debit}"
+            assert cogs_dr[0].debit == Decimal("50.00"), (
+                f"COGS should be 50 (fallback cost): got {cogs_dr[0].debit}"
+            )
 
             assert len(inv_cr) == 1, "Inventory credit line missing"
-            assert (
-                inv_cr[0].credit == cogs_dr[0].debit
-            ), "COGS and Inventory lines must match"
+            assert inv_cr[0].credit == cogs_dr[0].debit, (
+                "COGS and Inventory lines must match"
+            )
 
             # Step 8: Verify sale line has cost_price captured
             sale_line = sale.lines[0]
             assert sale_line.cost_price is not None
-            assert (
-                sale_line.cost_price > 0
-            ), f"SaleLine.cost_price should be > 0: got {sale_line.cost_price}"
+            assert sale_line.cost_price > 0, (
+                f"SaleLine.cost_price should be > 0: got {sale_line.cost_price}"
+            )
 
             print(f"\r\n{'=' * 60}")
             print("TEST PASSED: Negative Inventory + ILS + VAT Sale")

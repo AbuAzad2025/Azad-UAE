@@ -41,9 +41,7 @@ class MaintenanceService:
                 print(f"Note: {e}")
 
             # Delete existing cost centers (they have NULL tenant_id)
-            r = conn.execute(
-                text("DELETE FROM cost_centers WHERE tenant_id IS NULL")
-            )
+            r = conn.execute(text("DELETE FROM cost_centers WHERE tenant_id IS NULL"))
             result["deleted_rows"] = r.rowcount
             print("✅ Deleted old cost centers with NULL tenant_id")
         return result

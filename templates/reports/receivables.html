@@ -143,7 +143,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   const $tableEl = $('#receivablesTable');
   const printOptions = {
     title: '{{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }}',

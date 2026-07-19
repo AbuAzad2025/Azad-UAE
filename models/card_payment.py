@@ -11,6 +11,7 @@ import base64
 import json
 import hashlib
 
+
 class _FernetStub:
     """Dummy Fernet when cryptography is not installed — keeps Fernet always callable."""
 

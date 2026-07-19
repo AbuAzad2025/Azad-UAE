@@ -119,7 +119,7 @@
 
 {% block extra_js %}
 <script>
-$(function() {
+$(() => {
   function branchRequiredForSelectedRole() {
     const slug = $('#role_id option:selected').data('role-slug');
     return slug && !['developer', 'super_admin'].includes(slug);
@@ -144,11 +144,11 @@ $(function() {
     if (p.length && p.length < 10) ok = false;
     if (p.length && !/[A-Z]/.test(p)) ok = false;
     if (p.length && !/[0-9]/.test(p)) ok = false;
-    if (p.length && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p)) ok = false;
+    if (p.length && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p)) ok = false;
     if (p.length && c.length && p !== c) ok = false;
     return ok;
   }
-  $('#user-edit-form').on('submit', function(e) {
+  $('#user-edit-form').on('submit', (e) => {
     if (!validatePassword()) {
       e.preventDefault();
       if (typeof hideLoading === 'function') hideLoading();

@@ -237,7 +237,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   const table = $('#customersTable').DataTable({
     language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
     pageLength: 25,

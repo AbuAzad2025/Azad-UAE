@@ -956,9 +956,9 @@ class TestCalculateSaleCogs:
         )
         mocker.patch("services.stock_service._safe_for_update", return_value=pwc)
         mocker.patch("services.stock_service.ProductCostHistory")
-        mocker.patch("services.stock_service.db.session").get.return_value = (
-            _warehouse()
-        )
+        mocker.patch(
+            "services.stock_service.db.session"
+        ).get.return_value = _warehouse()
         from services.stock_service import StockService
 
         sale = _sale(lines=[_sale_line(quantity=Decimal("1"))])
@@ -1749,7 +1749,8 @@ class TestInventoryQueries:
 
 class TestReconcileStock:
     @staticmethod
-    def _setup_reconcile_queries( mocker, *, existing_rows, movement_rows, pws_sum_rows, products
+    def _setup_reconcile_queries(
+        mocker, *, existing_rows, movement_rows, pws_sum_rows, products
     ):
         session = mocker.patch("services.stock_service.db.session")
 

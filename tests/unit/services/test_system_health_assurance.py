@@ -15,9 +15,9 @@ class TestHealthCheckService:
         assert HealthCheckService.check_database()["status"] == "healthy"
 
     def test_check_database_unhealthy_on_error(self, mocker):
-        mocker.patch("services.health_service.db.session").execute.side_effect = (
-            RuntimeError("down")
-        )
+        mocker.patch(
+            "services.health_service.db.session"
+        ).execute.side_effect = RuntimeError("down")
         from services.health_service import HealthCheckService
 
         assert HealthCheckService.check_database()["status"] == "unhealthy"
@@ -139,9 +139,9 @@ class TestMonitoringService:
         mocker.patch(
             "services.monitoring_service.User.query"
         ).filter.return_value.all.return_value = []
-        mocker.patch("services.monitoring_service.Sale.query").filter.return_value = (
-            mock_q
-        )
+        mocker.patch(
+            "services.monitoring_service.Sale.query"
+        ).filter.return_value = mock_q
 
         from services.monitoring_service import MonitoringService
 

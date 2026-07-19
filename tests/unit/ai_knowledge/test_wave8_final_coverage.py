@@ -548,7 +548,9 @@ class TestWave8AgentsAndCore:
             patch("extensions.db.session") as session,
         ):
             Customer.query.filter.return_value.first.return_value = customer
-            session.query.return_value.filter.return_value.first.side_effect = RuntimeError("x")
+            session.query.return_value.filter.return_value.first.side_effect = (
+                RuntimeError("x")
+            )
             data2 = ia._collect_real_data("customer_balance", {"names": ["Ali"]}, 1)
             assert "customer_data" not in data2
         product = MagicMock(id=1, name="P", current_stock=1, min_stock_alert=5)

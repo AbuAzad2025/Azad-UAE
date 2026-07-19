@@ -311,12 +311,8 @@ class TestCustomersStatementBuilder:
             SaleMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = [
                 sale
             ]
-            PayMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
-            RcvMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            PayMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
+            RcvMod.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = customers_client.get(
                 "/customers/1/statement?date_from=2025-05-01&date_to=2025-05-31&transaction_type=sale"
             )

@@ -281,7 +281,9 @@ def delete_account(**kwargs):
 
     try:
         # التحقق من وجود قيود مرتبطة
-        has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
+        has_entries = (
+            scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
+        )
         if has_entries:
             flash("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به", "danger")
             return redirect(url_for("admin_ledger.accounts_management"))

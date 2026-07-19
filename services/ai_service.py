@@ -908,7 +908,9 @@ class AIService:
                 else (
                     "جيد"
                     if health_score >= 60
-                    else "مقبول" if health_score >= 40 else "ضعيف"
+                    else "مقبول"
+                    if health_score >= 40
+                    else "ضعيف"
                 )
             ),
         }
@@ -1102,7 +1104,10 @@ class AIService:
                         exception=e,
                     )
                 except Exception:
-                    logger.warning("Failed to log AI chat response error via LoggingCore", exc_info=True)
+                    logger.warning(
+                        "Failed to log AI chat response error via LoggingCore",
+                        exc_info=True,
+                    )
 
         return f"{local_response}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
 
@@ -1214,7 +1219,10 @@ class AIService:
                     exception=e,
                 )
             except Exception:
-                logger.warning("Failed to log AI action execution error via LoggingCore", exc_info=True)
+                logger.warning(
+                    "Failed to log AI action execution error via LoggingCore",
+                    exc_info=True,
+                )
             return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
 
     @staticmethod
@@ -1691,7 +1699,10 @@ class AIService:
                     exception=e,
                 )
             except Exception:
-                logger.warning("Failed to log AI chat message processing error via LoggingCore", exc_info=True)
+                logger.warning(
+                    "Failed to log AI chat message processing error via LoggingCore",
+                    exc_info=True,
+                )
             try:
                 from ai_knowledge.personality.azad_responses import AzadResponses
 

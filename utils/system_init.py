@@ -120,7 +120,10 @@ def _ensure_system_integrity_inner(app):
                     exception=e,
                 )
             except Exception:
-                current_app.logger.debug("Failed to log telemetry start failure via LoggingCore", exc_info=True)
+                current_app.logger.debug(
+                    "Failed to log telemetry start failure via LoggingCore",
+                    exc_info=True,
+                )
     else:
         current_app.logger.info(
             "SystemInit: Telemetry disabled via environment variable."
@@ -640,4 +643,6 @@ def _record_server_activation(owner_user, owner_created: bool):
                 exception=e,
             )
         except Exception:
-            current_app.logger.debug("Failed to log server activation failure via LoggingCore", exc_info=True)
+            current_app.logger.debug(
+                "Failed to log server activation failure via LoggingCore", exc_info=True
+            )

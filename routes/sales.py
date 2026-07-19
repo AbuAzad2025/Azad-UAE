@@ -170,7 +170,9 @@ def create():
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception("Failed to log currency resolution error for sale creation")
+                    current_app.logger.exception(
+                        "Failed to log currency resolution error for sale creation"
+                    )
                 default_currency = get_system_default_currency()
             currency_value = request.form.get("currency")
             currency = currency_value if currency_value else default_currency
@@ -713,7 +715,9 @@ def restore(**kwargs):
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
+    archived_query = ArchivedRecord.query.filter_by(
+        table_name="sales", record_id=record_id
+    )
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived_record = archived_query.first_or_404()

@@ -24,7 +24,6 @@ class TenantIsolationError(Exception):
     """Raised when a write operation violates tenant isolation."""
 
 
-
 _SKIP_BLUEPRINTS = frozenset(
     {
         "auth",  # Login/logout/register — platform-level auth, not tenant data
@@ -35,12 +34,14 @@ _SKIP_BLUEPRINTS = frozenset(
     }
 )
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
-_ORM_EXEMPT_MODELS = frozenset({
-    "User",
-    "Package",
-    "PackagePurchase",
-    "ErrorAuditLog",
-})
+_ORM_EXEMPT_MODELS = frozenset(
+    {
+        "User",
+        "Package",
+        "PackagePurchase",
+        "ErrorAuditLog",
+    }
+)
 
 # Blueprints that serve tenant business data. If ORM scoping fails to register
 # we block only these (not owner/platform/static) so operators can still reach
@@ -168,6 +169,7 @@ def _active_tenant_for_orm() -> int | None:
         logger.debug("Failed to resolve active tenant ID from g context", exc_info=True)
 
     from utils.tenanting import get_active_tenant_id
+
     return get_active_tenant_id()
 
 
@@ -264,7 +266,6 @@ def _patch_session_get():
 
     cast(Any, Session).get = _get_with_tenant
     _SESSION_GET_PATCHED = True
-
 
 
 @event.listens_for(Session, "do_orm_execute")

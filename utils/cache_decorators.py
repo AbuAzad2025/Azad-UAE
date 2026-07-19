@@ -58,4 +58,6 @@ def invalidate_cache(key_pattern):
         elif hasattr(cache, "delete"):
             cache.delete(key_pattern)
     except Exception:
-        logger.warning("Failed to invalidate cache for pattern: %s", key_pattern, exc_info=True)
+        logger.warning(
+            "Failed to invalidate cache for pattern: %s", key_pattern, exc_info=True
+        )

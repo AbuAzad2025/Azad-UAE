@@ -1,451 +1,451 @@
 {
-  "meta": {
-    "name": "azad_uae_dynamic_tenant_storefront_with_fixed_azad_footer_brand",
-    "version": "3.0.0",
-    "createdAt": "2026-06-02T06:54:09.493819+00:00",
-    "repository": "https://github.com/AbuAzad2025/Azad-UAE",
-    "purpose": "ملف JSON كامل ومحدث لتوجيه Cursor لبناء واجهة متجر إلكتروني ديناميكية لكل تينانت داخل نظام Azad-UAE، مع تثبيت هوية شركة ازاد للأنظمة الذكية ومعلوماتها بالفوتر لجميع متاجر التينانتس.",
-    "visualReferenceImage": {
-      "fileName": "a_wide_high_resolution_ui_design_mockup_and_speci.png",
-      "localPath": "/mnt/data/a_wide_high_resolution_ui_design_mockup_and_speci.png",
-      "role": "visual_reference_for_layout_and_style",
-      "note": "الصورة مرجع بصري للمظهر والترتيب. لا تثبت أسماء المنتجات أو اسم التينانت الظاهر في الصورة؛ كل ذلك ديناميكي من النظام."
-    },
-    "primaryLanguage": "ar",
-    "secondaryLanguage": "en",
-    "direction": "dynamic_rtl_ltr",
-    "framework": "Flask + Jinja2 + CSS + vanilla JS",
-    "targetFiles": [
-      "templates/shop/base.html",
-      "templates/shop/catalog.html",
-      "templates/shop/product.html",
-      "templates/shop/cart.html",
-      "templates/shop/checkout.html",
-      "templates/shop/account_login.html",
-      "templates/shop/account_register.html",
-      "templates/shop/account_orders.html",
-      "static/css/shop-palestine.css",
-      "static/js/shop-storefront.js"
-    ]
-  },
-  "coreDecision": {
-    "storeType": "dynamic_tenant_storefront",
-    "notFixedStore": true,
-    "tenantBrandDynamic": true,
-    "azadDeveloperBrandFixed": true,
-    "description": "واجهة المتجر تخص التينانت الحالي: اسمه وشعاره ومنتجاته وفئاته وألوانه، لكن يجب أن يظهر دائماً بالفوتر أن المتجر/النظام من إنتاج شركة ازاد للأنظمة الذكية مع شعار ازاد ومعلوماتها.",
-    "doNotUseOrMention": [
-      "متجر أصالة",
-      "Asala Store",
-      "منتجات ثابتة من الصورة القديمة",
-      "فئات ثابتة غير موجودة في قاعدة البيانات",
-      "أسعار ثابتة",
-      "بيانات تواصل ثابتة للتينانت"
-    ],
-    "mustAlwaysShow": [
-      "شعار التينانت في الهيدر أو hero حسب store.logo_url() أو fallback",
-      "اسم متجر التينانت من store.title أو tenant.name",
-      "وصف/Tagline التينانت من store.tagline",
-      "شعار شركة ازاد الثابت في الفوتر",
-      "اسم شركة ازاد للأنظمة الذكية في الفوتر",
-      "AZAD Smart Systems في الفوتر",
-      "عبارة Powered by / Developed by AZAD Smart Systems",
-      "معلومات ازاد الثابتة بالفوتر"
-    ]
-  },
-  "fixedAzadDeveloperBrand": {
-    "enabled": true,
-    "mustAppearOnEveryTenantStore": true,
-    "placement": {
-      "primary": "footer_right_or_footer_brand_column",
-      "secondary": "bottom_copyright_bar",
-      "doNotPlaceAsMainStoreLogo": true,
-      "doNotCompeteWithTenantLogoInHeader": true
-    },
-    "companyNameAr": "شركة ازاد للأنظمة الذكية",
-    "companyNameEn": "AZAD Smart Systems",
-    "managerAr": "بإدارة المهندس أحمد غنام",
-    "developerLines": {
-      "ar": [
-        "من إنتاج شركة ازاد للأنظمة الذكية",
-        "بإدارة المهندس أحمد غنام",
-        "نظام المتجر الإلكتروني مدعوم بواسطة AZAD Smart Systems"
-      ],
-      "en": [
-        "Powered by AZAD Smart Systems",
-        "Developed by AZAD Smart Systems",
-        "Managed by Eng. Ahmad Ghannam"
-      ]
-    },
-    "logo": {
-      "type": "fixed_azad_logo",
-      "sourcePreferred": [
-        "static/uploads/azad-logo.png",
-        "static/img/azad-logo.png",
-        "static/logo.png",
-        "fallback_css_mark"
-      ],
-      "fallbackMark": {
-        "shape": "geometric triangular AZAD monogram",
-        "text": "AZAD",
-        "colors": {
-          "mark": "#D7A741",
-          "text": "#D7A741",
-          "background": "transparent"
-        }
-      },
-      "size": {
-        "desktop": {
-          "width": 92,
-          "height": 92
-        },
-        "tablet": {
-          "width": 74,
-          "height": 74
-        },
-        "mobile": {
-          "width": 56,
-          "height": 56
-        }
-      }
-    },
-    "contact": {
-      "website": "www.azad.ae",
-      "email": "info@azad.ae",
-      "phone": "+971 50 123 4567",
-      "locationAr": "الإمارات العربية المتحدة",
-      "locationEn": "United Arab Emirates"
-    },
-    "footerCopyright": {
-      "ar": "جميع الحقوق محفوظة — نظام المتجر الإلكتروني من إنتاج شركة ازاد للأنظمة الذكية",
-      "en": "All rights reserved — Storefront system powered by AZAD Smart Systems"
-    },
-    "visualRule": "هوية ازاد تظهر كمطوّر/مشغّل تقني في الفوتر فقط، وليست بديلاً عن هوية التينانت في الهيدر."
-  },
-  "dynamicTenantBrand": {
-    "enabled": true,
-    "placement": {
-      "header": "main_brand_area",
-      "hero": "headline_and_logo_area",
-      "footer": "tenant_contact_column"
-    },
-    "dataSources": {
-      "storeTitle": "{{ store.title or tenant.name }}",
-      "storeTagline": "{{ store.tagline or tenant.name_ar or tenant.name }}",
-      "storeLogo": "{{ store.logo_url() }}",
-      "storeSlug": "{{ store.store_slug }}",
-      "storePhone": "{{ store.phone }}",
-      "storeWhatsapp": "{{ store.whatsapp }}",
-      "storeEmail": "{{ store.email }}",
-      "storeReturnPolicy": "{{ store.return_policy(lang) }}",
-      "tenantName": "{{ tenant.name }}",
-      "tenantNameAr": "{{ tenant.name_ar }}",
-      "tenantPrimaryColor": "{{ tenant.brand_color_primary }}",
-      "tenantSecondaryColor": "{{ tenant.brand_color_secondary }}",
-      "tenantCurrency": "{{ tenant.default_currency or 'AED' }}"
-    },
-    "fallbacks": {
-      "logo": "first letter from store.title or tenant.name inside a premium circular emblem",
-      "taglineAr": "منتجات مختارة بجودة عالية",
-      "taglineEn": "Curated products with premium quality",
-      "currency": "AED"
-    },
-    "strictRules": [
-      "اسم المتجر في الهيدر والهيرو والفوتر يجب أن يكون من store.title أو tenant.name فقط.",
-      "شعار المتجر الرئيسي يجب أن يكون شعار التينانت store.logo_url() أو fallback للتينانت.",
-      "لا تستخدم شعار ازاد كشعار رئيسي للمتجر في الهيدر.",
-      "شعار ازاد ثابت في الفوتر فقط كـ Powered by/Developed by."
-    ]
-  },
-  "existingArchitectureContract": {
-    "routes": {
-      "shopBlueprintPrefix": "/s",
-      "catalog": "shop.catalog / /s/<slug>",
-      "productDetail": "shop.product_detail / /s/<slug>/p/<product_id>",
-      "cartView": "shop.cart_view / /s/<slug>/cart",
-      "cartAdd": "shop.cart_add / /s/<slug>/cart/add",
-      "checkout": "shop.checkout / /s/<slug>/checkout",
-      "accountLogin": "shop.account_login / /s/<slug>/account/login",
-      "accountRegister": "shop.account_register / /s/<slug>/account/register",
-      "orders": "shop.account_orders / /s/<slug>/account/orders",
-      "languageToggle": "shop.set_lang / /s/<slug>/lang/<lang_code>",
-      "returnPolicy": "shop.return_policy / /s/<slug>/return-policy"
-    },
-    "doNotChange": [
-      "routes/shop.py",
-      "StoreService.get_public_catalog",
-      "StoreService.online_stock_map",
-      "cart session key per tenant",
-      "CSRF fields in forms",
-      "login requirement for cart and checkout",
-      "slug-based tenant resolution",
-      "language handling shop_lang/t()",
-      "tenant isolation"
-    ],
-    "availableContextVariables": [
-      "store",
-      "tenant",
-      "lang",
-      "is_rtl",
-      "t",
-      "theme_primary",
-      "theme_secondary",
-      "cart_count",
-      "shop_account",
-      "is_shop_logged_in",
-      "items",
-      "categories",
-      "category_id",
-      "search",
-      "wa_digits"
-    ],
-    "catalogRules": {
-      "itemsSource": "StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search)",
-      "displayOnlyInStockOnlineWarehouseProducts": true,
-      "excludeSerialTrackedProducts": true,
-      "productCardFields": [
-        "product.id",
-        "product.image_url",
-        "product.get_display_name(lang)",
-        "product.sku",
-        "product.regular_price",
-        "tenant.default_currency"
-      ]
-    }
-  },
-  "visualDesign": {
-    "styleName": "premium_palestinian_tenant_storefront",
-    "description": "نفس الفخامة والترتيب في الصورة: هيدر داكن، Hero كبير، لوحة محتوى كريمية، كروت أقسام، كروت منتجات، مميزات، فوتر عميق يحتوي معلومات التينانت ومعلومات ازاد الثابتة.",
-    "palette": {
-      "darkInk": "#071014",
-      "darkInk2": "#0A171B",
-      "cream": "#F7F3E9",
-      "warmWhite": "#FFFDF7",
-      "gold": "#D7A741",
-      "goldDark": "#A87922",
-      "tenantPrimary": "var(--theme-primary)",
-      "tenantSecondary": "var(--theme-secondary)",
-      "palestineRed": "#CE1126",
-      "palestineGreen": "#007A3D",
-      "black": "#000000",
-      "white": "#FFFFFF",
-      "muted": "#6B7280"
-    },
-    "motifs": [
-      "tatreez embroidery border",
-      "subtle keffiyeh geometric pattern",
-      "olive branches",
-      "small Palestinian flag detail",
-      "warm lantern/gold lighting feel",
-      "premium product photography layout"
-    ],
-    "layoutSections": [
-      "top premium thin bar",
-      "header with tenant logo and tenant store name",
-      "navigation and language/currency/cart/account area",
-      "hero with dynamic tenant store title",
-      "category cards from categories",
-      "featured products from items",
-      "benefits row",
-      "footer with tenant information plus fixed AZAD developer block",
-      "bottom powered-by AZAD copyright bar"
-    ],
-    "header": {
-      "background": "dark glass / #071014",
-      "brandBlock": {
-        "tenantLogo": "{{ store.logo_url() or fallback }}",
-        "tenantName": "{{ store.title or tenant.name }}",
-        "tenantTagline": "{{ store.tagline }}",
-        "doNotShowAzadAsMainHeaderBrand": true
-      },
-      "nav": [
-        {
-          "labelKey": "shop",
-          "href": "shop.catalog"
-        },
-        {
-          "labelKey": "categories",
-          "href": "#categories"
-        },
-        {
-          "labelKey": "offers",
-          "optional": true
-        },
-        {
-          "labelKey": "about_us",
-          "optional": true
-        },
-        {
-          "labelKey": "contact",
-          "optional": true
-        }
-      ],
-      "actions": [
-        "search",
-        "account login/register or account name",
-        "wishlist visual optional without backend only if non-functional hidden",
-        "cart with cart_count",
-        "language toggle ar/en",
-        "currency display tenant.default_currency"
-      ]
-    },
-    "hero": {
-      "title": "{{ store.title or tenant.name }}",
-      "subtitle": "{{ store.tagline or store.seo_description(lang) or fallback }}",
-      "primaryCTA": "{{ t('shop') or 'تسوق الآن' }}",
-      "secondaryCTA": "{{ t('categories') or 'الأقسام' }}",
-      "rightVisual": "Palestinian premium illustration/pattern, not fixed product data",
-      "mustStayDynamic": true
-    },
-    "categories": {
-      "source": "categories",
-      "hideIfEmpty": true,
-      "allProductsCard": true,
-      "cardStyle": "cream cards with icon, active tenantPrimary/dark green"
-    },
-    "products": {
-      "source": "items",
-      "cardStyle": "premium cream card with product image, title, SKU, price, action button",
-      "buttons": {
-        "loggedIn": "Add to Cart POST with csrf",
-        "guestWithWhatsapp": "WhatsApp order link",
-        "guestNoWhatsapp": "Register"
-      }
-    },
-    "footer": {
-      "background": "darkInk",
-      "columns": [
-        {
-          "id": "tenant_store",
-          "title": "{{ store.title or tenant.name }}",
-          "logo": "{{ store.logo_url() or fallback }}",
-          "tagline": "{{ store.tagline }}",
-          "contact": [
-            "{{ store.phone }}",
-            "{{ store.whatsapp }}",
-            "{{ store.email }}"
-          ]
-        },
-        {
-          "id": "quick_links",
-          "dynamicLinks": [
-            "shop.catalog",
-            "shop.account_login/register",
-            "shop.account_orders if logged in",
-            "shop.cart_view if logged in",
-            "shop.return_policy if exists"
-          ]
-        },
-        {
-          "id": "customer_service",
-          "content": [
-            "delivery note from store.delivery_note if exists",
-            "return policy link if exists",
-            "checkout/payment note from existing payment methods only if available"
-          ]
-        },
-        {
-          "id": "azad_developer_fixed",
-          "mustAlwaysShow": true,
-          "logo": "fixed AZAD logo/fallback mark",
-          "titleAr": "شركة ازاد للأنظمة الذكية",
-          "titleEn": "AZAD Smart Systems",
-          "manager": "بإدارة المهندس أحمد غنام",
-          "poweredBy": "Powered by AZAD Smart Systems",
-          "contact": {
-            "website": "www.azad.ae",
-            "email": "info@azad.ae",
-            "phone": "+971 50 123 4567",
-            "location": "United Arab Emirates"
-          }
-        }
-      ],
-      "bottomBar": {
-        "left": "{{ store.title or tenant.name }} © current year",
-        "center": "Powered by AZAD Smart Systems",
-        "right": "small Palestinian flag/tatreez accent"
-      }
-    }
-  },
-  "cssImplementation": {
-    "file": "static/css/shop-palestine.css",
-    "rootVariablesToAddOrUpdate": {
-      "--azad-gold": "#D7A741",
-      "--azad-ink": "#071014",
-      "--azad-cream": "#F7F3E9",
-      "--theme-primary": "{{ theme_primary }} from inline style already in base.html",
-      "--theme-secondary": "{{ theme_secondary }} from inline style already in base.html"
-    },
-    "importantClasses": [
-      ".ps-shop",
-      ".ps-header",
-      ".ps-header-inner",
-      ".ps-brand",
-      ".ps-brand-logo",
-      ".ps-brand-mark",
-      ".ps-tenant-brand",
-      ".ps-hero-premium",
-      ".ps-category-strip",
-      ".ps-cat-card",
-      ".ps-products-section",
-      ".ps-card",
-      ".ps-card-img",
-      ".ps-btn",
-      ".ps-benefits",
-      ".ps-footer",
-      ".ps-footer-tenant",
-      ".ps-footer-azad",
-      ".ps-azad-logo",
-      ".ps-powered-by-azad",
-      ".ps-tatreez-bar"
-    ],
-    "responsive": {
-      "desktop": "max-width 1400px, rich header/footer, products 4-5 columns",
-      "tablet": "products 2-3 columns, hero stacked",
-      "mobile": "single-column, scrollable categories, compact footer, no overflow"
-    }
-  },
-  "jinjaImplementationRules": {
-    "baseHtml": {
-      "mustRenderTenantBrandHeader": true,
-      "mustRenderAzadFooterBlock": true,
-      "exampleFooterAzadBlock": "<section class=\"ps-footer-azad\" aria-label=\"AZAD Smart Systems\">\n  <div class=\"ps-azad-logo\" aria-hidden=\"true\">AZAD</div>\n  <h3>شركة ازاد للأنظمة الذكية</h3>\n  <p>AZAD Smart Systems</p>\n  <p>بإدارة المهندس أحمد غنام</p>\n  <p class=\"ps-powered-by-azad\">Powered by AZAD Smart Systems</p>\n  <p><i class=\"fas fa-globe\"></i> www.azad.ae</p>\n  <p><i class=\"fas fa-envelope\"></i> info@azad.ae</p>\n</section>",
-      "note": "يمكن استبدال ps-azad-logo بصورة ثابتة إذا توفر ملف شعار ازاد في static."
-    },
-    "catalogHtml": {
-      "mustUseItemsLoop": "{% for row in items %}{% set product = row.product %}",
-      "mustUseDynamicProductImage": "{% if product.image_url %}<img src='{{ product.image_url }}'>",
-      "mustKeepCartAddForm": true,
-      "mustKeepWhatsappFallback": true,
-      "mustKeepRegisterFallback": true,
-      "mustKeepSearchForm": true,
-      "mustKeepCategoryFilter": true
-    }
-  },
-  "cursorPrompt": {
-    "copyPaste": "نفّذ ترقية واجهة المتجر في مشروع Azad-UAE حسب هذا JSON.\n\nالمطلوب ليس متجر ثابت، بل Storefront ديناميكي لكل تينانت.\n\nالأهم:\n1) اسم المتجر وشعاره ومعلوماته تأتي من التينانت:\n- store.title / tenant.name\n- store.tagline\n- store.logo_url()\n- store.phone\n- store.whatsapp\n- store.email\n- tenant.brand_color_primary\n- tenant.brand_color_secondary\n- tenant.default_currency\n\n2) يجب أن يظهر دائماً في فوتر كل متجر:\n- شعار شركة ازاد للأنظمة الذكية أو fallback AZAD mark\n- شركة ازاد للأنظمة الذكية\n- AZAD Smart Systems\n- بإدارة المهندس أحمد غنام\n- Powered by AZAD Smart Systems\n- www.azad.ae\n- info@azad.ae\n\n3) شعار التينانت يكون في الهيدر/الهيرو كشعار المتجر.\n4) شعار ازاد يكون في الفوتر كمنتج/مطوّر النظام، ولا يحل محل شعار التينانت.\n\nممنوع:\n- لا تكتب متجر أصالة.\n- لا تكتب Asala Store.\n- لا تثبت منتجات أو أسعار أو فئات.\n- لا تكسر routes/shop.py.\n- لا تكسر StoreService.\n- لا تلغِ CSRF.\n- لا تغيّر منطق cart/login/register/checkout.\n- لا تعرض منتجات خارج التينانت أو خارج مخزون الأونلاين.\n\nركز على:\n- templates/shop/base.html\n- templates/shop/catalog.html\n- static/css/shop-palestine.css\n- static/js/shop-storefront.js فقط عند الحاجة\n\nالمظهر:\n- مثل الصورة المرجعية الجديدة: متجر فخم، داكن وكريمي، لمسات فلسطينية، منتجات ديناميكية، كروت أقسام، كروت منتجات، أزرار واضحة، فوتر فيه التينانت + ازاد ثابت.\nراجع qaChecklist قبل الانتهاء."
-  },
-  "qaChecklist": [
-    "افتح /s/<store_slug> وتأكد أن اسم المتجر من store.title أو tenant.name.",
-    "تأكد أن شعار التينانت يظهر في الهيدر من store.logo_url() أو fallback.",
-    "تأكد أن شعار ازاد لا يظهر كشعار المتجر الرئيسي.",
-    "تأكد أن شعار ازاد ومعلومات شركة ازاد تظهر دائماً في الفوتر.",
-    "تأكد عدم وجود أي نص Asala أو متجر أصالة في القوالب أو CSS أو JS.",
-    "تأكد أن المنتجات من items فقط.",
-    "تأكد أن الأسعار من product.regular_price و tenant.default_currency.",
-    "تأكد أن الفئات من categories فقط.",
-    "تأكد أن البحث q يعمل.",
-    "تأكد أن فلتر category يعمل.",
-    "تأكد أن Add to Cart يعمل للمستخدم المسجل ويحافظ على csrf_token.",
-    "تأكد أن الضيف يتحول لواتساب عند توفر wa_digits أو Register عند عدم توفره.",
-    "تأكد أن cart_count يظهر للمستخدم المسجل.",
-    "تأكد أن checkout لا ينكسر.",
-    "تأكد أن RTL للعربية و LTR للإنجليزية يعملان.",
-    "تأكد أن التصميم متجاوب للموبايل بدون overflow.",
-    "تأكد أن المتجر المغلق أو المنصة المغلقة ما زالت تعرض closed.html."
-  ],
-  "finalExpectedResult": {
-    "ar": "كل تينانت يحصل على متجره باسمه وشعاره ومنتجاته وألوانه، مع مظهر فلسطيني فاخر، وفي فوتر كل متجر يظهر بوضوح أن النظام من إنتاج شركة ازاد للأنظمة الذكية.",
-    "en": "Each tenant gets a dynamic storefront with its own brand, logo, products and colors, while every storefront footer consistently displays AZAD Smart Systems as the platform developer/provider."
-  }
+	"meta": {
+		"name": "azad_uae_dynamic_tenant_storefront_with_fixed_azad_footer_brand",
+		"version": "3.0.0",
+		"createdAt": "2026-06-02T06:54:09.493819+00:00",
+		"repository": "https://github.com/AbuAzad2025/Azad-UAE",
+		"purpose": "ملف JSON كامل ومحدث لتوجيه Cursor لبناء واجهة متجر إلكتروني ديناميكية لكل تينانت داخل نظام Azad-UAE، مع تثبيت هوية شركة ازاد للأنظمة الذكية ومعلوماتها بالفوتر لجميع متاجر التينانتس.",
+		"visualReferenceImage": {
+			"fileName": "a_wide_high_resolution_ui_design_mockup_and_speci.png",
+			"localPath": "/mnt/data/a_wide_high_resolution_ui_design_mockup_and_speci.png",
+			"role": "visual_reference_for_layout_and_style",
+			"note": "الصورة مرجع بصري للمظهر والترتيب. لا تثبت أسماء المنتجات أو اسم التينانت الظاهر في الصورة؛ كل ذلك ديناميكي من النظام."
+		},
+		"primaryLanguage": "ar",
+		"secondaryLanguage": "en",
+		"direction": "dynamic_rtl_ltr",
+		"framework": "Flask + Jinja2 + CSS + vanilla JS",
+		"targetFiles": [
+			"templates/shop/base.html",
+			"templates/shop/catalog.html",
+			"templates/shop/product.html",
+			"templates/shop/cart.html",
+			"templates/shop/checkout.html",
+			"templates/shop/account_login.html",
+			"templates/shop/account_register.html",
+			"templates/shop/account_orders.html",
+			"static/css/shop-palestine.css",
+			"static/js/shop-storefront.js"
+		]
+	},
+	"coreDecision": {
+		"storeType": "dynamic_tenant_storefront",
+		"notFixedStore": true,
+		"tenantBrandDynamic": true,
+		"azadDeveloperBrandFixed": true,
+		"description": "واجهة المتجر تخص التينانت الحالي: اسمه وشعاره ومنتجاته وفئاته وألوانه، لكن يجب أن يظهر دائماً بالفوتر أن المتجر/النظام من إنتاج شركة ازاد للأنظمة الذكية مع شعار ازاد ومعلوماتها.",
+		"doNotUseOrMention": [
+			"متجر أصالة",
+			"Asala Store",
+			"منتجات ثابتة من الصورة القديمة",
+			"فئات ثابتة غير موجودة في قاعدة البيانات",
+			"أسعار ثابتة",
+			"بيانات تواصل ثابتة للتينانت"
+		],
+		"mustAlwaysShow": [
+			"شعار التينانت في الهيدر أو hero حسب store.logo_url() أو fallback",
+			"اسم متجر التينانت من store.title أو tenant.name",
+			"وصف/Tagline التينانت من store.tagline",
+			"شعار شركة ازاد الثابت في الفوتر",
+			"اسم شركة ازاد للأنظمة الذكية في الفوتر",
+			"AZAD Smart Systems في الفوتر",
+			"عبارة Powered by / Developed by AZAD Smart Systems",
+			"معلومات ازاد الثابتة بالفوتر"
+		]
+	},
+	"fixedAzadDeveloperBrand": {
+		"enabled": true,
+		"mustAppearOnEveryTenantStore": true,
+		"placement": {
+			"primary": "footer_right_or_footer_brand_column",
+			"secondary": "bottom_copyright_bar",
+			"doNotPlaceAsMainStoreLogo": true,
+			"doNotCompeteWithTenantLogoInHeader": true
+		},
+		"companyNameAr": "شركة ازاد للأنظمة الذكية",
+		"companyNameEn": "AZAD Smart Systems",
+		"managerAr": "بإدارة المهندس أحمد غنام",
+		"developerLines": {
+			"ar": [
+				"من إنتاج شركة ازاد للأنظمة الذكية",
+				"بإدارة المهندس أحمد غنام",
+				"نظام المتجر الإلكتروني مدعوم بواسطة AZAD Smart Systems"
+			],
+			"en": [
+				"Powered by AZAD Smart Systems",
+				"Developed by AZAD Smart Systems",
+				"Managed by Eng. Ahmad Ghannam"
+			]
+		},
+		"logo": {
+			"type": "fixed_azad_logo",
+			"sourcePreferred": [
+				"static/uploads/azad-logo.png",
+				"static/img/azad-logo.png",
+				"static/logo.png",
+				"fallback_css_mark"
+			],
+			"fallbackMark": {
+				"shape": "geometric triangular AZAD monogram",
+				"text": "AZAD",
+				"colors": {
+					"mark": "#D7A741",
+					"text": "#D7A741",
+					"background": "transparent"
+				}
+			},
+			"size": {
+				"desktop": {
+					"width": 92,
+					"height": 92
+				},
+				"tablet": {
+					"width": 74,
+					"height": 74
+				},
+				"mobile": {
+					"width": 56,
+					"height": 56
+				}
+			}
+		},
+		"contact": {
+			"website": "www.azad.ae",
+			"email": "info@azad.ae",
+			"phone": "+971 50 123 4567",
+			"locationAr": "الإمارات العربية المتحدة",
+			"locationEn": "United Arab Emirates"
+		},
+		"footerCopyright": {
+			"ar": "جميع الحقوق محفوظة — نظام المتجر الإلكتروني من إنتاج شركة ازاد للأنظمة الذكية",
+			"en": "All rights reserved — Storefront system powered by AZAD Smart Systems"
+		},
+		"visualRule": "هوية ازاد تظهر كمطوّر/مشغّل تقني في الفوتر فقط، وليست بديلاً عن هوية التينانت في الهيدر."
+	},
+	"dynamicTenantBrand": {
+		"enabled": true,
+		"placement": {
+			"header": "main_brand_area",
+			"hero": "headline_and_logo_area",
+			"footer": "tenant_contact_column"
+		},
+		"dataSources": {
+			"storeTitle": "{{ store.title or tenant.name }}",
+			"storeTagline": "{{ store.tagline or tenant.name_ar or tenant.name }}",
+			"storeLogo": "{{ store.logo_url() }}",
+			"storeSlug": "{{ store.store_slug }}",
+			"storePhone": "{{ store.phone }}",
+			"storeWhatsapp": "{{ store.whatsapp }}",
+			"storeEmail": "{{ store.email }}",
+			"storeReturnPolicy": "{{ store.return_policy(lang) }}",
+			"tenantName": "{{ tenant.name }}",
+			"tenantNameAr": "{{ tenant.name_ar }}",
+			"tenantPrimaryColor": "{{ tenant.brand_color_primary }}",
+			"tenantSecondaryColor": "{{ tenant.brand_color_secondary }}",
+			"tenantCurrency": "{{ tenant.default_currency or 'AED' }}"
+		},
+		"fallbacks": {
+			"logo": "first letter from store.title or tenant.name inside a premium circular emblem",
+			"taglineAr": "منتجات مختارة بجودة عالية",
+			"taglineEn": "Curated products with premium quality",
+			"currency": "AED"
+		},
+		"strictRules": [
+			"اسم المتجر في الهيدر والهيرو والفوتر يجب أن يكون من store.title أو tenant.name فقط.",
+			"شعار المتجر الرئيسي يجب أن يكون شعار التينانت store.logo_url() أو fallback للتينانت.",
+			"لا تستخدم شعار ازاد كشعار رئيسي للمتجر في الهيدر.",
+			"شعار ازاد ثابت في الفوتر فقط كـ Powered by/Developed by."
+		]
+	},
+	"existingArchitectureContract": {
+		"routes": {
+			"shopBlueprintPrefix": "/s",
+			"catalog": "shop.catalog / /s/<slug>",
+			"productDetail": "shop.product_detail / /s/<slug>/p/<product_id>",
+			"cartView": "shop.cart_view / /s/<slug>/cart",
+			"cartAdd": "shop.cart_add / /s/<slug>/cart/add",
+			"checkout": "shop.checkout / /s/<slug>/checkout",
+			"accountLogin": "shop.account_login / /s/<slug>/account/login",
+			"accountRegister": "shop.account_register / /s/<slug>/account/register",
+			"orders": "shop.account_orders / /s/<slug>/account/orders",
+			"languageToggle": "shop.set_lang / /s/<slug>/lang/<lang_code>",
+			"returnPolicy": "shop.return_policy / /s/<slug>/return-policy"
+		},
+		"doNotChange": [
+			"routes/shop.py",
+			"StoreService.get_public_catalog",
+			"StoreService.online_stock_map",
+			"cart session key per tenant",
+			"CSRF fields in forms",
+			"login requirement for cart and checkout",
+			"slug-based tenant resolution",
+			"language handling shop_lang/t()",
+			"tenant isolation"
+		],
+		"availableContextVariables": [
+			"store",
+			"tenant",
+			"lang",
+			"is_rtl",
+			"t",
+			"theme_primary",
+			"theme_secondary",
+			"cart_count",
+			"shop_account",
+			"is_shop_logged_in",
+			"items",
+			"categories",
+			"category_id",
+			"search",
+			"wa_digits"
+		],
+		"catalogRules": {
+			"itemsSource": "StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search)",
+			"displayOnlyInStockOnlineWarehouseProducts": true,
+			"excludeSerialTrackedProducts": true,
+			"productCardFields": [
+				"product.id",
+				"product.image_url",
+				"product.get_display_name(lang)",
+				"product.sku",
+				"product.regular_price",
+				"tenant.default_currency"
+			]
+		}
+	},
+	"visualDesign": {
+		"styleName": "premium_palestinian_tenant_storefront",
+		"description": "نفس الفخامة والترتيب في الصورة: هيدر داكن، Hero كبير، لوحة محتوى كريمية، كروت أقسام، كروت منتجات، مميزات، فوتر عميق يحتوي معلومات التينانت ومعلومات ازاد الثابتة.",
+		"palette": {
+			"darkInk": "#071014",
+			"darkInk2": "#0A171B",
+			"cream": "#F7F3E9",
+			"warmWhite": "#FFFDF7",
+			"gold": "#D7A741",
+			"goldDark": "#A87922",
+			"tenantPrimary": "var(--theme-primary)",
+			"tenantSecondary": "var(--theme-secondary)",
+			"palestineRed": "#CE1126",
+			"palestineGreen": "#007A3D",
+			"black": "#000000",
+			"white": "#FFFFFF",
+			"muted": "#6B7280"
+		},
+		"motifs": [
+			"tatreez embroidery border",
+			"subtle keffiyeh geometric pattern",
+			"olive branches",
+			"small Palestinian flag detail",
+			"warm lantern/gold lighting feel",
+			"premium product photography layout"
+		],
+		"layoutSections": [
+			"top premium thin bar",
+			"header with tenant logo and tenant store name",
+			"navigation and language/currency/cart/account area",
+			"hero with dynamic tenant store title",
+			"category cards from categories",
+			"featured products from items",
+			"benefits row",
+			"footer with tenant information plus fixed AZAD developer block",
+			"bottom powered-by AZAD copyright bar"
+		],
+		"header": {
+			"background": "dark glass / #071014",
+			"brandBlock": {
+				"tenantLogo": "{{ store.logo_url() or fallback }}",
+				"tenantName": "{{ store.title or tenant.name }}",
+				"tenantTagline": "{{ store.tagline }}",
+				"doNotShowAzadAsMainHeaderBrand": true
+			},
+			"nav": [
+				{
+					"labelKey": "shop",
+					"href": "shop.catalog"
+				},
+				{
+					"labelKey": "categories",
+					"href": "#categories"
+				},
+				{
+					"labelKey": "offers",
+					"optional": true
+				},
+				{
+					"labelKey": "about_us",
+					"optional": true
+				},
+				{
+					"labelKey": "contact",
+					"optional": true
+				}
+			],
+			"actions": [
+				"search",
+				"account login/register or account name",
+				"wishlist visual optional without backend only if non-functional hidden",
+				"cart with cart_count",
+				"language toggle ar/en",
+				"currency display tenant.default_currency"
+			]
+		},
+		"hero": {
+			"title": "{{ store.title or tenant.name }}",
+			"subtitle": "{{ store.tagline or store.seo_description(lang) or fallback }}",
+			"primaryCTA": "{{ t('shop') or 'تسوق الآن' }}",
+			"secondaryCTA": "{{ t('categories') or 'الأقسام' }}",
+			"rightVisual": "Palestinian premium illustration/pattern, not fixed product data",
+			"mustStayDynamic": true
+		},
+		"categories": {
+			"source": "categories",
+			"hideIfEmpty": true,
+			"allProductsCard": true,
+			"cardStyle": "cream cards with icon, active tenantPrimary/dark green"
+		},
+		"products": {
+			"source": "items",
+			"cardStyle": "premium cream card with product image, title, SKU, price, action button",
+			"buttons": {
+				"loggedIn": "Add to Cart POST with csrf",
+				"guestWithWhatsapp": "WhatsApp order link",
+				"guestNoWhatsapp": "Register"
+			}
+		},
+		"footer": {
+			"background": "darkInk",
+			"columns": [
+				{
+					"id": "tenant_store",
+					"title": "{{ store.title or tenant.name }}",
+					"logo": "{{ store.logo_url() or fallback }}",
+					"tagline": "{{ store.tagline }}",
+					"contact": [
+						"{{ store.phone }}",
+						"{{ store.whatsapp }}",
+						"{{ store.email }}"
+					]
+				},
+				{
+					"id": "quick_links",
+					"dynamicLinks": [
+						"shop.catalog",
+						"shop.account_login/register",
+						"shop.account_orders if logged in",
+						"shop.cart_view if logged in",
+						"shop.return_policy if exists"
+					]
+				},
+				{
+					"id": "customer_service",
+					"content": [
+						"delivery note from store.delivery_note if exists",
+						"return policy link if exists",
+						"checkout/payment note from existing payment methods only if available"
+					]
+				},
+				{
+					"id": "azad_developer_fixed",
+					"mustAlwaysShow": true,
+					"logo": "fixed AZAD logo/fallback mark",
+					"titleAr": "شركة ازاد للأنظمة الذكية",
+					"titleEn": "AZAD Smart Systems",
+					"manager": "بإدارة المهندس أحمد غنام",
+					"poweredBy": "Powered by AZAD Smart Systems",
+					"contact": {
+						"website": "www.azad.ae",
+						"email": "info@azad.ae",
+						"phone": "+971 50 123 4567",
+						"location": "United Arab Emirates"
+					}
+				}
+			],
+			"bottomBar": {
+				"left": "{{ store.title or tenant.name }} © current year",
+				"center": "Powered by AZAD Smart Systems",
+				"right": "small Palestinian flag/tatreez accent"
+			}
+		}
+	},
+	"cssImplementation": {
+		"file": "static/css/shop-palestine.css",
+		"rootVariablesToAddOrUpdate": {
+			"--azad-gold": "#D7A741",
+			"--azad-ink": "#071014",
+			"--azad-cream": "#F7F3E9",
+			"--theme-primary": "{{ theme_primary }} from inline style already in base.html",
+			"--theme-secondary": "{{ theme_secondary }} from inline style already in base.html"
+		},
+		"importantClasses": [
+			".ps-shop",
+			".ps-header",
+			".ps-header-inner",
+			".ps-brand",
+			".ps-brand-logo",
+			".ps-brand-mark",
+			".ps-tenant-brand",
+			".ps-hero-premium",
+			".ps-category-strip",
+			".ps-cat-card",
+			".ps-products-section",
+			".ps-card",
+			".ps-card-img",
+			".ps-btn",
+			".ps-benefits",
+			".ps-footer",
+			".ps-footer-tenant",
+			".ps-footer-azad",
+			".ps-azad-logo",
+			".ps-powered-by-azad",
+			".ps-tatreez-bar"
+		],
+		"responsive": {
+			"desktop": "max-width 1400px, rich header/footer, products 4-5 columns",
+			"tablet": "products 2-3 columns, hero stacked",
+			"mobile": "single-column, scrollable categories, compact footer, no overflow"
+		}
+	},
+	"jinjaImplementationRules": {
+		"baseHtml": {
+			"mustRenderTenantBrandHeader": true,
+			"mustRenderAzadFooterBlock": true,
+			"exampleFooterAzadBlock": "<section class=\"ps-footer-azad\" aria-label=\"AZAD Smart Systems\">\n  <div class=\"ps-azad-logo\" aria-hidden=\"true\">AZAD</div>\n  <h3>شركة ازاد للأنظمة الذكية</h3>\n  <p>AZAD Smart Systems</p>\n  <p>بإدارة المهندس أحمد غنام</p>\n  <p class=\"ps-powered-by-azad\">Powered by AZAD Smart Systems</p>\n  <p><i class=\"fas fa-globe\"></i> www.azad.ae</p>\n  <p><i class=\"fas fa-envelope\"></i> info@azad.ae</p>\n</section>",
+			"note": "يمكن استبدال ps-azad-logo بصورة ثابتة إذا توفر ملف شعار ازاد في static."
+		},
+		"catalogHtml": {
+			"mustUseItemsLoop": "{% for row in items %}{% set product = row.product %}",
+			"mustUseDynamicProductImage": "{% if product.image_url %}<img src='{{ product.image_url }}'>",
+			"mustKeepCartAddForm": true,
+			"mustKeepWhatsappFallback": true,
+			"mustKeepRegisterFallback": true,
+			"mustKeepSearchForm": true,
+			"mustKeepCategoryFilter": true
+		}
+	},
+	"cursorPrompt": {
+		"copyPaste": "نفّذ ترقية واجهة المتجر في مشروع Azad-UAE حسب هذا JSON.\n\nالمطلوب ليس متجر ثابت، بل Storefront ديناميكي لكل تينانت.\n\nالأهم:\n1) اسم المتجر وشعاره ومعلوماته تأتي من التينانت:\n- store.title / tenant.name\n- store.tagline\n- store.logo_url()\n- store.phone\n- store.whatsapp\n- store.email\n- tenant.brand_color_primary\n- tenant.brand_color_secondary\n- tenant.default_currency\n\n2) يجب أن يظهر دائماً في فوتر كل متجر:\n- شعار شركة ازاد للأنظمة الذكية أو fallback AZAD mark\n- شركة ازاد للأنظمة الذكية\n- AZAD Smart Systems\n- بإدارة المهندس أحمد غنام\n- Powered by AZAD Smart Systems\n- www.azad.ae\n- info@azad.ae\n\n3) شعار التينانت يكون في الهيدر/الهيرو كشعار المتجر.\n4) شعار ازاد يكون في الفوتر كمنتج/مطوّر النظام، ولا يحل محل شعار التينانت.\n\nممنوع:\n- لا تكتب متجر أصالة.\n- لا تكتب Asala Store.\n- لا تثبت منتجات أو أسعار أو فئات.\n- لا تكسر routes/shop.py.\n- لا تكسر StoreService.\n- لا تلغِ CSRF.\n- لا تغيّر منطق cart/login/register/checkout.\n- لا تعرض منتجات خارج التينانت أو خارج مخزون الأونلاين.\n\nركز على:\n- templates/shop/base.html\n- templates/shop/catalog.html\n- static/css/shop-palestine.css\n- static/js/shop-storefront.js فقط عند الحاجة\n\nالمظهر:\n- مثل الصورة المرجعية الجديدة: متجر فخم، داكن وكريمي، لمسات فلسطينية، منتجات ديناميكية، كروت أقسام، كروت منتجات، أزرار واضحة، فوتر فيه التينانت + ازاد ثابت.\nراجع qaChecklist قبل الانتهاء."
+	},
+	"qaChecklist": [
+		"افتح /s/<store_slug> وتأكد أن اسم المتجر من store.title أو tenant.name.",
+		"تأكد أن شعار التينانت يظهر في الهيدر من store.logo_url() أو fallback.",
+		"تأكد أن شعار ازاد لا يظهر كشعار المتجر الرئيسي.",
+		"تأكد أن شعار ازاد ومعلومات شركة ازاد تظهر دائماً في الفوتر.",
+		"تأكد عدم وجود أي نص Asala أو متجر أصالة في القوالب أو CSS أو JS.",
+		"تأكد أن المنتجات من items فقط.",
+		"تأكد أن الأسعار من product.regular_price و tenant.default_currency.",
+		"تأكد أن الفئات من categories فقط.",
+		"تأكد أن البحث q يعمل.",
+		"تأكد أن فلتر category يعمل.",
+		"تأكد أن Add to Cart يعمل للمستخدم المسجل ويحافظ على csrf_token.",
+		"تأكد أن الضيف يتحول لواتساب عند توفر wa_digits أو Register عند عدم توفره.",
+		"تأكد أن cart_count يظهر للمستخدم المسجل.",
+		"تأكد أن checkout لا ينكسر.",
+		"تأكد أن RTL للعربية و LTR للإنجليزية يعملان.",
+		"تأكد أن التصميم متجاوب للموبايل بدون overflow.",
+		"تأكد أن المتجر المغلق أو المنصة المغلقة ما زالت تعرض closed.html."
+	],
+	"finalExpectedResult": {
+		"ar": "كل تينانت يحصل على متجره باسمه وشعاره ومنتجاته وألوانه، مع مظهر فلسطيني فاخر، وفي فوتر كل متجر يظهر بوضوح أن النظام من إنتاج شركة ازاد للأنظمة الذكية.",
+		"en": "Each tenant gets a dynamic storefront with its own brand, logo, products and colors, while every storefront footer consistently displays AZAD Smart Systems as the platform developer/provider."
+	}
 }

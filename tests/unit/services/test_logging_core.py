@@ -450,9 +450,7 @@ class TestPerformanceAndActivity:
         col.__ge__ = lambda self, other: MagicMock()
         col.__eq__ = lambda self, other: MagicMock()
         AuditLog = MagicMock()
-        AuditLog.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        AuditLog.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
         User = MagicMock()
         User.last_seen = col
         User.is_active = col
@@ -462,9 +460,7 @@ class TestPerformanceAndActivity:
         Sale.created_at = col
         Sale.tenant_id = col
         Sale.branch_id = col
-        Sale.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        Sale.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
         originals = (models.AuditLog, models.Sale, models.User)
         models.AuditLog, models.Sale, models.User = AuditLog, Sale, User
         try:
@@ -480,9 +476,7 @@ class TestPerformanceAndActivity:
         col.__ge__ = lambda self, other: MagicMock()
         AuditLog = MagicMock()
         AuditLog.created_at = col
-        AuditLog.query.filter.return_value.filter_by.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        AuditLog.query.filter.return_value.filter_by.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
         original = models.AuditLog
         models.AuditLog = AuditLog
         try:
@@ -499,9 +493,9 @@ class TestPerformanceAndActivity:
 
     def test_track_login_attempt_success_and_lock(self, mocker):
         user = MagicMock(login_attempts=4)
-        mocker.patch("models.User").query.filter_by.return_value.first.return_value = (
-            user
-        )
+        mocker.patch(
+            "models.User"
+        ).query.filter_by.return_value.first.return_value = user
         mock_db = mocker.patch("extensions.db")
         LoggingCore.track_login_attempt("alice", success=False, ip_address="1.1.1.1")
         assert user.login_attempts == 5

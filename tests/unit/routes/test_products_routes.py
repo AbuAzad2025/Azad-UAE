@@ -638,9 +638,7 @@ class TestProductsIndex:
         query = _chain_query(all=items)
         session_rows = [(1, "WH", "مستودع", "Branch", "B1")]
         session_query = MagicMock()
-        session_query.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = (
-            session_rows
-        )
+        session_query.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = session_rows
         with (
             _products_patches(products=items, visible_query=query),
             patch("routes.products.should_show_all_branch_columns", return_value=True),

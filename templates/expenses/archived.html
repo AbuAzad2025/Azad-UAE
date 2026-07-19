@@ -62,7 +62,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   $('#expensesTable').DataTable({
     language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
     order: [[6, 'desc']],
@@ -83,10 +83,10 @@ $(document).ready(function() {
       headers: {
         'X-CSRFToken': csrfToken
       },
-      success: function() {
+      success: () => {
         location.reload();
       },
-      error: function() {
+      error: () => {
         location.reload();
       }
     });

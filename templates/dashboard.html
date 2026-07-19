@@ -356,8 +356,7 @@
 {% include 'partials/datatables_assets.html' %}
 <script>
 // Initialize DataTable for recent sales
-$(document).ready(function() {
-  {% if stats.recent_sales and stats.recent_sales|length > 0 %}
+$(document).ready(() => {% if stats.recent_sales and stats.recent_sales|length > 0 %
   $('#recentSalesTable').DataTable({
     language: { url: '{{ url_for("static", filename="datatables/Arabic.json") }}' },
     pageLength: 10,
@@ -368,12 +367,11 @@ $(document).ready(function() {
       targets: -1,
       orderable: false
     }]
-  });
-  {% endif %}
+  });% endif %
 
-  $('#supervisorOverrideForm').on('submit', function(e) {
+  $('#supervisorOverrideForm').on('submit', (e) => {
     e.preventDefault();
-    let btn = $('#overrideSubmitBtn');
+    const btn = $('#overrideSubmitBtn');
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري التحقق...');
     $('#overrideResult').addClass('d-none');
     $.ajax({
@@ -386,24 +384,24 @@ $(document).ready(function() {
         password: $('input[name="password"]').val()
       }),
       headers: { 'X-CSRFToken': $('input[name="csrf_token"]').val() }
-    }).done(function(res) {
+    }).done((res) => {
       if (res.success) {
         $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
           '<i class="fas fa-check-circle"></i> تم التفويض بنجاح بواسطة ' + res.supervisor_username
         );
-        setTimeout(function() { $('#supervisorOverrideModal').modal('hide'); }, 1500);
+        setTimeout(() => { $('#supervisorOverrideModal').modal('hide'); }, 1500);
       } else {
         $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
           '<i class="fas fa-times-circle"></i> ' + (res.error || 'فشل التفويض')
         );
       }
-    }).fail(function(xhr) {
+    }).fail((xhr) => {
       let msg = 'خطأ في الاتصال';
       try { msg = xhr.responseJSON.error || msg; } catch(e) {}
       $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
         '<i class="fas fa-times-circle"></i> ' + msg
       );
-    }).always(function() {
+    }).always(() => {
       btn.prop('disabled', false).html('<i class="fas fa-check"></i> تأكيد التفويض');
     });
   });

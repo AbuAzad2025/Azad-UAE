@@ -272,7 +272,7 @@
 <script>
 const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
 
-$(function() {
+$(() => {
   // {{ t('Change') }} {{ t('الحقول') }} {{ t('حسب') }} {{ t('نوع') }} {{ t('Cheque') }}
   $('#cheque_type').on('change', function() {
     const type = $(this).val();
@@ -313,7 +313,7 @@ $(function() {
     $.ajax({
       url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', TENANT_BASE_CURRENCY),
       method: 'GET',
-      success: function(data) {
+      success: (data) => {
         if (data && data.rate) {
           $('input[name="exchange_rate"]').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
@@ -322,7 +322,7 @@ $(function() {
           alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
-      error: function() {
+      error: () => {
         if (window.toastr) {
           toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {

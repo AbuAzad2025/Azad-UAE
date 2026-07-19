@@ -173,7 +173,7 @@
 
 {% block extra_js %}
 <script>
-$(function () {
+$(() => {
   // {{ t('تفعيل') }} Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -181,7 +181,7 @@ $(function () {
   });
   
   // {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
-  $('#saveExpenseCategoryBtn').on('click', function() {
+  $('#saveExpenseCategoryBtn').on('click', () => {
     const name = $('#expense_category_name').val().trim();
     const name_ar = $('#expense_category_name_ar').val().trim();
     
@@ -204,7 +204,7 @@ $(function () {
         name: name,
         name_ar: name_ar
       }),
-      success: function(response) {
+      success: (response) => {
         if (response.success) {
           // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للقائمة') }}
           const displayName = response.category.name_ar ? 
@@ -228,7 +228,7 @@ $(function () {
           alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
         }
       },
-      error: function(xhr) {
+      error: (xhr) => {
         const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
         alert('{{ t('Error') }}: ' + error);
       }

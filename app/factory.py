@@ -29,6 +29,7 @@ from app.integrity import run_system_integrity_check
 
 try:
     from flask_compress import Compress  # noqa: F401
+
     COMPRESS_AVAILABLE = True
 except ImportError:
     COMPRESS_AVAILABLE = False

@@ -126,6 +126,7 @@ def setup_enhanced_logging(app):
                 h.close()
             except Exception:
                 _logger.debug("Failed to close log handler", exc_info=True)
+
     utf8_stdout = _ensure_utf8_stream(sys.stdout)
     utf8_stderr = _ensure_utf8_stream(sys.stderr)
 

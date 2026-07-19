@@ -135,9 +135,7 @@ class TestActivityMonitor:
                 return self
 
         audit_q = MagicMock()
-        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        audit_q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
         user_q = MagicMock()
         user_q.filter.return_value.all.return_value = []
         sale_q = MagicMock()

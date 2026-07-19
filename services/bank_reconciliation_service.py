@@ -498,7 +498,11 @@ class BankReconciliationService:
         date_diff, gl = candidates[0]
         match_type = (
             "exact"
-            if abs(stmt_amount - _decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0)))
+            if abs(
+                stmt_amount
+                - _decimal(str(gl.debit or 0))
+                - _decimal(str(gl.credit or 0))
+            )
             < _decimal("0.001")
             else "amount_date"
         )
@@ -507,7 +511,10 @@ class BankReconciliationService:
             "journal_line_id": gl.id,
             "match_type": match_type,
             "amount_diff": float(
-                abs(stmt_amount - (_decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0))))
+                abs(
+                    stmt_amount
+                    - (_decimal(str(gl.debit or 0)) - _decimal(str(gl.credit or 0)))
+                )
             ),
             "date_diff": date_diff,
         }
@@ -602,7 +609,9 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
-            logger.exception("Failed to flush after routing orphan transactions to suspense")
+            logger.exception(
+                "Failed to flush after routing orphan transactions to suspense"
+            )
             raise
 
         return results

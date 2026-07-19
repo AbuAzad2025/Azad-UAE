@@ -211,7 +211,9 @@ def dashboard():
                     inv_credit = inv_credit_query.scalar() or Decimal("0")
                     stats["inventory_value_gl"] = float(inv_debit - inv_credit)
             except Exception:
-                current_app.logger.exception("Failed to compute inventory GL balance for dashboard")
+                current_app.logger.exception(
+                    "Failed to compute inventory GL balance for dashboard"
+                )
 
         # Optimized query with eager loading (N+1 problem fix)
         tid = get_active_tenant_id(current_user)

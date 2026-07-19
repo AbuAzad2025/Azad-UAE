@@ -351,7 +351,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-(function() {
+(() => {
   const tableSelector = '#chequesTable';
   const printButtonSelector = '#printChequesBtn';
   const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";

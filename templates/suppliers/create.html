@@ -402,7 +402,7 @@
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   // {{ t('تفعيل') }} Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -410,7 +410,7 @@ $(document).ready(function() {
   });
   
   // {{ t('التحقق') }} من {{ t('النموذج_2') }}
-  $('form').on('submit', function(e) {
+  $('form').on('submit', (e) => {
     const name = $('input[name="name"]').val().trim();
     const phone = $('input[name="phone"]').val().trim();
     

@@ -172,12 +172,16 @@ def _ensure_utf8_stream(stream):
             stream.reconfigure(encoding="utf-8", errors="replace")
             return stream
         except Exception:
-            logger.debug("Failed to reconfigure stream encoding to utf-8", exc_info=True)
+            logger.debug(
+                "Failed to reconfigure stream encoding to utf-8", exc_info=True
+            )
     if hasattr(stream, "buffer"):
         try:
             return io.TextIOWrapper(stream.buffer, encoding="utf-8", errors="replace")
         except Exception:
-            logger.debug("Failed to wrap stream buffer with utf-8 TextIOWrapper", exc_info=True)
+            logger.debug(
+                "Failed to wrap stream buffer with utf-8 TextIOWrapper", exc_info=True
+            )
     return stream
 
 
@@ -246,7 +250,9 @@ def _get_request_context() -> dict[str, Any]:
                 ctx["user_id"] = int(current_user.get_id())
                 ctx["tenant_id"] = getattr(current_user, "tenant_id", None)
         except Exception:
-            logger.debug("Failed to resolve current user for request context", exc_info=True)
+            logger.debug(
+                "Failed to resolve current user for request context", exc_info=True
+            )
     return ctx
 
 
@@ -626,7 +632,10 @@ class LoggingCore:
                     try:
                         msg += f" | route={request.method} {request.path}"
                     except Exception:
-                        logger.debug("Failed to append request path to warning message", exc_info=True)
+                        logger.debug(
+                            "Failed to append request path to warning message",
+                            exc_info=True,
+                        )
                 logger.warning(msg)
                 if original_showwarning:
                     original_showwarning(
@@ -766,7 +775,9 @@ class LoggingCore:
                 row_id,
             )
         except Exception:
-            logger.warning("Failed to write error audit log entry to logger", exc_info=True)
+            logger.warning(
+                "Failed to write error audit log entry to logger", exc_info=True
+            )
         return row_id
 
     @classmethod
@@ -846,7 +857,9 @@ class LoggingCore:
                 else:
                     payload = request.form.to_dict() if request.form else {}
             except Exception:
-                logger.debug("Failed to parse request payload for error context", exc_info=True)
+                logger.debug(
+                    "Failed to parse request payload for error context", exc_info=True
+                )
             request_data = _sanitize_dict(payload)
 
         endpoint_path = ""
@@ -856,7 +869,9 @@ class LoggingCore:
             elif has_request_context() and request:
                 endpoint_path = request.path or ""
         except Exception:
-            logger.debug("Failed to resolve endpoint path for error context", exc_info=True)
+            logger.debug(
+                "Failed to resolve endpoint path for error context", exc_info=True
+            )
 
         # Fingerprint
         fp_message = message
@@ -1051,13 +1066,21 @@ class LoggingCore:
                 fd = datetime.strptime(from_date, "%Y-%m-%d")
                 query = query.filter(ErrorAuditLog.created_at >= fd)
             except Exception:
-                logger.debug("Invalid from_date format '%s' in error logs query, ignoring filter", from_date, exc_info=True)
+                logger.debug(
+                    "Invalid from_date format '%s' in error logs query, ignoring filter",
+                    from_date,
+                    exc_info=True,
+                )
         if to_date:
             try:
                 td = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
                 query = query.filter(ErrorAuditLog.created_at < td)
             except Exception:
-                logger.debug("Invalid to_date format '%s' in error logs query, ignoring filter", to_date, exc_info=True)
+                logger.debug(
+                    "Invalid to_date format '%s' in error logs query, ignoring filter",
+                    to_date,
+                    exc_info=True,
+                )
         if search:
             query = query.filter(
                 db.or_(
@@ -1129,13 +1152,21 @@ class LoggingCore:
                 fd = datetime.strptime(from_date, "%Y-%m-%d")
                 query = query.filter(ErrorAuditLog.created_at >= fd)
             except Exception:
-                logger.debug("Invalid from_date format '%s' in audit logs query, ignoring filter", from_date, exc_info=True)
+                logger.debug(
+                    "Invalid from_date format '%s' in audit logs query, ignoring filter",
+                    from_date,
+                    exc_info=True,
+                )
         if to_date:
             try:
                 td = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
                 query = query.filter(ErrorAuditLog.created_at < td)
             except Exception:
-                logger.debug("Invalid to_date format '%s' in audit logs query, ignoring filter", to_date, exc_info=True)
+                logger.debug(
+                    "Invalid to_date format '%s' in audit logs query, ignoring filter",
+                    to_date,
+                    exc_info=True,
+                )
         if search:
             from extensions import db
 
@@ -1637,7 +1668,9 @@ class LoggingCore:
                 )
                 db_stats[safe_table] = count
         except Exception:
-            logger.debug("Failed to collect database table stats for system stats", exc_info=True)
+            logger.debug(
+                "Failed to collect database table stats for system stats", exc_info=True
+            )
 
         cls.log_audit(
             "view_system_stats",
@@ -1861,7 +1894,9 @@ class LoggingCore:
             results["logs_dir_bytes"] = log_dir_size
             results["logs_dir_mb"] = round(log_dir_size / (1024**2), 2)
         except Exception:
-            logger.debug("Failed to calculate logs directory size during cleanup", exc_info=True)
+            logger.debug(
+                "Failed to calculate logs directory size during cleanup", exc_info=True
+            )
 
         cleanup_sql = {
             "error_audit_logs": (

@@ -100,9 +100,7 @@ class TestAdvancedLedgerWave:
             ),
             patch("models.Supplier.query") as sup_q,
         ):
-            sup_q.filter_by.return_value.with_entities.return_value.all.return_value = (
-                []
-            )
+            sup_q.filter_by.return_value.with_entities.return_value.all.return_value = []
             resp = advanced_ledger_client.post(
                 "/ledger/advanced/advanced-expenses/add",
                 data={
@@ -730,9 +728,7 @@ class TestLedgerWizardWave:
     def test_option_one_empty(self, mock_user):
         ctx = {"last_action": "دفتر"}
         with patch("models.gl.GLJournalEntry") as GL:
-            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
             result = _run("1", mock_user, ctx)
         assert "لا يوجد قيود" in result
 
@@ -750,9 +746,7 @@ class TestLedgerWizardWave:
     def test_option_two_empty(self, mock_user):
         ctx = {"last_action": "دفتر"}
         with patch("models.gl.GLJournalEntry") as GL:
-            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            GL.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
             result = _run("2", mock_user, ctx)
         assert "لا يوجد قيود" in result
 

@@ -193,9 +193,7 @@ class TestTrainer:
 
         MagicMock(category="system", id=1)
         with patch("extensions.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.count.return_value = (
-                3
-            )
+            mock_db.session.query.return_value.filter.return_value.count.return_value = 3
             mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
                 ("system", 2),
                 ("learned", 1),
@@ -621,9 +619,7 @@ class TestNeuralNetworkConsolidatedDeep:
             patch("models.Customer"),
             patch("models.Sale"),
         ):
-            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = (
-                None
-            )
+            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = None
             assert engine.classify_customer_intelligence(1)["classification"] == "new"
         status = engine.get_status()
         assert status["total_models"] >= 10
@@ -745,9 +741,7 @@ class TestActionDispatcherHandlers:
                 is False
             )
             q = MagicMock()
-            q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            q.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
             Sale.query = q
             assert action_dispatcher.dispatch("list_sales", {}).success is True
             Ex.return_value.receive_payment.return_value = {
@@ -793,9 +787,7 @@ class TestActionDispatcherHandlers:
             )
             Sale.query.filter_by.return_value.count.return_value = 5
             assert action_dispatcher.dispatch("sales_summary", {}).success is True
-            session.query.return_value.join.return_value.filter.return_value.all.return_value = (
-                []
-            )
+            session.query.return_value.join.return_value.filter.return_value.all.return_value = []
             assert action_dispatcher.dispatch("profit_summary", {}).success is True
             Ex.return_value.create_employee.return_value = {
                 "success": True,

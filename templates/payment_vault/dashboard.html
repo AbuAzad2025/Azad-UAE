@@ -452,7 +452,7 @@
     }
     
     // {{ t('Update') }} {{ t('Statistics') }} {{ t('المباشرة') }} كل 30 {{ t('ثانية') }}
-    setInterval(async function() {
+    setInterval(async () => {
         try {
             const response = await fetch('{{ url_for("payment_vault.api_live_stats") }}');
             const data = await response.json();
@@ -499,7 +499,7 @@
     setInterval(fetchNotifications, 60000);
     
     // {{ t('تأثير') }} {{ t('لطيف') }} عند {{ t('Download') }} {{ t('الصفحة') }}
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         const cards = document.querySelectorAll('.stat-card, .quick-action');
         cards.forEach((card, index) => {
             card.style.opacity = '0';

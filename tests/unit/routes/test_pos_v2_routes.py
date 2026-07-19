@@ -1161,9 +1161,7 @@ class TestPosCustomerDisplay:
             patch("time.sleep") as sleep,
         ):
             sess.get.side_effect = get_session
-            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            sale_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             gen, _ = customer_display_stream(1)
             msg = next(gen)
             assert '"waiting"' in msg

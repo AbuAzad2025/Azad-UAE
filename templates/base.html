@@ -85,7 +85,7 @@
 <script>
   window.APP_ENUMS = {{ app_enums | tojson | safe }};
   window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
-  window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
+  window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1;
   window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
   window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency or 'USD' }}';
   window._FX_FALLBACK_BASE = '{{ tenant_default_currency or 'USD' }}';
@@ -103,36 +103,36 @@ window.ROUTES = {
     service: {
       exportCsv: '{{ url_for("owner.export_database") }}',
       searchWarehouses: '{{ url_for("api.api_search_warehouses") }}',
-      productsByWarehouse: function(wid) { return '{{ url_for("api.api_warehouse_products", wid=0) }}'.replace('/0', '/' + wid); },
-      productInfo: function(pid) { return '{{ url_for("api.api_product_info", pid=0) }}'.replace('/0', '/' + pid); }
+      productsByWarehouse: (wid) => '{{ url_for("api.api_warehouse_products", wid=0) }}'.replace('/0', '/' + wid),
+      productInfo: (pid) => '{{ url_for("api.api_product_info", pid=0) }}'.replace('/0', '/' + pid)
     },
     vendors: {
       payUrl: '{{ url_for("payments.create_voucher") }}'
     }
   };
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="window-print"]');
     if (btn) { e.preventDefault(); window.print(); }
     const closeBtn = e.target.closest('[data-action="window-close"]');
     if (closeBtn) { e.preventDefault(); window.close(); }
   });
   if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
-    window.addEventListener('DOMContentLoaded', function() { setTimeout(function() { window.print(); }, 300); });
+    window.addEventListener('DOMContentLoaded', () => { setTimeout(() => { window.print(); }, 300); });
   }
-  document.addEventListener('submit', function(ev) {
-    let btn = ev.target.querySelector('button[type="submit"]');
+  document.addEventListener('submit', (ev) => {
+    const btn = ev.target.querySelector('button[type="submit"]');
     if (btn && !btn.disabled) {
-      setTimeout(function() {
+      setTimeout(() => {
         btn.disabled = true;
-        let icon = btn.querySelector('.fa-spinner');
+        const icon = btn.querySelector('.fa-spinner');
         if (!icon) btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
       }, 10);
     }
   }, true);
-  document.addEventListener('change', function(ev) {
+  document.addEventListener('change', (ev) => {
     if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
   });
-  document.addEventListener('keyup', function(ev) {
+  document.addEventListener('keyup', (ev) => {
     if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
   });
 </script>

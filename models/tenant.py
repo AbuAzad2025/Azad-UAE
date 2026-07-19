@@ -182,8 +182,11 @@ class Tenant(db.Model):
                     return None
         except Exception:
             import logging
+
             logger = logging.getLogger("azad.security")
-            logger.debug("Failed to resolve active tenant from user relationship", exc_info=True)
+            logger.debug(
+                "Failed to resolve active tenant from user relationship", exc_info=True
+            )
 
         import logging
         from flask import has_request_context, request
@@ -259,7 +262,10 @@ class Tenant(db.Model):
         return self
 
     def apply_subscription_plan(
-        self, plan: str | None, duration: str | None = None, is_trial: bool | None = None
+        self,
+        plan: str | None,
+        duration: str | None = None,
+        is_trial: bool | None = None,
     ) -> "Tenant":
         """Update the subscription plan label / duration / trial flag.
 

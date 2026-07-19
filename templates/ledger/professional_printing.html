@@ -459,10 +459,7 @@ function printPDF() {
 
 function printExcel() {
   // {{ t('Create') }} {{ t('ملف') }} Excel
-  const data = [];
-  
-  // {{ t('Add') }} {{ t('Data') }}
-  {{ trial_balance_json | tojson }}.forEach(function (item) {
+  const data = [];trial_balance_json | tojson .forEach(function (item) {
     data.push([
       item.code,
       item.full_name,
@@ -486,11 +483,11 @@ function printExcel() {
 }
 
 // {{ t('تحسين') }} {{ t('Printing') }}
-window.addEventListener('beforeprint', function() {
+window.addEventListener('beforeprint', () => {
   document.body.style.fontSize = '12px';
 });
 
-window.addEventListener('afterprint', function() {
+window.addEventListener('afterprint', () => {
   document.body.style.fontSize = '';
 });
 </script>

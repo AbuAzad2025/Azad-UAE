@@ -217,14 +217,14 @@
 <script>
 if (!localStorage.getItem('cookie_consent')) { document.getElementById('ps-cookie-banner').style.display='flex'; }
 // Hide broken images globally (replaces inline onerror handlers)
-document.addEventListener('error', function(e) {
+document.addEventListener('error', (e) => {
   if (e.target.tagName === 'IMG' && e.target.classList.contains('ps-azad-logo') && e.target.style.display !== 'none') {
     e.target.style.display = 'none';
-    let fb = e.target.nextElementSibling;
+    const fb = e.target.nextElementSibling;
     if (fb) fb.style.display = 'grid';
   }
 }, true);
-document.addEventListener('click', function(e) {
+document.addEventListener('click', (e) => {
   const installBtn = e.target.closest('[data-action="pwa-install"]');
   if (installBtn && window.deferredPrompt) { e.preventDefault(); window.deferredPrompt.prompt(); }
   const dismissBtn = e.target.closest('[data-action="dismiss-banner"]');

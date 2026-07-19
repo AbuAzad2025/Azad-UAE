@@ -94,7 +94,7 @@
 
 <script>
 function filterByWarehouse() {
-  let sel = document.getElementById('product_id');
+  const sel = document.getElementById('product_id');
   const wh = document.getElementById('source_warehouse_id');
   const whId = parseInt(wh.value) || 0;
   const detail = document.getElementById('product_stock_detail');

@@ -115,6 +115,7 @@ def _make_ai_fallback(ai_import_error):
                 )
             except Exception:
                 import logging
+
                 logging.getLogger(__name__).exception(
                     "AI fallback catch-all route — LoggingCore.log_error itself failed"
                 )

@@ -108,12 +108,12 @@ class TestTenantIsolation:
 
             scoped = tenant_query(Customer).all()
             scoped_ids = {c.id for c in scoped}
-            assert (
-                customer_a.id in scoped_ids
-            ), "Tenant A's own customer missing from scoped query"
-            assert (
-                customer_b.id not in scoped_ids
-            ), "Tenant B's customer leaked into Tenant A's scoped query"
+            assert customer_a.id in scoped_ids, (
+                "Tenant A's own customer missing from scoped query"
+            )
+            assert customer_b.id not in scoped_ids, (
+                "Tenant B's customer leaked into Tenant A's scoped query"
+            )
 
         with app.test_request_context():
             login_user(user_b, remember=False)
@@ -123,12 +123,12 @@ class TestTenantIsolation:
 
             scoped = tenant_query(Customer).all()
             scoped_ids = {c.id for c in scoped}
-            assert (
-                customer_b.id in scoped_ids
-            ), "Tenant B's own customer missing from scoped query"
-            assert (
-                customer_a.id not in scoped_ids
-            ), "Tenant A's customer leaked into Tenant B's scoped query"
+            assert customer_b.id in scoped_ids, (
+                "Tenant B's own customer missing from scoped query"
+            )
+            assert customer_a.id not in scoped_ids, (
+                "Tenant A's customer leaked into Tenant B's scoped query"
+            )
 
         # --- Test 3: Without authentication, tenant_query returns all (no tenant filter) ---
         with app.test_request_context():

@@ -621,7 +621,9 @@ def collect_scoped_upload_paths(
     resolved: Set[str] = set()
     unresolved: List[str] = []
 
-    def add_column(table: str, column: str, where: str, bind_config: Dict[str, Any]) -> None:
+    def add_column(
+        table: str, column: str, where: str, bind_config: Dict[str, Any]
+    ) -> None:
         if not table_exists(conn, table):
             return
         cols = {

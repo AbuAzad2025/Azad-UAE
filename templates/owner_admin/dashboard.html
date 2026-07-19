@@ -282,9 +282,9 @@
 </div>
 
 <script>
-$(function() {
-    $('#activateModal').on('show.bs.modal', function(event) {
-      let btn = $(event.relatedTarget);
+$(() => {
+    $('#activateModal').on('show.bs.modal', (event) => {
+      const btn = $(event.relatedTarget);
       $('#modalTenantId').val(btn.data('tenant-id'));
         $('#modalTenantName').text(btn.data('tenant-name'));
     });

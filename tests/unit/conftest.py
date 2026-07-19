@@ -127,9 +127,7 @@ def app_factory():
         sys.path.insert(0, project_root)
         from tests.conftest import TestConfig
 
-        _app = Flask(
-            __name__, template_folder=os.path.join(project_root, "templates")
-        )
+        _app = Flask(__name__, template_folder=os.path.join(project_root, "templates"))
         _app.config.from_object(TestConfig)
         if config_overrides:
             _app.config.update(config_overrides)

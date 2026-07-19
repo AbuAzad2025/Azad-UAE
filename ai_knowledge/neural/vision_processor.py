@@ -37,6 +37,7 @@ class VisionProcessor:
         """التحقق من توفر OCR"""
         try:
             from PIL import Image  # noqa: F401
+
             return True
         except ImportError:
             logger.warning("Pillow not available - OCR disabled")

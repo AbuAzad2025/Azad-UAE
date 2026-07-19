@@ -19,9 +19,9 @@ class TestSerialTracking:
         assert SerialTrackingService.validate_imei("12345678901234a") is False
 
     def test_assign_serial_not_found_returns_none(self, mocker):
-        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = (
-            None
-        )
+        mocker.patch(
+            "models.product_serial.ProductSerial.query"
+        ).get.return_value = None
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.assign_serial_to_warehouse(99, 1) is None
@@ -38,9 +38,9 @@ class TestSerialTracking:
 
     def test_assign_serial_rejects_double_assignment(self, mocker):
         serial = MagicMock(warehouse_id=1)
-        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = (
-            serial
-        )
+        mocker.patch(
+            "models.product_serial.ProductSerial.query"
+        ).get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         with pytest.raises(ValueError, match="already assigned"):
@@ -48,9 +48,9 @@ class TestSerialTracking:
 
     def test_assign_serial_success(self, mocker):
         serial = MagicMock(warehouse_id=None)
-        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = (
-            serial
-        )
+        mocker.patch(
+            "models.product_serial.ProductSerial.query"
+        ).get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         result = SerialTrackingService.assign_serial_to_warehouse(1, 9)
@@ -58,18 +58,18 @@ class TestSerialTracking:
 
     def test_transfer_serial_wrong_warehouse_returns_none(self, mocker):
         serial = MagicMock(warehouse_id=2)
-        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = (
-            serial
-        )
+        mocker.patch(
+            "models.product_serial.ProductSerial.query"
+        ).get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.transfer_serial(1, 1, 3) is None
 
     def test_transfer_serial_success(self, mocker):
         serial = MagicMock(warehouse_id=1)
-        mocker.patch("models.product_serial.ProductSerial.query").get.return_value = (
-            serial
-        )
+        mocker.patch(
+            "models.product_serial.ProductSerial.query"
+        ).get.return_value = serial
         from services.serial_tracking_service import SerialTrackingService
 
         assert SerialTrackingService.transfer_serial(1, 1, 5).warehouse_id == 5

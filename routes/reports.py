@@ -353,7 +353,9 @@ def partners():
                 Payment.payment_confirmed,
             )
             if tenant_id is not None:
-                paid_query_total = paid_query_total.filter(Payment.tenant_id == tenant_id)
+                paid_query_total = paid_query_total.filter(
+                    Payment.tenant_id == tenant_id
+                )
                 receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
                 payment_in_query = payment_in_query.filter(
                     Payment.tenant_id == tenant_id
@@ -379,7 +381,9 @@ def partners():
                     func.date(Payment.payment_date) <= date_to
                 )
             if scoped_branch_id is not None:
-                paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
+                paid_query_total = paid_query_total.filter(
+                    Payment.branch_id == scoped_branch_id
+                )
                 receipts_query = receipts_query.filter(
                     Receipt.branch_id == scoped_branch_id
                 )
@@ -446,7 +450,9 @@ def partners():
             purchases_query = purchases_query.filter(
                 func.date(Purchase.purchase_date) >= date_from
             )
-            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) >= date_from)
+            paid_query_total = paid_query_total.filter(
+                func.date(Payment.payment_date) >= date_from
+            )
             received_query = received_query.filter(
                 func.date(Payment.payment_date) >= date_from
             )
@@ -454,7 +460,9 @@ def partners():
             purchases_query = purchases_query.filter(
                 func.date(Purchase.purchase_date) <= date_to
             )
-            paid_query_total = paid_query_total.filter(func.date(Payment.payment_date) <= date_to)
+            paid_query_total = paid_query_total.filter(
+                func.date(Payment.payment_date) <= date_to
+            )
             received_query = received_query.filter(
                 func.date(Payment.payment_date) <= date_to
             )
@@ -462,7 +470,9 @@ def partners():
             purchases_query = purchases_query.filter(
                 Purchase.branch_id == scoped_branch_id
             )
-            paid_query_total = paid_query_total.filter(Payment.branch_id == scoped_branch_id)
+            paid_query_total = paid_query_total.filter(
+                Payment.branch_id == scoped_branch_id
+            )
             received_query = received_query.filter(
                 Payment.branch_id == scoped_branch_id
             )
@@ -1868,7 +1878,9 @@ def entity_report_fragment(entity_type, **kwargs):
                 )
                 .join(Purchase)
                 .join(Product)
-                .filter(Purchase.supplier_id == record_id, Purchase.status == "confirmed")
+                .filter(
+                    Purchase.supplier_id == record_id, Purchase.status == "confirmed"
+                )
             )
             if tenant_id is not None:
                 p_lines = p_lines.filter(Purchase.tenant_id == tenant_id)
@@ -1977,7 +1989,9 @@ def entity_report_fragment(entity_type, **kwargs):
             context["allocation_exact"] = has_direct_allocation
             context["unallocated_supplier_credit"] = unallocated_credit
 
-            payments = Payment.query.filter_by(supplier_id=record_id, payment_confirmed=True)
+            payments = Payment.query.filter_by(
+                supplier_id=record_id, payment_confirmed=True
+            )
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -2156,7 +2170,8 @@ def entity_report_fragment(entity_type, **kwargs):
                     .join(SaleLine, SaleLine.product_id == Product.id)
                     .join(Sale, Sale.id == SaleLine.sale_id)
                     .filter(
-                        Product.merchant_customer_id == record_id, Sale.status == "confirmed"
+                        Product.merchant_customer_id == record_id,
+                        Sale.status == "confirmed",
                     )
                 )
                 if tenant_id is not None:
@@ -2206,7 +2221,9 @@ def entity_report_fragment(entity_type, **kwargs):
                 for s in sales
             ]
 
-            receipts = Receipt.query.filter_by(customer_id=record_id, payment_confirmed=True)
+            receipts = Receipt.query.filter_by(
+                customer_id=record_id, payment_confirmed=True
+            )
             payments_out = Payment.query.filter_by(
                 customer_id=record_id, direction="outgoing", payment_confirmed=True
             )

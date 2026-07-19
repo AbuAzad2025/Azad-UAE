@@ -292,7 +292,7 @@
 
 {% block extra_js %}
 <script>
-$(function () {
+$(() => {
   // Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -349,7 +349,7 @@ $(function () {
   syncBranchRequirement();
   
   // Form submission validation
-  $('#createUserForm').on('submit', function(e) {
+  $('#createUserForm').on('submit', (e) => {
     const password = $('#password').val();
     const confirm = $('#confirm_password').val();
     

@@ -179,7 +179,7 @@
 </div>
 
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   function branchRequiredForSelectedRole() {
     const slug = $('#role_select option:selected').data('role-slug');
     return !$('#is_owner').is(':checked') && slug && !['developer', 'super_admin'].includes(slug);
@@ -199,7 +199,7 @@ $(document).ready(function() {
   syncBranchRequirement();
 
   // ?????? ?? ????? ???? ??????
-  $('#editUserForm').on('submit', function(e) {
+  $('#editUserForm').on('submit', (e) => {
     const newPass = $('#new_password').val();
     const confirmPass = $('#confirm_new_password').val();
     

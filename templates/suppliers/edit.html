@@ -326,7 +326,7 @@
 {% block extra_js %}
 <script>
 // {{ t('تفعيل') }} Tooltips
-$(function () {
+$(() => {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
     trigger: 'hover'
@@ -345,11 +345,11 @@ function deleteSupplier(id) {
       headers: {
         'X-CSRFToken': $('input[name="csrf_token"]').val()
       },
-      success: function() {
+      success: () => {
         toastr.success('✅ تم {{ t('Delete') }} {{ t('Supplier') }} {{ t('بنجاح') }}');
         window.location.href = '{{ url_for("suppliers.index") }}';
       },
-      error: function() {
+      error: () => {
         toastr.error('❌ {{ t('Error') }} في {{ t('Delete') }} {{ t('Supplier') }}');
       }
     });

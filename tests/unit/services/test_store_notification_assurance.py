@@ -92,9 +92,9 @@ class TestEmailDispatch:
         mock_mail = mocker.patch(
             "services.store_notification_service.mail", create=True
         )
-        mocker.patch("services.store_notification_service.current_app").logger = (
-            MagicMock()
-        )
+        mocker.patch(
+            "services.store_notification_service.current_app"
+        ).logger = MagicMock()
 
         from services.store_notification_service import StoreNotificationService
 
@@ -105,9 +105,9 @@ class TestEmailDispatch:
     def test_skips_when_no_valid_recipient(self, app, mocker):
         sale, store = _sale_and_store()
         store.email = "not-an-email"
-        mocker.patch("services.store_notification_service.current_app").logger = (
-            MagicMock()
-        )
+        mocker.patch(
+            "services.store_notification_service.current_app"
+        ).logger = MagicMock()
 
         from services.store_notification_service import StoreNotificationService
 

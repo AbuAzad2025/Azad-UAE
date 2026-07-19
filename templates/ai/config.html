@@ -404,7 +404,7 @@
 
 <script>
 
-$(document).ready(function() {
+$(document).ready(() => {
 
   // {{ t('Show') }}/{{ t('Hide') }} {{ t('المفتاح') }}
 
@@ -470,7 +470,7 @@ $(document).ready(function() {
 
       contentType: false,
 
-      success: function(response) {
+      success: (response) => {
 
         submitBtn.prop('disabled', false).html(originalText);
 
@@ -514,7 +514,7 @@ $(document).ready(function() {
 
       },
 
-      error: function() {
+      error: () => {
 
         submitBtn.prop('disabled', false).html(originalText);
 

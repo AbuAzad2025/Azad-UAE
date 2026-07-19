@@ -50,9 +50,7 @@ class TestTenantLimits:
             patch("utils.tenant_limits._active_tenant", return_value=tenant),
             patch("utils.tenant_limits.db") as mock_db,
         ):
-            mock_db.session.query.return_value.filter.return_value.count.return_value = (
-                2
-            )
+            mock_db.session.query.return_value.filter.return_value.count.return_value = 2
             with pytest.raises(TenantLimitError):
                 check_limit("users", model=model)
 
@@ -74,9 +72,7 @@ class TestTenantLimits:
             ),
             patch("utils.tenant_limits.db") as mock_db,
         ):
-            mock_db.session.query.return_value.filter.return_value.count.return_value = (
-                1
-            )
+            mock_db.session.query.return_value.filter.return_value.count.return_value = 1
             with pytest.raises(TenantLimitError):
                 check_monthly_limit("sales", model=model, date_field="sale_date")
 

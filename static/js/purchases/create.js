@@ -2,27 +2,23 @@
 
 /* global SmartSelectors */
 
-const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || 'AED';
-const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || 'د.إ';
+const TENANT_BASE_CURRENCY = window._FX_FALLBACK_BASE || "AED";
+const TENANT_CURRENCY_SYMBOL = window._CURRENCY_SYMBOL || "د.إ";
 /* purchaseLineIndex scoped per file to avoid cross-page collision with sales */
-let purchaseLineIndex = 0;
+const purchaseLineIndex = 0;
 
 // Escape untrusted server-provided fields before interpolation into Select2
 // option/template HTML (defense against stored XSS via product names/SKUs).
 function azadEsc(v) {
-  return String(v == null ? '' : v)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+	return String(v == null ? "" : v)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
 }
 
-
-
 let purchaseLineIndex = 0;
-
-
 
 // =====================================
 
@@ -31,8 +27,7 @@ let purchaseLineIndex = 0;
 // =====================================
 
 function addLine() {
-
-  const html = `
+	const html = `
 
     <div class="product-line mb-3 p-3 ic-1" id="line_${purchaseLineIndex}">
 
@@ -164,112 +159,85 @@ function addLine() {
 
   `;
 
-  
+	$("#linesContainer").append(html);
 
-  $('#linesContainer').append(html);
+	// تفعيل Select2 للمنتج باستخدام الفلتر الذكي
 
-  
+	const $productSelect = $(
+		`select[name="lines[${purchaseLineIndex}][product_id]"]`,
+	);
 
-  // تفعيل Select2 للمنتج باستخدام الفلتر الذكي
+	// استخدام نفس التكوين من customer-select.js
 
-  const $productSelect = $(`select[name="lines[${purchaseLineIndex}][product_id]"]`);
+	if (window.SmartSelectors) {
+		window.SmartSelectors.initProducts($productSelect[0]);
+	} else {
+		// Fallback: تكوين يدوي
 
-  
+		$productSelect.select2({
+			ajax: {
+				url: window._API_SEARCH_URL || undefined,
 
-  // استخدام نفس التكوين من customer-select.js
+				dataType: "json",
 
-  if (window.SmartSelectors) {
+				delay: 250,
 
-    window.SmartSelectors.initProducts($productSelect[0]);
+				data: (params) => ({
+					q: params.term || "",
 
-  } else {
+					type: "products",
 
-    // Fallback: تكوين يدوي
+					purpose: "purchase",
 
-    $productSelect.select2({
+					warehouse_id: $("#warehouse_id").val() || "",
 
-      ajax: {
-        url: window._API_SEARCH_URL || undefined,
+					page: params.page || 1,
+				}),
 
-        dataType: 'json',
+				processResults: (data) => ({
+					results: data.results.map((p) => ({
+						id: p.id,
 
-        delay: 250,
+						text: azadEsc(p.name),
 
-        data: function(params) {
+						name: azadEsc(p.name),
 
-          return {
+						sku: azadEsc(p.sku),
 
-            q: params.term || '',
+						cost_price: p.cost_price || 0,
 
-            type: 'products',
+						current_stock: p.current_stock || 0,
+					})),
 
-            purpose: 'purchase',
+					pagination: { more: data.has_more || false },
+				}),
 
-            warehouse_id: $('#warehouse_id').val() || '',
+				cache: true,
+			},
 
-            page: params.page || 1
+			placeholder: "ابحث عن منتج...",
 
-          };
+			allowClear: true,
 
-        },
+			minimumInputLength: 0,
 
-        processResults: function(data) {
+			dir: "rtl",
 
-          return {
+			width: "100%",
 
-            results: data.results.map(p => ({
+			language: "ar",
 
-              id: p.id,
+			templateResult: (p) => {
+				if (p.loading) return "جاري البحث...";
 
-              text: azadEsc(p.name),
+				if (!p.id) return p.text;
 
-              name: azadEsc(p.name),
+				const stockIcon = (p.current_stock || 0) > 0 ? "✅" : "❌";
 
-              sku: azadEsc(p.sku),
+				const stockClass =
+					(p.current_stock || 0) > 0 ? "text-success" : "text-danger";
 
-              cost_price: p.cost_price || 0,
-
-              current_stock: p.current_stock || 0
-
-            })),
-
-            pagination: { more: data.has_more || false }
-
-          };
-
-        },
-
-        cache: true
-
-      },
-
-      placeholder: 'ابحث عن منتج...',
-
-      allowClear: true,
-
-      minimumInputLength: 0,
-
-      dir: 'rtl',
-
-      width: '100%',
-
-      language: 'ar',
-
-      templateResult: function(p) {
-
-        if (p.loading) return 'جاري البحث...';
-
-        if (!p.id) return p.text;
-
-        
-
-        const stockIcon = (p.current_stock || 0) > 0 ? '✅' : '❌';
-
-        const stockClass = (p.current_stock || 0) > 0 ? 'text-success' : 'text-danger';
-
-        
-
-        return $(`
+				return $(`
 
           <div class="ic-2">
 
@@ -279,7 +247,7 @@ function addLine() {
 
                 <strong>📦 ${p.text}</strong>
 
-                <br><small class="text-muted">SKU: ${p.sku || '-'}</small>
+                <br><small class="text-muted">SKU: ${p.sku || "-"}</small>
 
               </div>
 
@@ -296,84 +264,62 @@ function addLine() {
           </div>
 
         `);
+			},
 
-      },
+			templateSelection: (p) => (p.id ? `📦 ${p.text}` : p.text),
+		});
+	}
 
-      templateSelection: function(p) {
+	// حساب الإجمالي عند التغيير - استخدام setTimeout للتأكد من التحميل
 
-        return p.id ? `📦 ${p.text}` : p.text;
+	setTimeout(() => {
+		$(
+			`.line-quantity[data-line="${purchaseLineIndex}"], .line-cost[data-line="${purchaseLineIndex}"], .line-discount[data-line="${purchaseLineIndex}"]`,
+		).on("input change keyup", function () {
+			if ($(this).hasClass("line-cost")) {
+				const enteredCost = parseFloat($(this).val()) || 0;
 
-      }
+				const rate = parseFloat($("#exchange_rate").val()) || 1;
 
-    });
+				const currency = $("#currency").val();
 
-  }
+				$(this).data(
+					"base-cost",
+					currency !== TENANT_BASE_CURRENCY && rate > 0
+						? enteredCost * rate
+						: enteredCost,
+				);
+			}
 
-  
+			calculateLineTotal(purchaseLineIndex);
 
-  // حساب الإجمالي عند التغيير - استخدام setTimeout للتأكد من التحميل
+			void calculateTotals();
+		});
+	}, 100);
 
-  setTimeout(function() {
+	$productSelect.on("select2:select", (e) => {
+		const data = e.params.data;
 
-    $(`.line-quantity[data-line="${purchaseLineIndex}"], .line-cost[data-line="${purchaseLineIndex}"], .line-discount[data-line="${purchaseLineIndex}"]`)
+		if (data && data.cost_price) {
+			$(`.line-cost[data-line="${purchaseLineIndex}"]`).data(
+				"base-cost",
+				parseFloat(data.cost_price) || 0,
+			);
 
-      .on('input change keyup', function() {
+			updateLineCosts();
+		}
 
-        if ($(this).hasClass('line-cost')) {
+		if (data && data.has_serial_number) {
+			$(`#serial_row_${purchaseLineIndex}`).show();
+		} else {
+			$(`#serial_row_${purchaseLineIndex}`).hide();
+		}
+	});
 
-          const enteredCost = parseFloat($(this).val()) || 0;
+	purchaseLineIndex++;
 
-          const rate = parseFloat($('#exchange_rate').val()) || 1;
-
-          const currency = $('#currency').val();
-
-          $(this).data('base-cost', currency !== TENANT_BASE_CURRENCY && rate > 0 ? enteredCost * rate : enteredCost);
-
-        }
-
-        calculateLineTotal(purchaseLineIndex);
-
-        void calculateTotals();
-
-      });
-
-  }, 100);
-
-  
-
-  $productSelect.on('select2:select', function(e) {
-
-    const data = e.params.data;
-
-    if (data && data.cost_price) {
-
-      $(`.line-cost[data-line="${purchaseLineIndex}"]`).data('base-cost', parseFloat(data.cost_price) || 0);
-
-      updateLineCosts();
-
-    }
-
-    if (data && data.has_serial_number) {
-
-      $(`#serial_row_${purchaseLineIndex}`).show();
-
-    } else {
-
-      $(`#serial_row_${purchaseLineIndex}`).hide();
-
-    }
-
-  });
-
-  
-
-  purchaseLineIndex++;
-
-  $('#line_count').val(purchaseLineIndex);
-
+	$("#line_count").val(purchaseLineIndex);
 }
-
-
 
 // =====================================
 
@@ -382,14 +328,10 @@ function addLine() {
 // =====================================
 
 function removeLine(index) {
+	$(`#line_${index}`).remove();
 
-  $(`#line_${index}`).remove();
-
-  void calculateTotals();
-
+	void calculateTotals();
 }
-
-
 
 // =====================================
 
@@ -398,28 +340,21 @@ function removeLine(index) {
 // =====================================
 
 function calculateLineTotal(index) {
+	const qty = parseFloat($(`.line-quantity[data-line="${index}"]`).val()) || 0;
 
-  const qty = parseFloat($(`.line-quantity[data-line="${index}"]`).val()) || 0;
+	const cost = parseFloat($(`.line-cost[data-line="${index}"]`).val()) || 0;
 
-  const cost = parseFloat($(`.line-cost[data-line="${index}"]`).val()) || 0;
+	const discount =
+		parseFloat($(`.line-discount[data-line="${index}"]`).val()) || 0;
 
-  const discount = parseFloat($(`.line-discount[data-line="${index}"]`).val()) || 0;
+	const subtotal = qty * cost;
 
-  
+	const discountAmount = subtotal * (discount / 100);
 
-  const subtotal = qty * cost;
+	const total = subtotal - discountAmount;
 
-  const discountAmount = subtotal * (discount / 100);
-
-  const total = subtotal - discountAmount;
-
-  
-
-  $(`#line_total_${index}`).val(total.toFixed(2));
-
+	$(`#line_total_${index}`).val(total.toFixed(2));
 }
-
-
 
 // =====================================
 
@@ -428,197 +363,192 @@ function calculateLineTotal(index) {
 // =====================================
 
 async function calculateTotals() {
+	try {
+		// جمع البيانات من الفورم
 
-  try {
+		const lines = [];
 
-    // جمع البيانات من الفورم
+		$(".product-line").each(function () {
+			const lineId = $(this).attr("id");
 
-    const lines = [];
+			const lineNumber = lineId.split("_")[1];
 
-    $('.product-line').each(function() {
+			const qty =
+				parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
 
-      const lineId = $(this).attr('id');
+			const cost =
+				parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
 
-      const lineNumber = lineId.split('_')[1];
+			const discount =
+				parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
 
-      
+			if (qty > 0 || cost > 0) {
+				lines.push({
+					quantity: qty,
 
-      const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+					unit_cost: cost,
 
-      const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+					discount_percent: discount,
+				});
+			}
+		});
 
-      const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
+		const tax_rate = parseFloat($("#tax_rate").val()) || 0;
 
-      
+		// إرسال للـ backend
 
-      if (qty > 0 || cost > 0) {
+		const response = await fetch(window._PURCHASE_CALC_URL, {
+			method: "POST",
 
-        lines.push({
+			headers: {
+				"Content-Type": "application/json",
+			},
 
-          quantity: qty,
+			body: JSON.stringify({
+				lines: lines,
 
-          unit_cost: cost,
+				tax_rate: tax_rate,
 
-          discount_percent: discount
+				freight: parseFloat($("#freight").val()) || 0,
 
-        });
+				insurance: parseFloat($("#insurance").val()) || 0,
 
-      }
+				customs_duty: parseFloat($("#customs_duty").val()) || 0,
 
-    });
+				other_landed_cost: parseFloat($("#other_landed_cost").val()) || 0,
+			}),
+		});
 
-    
+		const result = await response.json();
 
-    const tax_rate = parseFloat($('#tax_rate').val()) || 0;
+		if (result.success) {
+			// تحديث الواجهة
 
-    
+			$("#summary_subtotal").text(
+				result.subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
 
-    // إرسال للـ backend
+			$("#summary_tax").text(
+				result.tax_amount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
 
-    const response = await fetch(window._PURCHASE_CALC_URL, {
+			if (result.landed_cost !== undefined) {
+				$("#summary_landed_cost").text(
+					result.landed_cost.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+				);
+			}
 
-      method: 'POST',
+			$("#summary_total").text(
+				result.total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
+		} else {
+			// Fallback to client-side
 
-      headers: {
+			await calculateTotalsClientSide();
+		}
+	} catch (error) {
+		// Fallback to client-side
 
-        'Content-Type': 'application/json'
-
-      },
-
-      body: JSON.stringify({
-
-        lines: lines,
-
-        tax_rate: tax_rate,
-
-        freight: parseFloat($('#freight').val()) || 0,
-
-        insurance: parseFloat($('#insurance').val()) || 0,
-
-        customs_duty: parseFloat($('#customs_duty').val()) || 0,
-
-        other_landed_cost: parseFloat($('#other_landed_cost').val()) || 0
-
-      })
-
-    });
-
-    
-
-    const result = await response.json();
-
-    
-
-    if (result.success) {
-
-      // تحديث الواجهة
-
-      $('#summary_subtotal').text(result.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-
-      $('#summary_tax').text(result.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-
-      if (result.landed_cost !== undefined) {
-
-        $('#summary_landed_cost').text(result.landed_cost.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-
-      }
-
-      $('#summary_total').text(result.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);    } else {      // Fallback to client-side
-
-      await calculateTotalsClientSide();
-
-    }
-
-  } catch (error) {    // Fallback to client-side
-
-    await calculateTotalsClientSide();
-
-  }
-
+		await calculateTotalsClientSide();
+	}
 }
-
-
 
 // Fallback: حساب محلي
 
 async function calculateTotalsClientSide() {
-  let subtotal = 0;
-  const $productLines = $('.product-line');
-  $productLines.each(function() {
-    const lineId = $(this).attr('id');
-    const lineNumber = lineId.split('_')[1];
-    const qty = parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) || 0;
-    const cost = parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
-    const discount = parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) || 0;
-    const lineSubtotal = qty * cost;
-    const lineDiscountAmount = lineSubtotal * (discount / 100);
-    const lineTotal = lineSubtotal - lineDiscountAmount;
-    $('#line_total_' + lineNumber).val(lineTotal.toFixed(2));
-    subtotal += lineTotal;
-  });
-  const taxRate = parseFloat($('#tax_rate').val()) || 0;
-  const freight = parseFloat($('#freight').val()) || 0;
-  const insurance = parseFloat($('#insurance').val()) || 0;
-  const customsDuty = parseFloat($('#customs_duty').val()) || 0;
-  const otherLanded = parseFloat($('#other_landed_cost').val()) || 0;
-  const landedTotal = freight + insurance + customsDuty + otherLanded;
-  const pricesIncludeVat = window._PRICES_INCLUDE_VAT || false;
-  const lines = [];
-  $productLines.each(function() {
-    const lineId = $(this).attr('id');
-    const lineNumber = lineId.split('_')[1];
-    const qty = parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) || 0;
-    const cost = parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
-    const discount = parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) || 0;
-    if (qty > 0 && cost > 0) {
-      lines.push({ quantity: qty, unit_cost: cost, discount_percent: discount });
-    }
-  });
-  try {
-    const r = await fetch('/purchases/api/calculate-totals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({
-        lines: lines,
-        tax_rate: taxRate,
-        freight: freight,
-        insurance: insurance,
-        customs_duty: customsDuty,
-        other_landed_cost: otherLanded,
-        prices_include_vat: pricesIncludeVat
-      })
-    });
-    const data = await r.json();
-    if (data.success) {
-      const $summarySubtotal = $('#summary_subtotal');
-      const $summaryTax = $('#summary_tax');
-      const $summaryLandedCost = $('#summary_landed_cost');
-      const $summaryTotal = $('#summary_total');
-      $summarySubtotal.text(data.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $summaryTax.text(data.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $summaryLandedCost.text(data.landed_cost.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      $summaryTotal.text(data.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-      return;
-    }
-  } catch (_) {}
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount + landedTotal;
-  const $summarySubtotal = $('#summary_subtotal');
-  const $summaryTax = $('#summary_tax');
-  const $summaryLandedCost = $('#summary_landed_cost');
-  const $summaryTotal = $('#summary_total');
-  $summarySubtotal.text(subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $summaryTax.text(taxAmount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $summaryLandedCost.text(landedTotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $summaryTotal.text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+	let subtotal = 0;
+	const $productLines = $(".product-line");
+	$productLines.each(function () {
+		const lineId = $(this).attr("id");
+		const lineNumber = lineId.split("_")[1];
+		const qty =
+			parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) ||
+			0;
+		const cost =
+			parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
+		const discount =
+			parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) ||
+			0;
+		const lineSubtotal = qty * cost;
+		const lineDiscountAmount = lineSubtotal * (discount / 100);
+		const lineTotal = lineSubtotal - lineDiscountAmount;
+		$("#line_total_" + lineNumber).val(lineTotal.toFixed(2));
+		subtotal += lineTotal;
+	});
+	const taxRate = parseFloat($("#tax_rate").val()) || 0;
+	const freight = parseFloat($("#freight").val()) || 0;
+	const insurance = parseFloat($("#insurance").val()) || 0;
+	const customsDuty = parseFloat($("#customs_duty").val()) || 0;
+	const otherLanded = parseFloat($("#other_landed_cost").val()) || 0;
+	const landedTotal = freight + insurance + customsDuty + otherLanded;
+	const pricesIncludeVat = window._PRICES_INCLUDE_VAT || false;
+	const lines = [];
+	$productLines.each(function () {
+		const lineId = $(this).attr("id");
+		const lineNumber = lineId.split("_")[1];
+		const qty =
+			parseFloat($('.line-quantity[data-line="' + lineNumber + '"]').val()) ||
+			0;
+		const cost =
+			parseFloat($('.line-cost[data-line="' + lineNumber + '"]').val()) || 0;
+		const discount =
+			parseFloat($('.line-discount[data-line="' + lineNumber + '"]').val()) ||
+			0;
+		if (qty > 0 && cost > 0) {
+			lines.push({
+				quantity: qty,
+				unit_cost: cost,
+				discount_percent: discount,
+			});
+		}
+	});
+	try {
+		const r = await fetch("/purchases/api/calculate-totals", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			credentials: "same-origin",
+			body: JSON.stringify({
+				lines: lines,
+				tax_rate: taxRate,
+				freight: freight,
+				insurance: insurance,
+				customs_duty: customsDuty,
+				other_landed_cost: otherLanded,
+				prices_include_vat: pricesIncludeVat,
+			}),
+		});
+		const data = await r.json();
+		if (data.success) {
+			const $summarySubtotal = $("#summary_subtotal");
+			const $summaryTax = $("#summary_tax");
+			const $summaryLandedCost = $("#summary_landed_cost");
+			const $summaryTotal = $("#summary_total");
+			$summarySubtotal.text(
+				data.subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
+			$summaryTax.text(
+				data.tax_amount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
+			$summaryLandedCost.text(
+				data.landed_cost.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+			);
+			$summaryTotal.text(data.total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
+			return;
+		}
+	} catch (_) {}
+	const taxAmount = subtotal * (taxRate / 100);
+	const total = subtotal + taxAmount + landedTotal;
+	const $summarySubtotal = $("#summary_subtotal");
+	const $summaryTax = $("#summary_tax");
+	const $summaryLandedCost = $("#summary_landed_cost");
+	const $summaryTotal = $("#summary_total");
+	$summarySubtotal.text(subtotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
+	$summaryTax.text(taxAmount.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
+	$summaryLandedCost.text(
+		landedTotal.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL,
+	);
+	$summaryTotal.text(total.toFixed(2) + " " + TENANT_CURRENCY_SYMBOL);
 }
-
-
-
-
-
-
 
 // =====================================
 
@@ -627,46 +557,32 @@ async function calculateTotalsClientSide() {
 // =====================================
 
 function updateLineCosts() {
+	const currency = $("#currency").val();
 
-    const currency = $('#currency').val();
+	const rate = parseFloat($("#exchange_rate").val()) || 1;
 
-    const rate = parseFloat($('#exchange_rate').val()) || 1;
+	$(".line-cost").each(function () {
+		const baseCost = parseFloat($(this).data("base-cost"));
 
-    
+		if (!isNaN(baseCost)) {
+			let finalCost = baseCost;
 
-    $('.line-cost').each(function() {
+			if (currency !== TENANT_BASE_CURRENCY && rate > 0) {
+				finalCost = baseCost / rate;
+			}
 
-        const baseCost = parseFloat($(this).data('base-cost'));
+			$(this).val(finalCost.toFixed(2));
 
-        if (!isNaN(baseCost)) {
+			// Recalculate line total
 
-            let finalCost = baseCost;
+			const lineId = $(this).data("line");
 
-            if (currency !== TENANT_BASE_CURRENCY && rate > 0) {
+			calculateLineTotal(lineId);
+		}
+	});
 
-                finalCost = baseCost / rate;
-
-            }
-
-            $(this).val(finalCost.toFixed(2));
-
-            
-
-            // Recalculate line total
-
-            const lineId = $(this).data('line');
-
-            calculateLineTotal(lineId);
-
-        }
-
-    });
-
-    void calculateTotals();
-
+	void calculateTotals();
 }
-
-
 
 // =====================================
 
@@ -674,64 +590,40 @@ function updateLineCosts() {
 
 // =====================================
 
-const $currency = $('#currency');
-const $exchangeRate = $('#exchange_rate');
+const $currency = $("#currency");
+const $exchangeRate = $("#exchange_rate");
 
-$currency.on('change', function() {
+$currency.on("change", function () {
+	const currency = $(this).val();
 
-  const currency = $(this).val();
+	if (currency !== TENANT_BASE_CURRENCY) {
+		$.ajax({
+			url: `/api/currency-rate/${currency}/${TENANT_BASE_CURRENCY}`,
 
-  
+			success: (data) => {
+				if (data.rate) {
+					$exchangeRate.val(data.rate.toFixed(6));
 
-  if (currency !== TENANT_BASE_CURRENCY) {
+					updateLineCosts();
+				} else {
+					toastr.warning("يرجى إدخال سعر الصرف يدوياً");
+				}
+			},
 
-    $.ajax({
+			error: () => {
+				toastr.warning("يرجى إدخال سعر الصرف يدوياً");
+			},
+		});
+	} else {
+		$exchangeRate.val("1.000000");
 
-      url: `/api/currency-rate/${currency}/${TENANT_BASE_CURRENCY}`,
-
-      success: function(data) {
-
-        if (data.rate) {
-
-          $exchangeRate.val(data.rate.toFixed(6));
-
-          updateLineCosts();
-
-        } else {
-
-          toastr.warning('يرجى إدخال سعر الصرف يدوياً');
-
-        }
-
-      },
-
-      error: function() {
-
-        toastr.warning('يرجى إدخال سعر الصرف يدوياً');
-
-      }
-
-    });
-
-  } else {
-
-    $exchangeRate.val('1.000000');
-
-    updateLineCosts();
-
-  }
-
+		updateLineCosts();
+	}
 });
 
-
-
-$exchangeRate.on('input change', function() {
-
-    updateLineCosts();
-
+$exchangeRate.on("input change", () => {
+	updateLineCosts();
 });
-
-
 
 // =====================================
 
@@ -739,33 +631,21 @@ $exchangeRate.on('input change', function() {
 
 // =====================================
 
-$('#supplier_id').on('change', function() {
+$("#supplier_id").on("change", function () {
+	const selectedData = $(this).select2("data")[0];
 
-  const selectedData = $(this).select2('data')[0];
+	if (selectedData) {
+		$("#supplier_phone").val(selectedData.phone || "");
 
-  
+		$("#supplier_email").val(selectedData.email || "");
 
-  if (selectedData) {
+		// عرض معلومات المورد
 
-    $('#supplier_phone').val(selectedData.phone || '');
-
-    $('#supplier_email').val(selectedData.email || '');
-
-    
-
-    // عرض معلومات المورد
-
-    if (selectedData.is_verified) {
-
-      toastr.success(`✅ مورد موثوق: ${selectedData.name}`);
-
-    }
-
-  }
-
+		if (selectedData.is_verified) {
+			toastr.success(`✅ مورد موثوق: ${selectedData.name}`);
+		}
+	}
 });
-
-
 
 // =====================================
 
@@ -773,19 +653,19 @@ $('#supplier_id').on('change', function() {
 
 // =====================================
 
-$(document).on('input change keyup', '.line-quantity, .line-cost, .line-discount', function() {  const lineNumber = $(this).data('line');
+$(document).on(
+	"input change keyup",
+	".line-quantity, .line-cost, .line-discount",
+	function () {
+		const lineNumber = $(this).data("line");
 
-  if (lineNumber !== undefined) {
+		if (lineNumber !== undefined) {
+			calculateLineTotal(lineNumber);
 
-    calculateLineTotal(lineNumber);
-
-    void calculateTotals();
-
-  }
-
-});
-
-
+			void calculateTotals();
+		}
+	},
+);
 
 // =====================================
 
@@ -793,89 +673,69 @@ $(document).on('input change keyup', '.line-quantity, .line-cost, .line-discount
 
 // =====================================
 
-$(document).ready(function() {  
+$(document).ready(() => {
+	// إضافة أول سطر
 
-  // إضافة أول سطر
+	addLine();
 
-  addLine();
+	// حساب عند تغيير الضريبة
 
-  
+	$("#tax_rate").on("input change", () => {
+		void calculateTotals();
+	});
 
-  // حساب عند تغيير الضريبة
+	// زر إعادة الحساب اليدوي
 
-  $('#tax_rate').on('input change', function() {    void calculateTotals();
+	$("#recalcTotalsBtn").on("click", () => {
+		void calculateTotals();
+	});
 
-  });
+	// زر إضافة سطر منتج
 
-  
+	$("#addLineBtn").on("click", () => {
+		addLine();
+	});
 
-  // زر إعادة الحساب اليدوي
+	// التحقق قبل الإرسال
 
-  $('#recalcTotalsBtn').on('click', function() {    void calculateTotals();
+	$("#purchaseForm").on("submit", (e) => {
+		const $productLines = $(".product-line");
+		const lineCount = $productLines.length;
 
-  });
+		if (lineCount === 0) {
+			e.preventDefault();
 
-  
+			toastr.error("يجب إضافة منتج واحد على الأقل");
 
-  // زر إضافة سطر منتج
+			return false;
+		}
 
-  $('#addLineBtn').on('click', function() {    addLine();
+		// التحقق من اختيار المورد
 
-  });
+		if (!$("#supplier_id").val()) {
+			e.preventDefault();
 
-  
+			toastr.error("يجب اختيار المورد");
 
-  // التحقق قبل الإرسال
+			return false;
+		}
 
-  $('#purchaseForm').on('submit', function(e) {    
+		// طباعة جميع البيانات قبل الإرسال
 
-    const $productLines = $('.product-line');
-    const lineCount = $productLines.length;    
+		// طباعة بيانات كل سطر
 
-    if (lineCount === 0) {
+		$productLines.each(function (index) {
+			const lineId = $(this).attr("id");
 
-      e.preventDefault();
+			const lineNumber = lineId.split("_")[1];
 
-      toastr.error('يجب إضافة منتج واحد على الأقل');
+			const productId = $(`.line-product[data-line="${lineNumber}"]`).val();
 
-      return false;
+			const quantity = $(`.line-quantity[data-line="${lineNumber}"]`).val();
 
-    }
+			const cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
 
-    
-
-    // التحقق من اختيار المورد
-
-    if (!$('#supplier_id').val()) {
-
-      e.preventDefault();
-
-      toastr.error('يجب اختيار المورد');
-
-      return false;
-
-    }
-
-    
-
-    // طباعة جميع البيانات قبل الإرسال    
-
-    // طباعة بيانات كل سطر
-
-    $productLines.each(function(index) {
-
-      const lineId = $(this).attr('id');
-
-      const lineNumber = lineId.split('_')[1];
-
-      
-
-      const productId = $(`.line-product[data-line="${lineNumber}"]`).val();
-
-      const quantity = $(`.line-quantity[data-line="${lineNumber}"]`).val();
-
-      const cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
-
-      const discount = $(`.line-discount[data-line="${lineNumber}"]`).val();    });  });
-
+			const discount = $(`.line-discount[data-line="${lineNumber}"]`).val();
+		});
+	});
 });

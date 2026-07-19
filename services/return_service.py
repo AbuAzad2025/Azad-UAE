@@ -187,13 +187,9 @@ class ReturnService:
                     db.func.sum(ProductReturnLine.quantity)
                 ).join(ProductReturn).filter(
                     ProductReturnLine.sale_line_id == sale_line.id
-                ).filter(
-                    ProductReturn.status != "rejected"
-                ).filter(
+                ).filter(ProductReturn.status != "rejected").filter(
                     ProductReturn.tenant_id == tenant_id
-                ).scalar() or Decimal(
-                    "0"
-                )
+                ).scalar() or Decimal("0")
 
                 if (previous_returned + quantity) > sale_line.quantity:
                     raise ValueError(
@@ -321,7 +317,12 @@ class ReturnService:
                                 Decimal(str(cost_hist.movement_unit_cost))
                             )
                     except Exception:
-                        logger.warning("Failed to fetch cost history for return cost calculation, product %s sale %s", sale_line.product_id, sale.id, exc_info=True)
+                        logger.warning(
+                            "Failed to fetch cost history for return cost calculation, product %s sale %s",
+                            sale_line.product_id,
+                            sale.id,
+                            exc_info=True,
+                        )
                     if original_cost <= Decimal("0"):
                         original_cost = Decimal(str(sale_line.cost_price or 0))
                     if original_cost <= Decimal("0"):

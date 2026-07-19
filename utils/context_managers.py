@@ -4,7 +4,9 @@ AutoSaveCtx is extracted here to break the circular import chain:
 routes.__init__ → routes.ai_routes.__init__ → shared → routes.ai_routes (back).
 """
 
-from ai_knowledge.core.conversation_store import set_context as _set_conversation_context
+from ai_knowledge.core.conversation_store import (
+    set_context as _set_conversation_context,
+)
 
 
 class AutoSaveCtx(dict):

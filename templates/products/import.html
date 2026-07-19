@@ -135,17 +135,17 @@
 <script>
 // Show file name
 $('.custom-file-input').on('change', function() {
-  let fileName = $(this).val().split('\\').pop();
+  const fileName = $(this).val().split('\\').pop();
   $(this).next('.custom-file-label').addClass("selected").html(fileName);
 });
 
-$('#importForm').on('submit', function() {
+$('#importForm').on('submit', () => {
     $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>{{ t('جاري') }} {{ t('Upload_2') }}...');
     $('#progressArea').removeClass('d-none');
 
     // Simulate progress for UX (Real progress requires WebSocket/SSE)
     let width = 0;
-    const interval = setInterval(function() {
+    const interval = setInterval(() => {
         width += 5;
         if (width > 90) clearInterval(interval);
         $('#progressBar').css('width', width + '%').text(width + '%');
@@ -153,7 +153,7 @@ $('#importForm').on('submit', function() {
 });
 
 // Grid Functionality
-$('#addRowBtn').on('click', function() {
+$('#addRowBtn').on('click', () => {
     const template = $('.product-row').first().clone();
     template.find('input').val(''); // Clear values
     for(let i=0; i<10; i++) {
@@ -173,10 +173,10 @@ $(document).on('keydown', 'input[name="barcode[]"]', function(e) {
         e.preventDefault();
 
         // Find current row
-        let currentRow = $(this).closest('tr');
+        const currentRow = $(this).closest('tr');
 
         // If next row exists, focus on its Name input
-        let nextRow = currentRow.next('tr');
+        const nextRow = currentRow.next('tr');
         if (nextRow.length > 0) {
             nextRow.find('input[name="name[]"]').focus();
         } else {

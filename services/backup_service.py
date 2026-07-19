@@ -137,7 +137,11 @@ class BackupService:
                     exception=e,
                 )
             except Exception:
-                logger.warning("Failed to log load JSON file error via LoggingCore for %s", file_path, exc_info=True)
+                logger.warning(
+                    "Failed to log load JSON file error via LoggingCore for %s",
+                    file_path,
+                    exc_info=True,
+                )
             return None
 
     @classmethod
@@ -166,7 +170,11 @@ class BackupService:
                     exception=e,
                 )
             except Exception:
-                logger.warning("Failed to log write JSON file error via LoggingCore for %s", file_path, exc_info=True)
+                logger.warning(
+                    "Failed to log write JSON file error via LoggingCore for %s",
+                    file_path,
+                    exc_info=True,
+                )
             return False
 
     @classmethod
@@ -346,7 +354,11 @@ class BackupService:
     def _which(cls, exe_name: str) -> Optional[str]:
         exe = str(exe_name)
         path_env = os.environ.get("PATH") or ""
-        exts = (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep))) if cls._is_windows() else ("",)
+        exts = (
+            (("",) + tuple(os.environ.get("PATHEXT", "").split(os.pathsep)))
+            if cls._is_windows()
+            else ("",)
+        )
         for directory in path_env.split(os.pathsep):
             if not directory:
                 continue

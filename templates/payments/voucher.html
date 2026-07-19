@@ -230,7 +230,7 @@ function updatePartyList() {
   
   const list = (type === 'customer') ? customers : suppliers;
   
-  list.forEach(function(item) {
+  list.forEach((item) => {
     let typeLabel = '';
     if (type === 'customer' && item.type !== 'regular') {
       typeLabel = ' (' + (item.type === 'merchant' ? '{{ t('تاجر') }}' : '{{ t('Partner') }}') + ')';
@@ -263,7 +263,7 @@ async function loadVoucherRate() {
   }
 }
 
-$(document).ready(function() {
+$(document).ready(() => {
   $('.select2').select2({
     theme: 'bootstrap4',
     width: '100%'

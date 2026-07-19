@@ -162,13 +162,9 @@ class TestUserService:
             patch("services.user_service.scoped_user_query") as mock_scoped,
             patch("services.user_service.joinedload", return_value=lambda x: x),
         ):
-            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
             mock_perm.query.order_by.return_value.all.return_value = []
-            mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = []
 
             q = MagicMock()
             mock_scoped.return_value = q
@@ -199,13 +195,9 @@ class TestUserService:
             patch("services.user_service.scoped_user_query") as mock_scoped,
             patch("services.user_service.joinedload", return_value=lambda x: x),
         ):
-            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
             mock_perm.query.order_by.return_value.all.return_value = []
-            mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            mock_tenant.query.filter_by.return_value.order_by.return_value.all.return_value = []
 
             user_mock = MagicMock(id=1, username="testuser")
             q = MagicMock()
@@ -279,9 +271,7 @@ class TestRoleService:
             patch("services.role_service.Permission") as mock_perm,
             patch("services.role_service.joinedload"),
         ):
-            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            mock_role.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
             mock_perm.query.order_by.return_value.all.return_value = []
             ctx = RoleService.get_roles_permissions_context(tenant_id=1)
             assert ctx["roles"] == []
@@ -304,9 +294,7 @@ class TestRoleService:
             ]
             p = MagicMock(category="sales", name="manage_sales")
             mock_perm.query.order_by.return_value.all.return_value = [p]
-            mock_user.query.filter_by.return_value.filter_by.return_value.count.return_value = (
-                3
-            )
+            mock_user.query.filter_by.return_value.filter_by.return_value.count.return_value = 3
             ctx = RoleService.get_roles_permissions_context(tenant_id=1)
             assert len(ctx["roles"]) == 1
             assert ctx["role_user_counts"][1] == 3
@@ -405,9 +393,7 @@ class TestStockService:
                 patch("services.stock_service.ProductCostHistory.query") as pch_q,
             ):
                 pwc_q.filter_by.return_value.first.return_value = None
-                pch_q.filter_by.return_value.order_by.return_value.first.return_value = (
-                    None
-                )
+                pch_q.filter_by.return_value.order_by.return_value.first.return_value = None
                 with pytest.raises(ValueError, match="لا يمكن تحديد تكلفة"):
                     StockService._resolve_cogs_unit_cost(
                         999, 999, 1, line_cost_price=None

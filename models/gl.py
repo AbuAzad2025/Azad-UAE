@@ -449,6 +449,7 @@ class GLJournalLine(db.Model):
 
 def _load_gl_constants():
     from models._constants import VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
+
     return VALID_GL_CONCEPT_CODES, _GL_CONCEPT_CODE_CHECK
 
 

@@ -32,6 +32,7 @@ def _init_project_imports():
     from app import create_app
     from extensions import db
     from services.logging_core import LoggingCore
+
     return create_app, db, LoggingCore
 
 

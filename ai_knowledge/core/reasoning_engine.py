@@ -300,7 +300,8 @@ class ReasoningEngine:
         }
 
     @staticmethod
-    def _generate_alternatives( _problem: str, _context: dict, main_solution: Any
+    def _generate_alternatives(
+        _problem: str, _context: dict, main_solution: Any
     ) -> List[dict]:
         """توليد حلول بديلة"""
         alternatives = []
@@ -335,10 +336,26 @@ class ReasoningEngine:
         """
         available_data = list(data.keys()) if data else []
         thought_chain = [
-            {"step": 1, "thought": f"فهم السؤال: {question}", "action": "analyzing question"},
-            {"step": 2, "thought": f"المعطيات المتاحة: {', '.join(available_data)}", "action": "identifying data"},
-            {"step": 3, "thought": "تحديد ما هو المطلوب بالضبط", "action": "identifying goal"},
-            {"step": 4, "thought": "تطبيق المنطق والمعرفة للوصول للحل", "action": "applying logic"},
+            {
+                "step": 1,
+                "thought": f"فهم السؤال: {question}",
+                "action": "analyzing question",
+            },
+            {
+                "step": 2,
+                "thought": f"المعطيات المتاحة: {', '.join(available_data)}",
+                "action": "identifying data",
+            },
+            {
+                "step": 3,
+                "thought": "تحديد ما هو المطلوب بالضبط",
+                "action": "identifying goal",
+            },
+            {
+                "step": 4,
+                "thought": "تطبيق المنطق والمعرفة للوصول للحل",
+                "action": "applying logic",
+            },
             {"step": 5, "thought": "التحقق من منطقية الحل", "action": "verification"},
         ]
 
@@ -432,8 +449,7 @@ class ReasoningEngine:
             }
 
     @staticmethod
-    def financial_reasoning( financial_question: str, financial_data: dict
-    ) -> dict:
+    def financial_reasoning(financial_question: str, financial_data: dict) -> dict:
         """
         الاستدلال المالي المتقدم
 
@@ -556,12 +572,14 @@ class ReasoningEngine:
         ]
 
         if "محرك" in problem_lower or "engine" in problem_lower:
-            diagnosis_steps.extend([
-                "1. فحص نظام الوقود",
-                "2. فحص نظام الإشعال",
-                "3. فحص نظام التبريد",
-                "4. فحص الضغط",
-            ])
+            diagnosis_steps.extend(
+                [
+                    "1. فحص نظام الوقود",
+                    "2. فحص نظام الإشعال",
+                    "3. فحص نظام التبريد",
+                    "4. فحص الضغط",
+                ]
+            )
             possible_causes = [
                 "فلتر وقود مسدود",
                 "شمعات إشعال تالفة",
@@ -643,7 +661,11 @@ class ReasoningEngine:
         analysis: dict[str, Any] = {
             "question": business_question,
             "swot": {
-                "strengths": ["نظام محاسبي متقدم", "مساعد ذكي متطور", "إدارة مخزون فعالة"],
+                "strengths": [
+                    "نظام محاسبي متقدم",
+                    "مساعد ذكي متطور",
+                    "إدارة مخزون فعالة",
+                ],
                 "weaknesses": ["يحتاج تدريب النماذج بشكل دوري"],
                 "opportunities": [
                     "توسع في الأسواق الجديدة",

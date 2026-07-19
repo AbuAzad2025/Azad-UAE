@@ -206,7 +206,7 @@
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   if ($.fn.select2) {
     $('#warehouseFilter').select2({
       placeholder: $('#warehouseFilter').data('placeholder') || '{{ t('اختر') }} {{ t('Warehouse_2') }}...',

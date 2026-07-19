@@ -247,7 +247,9 @@ class RealTimeAccountingListeners:
                     (
                         "success"
                         if cheque.status == "cleared"
-                        else "warning" if cheque.status == "bounced" else "info"
+                        else "warning"
+                        if cheque.status == "bounced"
+                        else "info"
                     ),
                 )
 

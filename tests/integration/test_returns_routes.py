@@ -227,9 +227,9 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert (
-            resp.status_code == 200
-        ), f"Expected 200, got {resp.status_code}: {resp.data}"
+        assert resp.status_code == 200, (
+            f"Expected 200, got {resp.status_code}: {resp.data}"
+        )
         data = resp.get_json()
         assert data["success"] is True
         assert "return_id" in data
@@ -249,9 +249,9 @@ class TestReturnsApiCreate:
         stock_after_return = ProductWarehouseStock.query.filter_by(
             product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id
         ).first()
-        assert stock_after_return.quantity == Decimal(
-            "49"
-        ), f"Expected 49, got {stock_after_return.quantity}"
+        assert stock_after_return.quantity == Decimal("49"), (
+            f"Expected 49, got {stock_after_return.quantity}"
+        )
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == "ProductReturn",
@@ -260,9 +260,9 @@ class TestReturnsApiCreate:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit
-        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit, (
+            f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        )
 
         revenue_entries = [
             e for e in gl_entries if "Sales Return" in (e.description or "")
@@ -309,9 +309,9 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert (
-            resp.status_code == 200
-        ), f"Expected 200, got {resp.status_code}: {resp.data}"
+        assert resp.status_code == 200, (
+            f"Expected 200, got {resp.status_code}: {resp.data}"
+        )
         data = resp.get_json()
         assert data["success"] is True
 
@@ -332,9 +332,9 @@ class TestReturnsApiCreate:
 
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit
-        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit, (
+            f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        )
 
         revenue_entry = None
         cost_entry = None
@@ -362,9 +362,9 @@ class TestReturnsApiCreate:
         stock_before_return = ProductWarehouseStock.query.filter_by(
             product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id
         ).first()
-        assert stock_before_return.quantity == Decimal(
-            "46"
-        ), f"Expected 46 after sale, got {stock_before_return.quantity}"
+        assert stock_before_return.quantity == Decimal("46"), (
+            f"Expected 46 after sale, got {stock_before_return.quantity}"
+        )
 
         with client:
             resp = client.post(
@@ -391,9 +391,9 @@ class TestReturnsApiCreate:
                 follow_redirects=False,
             )
 
-        assert (
-            resp.status_code == 200
-        ), f"Expected 200, got {resp.status_code}: {resp.data}"
+        assert resp.status_code == 200, (
+            f"Expected 200, got {resp.status_code}: {resp.data}"
+        )
         data = resp.get_json()
         assert data["success"] is True
         assert float(data["refund_amount"]) == 200.0
@@ -401,9 +401,9 @@ class TestReturnsApiCreate:
         stock_after_return = ProductWarehouseStock.query.filter_by(
             product_id=ctx["product"].id, warehouse_id=ctx["warehouse"].id
         ).first()
-        assert stock_after_return.quantity == Decimal(
-            "50"
-        ), f"Expected 50 (full revert), got {stock_after_return.quantity}"
+        assert stock_after_return.quantity == Decimal("50"), (
+            f"Expected 50 (full revert), got {stock_after_return.quantity}"
+        )
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == "ProductReturn",

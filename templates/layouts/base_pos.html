@@ -68,7 +68,7 @@
     <script>
         window.APP_ENUMS = {{ app_enums | tojson | safe }};
         window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
-        window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
+        window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1;
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -106,6 +106,6 @@ class TestPayrollProcess:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit
-        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit, (
+            f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        )

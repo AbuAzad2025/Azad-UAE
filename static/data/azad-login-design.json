@@ -1,12 +1,12 @@
 {
-  "meta": {
-    "name": "azad_unified_multi_tenant_login_design",
-    "version": "1.0.0"
-  },
-  "assets": {
-    "logo": "assets/brand/azad/logos/logo.png",
-    "logoFallback": "assets/brand/azad/logos/logo-dark.png",
-    "favicon": "assets/brand/azad/favicons/favicon.png",
-    "icon192": "assets/brand/azad/icons/icon-192.png"
-  }
+	"meta": {
+		"name": "azad_unified_multi_tenant_login_design",
+		"version": "1.0.0"
+	},
+	"assets": {
+		"logo": "assets/brand/azad/logos/logo.png",
+		"logoFallback": "assets/brand/azad/logos/logo-dark.png",
+		"favicon": "assets/brand/azad/favicons/favicon.png",
+		"icon192": "assets/brand/azad/icons/icon-192.png"
+	}
 }

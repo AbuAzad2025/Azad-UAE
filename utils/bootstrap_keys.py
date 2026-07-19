@@ -23,7 +23,11 @@ def ensure_secret_key(instance_dir: str, env_value: str | None = None) -> str:
             with open(secret_file, "w", encoding="utf-8") as f:
                 f.write(key)
         except Exception:
-            logger.warning("Failed to persist generated SECRET_KEY to %s", secret_file, exc_info=True)
+            logger.warning(
+                "Failed to persist generated SECRET_KEY to %s",
+                secret_file,
+                exc_info=True,
+            )
         logger.info("[Dev] SECRET_KEY generated for development")
     return key
 
@@ -46,7 +50,11 @@ def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) 
             with open(key_path, "w", encoding="utf-8") as f:
                 f.write(key)
         except Exception:
-            logger.warning("Failed to persist generated card encryption key to %s", key_path, exc_info=True)
+            logger.warning(
+                "Failed to persist generated card encryption key to %s",
+                key_path,
+                exc_info=True,
+            )
     return key
 
 

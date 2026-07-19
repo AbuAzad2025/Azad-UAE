@@ -229,12 +229,12 @@ def _verify_gl(_db, ctx, sale):
         total_debit = sum(Decimal(str(line.debit or 0)) for line in entry.lines)
         total_credit = sum(Decimal(str(line.credit or 0)) for line in entry.lines)
         diff = abs(total_debit - total_credit)
-        assert diff <= Decimal(
-            "0.001"
-        ), f"Unbalanced entry {entry.entry_number}: debit={total_debit} credit={total_credit} diff={diff}"
-        assert (
-            entry.status == "posted"
-        ), f"Entry {entry.entry_number} status is {entry.status}, expected posted"
+        assert diff <= Decimal("0.001"), (
+            f"Unbalanced entry {entry.entry_number}: debit={total_debit} credit={total_credit} diff={diff}"
+        )
+        assert entry.status == "posted", (
+            f"Entry {entry.entry_number} status is {entry.status}, expected posted"
+        )
 
     return entries
 
@@ -251,9 +251,9 @@ def _reconcile_and_close_shift(db, _ctx, shift, sale):
     actual = expected
     shift.reconcile(actual, notes="E2E reconciliation")
     assert shift.status == PosShift.SHIFT_RECONCILED
-    assert shift.discrepancy == Decimal(
-        "0"
-    ), f"Expected zero discrepancy, got {shift.discrepancy}"
+    assert shift.discrepancy == Decimal("0"), (
+        f"Expected zero discrepancy, got {shift.discrepancy}"
+    )
 
     shift.close()
     assert shift.status == PosShift.SHIFT_CLOSED
@@ -269,9 +269,9 @@ def _run_subscription_scheduler(_db, _ctx):
     assert "suspended" in result
     assert "active" in result
 
-    assert (
-        result["reminded"] >= 1
-    ), f"Expected at least 1 reminded tenant (the E2E tenant expires in 2 days), got {result}"
+    assert result["reminded"] >= 1, (
+        f"Expected at least 1 reminded tenant (the E2E tenant expires in 2 days), got {result}"
+    )
     return result
 
 

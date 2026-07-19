@@ -117,9 +117,9 @@ class TestCustomerBranchIsolation:
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
         assert f"NorthCustomer {tid}" in html
-        assert (
-            f"SouthCustomer {tid}" not in html
-        ), "BUG: Customer from Branch 2 leaked into Branch 1 list"
+        assert f"SouthCustomer {tid}" not in html, (
+            "BUG: Customer from Branch 2 leaked into Branch 1 list"
+        )
 
     def test_customer_branch_isolation_reverse(self, app, db_session, client):
         """Customer in Branch 2 should NOT appear in Branch 1's list (reverse check)."""
@@ -212,9 +212,9 @@ class TestCustomerBranchIsolation:
             resp = client.get("/customers/")
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
-        assert (
-            f"LeftCustomer {tid}" not in html
-        ), "BUG: Customer from Branch 1 leaked into Branch 2 list"
+        assert f"LeftCustomer {tid}" not in html, (
+            "BUG: Customer from Branch 1 leaked into Branch 2 list"
+        )
 
 
 class TestCustomerStatement:
@@ -506,9 +506,9 @@ class TestCustomerDelete:
         db_session.expire_all()
         deleted = Customer.query.get(customer.id)
         assert deleted is not None, "BUG: Customer hard-deleted despite having sales"
-        assert (
-            deleted.is_active is False
-        ), "Customer should be inactive after soft-delete"
+        assert deleted.is_active is False, (
+            "Customer should be inactive after soft-delete"
+        )
 
     def test_delete_customer_without_links_hard_deletes(self, app, db_session, client):
         """Customer with NO linked records should be hard-deleted."""
@@ -1003,9 +1003,9 @@ class TestReceivablesReport:
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
         html = resp.data.decode("utf-8")
 
-        assert (
-            f"Rec3Cust {tid}" in html
-        ), "Customer missing from unfiltered receivables report"
+        assert f"Rec3Cust {tid}" in html, (
+            "Customer missing from unfiltered receivables report"
+        )
 
 
 class TestCustomerApi:
@@ -1084,9 +1084,9 @@ class TestCustomerApi:
         assert resp.status_code == 200
         data = resp.get_json()
         assert isinstance(data, list)
-        assert any(
-            c["name"] == f"APICust {tid}" for c in data
-        ), "API search did not return the expected customer"
+        assert any(c["name"] == f"APICust {tid}" for c in data), (
+            "API search did not return the expected customer"
+        )
 
     def test_api_balance_returns_json(self, app, db_session, client):
         """Balance API endpoint should return customer balance and unpaid sales."""

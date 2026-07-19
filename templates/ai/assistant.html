@@ -262,12 +262,12 @@
 
   function addMessage(sender, text, isBot) {
   chatHistory.push({role: isBot ? 'bot' : 'user', content: text, timestamp: new Date()});
-    let cls = isBot ? 'bot-message' : 'user-message';
-    let avatar = isBot
+    const cls = isBot ? 'bot-message' : 'user-message';
+    const avatar = isBot
       ? '<div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div>'
       : '<div class="avatar-circle" style="background:linear-gradient(135deg,#007A3D,#1B4D89)"><i class="fas fa-user text-white fa-2x"></i></div>';
-    let name = isBot ? '{{ t("Assistant") }} {{ t("Smart") }}' : '{{ current_user.username }}' || 'أنت';
-    let align = isBot ? 'ml-3' : 'mr-3';
+    const name = isBot ? '{{ t("Assistant") }} {{ t("Smart") }}' : '{{ current_user.username }}' || 'أنت';
+    const align = isBot ? 'ml-3' : 'mr-3';
     $('#chatBox').append(
     '<div class="' + cls + '"><div class="d-flex align-items-start">' +
     (isBot ? avatar : '') +
@@ -275,7 +275,7 @@
     '<div style="white-space:pre-wrap">' + text + '</div></div>' +
     (!isBot ? avatar : '') + '</div></div>'
   );
-  setTimeout(function() { const $cb = $('#chatBox'); $cb.scrollTop($cb[0].scrollHeight); }, 100);
+  setTimeout(() => { const $cb = $('#chatBox'); $cb.scrollTop($cb[0].scrollHeight); }, 100);
 }
 
 function showTyping() {
@@ -291,16 +291,16 @@ function showTyping() {
 
 function hideTyping() { $('#typing-indicator').remove(); }
 
-$(document).ready(function() {
+$(document).ready(() => {
   $('#sendBtn').on('click', sendMessage);
-  $('#userMessage').keypress(function(e) { if (e.which === 13) { e.preventDefault(); sendMessage(); } });
+  $('#userMessage').keypress((e) => { if (e.which === 13) { e.preventDefault(); sendMessage(); } });
   $('#userMessage').focus();
 });
 
 function sendMessage() {
   const $userMessage = $('#userMessage');
   const $sendBtn = $('#sendBtn');
-  let msg = $userMessage.val().trim();
+  const msg = $userMessage.val().trim();
   if (!msg) return;
   addMessage('user', msg, false);
   $userMessage.val('');
@@ -316,38 +316,36 @@ function sendMessage() {
       ai_mode: localStorage.getItem('ai_mode') || 'groq',
       context: { dialect: currentDialect, beginners_mode: beginnersMode }
     }),
-    success: function(r) { hideTyping(); addMessage('bot', r.response, true); $sendBtn.prop('disabled', false); $userMessage.focus(); },
-    error: function() { hideTyping(); addMessage('bot', '❌ {{ t("عذراً،") }} {{ t("حدث") }} {{ t("Error") }}. {{ t("حاول") }} {{ t("مرة") }} {{ t("أخرى") }}.', true); $sendBtn.prop('disabled', false); }
+    success: (r) => { hideTyping(); addMessage('bot', r.response, true); $sendBtn.prop('disabled', false); $userMessage.focus(); },
+    error: () => { hideTyping(); addMessage('bot', '❌ {{ t("عذراً،") }} {{ t("حدث") }} {{ t("Error") }}. {{ t("حاول") }} {{ t("مرة") }} {{ t("أخرى") }}.', true); $sendBtn.prop('disabled', false); }
   });
 }
 
-window.clearChat = function() {
+window.clearChat = () => {
   if (!confirm('{{ t("مسح") }} {{ t("المحادثة_2") }}')) return;
   $('#chatBox').empty(); chatHistory = [];
   addMessage('bot', 'تم {{ t("مسح") }} {{ t("المحادثة_2") }}! {{ t("كيف") }} {{ t("يمكنني") }} {{ t("مساعدتك") }}', true);
 };
 
-window.getSummary = function() {
+window.getSummary = () => {
   if (chatHistory.length === 0) { addMessage('bot', '📝 لا {{ t('توجد') }} {{ t('محادثة') }} بعد.', true); return; }
-  let q = chatHistory.filter(function (m) {
-    return m.role === 'user';
-  }).length;
-  addMessage('bot', '📊 **{{ t('Summary') }} {{ t('المحادثة_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('الردود') }}: ' + chatHistory.filter(function(m) { return m.role === 'bot'; }).length, true);
+  const q = chatHistory.filter((m) => m.role === 'user').length;
+  addMessage('bot', '📊 **{{ t('Summary') }} {{ t('المحادثة_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('الردود') }}: ' + chatHistory.filter((m) => m.role === 'bot').length, true);
 };
 
-window.toggleBeginnersMode = function() {
+window.toggleBeginnersMode = () => {
   beginnersMode = !beginnersMode;
   const btn = $('#beginnersBtn');
   btn.toggleClass('btn-success btn-outline-success');
   addMessage('bot', beginnersMode ? '👨‍🎓 {{ t('وضع') }} {{ t('المبتدئين') }} {{ t('مفعّل') }}! {{ t('سأشرح') }} {{ t('بالتفصيل') }}.' : '⚡ {{ t('وضع') }} {{ t('المحترفين') }} {{ t('مفعّل') }}! {{ t('ردود') }} {{ t('مباشرة') }}.', true);
 };
 
-window.setDialect = function(d) {
+window.setDialect = (d) => {
   currentDialect = d;
   $('.btn-group .btn').removeClass('active');
   $('#' + d + 'Btn').addClass('active');
   const _dialectLabel = "{{ t('اللهجة') }}";
-  let msgs = {
+  const msgs = {
     formal: '📖 {{ t('Language') }}: {{ t('فصحى') }}',
     palestinian: '🇵🇸 ' + _dialectLabel + ': {{ t('Palestinian') }}',
     gulf: '🏝️ ' + _dialectLabel + ': {{ t('Gulf') }}'
@@ -355,12 +353,12 @@ window.setDialect = function(d) {
   addMessage('bot', msgs[d], true);
 };
 
-window.quickAsk = function(q) {
+window.quickAsk = (q) => {
   $('#userMessage').val(q);
   sendMessage();
 };
 
-window.switchAIMode = function(mode) {
+window.switchAIMode = (mode) => {
   localStorage.setItem('ai_mode', mode);
   if (mode === 'local') {
     $('#ai-mode-local').css({background:'#495057', boxShadow:'0 0 15px rgba(73,80,87,0.8)', transform:'scale(1.05)'});
@@ -373,7 +371,7 @@ window.switchAIMode = function(mode) {
   }
 };
 
-  let savedMode = localStorage.getItem('ai_mode') || 'groq';
+  const savedMode = localStorage.getItem('ai_mode') || 'groq';
   switchAIMode(savedMode);
 
 // Excel Upload
@@ -384,7 +382,7 @@ function hideExcelUploader() {
 }
 
 const $excelUploadForm = $('#excelUploadForm');
-$excelUploadForm.on('submit', function(e) {
+$excelUploadForm.on('submit', (e) => {
   e.preventDefault();
   const $excelFile = $('#excelFile');
   const file = $excelFile[0];
@@ -407,12 +405,12 @@ $excelUploadForm.on('submit', function(e) {
     processData: false,
     contentType: false,
     headers: csrf ? { 'X-CSRFToken': csrf } : {},
-    success: function(r) {
+    success: (r) => {
       if (r.success) addMessage('bot', r.message, true); else addMessage('bot', '❌ ' + r.error, true);
       hideExcelUploader();
       $uploadBtn.prop('disabled', false);
     },
-    error: function(x) {
+    error: (x) => {
       addMessage('bot', '❌ ' + (x.responseJSON ? x.responseJSON.error : '{{ t("Error") }}'), true);
       $uploadBtn.prop('disabled', false);
       $progress.hide();

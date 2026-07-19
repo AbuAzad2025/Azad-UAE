@@ -130,9 +130,7 @@ class TestBuildPlatformOverview:
         branch_q.filter_by.return_value.count.return_value = 0
         mocker.patch("utils.owner_panel.Branch.query", branch_q)
         tenant_q = MagicMock()
-        tenant_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        tenant_q.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
         mocker.patch("utils.owner_panel.Tenant.query", tenant_q)
 
         real_import = __import__
@@ -313,9 +311,7 @@ class TestBuildCompanyDashboardContext:
         mocker.patch("models.Product.query", prod_q)
 
         cust_q = MagicMock()
-        cust_q.filter_by.return_value.join.return_value.filter.return_value.distinct.return_value.count.return_value = (
-            20
-        )
+        cust_q.filter_by.return_value.join.return_value.filter.return_value.distinct.return_value.count.return_value = 20
         mocker.patch("models.Customer.query", cust_q)
 
         user_q = MagicMock()

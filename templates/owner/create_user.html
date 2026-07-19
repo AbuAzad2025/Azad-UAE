@@ -220,7 +220,7 @@ function checkPasswordStrength(password) {
     upper: /[A-Z]/.test(password),
     lower: /[a-z]/.test(password),
     digit: /\d/.test(password),
-    special: /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)
+    special: /[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password)
   };
   
   // Update requirements indicators
@@ -278,7 +278,7 @@ function checkPasswordStrength(password) {
   return score;
 }
 
-$(document).ready(function() {
+$(document).ready(() => {
   // Password strength check on input
   $('#password').on('input', function() {
     const password = $(this).val();
@@ -385,7 +385,7 @@ $(document).ready(function() {
   syncBranchRequirement();
   
   // التحقق من تطابق كلمة المرور
-  $('#userForm').on('submit', function(e) {
+  $('#userForm').on('submit', (e) => {
     const password = $('#password').val();
     const confirm = $('#confirm_password').val();
     

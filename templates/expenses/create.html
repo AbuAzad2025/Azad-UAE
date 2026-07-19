@@ -246,7 +246,7 @@
 <script>
 const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
 
-$(function () {
+$(() => {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
     trigger: 'hover'
@@ -264,7 +264,7 @@ $(function () {
     $.ajax({
       url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', currency).replace('Y', '{{ tenant_default_currency or "AED" }}'),
       method: 'GET',
-      success: function(data) {
+      success: (data) => {
         if (data && data.rate) {
           $('#exchange_rate').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
@@ -273,7 +273,7 @@ $(function () {
           alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
-      error: function() {
+      error: () => {
         if (window.toastr) {
           toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
@@ -290,7 +290,7 @@ if (window.PaymentFieldsManager) {
 }
 
 // {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
-$('#saveExpenseCategoryBtn').on('click', function() {
+$('#saveExpenseCategoryBtn').on('click', () => {
   const name = $('#expense_category_name').val().trim();
   const name_ar = $('#expense_category_name_ar').val().trim();
   
@@ -313,7 +313,7 @@ $('#saveExpenseCategoryBtn').on('click', function() {
       name: name,
       name_ar: name_ar
     }),
-    success: function(response) {
+    success: (response) => {
       if (response.success) {
         // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للقائمة') }}
         const displayName = response.category.name_ar ? 
@@ -337,7 +337,7 @@ $('#saveExpenseCategoryBtn').on('click', function() {
         alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
       }
     },
-    error: function(xhr) {
+    error: (xhr) => {
       const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
       alert('{{ t('Error') }}: ' + error);
     }

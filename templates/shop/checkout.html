@@ -118,18 +118,18 @@
 
 {% block extra_js %}
 <script>
-(function () {
-  let hintEl = document.getElementById('ps-pay-hint');
-  let radios = document.querySelectorAll('input[name="payment_method"]');
+(() => {
+  const hintEl = document.getElementById('ps-pay-hint');
+  const radios = document.querySelectorAll('input[name="payment_method"]');
 
   function updateHint() {
-    let sel = document.querySelector('input[name="payment_method"]:checked');
+    const sel = document.querySelector('input[name="payment_method"]:checked');
     if (!sel || !hintEl) return;
-    let text = (sel.getAttribute('data-hint') || '').trim();
+    const text = (sel.getAttribute('data-hint') || '').trim();
     if (text) { hintEl.textContent = text; hintEl.style.display = 'block'; }
     else { hintEl.style.display = 'none'; }
   }
-  radios.forEach(function (r) { r.addEventListener('change', updateHint); });
+  radios.forEach((r) => { r.addEventListener('change', updateHint); });
   updateHint();
 })();
 </script>

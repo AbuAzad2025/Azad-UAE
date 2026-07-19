@@ -90,8 +90,6 @@ class TestCriteriaAndValidation:
         assert crit(M) == (M.tenant_id == 7)
 
 
-
-
 class TestOrmExecuteListener:
     def test_skips_non_select(self):
         from utils.tenant_orm import _inject_tenant_criteria
@@ -328,7 +326,6 @@ class TestPatchSessionGet:
         entity = mocker.Mock(__name__="Branch")
         result = torm.Session.get(mocker.Mock(), entity, 1)
         assert result is None
-
 
     def test_login_import_failure_in_scope(self, mocker):
         mocker.patch("utils.tenant_orm.has_request_context", return_value=True)

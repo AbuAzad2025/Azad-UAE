@@ -65,6 +65,7 @@ if __name__ == "__main__":
                     )
                 except Exception:
                     import logging
+
                     logging.getLogger(__name__).exception(
                         "Failed to log DB URI masking warning"
                     )

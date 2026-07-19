@@ -454,9 +454,9 @@ class TestVaultPageRoutes:
         assert resp.status_code == 302
 
     def test_edit_package_get(self, vault_owner_client, mock_unlocked_vault, mocker):
-        mocker.patch("routes.payment_vault.Package.query").get_or_404.return_value = (
-            MagicMock()
-        )
+        mocker.patch(
+            "routes.payment_vault.Package.query"
+        ).get_or_404.return_value = MagicMock()
         resp = vault_owner_client.get("/payment-vault/package/1/edit")
         assert resp.status_code == 200
 

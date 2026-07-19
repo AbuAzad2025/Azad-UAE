@@ -163,9 +163,9 @@ class TestNeuralWave7:
                 [[1.0] * 6]
             )
             engine.models["maintenance_predictor"].predict.return_value = np.array([0])
-            engine.models["maintenance_predictor"].predict_proba.return_value = (
-                np.array([[0.8, 0.2]])
-            )
+            engine.models[
+                "maintenance_predictor"
+            ].predict_proba.return_value = np.array([[0.8, 0.2]])
             result = engine._predict_maintenance_internal(1)
             assert result["estimated_days"] == 30
 
@@ -177,9 +177,9 @@ class TestNeuralWave7:
                 [[1.0] * 6]
             )
             engine.models["accounting_classifier"].predict.return_value = np.array([0])
-            engine.models["accounting_classifier"].predict_proba.return_value = (
-                np.array([[0.3, 0.7]])
-            )
+            engine.models[
+                "accounting_classifier"
+            ].predict_proba.return_value = np.array([[0.3, 0.7]])
             result = engine.validate_accounting_entry(100, 100, 2, "Sale")
             assert (
                 "مراجعة" in result["recommendation"]

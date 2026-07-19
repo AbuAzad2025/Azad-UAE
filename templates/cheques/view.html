@@ -518,13 +518,13 @@ function fetchCurrentExchangeRate() {
   $.ajax({
     url: '{{ url_for("api.currency_rate", from_currency="X", to_currency="Y") }}'.replace('X', '{{ cheque.currency }}').replace('Y', '{{ tenant_default_currency or "AED" }}'),
     method: 'GET',
-    success: function(data) {
+    success: (data) => {
       if (data.rate) {
         $('#clearance_exchange_rate').val(data.rate.toFixed(6));
         calculateActualAmount();
       }
     },
-    error: function() {    }
+    error: () => {    }
   });
 }
 

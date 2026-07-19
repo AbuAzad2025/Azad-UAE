@@ -80,7 +80,9 @@ class GLTreeBuilder:
             if tenant and tenant.business_type:
                 industry_tree = _get_industry_tree(tenant.business_type)
         except Exception:
-            logger.warning("Failed to load industry tree for tenant %s", tenant_id, exc_info=True)
+            logger.warning(
+                "Failed to load industry tree for tenant %s", tenant_id, exc_info=True
+            )
         full_tree = core_tree + industry_tree
         for (
             code,

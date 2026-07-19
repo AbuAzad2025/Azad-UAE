@@ -4,54 +4,69 @@
  */
 
 class NotificationManager {
-    constructor() {
-        this.container = null;
-        this.userHasInteracted = false; // Track user interaction for vibration API
-        this.sounds = {
-            success: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi6Bzvi6bh0HH27A7+OHUQ0MUqzn77BhGggziNXzzn0pBSh+zPLaizsKGGS46eihUhELTKXh8bllHAU2jdj0yoAtBSJ6yPDajjwKF12y6OioVBIKSKHf8bllHAU3jtj0yoEtBSJ6yO/ajTsKGF+y6OmoUxELTKPh8bllHAU3jtf0y4EtBSF7yO/bjDwKGF+y6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmoUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBQ=='),
-            error: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAAB/fn9/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/fQ=='),
-            warning: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAgYGCgoODhISFhYaGh4eIiImJioqLi4yMjY2Ojo+PkJCRkZKSk5OUlJWVlpaXl5iYmZmampubm5ycnZ2enp+foKCgoaGio6OkpKWlpqanp6ioqamqqquqq6yrrKysra6rrq6vr7CwsbCxsbKys7O0tLS1tba2t7e3uLi5ubq6u7u8vLy9vr6/v8DAwcHCwsPDw8TFxcbGx8fIyMnJysrLy8zMzc3Ozs/P0NDR0dLS09PU1NXV1tbX19jY2dna2tvb3Nzd3d7e39/g4OHh4uLj4+Tk5eXm5ufn6Ojp6erq6+vs7O3t7u7v7/Dw8fHy8vPz9PT19fb29/f4+Pn5+vr7+/z8/f3+/v////7+/f39/Pz7+/r6+fn4+Pf39vb19fT08/Py8vHx8PDv7+7u7e3s7Ovr6urp6ejo5+fm5uXl5OTj4+Li4eHg4N/f3t7d3dzc29va2tnZ2NjX19bW1dXU1NPT0tLR0dDQ0M/Pzs7Nzc3My8vKysnJyMjHx8bGxcXExMPDwsLBwcDAwMC/v76+vb29vLy7u7q6ubi4uLe3tra1tbW0tLOzsrKxsbCwsK+vr66urq2trKysq6uqqqqpqKioqKenp6ampaWkpKSkpaSlpKSko6OioqGhoa==')
-        };
-        this.init();
-        this.trackUserInteraction();
-    }
+	constructor() {
+		this.container = null;
+		this.userHasInteracted = false; // Track user interaction for vibration API
+		this.sounds = {
+			success: new Audio(
+				"data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi6Bzvi6bh0HH27A7+OHUQ0MUqzn77BhGggziNXzzn0pBSh+zPLaizsKGGS46eihUhELTKXh8bllHAU2jdj0yoAtBSJ6yPDajjwKF12y6OioVBIKSKHf8bllHAU3jtj0yoEtBSJ6yO/ajTsKGF+y6OmoUxELTKPh8bllHAU3jtf0y4EtBSF7yO/bjDwKGF+y6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmoUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDsKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBSJ7yO/bjDwKGF+z6OmpUxELTKPh8bllHAY3jtf0y4EtBQ==",
+			),
+			error: new Audio(
+				"data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAAB/fn9/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/fQ==",
+			),
+			warning: new Audio(
+				"data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAgYGCgoODhISFhYaGh4eIiImJioqLi4yMjY2Ojo+PkJCRkZKSk5OUlJWVlpaXl5iYmZmampubm5ycnZ2enp+foKCgoaGio6OkpKWlpqanp6ioqamqqquqq6yrrKysra6rrq6vr7CwsbCxsbKys7O0tLS1tba2t7e3uLi5ubq6u7u8vLy9vr6/v8DAwcHCwsPDw8TFxcbGx8fIyMnJysrLy8zMzc3Ozs/P0NDR0dLS09PU1NXV1tbX19jY2dna2tvb3Nzd3d7e39/g4OHh4uLj4+Tk5eXm5ufn6Ojp6erq6+vs7O3t7u7v7/Dw8fHy8vPz9PT19fb29/f4+Pn5+vr7+/z8/f3+/v////7+/f39/Pz7+/r6+fn4+Pf39vb19fT08/Py8vHx8PDv7+7u7e3s7Ovr6urp6ejo5+fm5uXl5OTj4+Li4eHg4N/f3t7d3dzc29va2tnZ2NjX19bW1dXU1NPT0tLR0dDQ0M/Pzs7Nzc3My8vKysnJyMjHx8bGxcXExMPDwsLBwcDAwMC/v76+vb29vLy7u7q6ubi4uLe3tra1tbW0tLOzsrKxsbCwsK+vr66urq2trKysq6uqqqqpqKioqKenp6ampaWkpKSkpaSlpKSko6OioqGhoa==",
+			),
+		};
+		this.init();
+		this.trackUserInteraction();
+	}
 
-    init() {
-        // Create notification container
-        if (!document.getElementById('toast-container')) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.className = 'toast-container';
-            document.body.appendChild(this.container);
-        } else {
-            this.container = document.getElementById('toast-container');
-        }
+	init() {
+		// Create notification container
+		if (!document.getElementById("toast-container")) {
+			this.container = document.createElement("div");
+			this.container.id = "toast-container";
+			this.container.className = "toast-container";
+			document.body.appendChild(this.container);
+		} else {
+			this.container = document.getElementById("toast-container");
+		}
 
-        // Inject CSS
-        this.injectStyles();
-    }
+		// Inject CSS
+		this.injectStyles();
+	}
 
-    trackUserInteraction() {
-        // Track first user interaction to enable vibration API
-        const enableInteraction = () => {
-            this.userHasInteracted = true;
-            // Remove listeners after first interaction
-            document.removeEventListener('click', enableInteraction);
-            document.removeEventListener('touchstart', enableInteraction);
-            document.removeEventListener('keydown', enableInteraction);
-        };
-        
-        document.addEventListener('click', enableInteraction, { once: true, passive: true });
-        document.addEventListener('touchstart', enableInteraction, { once: true, passive: true });
-        document.addEventListener('keydown', enableInteraction, { once: true, passive: true });
-    }
+	trackUserInteraction() {
+		// Track first user interaction to enable vibration API
+		const enableInteraction = () => {
+			this.userHasInteracted = true;
+			// Remove listeners after first interaction
+			document.removeEventListener("click", enableInteraction);
+			document.removeEventListener("touchstart", enableInteraction);
+			document.removeEventListener("keydown", enableInteraction);
+		};
 
-    injectStyles() {
-        if (document.getElementById('toast-styles')) return;
+		document.addEventListener("click", enableInteraction, {
+			once: true,
+			passive: true,
+		});
+		document.addEventListener("touchstart", enableInteraction, {
+			once: true,
+			passive: true,
+		});
+		document.addEventListener("keydown", enableInteraction, {
+			once: true,
+			passive: true,
+		});
+	}
 
-        const style = document.createElement('style');
-        style.id = 'toast-styles';
-        style.textContent = `
+	injectStyles() {
+		if (document.getElementById("toast-styles")) return;
+
+		const style = document.createElement("style");
+		style.id = "toast-styles";
+		style.textContent = `
             .toast-container {
                 position: fixed;
                 top: 80px;
@@ -194,103 +209,99 @@ class NotificationManager {
                 animation: slideOut 0.3s ease-in forwards;
             }
         `;
-        document.head.appendChild(style);
-    }
+		document.head.appendChild(style);
+	}
 
-    show(options) {
-        const {
-            type = 'info',
-            title = '',
-            message = '',
-            duration = 8000,
-            sound = false,
-            vibrate = false
-        } = options;
+	show(options) {
+		const {
+			type = "info",
+			title = "",
+			message = "",
+			duration = 8000,
+			sound = false,
+			vibrate = false,
+		} = options;
 
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+		// Create toast element
+		const toast = document.createElement("div");
+		toast.className = `toast toast-${type}`;
 
-        // Icon
-        const icons = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ'
-        };
+		// Icon
+		const icons = {
+			success: "✓",
+			error: "✕",
+			warning: "⚠",
+			info: "ℹ",
+		};
 
-        // Progress bar
-        const progress = document.createElement('div');
-        progress.className = 'toast-progress';
-        progress.style.animationDuration = `${duration}ms`;
+		// Progress bar
+		const progress = document.createElement("div");
+		progress.className = "toast-progress";
+		progress.style.animationDuration = `${duration}ms`;
 
-        toast.innerHTML = `
+		toast.innerHTML = `
             <div class="toast-icon">${icons[type]}</div>
             <div class="toast-content">
-                ${title ? `<div class="toast-title">${title}</div>` : ''}
+                ${title ? `<div class="toast-title">${title}</div>` : ""}
                 <div class="toast-message">${message}</div>
             </div>
             <button class="toast-close" onclick="this.closest('.toast').remove()">×</button>
         `;
-        toast.appendChild(progress);
+		toast.appendChild(progress);
 
-        // Add to container
-        this.container.appendChild(toast);
+		// Add to container
+		this.container.appendChild(toast);
 
-        // Play sound (only after user interaction to comply with browser policies)
-        if (sound && this.sounds[type]) {
-            this.sounds[type].volume = 0.3;
-            this.sounds[type].play().catch(() => {
-                // Silently fail if autoplay is blocked
-            });
-        }
+		// Play sound (only after user interaction to comply with browser policies)
+		if (sound && this.sounds[type]) {
+			this.sounds[type].volume = 0.3;
+			this.sounds[type].play().catch(() => {
+				// Silently fail if autoplay is blocked
+			});
+		}
 
-        // Vibrate (only if user has interacted with the page)
-        if (vibrate && 'vibrate' in navigator && this.userHasInteracted) {
-            const patterns = {
-                success: [100],
-                error: [100, 50, 100],
-                warning: [50, 50, 50],
-                info: [50]
-            };
-            navigator.vibrate(patterns[type] || [50]);
-        }
+		// Vibrate (only if user has interacted with the page)
+		if (vibrate && "vibrate" in navigator && this.userHasInteracted) {
+			const patterns = {
+				success: [100],
+				error: [100, 50, 100],
+				warning: [50, 50, 50],
+				info: [50],
+			};
+			navigator.vibrate(patterns[type] || [50]);
+		}
 
-        // Auto remove
-        setTimeout(() => {
-            toast.classList.add('removing');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
+		// Auto remove
+		setTimeout(() => {
+			toast.classList.add("removing");
+			setTimeout(() => toast.remove(), 300);
+		}, duration);
 
-        return toast;
-    }
+		return toast;
+	}
 
-    success(message, title = 'نجح!') {
-        return this.show({ type: 'success', title, message });
-    }
+	success(message, title = "نجح!") {
+		return this.show({ type: "success", title, message });
+	}
 
-    error(message, title = 'خطأ!') {
-        return this.show({ type: 'error', title, message, duration: 20000 });
-    }
+	error(message, title = "خطأ!") {
+		return this.show({ type: "error", title, message, duration: 20000 });
+	}
 
-    warning(message, title = 'تحذير!') {
-        return this.show({ type: 'warning', title, message });
-    }
+	warning(message, title = "تحذير!") {
+		return this.show({ type: "warning", title, message });
+	}
 
-    info(message, title = 'معلومة') {
-        return this.show({ type: 'info', title, message });
-    }
+	info(message, title = "معلومة") {
+		return this.show({ type: "info", title, message });
+	}
 }
 
 // Global instance
 window.notify = new NotificationManager();
 
 // jQuery integration
-if (typeof $ !== 'undefined') {
-    $.notify = function(message, type = 'info', title = '') {
-        return window.notify.show({ type, title, message });
-    };
+if (typeof $ !== "undefined") {
+	$.notify = (message, type = "info", title = "") =>
+		window.notify.show({ type, title, message });
 }
-
- 
-

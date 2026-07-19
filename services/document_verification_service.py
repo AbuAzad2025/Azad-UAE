@@ -132,9 +132,7 @@ class DocumentVerificationService:
             document, "payment_number", None
         ) or getattr(document, "receipt_number", None) or getattr(
             document, "purchase_number", None
-        ) or getattr(
-            document, "expense_number", None
-        ) or str(
+        ) or getattr(document, "expense_number", None) or str(
             getattr(document, "id", "")
         )
         float(

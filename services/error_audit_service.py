@@ -319,7 +319,10 @@ class ErrorAuditService:
                     user_id = int(current_user.get_id())
                     tenant_id = getattr(current_user, "tenant_id", None)
         except Exception:
-            logger.warning("Failed to resolve user/tenant from request context for error audit", exc_info=True)
+            logger.warning(
+                "Failed to resolve user/tenant from request context for error audit",
+                exc_info=True,
+            )
 
         # Request ID
         request_id = ErrorAuditService.get_or_create_request_id()
@@ -330,7 +333,9 @@ class ErrorAuditService:
             environment = current_app.config.get("FLASK_ENV", "production")
             app_version = current_app.config.get("APP_VERSION", "")
         except Exception:
-            logger.warning("Failed to read app config for error audit context", exc_info=True)
+            logger.warning(
+                "Failed to read app config for error audit context", exc_info=True
+            )
 
         # Sanitize
         request_data = None
@@ -344,7 +349,9 @@ class ErrorAuditService:
                 else:
                     payload = request.form.to_dict() if request.form else {}
             except Exception:
-                logger.warning("Failed to parse request payload for error audit", exc_info=True)
+                logger.warning(
+                    "Failed to parse request payload for error audit", exc_info=True
+                )
             request_data = ErrorAuditService._sanitize_dict(payload)
 
         endpoint_path = ""
@@ -354,7 +361,9 @@ class ErrorAuditService:
             elif has_request_context() and request:
                 endpoint_path = request.path or ""
         except Exception:
-            logger.debug("Failed to resolve endpoint path for error audit", exc_info=True)
+            logger.debug(
+                "Failed to resolve endpoint path for error audit", exc_info=True
+            )
 
         # Fingerprint
         fingerprint_message = message
@@ -428,7 +437,9 @@ class ErrorAuditService:
                     f"engine_error={engine_exc}\n"
                 )
             except Exception:
-                logger.warning("Failed to write error audit fallback to stderr", exc_info=True)
+                logger.warning(
+                    "Failed to write error audit fallback to stderr", exc_info=True
+                )
             return None
 
     # ── Deduplication helpers ─────────────────────────────────────

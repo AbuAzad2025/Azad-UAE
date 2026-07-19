@@ -361,7 +361,7 @@
 {% include 'partials/select2_assets.html' %}
 <script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
-$(function () {
+$(() => {
   // {{ t('تفعيل') }} Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -373,8 +373,7 @@ $(function () {
   const addPartnerBtn = $('#addPartnerBtn');
   
   // {{ t('List') }} {{ t('Partners') }} {{ t('المتاحين') }}
-  let partnerOptions = '<option value="">{{ t('اختر') }} {{ t('Partner_2') }}...</option>';
-  {{ partners_json | tojson }}.forEach(function (partner) {
+  let partnerOptions = '<option value="">{{ t('اختر') }} {{ t('Partner_2') }}...</option>';partners_json | tojson .forEach(function (partner) {
     partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
   });
 
@@ -410,24 +409,21 @@ $(function () {
     }
   }
 
-  addPartnerBtn.on('click', function() {
+  addPartnerBtn.on('click', () => {
     addPartnerRow();
   });
 
   $(document).on('click', '.remove-partner-btn', function() {
     const rowId = $(this).data('row');
     $('#' + rowId).remove();
-  });
-
-  // {{ t('Download') }} {{ t('Partners') }} {{ t('الحاليين') }}
-  {{ partner_shares_json | tojson }}.forEach(function (share) {
+  });partner_shares_json | tojson .forEach(function (share) {
     addPartnerRow(String(share.partner_customer_id), String(share.percentage));
   });
   
   initProductCategoryControls({
     createUrl: "{{ url_for('products.create_category') }}",
-    updateUrl: function(id) { return "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'); },
-    deleteUrl: function(id) { return "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/'); }
+    updateUrl: (id) => "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'),
+    deleteUrl: (id) => "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/')
   });
 
   // Toggle merchant share field

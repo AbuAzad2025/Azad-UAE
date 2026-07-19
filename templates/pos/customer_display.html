@@ -31,20 +31,20 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-(function(){
+(()=> {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
   const tenantId = params.get('tenant_id');
   if (!sessionId || !tenantId) { document.getElementById('cdOrderNumber').textContent = '{{ t("Invalid Link") }}'; return; }
 
   const es = new EventSource('/pos/api/customer-display/'+sessionId+'/stream?tenant_id='+encodeURIComponent(tenantId));
-  es.onmessage = function(e) {
+  es.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data);
       if (d.type === 'order_update') updateDisplay(d);
     } catch(ex) {}
   };
-  es.onerror = function() { es.close(); setTimeout(function(){window.location.reload()}, 5000); };
+  es.onerror = () => { es.close(); setTimeout(()=> {window.location.reload()}, 5000); };
 
   function updateDisplay(d) {
     document.getElementById('cdStatus').classList.remove('d-none');

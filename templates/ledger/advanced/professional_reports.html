@@ -417,9 +417,7 @@ const revenueExpenseChart = new Chart(revenueExpenseCtx, {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + ' د.إ';
-          }
+          callback: (value) => value.toLocaleString() + ' د.إ'
         }
       }
     }
@@ -487,9 +485,7 @@ const profitTrendChart = new Chart(profitTrendCtx, {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + ' د.إ';
-          }
+          callback: (value) => value.toLocaleString() + ' د.إ'
         }
       }
     }

@@ -207,7 +207,9 @@ class DocumentGenerator:
                             (
                                 "مدفوع"
                                 if sale.balance_due == 0
-                                else "جزئي" if sale.paid_amount > 0 else "غير مدفوع"
+                                else "جزئي"
+                                if sale.paid_amount > 0
+                                else "غير مدفوع"
                             ),
                         ]
                     )

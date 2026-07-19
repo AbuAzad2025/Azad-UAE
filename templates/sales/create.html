@@ -328,8 +328,8 @@
 
 {% block extra_js %}
 <script>
-  window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'{% else %}null{% endif %};
-  window._PRESELECTED_CUSTOMER = {% if preselected_customer %}{{ {'id': preselected_customer.id, 'name': preselected_customer.name, 'phone': preselected_customer.phone or ''}|tojson }}{% else %}null{% endif %};
+  window._API_SEARCH_URL = {% if current_user.has_permission('view_reports') %}'{{ url_for('api.api_search') }}'% else %null% endif %;
+  window._PRESELECTED_CUSTOMER = {% if preselected_customer %}'id': preselected_customer.id, 'name': preselected_customer.name, 'phone': preselected_customer.phone or ''|tojson % else %null% endif %;
   window._GARAGE_NAME = '{{ current_user.garage_name if current_user.garage_name else 'Garage System' }}';
   window._COMPANY_PHONE = '{{ current_user.phone if current_user.phone else '' }}';
 </script>

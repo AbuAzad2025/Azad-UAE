@@ -100,6 +100,6 @@ class TestExpensesCreate:
         assert len(gl_entries) >= 1, f"Expected >=1 entry, got {len(gl_entries)}"
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit == Decimal("250.50")
-        ), f"GL: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit == Decimal("250.50"), (
+            f"GL: debit={total_debit} credit={total_credit}"
+        )

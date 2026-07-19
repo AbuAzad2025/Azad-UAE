@@ -51,7 +51,8 @@ def {function_name}():
         }
 
     @staticmethod
-    def generate_sql_query( intent: str, table: str, filters: Optional[dict] = None
+    def generate_sql_query(
+        intent: str, table: str, filters: Optional[dict] = None
     ) -> str:
         """
         توليد SQL query تلقائياً
@@ -75,9 +76,7 @@ def {function_name}():
                     else "1=1"
                 )
 
-                query = (
-                    f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
-                )
+                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
 
                 if filters and "order_by" in filters:
                     query += f" ORDER BY {filters['order_by']}"
@@ -100,9 +99,7 @@ def {function_name}():
                     else ""
                 )
 
-                return (
-                    f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
-                )
+                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
 
             elif intent == "update":
                 updates = (
@@ -130,7 +127,8 @@ def {function_name}():
             return f"-- Error: {e}"
 
     @staticmethod
-    def generate_python_function( function_name: str, purpose: str, params: Optional[List[str]] = None
+    def generate_python_function(
+        function_name: str, purpose: str, params: Optional[List[str]] = None
     ) -> str:
         """
         توليد دالة Python
@@ -190,7 +188,8 @@ def {function_name}():
             return f"# Error: {e}"
 
     @staticmethod
-    def generate_report_query( report_type: str, date_range: Optional[dict] = None
+    def generate_report_query(
+        report_type: str, date_range: Optional[dict] = None
     ) -> str:  # nosec B608
         """
         توليد query لتقرير محدد

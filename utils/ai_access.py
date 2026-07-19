@@ -25,7 +25,9 @@ def get_tenant_ai_level(tenant_id: int | None, default: str = "execute") -> str:
         if raw in ("basic", "advanced", "execute"):
             return raw
     except Exception:
-        logger.debug("Failed to resolve tenant AI level for tenant %s", tenant_id, exc_info=True)
+        logger.debug(
+            "Failed to resolve tenant AI level for tenant %s", tenant_id, exc_info=True
+        )
     return level
 
 

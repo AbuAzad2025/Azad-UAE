@@ -1,4 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+    jsonify,
+    current_app,
+)
 from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import Expense, ExpenseCategory, Cheque
@@ -173,7 +182,9 @@ def create():
                         cheque_date_str, "%Y-%m-%d"
                     ).date()
                 except ValueError:
-                    current_app.logger.debug("Invalid cheque date format: %s", cheque_date_str)
+                    current_app.logger.debug(
+                        "Invalid cheque date format: %s", cheque_date_str
+                    )
 
             with atomic_transaction("expense_create"):
                 expense = Expense(
@@ -276,7 +287,9 @@ def create():
     exchange_rates = CurrencyService.get_all_rates(_dc)
 
     return render_template(
-        "expenses/create.html", categories=expense_categories, exchange_rates=exchange_rates
+        "expenses/create.html",
+        categories=expense_categories,
+        exchange_rates=exchange_rates,
     )
 
 
@@ -417,7 +430,9 @@ def edit(**kwargs):
                 "danger",
             )
 
-    return render_template("expenses/edit.html", expense=expense, categories=expense_categories)
+    return render_template(
+        "expenses/edit.html", expense=expense, categories=expense_categories
+    )
 
 
 @expenses_bp.route("/<int:id>/delete", methods=["POST"])
@@ -725,7 +740,9 @@ def restore(**kwargs):
 
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=record_id)
+    archived_query = ArchivedRecord.query.filter_by(
+        table_name="expenses", record_id=record_id
+    )
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived_record = archived_query.first_or_404()

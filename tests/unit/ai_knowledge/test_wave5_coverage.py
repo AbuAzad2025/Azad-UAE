@@ -957,18 +957,18 @@ class TestNeuralEngineWave5:
             engine.models["accounting_classifier"] = MagicMock()
             engine.scalers["accounting_classifier"] = MagicMock()
             engine.models["accounting_classifier"].predict.return_value = np.array([0])
-            engine.models["accounting_classifier"].predict_proba.return_value = (
-                np.array([[0.3, 0.7]])
-            )
+            engine.models[
+                "accounting_classifier"
+            ].predict_proba.return_value = np.array([[0.3, 0.7]])
             engine.scalers["accounting_classifier"].transform.return_value = np.array(
                 [[1.0]]
             )
             result = engine.validate_accounting_entry(100, 90, 2, "Sale")
             assert "غير متوازن" in result["recommendation"]
             engine.models["accounting_classifier"].predict.return_value = np.array([1])
-            engine.models["accounting_classifier"].predict_proba.return_value = (
-                np.array([[0.9, 0.1]])
-            )
+            engine.models[
+                "accounting_classifier"
+            ].predict_proba.return_value = np.array([[0.9, 0.1]])
             assert (
                 engine.validate_accounting_entry(100, 100, 2, "Sale")["is_correct"]
                 is True
@@ -992,9 +992,7 @@ class TestNeuralEngineWave5:
                 row.sale_date = base + timedelta(days=i)
                 row.total_amount = Decimal(str(1000 + i * 100))
                 rows.append(row)
-            mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                rows
-            )
+            mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = rows
             fc = engine._forecast_sales_internal(7)
             assert fc.get("trend") in ("increasing", "decreasing", "stable")
             assert "forecast" in fc

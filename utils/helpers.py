@@ -183,7 +183,9 @@ def _resolve_format_currency_settings():
         ).strip() or None
         settings_decimals = getattr(settings, "decimal_places", None)
     except Exception:
-        logger.debug("Failed to load currency format settings from SystemSettings", exc_info=True)
+        logger.debug(
+            "Failed to load currency format settings from SystemSettings", exc_info=True
+        )
     try:
         from models.tenant import Tenant
 
@@ -191,7 +193,9 @@ def _resolve_format_currency_settings():
         if tenant and tenant.default_currency:
             settings_currency = settings_currency or tenant.default_currency
     except Exception:
-        logger.debug("Failed to load tenant default currency for formatting", exc_info=True)
+        logger.debug(
+            "Failed to load tenant default currency for formatting", exc_info=True
+        )
     return settings_currency, settings_symbol, settings_position, settings_decimals
 
 

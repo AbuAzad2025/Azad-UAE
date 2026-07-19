@@ -100,9 +100,7 @@ class TestReportsSales:
                 return_value=_chain_query_stub(all=[]),
             ),
         ):
-            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/sales")
             assert resp.status_code == 200
 
@@ -115,9 +113,7 @@ class TestReportsSales:
                 return_value=_chain_query_stub(all=[]),
             ),
         ):
-            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get(
                 "/reports/sales",
                 query_string={"date_from": "2025-06-01", "date_to": "2025-06-30"},
@@ -133,9 +129,7 @@ class TestReportsSales:
                 return_value=_chain_query_stub(all=[]),
             ),
         ):
-            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get(
                 "/reports/sales",
                 query_string={"customer": "3", "seller": "5"},
@@ -254,9 +248,7 @@ class TestReportsInventoryReconciliation:
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("models.Warehouse") as wh_model,
         ):
-            wh_model.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            wh_model.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = reports_client.get("/reports/inventory-reconciliation")
             assert resp.status_code == 200
 
@@ -271,9 +263,7 @@ class TestReportsInventoryReconciliation:
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("models.Warehouse") as wh_model,
         ):
-            wh_model.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            wh_model.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = reports_client.get(
                 "/reports/inventory-reconciliation",
                 query_string={"date_from": "2025-01-01", "date_to": "2025-06-30"},
@@ -309,18 +299,14 @@ class TestReportsReceivables:
     def test_receivables_returns_200(self, reports_client, mock_user):
         _configure_user(mock_user)
         with patch("routes.reports.Customer") as customer_model:
-            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/receivables")
             assert resp.status_code == 200
 
     def test_receivables_with_customer(self, reports_client, mock_user):
         _configure_user(mock_user)
         with patch("routes.reports.Customer") as customer_model:
-            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            customer_model.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/receivables?customer=12")
             assert resp.status_code == 200
 
@@ -461,19 +447,11 @@ class TestReportsEntityFragment:
         _configure_user(mock_user)
         entity = _entity_mock("Supplier Co")
         purchase_query = MagicMock()
-        purchase_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-            []
-        )
+        purchase_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
         payment_query = MagicMock()
-        payment_query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
-            []
-        )
-        payment_query.filter.return_value.filter.return_value.with_entities.return_value.scalar.return_value = (
-            0
-        )
-        payment_query.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
-            []
-        )
+        payment_query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        payment_query.filter.return_value.filter.return_value.with_entities.return_value.scalar.return_value = 0
+        payment_query.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("models.Purchase") as purchase_model,
@@ -488,9 +466,7 @@ class TestReportsEntityFragment:
         _configure_user(mock_user)
         entity = _entity_mock("Customer Co", customer_type="regular")
         sale_query = MagicMock()
-        sale_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-            []
-        )
+        sale_query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
         receipt_query = MagicMock()
         receipt_query.filter_by.return_value.filter.return_value.all.return_value = []
         payment_query = MagicMock()
@@ -657,9 +633,7 @@ class TestReportsPartnersDeep:
         product.product_partners = [partner]
 
         partner_products_chain = MagicMock()
-        partner_products_chain.join.return_value.filter.return_value.distinct.return_value.all.return_value = (
-            []
-        )
+        partner_products_chain.join.return_value.filter.return_value.distinct.return_value.all.return_value = []
 
         with (
             patch("routes.reports.db.session.query", side_effect=query_side),
@@ -735,9 +709,7 @@ class TestReportsSalesDeep:
                 return_value=_chain_query_stub(all=[]),
             ),
         ):
-            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/sales?date_from=2025-01-01")
             assert resp.status_code == 200
 
@@ -749,9 +721,7 @@ class TestReportsSalesDeep:
             patch("routes.reports.tenant_query", return_value=sale_query),
             patch("routes.reports.Customer") as Customer,
         ):
-            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/sales")
             assert resp.status_code == 200
 
@@ -879,9 +849,7 @@ class TestReportsEntityFragmentDeep:
             Payment.query.filter.return_value.filter.return_value.all.return_value = [
                 payment
             ]
-            Payment.query.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
-                []
-            )
+            Payment.query.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
             resp = reports_client.get("/reports/entity_report_fragment/supplier/5")
             assert resp.status_code == 200
 
@@ -900,12 +868,8 @@ class TestReportsEntityFragmentDeep:
             patch("models.Payment") as Payment,
         ):
             Sale.query.filter.return_value.order_by.return_value.all.return_value = []
-            Receipt.query.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
-            Payment.query.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            Receipt.query.filter.return_value.order_by.return_value.all.return_value = []
+            Payment.query.filter.return_value.order_by.return_value.all.return_value = []
             resp = reports_client.get("/reports/entity_report_fragment/customer/7")
             assert resp.status_code == 200
 
@@ -938,9 +902,7 @@ class TestReportsReceivablesDeep:
             patch("routes.reports.tenant_query", return_value=sale_query),
             patch("routes.reports.Customer") as Customer,
         ):
-            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/receivables?customer=1")
             assert resp.status_code == 200
 
@@ -954,9 +916,7 @@ class TestReportsPurchasesDeep:
         purchase.get_profit = MagicMock(return_value=Decimal("0"))
         purchase_query = _chain_query_stub(all=[purchase])
         supplier_chain = MagicMock()
-        supplier_chain.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
+        supplier_chain.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
         with (
             patch("routes.reports.tenant_query", return_value=purchase_query),
             patch(
@@ -965,9 +925,7 @@ class TestReportsPurchasesDeep:
             ),
             patch("models.Supplier") as Supplier,
         ):
-            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get(
                 "/reports/purchases?start_date=2025-01-01&end_date=2025-06-30"
             )
@@ -1149,9 +1107,7 @@ class TestPurchasesPaymentAllocation:
             ),
             patch("models.Supplier") as Supplier,
         ):
-            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/purchases?supplier_id=3")
             assert resp.status_code == 200
 
@@ -1170,9 +1126,7 @@ class TestPurchasesPaymentAllocation:
             ),
             patch("models.Supplier") as Supplier,
         ):
-            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Supplier.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/purchases")
             assert resp.status_code == 200
 
@@ -1239,9 +1193,7 @@ class TestReceivablesAgingBuckets:
             patch("routes.reports.tenant_query", return_value=sq),
             patch("routes.reports.Customer") as Customer,
         ):
-            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                []
-            )
+            Customer.query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             resp = reports_client.get("/reports/receivables")
             assert resp.status_code == 200
 
@@ -1420,9 +1372,7 @@ class TestPartnersMerchantsLoop:
         sale_line.line_total = Decimal("500")
         sale_line.quantity = Decimal("5")
         empty_pp = MagicMock()
-        empty_pp.join.return_value.filter.return_value.distinct.return_value.all.return_value = (
-            []
-        )
+        empty_pp.join.return_value.filter.return_value.distinct.return_value.all.return_value = []
         merch_chain = MagicMock()
         merch_chain.filter.return_value.all.return_value = [product]
         sl_chain = MagicMock()
@@ -1991,8 +1941,6 @@ class TestReportsSupplierFragmentDeep:
                 direct_all=[],
                 fifo_scalar=Decimal("150"),
             )
-            Payment.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = (
-                []
-            )
+            Payment.query.filter_by.return_value.filter.return_value.order_by.return_value.all.return_value = []
             resp = reports_client.get("/reports/entity_report_fragment/supplier/12")
             assert resp.status_code == 200

@@ -1,25 +1,25 @@
 .customer-edit-form .form-control,
 .customer-edit-form textarea.form-control,
 .customer-edit-form select.form-control {
-  min-height: 56px;
-  height: auto !important;
-  padding: 0.95rem 1.35rem;
-  font-size: 0.95rem;
-  line-height: 1.7;
-  text-align: center;
+	min-height: 56px;
+	height: auto !important;
+	padding: 0.95rem 1.35rem;
+	font-size: 0.95rem;
+	line-height: 1.7;
+	text-align: center;
 }
 .customer-edit-form .form-control::placeholder {
-  text-align: center;
-  color: #64748b;
-  opacity: 0.85;
+	text-align: center;
+	color: #64748b;
+	opacity: 0.85;
 }
 .customer-edit-form textarea.form-control {
-  text-align: right;
+	text-align: right;
 }
 .customer-edit-form textarea.form-control::placeholder {
-  text-align: right;
+	text-align: right;
 }
 .customer-edit-form select.form-control option {
-  text-align: center;
-  padding: 0.75rem 1rem;
+	text-align: center;
+	padding: 0.75rem 1rem;
 }

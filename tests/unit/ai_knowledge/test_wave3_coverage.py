@@ -747,9 +747,7 @@ class TestAzadResponsesWave3:
             }
             da.analyze_sales_trends.return_value = {"success": True, "trends": []}
             dg.generate_sales_report.return_value = ("تقرير", "ok")
-            mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
-                []
-            )
+            mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
             result = responses._handle_detected_intent(intent, "رسالة اختبار", {})
             if intent == "unknown_intent_xyz":
                 assert result is None
@@ -967,13 +965,21 @@ class TestIntelligentAssistantWave3:
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
+            assert (
+                assistant.process("حلل المبيعات", user_id=1, context={})["success"]
+                is True
+            )
             um.return_value = {
                 "intent": "inventory_check",
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("وين المخزون الناقص", user_id=1, context={})["success"] is True
+            assert (
+                assistant.process("وين المخزون الناقص", user_id=1, context={})[
+                    "success"
+                ]
+                is True
+            )
             um.return_value = {
                 "intent": "greeting",
                 "confidence": 0.9,
@@ -993,7 +999,9 @@ class TestIntelligentAssistantWave3:
                 "confidence": 0.9,
                 "all_scores": [],
             }
-            assert assistant.process("سيء جدا", user_id=1, context={})["success"] is True
+            assert (
+                assistant.process("سيء جدا", user_id=1, context={})["success"] is True
+            )
 
     def test_customer_balance_with_debt(self, assistant):
         debt = {
@@ -1023,7 +1031,10 @@ class TestIntelligentAssistantWave3:
             "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
             return_value="جواب سريع",
         ):
-            assert assistant.process("سؤال", user_id=1, context={})["method"] == "quick_learner"
+            assert (
+                assistant.process("سؤال", user_id=1, context={})["method"]
+                == "quick_learner"
+            )
         with (
             patch(
                 "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
@@ -1535,7 +1546,13 @@ class TestWave3Extended:
             patch.object(
                 assistant,
                 "_understand_message",
-                return_value={"success": True, "intent": "inventory_check", "confidence": 0.9, "entities": {}, "context": {}},
+                return_value={
+                    "success": True,
+                    "intent": "inventory_check",
+                    "confidence": 0.9,
+                    "entities": {},
+                    "context": {},
+                },
             ),
             patch.object(assistant, "_collect_real_data", return_value=payload),
             patch.object(assistant, "_learn_from_interaction"),

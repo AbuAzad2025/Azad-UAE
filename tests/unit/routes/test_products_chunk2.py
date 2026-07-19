@@ -290,12 +290,8 @@ class TestDeleteEndpointJson:
         mocker.patch("models.PurchaseLine", self.pl_mock)
 
     def test_soft_delete_returns_json(self, product_client, mocker):
-        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            1
-        )
-        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            0
-        )
+        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 1
+        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 0
 
         resp = product_client.post(
             f"{self.ENDPOINT}/1/delete",
@@ -307,12 +303,8 @@ class TestDeleteEndpointJson:
         assert "إلغاء تفعيل" in body["message"]
 
     def test_hard_delete_returns_json(self, product_client, mocker):
-        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            0
-        )
-        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            0
-        )
+        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 0
+        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 0
 
         resp = product_client.post(
             f"{self.ENDPOINT}/1/delete",
@@ -416,12 +408,8 @@ class TestAjaxHeaderJsonResponses:
             "routes.products.StockService.get_product_stock",
             return_value=0.0,
         )
-        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            1
-        )
-        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = (
-            0
-        )
+        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 1
+        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 0
 
         resp = product_client.post(
             f"{self.ENDPOINT}/1/delete",

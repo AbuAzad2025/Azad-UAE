@@ -32,13 +32,11 @@ from routes.owner.shared import (
     _inspector_column_names,
     _validate_postgresql_uri,
     _is_blocked_table,
-    _sql_references_blocked_table,
 )
 
 import logging
 import os
 import json
-import re
 from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
@@ -155,9 +153,7 @@ def clear_cache():
                 app = cache.app if hasattr(cache, "app") else None
                 if app:
                     cache.init_app(app, config={"CACHE_TYPE": "null"})
-            flash(
-                "⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ", "warning"
-            )
+            flash("⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ", "warning")
         except Exception as inner:
             LoggingCore.log_error(
                 message=f"Cache fallback to null also failed: {inner}",
@@ -223,16 +219,12 @@ def browse_table(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        count_result = db.session.execute(
-            text(f'SELECT COUNT(*) FROM "{safe_table}"')
-        )  # nosec B608
+        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))  # nosec B608
         total = count_result.scalar()
 
         offset = (page - 1) * per_page
         result = db.session.execute(
-            text(
-                f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}'
-            )  # nosec B608
+            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')  # nosec B608
         )
 
         rows = result.fetchall()
@@ -320,9 +312,7 @@ def edit_table_data(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        result = db.session.execute(
-            text(f'SELECT * FROM "{safe_table}" LIMIT 100')
-        )  # nosec B608
+        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))  # nosec B608
         rows = result.fetchall()
         columns = result.keys()
 
@@ -432,9 +422,7 @@ def export_database():
             for table_name in _known_tables_map().values():
                 if _is_blocked_table(table_name):
                     continue
-                result = db.session.execute(
-                    text(f"SELECT * FROM {table_name}")
-                )  # nosec B608
+                result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
                 rows = result.fetchall()
                 columns = result.keys()
 
@@ -501,9 +489,7 @@ def convert_database():
                     if not allowed_columns:
                         continue
 
-                    result = db.session.execute(
-                        text(f"SELECT * FROM {table_name}")
-                    )  # nosec B608
+                    result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
                     rows = result.fetchall()
                     if not rows:
                         continue

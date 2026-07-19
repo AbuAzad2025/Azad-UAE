@@ -148,7 +148,7 @@ function deleteAccount(accountId, accountName) {
   document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id=0) }}".replace('0', accountId);
   $('#deleteModal').modal('show');
 }
-$(document).ready(function() {
+$(document).ready(() => {
   $('#accountsTable').DataTable({
     language: { url: "https://cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json" },
     pageLength: 25,

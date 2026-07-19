@@ -1096,12 +1096,8 @@ class TestProcessExcelIntelligently:
                             with patch("routes.ai_routes.actions.assign_tenant_id"):
                                 with patch("routes.ai_routes.assistant.StockService"):
                                     with patch("routes.ai_routes._train_ai_from_excel"):
-                                        Warehouse.query.filter_by.return_value.first.return_value = (
-                                            warehouse
-                                        )
-                                        Product.query.filter_by.return_value.first.return_value = (
-                                            None
-                                        )
+                                        Warehouse.query.filter_by.return_value.first.return_value = warehouse
+                                        Product.query.filter_by.return_value.first.return_value = None
                                         result = _process_excel_intelligently(
                                             file_obj, 1, mock_user
                                         )
@@ -1149,12 +1145,8 @@ class TestProcessExcelIntelligently:
                     with patch("models.Product") as Product:
                         with patch("routes.ai_routes.assistant.db"):
                             with patch("routes.ai_routes._train_ai_from_excel"):
-                                Warehouse.query.filter_by.return_value.first.return_value = (
-                                    warehouse
-                                )
-                                Product.query.filter_by.return_value.first.return_value = (
-                                    existing
-                                )
+                                Warehouse.query.filter_by.return_value.first.return_value = warehouse
+                                Product.query.filter_by.return_value.first.return_value = existing
                                 result = _process_excel_intelligently(
                                     MagicMock(), 1, mock_user
                                 )

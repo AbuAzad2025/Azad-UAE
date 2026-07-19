@@ -1,516 +1,551 @@
 :root {
-  --navy-950: #01050d
-;
-  --navy-900: #020817
-;
-  --navy-850: #041020
-;
-  --navy-800: #06162b
-;
-  --navy-700: #0b1f3a
-;
-  --gold-500: #d7a741
-;
-  --gold-450: #e3b85f
-;
-  --gold-400: #f2c76b
-;
-  --gold-300: #ffe19a
-;
-  --gold-700: #a87922
-;
-  --text-primary: #f7faff
-;
-  --text-secondary: #c0cbda
-;
-  --text-muted: #8694aa
-;
-  --border-light: rgba(255, 255, 255, 0.10);
-  --border-gold: rgba(215, 167, 65, 0.30);
-  --glass-dark: rgba(8, 24, 48, 0.58);
-  --glass-deeper: rgba(3, 12, 26, 0.82);
-  --danger: #ff5c73
-;
-  --success: #4ade80
-;
-  --font-family: "Cairo", "Tajawal", "Segoe UI", system-ui, sans-serif;
+	--navy-950: #01050d;
+	--navy-900: #020817;
+	--navy-850: #041020;
+	--navy-800: #06162b;
+	--navy-700: #0b1f3a;
+	--gold-500: #d7a741;
+	--gold-450: #e3b85f;
+	--gold-400: #f2c76b;
+	--gold-300: #ffe19a;
+	--gold-700: #a87922;
+	--text-primary: #f7faff;
+	--text-secondary: #c0cbda;
+	--text-muted: #8694aa;
+	--border-light: rgba(255, 255, 255, 0.1);
+	--border-gold: rgba(215, 167, 65, 0.3);
+	--glass-dark: rgba(8, 24, 48, 0.58);
+	--glass-deeper: rgba(3, 12, 26, 0.82);
+	--danger: #ff5c73;
+	--success: #4ade80;
+	--font-family: "Cairo", "Tajawal", "Segoe UI", system-ui, sans-serif;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
 
-html, body.azad-login-page {
-  margin: 0;
-  min-height: 100vh;
-  font-family: var(--font-family), sans-serif;
-  color: var(--text-primary);
-  background: var(--navy-950);
-  direction: rtl;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+html,
+body.azad-login-page {
+	margin: 0;
+	min-height: 100vh;
+	font-family: var(--font-family), sans-serif;
+	color: var(--text-primary);
+	background: var(--navy-950);
+	direction: rtl;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 }
 
 .azad-login-page {
-  line-height: 1.6;
-  letter-spacing: 0;
+	line-height: 1.6;
+	letter-spacing: 0;
 }
 
 .azad-login-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse 62% 50% at 22% 28%, rgba(27, 108, 255, 0.10), transparent 58%),
-    radial-gradient(ellipse 42% 38% at 80% 16%, rgba(215, 167, 65, 0.06), transparent 60%),
-    radial-gradient(ellipse 30% 28% at 72% 76%, rgba(82, 126, 255, 0.05), transparent 62%),
-    linear-gradient(160deg, var(--navy-950), var(--navy-900) 48%, var(--navy-800));
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	background:
+		radial-gradient(
+			ellipse 62% 50% at 22% 28%,
+			rgba(27, 108, 255, 0.1),
+			transparent 58%
+		),
+		radial-gradient(
+			ellipse 42% 38% at 80% 16%,
+			rgba(215, 167, 65, 0.06),
+			transparent 60%
+		),
+		radial-gradient(
+			ellipse 30% 28% at 72% 76%,
+			rgba(82, 126, 255, 0.05),
+			transparent 62%
+		),
+		linear-gradient(
+			160deg,
+			var(--navy-950),
+			var(--navy-900) 48%,
+			var(--navy-800)
+		);
 }
 
 .azad-login-bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 35%);
-  pointer-events: none;
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		circle at 50% 0%,
+		rgba(255, 255, 255, 0.05),
+		transparent 35%
+	);
+	pointer-events: none;
 }
 
 .azad-login-bg__noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.018;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  pointer-events: none;
+	position: absolute;
+	inset: 0;
+	opacity: 0.018;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	pointer-events: none;
 }
 
 .azad-login-lang {
-  position: fixed;
-  top: 18px;
-  left: 18px;
-  z-index: 30;
-  display: flex;
-  gap: 8px;
+	position: fixed;
+	top: 18px;
+	left: 18px;
+	z-index: 30;
+	display: flex;
+	gap: 8px;
 }
 
 .azad-login-lang a {
-  padding: 7px 12px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-  transition: 0.22s ease;
-  backdrop-filter: blur(10px);
+	padding: 7px 12px;
+	border-radius: 10px;
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-decoration: none;
+	color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	transition: 0.22s ease;
+	backdrop-filter: blur(10px);
 }
 
 .azad-login-lang a.is-active,
 .azad-login-lang a:hover {
-  color: var(--gold-300);
-  border-color: var(--border-gold);
-  background: rgba(215, 167, 65, 0.09);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+	color: var(--gold-300);
+	border-color: var(--border-gold);
+	background: rgba(215, 167, 65, 0.09);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
 }
 
 .azad-login-shell {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 48px 72px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 56px;
-  align-items: center;
+	position: relative;
+	z-index: 2;
+	min-height: 100vh;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 40px 48px 72px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 56px;
+	align-items: center;
 }
 
 .azad-login-brand {
-  animation: fadeUp 0.7s ease 0.08s both;
+	animation: fadeUp 0.7s ease 0.08s both;
 }
 
 .azad-login-brand__logo {
-  width: 100%;
-  max-width: 380px;
-  margin-bottom: 30px;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.96);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.26);
+	width: 100%;
+	max-width: 380px;
+	margin-bottom: 30px;
+	padding: 14px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.96);
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.26);
 }
 
 .azad-login-brand__logo img {
-  display: block;
-  width: 100%;
-  height: auto;
+	display: block;
+	width: 100%;
+	height: auto;
 }
 
 .azad-login-brand__title {
-  font-size: clamp(1.55rem, 2.35vw, 2.15rem);
-  font-weight: 800;
-  line-height: 1.25;
-  color: var(--gold-300);
-  margin: 0 0 8px;
-  letter-spacing: -0.01em;
+	font-size: clamp(1.55rem, 2.35vw, 2.15rem);
+	font-weight: 800;
+	line-height: 1.25;
+	color: var(--gold-300);
+	margin: 0 0 8px;
+	letter-spacing: -0.01em;
 }
 
 .azad-login-brand__sub {
-  font-size: clamp(1rem, 1.35vw, 1.15rem);
-  font-weight: 700;
-  line-height: 1.5;
-  color: var(--text-secondary);
-  margin: 0 0 22px;
+	font-size: clamp(1rem, 1.35vw, 1.15rem);
+	font-weight: 700;
+	line-height: 1.5;
+	color: var(--text-secondary);
+	margin: 0 0 22px;
 }
 
 .azad-login-brand__text {
-  font-size: 0.98rem;
-  line-height: 1.85;
-  color: var(--text-secondary);
-  max-width: 460px;
-  margin: 0 0 26px;
+	font-size: 0.98rem;
+	line-height: 1.85;
+	color: var(--text-secondary);
+	max-width: 460px;
+	margin: 0 0 26px;
 }
 
 .azad-login-trust {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 18px;
 }
 
 .azad-login-trust span {
-  font-size: 0.86rem;
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+	font-size: 0.86rem;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
 }
 
 .azad-login-trust i {
-  color: var(--gold-400);
-  font-size: 0.8rem;
+	color: var(--gold-400);
+	font-size: 0.8rem;
 }
 
 .azad-login-card-wrap {
-  display: flex;
-  justify-content: center;
-  animation: fadeUp 0.7s ease 0.16s both;
+	display: flex;
+	justify-content: center;
+	animation: fadeUp 0.7s ease 0.16s both;
 }
 
 .azad-login-card {
-  width: 100%;
-  max-width: 470px;
-  padding: 34px 38px;
-  border-radius: 26px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(8,24,48,0.60) 52%, rgba(3,12,26,0.88));
-  border: 1px solid var(--border-light);
-  box-shadow: 0 26px 70px rgba(0,0,0,0.42);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+	width: 100%;
+	max-width: 470px;
+	padding: 34px 38px;
+	border-radius: 26px;
+	background: linear-gradient(
+		145deg,
+		rgba(255, 255, 255, 0.08),
+		rgba(8, 24, 48, 0.6) 52%,
+		rgba(3, 12, 26, 0.88)
+	);
+	border: 1px solid var(--border-light);
+	box-shadow: 0 26px 70px rgba(0, 0, 0, 0.42);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
 }
 
 .azad-login-card__title {
-  margin: 0 0 6px;
-  font-size: 1.55rem;
-  line-height: 1.3;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+	margin: 0 0 6px;
+	font-size: 1.55rem;
+	line-height: 1.3;
+	font-weight: 800;
+	letter-spacing: -0.02em;
 }
 
 .azad-login-card__sub {
-  margin: 0 0 22px;
-  font-size: 0.94rem;
-  line-height: 1.7;
-  color: var(--text-secondary);
+	margin: 0 0 22px;
+	font-size: 0.94rem;
+	line-height: 1.7;
+	color: var(--text-secondary);
 }
 
 .azad-login-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 4px;
-  margin-bottom: 22px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	padding: 4px;
+	margin-bottom: 22px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .azad-login-tab {
-  border: 0;
-  border-radius: 11px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 11px 10px;
-  color: var(--text-primary);
-  background: transparent;
-  transition: 0.22s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 44px;
+	border: 0;
+	border-radius: 11px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	cursor: pointer;
+	padding: 11px 10px;
+	color: var(--text-primary);
+	background: transparent;
+	transition: 0.22s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 44px;
 }
 
 .azad-login-tab:hover {
-  background: rgba(255,255,255,0.05);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 .azad-login-tab.is-active {
-  background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
-  color: #0b1527
-;
-  font-weight: 800;
-  box-shadow: 0 8px 20px rgba(215, 167, 65, 0.24);
+	background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
+	color: #0b1527;
+	font-weight: 800;
+	box-shadow: 0 8px 20px rgba(215, 167, 65, 0.24);
 }
 
 .azad-login-alert {
-  padding: 11px 14px;
-  border-radius: 11px;
-  margin-bottom: 14px;
-  font-size: 0.86rem;
-  line-height: 1.6;
+	padding: 11px 14px;
+	border-radius: 11px;
+	margin-bottom: 14px;
+	font-size: 0.86rem;
+	line-height: 1.6;
 }
 
 /* purgecss start ignore */
 .azad-login-alert--danger {
-  background: rgba(255,92,115,0.1);
-  border: 1px solid rgba(255,92,115,0.28);
-  color: #ffb1bc
-;
+	background: rgba(255, 92, 115, 0.1);
+	border: 1px solid rgba(255, 92, 115, 0.28);
+	color: #ffb1bc;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .azad-login-alert--success {
-  background: rgba(74,222,128,0.08);
-  border: 1px solid rgba(74,222,128,0.24);
-  color: #a9efbf
-;
+	background: rgba(74, 222, 128, 0.08);
+	border: 1px solid rgba(74, 222, 128, 0.24);
+	color: #a9efbf;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .azad-login-alert--warning {
-  background: rgba(242,199,107,0.08);
-  border: 1px solid var(--border-gold);
-  color: var(--gold-300);
+	background: rgba(242, 199, 107, 0.08);
+	border: 1px solid var(--border-gold);
+	color: var(--gold-300);
 }
 /* purgecss end ignore */
 
-.azad-login-form { display: grid; gap: 15px; }
+.azad-login-form {
+	display: grid;
+	gap: 15px;
+}
 
 .azad-login-field label {
-  display: block;
-  margin-bottom: 7px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-primary);
+	display: block;
+	margin-bottom: 7px;
+	font-size: 0.88rem;
+	font-weight: 700;
+	color: var(--text-primary);
 }
 
 .azad-login-input-wrap {
-  display: flex;
-  align-items: stretch;
-  min-height: 52px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(3,12,26,0.44);
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+	display: flex;
+	align-items: stretch;
+	min-height: 52px;
+	border-radius: 12px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(3, 12, 26, 0.44);
+	overflow: hidden;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		transform 0.2s ease;
 }
 
 .azad-login-input-wrap:hover {
-  border-color: rgba(255,255,255,0.12);
+	border-color: rgba(255, 255, 255, 0.12);
 }
 
 .azad-login-input-wrap:focus-within {
-  border-color: var(--gold-500);
-  box-shadow: 0 0 0 3px rgba(215, 167, 65, 0.11);
-  transform: translateY(-1px);
+	border-color: var(--gold-500);
+	box-shadow: 0 0 0 3px rgba(215, 167, 65, 0.11);
+	transform: translateY(-1px);
 }
 
 .azad-login-input-wrap__icon {
-  width: 46px;
-  display: grid;
-  place-items: center;
-  color: var(--text-muted);
-  flex-shrink: 0;
+	width: 46px;
+	display: grid;
+	place-items: center;
+	color: var(--text-muted);
+	flex-shrink: 0;
 }
 
 .azad-login-input-wrap input {
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.96rem;
-  line-height: 1.4;
-  padding: 0 12px;
-  min-width: 0;
+	flex: 1;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	color: var(--text-primary);
+	font-family: inherit;
+	font-size: 0.96rem;
+	line-height: 1.4;
+	padding: 0 12px;
+	min-width: 0;
 }
 
 .azad-login-input-wrap input::placeholder {
-  color: #8896ab
-;
-  opacity: 1;
+	color: #8896ab;
+	opacity: 1;
 }
 
 .azad-login-input-wrap input.azad-ltr {
-  direction: ltr;
-  text-align: left;
+	direction: ltr;
+	text-align: left;
 }
 
 .azad-login-toggle-pass {
-  width: 46px;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
+	width: 46px;
+	border: 0;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
 }
 
 .azad-login-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 2px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 2px;
 }
 
 .azad-login-remember {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  color: var(--text-secondary);
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 0.88rem;
+	color: var(--text-secondary);
 }
 
 .azad-login-remember input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--gold-500);
+	width: 18px;
+	height: 18px;
+	accent-color: var(--gold-500);
 }
 
 .azad-login-forgot {
-  color: var(--gold-400);
-  text-decoration: none;
-  font-size: 0.86rem;
-  font-weight: 700;
+	color: var(--gold-400);
+	text-decoration: none;
+	font-size: 0.86rem;
+	font-weight: 700;
 }
 
-.azad-login-forgot:hover { color: var(--gold-300); }
+.azad-login-forgot:hover {
+	color: var(--gold-300);
+}
 
 .azad-login-submit {
-  width: 100%;
-  min-height: 54px;
-  margin-top: 8px;
-  border: 0;
-  border-radius: 13px;
-  background: linear-gradient(135deg, var(--gold-300), var(--gold-500) 50%, var(--gold-700));
-  color: #091525
-;
-  font-family: inherit;
-  font-size: 1.02rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: 0 10px 28px rgba(215,167,65,0.27);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+	width: 100%;
+	min-height: 54px;
+	margin-top: 8px;
+	border: 0;
+	border-radius: 13px;
+	background: linear-gradient(
+		135deg,
+		var(--gold-300),
+		var(--gold-500) 50%,
+		var(--gold-700)
+	);
+	color: #091525;
+	font-family: inherit;
+	font-size: 1.02rem;
+	font-weight: 800;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	box-shadow: 0 10px 28px rgba(215, 167, 65, 0.27);
+	transition:
+		transform 0.16s ease,
+		box-shadow 0.16s ease,
+		filter 0.16s ease;
 }
 
 .azad-login-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 34px rgba(215,167,65,0.36);
-  filter: saturate(1.03);
+	transform: translateY(-1px);
+	box-shadow: 0 14px 34px rgba(215, 167, 65, 0.36);
+	filter: saturate(1.03);
 }
 
 .azad-login-submit.is-loading {
-  opacity: 0.72;
-  pointer-events: none;
+	opacity: 0.72;
+	pointer-events: none;
 }
 
 .azad-login-footer {
-  position: relative;
-  z-index: 4;
-  text-align: center;
-  padding: 24px 48px 32px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  font-size: 0.82rem;
-  color: var(--text-muted);
+	position: relative;
+	z-index: 4;
+	text-align: center;
+	padding: 24px 48px 32px;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	font-size: 0.82rem;
+	color: var(--text-muted);
 }
 
 .azad-login-footer span {
-  color: var(--gold-400);
-  font-weight: 700;
+	color: var(--gold-400);
+	font-weight: 700;
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @media (max-width: 1023px) {
-  .azad-login-shell {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 32px 24px 60px;
-  }
-  .azad-login-brand {
-    text-align: center;
-  }
-  .azad-login-brand__logo {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .azad-login-brand__text {
-    margin: 0 auto 26px;
-  }
-  .azad-login-trust {
-    justify-content: center;
-  }
-  .azad-login-card {
-    max-width: 100%;
-  }
+	.azad-login-shell {
+		grid-template-columns: 1fr;
+		gap: 32px;
+		padding: 32px 24px 60px;
+	}
+	.azad-login-brand {
+		text-align: center;
+	}
+	.azad-login-brand__logo {
+		margin-left: auto;
+		margin-right: auto;
+	}
+	.azad-login-brand__text {
+		margin: 0 auto 26px;
+	}
+	.azad-login-trust {
+		justify-content: center;
+	}
+	.azad-login-card {
+		max-width: 100%;
+	}
 }
 
 @media (max-width: 767px) {
-  .azad-login-shell {
-    padding: 18px 16px 44px;
-    gap: 22px;
-  }
-  .azad-login-brand__text {
-    display: none;
-  }
-  .azad-login-trust {
-    display: none;
-  }
-  .azad-login-card {
-    padding: 24px 18px;
-    border-radius: 18px;
-  }
-  .azad-login-card__title {
-    font-size: 1.35rem;
-  }
-  .azad-login-tabs {
-    grid-template-columns: 1fr;
-  }
-  .azad-login-submit {
-    min-height: 48px;
-    font-size: 0.98rem;
-  }
-  .azad-login-footer {
-    padding: 16px;
-  }
+	.azad-login-shell {
+		padding: 18px 16px 44px;
+		gap: 22px;
+	}
+	.azad-login-brand__text {
+		display: none;
+	}
+	.azad-login-trust {
+		display: none;
+	}
+	.azad-login-card {
+		padding: 24px 18px;
+		border-radius: 18px;
+	}
+	.azad-login-card__title {
+		font-size: 1.35rem;
+	}
+	.azad-login-tabs {
+		grid-template-columns: 1fr;
+	}
+	.azad-login-submit {
+		min-height: 48px;
+		font-size: 0.98rem;
+	}
+	.azad-login-footer {
+		padding: 16px;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

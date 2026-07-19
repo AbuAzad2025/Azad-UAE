@@ -456,12 +456,12 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   // إبقاء يافطة التحذير الرئيسية ثابتة دائماً
   // لا يتم إخفاء alert-danger أبداً
   
   // زيادة عمر التحذيرات الأخرى إلى الضعف (10 ثواني بدلاً من 5)
-  setTimeout(function() {
+  setTimeout(() => {
     $('.alert:not(.alert-danger)').fadeOut('slow');
   }, 10000);
   

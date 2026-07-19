@@ -306,9 +306,7 @@ class TestImportProducts:
             inner = ctx["product_query"].filter.return_value
             inner.filter.return_value = inner
             inner.first.return_value = None
-            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = (
-                existing_cat
-            )
+            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = existing_cat
             resp = product_client_upload.post(
                 "/products/import",
                 data={"file": (BytesIO(b"x"), "products.xlsx")},
@@ -1012,9 +1010,7 @@ class TestImportProductsDirect:
             patch("routes.products.ProductCategory") as pc_cls,
         ):
             ctx["product_query"].filter.return_value = inner
-            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = (
-                None
-            )
+            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
             with patch("routes.products._read_import_dataframe", return_value=df):
                 file_mock = MagicMock()
                 file_mock.filename = "products.xlsx"

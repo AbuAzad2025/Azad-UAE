@@ -75,7 +75,9 @@ def _persist_seed_file(seed: str) -> None:
         try:
             os.chmod(path, 0o600)
         except OSError:
-            logger.warning("Could not set restrictive permissions on master seed file: %s", path)
+            logger.warning(
+                "Could not set restrictive permissions on master seed file: %s", path
+            )
     except OSError as exc:
         logger.warning("Could not persist master daily seed file: %s", exc)
 

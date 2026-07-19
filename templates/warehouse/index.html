@@ -318,7 +318,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   const table = $('#warehouseTable').DataTable({
     language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
     pageLength: 50,
@@ -340,7 +340,7 @@ $(document).ready(function() {
   });
 
   $('#filterLow').on('click', function() {
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+    $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
       const row = table.row(dataIndex).node();
       return $(row).data('status') === 'low';
     });
@@ -351,7 +351,7 @@ $(document).ready(function() {
   });
 
   $('#filterOut').on('click', function() {
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+    $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
       const row = table.row(dataIndex).node();
       return $(row).data('status') === 'out';
     });

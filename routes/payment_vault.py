@@ -237,9 +237,7 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
     except Exception:
         from flask import current_app
 
-        current_app.logger.exception(
-            "Failed to track API key %s usage", api_key_id
-        )
+        current_app.logger.exception("Failed to track API key %s usage", api_key_id)
 
     return None
 
@@ -380,7 +378,9 @@ def dashboard():
             for p in purchases + donation_list
             if p.status == "completed"
         ),
-        "pending_count": sum(1 for p in purchases + donation_list if p.status == "pending"),
+        "pending_count": sum(
+            1 for p in purchases + donation_list if p.status == "pending"
+        ),
     }
 
     # إحصائيات اليوم

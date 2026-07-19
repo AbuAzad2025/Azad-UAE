@@ -178,7 +178,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready((() => {
   $('#outOfStockTable').DataTable({
     language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
     pageLength: 50,
@@ -196,15 +196,14 @@ $(document).ready(function() {
   });
 
   // Show urgent notification
-  if ({{ products|length }} > 0) {
-    setTimeout(function() {
+  if ({{ products|length }}) > 0) 
+    setTimeout(() => {
       UI.toast(
         '🚨 {{ t('يوجد') }} {{ products|length }} {{ t('Product_2') }} {{ t('منفذ') }} من {{ t('Inventory') }} - {{ t('يتطلب') }} {{ t('إجراء') }} {{ t('عاجل') }}!',
         'error',
         5000
       );
     }, 500);
-  }
 });
 </script>
 {% endblock %}

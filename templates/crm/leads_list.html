@@ -48,7 +48,7 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-$(document).ready(function(){
+$(document).ready(()=> {
   if($.fn.DataTable && !$.fn.DataTable.isDataTable('#leadsTable')){
     $('#leadsTable').DataTable({
       language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},

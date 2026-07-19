@@ -87,12 +87,8 @@ def _dashboard_db_query():
     q.filter.return_value.scalar.return_value = Decimal("0")
     q.scalar.return_value = Decimal("0")
     q.join.return_value.filter.return_value.distinct.return_value.count.return_value = 0
-    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-        []
-    )
-    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-        []
-    )
+    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    q.outerjoin.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
     q.filter.return_value.group_by.return_value.all.return_value = []
     q.select_from.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
         "0"
@@ -1180,7 +1176,10 @@ class TestOwnerPostRoutes:
     def test_api_tenant_extend_subscription_explicit_end(self, owner_client):
         resp = owner_client.post(
             "/owner/api/tenant/2/extend-subscription",
-            json={"subscription_end": "2030-12-31T00:00:00", "subscription_plan": "enterprise"},
+            json={
+                "subscription_end": "2030-12-31T00:00:00",
+                "subscription_plan": "enterprise",
+            },
         )
         assert resp.status_code == 200
         data = resp.get_json()
@@ -1515,9 +1514,7 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code in (302, 303, 200)
 
     def test_browse_table_valid(self, owner_client):
-        resp = owner_client.get(
-            "/owner/browse-table/customers", follow_redirects=False
-        )
+        resp = owner_client.get("/owner/browse-table/customers", follow_redirects=False)
         assert resp.status_code in (302, 303)
 
     def test_browse_table_invalid(self, owner_client):

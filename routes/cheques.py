@@ -288,7 +288,9 @@ def create():
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception("Failed to log currency resolution error for cheque creation")
+                    current_app.logger.exception(
+                        "Failed to log currency resolution error for cheque creation"
+                    )
                 default_currency = get_system_default_currency()
             currency = request.form.get("currency") or default_currency
 
@@ -418,6 +420,7 @@ def view(**kwargs):
     today = datetime.now().strftime("%Y-%m-%d")
 
     from models import Tenant
+
     tenant_default_currency = ""
     tenant = Tenant.get_current()
     if tenant:
@@ -478,7 +481,9 @@ def edit(**kwargs):
                             exception=e,
                         )
                     except Exception:
-                        current_app.logger.exception("Failed to log currency resolution error for cheque update")
+                        current_app.logger.exception(
+                            "Failed to log currency resolution error for cheque update"
+                        )
                     default_currency = get_system_default_currency()
                 cheque.currency = request.form.get("currency") or default_currency
 

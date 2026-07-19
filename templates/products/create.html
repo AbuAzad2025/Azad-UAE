@@ -340,10 +340,9 @@
 {% include 'partials/select2_assets.html' %}
 <script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
-$(function() {
+$(() => {
   const partnersList = $('#partnersList');
-  let partnerOptions = '<option value="">اختر شريكاً...</option>';
-  {{ partners_json | tojson }}.forEach(function (partner) {
+  let partnerOptions = '<option value="">اختر شريكاً...</option>';partners_json | tojson .forEach(function (partner) {
     partnerOptions += '<option value="' + partner.id + '">' + partner.name + '</option>';
   });
 
@@ -358,7 +357,7 @@ $(function() {
     if (partnerId) $('#' + rowId + ' select').val(String(partnerId));
   }
 
-  $('#addPartnerBtn').on('click', function() { addPartnerRow(); });
+  $('#addPartnerBtn').on('click', () => { addPartnerRow(); });
   $(document).on('click', '.remove-partner-btn', function() { $('#' + $(this).data('row')).remove(); });
 
   $('#merchant_customer_id').on('change', function() {
@@ -369,13 +368,13 @@ $(function() {
 
   initProductCategoryControls({
     createUrl: "{{ url_for('products.create_category') }}",
-    updateUrl: function(id) { return "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'); },
-    deleteUrl: function(id) { return "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/'); }
+    updateUrl: (id) => "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'),
+    deleteUrl: (id) => "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/')
   });
 
-  $('#pcAdvanced').on('show.bs.collapse', function() {
+  $('#pcAdvanced').on('show.bs.collapse', () => {
     $('.pc-advanced-toggle i').removeClass('fa-chevron-down').addClass('fa-chevron-up');
-  }).on('hide.bs.collapse', function() {
+  }).on('hide.bs.collapse', () => {
     $('.pc-advanced-toggle i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
   });
 });

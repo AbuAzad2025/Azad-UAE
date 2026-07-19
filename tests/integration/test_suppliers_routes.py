@@ -171,9 +171,9 @@ class TestSupplierBranchIsolation:
             resp = client.get("/suppliers/")
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
-        assert (
-            f"SuppB1 {tid}" not in html
-        ), "Supplier from Branch 1 visible in Branch 2 list"
+        assert f"SuppB1 {tid}" not in html, (
+            "Supplier from Branch 1 visible in Branch 2 list"
+        )
 
     def test_supplier_branch_isolation_reverse(self, app, db_session, client):
         """Supplier in Branch 2 must NOT appear in Branch 1's list."""
@@ -268,9 +268,9 @@ class TestSupplierBranchIsolation:
             resp = client.get("/suppliers/")
         assert resp.status_code == 200
         html = resp.data.decode("utf-8")
-        assert (
-            f"SuppB2 {tid}" not in html
-        ), "Supplier from Branch 2 visible in Branch 1 list"
+        assert f"SuppB2 {tid}" not in html, (
+            "Supplier from Branch 2 visible in Branch 1 list"
+        )
 
 
 class TestSupplierStatement:
@@ -735,9 +735,9 @@ class TestSupplierDelete:
         db_session.expire_all()
         deleted = Supplier.query.get(supplier.id)
         assert deleted is not None, "Supplier hard-deleted despite having purchases"
-        assert (
-            deleted.is_active is False
-        ), "Supplier should be inactive after soft-delete"
+        assert deleted.is_active is False, (
+            "Supplier should be inactive after soft-delete"
+        )
 
     def test_delete_supplier_without_links_hard_deletes(self, app, db_session, client):
         """Supplier with NO linked records must be hard-deleted."""
@@ -1047,6 +1047,6 @@ class TestSupplierCreditLimit:
         db_session.commit()
 
         db_session.refresh(supplier)
-        assert (
-            float(supplier.total_purchases_aed or 0) >= 800
-        ), "Supplier total_purchases_aed should reflect existing balance"
+        assert float(supplier.total_purchases_aed or 0) >= 800, (
+            "Supplier total_purchases_aed should reflect existing balance"
+        )

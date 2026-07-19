@@ -47,7 +47,9 @@ def resolve_default_currency(tenant=None) -> str:
         if val:
             return val.upper()
     except Exception:
-        logger.debug("Failed to resolve default currency from SystemSettings", exc_info=True)
+        logger.debug(
+            "Failed to resolve default currency from SystemSettings", exc_info=True
+        )
     return get_system_default_currency()
 
 
@@ -75,7 +77,11 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
                     if val:
                         return val
         except Exception:
-            logger.debug("Failed to resolve base currency for tenant %s", tenant_id, exc_info=True)
+            logger.debug(
+                "Failed to resolve base currency for tenant %s",
+                tenant_id,
+                exc_info=True,
+            )
     return get_system_default_currency()
 
 

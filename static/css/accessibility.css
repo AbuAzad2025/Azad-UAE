@@ -1,165 +1,173 @@
 :root {
-  /* Landing/Brand Palette */
-  --gulf-gold: #D4AF37;
-  --gulf-blue: #1B4D89;
-  --gradient-gulf: linear-gradient(135deg, #1B4D89 0%, #6B46C1 50%, #D4AF37 100%);
+	/* Landing/Brand Palette */
+	--gulf-gold: #d4af37;
+	--gulf-blue: #1b4d89;
+	--gradient-gulf: linear-gradient(
+		135deg,
+		#1b4d89 0%,
+		#6b46c1 50%,
+		#d4af37 100%
+	);
 
-  /* Core Palette */
-  --color-surface: #f5f7fa;
-  --color-surface-elevated: #ffffff;
-  --color-surface-strong: #e3e8f0;
-  --color-border: #cbd5e1;
-  --color-text-strong: #111827;
-  --color-text-regular: #1f2937;
-  --color-text-muted: #4b5563;
-  --color-text-soft: #64748b;
+	/* Core Palette */
+	--color-surface: #f5f7fa;
+	--color-surface-elevated: #ffffff;
+	--color-surface-strong: #e3e8f0;
+	--color-border: #cbd5e1;
+	--color-text-strong: #111827;
+	--color-text-regular: #1f2937;
+	--color-text-muted: #4b5563;
+	--color-text-soft: #64748b;
 
-  --color-primary: #2563eb;
-  --color-primary-strong: #1d4ed8;
-  --color-on-primary: #ffffff;
+	--color-primary: #2563eb;
+	--color-primary-strong: #1d4ed8;
+	--color-on-primary: #ffffff;
 
-  --color-secondary: #475569;
-  --color-secondary-strong: #334155;
-  --color-on-secondary: #ffffff;
+	--color-secondary: #475569;
+	--color-secondary-strong: #334155;
+	--color-on-secondary: #ffffff;
 
-  --color-success: #16a34a;
-  --color-success-strong: #15803d;
-  --color-on-success: #ffffff;
+	--color-success: #16a34a;
+	--color-success-strong: #15803d;
+	--color-on-success: #ffffff;
 
-  --color-danger: #dc2626;
-  --color-danger-strong: #b91c1c;
-  --color-on-danger: #ffffff;
+	--color-danger: #dc2626;
+	--color-danger-strong: #b91c1c;
+	--color-on-danger: #ffffff;
 
-  --color-warning: #f97316;
-  --color-warning-strong: #ea580c;
-  --color-on-warning: #111827;
+	--color-warning: #f97316;
+	--color-warning-strong: #ea580c;
+	--color-on-warning: #111827;
 
-  --color-info: #0ea5e9;
-  --color-info-strong: #0284c7;
-  --color-on-info: #ffffff;
+	--color-info: #0ea5e9;
+	--color-info-strong: #0284c7;
+	--color-on-info: #ffffff;
 
-  --color-light: #e5e9f2;
-  --color-light-strong: #d2d7e2;
-  --color-on-light: #111827;
+	--color-light: #e5e9f2;
+	--color-light-strong: #d2d7e2;
+	--color-on-light: #111827;
 
-  --color-dark: #0f172a;
-  --color-dark-strong: #0b1220;
-  --color-on-dark: #f8fafc;
+	--color-dark: #0f172a;
+	--color-dark-strong: #0b1220;
+	--color-on-dark: #f8fafc;
 
-  --color-focus-ring: rgba(37, 99, 235, 0.35);
-  --color-input-bg: #ffffff;
+	--color-focus-ring: rgba(37, 99, 235, 0.35);
+	--color-input-bg: #ffffff;
 
-  /* Map legacy variables to the accessible palette */
-  --primary-color: var(--color-primary);
-  --primary-hover: var(--color-primary-strong);
-  --secondary-color: var(--color-secondary);
-  --success-color: var(--color-success);
-  --danger-color: var(--color-danger);
-  --warning-color: var(--color-warning);
-  --info-color: var(--color-info);
-  --light-color: var(--color-light);
-  --dark-color: var(--color-dark);
+	/* Map legacy variables to the accessible palette */
+	--primary-color: var(--color-primary);
+	--primary-hover: var(--color-primary-strong);
+	--secondary-color: var(--color-secondary);
+	--success-color: var(--color-success);
+	--danger-color: var(--color-danger);
+	--warning-color: var(--color-warning);
+	--info-color: var(--color-info);
+	--light-color: var(--color-light);
+	--dark-color: var(--color-dark);
 
-  --sidebar-link-default: rgba(243, 249, 255, 0.9);
-  --sidebar-link-hover: #ffffff;
-  --sidebar-link-hover-bg: rgba(255, 255, 255, 0.25);
-  --sidebar-link-active-border: rgba(255, 255, 255, 0.45);
-  --sidebar-link-focus-border: #38bdf8;
-  --sidebar-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  --sidebar-brand-bg: linear-gradient(135deg, #2563eb 0%, #475569 100%);
+	--sidebar-link-default: rgba(243, 249, 255, 0.9);
+	--sidebar-link-hover: #ffffff;
+	--sidebar-link-hover-bg: rgba(255, 255, 255, 0.25);
+	--sidebar-link-active-border: rgba(255, 255, 255, 0.45);
+	--sidebar-link-focus-border: #38bdf8;
+	--sidebar-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+	--sidebar-brand-bg: linear-gradient(135deg, #2563eb 0%, #475569 100%);
 
-  --content-bg: var(--color-surface);
-  --content-text: var(--color-text-strong);
-  --content-text-muted: var(--color-text-muted);
+	--content-bg: var(--color-surface);
+	--content-text: var(--color-text-strong);
+	--content-text-muted: var(--color-text-muted);
 
-  --card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --card-header-text: #ffffff;
+	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	--card-header-text: #ffffff;
 
-  --footer-bg: #eef2f8;
-  --footer-text: var(--color-text-regular);
+	--footer-bg: #eef2f8;
+	--footer-text: var(--color-text-regular);
 }
 
 body {
-  font-weight: 400;
+	font-weight: 400;
 }
 
 body:not(.keep-theme) {
-  background-color: var(--color-surface) !important;
-  color: var(--color-text-regular) !important;
+	background-color: var(--color-surface) !important;
+	color: var(--color-text-regular) !important;
 }
 
 body:not(.keep-theme) .content-wrapper {
-  background-color: var(--color-surface) !important;
-  color: var(--color-text-regular) !important;
+	background-color: var(--color-surface) !important;
+	color: var(--color-text-regular) !important;
 }
 
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
 .sr-only-focusable:focus {
-  position: static;
-  width: auto;
-  height: auto;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-  margin: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--color-surface-elevated);
-  color: var(--color-text-strong);
-  border: 2px solid var(--color-primary);
-  border-radius: 4px;
-  z-index: 9999;
-  text-align: center;
-  font-weight: 600;
+	position: static;
+	width: auto;
+	height: auto;
+	overflow: visible;
+	clip: auto;
+	white-space: normal;
+	margin: 0.5rem;
+	padding: 0.5rem 1rem;
+	background: var(--color-surface-elevated);
+	color: var(--color-text-strong);
+	border: 2px solid var(--color-primary);
+	border-radius: 4px;
+	z-index: 9999;
+	text-align: center;
+	font-weight: 600;
 }
 a {
-  color: var(--color-primary) !important;
-  text-decoration-color: rgba(11, 94, 215, 0.35);
+	color: var(--color-primary) !important;
+	text-decoration-color: rgba(11, 94, 215, 0.35);
 }
 
 a:hover,
 a:focus {
-  color: var(--color-primary-strong) !important;
+	color: var(--color-primary-strong) !important;
 }
 
 /* Buttons */
 button,
 .btn {
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border-width: 1px !important;
-  text-transform: none;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	border-width: 1px !important;
+	text-transform: none;
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease,
+		box-shadow 0.2s ease;
 }
 
 .btn i,
 .btn svg,
 .btn span,
 .btn small {
-  color: inherit !important;
-  fill: currentColor !important;
+	color: inherit !important;
+	fill: currentColor !important;
 }
 
 .btn,
 .input-group .btn {
-  min-height: 2.45rem !important;
-  padding-right: 1rem !important;
-  padding-left: 1rem !important;
+	min-height: 2.45rem !important;
+	padding-right: 1rem !important;
+	padding-left: 1rem !important;
 }
 
 .btn:focus-visible,
 button:focus-visible {
-  outline: 3px solid var(--color-focus-ring);
-  outline-offset: 2px;
+	outline: 3px solid var(--color-focus-ring);
+	outline-offset: 2px;
 }
 
 /* purgecss start ignore */
@@ -172,20 +180,28 @@ button:focus-visible {
 .info-box .bg-primary,
 .alert-primary,
 .pagination .page-item.active .page-link {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
-  border-color: var(--color-primary-strong) !important;
-  color: var(--color-on-primary) !important;
-  -webkit-text-fill-color: var(--color-on-primary) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+	background: linear-gradient(
+		135deg,
+		var(--color-primary) 0%,
+		var(--color-primary-strong) 100%
+	) !important;
+	border-color: var(--color-primary-strong) !important;
+	color: var(--color-on-primary) !important;
+	-webkit-text-fill-color: var(--color-on-primary) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 /* purgecss end ignore */
 
 .btn-primary:hover,
 .btn-primary:focus,
 .bg-primary:hover {
-  background: linear-gradient(135deg, var(--color-primary-strong) 0%, var(--color-primary) 100%) !important;
-  color: var(--color-on-primary) !important;
-  box-shadow: 0 8px 18px rgba(9, 73, 163, 0.28) !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-primary-strong) 0%,
+		var(--color-primary) 100%
+	) !important;
+	color: var(--color-on-primary) !important;
+	box-shadow: 0 8px 18px rgba(9, 73, 163, 0.28) !important;
 }
 
 /* purgecss start ignore */
@@ -194,18 +210,26 @@ button:focus-visible {
 .callout.callout-secondary,
 .badge-secondary,
 .label-secondary {
-  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-strong) 100%) !important;
-  border-color: var(--color-secondary-strong) !important;
-  color: var(--color-on-secondary) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+	background: linear-gradient(
+		135deg,
+		var(--color-secondary) 0%,
+		var(--color-secondary-strong) 100%
+	) !important;
+	border-color: var(--color-secondary-strong) !important;
+	color: var(--color-on-secondary) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 /* purgecss end ignore */
 
 .btn-secondary:hover,
 .btn-secondary:focus {
-  background: linear-gradient(135deg, var(--color-secondary-strong) 0%, var(--color-secondary) 100%) !important;
-  color: var(--color-on-secondary) !important;
-  box-shadow: 0 8px 18px rgba(76, 29, 149, 0.28) !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-secondary-strong) 0%,
+		var(--color-secondary) 100%
+	) !important;
+	color: var(--color-on-secondary) !important;
+	box-shadow: 0 8px 18px rgba(76, 29, 149, 0.28) !important;
 }
 
 /* purgecss start ignore */
@@ -217,19 +241,19 @@ button:focus-visible {
 .small-box.bg-success,
 .info-box .bg-success,
 .alert-success {
-  background-color: var(--color-success) !important;
-  border-color: var(--color-success-strong) !important;
-  color: var(--color-on-success) !important;
-  -webkit-text-fill-color: var(--color-on-success) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+	background-color: var(--color-success) !important;
+	border-color: var(--color-success-strong) !important;
+	color: var(--color-on-success) !important;
+	-webkit-text-fill-color: var(--color-on-success) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 /* purgecss end ignore */
 
 .btn-success:hover,
 .btn-success:focus {
-  background-color: var(--color-success-strong) !important;
-  color: var(--color-on-success) !important;
-  box-shadow: 0 8px 18px rgba(15, 81, 50, 0.28) !important;
+	background-color: var(--color-success-strong) !important;
+	color: var(--color-on-success) !important;
+	box-shadow: 0 8px 18px rgba(15, 81, 50, 0.28) !important;
 }
 
 /* purgecss start ignore */
@@ -241,19 +265,19 @@ button:focus-visible {
 .small-box.bg-danger,
 .info-box .bg-danger,
 .alert-danger {
-  background-color: var(--color-danger) !important;
-  border-color: var(--color-danger-strong) !important;
-  color: var(--color-on-danger) !important;
-  -webkit-text-fill-color: var(--color-on-danger) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+	background-color: var(--color-danger) !important;
+	border-color: var(--color-danger-strong) !important;
+	color: var(--color-on-danger) !important;
+	-webkit-text-fill-color: var(--color-on-danger) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 /* purgecss end ignore */
 
 .btn-danger:hover,
 .btn-danger:focus {
-  background-color: var(--color-danger-strong) !important;
-  color: var(--color-on-danger) !important;
-  box-shadow: 0 8px 18px rgba(155, 28, 28, 0.28) !important;
+	background-color: var(--color-danger-strong) !important;
+	color: var(--color-on-danger) !important;
+	box-shadow: 0 8px 18px rgba(155, 28, 28, 0.28) !important;
 }
 
 /* purgecss start ignore */
@@ -265,18 +289,18 @@ button:focus-visible {
 .small-box.bg-warning,
 .info-box .bg-warning,
 .alert-warning {
-  background-color: var(--color-warning) !important;
-  border-color: var(--color-warning-strong) !important;
-  color: var(--color-on-warning) !important;
-  text-shadow: none !important;
+	background-color: var(--color-warning) !important;
+	border-color: var(--color-warning-strong) !important;
+	color: var(--color-on-warning) !important;
+	text-shadow: none !important;
 }
 /* purgecss end ignore */
 
 .btn-warning:hover,
 .btn-warning:focus {
-  background-color: var(--color-warning-strong) !important;
-  color: var(--color-on-warning) !important;
-  box-shadow: 0 8px 18px rgba(180, 83, 9, 0.24) !important;
+	background-color: var(--color-warning-strong) !important;
+	color: var(--color-on-warning) !important;
+	box-shadow: 0 8px 18px rgba(180, 83, 9, 0.24) !important;
 }
 
 /* purgecss start ignore */
@@ -288,19 +312,19 @@ button:focus-visible {
 .small-box.bg-info,
 .info-box .bg-info,
 .alert-info {
-  background-color: var(--color-info) !important;
-  border-color: var(--color-info-strong) !important;
-  color: var(--color-on-info) !important;
-  -webkit-text-fill-color: var(--color-on-info) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+	background-color: var(--color-info) !important;
+	border-color: var(--color-info-strong) !important;
+	color: var(--color-on-info) !important;
+	-webkit-text-fill-color: var(--color-on-info) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 /* purgecss end ignore */
 
 .btn-info:hover,
 .btn-info:focus {
-  background-color: var(--color-info-strong) !important;
-  color: var(--color-on-info) !important;
-  box-shadow: 0 8px 18px rgba(2, 86, 127, 0.28) !important;
+	background-color: var(--color-info-strong) !important;
+	color: var(--color-on-info) !important;
+	box-shadow: 0 8px 18px rgba(2, 86, 127, 0.28) !important;
 }
 
 /* purgecss start ignore */
@@ -310,10 +334,10 @@ button:focus-visible {
 .badge-light,
 .label-light,
 .alert-light {
-  background-color: var(--color-light) !important;
-  border-color: var(--color-light-strong) !important;
-  color: var(--color-on-light) !important;
-  text-shadow: none !important;
+	background-color: var(--color-light) !important;
+	border-color: var(--color-light-strong) !important;
+	color: var(--color-on-light) !important;
+	text-shadow: none !important;
 }
 /* purgecss end ignore */
 
@@ -326,118 +350,118 @@ button:focus-visible {
 .alert-dark,
 .small-box.bg-dark,
 .info-box .bg-dark {
-  background-color: var(--color-dark) !important;
-  border-color: var(--color-dark-strong) !important;
-  color: var(--color-on-dark) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+	background-color: var(--color-dark) !important;
+	border-color: var(--color-dark-strong) !important;
+	color: var(--color-on-dark) !important;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
 /* purgecss end ignore */
 
 .btn-outline-primary {
-  color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
+	color: var(--color-primary) !important;
+	border-color: var(--color-primary) !important;
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
-  color: var(--color-on-primary) !important;
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary-strong) !important;
-  box-shadow: 0 6px 14px rgba(9, 73, 163, 0.22) !important;
+	color: var(--color-on-primary) !important;
+	background-color: var(--color-primary) !important;
+	border-color: var(--color-primary-strong) !important;
+	box-shadow: 0 6px 14px rgba(9, 73, 163, 0.22) !important;
 }
 
 .btn-outline-secondary {
-  color: var(--color-secondary) !important;
-  border-color: var(--color-secondary) !important;
+	color: var(--color-secondary) !important;
+	border-color: var(--color-secondary) !important;
 }
 
 .btn-outline-secondary:hover,
 .btn-outline-secondary:focus {
-  color: var(--color-on-secondary) !important;
-  background-color: var(--color-secondary) !important;
-  border-color: var(--color-secondary-strong) !important;
-  box-shadow: 0 6px 14px rgba(76, 29, 149, 0.22) !important;
+	color: var(--color-on-secondary) !important;
+	background-color: var(--color-secondary) !important;
+	border-color: var(--color-secondary-strong) !important;
+	box-shadow: 0 6px 14px rgba(76, 29, 149, 0.22) !important;
 }
 
 .btn-outline-success {
-  color: var(--color-success) !important;
-  border-color: var(--color-success) !important;
+	color: var(--color-success) !important;
+	border-color: var(--color-success) !important;
 }
 
 .btn-outline-success:hover,
 .btn-outline-success:focus {
-  color: var(--color-on-success) !important;
-  background-color: var(--color-success) !important;
-  border-color: var(--color-success-strong) !important;
-  box-shadow: 0 6px 14px rgba(15, 81, 50, 0.22) !important;
+	color: var(--color-on-success) !important;
+	background-color: var(--color-success) !important;
+	border-color: var(--color-success-strong) !important;
+	box-shadow: 0 6px 14px rgba(15, 81, 50, 0.22) !important;
 }
 
 .btn-outline-danger {
-  color: var(--color-danger) !important;
-  border-color: var(--color-danger) !important;
+	color: var(--color-danger) !important;
+	border-color: var(--color-danger) !important;
 }
 
 .btn-outline-danger:hover,
 .btn-outline-danger:focus {
-  color: var(--color-on-danger) !important;
-  background-color: var(--color-danger) !important;
-  border-color: var(--color-danger-strong) !important;
-  box-shadow: 0 6px 14px rgba(155, 28, 28, 0.22) !important;
+	color: var(--color-on-danger) !important;
+	background-color: var(--color-danger) !important;
+	border-color: var(--color-danger-strong) !important;
+	box-shadow: 0 6px 14px rgba(155, 28, 28, 0.22) !important;
 }
 
 .btn-outline-warning {
-  color: var(--color-warning) !important;
-  border-color: var(--color-warning) !important;
+	color: var(--color-warning) !important;
+	border-color: var(--color-warning) !important;
 }
 
 .btn-outline-warning:hover,
 .btn-outline-warning:focus {
-  color: var(--color-on-warning) !important;
-  background-color: var(--color-warning) !important;
-  border-color: var(--color-warning-strong) !important;
-  box-shadow: 0 6px 14px rgba(180, 83, 9, 0.2) !important;
+	color: var(--color-on-warning) !important;
+	background-color: var(--color-warning) !important;
+	border-color: var(--color-warning-strong) !important;
+	box-shadow: 0 6px 14px rgba(180, 83, 9, 0.2) !important;
 }
 
 .btn-outline-info {
-  color: var(--color-info) !important;
-  border-color: var(--color-info) !important;
+	color: var(--color-info) !important;
+	border-color: var(--color-info) !important;
 }
 
 .btn-outline-info:hover,
 .btn-outline-info:focus {
-  color: var(--color-on-info) !important;
-  background-color: var(--color-info) !important;
-  border-color: var(--color-info-strong) !important;
-  box-shadow: 0 6px 14px rgba(2, 86, 127, 0.22) !important;
+	color: var(--color-on-info) !important;
+	background-color: var(--color-info) !important;
+	border-color: var(--color-info-strong) !important;
+	box-shadow: 0 6px 14px rgba(2, 86, 127, 0.22) !important;
 }
 
 .btn-outline-dark {
-  color: var(--color-dark) !important;
-  border-color: var(--color-dark) !important;
+	color: var(--color-dark) !important;
+	border-color: var(--color-dark) !important;
 }
 
 .btn-outline-dark:hover,
 .btn-outline-dark:focus {
-  color: var(--color-on-dark) !important;
-  background-color: var(--color-dark) !important;
+	color: var(--color-on-dark) !important;
+	background-color: var(--color-dark) !important;
 }
 
 .btn-link {
-  color: var(--color-primary) !important;
+	color: var(--color-primary) !important;
 }
 
 .btn-link:hover,
 .btn-link:focus {
-  color: var(--color-primary-strong) !important;
+	color: var(--color-primary-strong) !important;
 }
 
 /* Stronger disabled buttons readability - no opacity dimming */
 .btn:disabled,
 .btn.disabled,
 button:disabled {
-  opacity: 1 !important;
-  filter: none !important;
-  cursor: not-allowed !important;
+	opacity: 1 !important;
+	filter: none !important;
+	cursor: not-allowed !important;
 }
 
 /* Ensure icon/text in colored buttons stays readable */
@@ -447,8 +471,8 @@ button:disabled {
 .btn svg,
 .btn span,
 .btn small {
-  color: inherit !important;
-  fill: currentColor !important;
+	color: inherit !important;
+	fill: currentColor !important;
 }
 
 /* Form controls */
@@ -457,17 +481,17 @@ select,
 textarea,
 .form-control,
 .custom-select {
-  font-size: 0.95rem !important;
-  font-weight: 500 !important;
-  line-height: 1.6 !important;
-  min-height: 3rem !important;
-  height: auto !important;
-  color: var(--color-text-regular) !important;
-  background-color: var(--color-input-bg) !important;
-  border: 2px solid var(--color-border) !important;
-  border-radius: 0.6rem !important;
-  padding: 0.6rem 1rem !important;
-  box-shadow: none !important;
+	font-size: 0.95rem !important;
+	font-weight: 500 !important;
+	line-height: 1.6 !important;
+	min-height: 3rem !important;
+	height: auto !important;
+	color: var(--color-text-regular) !important;
+	background-color: var(--color-input-bg) !important;
+	border: 2px solid var(--color-border) !important;
+	border-radius: 0.6rem !important;
+	padding: 0.6rem 1rem !important;
+	box-shadow: none !important;
 }
 
 .form-control:focus,
@@ -475,208 +499,237 @@ textarea,
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--color-primary) !important;
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 1px;
-  box-shadow: 0 0 0 2px rgba(11, 94, 215, 0.15) !important;
+	border-color: var(--color-primary) !important;
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 1px;
+	box-shadow: 0 0 0 2px rgba(11, 94, 215, 0.15) !important;
 }
 
 .warehouse-select {
-  font-size: 0.95rem !important;
-  padding: 0.75rem 1rem !important;
-  height: auto !important;
-  min-height: 48px !important;
-  line-height: 1.5 !important;
-  background-position: left 0.75rem center !important;
+	font-size: 0.95rem !important;
+	padding: 0.75rem 1rem !important;
+	height: auto !important;
+	min-height: 48px !important;
+	line-height: 1.5 !important;
+	background-position: left 0.75rem center !important;
 }
 
 .warehouse-select option {
-  white-space: normal !important;
-  line-height: 1.45 !important;
-  font-size: 0.94rem !important;
+	white-space: normal !important;
+	line-height: 1.45 !important;
+	font-size: 0.94rem !important;
 }
 
 .form-control::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: var(--color-text-muted) !important;
-  opacity: 1 !important;
+	color: var(--color-text-muted) !important;
+	opacity: 1 !important;
 }
 
 select,
 select.form-control,
 .form-control {
-  color: var(--color-text-regular) !important;
+	color: var(--color-text-regular) !important;
 }
 
 select option,
 select.form-control option {
-  color: var(--color-text-regular) !important;
-  background-color: var(--color-input-bg) !important;
+	color: var(--color-text-regular) !important;
+	background-color: var(--color-input-bg) !important;
 }
 
 .form-group label,
 label {
-  color: var(--color-text-strong) !important;
-  font-weight: 600 !important;
+	color: var(--color-text-strong) !important;
+	font-weight: 600 !important;
 }
 
 .input-group-text {
-  background-color: var(--color-light) !important;
-  color: var(--color-on-light) !important;
-  border-color: var(--color-border) !important;
+	background-color: var(--color-light) !important;
+	color: var(--color-on-light) !important;
+	border-color: var(--color-border) !important;
 }
 
 /* Select2 overrides */
 /* purgecss start ignore */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {
-  min-height: 3rem !important;
-  border-color: var(--color-border) !important;
-  border-radius: 0.6rem !important;
-  background-color: var(--color-input-bg) !important;
-  padding: 0.4rem 0 !important;
+	min-height: 3rem !important;
+	border-color: var(--color-border) !important;
+	border-radius: 0.6rem !important;
+	background-color: var(--color-input-bg) !important;
+	padding: 0.4rem 0 !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .select2-container--default .select2-selection__rendered {
-  color: var(--color-text-regular) !important;
-  line-height: 2rem !important;
-  font-size: 0.95rem !important;
-  font-weight: 500 !important;
+	color: var(--color-text-regular) !important;
+	line-height: 2rem !important;
+	font-size: 0.95rem !important;
+	font-weight: 500 !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .select2-dropdown {
-  border-color: var(--color-primary) !important;
-  background-color: var(--color-surface-elevated) !important;
-  color: var(--color-text-regular) !important;
+	border-color: var(--color-primary) !important;
+	background-color: var(--color-surface-elevated) !important;
+	color: var(--color-text-regular) !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .select2-results__option {
-  color: var(--color-text-regular) !important;
+	color: var(--color-text-regular) !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .select2-results__option--highlighted[aria-selected] {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
+	background-color: var(--color-primary) !important;
+	color: var(--color-on-primary) !important;
 }
 /* purgecss end ignore */
 
 /* Tables */
 .table {
-  color: var(--color-text-regular) !important;
+	color: var(--color-text-regular) !important;
 }
 
 .table thead th {
-  background: linear-gradient(135deg, var(--color-dark) 0%, #1e293b 100%) !important;
-  color: var(--color-on-dark) !important;
-  border-color: #1e293b !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-dark) 0%,
+		#1e293b 100%
+	) !important;
+	color: var(--color-on-dark) !important;
+	border-color: #1e293b !important;
 }
 
 .table tbody tr:hover {
-  background-color: rgba(11, 94, 215, 0.08) !important;
+	background-color: rgba(11, 94, 215, 0.08) !important;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(15, 23, 42, 0.03) !important;
+	background-color: rgba(15, 23, 42, 0.03) !important;
 }
 
 /* Cards and panels */
 .card {
-  background-color: var(--color-surface-elevated) !important;
-  color: var(--color-text-regular) !important;
-  border: 1px solid rgba(15, 23, 42, 0.05) !important;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+	background-color: var(--color-surface-elevated) !important;
+	color: var(--color-text-regular) !important;
+	border: 1px solid rgba(15, 23, 42, 0.05) !important;
+	box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
 }
 
 .card .card-header {
-  background: var(--card-header-bg) !important;
-  color: var(--card-header-text) !important;
+	background: var(--card-header-bg) !important;
+	color: var(--card-header-text) !important;
 }
 
 .card .card-header h3,
 .card .card-header .card-title {
-  color: var(--card-header-text) !important;
+	color: var(--card-header-text) !important;
 }
 
 .small-box,
 .info-box {
-  background-color: var(--color-surface-elevated) !important;
-  color: var(--color-text-regular) !important;
-  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+	background-color: var(--color-surface-elevated) !important;
+	color: var(--color-text-regular) !important;
+	border: 1px solid rgba(15, 23, 42, 0.05) !important;
 }
 
 .info-box-icon {
-  color: var(--color-on-primary) !important;
+	color: var(--color-on-primary) !important;
 }
 
 /* Fix for colored info-boxes to prevent white-on-white */
-.info-box.bg-success, .small-box.bg-success { background-color: var(--color-success) !important; color: var(--color-on-success) !important; }
-.info-box.bg-info, .small-box.bg-info { background-color: var(--color-info) !important; color: var(--color-on-info) !important; }
-.info-box.bg-danger, .small-box.bg-danger { background-color: var(--color-danger) !important; color: var(--color-on-danger) !important; }
-.info-box.bg-warning, .small-box.bg-warning { background-color: #ffc107 !important; color: #1f2937 !important; }
-.info-box.bg-orange, .small-box.bg-orange { background-color: #fd7e14 !important; color: #ffffff !important; }
+.info-box.bg-success,
+.small-box.bg-success {
+	background-color: var(--color-success) !important;
+	color: var(--color-on-success) !important;
+}
+.info-box.bg-info,
+.small-box.bg-info {
+	background-color: var(--color-info) !important;
+	color: var(--color-on-info) !important;
+}
+.info-box.bg-danger,
+.small-box.bg-danger {
+	background-color: var(--color-danger) !important;
+	color: var(--color-on-danger) !important;
+}
+.info-box.bg-warning,
+.small-box.bg-warning {
+	background-color: #ffc107 !important;
+	color: #1f2937 !important;
+}
+.info-box.bg-orange,
+.small-box.bg-orange {
+	background-color: #fd7e14 !important;
+	color: #ffffff !important;
+}
 
-.info-box.bg-warning .info-box-icon, 
+.info-box.bg-warning .info-box-icon,
 .small-box.bg-warning .icon {
-  color: #1f2937 !important;
+	color: #1f2937 !important;
 }
 
 /* Alerts */
 .alert {
-  color: inherit !important;
+	color: inherit !important;
 }
 
 .alert a {
-  color: inherit !important;
-  text-decoration: underline;
+	color: inherit !important;
+	text-decoration: underline;
 }
 
 /* Badges */
 .badge,
 .label {
-  font-weight: 600 !important;
-  letter-spacing: 0.01em;
-  padding: 0.35rem 0.6rem !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.01em;
+	padding: 0.35rem 0.6rem !important;
 }
 
 /* Navigation */
 .main-sidebar {
-  background: var(--sidebar-bg) !important;
+	background: var(--sidebar-bg) !important;
 }
 
 .main-sidebar .nav-link,
-.sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link {
-  color: var(--sidebar-link-default) !important;
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link {
+	color: var(--sidebar-link-default) !important;
 }
 
 .main-sidebar .nav-link.active,
 .main-sidebar .nav-link:hover,
 .main-sidebar .nav-link:focus {
-  background: rgba(255, 255, 255, 0.3) !important;
-  color: #ffffff !important;
-  border: 1px solid var(--sidebar-link-active-border) !important;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
-  transform: translateX(-2px);
+	background: rgba(255, 255, 255, 0.3) !important;
+	color: #ffffff !important;
+	border: 1px solid var(--sidebar-link-active-border) !important;
+	box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+	transform: translateX(-2px);
 }
 
 .main-sidebar .nav-link .nav-icon {
-  color: rgba(243, 249, 255, 0.95) !important;
+	color: rgba(243, 249, 255, 0.95) !important;
 }
 
 .main-header.navbar,
 .navbar-white.navbar-light {
-  background: linear-gradient(135deg, #0b1220 0%, #111a2d 55%, #0b1220 100%) !important;
-  color: #f8fafc !important;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.35) !important;
-  box-shadow: 0 6px 22px rgba(8, 12, 24, 0.35) !important;
+	background: linear-gradient(
+		135deg,
+		#0b1220 0%,
+		#111a2d 55%,
+		#0b1220 100%
+	) !important;
+	color: #f8fafc !important;
+	border-bottom: 1px solid rgba(15, 23, 42, 0.35) !important;
+	box-shadow: 0 6px 22px rgba(8, 12, 24, 0.35) !important;
 }
 
 .main-header.navbar .navbar-brand,
@@ -684,108 +737,111 @@ label {
 .main-header.navbar .navbar-nav .nav-link i,
 .main-header.navbar .navbar-nav .nav-link span,
 .navbar-white.navbar-light .navbar-nav .nav-link {
-  color: #f8fafc !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  transition: color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+	color: #f8fafc !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.02em;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+	transition:
+		color 0.2s ease,
+		background-color 0.2s ease,
+		opacity 0.2s ease;
 }
 
 .main-header.navbar .navbar-nav .nav-link .fas,
 .main-header.navbar .navbar-nav .nav-link .far,
 .main-header.navbar .navbar-nav .nav-link .fab {
-  color: inherit !important;
-  opacity: 0.9;
+	color: inherit !important;
+	opacity: 0.9;
 }
 
 .main-header.navbar .navbar-nav .nav-link:hover,
 .main-header.navbar .navbar-nav .nav-link:focus {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.16) !important;
-  border-radius: 0.6rem;
-  opacity: 1;
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.16) !important;
+	border-radius: 0.6rem;
+	opacity: 1;
 }
 
 .main-header.navbar .navbar-nav .nav-link .badge {
-  background-color: rgba(255, 255, 255, 0.24) !important;
-  color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.24) !important;
+	color: #ffffff !important;
 }
 
 .main-header.navbar .form-control {
-  background-color: rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  min-height: 2.45rem !important;
-  padding-right: 1rem !important;
-  padding-left: 1rem !important;
+	background-color: rgba(255, 255, 255, 0.18) !important;
+	color: #ffffff !important;
+	border-color: rgba(255, 255, 255, 0.35) !important;
+	min-height: 2.45rem !important;
+	padding-right: 1rem !important;
+	padding-left: 1rem !important;
 }
 
 .main-header.navbar .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.88) !important;
+	color: rgba(255, 255, 255, 0.88) !important;
 }
 
 .main-header.navbar .form-control:focus {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  border-color: rgba(56, 189, 248, 0.65) !important;
+	background-color: rgba(255, 255, 255, 0.25) !important;
+	border-color: rgba(56, 189, 248, 0.65) !important;
 }
 
 .nav-pills .nav-link {
-  color: var(--color-text-regular) !important;
+	color: var(--color-text-regular) !important;
 }
 
 .nav-pills .nav-link.active,
-.nav-pills .show>.nav-link {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
+.nav-pills .show > .nav-link {
+	background-color: var(--color-primary) !important;
+	color: var(--color-on-primary) !important;
 }
 
 .pagination .page-link {
-  color: var(--color-primary) !important;
+	color: var(--color-primary) !important;
 }
 
 .pagination .page-link:hover {
-  color: var(--color-primary-strong) !important;
+	color: var(--color-primary-strong) !important;
 }
 
 .pagination .page-item.disabled .page-link {
-  color: var(--color-text-soft) !important;
+	color: var(--color-text-soft) !important;
 }
 
 .dropdown-menu {
-  background-color: rgba(11, 17, 30, 0.96) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid rgba(148, 163, 184, 0.28) !important;
-  box-shadow: 0 16px 35px rgba(8, 14, 32, 0.35) !important;
-  backdrop-filter: blur(14px);
+	background-color: rgba(11, 17, 30, 0.96) !important;
+	color: #e2e8f0 !important;
+	border: 1px solid rgba(148, 163, 184, 0.28) !important;
+	box-shadow: 0 16px 35px rgba(8, 14, 32, 0.35) !important;
+	backdrop-filter: blur(14px);
 }
 
 .dropdown-menu .dropdown-item {
-  color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+	color: #e2e8f0 !important;
+	font-weight: 600 !important;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
 }
 
 .dropdown-menu .dropdown-item i,
 .dropdown-menu .dropdown-item svg {
-  color: inherit !important;
-  opacity: 0.9;
+	color: inherit !important;
+	opacity: 0.9;
 }
 
 .dropdown-menu .dropdown-item:hover,
 .dropdown-menu .dropdown-item:focus,
 .dropdown-menu .dropdown-item.active {
-  background-color: rgba(56, 189, 248, 0.2) !important;
-  color: #ffffff !important;
-  border-radius: 0.6rem;
+	background-color: rgba(56, 189, 248, 0.2) !important;
+	color: #ffffff !important;
+	border-radius: 0.6rem;
 }
 
 /* Receipts & Invoices */
 .receipt-print,
 .invoice-print {
-  background-color: var(--color-surface) !important;
-  color: var(--color-text-regular) !important;
+	background-color: var(--color-surface) !important;
+	color: var(--color-text-regular) !important;
 }
 
 /* purgecss start ignore */
@@ -795,10 +851,10 @@ label {
 .invoice-print .invoice-container,
 .invoice-print .invoice-wrapper,
 .invoice-print .invoice-card {
-  background-color: #ffffff !important;
-  color: var(--color-text-regular) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  box-shadow: none !important;
+	background-color: #ffffff !important;
+	color: var(--color-text-regular) !important;
+	border-color: rgba(15, 23, 42, 0.12) !important;
+	box-shadow: none !important;
 }
 /* purgecss end ignore */
 
@@ -806,17 +862,21 @@ label {
 .invoice-print :is(div, section, header)[class*="header"],
 .receipt-print .receipt-header,
 .invoice-print .invoice-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
-  color: var(--color-on-primary) !important;
-  border-color: var(--color-primary-strong) !important;
-  text-shadow: none !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-primary) 0%,
+		var(--color-primary-strong) 100%
+	) !important;
+	color: var(--color-on-primary) !important;
+	border-color: var(--color-primary-strong) !important;
+	text-shadow: none !important;
 }
 
 .receipt-print :is(div, section)[class*="title"],
 .invoice-print :is(div, section)[class*="title"] {
-  background-color: rgba(11, 94, 215, 0.12) !important;
-  color: var(--color-primary) !important;
-  border-color: rgba(11, 94, 215, 0.25) !important;
+	background-color: rgba(11, 94, 215, 0.12) !important;
+	color: var(--color-primary) !important;
+	border-color: rgba(11, 94, 215, 0.25) !important;
 }
 
 /* purgecss start ignore */
@@ -828,9 +888,13 @@ label {
 .invoice-print .amount-display,
 .invoice-print .amount-showcase,
 .invoice-print .amount-section {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
-  color: var(--color-on-primary) !important;
-  border-color: var(--color-primary-strong) !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-primary) 0%,
+		var(--color-primary-strong) 100%
+	) !important;
+	color: var(--color-on-primary) !important;
+	border-color: var(--color-primary-strong) !important;
 }
 /* purgecss end ignore */
 
@@ -838,23 +902,27 @@ label {
 .invoice-print [class*="badge"],
 .receipt-print [class*="status"],
 .invoice-print [class*="status"] {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
-  border-color: var(--color-primary-strong) !important;
+	background-color: var(--color-primary) !important;
+	color: var(--color-on-primary) !important;
+	border-color: var(--color-primary-strong) !important;
 }
 
 .receipt-print table thead,
 .invoice-print table thead {
-  background: linear-gradient(135deg, var(--color-dark) 0%, #1e293b 100%) !important;
-  color: var(--color-on-dark) !important;
+	background: linear-gradient(
+		135deg,
+		var(--color-dark) 0%,
+		#1e293b 100%
+	) !important;
+	color: var(--color-on-dark) !important;
 }
 
 .receipt-print table th,
 .receipt-print table td,
 .invoice-print table th,
 .invoice-print table td {
-  color: var(--color-text-regular) !important;
-  border-color: rgba(15, 23, 42, 0.2) !important;
+	color: var(--color-text-regular) !important;
+	border-color: rgba(15, 23, 42, 0.2) !important;
 }
 
 /* purgecss start ignore */
@@ -869,72 +937,72 @@ label {
 .invoice-print .summary-box,
 .receipt-print .section,
 .invoice-print .section {
-  background-color: #ffffff !important;
-  color: var(--color-text-regular) !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
-  box-shadow: none !important;
+	background-color: #ffffff !important;
+	color: var(--color-text-regular) !important;
+	border-color: rgba(15, 23, 42, 0.1) !important;
+	box-shadow: none !important;
 }
 /* purgecss end ignore */
 
 .receipt-print .payment-method-badge,
 .invoice-print .payment-method-badge {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
-  border-color: var(--color-primary-strong) !important;
+	background-color: var(--color-primary) !important;
+	color: var(--color-on-primary) !important;
+	border-color: var(--color-primary-strong) !important;
 }
 
 /* Breadcrumb */
 .breadcrumb {
-  background-color: transparent !important;
-  color: var(--color-text-muted) !important;
+	background-color: transparent !important;
+	color: var(--color-text-muted) !important;
 }
 
 .breadcrumb-item a {
-  color: var(--color-primary) !important;
+	color: var(--color-primary) !important;
 }
 
 .breadcrumb-item.active {
-  color: var(--color-text-soft) !important;
+	color: var(--color-text-soft) !important;
 }
 
 /* Footer */
 .main-footer {
-  background-color: var(--footer-bg) !important;
-  color: var(--footer-text) !important;
-  border-top: 1px solid rgba(148, 163, 184, 0.35) !important;
+	background-color: var(--footer-bg) !important;
+	color: var(--footer-text) !important;
+	border-top: 1px solid rgba(148, 163, 184, 0.35) !important;
 }
 
 /* Dark mode overrides */
 /* purgecss start ignore */
 .dark-mode,
 body.dark-mode {
-  --color-surface: #0b1220;
-  --color-surface-elevated: #111a2d;
-  --color-surface-strong: #1b2236;
-  --color-border: #25304a;
-  --color-text-strong: #f8fafc;
-  --color-text-regular: #e2e8f0;
-  --color-text-muted: #cbd5f5;
-  --color-text-soft: #a3aed0;
-  --color-input-bg: #111a2d;
+	--color-surface: #0b1220;
+	--color-surface-elevated: #111a2d;
+	--color-surface-strong: #1b2236;
+	--color-border: #25304a;
+	--color-text-strong: #f8fafc;
+	--color-text-regular: #e2e8f0;
+	--color-text-muted: #cbd5f5;
+	--color-text-soft: #a3aed0;
+	--color-input-bg: #111a2d;
 
-  --sidebar-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
-  --card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --footer-bg: #111a2d;
-  --footer-text: #e2e8f0;
+	--sidebar-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+	--card-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	--footer-bg: #111a2d;
+	--footer-text: #e2e8f0;
 }
 /* purgecss end ignore */
 
 .dark-mode .table thead th {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-  border-color: #1e293b !important;
+	background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+	border-color: #1e293b !important;
 }
 
 .dark-mode .card,
 .dark-mode .small-box,
 .dark-mode .info-box {
-  background-color: var(--color-surface-elevated) !important;
-  border-color: rgba(148, 163, 184, 0.1) !important;
+	background-color: var(--color-surface-elevated) !important;
+	border-color: rgba(148, 163, 184, 0.1) !important;
 }
 
 .dark-mode input,
@@ -942,48 +1010,48 @@ body.dark-mode {
 .dark-mode select,
 .dark-mode textarea,
 .dark-mode .custom-select {
-  background-color: var(--color-input-bg) !important;
-  color: var(--color-text-regular) !important;
-  border-color: var(--color-border) !important;
+	background-color: var(--color-input-bg) !important;
+	color: var(--color-text-regular) !important;
+	border-color: var(--color-border) !important;
 }
 
 .dark-mode select option,
 .dark-mode select.form-control option {
-  color: var(--color-text-regular) !important;
-  background-color: var(--color-input-bg) !important;
+	color: var(--color-text-regular) !important;
+	background-color: var(--color-input-bg) !important;
 }
 
 .dark-mode .form-control:focus,
 .dark-mode input:focus,
 .dark-mode select:focus,
 .dark-mode textarea:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.3) !important;
+	border-color: var(--color-primary) !important;
+	box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.3) !important;
 }
 
 .dark-mode .dropdown-menu {
-  background-color: #0f172a !important;
-  border-color: rgba(148, 163, 184, 0.15) !important;
+	background-color: #0f172a !important;
+	border-color: rgba(148, 163, 184, 0.15) !important;
 }
 
 .dark-mode .dropdown-item:hover,
 .dark-mode .dropdown-item:focus,
 .dark-mode .dropdown-item.active {
-  background-color: rgba(56, 189, 248, 0.18) !important;
-  color: #f0f9ff !important;
+	background-color: rgba(56, 189, 248, 0.18) !important;
+	color: #f0f9ff !important;
 }
 
 .dark-mode .main-footer {
-  border-top-color: rgba(148, 163, 184, 0.2) !important;
+	border-top-color: rgba(148, 163, 184, 0.2) !important;
 }
 
 /* Utility */
 .text-muted {
-  color: var(--color-text-soft) !important;
+	color: var(--color-text-soft) !important;
 }
 
 .shadow-none {
-  box-shadow: none !important;
+	box-shadow: none !important;
 }
 
 /* Icons inside colored backgrounds */
@@ -1012,7 +1080,7 @@ body.dark-mode {
 .bg-warning .far,
 .bg-warning .fab,
 .bg-warning .svg-inline--fa {
-  color: inherit !important;
+	color: inherit !important;
 }
 /* purgecss end ignore */
 
@@ -1022,37 +1090,37 @@ body.dark-mode {
 .badge .far,
 .badge .fab,
 .badge .svg-inline--fa {
-  color: inherit !important;
+	color: inherit !important;
 }
 /* purgecss end ignore */
 
 /* Forms inside tables */
 table .form-control,
 table .custom-select {
-  min-height: 2.4rem !important;
-  font-size: 0.9rem !important;
+	min-height: 2.4rem !important;
+	font-size: 0.9rem !important;
 }
 
 /* Toasts / notifications */
 /* purgecss start ignore */
 .toast,
 .swal2-popup {
-  color: var(--color-text-regular) !important;
-  background-color: var(--color-surface-elevated) !important;
+	color: var(--color-text-regular) !important;
+	background-color: var(--color-surface-elevated) !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .swal2-styled.swal2-confirm {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
+	background-color: var(--color-primary) !important;
+	color: var(--color-on-primary) !important;
 }
 /* purgecss end ignore */
 
 /* purgecss start ignore */
 .swal2-styled.swal2-cancel {
-  background-color: var(--color-danger) !important;
-  color: var(--color-on-danger) !important;
+	background-color: var(--color-danger) !important;
+	color: var(--color-on-danger) !important;
 }
 /* purgecss end ignore */
 
@@ -1060,21 +1128,21 @@ table .custom-select {
 .sidebar .nav-link:focus-visible,
 .main-header .nav-link:focus-visible,
 .dropdown-item:focus-visible {
-  outline: 3px solid var(--color-focus-ring);
-  outline-offset: 2px;
+	outline: 3px solid var(--color-focus-ring);
+	outline-offset: 2px;
 }
 
 /* Print adjustments */
 @media print {
-  body {
-    background: #ffffff !important;
-    color: #0f172a !important;
-  }
+	body {
+		background: #ffffff !important;
+		color: #0f172a !important;
+	}
 
-  .card,
-  .table,
-  .alert {
-    box-shadow: none !important;
-    border-color: #64748b !important;
-  }
+	.card,
+	.table,
+	.alert {
+		box-shadow: none !important;
+		border-color: #64748b !important;
+	}
 }

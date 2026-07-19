@@ -86,8 +86,8 @@
   </div>
 </div>
 <script>
-(function () {
-  let toggle = document.getElementById('enable_tax');
+(() => {
+  const toggle = document.getElementById('enable_tax');
   const fields = document.getElementById('tax-fields');
   const countryRates = { AE: 5, IL: 17, PS: 16 };
   function refresh() {

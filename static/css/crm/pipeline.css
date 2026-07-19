@@ -1,8 +1,27 @@
 /* purgecss start ignore */
-.pipeline-column .card-header{border-radius:8px 8px 0 0;}
-.pipeline-cards{min-height:200px;max-height:calc(100vh - 300px);overflow-y:auto;}
-.pipeline-card{cursor:grab;border:1px solid #e2e8f0;border-radius:8px;}
-.pipeline-card:active{cursor:grabbing;}
-.pipeline-card.dragging{opacity:.5;border:2px dashed #10b981;}
-.pipeline-cards.drag-over{background:#f0fdf4;border-radius:8px;min-height:250px;}
+.pipeline-column .card-header {
+	border-radius: 8px 8px 0 0;
+}
+.pipeline-cards {
+	min-height: 200px;
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+}
+.pipeline-card {
+	cursor: grab;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+}
+.pipeline-card:active {
+	cursor: grabbing;
+}
+.pipeline-card.dragging {
+	opacity: 0.5;
+	border: 2px dashed #10b981;
+}
+.pipeline-cards.drag-over {
+	background: #f0fdf4;
+	border-radius: 8px;
+	min-height: 250px;
+}
 /* purgecss end ignore */

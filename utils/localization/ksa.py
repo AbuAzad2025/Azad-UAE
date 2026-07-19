@@ -40,7 +40,8 @@ class KSAStrategy(LocalizationStrategy):
         return Decimal("0")
 
     @staticmethod
-    def _extract_tax_from_inclusive( total: Decimal, rate: Decimal
+    def _extract_tax_from_inclusive(
+        total: Decimal, rate: Decimal
     ) -> tuple[Decimal, Decimal]:
         total = Decimal(str(total))
         rate = Decimal(str(rate))

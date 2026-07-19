@@ -95,9 +95,7 @@ class TestNeuralEngineDeep:
             patch("models.Customer"),
             patch("models.Sale"),
         ):
-            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = (
-                None
-            )
+            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = None
             result = engine.classify_customer_intelligence(99)
             assert result["classification"] == "new"
 
@@ -154,9 +152,7 @@ class TestNeuralEngineDeep:
             patch("models.Product"),
             patch("models.SaleLine"),
         ):
-            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = (
-                None
-            )
+            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = None
             result = engine.optimize_stock_level(404)
             assert result["optimal_stock"] == 0
 

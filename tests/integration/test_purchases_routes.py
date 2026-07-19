@@ -132,9 +132,9 @@ class TestPurchasesCreate:
         stock_after = ProductWarehouseStock.query.filter_by(
             product_id=product.id, warehouse_id=warehouse.id
         ).first()
-        assert stock_after.quantity == Decimal(
-            "30"
-        ), f"Expected 30, got {stock_after.quantity}"
+        assert stock_after.quantity == Decimal("30"), (
+            f"Expected 30, got {stock_after.quantity}"
+        )
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == GLRef.PURCHASE,
@@ -143,6 +143,6 @@ class TestPurchasesCreate:
         assert len(gl_entries) >= 1, f"Expected >=1 GL entry, got {len(gl_entries)}"
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit == Decimal("600")
-        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit == Decimal("600"), (
+            f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        )

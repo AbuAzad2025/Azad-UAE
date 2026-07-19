@@ -787,7 +787,7 @@
 {% include 'partials/select2_assets.html' %}
 <script>
 
-$(document).ready(function() {
+$(document).ready(() => {
 
   // {{ t('تفعيل') }} Tooltips
 
@@ -813,7 +813,7 @@ $(document).ready(function() {
 
   // {{ t('ملء') }} {{ t('Amount') }} {{ t('المقترح') }} من {{ t('السيرفر') }}
 
-  let suggestedAmount = $('#amount').data('suggested-amount');
+  const suggestedAmount = $('#amount').data('suggested-amount');
 
   if (suggestedAmount) {
 
@@ -827,7 +827,7 @@ $(document).ready(function() {
 
   $('#payment_method').on('change', function() {
 
-    let method = $(this).val();
+    const method = $(this).val();
 
 
     // {{ t('Hide') }} {{ t('جميع') }} {{ t('الحقول') }} {{ t('الديناميكية') }} {{ t('أولاً') }}
@@ -890,7 +890,7 @@ $(document).ready(function() {
 
   $('#customer_id').on('select2:select change', function() {
 
-    let customerId = $(this).val();
+    const customerId = $(this).val();
 
     if (customerId) {
 
@@ -908,11 +908,11 @@ $(document).ready(function() {
 
   // {{ t('Download') }} {{ t('Data_2') }} {{ t('Customer') }} {{ t('المحدد') }} {{ t('مسبقاً') }}
 
-  let hasPreselectedCustomer = $('#customer_id option:selected').val() !== '';
+  const hasPreselectedCustomer = $('#customer_id option:selected').val() !== '';
 
   if (hasPreselectedCustomer) {
 
-    setTimeout(function() {
+    setTimeout(() => {
 
       loadCustomerBalance();
 
@@ -924,9 +924,9 @@ $(document).ready(function() {
 
   // {{ t('توليد') }} {{ t('رقم') }} {{ t('المرجع') }} {{ t('تلقائياً') }}
 
-  let now = new Date();
+  const now = new Date();
 
-  let refNumber = 'REF-' + now.getFullYear() +
+  const refNumber = 'REF-' + now.getFullYear() +
 
     String(now.getMonth() + 1).padStart(2, '0') +
 
@@ -948,7 +948,7 @@ $(document).ready(function() {
 
 function loadCustomerBalance() {
 
-  let customerId = $('#customer_id').val();
+  const customerId = $('#customer_id').val();
 
   if (!customerId) {
 
@@ -956,11 +956,11 @@ function loadCustomerBalance() {
 
     return;
 
-  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), function(data) {    // {{ t('View') }} {{ t('Balance') }} مع {{ t('اللون') }} {{ t('المناسب') }}
+  }  $.get('{{ url_for("customers.customer_balance", id=0) }}'.replace('0', customerId), (data) => {    // {{ t('View') }} {{ t('Balance') }} مع {{ t('اللون') }} {{ t('المناسب') }}
 
-    let balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
+    const balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
 
-    let balanceLabel = data.balance > 0 ? ' ({{ t('Balance_3') }} {{ t('للعميل') }})' : (data.balance < 0 ? ' ({{ t('ذمة') }} على {{ t('Customer') }})' : '');
+    const balanceLabel = data.balance > 0 ? ' ({{ t('Balance_3') }} {{ t('للعميل') }})' : (data.balance < 0 ? ' ({{ t('ذمة') }} على {{ t('Customer') }})' : '');
 
     $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol }}' + balanceLabel)
       .removeClass('text-danger text-success text-muted').addClass(balanceClass);
@@ -973,12 +973,9 @@ function loadCustomerBalance() {
 
     if (data.unpaid_sales && data.unpaid_sales.length > 0) {
 
-      let totalUnpaid = data.unpaid_sales.reduce(function (sum, sale) {
+      const totalUnpaid = data.unpaid_sales.reduce((sum, sale) => sum + parseFloat(sale.balance_due_aed || sale.balance_due || 0), 0);
 
-        return sum + parseFloat(sale.balance_due_aed || sale.balance_due || 0);
-      }, 0);
-
-      let currentAmount = parseFloat($('#amount').val()) || 0;
+      const currentAmount = parseFloat($('#amount').val()) || 0;
 
 
       if (currentAmount === 0 || !$('#amount').val()) {
@@ -993,11 +990,8 @@ function loadCustomerBalance() {
 
       let html = '<strong>{{ t('فواتير') }} غير {{ t('Paid_4') }}:</strong><ul class="mb-0">';
 
-      data.unpaid_sales.forEach(function(sale) {
-
-        {% if current_user.has_permission('manage_sales') %}
-          let saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);
-        {% endif %}
+      data.unpaid_sales.forEach((sale) => {% if current_user.has_permission('manage_sales') %
+          const saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);% endif %
 
         html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
       });
@@ -1012,7 +1006,7 @@ function loadCustomerBalance() {
 
     }
 
-  }).fail(function() {  });
+  }).fail(() => {  });
 
 }
 

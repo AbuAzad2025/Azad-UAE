@@ -122,7 +122,6 @@ def update_integration(service):
 def reports():
     """Platform telemetry only — the owner plane never exposes tenant business data."""
     from utils.owner_panel import build_platform_telemetry
-    from services.backup_service import BackupService
     from models import PaymentVault
 
     telemetry = build_platform_telemetry()
@@ -316,25 +315,33 @@ def system_config():
                     )
                     settings.azad_platform_fee_rate = fee_rate.quantize(Decimal("0.01"))
                 except Exception:
-                    logger.exception("Failed to parse azad_platform_fee_rate from form data")
+                    logger.exception(
+                        "Failed to parse azad_platform_fee_rate from form data"
+                    )
                 try:
                     settings.subscription_monthly_fee_aed = Decimal(
                         request.form.get("subscription_monthly_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception("Failed to parse subscription_monthly_fee_aed from form data")
+                    logger.exception(
+                        "Failed to parse subscription_monthly_fee_aed from form data"
+                    )
                 try:
                     settings.subscription_yearly_fee_aed = Decimal(
                         request.form.get("subscription_yearly_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception("Failed to parse subscription_yearly_fee_aed from form data")
+                    logger.exception(
+                        "Failed to parse subscription_yearly_fee_aed from form data"
+                    )
                 try:
                     settings.subscription_perpetual_fee_aed = Decimal(
                         request.form.get("subscription_perpetual_fee_aed", "0") or "0"
                     ).quantize(Decimal("0.001"))
                 except Exception:
-                    logger.exception("Failed to parse subscription_perpetual_fee_aed from form data")
+                    logger.exception(
+                        "Failed to parse subscription_perpetual_fee_aed from form data"
+                    )
 
                 try:
                     default_currency = request.form.get("default_currency", "ILS")

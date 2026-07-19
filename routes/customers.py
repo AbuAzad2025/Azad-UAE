@@ -474,8 +474,12 @@ def delete(**kwargs):
             sales_query = Sale.query.filter_by(customer_id=record_id, tenant_id=tid)
             from models import Payment, Receipt
 
-            payments_query = Payment.query.filter_by(customer_id=record_id, tenant_id=tid)
-            receipts_query = Receipt.query.filter_by(customer_id=record_id, tenant_id=tid)
+            payments_query = Payment.query.filter_by(
+                customer_id=record_id, tenant_id=tid
+            )
+            receipts_query = Receipt.query.filter_by(
+                customer_id=record_id, tenant_id=tid
+            )
             if branch_scope_id() is not None:
                 sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
                 payments_query = payments_query.filter(

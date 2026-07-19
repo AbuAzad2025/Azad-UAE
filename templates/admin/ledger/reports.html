@@ -242,7 +242,7 @@
 {% block scripts %}
 <script>
 // {{ t('ملء') }} {{ t('List') }} {{ t('Accounts') }}
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   const select = document.querySelector('select[name="account_id"]');
   if (!select) {
     return;

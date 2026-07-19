@@ -356,7 +356,7 @@
 
 function updateTenantSetting(field, value) {
 
-  let targetEl = event && event.target ? $(event.target) : $('button:first');
+  const targetEl = event && event.target ? $(event.target) : $('button:first');
 
   btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
@@ -374,7 +374,7 @@ function updateTenantSetting(field, value) {
 
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
 
-  }).done(function(res) {
+  }).done((res) => {
 
     if (res.success) {
 
@@ -386,7 +386,7 @@ function updateTenantSetting(field, value) {
 
       if (field === 'prices_include_vat') {
 
-        let lbl = $('#pricesIncludeVatSwitch').next('label');
+        const lbl = $('#pricesIncludeVatSwitch').next('label');
 
         lbl.text($('#pricesIncludeVatSwitch').is(':checked') ? 'نعم' : 'لا');
 
@@ -402,7 +402,7 @@ function updateTenantSetting(field, value) {
 
     }
 
-  }).fail(function(xhr) {
+  }).fail((xhr) => {
 
     let msg = 'خطأ في الاتصال';
 
@@ -414,7 +414,7 @@ function updateTenantSetting(field, value) {
 
     );
 
-  }).always(function() {
+  }).always(() => {
 
     btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
 
@@ -424,7 +424,7 @@ function updateTenantSetting(field, value) {
 
 function toggleWarehouseNegative() {
 
-  let btn = $('#warehouseNegSwitch');
+  const btn = $('#warehouseNegSwitch');
 
   $.ajax({
 
@@ -438,7 +438,7 @@ function toggleWarehouseNegative() {
 
     headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
 
-  }).done(function(res) {
+  }).done((res) => {
 
     if (res.success) {
 
@@ -452,7 +452,7 @@ function toggleWarehouseNegative() {
 
     }
 
-  }).fail(function(xhr) {
+  }).fail((xhr) => {
 
     let msg = 'خطأ';
 

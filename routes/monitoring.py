@@ -28,4 +28,6 @@ def dashboard():
     system_health = LoggingCore.get_system_health()
     app_metrics = LoggingCore.get_app_metrics()
 
-    return render_template("monitoring/dashboard.html", health=system_health, metrics=app_metrics)
+    return render_template(
+        "monitoring/dashboard.html", health=system_health, metrics=app_metrics
+    )

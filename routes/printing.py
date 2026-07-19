@@ -86,7 +86,9 @@ def print_document(doc_type, **kwargs):
         return render_template("errors/403.html"), 403
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
-    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
+    PrintService.create_snapshot(
+        eff_tid, doc_type, record_id, reason="print", document=doc
+    )
     PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
 
     return PrintService.render_print(

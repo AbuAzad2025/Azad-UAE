@@ -105,9 +105,9 @@ class TestPaymentsVoucher:
 
         customer_after = Customer.query.get(customer.id)
         # customer.balance tracks credit: receipt adds to it
-        assert customer_after.balance == Decimal(
-            "700"
-        ), f"balance={customer_after.balance}"
+        assert customer_after.balance == Decimal("700"), (
+            f"balance={customer_after.balance}"
+        )
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == GLRef.RECEIPT,
@@ -115,9 +115,9 @@ class TestPaymentsVoucher:
         if gl_entries:
             total_debit = sum((e.total_debit or 0) for e in gl_entries)
             total_credit = sum((e.total_credit or 0) for e in gl_entries)
-            assert (
-                total_debit == total_credit
-            ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+            assert total_debit == total_credit, (
+                f"GL unbalanced: debit={total_debit} credit={total_credit}"
+            )
 
     def test_create_payment_to_supplier_reduces_ap(self, app, db_session, client):
         from models import Tenant, Branch, User, Role, Supplier, Purchase
@@ -210,9 +210,9 @@ class TestPaymentsVoucher:
         assert resp.status_code in (200, 302), f"Unexpected status {resp.status_code}"
 
         supplier_after = Supplier.query.get(supplier.id)
-        assert supplier_after.total_paid_aed >= Decimal(
-            "400"
-        ), f"paid={supplier_after.total_paid_aed}"
+        assert supplier_after.total_paid_aed >= Decimal("400"), (
+            f"paid={supplier_after.total_paid_aed}"
+        )
 
         gl_entries = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type == GLRef.PAYMENT,
@@ -220,6 +220,6 @@ class TestPaymentsVoucher:
         if gl_entries:
             total_debit = sum((e.total_debit or 0) for e in gl_entries)
             total_credit = sum((e.total_credit or 0) for e in gl_entries)
-            assert (
-                total_debit == total_credit
-            ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+            assert total_debit == total_credit, (
+                f"GL unbalanced: debit={total_debit} credit={total_credit}"
+            )

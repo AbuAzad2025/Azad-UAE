@@ -103,7 +103,9 @@ def register_purchase_listeners():
             )
         except Exception:
             try:
-                logger.debug("Purchase after_insert event listener failed", exc_info=True)
+                logger.debug(
+                    "Purchase after_insert event listener failed", exc_info=True
+                )
             except Exception:
                 pass
 

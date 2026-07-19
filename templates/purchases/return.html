@@ -101,7 +101,7 @@ document.querySelectorAll('.line-check').forEach(cb => {
     if (!this.checked) qtyInput.value = 0;
   });
 });
-document.getElementById('returnForm').addEventListener('submit', function(e) {
+document.getElementById('returnForm').addEventListener('submit', (e) => {
   const checked = document.querySelectorAll('.line-check:checked');
   if (checked.length === 0) {
     e.preventDefault();

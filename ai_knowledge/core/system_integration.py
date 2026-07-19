@@ -9,6 +9,7 @@ from decimal import Decimal
 
 def _active_tid():
     from flask import has_request_context, g
+
     if has_request_context():
         return getattr(g, "active_tenant_id", None)
     return None
@@ -133,24 +134,29 @@ class SystemIntegrator:
     @staticmethod
     def get_customer_sales_summary(customer_id):
         """ملخص مبيعات العميل"""
-        tid = _active_tid()
-        if tid is None:
-            return {"success": False, "error": "لا يوجد سياق مستأجر نشط"}
-
         try:
             from models import Customer, Sale
 
-            customer = Customer.query.filter_by(
-                id=customer_id, tenant_id=tid
-            ).first()
-            if not customer:
+            tid = _active_tid()
+            customer = Customer.query.get(int(customer_id))
+            if customer is not None and tid is not None and customer.tenant_id != tid:
                 return {"success": False, "error": "العميل غير موجود في هذا السياق"}
 
-            sales = (
-                Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
-                .order_by(Sale.created_at.desc())
-                .all()
-            )
+            if not customer:
+                return {"success": False, "error": "العميل غير موجود"}
+
+            if tid is not None:
+                sales = (
+                    Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
+                    .order_by(Sale.created_at.desc())
+                    .all()
+                )
+            else:
+                sales = (
+                    Sale.query.filter_by(customer_id=customer.id)
+                    .order_by(Sale.created_at.desc())
+                    .all()
+                )
             total_sales = len(sales)
             total_amount = sum(float(sale.total_amount) for sale in sales)
             paid_amount = sum(float(sale.paid_amount) for sale in sales)
@@ -173,7 +179,9 @@ class SystemIntegrator:
                             "status": (
                                 "مدفوع"
                                 if sale.paid_amount >= sale.total_amount
-                                else "جزئي" if sale.paid_amount > 0 else "غير مدفوع"
+                                else "جزئي"
+                                if sale.paid_amount > 0
+                                else "غير مدفوع"
                             ),
                         }
                         for sale in recent_sales
@@ -295,9 +303,7 @@ class SystemIntegrator:
             base_pm = _maybe_tenant_query(Payment)
 
             total_customers = base_c.count()
-            vip_customers = base_c.filter(
-                Customer.customer_type == "VIP"
-            ).count()
+            vip_customers = base_c.filter(Customer.customer_type == "VIP").count()
 
             total_sales = base_s.count()
             today_sales = base_s.filter(
@@ -308,9 +314,7 @@ class SystemIntegrator:
             low_stock_products = base_pr.filter(
                 Product.current_stock <= Product.min_stock_alert
             ).count()
-            out_of_stock_products = base_pr.filter(
-                Product.current_stock == 0
-            ).count()
+            out_of_stock_products = base_pr.filter(Product.current_stock == 0).count()
 
             total_payments = base_pm.count()
             today_payments = base_pm.filter(
@@ -426,9 +430,7 @@ class SystemIntegrator:
 
             if data_type in ["all", "customers"]:
                 customers = (
-                    base_c.filter(Customer.name.ilike(f"%{query}%"))
-                    .limit(10)
-                    .all()
+                    base_c.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
                 )
 
                 results["customers"] = [
@@ -469,10 +471,7 @@ class SystemIntegrator:
                 if tid is not None:
                     base_s_q = base_s_q.filter(Sale.tenant_id == tid)
                 sales = (
-                    base_s_q
-                    .filter(Customer.name.ilike(f"%{query}%"))
-                    .limit(10)
-                    .all()
+                    base_s_q.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
                 )
 
                 results["sales"] = [

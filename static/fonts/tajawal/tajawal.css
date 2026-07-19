@@ -1,24 +1,24 @@
 /* Tajawal Arabic Font — self-hosted, zero external dependency */
 @font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('tajawal-regular.woff2') format('woff2');
+	font-family: "Tajawal";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("tajawal-regular.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('tajawal-medium.woff2') format('woff2');
+	font-family: "Tajawal";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("tajawal-medium.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('tajawal-bold.woff2') format('woff2');
+	font-family: "Tajawal";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("tajawal-bold.woff2") format("woff2");
 }

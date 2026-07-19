@@ -735,9 +735,9 @@
 
 <script>
 // Live preview update
-$(document).ready(function() {
+$(document).ready(() => {
   // Update colors in real-time
-  $('input[name="header_color"], input[name="accent_color"]').on('change', function() {
+  $('input[name="header_color"], input[name="accent_color"]').on('change', () => {
     const headerColor = $('input[name="header_color"]').val();
     const accentColor = $('input[name="accent_color"]').val();
     
@@ -789,7 +789,7 @@ function applyTemplate(templateName) {
   
   // تمييز القالب المحدد
   $('select[name="active_template"]').css('background-color', '#d4edda').css('color', '#155724');
-  setTimeout(function() {
+  setTimeout(() => {
     $('select[name="active_template"]').css('background-color', '').css('color', '');
   }, 2000);
 }

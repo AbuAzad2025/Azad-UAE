@@ -346,7 +346,7 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
+    $(document).ready(() => {
         // Force tab switching for mixed Bootstrap environments
         $('#reportTabs button').on('click', function (e) {
             e.preventDefault();
@@ -358,7 +358,7 @@
             $(this).addClass('active');
             
             // Show target content
-            let targetId = $(this).data('target');
+            const targetId = $(this).data('target');
             $(targetId).addClass('show active');
         });
 
@@ -380,7 +380,7 @@
             }
 
             searchTimeout = setTimeout(() => {
-                $.get(`{{ url_for("reports.api_entity_search") }}?q=${encodeURIComponent(query)}&type=${type}`, function(data) {
+                $.get(`{{ url_for("reports.api_entity_search") }}?q=${encodeURIComponent(query)}&type=${type}`, (data) => {
                     searchResults.empty();
                     if (data.length > 0) {
                         data.forEach(item => {
@@ -422,21 +422,21 @@
         });
 
         // Hide results on click outside
-        $(document).on('click', function(e) {
+        $(document).on('click', (e) => {
             if (!$(e.target).closest('.position-relative').length) {
                 searchResults.hide();
             }
         });
 
-        window.loadEntityDetails = function(type, id, name) {
+        window.loadEntityDetails = (type, id, name) => {
             searchResults.hide();
             searchInput.val(name); 
             
             detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ t('جاري') }} {{ t('Download') }} {{ t('Report') }} {{ t('التفصيلي') }}...</p></div>');
             
-            $.get(`{{ url_for("reports.entity_report_fragment", type="X", id=0) }}`.replace('X', type).replace('0', id), function(html) {
+            $.get(`{{ url_for("reports.entity_report_fragment", type="X", id=0) }}`.replace('X', type).replace('0', id), (html) => {
                 detailsContainer.html(html);
-            }).fail(function(err) {
+            }).fail((err) => {
                 console.error(err);
                 detailsContainer.html('<div class="alert alert-danger">{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Download') }} {{ t('Report') }}. {{ t('يرجى') }} {{ t('المحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.</div>');
             });

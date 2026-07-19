@@ -1,204 +1,229 @@
 // Performance Optimization Script
-$(document).ready(function() {
-    // Lazy loading for images
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src;
-                    img.classList.remove('lazy');
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
+$(document).ready(() => {
+	// Lazy loading for images
+	if ("IntersectionObserver" in window) {
+		const imageObserver = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					const img = entry.target;
+					img.src = img.dataset.src;
+					img.classList.remove("lazy");
+					imageObserver.unobserve(img);
+				}
+			});
+		});
 
-        document.querySelectorAll('img[data-src]').forEach(img => {
-            imageObserver.observe(img);
-        });
-    }
+		document.querySelectorAll("img[data-src]").forEach((img) => {
+			imageObserver.observe(img);
+		});
+	}
 
-    // Debounce function for search inputs
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+	// Debounce function for search inputs
+	function debounce(func, wait) {
+		let timeout;
+		return function executedFunction(...args) {
+			const later = () => {
+				clearTimeout(timeout);
+				func(...args);
+			};
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	}
 
-    // Optimize search inputs
-    $('input[type="search"], input[placeholder*="بحث"], input[placeholder*="search"]').each(function() {
-        const $input = $(this);
-        const originalHandler = $input.data('events');
-        
-        if (originalHandler) {
-            $input.off('input keyup');
-            $input.on('input keyup', debounce(function() {
-                if (originalHandler.input) {
-                    originalHandler.input.forEach(handler => handler.handler.call(this));
-                }
-            }, 300));
-        }
-    });
+	// Optimize search inputs
+	$(
+		'input[type="search"], input[placeholder*="بحث"], input[placeholder*="search"]',
+	).each(function () {
+		const $input = $(this);
+		const originalHandler = $input.data("events");
 
-    // Preload critical pages
-    function preloadPage(url) {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = url;
-        document.head.appendChild(link);
-    }
+		if (originalHandler) {
+			$input.off("input keyup");
+			$input.on(
+				"input keyup",
+				debounce(function () {
+					if (originalHandler.input) {
+						originalHandler.input.forEach((handler) =>
+							handler.handler.call(this),
+						);
+					}
+				}, 300),
+			);
+		}
+	});
 
-    $('.nav-link, .btn').hover(function() {
-        const href = $(this).attr('href');
-        if (href && href.startsWith('/') && !href.includes('#') &&
-            !/\/\d+\/?$/.test(href) &&
-            !/^\/(reports|owner|store|pos|api)\//.test(href) &&
-            !/\?/.test(href)) {
-            preloadPage(href);
-        }
-    });
+	// Preload critical pages
+	function preloadPage(url) {
+		const link = document.createElement("link");
+		link.rel = "prefetch";
+		link.href = url;
+		document.head.appendChild(link);
+	}
 
-    // Optimize DataTables
-    if ($.fn.DataTable) {
-        $.extend($.fn.dataTable.defaults, {
-            "processing": true,
-            "serverSide": false,
-            "deferRender": true,
-            "responsive": true,
-            "pageLength": 25,
-            "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
-            "language": {
-                "url": "/static/datatables/Arabic.json"
-            },
-            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                   '<"row"<"col-sm-12"tr>>' +
-                   '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            "initComplete": function() {
-                // Add loading class removal
-                $(this).closest('.card').find('.card-body').removeClass('loading');
-            }
-        });
-    }
+	$(".nav-link, .btn").hover(function () {
+		const href = $(this).attr("href");
+		if (
+			href &&
+			href.startsWith("/") &&
+			!href.includes("#") &&
+			!/\/\d+\/?$/.test(href) &&
+			!/^\/(reports|owner|store|pos|api)\//.test(href) &&
+			!/\?/.test(href)
+		) {
+			preloadPage(href);
+		}
+	});
 
-    // Optimize form submissions
-    $('form').on('submit', function() {
-        const $form = $(this);
-        const $submitBtn = $form.find('button[type="submit"], input[type="submit"]');
-        
-        // Disable submit button to prevent double submission
-        $submitBtn.prop('disabled', true);
-        
-        // Add loading state
-        $submitBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>جاري الحفظ...');
-        
-        // Re-enable after 5 seconds as fallback
-        setTimeout(() => {
-            $submitBtn.prop('disabled', false);
-            $submitBtn.html($submitBtn.data('original-text') || 'حفظ');
-        }, 5000);
-    });
+	// Optimize DataTables
+	if ($.fn.DataTable) {
+		$.extend($.fn.dataTable.defaults, {
+			processing: true,
+			serverSide: false,
+			deferRender: true,
+			responsive: true,
+			pageLength: 25,
+			lengthMenu: [
+				[10, 25, 50, 100],
+				[10, 25, 50, 100],
+			],
+			language: {
+				url: "/static/datatables/Arabic.json",
+			},
+			dom:
+				'<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+				'<"row"<"col-sm-12"tr>>' +
+				'<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+			initComplete: function () {
+				// Add loading class removal
+				$(this).closest(".card").find(".card-body").removeClass("loading");
+			},
+		});
+	}
 
-    // Store original button text
-    $('button[type="submit"], input[type="submit"]').each(function() {
-        $(this).data('original-text', $(this).html());
-    });
+	// Optimize form submissions
+	$("form").on("submit", function () {
+		const $form = $(this);
+		const $submitBtn = $form.find(
+			'button[type="submit"], input[type="submit"]',
+		);
 
-    // Optimize AJAX requests
-    $.ajaxSetup({
-        timeout: 10000,
-        cache: false,
-        beforeSend: function(xhr, settings) {
-            // Add loading indicator
-            if (settings.type === 'POST' || settings.type === 'PUT' || settings.type === 'DELETE') {
-                $('body').addClass('loading');
-            }
-        },
-        complete: function() {
-            $('body').removeClass('loading');
-        },
-        error: function(xhr, status) {
-            if (status === 'timeout') {
-                alert('انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.');
-            } else if (xhr.status === 500) {
-                alert('حدث خطأ في الخادم. يرجى المحاولة مرة أخرى.');
-            }
-        }
-    });
+		// Disable submit button to prevent double submission
+		$submitBtn.prop("disabled", true);
 
-    // Optimize scroll performance
-    let ticking = false;
-    function updateScrollPosition() {
-        // Add scroll-based optimizations here
-        ticking = false;
-    }
+		// Add loading state
+		$submitBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>جاري الحفظ...');
 
-    window.addEventListener('scroll', function() {
-        if (!ticking) {
-            requestAnimationFrame(updateScrollPosition);
-            ticking = true;
-        }
-    });
+		// Re-enable after 5 seconds as fallback
+		setTimeout(() => {
+			$submitBtn.prop("disabled", false);
+			$submitBtn.html($submitBtn.data("original-text") || "حفظ");
+		}, 5000);
+	});
 
-    // Optimize resize performance
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(function() {
-            // Trigger DataTables responsive update
-            if ($.fn.DataTable) {
-                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
-            }
-        }, 250);
-    });
+	// Store original button text
+	$('button[type="submit"], input[type="submit"]').each(function () {
+		$(this).data("original-text", $(this).html());
+	});
 
-    // تعطيل loading للبطاقات - يسبب مشاكل
-    // $('.card').each(function() {
-    //     const $card = $(this);
-    //     if ($card.find('table').length > 0) {
-    //         $card.find('.card-body').addClass('loading');
-    //     }
-    // });
+	// Optimize AJAX requests
+	$.ajaxSetup({
+		timeout: 10000,
+		cache: false,
+		beforeSend: (xhr, settings) => {
+			// Add loading indicator
+			if (
+				settings.type === "POST" ||
+				settings.type === "PUT" ||
+				settings.type === "DELETE"
+			) {
+				$("body").addClass("loading");
+			}
+		},
+		complete: () => {
+			$("body").removeClass("loading");
+		},
+		error: (xhr, status) => {
+			if (status === "timeout") {
+				alert("انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.");
+			} else if (xhr.status === 500) {
+				alert("حدث خطأ في الخادم. يرجى المحاولة مرة أخرى.");
+			}
+		},
+	});
 
-    // Optimize tooltips
-    $('[data-toggle="tooltip"]').tooltip({
-        delay: { show: 500, hide: 100 }
-    });
+	// Optimize scroll performance
+	let ticking = false;
+	function updateScrollPosition() {
+		// Add scroll-based optimizations here
+		ticking = false;
+	}
 
-    // Optimize modals
-    $('.modal').on('show.bs.modal', function() {
-        $(this).find('input:first').focus();
-    });
+	window.addEventListener("scroll", () => {
+		if (!ticking) {
+			requestAnimationFrame(updateScrollPosition);
+			ticking = true;
+		}
+	});
 
-    // Add smooth scrolling
-    $('a[href^="#"]').on('click', function(e) {
-        const href = this.getAttribute('href');
-        if (href && href !== '#') {
-            e.preventDefault();
-            const target = $(href);
-            if (target.length) {
-                $('html, body').animate({
-                    scrollTop: target.offset().top - 100
-                }, 500);
-            }
-        }
-    });
+	// Optimize resize performance
+	let resizeTimeout;
+	window.addEventListener("resize", () => {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(() => {
+			// Trigger DataTables responsive update
+			if ($.fn.DataTable) {
+				$.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+			}
+		}, 250);
+	});
 
-    // Add performance monitoring - تحسين
-    if (window.performance && (window.performance.timing || window.performance.getEntriesByType)) {
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                // Use Navigation Timing API (modern) with timing fallback
-                
+	// تعطيل loading للبطاقات - يسبب مشاكل
+	// $('.card').each(function() {
+	//     const $card = $(this);
+	//     if ($card.find('table').length > 0) {
+	//         $card.find('.card-body').addClass('loading');
+	//     }
+	// });
 
-            }, 100);
-        });
-    }
+	// Optimize tooltips
+	$('[data-toggle="tooltip"]').tooltip({
+		delay: { show: 500, hide: 100 },
+	});
+
+	// Optimize modals
+	$(".modal").on("show.bs.modal", function () {
+		$(this).find("input:first").focus();
+	});
+
+	// Add smooth scrolling
+	$('a[href^="#"]').on("click", function (e) {
+		const href = this.getAttribute("href");
+		if (href && href !== "#") {
+			e.preventDefault();
+			const target = $(href);
+			if (target.length) {
+				$("html, body").animate(
+					{
+						scrollTop: target.offset().top - 100,
+					},
+					500,
+				);
+			}
+		}
+	});
+
+	// Add performance monitoring - تحسين
+	if (
+		window.performance &&
+		(window.performance.timing || window.performance.getEntriesByType)
+	) {
+		window.addEventListener("load", () => {
+			setTimeout(() => {
+				// Use Navigation Timing API (modern) with timing fallback
+			}, 100);
+		});
+	}
 });
 
 // CSS for loading states
@@ -270,6 +295,6 @@ img.lazy.loaded {
 `;
 
 // Inject CSS
-const style = document.createElement('style');
+const style = document.createElement("style");
 style.textContent = loadingCSS;
 document.head.appendChild(style);

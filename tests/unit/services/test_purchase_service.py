@@ -189,12 +189,8 @@ class TestPurchaseServiceCreate:
                                         with patch(
                                             "models.product_serial.ProductSerial"
                                         ) as mock_sn:
-                                            mock_sn.query.filter_by.return_value.first.return_value = (
-                                                None
-                                            )
-                                            mock_sn.query.filter.return_value.count.return_value = (
-                                                0
-                                            )
+                                            mock_sn.query.filter_by.return_value.first.return_value = None
+                                            mock_sn.query.filter.return_value.count.return_value = 0
                                             result = PurchaseService.create_purchase(
                                                 user,
                                                 {"supplier_name": "Test Supplier"},

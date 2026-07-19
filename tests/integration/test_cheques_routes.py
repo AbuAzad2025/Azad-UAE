@@ -108,9 +108,9 @@ class TestChequesCreate:
         assert len(gl_entries) >= 1
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit
-        ), f"GL unbalanced: {total_debit} vs {total_credit}"
+        assert total_debit == total_credit, (
+            f"GL unbalanced: {total_debit} vs {total_credit}"
+        )
         assert total_debit == Decimal("5000.00")
 
         lines = (
@@ -377,9 +377,9 @@ class TestChequesLifecycle:
 
         total_debit_all = sum((e.total_debit or 0) for e in gl_entries)
         total_credit_all = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit_all == total_credit_all
-        ), f"Total GL unbalanced: {total_debit_all} vs {total_credit_all}"
+        assert total_debit_all == total_credit_all, (
+            f"Total GL unbalanced: {total_debit_all} vs {total_credit_all}"
+        )
 
         receive_entry = next(
             (e for e in gl_entries if e.reference_type == "ChequeReceive"), None

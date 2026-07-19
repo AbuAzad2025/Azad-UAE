@@ -101,7 +101,11 @@ class ExchangeRateService:
             try:
                 return int(cfg)
             except Exception:
-                logger.warning("Invalid CURRENCY_ONLINE_CACHE_TIMEOUT config value: %s", cfg, exc_info=True)
+                logger.warning(
+                    "Invalid CURRENCY_ONLINE_CACHE_TIMEOUT config value: %s",
+                    cfg,
+                    exc_info=True,
+                )
         return ExchangeRateService._display_cache_ttl
 
     @staticmethod
@@ -111,7 +115,9 @@ class ExchangeRateService:
             try:
                 return int(cfg)
             except Exception:
-                logger.warning("Invalid CURRENCY_API_TIMEOUT config value: %s", cfg, exc_info=True)
+                logger.warning(
+                    "Invalid CURRENCY_API_TIMEOUT config value: %s", cfg, exc_info=True
+                )
         return 5
 
     @staticmethod
@@ -135,12 +141,20 @@ class ExchangeRateService:
                     try:
                         result[code.upper()] = float(val or 0)
                     except Exception:
-                        logger.debug("Failed to convert rate value for %s from primary provider", code, exc_info=True)
+                        logger.debug(
+                            "Failed to convert rate value for %s from primary provider",
+                            code,
+                            exc_info=True,
+                        )
             if result:
                 result[base.upper()] = 1.0
                 return result
         except Exception:
-            logger.debug("Primary exchange rate provider fetch failed for base %s", base, exc_info=True)
+            logger.debug(
+                "Primary exchange rate provider fetch failed for base %s",
+                base,
+                exc_info=True,
+            )
         return None
 
     @staticmethod
@@ -167,12 +181,20 @@ class ExchangeRateService:
                     try:
                         result[code.upper()] = float(val or 0)
                     except Exception:
-                        logger.debug("Failed to convert rate value for %s from Frankfurter", code, exc_info=True)
+                        logger.debug(
+                            "Failed to convert rate value for %s from Frankfurter",
+                            code,
+                            exc_info=True,
+                        )
             if result:
                 result[base.upper()] = 1.0
                 return result
         except Exception:
-            logger.debug("Frankfurter exchange rate fetch failed for base %s", base, exc_info=True)
+            logger.debug(
+                "Frankfurter exchange rate fetch failed for base %s",
+                base,
+                exc_info=True,
+            )
         return None
 
     @staticmethod
@@ -217,12 +239,18 @@ class ExchangeRateService:
                         try:
                             result[code.upper()] = float(val or 0)
                         except Exception:
-                            logger.debug("Failed to convert rate value for %s from fallback provider", code, exc_info=True)
+                            logger.debug(
+                                "Failed to convert rate value for %s from fallback provider",
+                                code,
+                                exc_info=True,
+                            )
                 if result:
                     result[base.upper()] = 1.0
                     return result
             except Exception:
-                logger.debug("Fallback exchange rate fetch failed for URL %s", url, exc_info=True)
+                logger.debug(
+                    "Fallback exchange rate fetch failed for URL %s", url, exc_info=True
+                )
         return None
 
     @staticmethod
@@ -384,7 +412,12 @@ class ExchangeRateService:
                         "note": "Rate is already frozen inside the saved document. Never auto-update.",
                     }
             except Exception:
-                logger.debug("Failed to resolve document fixed rate for %s -> %s", from_currency, to_currency, exc_info=True)
+                logger.debug(
+                    "Failed to resolve document fixed rate for %s -> %s",
+                    from_currency,
+                    to_currency,
+                    exc_info=True,
+                )
 
         # 2. User manual input — highest priority for NEW documents
         if user_rate is not None:
@@ -498,7 +531,12 @@ class ExchangeRateService:
             if record and record.rate:
                 return float(record.rate)
         except Exception:
-            logger.debug("Failed to fetch manual exchange rate from DB for %s -> %s", from_currency, to_currency, exc_info=True)
+            logger.debug(
+                "Failed to fetch manual exchange rate from DB for %s -> %s",
+                from_currency,
+                to_currency,
+                exc_info=True,
+            )
         return None
 
     @staticmethod
@@ -526,7 +564,12 @@ class ExchangeRateService:
                 )
                 return rate_float
         except Exception:
-            logger.warning("Failed to fetch and store online exchange rate for %s -> %s", from_currency, to_currency, exc_info=True)
+            logger.warning(
+                "Failed to fetch and store online exchange rate for %s -> %s",
+                from_currency,
+                to_currency,
+                exc_info=True,
+            )
         return None
 
     @staticmethod
@@ -554,7 +597,12 @@ class ExchangeRateService:
             if record and record.rate:
                 return float(record.rate)
         except Exception:
-            logger.debug("Failed to get last known exchange rate for %s -> %s", from_currency, to_currency, exc_info=True)
+            logger.debug(
+                "Failed to get last known exchange rate for %s -> %s",
+                from_currency,
+                to_currency,
+                exc_info=True,
+            )
         return None
 
     @staticmethod
@@ -596,7 +644,12 @@ class ExchangeRateService:
                 )
                 db.session.add(record)
         except Exception:
-            logger.warning("Failed to save exchange rate record for %s -> %s", from_currency, to_currency, exc_info=True)
+            logger.warning(
+                "Failed to save exchange rate record for %s -> %s",
+                from_currency,
+                to_currency,
+                exc_info=True,
+            )
 
     @staticmethod
     def save_manual_rate(

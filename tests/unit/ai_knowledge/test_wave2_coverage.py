@@ -147,9 +147,7 @@ class TestNeuralEngineTrainWave2:
             patch("models.SaleLine"),
             patch("models.StockMovement"),
         ):
-            chain = (
-                mock_db.session.query.return_value.outerjoin.return_value.outerjoin.return_value.group_by.return_value.limit.return_value
-            )
+            chain = mock_db.session.query.return_value.outerjoin.return_value.outerjoin.return_value.group_by.return_value.limit.return_value
             chain.all.return_value = _product_rows(25)
             result = engine._train_maintenance_internal()
             assert result["success"] is True
@@ -173,9 +171,7 @@ class TestNeuralEngineTrainWave2:
             patch("models.SaleLine"),
             patch("models.StockMovement"),
         ):
-            chain = (
-                mock_db.session.query.return_value.outerjoin.return_value.outerjoin.return_value.group_by.return_value.limit.return_value
-            )
+            chain = mock_db.session.query.return_value.outerjoin.return_value.outerjoin.return_value.group_by.return_value.limit.return_value
             chain.all.return_value = _product_rows(5)
             result = engine._train_maintenance_internal()
             assert result["success"] is False

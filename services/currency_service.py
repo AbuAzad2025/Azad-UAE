@@ -19,6 +19,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class _CurrencyRatesStub:
     """Dummy CurrencyRates when forex-python is not installed — keeps CurrencyRates always callable."""
 
@@ -329,7 +330,12 @@ class CurrencyService:
                     "age_seconds": 0,
                 }
             except Exception:
-                logger.warning("forex-python conversion failed for %s -> %s", from_currency, to_currency, exc_info=True)
+                logger.warning(
+                    "forex-python conversion failed for %s -> %s",
+                    from_currency,
+                    to_currency,
+                    exc_info=True,
+                )
 
         def get_aed_value(target):
             if target == "AED":

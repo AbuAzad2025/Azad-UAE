@@ -122,14 +122,14 @@
   </footer>
 
   <script>
-    (function () {
+    (() => {
       const modeInput = document.getElementById('access_mode');
       const tabs = document.querySelectorAll('.azad-login-tab');
-      let modeHint = document.getElementById('loginModeHint');
-      let pwd = document.getElementById('password');
-      let toggle = document.getElementById('togglePassword');
-      let form = document.getElementById('azadLoginForm');
-      let submitBtn = document.getElementById('loginSubmitBtn');
+      const modeHint = document.getElementById('loginModeHint');
+      const pwd = document.getElementById('password');
+      const toggle = document.getElementById('togglePassword');
+      const form = document.getElementById('azadLoginForm');
+      const submitBtn = document.getElementById('loginSubmitBtn');
 
       function setAccessMode(mode) {
         if (!modeInput) return;
@@ -139,15 +139,15 @@
             ? 'دخول المنصة (مالك/مطور)'
             : 'دخول مستخدمي الشركات';
         }
-        tabs.forEach(function (tab) {
+        tabs.forEach((tab) => {
           const active = tab.getAttribute('data-access-mode') === mode;
           tab.classList.toggle('is-active', active);
           tab.setAttribute('aria-selected', active ? 'true' : 'false');
         });
       }
 
-      tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
           setAccessMode(tab.getAttribute('data-access-mode') || 'users');
         });
       });
@@ -157,10 +157,10 @@
       }
 
       if (pwd && toggle) {
-        toggle.addEventListener('click', function () {
-          let show = pwd.type === 'password';
+        toggle.addEventListener('click', () => {
+          const show = pwd.type === 'password';
           pwd.type = show ? 'text' : 'password';
-          let icon = toggle.querySelector('i');
+          const icon = toggle.querySelector('i');
           if (icon) {
             icon.classList.toggle('fa-eye', !show);
             icon.classList.toggle('fa-eye-slash', show);
@@ -169,11 +169,11 @@
       }
 
       if (form && submitBtn) {
-        let submitOriginalHtml = submitBtn.innerHTML;
-        form.addEventListener('submit', function () {
+        const submitOriginalHtml = submitBtn.innerHTML;
+        form.addEventListener('submit', () => {
           submitBtn.classList.add('is-loading');
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> جاري التحقق...';
-          setTimeout(function () {
+          setTimeout(() => {
             submitBtn.classList.remove('is-loading');
             submitBtn.innerHTML = submitOriginalHtml;
           }, 15000);

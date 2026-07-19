@@ -55,6 +55,7 @@ def _rate_limit_key():
             return f"user:{current_user.get_id()}"
     except Exception:
         import logging
+
         logging.getLogger(__name__).debug(
             "Rate-limit key resolution: current_user not available, falling back to IP"
         )

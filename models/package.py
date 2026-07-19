@@ -54,9 +54,7 @@ class Package(db.Model):
     has_priority_support = db.Column(db.Boolean, default=False)  # دعم أولوية
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(
-        db.DateTime, default=_utc_now, onupdate=_utc_now
-    )
+    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
 
     def __repr__(self):
         return f"<Package {self.name_ar}>"
@@ -140,9 +138,7 @@ class PackagePurchase(db.Model):
     )
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(
-        db.DateTime, default=_utc_now, onupdate=_utc_now
-    )
+    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
 
     # العلاقات
     package = db.relationship("Package", backref="purchases")

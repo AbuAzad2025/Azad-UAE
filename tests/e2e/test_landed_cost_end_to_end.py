@@ -185,12 +185,14 @@ def main():
             expected_unit_cost_with_landed = (
                 fob_unit_cost + expected_landed_per_unit
             )  # 285
-            assert (
-                pl.landed_cost == total_landed
-            ), f"Landed cost allocation mismatch: {pl.landed_cost} != {total_landed}"
+            assert pl.landed_cost == total_landed, (
+                f"Landed cost allocation mismatch: {pl.landed_cost} != {total_landed}"
+            )
             assert pl.landed_unit_cost == expected_unit_cost_with_landed.quantize(
                 Decimal("0.001")
-            ), f"Landed unit cost mismatch: {pl.landed_unit_cost} != {expected_unit_cost_with_landed}"
+            ), (
+                f"Landed unit cost mismatch: {pl.landed_unit_cost} != {expected_unit_cost_with_landed}"
+            )
             print("  ✅ Landed cost allocation correct")
 
             # Verify WAC includes landed cost
@@ -201,12 +203,12 @@ def main():
             expected_new_avg = (expected_new_value / expected_new_qty).quantize(
                 Decimal("0.0001")
             )
-            assert (
-                pwc.total_quantity == expected_new_qty
-            ), f"Qty mismatch: {pwc.total_quantity} != {expected_new_qty}"
-            assert abs(pwc.average_cost - expected_new_avg) < Decimal(
-                "0.001"
-            ), f"Avg mismatch: {pwc.average_cost} != {expected_new_avg}"
+            assert pwc.total_quantity == expected_new_qty, (
+                f"Qty mismatch: {pwc.total_quantity} != {expected_new_qty}"
+            )
+            assert abs(pwc.average_cost - expected_new_avg) < Decimal("0.001"), (
+                f"Avg mismatch: {pwc.average_cost} != {expected_new_avg}"
+            )
             print("  ✅ WAC includes landed cost")
 
             # Create sale and verify COGS from landed-cost-inclusive WAC
@@ -275,12 +277,12 @@ def main():
                 purchase.subtotal - purchase.discount_amount
             ) + total_landed
             expected_payable = purchase.total_amount + total_landed
-            assert expected_inventory_debit == Decimal(
-                "2850"
-            ), f"Inventory debit mismatch: {expected_inventory_debit}"
-            assert expected_payable == Decimal(
-                "2850"
-            ), f"AP mismatch: {expected_payable}"
+            assert expected_inventory_debit == Decimal("2850"), (
+                f"Inventory debit mismatch: {expected_inventory_debit}"
+            )
+            assert expected_payable == Decimal("2850"), (
+                f"AP mismatch: {expected_payable}"
+            )
             print("  ✅ GL math correct (inventory includes landed costs)")
 
             print("\r\n=== ALL LANDED COST TESTS PASSED ===")

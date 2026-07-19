@@ -399,9 +399,7 @@ class TestAzadResponsesWave4:
                     },
                 ),
             ):
-                mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
-                    monthly
-                )
+                mock_db.session.query.return_value.filter.return_value.group_by.return_value.all.return_value = monthly
                 assert "5,000" in responses.smart_response(
                     "توقع predict forecast الشهر"
                 )
@@ -845,9 +843,7 @@ class TestAzadResponsesWave4:
             da.analyze_customer_debt.return_value = {"success": False}
             MockSale.query.filter.return_value.all.return_value = []
             MockSup.query.filter_by.return_value.count.return_value = 0
-            MockSup.query.filter_by.return_value.order_by.return_value.first.return_value = (
-                None
-            )
+            MockSup.query.filter_by.return_value.order_by.return_value.first.return_value = None
             mock_db.session.query.return_value.scalar.return_value = 0
             result = responses._handle_detected_intent(intent, "test message", {})
             assert result is None or isinstance(result, str)
@@ -1333,9 +1329,7 @@ class TestActionDispatcherWave4:
             permitted[3],
             patch("models.Customer") as Customer,
         ):
-            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = (
-                RuntimeError()
-            )
+            Customer.query.filter_by.return_value.order_by.return_value.limit.return_value.all.side_effect = RuntimeError()
             assert action_dispatcher.dispatch("list_customers", {}).success is False
             assert (
                 action_dispatcher.dispatch("customer_balance", {"name": ""}).success
@@ -1623,7 +1617,10 @@ class TestSecondaryWave4:
         ):
             mock_q.all.return_value = [sale] * 10
             mock_q.count.return_value = 10
-            assert assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
+            assert (
+                assistant.process("حلل المبيعات", user_id=1, context={})["success"]
+                is True
+            )
         debt_payload = {
             "success": True,
             "customer": {"name": "Debtor"},
@@ -1649,7 +1646,10 @@ class TestSecondaryWave4:
             ),
             patch.object(assistant, "_learn_from_interaction"),
         ):
-            assert assistant.process("رصيد العميل", user_id=1, context={})["success"] is True
+            assert (
+                assistant.process("رصيد العميل", user_id=1, context={})["success"]
+                is True
+            )
 
     def test_master_brain_and_expansion(self, knowledge_path):
         from ai_knowledge.agents.master_brain import get_master_brain
@@ -1875,7 +1875,10 @@ class TestWave4Extended:
                     mock_q.all.return_value = []
                     mock_q.count.return_value = 0
                     assert (
-                        assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
+                        assistant.process("حلل المبيعات", user_id=1, context={})[
+                            "success"
+                        ]
+                        is True
                     )
                     understand.return_value = {
                         "intent": "sales_analysis",
@@ -1883,7 +1886,10 @@ class TestWave4Extended:
                     }
                     mock_q.all.return_value = [sale] * 3
                     assert (
-                        assistant.process("حلل المبيعات", user_id=1, context={})["success"] is True
+                        assistant.process("حلل المبيعات", user_id=1, context={})[
+                            "success"
+                        ]
+                        is True
                     )
                     understand.return_value = {
                         "intent": "sales_analysis",
@@ -1897,7 +1903,9 @@ class TestWave4Extended:
                         create=True,
                     ):
                         assert (
-                            assistant.process("حلل المبيعات", user_id=1, context={})["success"]
+                            assistant.process("حلل المبيعات", user_id=1, context={})[
+                                "success"
+                            ]
                             is True
                         )
                     understand.return_value = {
@@ -1905,9 +1913,15 @@ class TestWave4Extended:
                         "confidence": 0.9,
                     }
                     mock_q.filter.return_value.all.return_value = []
-                    assert assistant.process("مخزون", user_id=1, context={})["success"] is True
+                    assert (
+                        assistant.process("مخزون", user_id=1, context={})["success"]
+                        is True
+                    )
                     mock_q.filter.return_value.all.return_value = [product] * 6
-                    assert assistant.process("مخzون", user_id=1, context={})["success"] is True
+                    assert (
+                        assistant.process("مخzون", user_id=1, context={})["success"]
+                        is True
+                    )
                     understand.return_value = {
                         "intent": "customer_balance",
                         "confidence": 0.9,
@@ -1926,7 +1940,9 @@ class TestWave4Extended:
                             },
                         ):
                             assert (
-                                assistant.process("رصيد Ali", user_id=1, context={})["success"]
+                                assistant.process("رصيد Ali", user_id=1, context={})[
+                                    "success"
+                                ]
                                 is True
                             )
                         with patch.object(
@@ -1941,7 +1957,9 @@ class TestWave4Extended:
                             },
                         ):
                             assert (
-                                assistant.process("رصيد Ali", user_id=1, context={})["success"]
+                                assistant.process("رصيد Ali", user_id=1, context={})[
+                                    "success"
+                                ]
                                 is True
                             )
         finally:
@@ -2124,9 +2142,7 @@ class TestWave4Extended:
                 patch.object(engine, "_load_model", return_value=True),
                 patch("extensions.db") as mock_db,
             ):
-                mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
-                    []
-                )
+                mock_db.session.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
                 assert (
                     engine._forecast_sales_internal(3)["error"]
                     == "Not enough recent data"

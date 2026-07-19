@@ -128,7 +128,9 @@ def api_create_return():
 @permission_required("manage_sales")
 def view(**kwargs):
     record_id = kwargs.pop("id")
-    product_return = _scoped_returns_query().filter(ProductReturn.id == record_id).first()
+    product_return = (
+        _scoped_returns_query().filter(ProductReturn.id == record_id).first()
+    )
     if not product_return:
         abort(404)
 

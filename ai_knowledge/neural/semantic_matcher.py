@@ -622,8 +622,7 @@ class SemanticMatcher:
         return tfidf
 
     @staticmethod
-    def _cosine_similarity( vec1: Dict[str, float], vec2: Dict[str, float]
-    ) -> float:
+    def _cosine_similarity(vec1: Dict[str, float], vec2: Dict[str, float]) -> float:
         """حساب التشابه بين متجهين باستخدام Cosine Similarity"""
         # الكلمات المشتركة
         common_words = set(vec1.keys()) & set(vec2.keys())

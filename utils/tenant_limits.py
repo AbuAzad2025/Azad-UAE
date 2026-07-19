@@ -47,7 +47,9 @@ class TenantLimitError(Exception):
                         link = f"https://wa.me/{link}"
                     TenantLimitError.wa_upgrade_link = link
             except Exception:
-                logger.debug("Failed to resolve developer WhatsApp upgrade link", exc_info=True)
+                logger.debug(
+                    "Failed to resolve developer WhatsApp upgrade link", exc_info=True
+                )
             msg += (
                 f"\n\nيمكنك التواصل مع المطور للترقية إلى باقة أعلى عبر "
                 f'<a href="{TenantLimitError.wa_upgrade_link}" target="_blank" class="alert-link">واتساب</a>.'

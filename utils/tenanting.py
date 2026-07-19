@@ -65,7 +65,9 @@ def get_active_tenant_id(user=None) -> int | None:
                 if g_tid is not None:
                     return int(g_tid)
         except Exception:
-            logger.debug("Failed to resolve active tenant from g context", exc_info=True)
+            logger.debug(
+                "Failed to resolve active tenant from g context", exc_info=True
+            )
         return None
 
     if not is_platform_owner(user):

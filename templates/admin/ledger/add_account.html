@@ -277,9 +277,9 @@
   }
 </style>
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   function toggleBankFields() {
-    let accountType = $('select[name="type"]').val();
+    const accountType = $('select[name="type"]').val();
     if (accountType === 'asset') {
       $('#bank_fields').show();
     } else {

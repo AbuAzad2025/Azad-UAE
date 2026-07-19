@@ -241,9 +241,9 @@ class TestRecordPaymentFallbacks:
         )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")
-        mocker.patch("services.azad_subscription_fee_service.current_app").logger = (
-            MagicMock()
-        )
+        mocker.patch(
+            "services.azad_subscription_fee_service.current_app"
+        ).logger = MagicMock()
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
 
         with app.app_context():

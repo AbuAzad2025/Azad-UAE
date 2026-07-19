@@ -55,7 +55,7 @@
     </div>
   </footer>
   <script>
-  document.querySelectorAll('.erp-footer-logo[data-fallback]').forEach(function(img){
+  document.querySelectorAll('.erp-footer-logo[data-fallback]').forEach((img)=> {
     img.addEventListener('error',function(){if(this.dataset.fallback){this.src=this.dataset.fallback;}});
   });
   </script>

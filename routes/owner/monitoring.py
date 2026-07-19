@@ -371,6 +371,7 @@ def error_audit_logs():
     )
 
     from models.user import User
+
     user_ids = {log.user_id for log in items if log.user_id}
     user_map = {}
     if user_ids:

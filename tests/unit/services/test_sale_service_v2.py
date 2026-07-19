@@ -110,9 +110,7 @@ class TestSaleServiceCreate:
             mock_stock._resolve_cogs_unit_cost.return_value = (Decimal("50"), "test")
             with self._setup_mocks()[0] as mock_wh_query:
                 wh = self._mock_warehouse()
-                mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = (
-                    wh
-                )
+                mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = wh
                 with self._setup_mocks()[1]:
                     with self._setup_mocks()[2]:
                         with self._setup_mocks()[3] as mock_ex:
@@ -181,9 +179,7 @@ class TestSaleServiceCreate:
             mock_stock._resolve_cogs_unit_cost.return_value = (Decimal("50"), "test")
             with patch("models.Warehouse.query") as mock_wh_query:
                 wh = self._mock_warehouse()
-                mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = (
-                    wh
-                )
+                mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = wh
                 with patch(
                     "services.sale_service.ensure_warehouse_access", return_value=wh
                 ):
@@ -215,9 +211,7 @@ class TestSaleServiceCreate:
                                         sn_obj = MagicMock()
                                         sn_obj.status = "available"
                                         sn_obj.warehouse_id = None
-                                        mock_sn.query.filter_by.return_value.first.return_value = (
-                                            sn_obj
-                                        )
+                                        mock_sn.query.filter_by.return_value.first.return_value = sn_obj
                                         with patch(
                                             "services.sale_service.validate_currency_code",
                                             return_value="AED",

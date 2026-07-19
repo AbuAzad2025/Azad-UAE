@@ -206,7 +206,10 @@ def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
         return False, "❌ استعلام غير مسموح — قراءة فقط (SELECT)."
     blocked = _sql_references_blocked_table(sql_query)
     if blocked:
-        return False, "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables)."
+        return (
+            False,
+            "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables).",
+        )
     return True, None
 
 

@@ -880,9 +880,7 @@ def _do_seed_demo(_app):
             Sale.customer_id == cust.id,
             Sale.status == "confirmed",
             Sale.is_active,
-        ).scalar() or Decimal(
-            "0"
-        )
+        ).scalar() or Decimal("0")
         cust.balance = bal
     db.session.flush()
 

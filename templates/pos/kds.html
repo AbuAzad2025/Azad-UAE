@@ -36,7 +36,7 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-(function(){
+(()=> {
   const grid = document.getElementById('kdsGrid');
   let currentFilter = 'all';
 
@@ -80,7 +80,7 @@
     return btns.join('');
   }
 
-  grid.addEventListener('click', function(e){
+  grid.addEventListener('click', (e)=> {
     const btn = e.target.closest('.status-btn');
     if (!btn) return;
     const orderId = btn.dataset.id;
@@ -105,10 +105,10 @@
 
   function connectSSE() {
     const es = new EventSource('/pos/api/kds/stream');
-    es.onmessage = function(e) {
+    es.onmessage = (e) => {
       try { const d = JSON.parse(e.data); if (d.type) loadOrders(); } catch(ex) {}
     };
-    es.onerror = function() { es.close(); setTimeout(connectSSE, 3000); };
+    es.onerror = () => { es.close(); setTimeout(connectSSE, 3000); };
   }
 
   loadOrders();

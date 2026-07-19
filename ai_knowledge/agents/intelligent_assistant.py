@@ -491,7 +491,8 @@ class IntelligentAssistant:
             return {"insights": [], "warnings": [], "recommendations": []}
 
     @staticmethod
-    def _generate_dynamic_response( intent: str, analysis: Dict, _entities: Dict, data: Dict
+    def _generate_dynamic_response(
+        intent: str, analysis: Dict, _entities: Dict, data: Dict
     ) -> str:
         """توليد رد ديناميكي - ليس مسبق الحفظ"""
         try:

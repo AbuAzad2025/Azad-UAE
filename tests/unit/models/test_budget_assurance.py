@@ -133,7 +133,9 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_zero_budgeted_variance_pct(
         self, mocker, mock_gl_columns, mock_db
     ):
-        budget = _budget(total_budgeted=Decimal("0"), lines=[_line(budgeted=Decimal("0"))])
+        budget = _budget(
+            total_budgeted=Decimal("0"), lines=[_line(budgeted=Decimal("0"))]
+        )
         debit_q = MagicMock()
         debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
             "10"
@@ -176,7 +178,9 @@ class TestBudgetUpdateActuals:
     def test_update_actuals_sets_budget_variance_percentage(
         self, mocker, mock_gl_columns, mock_db
     ):
-        budget = _budget(total_budgeted=Decimal("200"), lines=[_line(budgeted=Decimal("200"))])
+        budget = _budget(
+            total_budgeted=Decimal("200"), lines=[_line(budgeted=Decimal("200"))]
+        )
         debit_q = MagicMock()
         debit_q.filter.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
             "100"

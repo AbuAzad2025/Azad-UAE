@@ -565,9 +565,9 @@ class TestWarehouseEditSecurity:
 
         # Verify branch validation logic (as implemented in route)
         new_branch_id = b2.id
-        assert (
-            new_branch_id not in accessible_ids
-        ), "Inaccessible branch should be rejected by route"
+        assert new_branch_id not in accessible_ids, (
+            "Inaccessible branch should be rejected by route"
+        )
 
 
 class TestPartnerCommissionDynamicProfitMargin:

@@ -434,7 +434,7 @@ function deleteLine(button) {
 }
 
 // عند {{ t('Download') }} {{ t('الصفحة') }}
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // {{ t('تعيين') }} {{ t('Date') }} {{ t('الحالي') }}
   document.querySelector('input[name="entry_date"]').value = new Date().toISOString().split('T')[0];
   

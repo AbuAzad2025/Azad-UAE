@@ -79,8 +79,8 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/products/category-controls.js') }}"></script>
 <script>
-$(function() {
-  $('.js-category-add').on('click', function() {
+$(() => {
+  $('.js-category-add').on('click', () => {
     $('#categoryModal').removeData('edit-id');
     $('#categoryModal .js-category-modal-title').text('إضافة فئة منتجات');
     $('#categoryModal .js-category-save-label').text('حفظ الفئة');
@@ -88,8 +88,8 @@ $(function() {
   });
   initCategoryListControls({
     createUrl: "{{ url_for('products.create_category') }}",
-    updateUrl: function(id) { return "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'); },
-    deleteUrl: function(id) { return "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/'); }
+    updateUrl: (id) => "{{ url_for('products.update_category', id=0) }}".replace('/0/', '/' + id + '/'),
+    deleteUrl: (id) => "{{ url_for('products.delete_category', id=0) }}".replace('/0/', '/' + id + '/')
   });
 });
 </script>

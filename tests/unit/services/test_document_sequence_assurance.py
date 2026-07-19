@@ -82,9 +82,7 @@ class TestNextNumber:
             return_value=seq,
         )
         mock_session = mocker.patch("services.document_sequence_service.db.session")
-        mock_session.query.return_value.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            locked
-        )
+        mock_session.query.return_value.filter_by.return_value.with_for_update.return_value.first.return_value = locked
 
         from services.document_sequence_service import DocumentSequenceService
 
@@ -104,9 +102,7 @@ class TestNextNumber:
             return_value=seq,
         )
         mock_session = mocker.patch("services.document_sequence_service.db.session")
-        mock_session.query.return_value.filter_by.return_value.with_for_update.return_value.first.return_value = (
-            None
-        )
+        mock_session.query.return_value.filter_by.return_value.with_for_update.return_value.first.return_value = None
 
         from services.document_sequence_service import DocumentSequenceService
 

@@ -257,7 +257,7 @@
 
 <script>
 
-$(document).ready(function() {
+$(document).ready(() => {
 
   $('#archivedTable').DataTable({
 
@@ -305,13 +305,13 @@ $(document).ready(function() {
 
       },
 
-      success: function() {
+      success: () => {
 
         location.reload();
 
       },
 
-      error: function() {
+      error: () => {
 
         location.reload();
 

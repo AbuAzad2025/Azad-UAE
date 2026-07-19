@@ -117,9 +117,7 @@ class TestNeuralEngineFinal:
             patch("models.Customer"),
             patch("models.Sale"),
         ):
-            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = (
-                None
-            )
+            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = None
             assert engine.classify_customer_intelligence(99)["classification"] == "new"
             mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = _customer_row(
                 120000
@@ -144,9 +142,7 @@ class TestNeuralEngineFinal:
                 assert result["classification"] == "regular"
                 assert any("خسارة" in r for r in result["recommendations"])
             row = _customer_row(5000)
-            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = (
-                row
-            )
+            mock_db.session.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.first.return_value = row
             with (
                 patch.object(engine, "_load_model", return_value=True),
                 patch.object(engine, "_is_model_loaded", return_value=True),

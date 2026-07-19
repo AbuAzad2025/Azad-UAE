@@ -946,11 +946,7 @@ class GLMappingValidationService:
         parent_code_hint = rule.get("parent_code_hint")
 
         def _is_postable(acct: GLAccount) -> bool:
-            return (
-                acct.tenant_id == tenant.id
-                and acct.is_active
-                and not acct.is_header
-            )
+            return acct.tenant_id == tenant.id and acct.is_active and not acct.is_header
 
         # --- Strategy 1: exact name match (highest confidence) ---
         for pattern in name_exact:

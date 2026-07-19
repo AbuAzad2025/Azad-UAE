@@ -608,7 +608,9 @@ def restore_payment(**kwargs):
 
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="payments", record_id=record_id)
+    archived_query = ArchivedRecord.query.filter_by(
+        table_name="payments", record_id=record_id
+    )
     if tid is not None:
         archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
     archived = archived_query.first_or_404()
@@ -672,7 +674,9 @@ def create_from_sale(sale_id):
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception("Failed to log currency resolution error for sale payment")
+                    current_app.logger.exception(
+                        "Failed to log currency resolution error for sale payment"
+                    )
                 default_currency = (
                     sale.currency or ""
                 ).strip() or resolve_default_currency()
@@ -815,7 +819,9 @@ def create_voucher_submit():
                     exception=e,
                 )
             except Exception:
-                current_app.logger.exception("Failed to log currency resolution error for voucher submit")
+                current_app.logger.exception(
+                    "Failed to log currency resolution error for voucher submit"
+                )
             default_currency = get_system_default_currency()
         currency = request.form.get("currency") or default_currency
         user_exchange_rate = request.form.get("exchange_rate", type=float, default=1.0)
@@ -1379,7 +1385,9 @@ def print_receipt(**kwargs):
                 exception=e,
             )
         except Exception:
-            current_app.logger.exception("Failed to log receipt template rendering error")
+            current_app.logger.exception(
+                "Failed to log receipt template rendering error"
+            )
         return render_template(
             "receipts/modern.html",
             receipt=receipt,
@@ -1810,7 +1818,9 @@ def create_payment(purchase_id):
                         exception=e,
                     )
                 except Exception:
-                    current_app.logger.exception("Failed to log currency resolution error for purchase payment")
+                    current_app.logger.exception(
+                        "Failed to log currency resolution error for purchase payment"
+                    )
                 default_currency = (
                     purchase.currency or ""
                 ).strip() or get_system_default_currency()

@@ -1628,7 +1628,9 @@ class AzadNeuralEngine:
                 "risk_level": (
                     "high"
                     if risk_score > 0.7
-                    else "medium" if risk_score > 0.4 else "low"
+                    else "medium"
+                    if risk_score > 0.4
+                    else "low"
                 ),
                 "reasons": reasons,
                 "recommendation": (

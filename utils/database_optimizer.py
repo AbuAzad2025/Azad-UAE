@@ -36,14 +36,16 @@ class DatabaseOptimizer:
     def get_table_sizes():
         try:
             if "postgresql" in str(db.engine.url):
-                result = db.session.execute(text("""
+                result = db.session.execute(
+                    text("""
                     SELECT c.relname AS table_name,
                            c.reltuples::bigint AS row_estimate
                     FROM pg_class c
                     JOIN pg_namespace n ON n.oid = c.relnamespace
                     WHERE n.nspname = 'public' AND c.relkind = 'r'
                     ORDER BY c.relname
-                """))
+                """)
+                )
 
                 tables = []
                 for row in result:

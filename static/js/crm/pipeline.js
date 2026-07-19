@@ -1,17 +1,44 @@
-(function(){
-document.querySelectorAll('.pipeline-card[draggable]').forEach(card=>{
-card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',this.dataset.leadId);this.classList.add('dragging')});
-card.addEventListener('dragend',function(){this.classList.remove('dragging')});
-});
-document.querySelectorAll('.pipeline-cards').forEach(col=>{
-col.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('drag-over')});
-col.addEventListener('dragleave',function(){this.classList.remove('drag-over')});
-col.addEventListener('drop',function(e){
-e.preventDefault();this.classList.remove('drag-over');
-const leadId=e.dataTransfer.getData('text/plain');const stageId=this.closest('.pipeline-column').dataset.stageId;
-if(!leadId||!stageId)return;
-fetch('/crm/api/move-stage',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({lead_id:parseInt(leadId),stage_id:parseInt(stageId)})})
-.then(r=>r.json()).then(d=>{if(d.success)location.reload()}).catch(()=>location.reload());
-});
-});
+(() => {
+	document.querySelectorAll(".pipeline-card[draggable]").forEach((card) => {
+		card.addEventListener("dragstart", function (e) {
+			e.dataTransfer.setData("text/plain", this.dataset.leadId);
+			this.classList.add("dragging");
+		});
+		card.addEventListener("dragend", function () {
+			this.classList.remove("dragging");
+		});
+	});
+	document.querySelectorAll(".pipeline-cards").forEach((col) => {
+		col.addEventListener("dragover", function (e) {
+			e.preventDefault();
+			this.classList.add("drag-over");
+		});
+		col.addEventListener("dragleave", function () {
+			this.classList.remove("drag-over");
+		});
+		col.addEventListener("drop", function (e) {
+			e.preventDefault();
+			this.classList.remove("drag-over");
+			const leadId = e.dataTransfer.getData("text/plain");
+			const stageId = this.closest(".pipeline-column").dataset.stageId;
+			if (!leadId || !stageId) return;
+			fetch("/crm/api/move-stage", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
+						.content,
+				},
+				body: JSON.stringify({
+					lead_id: parseInt(leadId),
+					stage_id: parseInt(stageId),
+				}),
+			})
+				.then((r) => r.json())
+				.then((d) => {
+					if (d.success) location.reload();
+				})
+				.catch(() => location.reload());
+		});
+	});
 })();

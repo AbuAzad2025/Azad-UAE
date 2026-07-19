@@ -186,7 +186,7 @@
 {% block extra_js %}
 {% include 'partials/datatables_assets.html' %}
 <script>
-$(document).ready(function() {
+$(document).ready(() => {
   const $tableEl = $('#purchasesTable');
   const printOptions = {
     title: '{{ t('Log') }} {{ t('Purchases') }}',

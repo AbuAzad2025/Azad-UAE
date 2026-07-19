@@ -423,9 +423,7 @@ def account_order_detail(slug, order_id):
         "shop/account_order_detail.html",
         order=sale,
         pay_method=pay_method,
-        status_label=StoreOrderService.status_label(
-            sale.status, ctx.get("lang", "")
-        ),
+        status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         noindex=True,
         **ctx,
     )
@@ -1395,9 +1393,7 @@ def order_invoice(slug, sale_id):
         sale.checkout_payment_method or "cod"
     )
     ctx.update(
-        status_label=StoreOrderService.status_label(
-            sale.status, ctx.get("lang", "")
-        ),
+        status_label=StoreOrderService.status_label(sale.status, ctx.get("lang", "")),
         pay_method=pay_method,
     )
     return render_template("shop/order_invoice.html", sale=sale, **ctx)

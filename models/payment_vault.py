@@ -9,6 +9,8 @@ from extensions import db
 
 def _utc_now():
     return datetime.now(timezone.utc)
+
+
 from decimal import Decimal
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -98,9 +100,7 @@ class PaymentVault(db.Model):
     failed_attempts = db.Column(db.Integer, default=0)  # عدد المحاولات الفاشلة
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(
-        db.DateTime, default=_utc_now, onupdate=_utc_now
-    )
+    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
 
     @classmethod
     def get_platform_vault(cls):
@@ -206,9 +206,7 @@ class PaymentTransaction(db.Model):
     is_verified = db.Column(db.Boolean, default=False)  # هل تم التحقق
 
     created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(
-        db.DateTime, default=_utc_now, onupdate=_utc_now
-    )
+    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
     completed_at = db.Column(db.DateTime)  # وقت الإكمال
 
     vault_id = db.Column(

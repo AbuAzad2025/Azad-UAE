@@ -90,7 +90,11 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
             if resolved:
                 return resolved.account_code
         except Exception:
-            logger.warning("Dynamic GL mapping failed for concept %s, falling back to static", concept_code, exc_info=True)
+            logger.warning(
+                "Dynamic GL mapping failed for concept %s, falling back to static",
+                concept_code,
+                exc_info=True,
+            )
     concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
     if concept_key and concept_key in GL_ACCOUNTS:
         return GL_ACCOUNTS[concept_key]
@@ -432,7 +436,11 @@ class StockService:
                     f"Stock movement: {movement_type} {quantity} of product #{product_id}"
                 )
             except Exception:
-                logger.warning("Failed to log stock movement info for product #%s", product_id, exc_info=True)
+                logger.warning(
+                    "Failed to log stock movement info for product #%s",
+                    product_id,
+                    exc_info=True,
+                )
 
             return movement
 

@@ -36,7 +36,10 @@ def post_sale_commissions(sale):
             resolve_tenant_base_currency(tenant_id=sale.tenant_id) or base_currency
         )
     except Exception:
-        logger.warning("Failed to resolve tenant base currency for commission GL, using default", exc_info=True)
+        logger.warning(
+            "Failed to resolve tenant base currency for commission GL, using default",
+            exc_info=True,
+        )
 
     GLService.ensure_core_accounts(tenant_id=getattr(sale, "tenant_id", None))
     return post_or_fail(

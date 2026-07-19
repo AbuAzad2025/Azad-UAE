@@ -153,16 +153,16 @@ class TestSalesCreate:
         assert len(gl_entries) >= 2
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
-        assert (
-            total_debit == total_credit
-        ), f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        assert total_debit == total_credit, (
+            f"GL unbalanced: debit={total_debit} credit={total_credit}"
+        )
 
         stock_after = ProductWarehouseStock.query.filter_by(
             product_id=product.id, warehouse_id=warehouse.id
         ).first()
-        assert stock_after.quantity == Decimal(
-            "95"
-        ), f"Expected 95, got {stock_after.quantity}"
+        assert stock_after.quantity == Decimal("95"), (
+            f"Expected 95, got {stock_after.quantity}"
+        )
 
     def test_create_invoice_with_tax_calculates_vat_correctly(
         self, app, db_session, client

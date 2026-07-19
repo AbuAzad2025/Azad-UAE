@@ -155,9 +155,7 @@ def vat_report():
 
     tenant = Tenant.get_current()
     if tenant and not is_tax_enabled(tenant.id):
-        flash(
-            "الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم.", "info"
-        )
+        flash("الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم.", "info")
         return redirect(url_for("ledger.index"))
 
     date_from = request.args.get("date_from", type=str)
@@ -550,7 +548,9 @@ def account_statement(account_id):
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
     branch_id = _effective_branch_id()
-    statement = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
+    statement = GLService.get_account_statement(
+        account_id, date_from, date_to, branch_id
+    )
     branches = get_accessible_branches(current_user)
     return render_template(
         "ledger/account_statement.html",

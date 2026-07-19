@@ -1,21 +1,21 @@
 {
-  "name": "AZAD Store",
-  "short_name": "AZAD Shop",
-  "description": "Multi-tenant online store powered by AZAD ERP",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1B7A4E",
-  "icons": [
-    {
-      "src": "/static/assets/brand/azad/logos/logo-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/assets/brand/azad/logos/logo-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+	"name": "AZAD Store",
+	"short_name": "AZAD Shop",
+	"description": "Multi-tenant online store powered by AZAD ERP",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#1B7A4E",
+	"icons": [
+		{
+			"src": "/static/assets/brand/azad/logos/logo-192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "/static/assets/brand/azad/logos/logo-512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	]
 }

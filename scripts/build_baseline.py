@@ -37,12 +37,23 @@ def _load_data_constants():
         GL_MODULE_DEFINITIONS,
     )
     from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
-    return (BASE_ACCOUNTS, INDUSTRY_EXTENSIONS, GL_MODULE_DEFINITIONS,
-            GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING)
+
+    return (
+        BASE_ACCOUNTS,
+        INDUSTRY_EXTENSIONS,
+        GL_MODULE_DEFINITIONS,
+        GL_CONCEPT_REGISTRY,
+        RESOLUTION_MODE_MAPPING,
+    )
 
 
-(BASE_ACCOUNTS, INDUSTRY_EXTENSIONS, GL_MODULE_DEFINITIONS,
- GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING) = _load_data_constants()
+(
+    BASE_ACCOUNTS,
+    INDUSTRY_EXTENSIONS,
+    GL_MODULE_DEFINITIONS,
+    GL_CONCEPT_REGISTRY,
+    RESOLUTION_MODE_MAPPING,
+) = _load_data_constants()
 
 MAIN_DB_URL = "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"
 VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "migrations", "versions")
@@ -353,10 +364,17 @@ depends_on = None
 
 '''
 
-tail = "\n\ndef upgrade():" + schema_body + data_block + """
+tail = (
+    "\n\ndef upgrade():"
+    + schema_body
+    + data_block
+    + """
 
 def downgrade():
-""" + downgrade_body + "\n"
+"""
+    + downgrade_body
+    + "\n"
+)
 
 content = header + tail
 

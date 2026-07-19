@@ -1,8 +1,26 @@
 /* purgecss start ignore */
-.kanban-column .card-header{border-radius:8px 8px 0 0;}
-.kanban-cards{min-height:150px;max-height:calc(100vh - 250px);overflow-y:auto;}
-.kanban-card{cursor:grab;border:1px solid #e2e8f0;}
-.kanban-card:active{cursor:grabbing;}
-.kanban-card.dragging{opacity:.5;border:2px dashed #10b981;}
-.kanban-cards.drag-over{background:#f0fdf4;border-radius:8px;min-height:200px;}
+.kanban-column .card-header {
+	border-radius: 8px 8px 0 0;
+}
+.kanban-cards {
+	min-height: 150px;
+	max-height: calc(100vh - 250px);
+	overflow-y: auto;
+}
+.kanban-card {
+	cursor: grab;
+	border: 1px solid #e2e8f0;
+}
+.kanban-card:active {
+	cursor: grabbing;
+}
+.kanban-card.dragging {
+	opacity: 0.5;
+	border: 2px dashed #10b981;
+}
+.kanban-cards.drag-over {
+	background: #f0fdf4;
+	border-radius: 8px;
+	min-height: 200px;
+}
 /* purgecss end ignore */
