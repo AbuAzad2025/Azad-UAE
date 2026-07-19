@@ -2,6 +2,7 @@
 خدمة مطابقة البنك - Bank Reconciliation Service
 """
 
+import logging
 from decimal import Decimal
 from datetime import timedelta
 from extensions import db
@@ -16,6 +17,8 @@ from models import (
 )
 from utils.helpers import generate_number
 from utils.gl_reference_types import GLRef
+
+logger = logging.getLogger(__name__)
 
 
 class BankReconciliationService:
@@ -75,6 +78,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after creating reconciliation")
             raise
 
         return reconciliation
@@ -159,6 +163,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after adding bank charge")
             raise
 
         return item
@@ -191,6 +196,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after adding bank interest")
             raise
 
         return item
@@ -275,6 +281,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after completing reconciliation")
             raise
 
         return reconciliation
@@ -595,6 +602,7 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after routing orphan transactions to suspense")
             raise
 
         return results
@@ -636,5 +644,6 @@ class BankReconciliationService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush after applying reconciliation matches")
             raise
         return reconciliation

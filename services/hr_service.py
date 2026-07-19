@@ -63,6 +63,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush attendance clock-in record")
             raise
         return att
 
@@ -94,6 +95,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush attendance clock-out record")
             raise
         return att
 
@@ -170,6 +172,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush leave request")
             raise
         return leave
 
@@ -186,6 +189,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush leave approval")
             raise
         return leave
 
@@ -203,6 +207,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush leave refusal")
             raise
         return leave
 
@@ -239,6 +244,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush department creation")
             raise
         return dept
 
@@ -288,6 +294,7 @@ class HRService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush HR contract creation")
             raise
         return contract
 

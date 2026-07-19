@@ -47,6 +47,7 @@ def ensure_card_encryption_key(instance_dir: str, env_value: str | None = None) 
                 f.write(key)
         except Exception:
             logger.warning("Failed to persist generated card encryption key to %s", key_path, exc_info=True)
+    return key
 
 
 def bootstrap_keys(app, instance_dir: str | None = None) -> None:

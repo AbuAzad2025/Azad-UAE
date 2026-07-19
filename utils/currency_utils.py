@@ -76,6 +76,7 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
                         return val
         except Exception:
             logger.debug("Failed to resolve base currency for tenant %s", tenant_id, exc_info=True)
+    return get_system_default_currency()
 
 
 def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:

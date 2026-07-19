@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from datetime import datetime, timezone
@@ -12,6 +13,8 @@ from extensions import db
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
 from utils.currency_utils import resolve_default_currency
+
+logger = logging.getLogger(__name__)
 
 
 class ShopCustomerAuthService:
@@ -118,6 +121,7 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush shop customer account registration")
             raise
 
         return account
@@ -136,6 +140,7 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush shop customer last login timestamp")
             raise
 
         return account
@@ -161,6 +166,7 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush shop customer password reset token")
             raise
 
         return account
@@ -194,6 +200,7 @@ class ShopCustomerAuthService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush shop customer password reset")
             raise
 
         return account

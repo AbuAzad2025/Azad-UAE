@@ -4,8 +4,12 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
 
+import logging
+
 from sqlalchemy import func
 from extensions import db
+
+logger = logging.getLogger(__name__)
 
 
 class PartnerService:
@@ -253,6 +257,7 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush partner profit distributions")
             raise
 
         return distribution_ids
@@ -304,6 +309,7 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush partner distribution approval")
             raise
 
         return True
@@ -365,6 +371,7 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush partner distribution payment")
             raise
 
         return True
@@ -487,6 +494,7 @@ class PartnerService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush partner manual transaction")
             raise
 
         return tx.id

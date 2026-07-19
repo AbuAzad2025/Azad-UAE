@@ -37,6 +37,7 @@ def _get_user_context():
             }
     except Exception:
         logger.debug("Failed to extract user context for structured log", exc_info=True)
+    return {}
 
 
 def _resolve_id(value):

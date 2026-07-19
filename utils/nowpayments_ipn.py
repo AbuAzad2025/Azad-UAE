@@ -34,4 +34,6 @@ def resolve_nowpayments_ipn_secret(vault=None) -> str:
     except Exception:
         logger.debug("Failed to load NOWPayments IPN secret from PaymentVault", exc_info=True)
 
+    from services.payments.nowpayments_provider import NowPaymentsProvider
+
     return (NowPaymentsProvider().ipn_secret or "").strip()

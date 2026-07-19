@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from extensions import db
@@ -5,6 +6,8 @@ from models import Project, TaskStage, Task, Timesheet, ProjectMember
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for
 from utils.auth_helpers import is_global_owner_user
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectService:
@@ -44,6 +47,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush project creation")
             raise
         default_stages = [
             ("To Do", "للتنفيذ", 0, "#6b7280"),
@@ -64,6 +68,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush project default stages")
             raise
         return project
 
@@ -99,6 +104,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush project update")
             raise
         return project
 
@@ -146,6 +152,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush task creation")
             raise
         return task
 
@@ -163,6 +170,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush task stage change")
             raise
         return task
 
@@ -188,6 +196,7 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush timesheet entry")
             raise
         return ts
 
@@ -247,5 +256,6 @@ class ProjectService:
         try:
             db.session.flush()
         except Exception:
+            logger.exception("Failed to flush project member addition")
             raise
         return member
