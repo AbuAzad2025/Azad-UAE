@@ -5,8 +5,7 @@ Provides internal API endpoints for the Owner Dashboard database maintenance too
 """
 
 import os
-from sqlalchemy import create_engine, func, select, text, update
-from sqlalchemy import table as sa_table
+from sqlalchemy import create_engine, func, select, text, update, Table, MetaData
 from extensions import db
 from utils.safe_sql import assert_known_column
 
@@ -238,7 +237,7 @@ class MaintenanceService:
                 if default is not None and str(default).upper() != "NULL":
                     continue  # DB will supply the default on insert/update
                 assert_known_column(engine, "tenants", name)
-                tenants_tbl = sa_table("tenants")
+                tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
                 cur = conn.execute(
                     select(tenants_tbl.c[name])
                     .where(tenants_tbl.c.slug == "default")
