@@ -111,11 +111,11 @@ def _seed(db):
             tenant_id=tenant.id,
             email=email,
             username=f"{email_slug}-{uid}",
-            name=slug.replace("_", " ").title(),
+            full_name=slug.replace("_", " ").title(),
             role_id=role_map[slug].id,
             branch_id=branch.id,
             is_active=True,
-            is_verified=True,
+            email_verified=True,
         )
         user.set_password(password)
         db.session.add(user)
