@@ -52,11 +52,11 @@
             <strong>{{ t('النوع') }}:</strong> {{ warehouse.type_label_ar() }}
           </div>
           <div class="col-md-3">
-            <strong>سحب السالب:</strong>
+            <strong>{{ _('سحب السالب:') }}</strong>
             {% if warehouse.allow_negative_inventory %}
-              <span class="badge badge-warning">مسموح</span>
+              <span class="badge badge-warning">{{ _('مسموح') }}</span>
             {% else %}
-              <span class="badge badge-secondary">غير مسموح</span>
+              <span class="badge badge-secondary">{{ _('غير مسموح') }}</span>
             {% endif %}
           </div>
         </div>

@@ -4,18 +4,18 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-shopping-cart"></i> المبيعات
+      <i class="fas fa-shopping-cart"></i> {{ _('المبيعات') }}
     </a>
     <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
-      <i class="fas fa-chart-line"></i> التنبؤ
+      <i class="fas fa-chart-line"></i> {{ _('التنبؤ') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-users"></i> تحليلات العملاء (أفضل 50)</h3>
+      <h3><i class="fas fa-users"></i> {{ _('تحليلات العملاء (أفضل 50)') }}</h3>
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -24,10 +24,10 @@
             <tr>
               <th>#</th>
               <th>{{ t('Customer') }}</th>
-              <th>إجمالي المشتريات</th>
-              <th>عدد الفواتير</th>
-              <th>متوسط الفاتورة</th>
-              <th>آخر شراء</th>
+              <th>{{ _('إجمالي المشتريات') }}</th>
+              <th>{{ _('عدد الفواتير') }}</th>
+              <th>{{ _('متوسط الفاتورة') }}</th>
+              <th>{{ _('آخر شراء') }}</th>
               <th>{{ t('Status') }}</th>
             </tr>
           </thead>

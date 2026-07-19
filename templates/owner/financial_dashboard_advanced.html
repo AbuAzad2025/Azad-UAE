@@ -4,23 +4,23 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-link"></i> المبيعات
+      <i class="fas fa-link"></i> {{ _('المبيعات') }}
     </a>
     <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> التنبؤ
+      <i class="fas fa-link"></i> {{ _('التنبؤ') }}
     </a>
   </div>
   
 <div class="row">
-<div class="col-md-3"><div class="small-box bg-success"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_revenue) }}</h3><p>متوسط الإيرادات</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-info"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_profit) }}</h3><p>متوسط الأرباح</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-primary"><div class="inner"><h3>{{ "%.1f"|format(kpis.avg_margin) }}%</h3><p>هامش الربح</p></div></div></div>
-<div class="col-md-3"><div class="small-box bg-{{ 'success' if kpis.growth_rate > 0 else 'danger' }}"><div class="inner"><h3>{{ "%.1f"|format(kpis.growth_rate) }}%</h3><p>معدل النمو</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-success"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_revenue) }}</h3><p>{{ _('متوسط الإيرادات') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-info"><div class="inner"><h3>{{ "%.0f"|format(kpis.avg_profit) }}</h3><p>{{ _('متوسط الأرباح') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-primary"><div class="inner"><h3>{{ "%.1f"|format(kpis.avg_margin) }}%</h3><p>{{ _('هامش الربح') }}</p></div></div></div>
+<div class="col-md-3"><div class="small-box bg-{{ 'success' if kpis.growth_rate > 0 else 'danger' }}"><div class="inner"><h3>{{ "%.1f"|format(kpis.growth_rate) }}%</h3><p>{{ _('معدل النمو') }}</p></div></div></div>
 </div>
-<div class="card"><div class="card-header"><h3>الأداء المالي (12 شهر)</h3></div><div class="card-body"><canvas id="financialChart" height="80"></canvas></div></div>
+<div class="card"><div class="card-header"><h3>{{ _('الأداء المالي (12 شهر)') }}</h3></div><div class="card-body"><canvas id="financialChart" height="80"></canvas></div></div>
 </div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>

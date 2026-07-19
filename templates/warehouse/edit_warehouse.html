@@ -118,9 +118,9 @@
                 <div class="custom-control custom-checkbox">
                   <input type="checkbox" class="custom-control-input" id="allow_negative_inventory" name="allow_negative_inventory" {% if warehouse.allow_negative_inventory %}checked{% endif %} aria-label="allow negative inventory">
                   <label class="custom-control-label" for="allow_negative_inventory">
-                    <i class="fas fa-exclamation-triangle text-warning"></i> السماح بسحب المخزون السالب
+                    <i class="fas fa-exclamation-triangle text-warning"></i> {{ _('السماح بسحب المخزون السالب') }}
                   </label>
-                  <small class="text-muted d-block">عند التفعيل، يمكن بيع منتجات تجاوزت مخزونها الصفر بدون حظر.</small>
+                  <small class="text-muted d-block">{{ _('عند التفعيل، يمكن بيع منتجات تجاوزت مخزونها الصفر بدون حظر.') }}</small>
                 </div>
               </div>
 

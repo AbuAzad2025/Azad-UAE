@@ -24,7 +24,7 @@
       </div>
       <div class="profile-card__body">
         <div class="profile-card__stat">
-          <span class="label">نوع النشاط</span>
+          <span class="label">{{ _('نوع النشاط') }}</span>
           <span class="value">{{ tenant.business_type_label() }}</span>
         </div>
         <div class="profile-card__stat">
@@ -38,7 +38,7 @@
       </div>
       <div class="profile-card__footer">
         <div class="brand-colors">
-          <span>ألوان الهوية</span>
+          <span>{{ _('ألوان الهوية') }}</span>
           <div class="brand-colors__swatches">
             <div class="color" style="--color: {{ tenant.brand_color_primary or '#007A3D' }}"></div>
             <div class="color" style="--color: {{ tenant.brand_color_secondary or '#D4AF37' }}"></div>
@@ -55,14 +55,14 @@
 
     <div class="quick-links card">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-tools mr-2"></i>روابط سريعة</h3>
+        <h3 class="card-title"><i class="fas fa-tools mr-2"></i>{{ _('روابط سريعة') }}</h3>
       </div>
       <div class="card-body">
-        <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link" aria-label="إعدادات الفواتير">
+        <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link" aria-label="{{ _('إعدادات الفواتير') }}">
           <i class="fas fa-file-invoice"></i>
           <span>{{ t('Invoice_Settings_2') }}</span>
         </a>
-        <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="المستودعات">
+        <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="{{ _('المستودعات') }}">
           <i class="fas fa-warehouse"></i>
           <span>{{ t('Warehouses') }}</span>
         </a>
@@ -75,16 +75,16 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">🏢 إعدادات التينانت (النشاط/العميل)</h1>
+        <h1 class="m-0">{{ _('🏢 إعدادات التينانت (النشاط/العميل)') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ _('الرجوع للوحة المالك') }}">
+            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-            <li class="breadcrumb-item active">بيانات التينانت</li>
+            <li class="breadcrumb-item active">{{ _('بيانات التينانت') }}</li>
           </ol>
         </div>
       </div>
@@ -100,34 +100,34 @@
       
       <div class="card">
         <div class="card-header bg-primary">
-          <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+          <h3 class="card-title text-white">{{ _('📋 المعلومات الأساسية') }}</h3>
         </div>
         <div class="card-body">
           <div class="row gy-3">
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
-                <label for="input_name_ar">الاسم بالعربي *</label>
+                <label for="input_name_ar">{{ _('الاسم بالعربي *') }}</label>
                 <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
-                <label for="input_name_en">الاسم بالإنجليزي</label>
+                <label for="input_name_en">{{ _('الاسم بالإنجليزي') }}</label>
                 <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
               </div>
             </div>
             <div class="col-xl-4 col-lg-12">
               <div class="form-group">
-                <label for="input_slug">الكود (Slug)</label>
+                <label for="input_slug">{{ _('الكود (Slug)') }}</label>
                 <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+" id="input_slug" aria-label="slug">
-                <small class="text-muted">حروف صغيرة وأرقام وشرطة فقط</small>
+                <small class="text-muted">{{ _('حروف صغيرة وأرقام وشرطة فقط') }}</small>
               </div>
             </div>
           </div>
           <div class="row gy-3">
             <div class="col-lg-8 col-md-7">
               <div class="form-group">
-                <label for="input_business_type">نوع النشاط</label>
+                <label for="input_business_type">{{ _('نوع النشاط') }}</label>
                 <select name="business_type" id="input_business_type" class="form-control compact-control select-center" aria-label="business type">
                   {% from 'macros/industry_choices.html' import industry_options %}
                   {{ industry_options(tenant.business_type or 'general') }}
@@ -141,19 +141,19 @@
       
       <div class="card">
         <div class="card-header bg-success">
-          <h3 class="card-title text-white">📞 معلومات الاتصال</h3>
+          <h3 class="card-title text-white">{{ _('📞 معلومات الاتصال') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label for="company_address_ar">العنوان بالعربي</label>
+                <label for="company_address_ar">{{ _('العنوان بالعربي') }}</label>
                 <textarea id="company_address_ar" name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255">{{ tenant.address_ar or '' }}</textarea>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label for="company_address_en">العنوان بالإنجليزي</label>
+                <label for="company_address_en">{{ _('العنوان بالإنجليزي') }}</label>
                 <textarea id="company_address_en" name="address_en" class="form-control" rows="2" aria-label="address en" maxlength="255">{{ tenant.address_en or '' }}</textarea>
               </div>
             </div>
@@ -170,16 +170,16 @@
                 <label>{{ t('Country') }}</label>
                 <select name="country" class="form-control compact-control select-center" aria-label="country">
                   <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>{{ t('الإمارات') }}</option>
-                  <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>السعودية</option>
+                  <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>{{ _('السعودية') }}</option>
                   <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>{{ t('فلسطين') }}</option>
-                  <option value="Jordan" {{ 'selected' if tenant.country == 'Jordan' }}>الأردن</option>
+                  <option value="Jordan" {{ 'selected' if tenant.country == 'Jordan' }}>{{ _('الأردن') }}</option>
                   <option value="Other" {{ 'selected' if tenant.country == 'Other' }}>{{ t('Other') }}</option>
                 </select>
               </div>
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
               <div class="form-group">
-                <label for="input_location_coords">الموقع الجغرافي</label>
+                <label for="input_location_coords">{{ _('الموقع الجغرافي') }}</label>
                 <input type="text" name="location_coords" class="form-control compact-control" value="{{ tenant.location_coords or '' }}" placeholder="25.2048,55.2708" id="input_location_coords">
               </div>
             </div>
@@ -187,19 +187,19 @@
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
-                <label for="input_phone_1">هاتف 1</label>
+                <label for="input_phone_1">{{ _('هاتف 1') }}</label>
                 <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label for="input_phone_2">هاتف 2</label>
+                <label for="input_phone_2">{{ _('هاتف 2') }}</label>
                 <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label for="input_mobile">موبايل</label>
+                <label for="input_mobile">{{ _('موبايل') }}</label>
                 <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile" aria-label="mobile" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
@@ -211,7 +211,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="input_website">الموقع الإلكتروني</label>
+            <label for="input_website">{{ _('الموقع الإلكتروني') }}</label>
             <input type="url" name="website" class="form-control" value="{{ tenant.website or '' }}" placeholder="https://example.com" id="input_website">
           </div>
         </div>
@@ -220,25 +220,25 @@
       
       <div class="card">
         <div class="card-header bg-warning">
-          <h3 class="card-title text-dark">⚖️ المعلومات القانونية</h3>
+          <h3 class="card-title text-dark">{{ _('⚖️ المعلومات القانونية') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-4">
               <div class="form-group">
-                <label for="input_tax_number">الرقم الضريبي (TRN)</label>
+                <label for="input_tax_number">{{ _('الرقم الضريبي (TRN)') }}</label>
                 <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label for="input_commercial_register">السجل التجاري</label>
+                <label for="input_commercial_register">{{ _('السجل التجاري') }}</label>
                 <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}" id="input_commercial_register" aria-label="commercial register">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label for="input_license_number">رقم الترخيص</label>
+                <label for="input_license_number">{{ _('رقم الترخيص') }}</label>
                 <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}" id="input_license_number" aria-label="license number">
               </div>
             </div>
@@ -249,26 +249,26 @@
       
       <div class="card">
         <div class="card-header bg-info">
-          <h3 class="card-title text-white">🎨 العلامة التجارية</h3>
+          <h3 class="card-title text-white">{{ _('🎨 العلامة التجارية') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label for="input_brand_color_primary">اللون الأساسي</label>
+                <label for="input_brand_color_primary">{{ _('اللون الأساسي') }}</label>
                 <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}" id="input_brand_color_primary" aria-label="brand color primary">
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label for="input_brand_color_secondary">اللون الثانوي</label>
+                <label for="input_brand_color_secondary">{{ _('اللون الثانوي') }}</label>
                 <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}" id="input_brand_color_secondary" aria-label="brand color secondary">
               </div>
             </div>
           </div>
           <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
-            <strong>{{ t('Note') }}</strong> لتغيير الشعار، استخدم إعدادات ترويسات الفواتير.
+            <strong>{{ t('Note') }}</strong> {{ _('لتغيير الشعار، استخدم إعدادات ترويسات الفواتير.') }}
           </div>
         </div>
       </div>
@@ -276,10 +276,10 @@
       
       <div class="row">
         <div class="col-12">
-          <button type="submit" class="btn btn-primary btn-lg" aria-label="حفظ المعلومات">
-            <i class="fas fa-save mr-2"></i>حفظ المعلومات
+          <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ _('حفظ المعلومات') }}">
+            <i class="fas fa-save mr-2"></i>{{ _('حفظ المعلومات') }}
           </button>
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="{{ _('إلغاء والعودة') }}">
             <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>

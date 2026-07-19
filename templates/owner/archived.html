@@ -12,9 +12,9 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
-                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="لوحة المالك">
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ _('لوحة المالك') }}">
                             <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
-                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="الصفحة الرئيسية">
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="{{ _('الصفحة الرئيسية') }}">
                             <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                                 <table class="table table-bordered table-striped">
                                     <thead>
                                         <tr>
-                                            <th>تاريخ الأرشفة</th>
+                                            <th>{{ _('تاريخ الأرشفة') }}</th>
                                             <th>{{ t('Table') }}</th>
                                             <th>{{ t('المعرف') }}</th>
                                             <th>{{ t('User') }}</th>

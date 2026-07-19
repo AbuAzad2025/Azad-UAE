@@ -63,7 +63,8 @@ RTL_CONTENT_MARKER = re.compile(
 )
 
 TRANSLATION_CALL = re.compile(
-    r"(?:\{\{?\s*_\s*\(|gettext|lazy_gettext|lazy_pgettext|ngettext)\s*\("
+    r"(?:\{\{?\s*_\s*\(|gettext\s*\(|lazy_gettext\s*\(|lazy_pgettext\s*\(|ngettext\s*\(|"
+    r"\{\{?\s*t\s*\(|[^A-Za-z0-9_]t\s*\()"
 )
 
 FLASK_ROUTE_BARE_STRING = re.compile(
@@ -175,16 +176,80 @@ def _extract_string_literals(line):
     return strings
 
 
+def _trans_call_unterminated(code):
+    """True if a translation call on this line is not closed on the same line
+    (i.e. the call and/or its string continue onto later lines).
+
+    Detected by unbalanced parentheses after a translation-call keyword, which
+    covers both ``gettext(\\n   "text")`` and ``{{ _('multi-line text`` cases.
+    """
+    if not TRANSLATION_CALL.search(code):
+        return False
+    return code.count("(") > code.count(")")
+
+
+def _in_jinja_expr_spans(text, pos):
+    """True if ``pos`` lies inside a ``{{ ... }}`` Jinja *expression* span.
+
+    Strings inside ``{{ }}`` are code (e.g. ``{{ settings.x or 'العنوان' }}``),
+    not literal user-facing template text, so they must not be flagged.
+    """
+    for m in re.finditer(r"\{\{.*?\}\}", text, re.DOTALL):
+        if m.start() <= pos < m.end():
+            return True
+    return False
+
+
 def scan_file(filepath):
     issues = []
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
     ext = os.path.splitext(filepath)[1].lower()
     _IN_TRIPLE[""] = None
-    prev_wrapped = False
+    in_raw = False  # inside <script> or <style> block (cross-line)
+    in_trans = False  # inside a multi-line translation call string e.g. {{ _('...') }}
+    in_trans_quote = None
+    in_jinja_block = False  # inside {% set %} / {% macro %} / {% call %} / {% filter %}
     for lineno, line in enumerate(lines, 1):
+        # Track multi-line Jinja *statement* blocks ({% set %}, {% macro %},
+        # {% call %}, {% filter %}). Their bodies are code/data definitions,
+        # not literal user-facing markup, so string literals inside are
+        # skipped (per the i18n rules: skip content inside {% ... %} control
+        # tags). Detected before the skip check because the opening tag itself
+        # starts with {% and would otherwise be skipped.
+        if ext == ".html":
+            if not in_jinja_block:
+                m = re.search(r"\{\%\s*(set|macro|call|filter)\b", line)
+                if m and not re.search(r"\{\%\s*end" + m.group(1) + r"\b", line):
+                    in_jinja_block = True
+            else:
+                if re.search(r"\{\%\s*end(set|macro|call|filter)\b", line):
+                    in_jinja_block = False
+                else:
+                    continue
+            if in_jinja_block:
+                continue
         if _should_skip_line(line):
             continue
+        # Track <script>/<style> raw blocks so their JS/CSS content is never
+        # treated as user-facing template text.
+        if ext == ".html":
+            if re.search(r"<\s*script\b", line) and not re.search(
+                r"<\s*/\s*script\s*>", line
+            ):
+                in_raw = True
+            elif re.search(r"<\s*/\s*script\s*>", line):
+                in_raw = False
+                continue
+            elif re.search(r"<\s*style\b", line) and not re.search(
+                r"<\s*/\s*style\s*>", line
+            ):
+                in_raw = True
+            elif re.search(r"<\s*/\s*style\s*>", line):
+                in_raw = False
+                continue
+            if in_raw:
+                continue
         # Remove triple-quoted spans (docstrings / multi-line strings) and
         # track block state; lines that are entirely inside a block are
         # dropped from literal extraction.
@@ -194,16 +259,38 @@ def scan_file(filepath):
         # Drop trailing # comments (outside of string literals) so developer
         # comments are never treated as user-facing text.
         code = _strip_inline_comment(stripped)
-        # A string on this line may be wrapped by a translation call that
-        # opened on the previous line (e.g. ruff splitting a long gettext(...)
-        # call across lines). Treat such lines as wrapped.
-        line_wrapped = _is_translation_wrapped(code) or prev_wrapped
-        prev_wrapped = _is_translation_wrapped(code)
+        # A multi-line translation call (e.g. a whole `{% set %}` block passed
+        # to {{ _('...') }}) may open on one line and close many lines later.
+        # Track that span so its contents are not double-flagged.
+        if in_trans:
+            # We are inside a multi-line translation string opened earlier.
+            # Close only when the *matching* quote is followed by the call
+            # terminator ()) or }}). Inner '}' / ')' chars are ignored.
+            close = re.search(
+                re.escape(in_trans_quote) + r"\s*\)\s*\)"
+                r"|" + re.escape(in_trans_quote) + r"\s*\}\}",
+                code,
+            )
+            if close:
+                in_trans = False
+                in_trans_quote = None
+            continue
+        line_wrapped = _is_translation_wrapped(code)
+        if line_wrapped and _trans_call_unterminated(code):
+            in_trans = True
+            q = re.search(r"['\"]", code[TRANSLATION_CALL.search(code).end() :])
+            in_trans_quote = q.group(0) if q else "'"
+            continue
         if line_wrapped:
             continue
         if ext == ".html":
             for s in _extract_string_literals(code):
                 if _is_likely_user_facing(s) and RTL_CONTENT_MARKER.match(s):
+                    # locate the literal in the (un-commented) code to test
+                    # whether it lives inside a {{ ... }} Jinja expression
+                    idx = code.find(s)
+                    if idx != -1 and _in_jinja_expr_spans(code, idx):
+                        continue
                     issues.append((lineno, s, "template string"))
         elif ext == ".py":
             for s in _extract_string_literals(code):

@@ -101,13 +101,13 @@
         {% if is_owner_viewer %}
         <div class="col-auto d-flex gap-2 align-items-start">
           <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-light">
-            <i class="bi bi-pencil mr-1"></i>تعديل
+            <i class="bi bi-pencil mr-1"></i>{{ _('تعديل') }}
           </a>
           <form class="needs-validation d-inline" method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" onsubmit="return confirm('تأكيد تعليق هذا التينانت؟');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="reason" value="Suspended from public profile" aria-label="reason">
             <button type="submit" class="btn btn-warning">
-              <i class="bi bi-pause-circle mr-1"></i>تعليق
+              <i class="bi bi-pause-circle mr-1"></i>{{ _('تعليق') }}
             </button>
           </form>
         </div>
@@ -123,7 +123,7 @@
       <div class="col-lg-8">
         <div class="card info-card mb-4">
           <div class="card-body">
-            <h5 class="fw-bold mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i>معلومات التواصل</h5>
+            <h5 class="fw-bold mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i>{{ _('معلومات التواصل') }}</h5>
             <div class="row g-4">
               {% if tenant.phone_1 %}
               <div class="col-md-6 d-flex align-items-center">
@@ -131,7 +131,7 @@
                   <i class="bi bi-telephone"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">الهاتف الرئيسي</div>
+                  <div class="text-muted small">{{ _('الهاتف الرئيسي') }}</div>
                   <div class="fw-semibold" dir="ltr">{{ tenant.phone_1 }}</div>
                 </div>
               </div>
@@ -142,7 +142,7 @@
                   <i class="bi bi-telephone"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">الهاتف الثانوي</div>
+                  <div class="text-muted small">{{ _('الهاتف الثانوي') }}</div>
                   <div class="fw-semibold" dir="ltr">{{ tenant.phone_2 }}</div>
                 </div>
               </div>
@@ -153,7 +153,7 @@
                   <i class="bi bi-phone"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">الجوال / واتساب</div>
+                  <div class="text-muted small">{{ _('الجوال / واتساب') }}</div>
                   <div class="fw-semibold" dir="ltr">{{ tenant.mobile }}</div>
                 </div>
               </div>
@@ -164,7 +164,7 @@
                   <i class="bi bi-envelope"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">البريد الإلكتروني</div>
+                  <div class="text-muted small">{{ _('البريد الإلكتروني') }}</div>
                   <div class="fw-semibold">{{ tenant.email }}</div>
                 </div>
               </div>
@@ -175,7 +175,7 @@
                   <i class="bi bi-geo-alt"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">العنوان</div>
+                  <div class="text-muted small">{{ _('العنوان') }}</div>
                   <div class="fw-semibold">{{ tenant.address_ar }}</div>
                 </div>
               </div>
@@ -186,7 +186,7 @@
                   <i class="bi bi-globe"></i>
                 </div>
                 <div>
-                  <div class="text-muted small">الموقع الإلكتروني</div>
+                  <div class="text-muted small">{{ _('الموقع الإلكتروني') }}</div>
                   <a href="{{ tenant.website }}" target="_blank" rel="noopener noreferrer" class="fw-semibold">{{ tenant.website }}</a>
                 </div>
               </div>
@@ -199,7 +199,7 @@
         {% if branches %}
         <div class="card info-card">
           <div class="card-body">
-            <h5 class="fw-bold mb-4"><i class="bi bi-shop text-primary me-2"></i>الفروع</h5>
+            <h5 class="fw-bold mb-4"><i class="bi bi-shop text-primary me-2"></i>{{ _('الفروع') }}</h5>
             <div class="row g-3">
               {% for branch in branches %}
               <div class="col-md-6">
@@ -231,35 +231,35 @@
         
         <div class="card info-card mb-4">
           <div class="card-body">
-            <h6 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i>البيانات القانونية</h6>
+            <h6 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i>{{ _('البيانات القانونية') }}</h6>
             <ul class="list-group list-group-flush">
               {% if tenant.commercial_register %}
               <li class="list-group-item d-flex justify-content-between px-0">
-                <span class="text-muted small">السجل التجاري</span>
+                <span class="text-muted small">{{ _('السجل التجاري') }}</span>
                 <span class="fw-semibold small">{{ tenant.commercial_register }}</span>
               </li>
               {% endif %}
               {% if tenant.tax_number %}
               <li class="list-group-item d-flex justify-content-between px-0">
-                <span class="text-muted small">الرقم الضريبي (TRN)</span>
+                <span class="text-muted small">{{ _('الرقم الضريبي (TRN)') }}</span>
                 <span class="fw-semibold small">{{ tenant.tax_number }}</span>
               </li>
               {% endif %}
               {% if tenant.license_number %}
               <li class="list-group-item d-flex justify-content-between px-0">
-                <span class="text-muted small">رقم الترخيص</span>
+                <span class="text-muted small">{{ _('رقم الترخيص') }}</span>
                 <span class="fw-semibold small">{{ tenant.license_number }}</span>
               </li>
               {% endif %}
               {% if tenant.country %}
               <li class="list-group-item d-flex justify-content-between px-0">
-                <span class="text-muted small">الدولة</span>
+                <span class="text-muted small">{{ _('الدولة') }}</span>
                 <span class="fw-semibold small">{{ tenant.country }}</span>
               </li>
               {% endif %}
               {% if tenant.city %}
               <li class="list-group-item d-flex justify-content-between px-0">
-                <span class="text-muted small">المدينة</span>
+                <span class="text-muted small">{{ _('المدينة') }}</span>
                 <span class="fw-semibold small">{{ tenant.city }}</span>
               </li>
               {% endif %}
@@ -271,10 +271,10 @@
         {% if tenant.enable_store %}
         <div class="card info-card">
           <div class="card-body text-center">
-            <h6 class="fw-bold mb-3"><i class="bi bi-bag text-primary me-2"></i>المتجر الإلكتروني</h6>
-            <p class="text-muted small">تصفح منتجاتنا واطلب أونلاين</p>
+            <h6 class="fw-bold mb-3"><i class="bi bi-bag text-primary me-2"></i>{{ _('المتجر الإلكتروني') }}</h6>
+            <p class="text-muted small">{{ _('تصفح منتجاتنا واطلب أونلاين') }}</p>
             <a href="{{ url_for('shop.catalog', slug=tenant.slug) }}" class="btn btn-primary w-100">
-              <i class="bi bi-bag mr-1"></i>تصفح المتجر
+              <i class="bi bi-bag mr-1"></i>{{ _('تصفح المتجر') }}
             </a>
           </div>
         </div>
@@ -290,7 +290,7 @@
       <div class="mb-2">
         <i class="bi bi-building me-2"></i>{{ tenant.name_ar or tenant.name }}
       </div>
-      <small class="opacity-75">نظام أزاد المحاسبي — Azad Accounting System</small>
+      <small class="opacity-75">{{ _('نظام أزاد المحاسبي — Azad Accounting System') }}</small>
     </div>
   </div>
 

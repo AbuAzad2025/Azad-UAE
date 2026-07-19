@@ -5,21 +5,21 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.system_health') }}" class="btn btn-success">
-      <i class="fas fa-heartbeat"></i> صحة النظام
+      <i class="fas fa-heartbeat"></i> {{ _('صحة النظام') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-tachometer-alt"></i> مقاييس الأداء</h3>
+      <h3><i class="fas fa-tachometer-alt"></i> {{ _('مقاييس الأداء') }}</h3>
       <div class="card-tools">
         <span class="badge badge-warning">{{ metrics.slow_queries_count }} استعلام بطيء</span>
       </div>
     </div>
     <div class="card-body">
-      <h5 class="mb-3">الاستعلامات البطيئة</h5>
+      <h5 class="mb-3">{{ _('الاستعلامات البطيئة') }}</h5>
       <div class="ic-1">
         {% if metrics.slow_queries %}
           {% for query in metrics.slow_queries %}
@@ -30,7 +30,7 @@
         {% else %}
           <div class="text-center text-white-50 py-5">
             <i class="fas fa-check-circle fa-3x mb-3"></i>
-            <p>لا توجد استعلامات بطيئة</p>
+            <p>{{ _('لا توجد استعلامات بطيئة') }}</p>
           </div>
         {% endif %}
       </div>

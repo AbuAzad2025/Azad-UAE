@@ -15,24 +15,24 @@
     <meta name="description" content="Azad Smart Systems: all-in-one ERP with multi-warehouse inventory, double-entry accounting, AI assistant, POS, e-commerce, HR & payroll for UAE businesses.">
     <meta name="keywords" content="ERP UAE, warehouse management Dubai, accounting software, inventory management, POS, e-invoicing, AI accounting, HR payroll UAE">
     {% else %}
-    <meta name="description" content="شركة أزاد للأنظمة الذكية - نظام ERP متكامل: محاسبة قيد مزدوج، مخازن متعددة، AI، نقاط بيع، متجر إلكتروني، رواتب. للشركات في الإمارات دبي وأبوظبي والشارقة.">
-    <meta name="keywords" content="ERP الإمارات، إدارة مستودعات دبي، برنامج محاسبة، مخزون، نقاط بيع، فواتير إلكترونية، ذكاء اصطناعي، رواتب">
+    <meta name="description" content="{{ _('شركة أزاد للأنظمة الذكية - نظام ERP متكامل: محاسبة قيد مزدوج، مخازن متعددة، AI، نقاط بيع، متجر إلكتروني، رواتب. للشركات في الإمارات دبي وأبوظبي والشارقة.') }}">
+    <meta name="keywords" content="{{ _('ERP الإمارات، إدارة مستودعات دبي، برنامج محاسبة، مخزون، نقاط بيع، فواتير إلكترونية، ذكاء اصطناعي، رواتب') }}">
     {% endif %}
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="{{ 'شركة أزاد للأنظمة الذكية - ERP متكامل مع AI' if not is_en else 'Azad Smart Systems - Full ERP with AI' }}">
-    <meta property="og:description" content="{{ 'محاسبة، مخزون، مبيعات، AI، نقاط بيع، متجر إلكتروني' if not is_en else 'Accounting, inventory, sales, AI, POS, e-commerce' }}">
+    <meta property="og:title" content="{{ _('{{ \'شركة أزاد للأنظمة الذكية - ERP متكامل مع AI\' if not is_en else \'Azad Smart Systems - Full ERP with AI\' }}') }}">
+    <meta property="og:description" content="{{ _('{{ \'محاسبة، مخزون، مبيعات، AI، نقاط بيع، متجر إلكتروني\' if not is_en else \'Accounting, inventory, sales, AI, POS, e-commerce\' }}') }}">
     <meta property="og:locale" content="{{ 'ar_AE' if not is_en else 'en_US' }}">
-    <meta property="og:site_name" content="{{ 'شركة أزاد للأنظمة الذكية' if not is_en else 'Azad Smart Systems' }}">
+    <meta property="og:site_name" content="{{ _('{{ \'شركة أزاد للأنظمة الذكية\' if not is_en else \'Azad Smart Systems\' }}') }}">
     {% set _logo_path_og = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') %}
     {% if _logo_path_og.startswith('/static/') %}{% set _logo_path_og = _logo_path_og[8:] %}{% elif _logo_path_og.startswith('static/') %}{% set _logo_path_og = _logo_path_og[7:] %}{% endif %}
     <meta property="og:image" content="{{ url_for('static', filename=_logo_path_og, _external=True) }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ 'أزاد - ERP مع AI في الإمارات' if not is_en else 'Azad - ERP with AI in UAE' }}">
-    <meta name="twitter:description" content="{{ 'نظام ERP متكامل: محاسبة، مخزون، AI، متجر إلكتروني' if not is_en else 'Full ERP: accounting, inventory, AI, e-commerce' }}">
+    <meta name="twitter:title" content="{{ _('{{ \'أزاد - ERP مع AI في الإمارات\' if not is_en else \'Azad - ERP with AI in UAE\' }}') }}">
+    <meta name="twitter:description" content="{{ _('{{ \'نظام ERP متكامل: محاسبة، مخزون، AI، متجر إلكتروني\' if not is_en else \'Full ERP: accounting, inventory, AI, e-commerce\' }}') }}">
     <link rel="canonical" href="{{ request.url }}">
     <link rel="alternate" hreflang="ar" href="{{ url_for('public.landing', _external=True) }}{% if is_en %}?lang=ar{% endif %}">
     <link rel="alternate" hreflang="en" href="{{ url_for('public.landing', _external=True) }}{% if not is_en %}?lang=en{% endif %}">
@@ -423,32 +423,32 @@
                 <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--azad-accent-light);"><i class="fas fa-puzzle-piece"></i> {{ 'موديولات إضافية (رسوم ثابتة)' if not is_en else 'Add-on Modules (Flat fee)' }}</div>
                 <div class="azad-addon-grid">
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonPOS" aria-label="{{ 'نقاط البيع (POS)' if not is_en else 'Point of Sale' }}">
+                        <input type="checkbox" id="addonPOS" aria-label="{{ _('{{ \'نقاط البيع (POS)\' if not is_en else \'Point of Sale\' }}') }}">
                         <div class="info"><div class="name">{{ 'نقاط البيع (POS)' if not is_en else 'Point of Sale' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonStore" aria-label="{{ 'متجر إلكتروني' if not is_en else 'Online Store' }}">
+                        <input type="checkbox" id="addonStore" aria-label="{{ _('{{ \'متجر إلكتروني\' if not is_en else \'Online Store\' }}') }}">
                         <div class="info"><div class="name">{{ 'متجر إلكتروني' if not is_en else 'Online Store' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonHR" aria-label="{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}">
+                        <input type="checkbox" id="addonHR" aria-label="{{ _('{{ \'HR ورواتب\' if not is_en else \'HR & Payroll\' }}') }}">
                         <div class="info"><div class="name">{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonAI" aria-label="{{ 'مساعد ذكاء اصطناعي' if not is_en else 'AI Assistant' }}">
+                        <input type="checkbox" id="addonAI" aria-label="{{ _('{{ \'مساعد ذكاء اصطناعي\' if not is_en else \'AI Assistant\' }}') }}">
                         <div class="info"><div class="name">{{ 'مساعد ذكاء اصطناعي' if not is_en else 'AI Assistant' }}</div></div>
                         <span class="price-tag">+$15</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonMultiBranch" aria-label="{{ 'فروع متعددة' if not is_en else 'Multi-Branch' }}">
+                        <input type="checkbox" id="addonMultiBranch" aria-label="{{ _('{{ \'فروع متعددة\' if not is_en else \'Multi-Branch\' }}') }}">
                         <div class="info"><div class="name">{{ 'فروع متعددة' if not is_en else 'Multi-Branch' }}</div></div>
                         <span class="price-tag">+$10</span>
                     </div>
                     <div class="azad-addon-item">
-                        <input type="checkbox" id="addonRestaurant" aria-label="{{ 'نظام مطاعم' if not is_en else 'Restaurant' }}">
+                        <input type="checkbox" id="addonRestaurant" aria-label="{{ _('{{ \'نظام مطاعم\' if not is_en else \'Restaurant\' }}') }}">
                         <div class="info"><div class="name">{{ 'نظام مطاعم' if not is_en else 'Restaurant' }}</div></div>
                         <span class="price-tag">+$12</span>
                     </div>
@@ -616,7 +616,7 @@
                 <p>{{ 'منصة ERP سحابية متكاملة — محاسبة، مخازن، AI، نقاط بيع، متجر إلكتروني، موظفين ورواتب.' if not is_en else 'Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.' }}</p>
                 <div class="azad-footer-social">
                     {% if developer_whatsapp_link %}<a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>{% endif %}
-                    {% if developer_phone %}<a href="tel:{{ developer_phone }}" aria-label="{{ 'اتصال' if not is_en else 'Phone' }}"><i class="fas fa-phone"></i></a>{% endif %}
+                    {% if developer_phone %}<a href="tel:{{ developer_phone }}" aria-label="{{ _('{{ \'اتصال\' if not is_en else \'Phone\' }}') }}"><i class="fas fa-phone"></i></a>{% endif %}
                     {% if developer_email %}<a href="mailto:{{ developer_email }}" aria-label="Email"><i class="fas fa-envelope"></i></a>{% endif %}
                 </div>
             </div>

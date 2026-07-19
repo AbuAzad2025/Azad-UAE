@@ -55,7 +55,7 @@
                                             <td><strong>{{ key }}</strong></td>
                                             <td>
                                                 {% if key == 'DATABASE_URL' %}
-                                                    <span class="text-muted">مخفي لأسباب أمنية</span>
+                                                    <span class="text-muted">{{ _('مخفي لأسباب أمنية') }}</span>
                                                 {% else %}
                                                     {{ value }}
                                                 {% endif %}

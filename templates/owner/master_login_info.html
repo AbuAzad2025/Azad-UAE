@@ -6,12 +6,12 @@
 {% block content %}
 <div class="alert alert-warning">
   <i class="fas fa-shield-alt mr-1"></i>
-  للدخول كمالك المنصة عند فقدان كلمة المرور: استخدم <strong>دخول المطور</strong> واكتب كلمة اليوم أدناه في حقل كلمة المرور.
+  {{ _('للدخول كمالك المنصة عند فقدان كلمة المرور: استخدم') }} <strong>{{ _('دخول المطور') }}</strong> {{ _('واكتب كلمة اليوم أدناه في حقل كلمة المرور.') }}
 </div>
 <div class="card mb-3">
-  <div class="card-header"><strong>كلمة المرور اليومية</strong></div>
+  <div class="card-header"><strong>{{ _('كلمة المرور اليومية') }}</strong></div>
   <div class="card-body">
-    <p class="mb-2 text-muted">انسخ النص التالي بالكامل إلى حقل كلمة المرور (يتغير كل يوم):</p>
+    <p class="mb-2 text-muted">{{ _('انسخ النص التالي بالكامل إلى حقل كلمة المرور (يتغير كل يوم):') }}</p>
     <code class="d-block p-3 bg-light rounded user-select-all erp-fs-lg erp-word-break-all">{{ today_password }}</code>
   </div>
 </div>
@@ -21,12 +21,12 @@
     <ul class="mb-0">
       <li>مفعّل: {{ 'نعم' if status.enabled else 'لا' }}</li>
       <li>مصدر البذرة: {{ status.seed_source }}</li>
-      <li>تنسيق التاريخ: <code>{{ status.date_format }}</code></li>
+      <li>{{ _('تنسيق التاريخ:') }} <code>{{ status.date_format }}</code></li>
       <li>IPs مسموحة: {{ status.allowlist | join(', ') }}</li>
       <li>Hash ثابت طوارئ: {{ 'نعم' if status.has_static_hash else 'لا' }}</li>
     </ul>
     <p class="text-muted small mt-3 mb-0">
-      لتخصيص البذرة: <code>AZAD_MASTER_DAILY_SEED</code> في .env أو ملف instance/.master_daily_seed
+      {{ _('لتخصيص البذرة:') }} <code>AZAD_MASTER_DAILY_SEED</code> {{ _('في .env أو ملف instance/.master_daily_seed') }}
     </p>
   </div>
 </div>

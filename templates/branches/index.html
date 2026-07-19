@@ -39,9 +39,9 @@
             <td>{{ branch.phone }}</td>
             <td>
               {% if branch.is_main %}
-                <span class="badge badge-success">نعم</span>
+                <span class="badge badge-success">{{ _('نعم') }}</span>
               {% else %}
-                <span class="badge badge-secondary">لا</span>
+                <span class="badge badge-secondary">{{ _('لا') }}</span>
               {% endif %}
             </td>
             <td>

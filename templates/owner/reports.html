@@ -6,8 +6,8 @@
 <div class="d-flex align-items-center">
     <i class="fas fa-chart-line text-primary mr-3 erp-icon-xl icon-lg"></i>
     <div>
-        <h1 class="mb-0">📊 التقارير والإحصائيات</h1>
-        <p class="text-muted mb-0">نظرة شاملة على أداء النظام</p>
+        <h1 class="mb-0">{{ _('📊 التقارير والإحصائيات') }}</h1>
+        <p class="text-muted mb-0">{{ _('نظرة شاملة على أداء النظام') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -20,7 +20,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.tenant_count }}</h4>
-                        <p class="mb-0">إجمالي الشركات</p>
+                        <p class="mb-0">{{ _('إجمالي الشركات') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-building fa-2x"></i>
@@ -36,7 +36,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.active_tenant_count }}</h4>
-                        <p class="mb-0">شركات نشطة</p>
+                        <p class="mb-0">{{ _('شركات نشطة') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-check-circle fa-2x"></i>
@@ -68,7 +68,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.new_tenants_month }}</h4>
-                        <p class="mb-0">اشتراكات جديدة (الشهر)</p>
+                        <p class="mb-0">{{ _('اشتراكات جديدة (الشهر)') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-user-plus fa-2x"></i>
@@ -86,7 +86,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.suspended_tenant_count }}</h4>
-                        <p class="mb-0">شركات معلقة/موقوفة</p>
+                        <p class="mb-0">{{ _('شركات معلقة/موقوفة') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-pause-circle fa-2x"></i>
@@ -102,7 +102,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.trial_tenant_count }}</h4>
-                        <p class="mb-0">اشتراكات تجريبية</p>
+                        <p class="mb-0">{{ _('اشتراكات تجريبية') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-flask fa-2x"></i>
@@ -118,7 +118,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4 class="mb-0">{{ stats.expired_subscription_count }}</h4>
-                        <p class="mb-0">اشتراكات منتهية</p>
+                        <p class="mb-0">{{ _('اشتراكات منتهية') }}</p>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-calendar-times fa-2x"></i>
@@ -134,14 +134,14 @@
         <div class="card">
             <div class="card-header bg-warning text-dark">
                 <h5 class="mb-0">
-                    <i class="fas fa-vault mr-2"></i>حالة الخزينة السرية
+                    <i class="fas fa-vault mr-2"></i>{{ _('حالة الخزينة السرية') }}
                 </h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1">الخزينة السرية</h6>
-                        <p class="text-muted mb-0">حالة أمان الدفع (بنية المنصة)</p>
+                        <h6 class="mb-1">{{ _('الخزينة السرية') }}</h6>
+                        <p class="text-muted mb-0">{{ _('حالة أمان الدفع (بنية المنصة)') }}</p>
                     </div>
                     <div>
                         {% if stats.vault_status %}
@@ -159,18 +159,18 @@
         <div class="card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-pie mr-2"></i>نمو المستأجرين
+                    <i class="fas fa-chart-pie mr-2"></i>{{ _('نمو المستأجرين') }}
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-6">
                         <h4 class="text-primary">{{ stats.new_tenants_week }}</h4>
-                        <p class="mb-0">هذا الأسبوع</p>
+                        <p class="mb-0">{{ _('هذا الأسبوع') }}</p>
                     </div>
                     <div class="col-6">
                         <h4 class="text-success">{{ stats.new_tenants_today }}</h4>
-                        <p class="mb-0">اليوم</p>
+                        <p class="mb-0">{{ _('اليوم') }}</p>
                     </div>
                 </div>
             </div>
@@ -183,7 +183,7 @@
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-bar mr-2"></i>توزيع الباقات
+                    <i class="fas fa-chart-bar mr-2"></i>{{ _('توزيع الباقات') }}
                 </h5>
             </div>
             <div class="card-body">
@@ -192,7 +192,7 @@
                         <div class="info-box">
                             <span class="info-box-icon bg-primary"><i class="fas fa-layer-group"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">الشركات النشطة</span>
+                                <span class="info-box-text">{{ _('الشركات النشطة') }}</span>
                                 <span class="info-box-number">{{ stats.active_tenant_count }}</span>
                             </div>
                         </div>
@@ -201,7 +201,7 @@
                         <div class="info-box">
                             <span class="info-box-icon bg-success"><i class="fas fa-hourglass-half"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">تنتهي قريباً (7 أيام)</span>
+                                <span class="info-box-text">{{ _('تنتهي قريباً (7 أيام)') }}</span>
                                 <span class="info-box-number">{{ stats.expiring_soon_count }}</span>
                             </div>
                         </div>
@@ -210,7 +210,7 @@
                         <div class="info-box">
                             <span class="info-box-icon bg-info"><i class="fas fa-sitemap"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">الفروع النشطة</span>
+                                <span class="info-box-text">{{ _('الفروع النشطة') }}</span>
                                 <span class="info-box-number">{{ stats.total_branches }}</span>
                             </div>
                         </div>
@@ -219,7 +219,7 @@
                         <div class="info-box">
                             <span class="info-box-icon bg-warning"><i class="fas fa-users"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">المستخدمون (غير المالك)</span>
+                                <span class="info-box-text">{{ _('المستخدمون (غير المالك)') }}</span>
                                 <span class="info-box-number">{{ stats.total_users }}</span>
                             </div>
                         </div>
@@ -234,7 +234,7 @@
     <div class="col-12 text-center">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-arrow-right mr-2"></i>
-            العودة للوحة المالك
+            {{ _('العودة للوحة المالك') }}
         </a>
     </div>
 </div>

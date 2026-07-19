@@ -311,9 +311,9 @@
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
   <i class="fas fa-shield-alt"></i>
   صلاحياتك محدودة:
-  {% if not stats.can_apply_discount %}<span class="badge badge-warning ml-2">لا يمكن تطبيق الخصم</span>{% endif %}
-  {% if not stats.can_edit_price %}<span class="badge badge-warning ml-2">لا يمكن تعديل السعر</span>{% endif %}
-  <small class="text-muted mr-2">— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات</small>
+  {% if not stats.can_apply_discount %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تطبيق الخصم') }}</span>{% endif %}
+  {% if not stats.can_edit_price %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تعديل السعر') }}</span>{% endif %}
+  <small class="text-muted mr-2">{{ _('— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات') }}</small>
   <button type="button" class="close" data-dismiss="alert">&times;</button>
 </div>
 {% endif %}
@@ -322,28 +322,28 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="fas fa-shield-alt"></i> تفويض المشرف</h5>
+        <h5 class="modal-title"><i class="fas fa-shield-alt"></i> {{ _('تفويض المشرف') }}</h5>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <form id="supervisorOverrideForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" id="overrideAction" value="">
         <div class="modal-body">
-          <p>هذا الإجراء يتطلب موافقة المشرف. يرجى إدخال بيانات المشرف المصرح له.</p>
+          <p>{{ _('هذا الإجراء يتطلب موافقة المشرف. يرجى إدخال بيانات المشرف المصرح له.') }}</p>
           <div class="form-group">
-            <label for="supervisor_id">معرف المشرف (رقم المستخدم)</label>
-            <input type="number" name="supervisor_id" id="supervisor_id" class="form-control" required min="1" placeholder="أدخل رقم المستخدم للمشرف">
+            <label for="supervisor_id">{{ _('معرف المشرف (رقم المستخدم)') }}</label>
+            <input type="number" name="supervisor_id" id="supervisor_id" class="form-control" required min="1" placeholder="{{ _('أدخل رقم المستخدم للمشرف') }}">
           </div>
           <div class="form-group">
-            <label for="supervisor_password">كلمة مرور المشرف</label>
-            <input type="password" name="password" id="supervisor_password" class="form-control" required placeholder="كلمة مرور المشرف">
+            <label for="supervisor_password">{{ _('كلمة مرور المشرف') }}</label>
+            <input type="password" name="password" id="supervisor_password" class="form-control" required placeholder="{{ _('كلمة مرور المشرف') }}">
           </div>
           <div id="overrideResult" class="alert d-none"></div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
           <button type="submit" class="btn btn-warning" id="overrideSubmitBtn">
-            <i class="fas fa-check"></i> تأكيد التفويض
+            <i class="fas fa-check"></i> {{ _('تأكيد التفويض') }}
           </button>
         </div>
       </form>

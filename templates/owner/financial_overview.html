@@ -8,21 +8,21 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-chart-line mr-2"></i>النظرة المالية</h1>
+                    <h1 class="m-0"><i class="fas fa-chart-line mr-2"></i>{{ _('النظرة المالية') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
                         {% if financial_data.platform_mode %}
                         <a href="{{ url_for('owner.financial_overview', period=period) }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-building mr-1"></i> عرض شركة محددة
+                            <i class="fas fa-building mr-1"></i> {{ _('عرض شركة محددة') }}
                         </a>
                         {% else %}
                         <a href="{{ url_for('owner.financial_overview', period=period, _platform=1) }}" class="btn btn-outline-info btn-sm">
-                            <i class="fas fa-globe mr-1"></i> وضع المنصة
+                            <i class="fas fa-globe mr-1"></i> {{ _('وضع المنصة') }}
                         </a>
                         {% endif %}
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+                            <i class="fas fa-arrow-right mr-2"></i>{{ _('العودة للوحة التحكم') }}
                         </a>
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
@@ -41,9 +41,9 @@
                             <h3 class="card-title">
                                 النظرة المالية - {{ period }}
                                 {% if financial_data.platform_mode %}
-                                <span class="badge badge-info ml-2"><i class="fas fa-globe"></i> وضع المنصة (جميع الشركات)</span>
+                                <span class="badge badge-info ml-2"><i class="fas fa-globe"></i> {{ _('وضع المنصة (جميع الشركات)') }}</span>
                                 {% else %}
-                                <span class="badge badge-primary ml-2"><i class="fas fa-building"></i> نطاق الشركة الحالية</span>
+                                <span class="badge badge-primary ml-2"><i class="fas fa-building"></i> {{ _('نطاق الشركة الحالية') }}</span>
                                 {% endif %}
                             </h3>
                         </div>
@@ -53,7 +53,7 @@
                                     <div class="info-box">
                                         <span class="info-box-icon bg-success"><i class="fas fa-chart-line"></i></span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text">إجمالي المبيعات</span>
+                                            <span class="info-box-text">{{ _('إجمالي المبيعات') }}</span>
                                             <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
@@ -71,7 +71,7 @@
                                     <div class="info-box">
                                         <span class="info-box-icon bg-warning"><i class="fas fa-shopping-cart"></i></span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text">إجمالي المشتريات</span>
+                                            <span class="info-box-text">{{ _('إجمالي المشتريات') }}</span>
                                             <span class="info-box-number">{{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
@@ -80,7 +80,7 @@
                                     <div class="info-box">
                                         <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text">صافي الإيرادات</span>
+                                            <span class="info-box-text">{{ _('صافي الإيرادات') }}</span>
                                             <span class="info-box-number">{{ "%.2f"|format(financial_data.net_revenue) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
@@ -91,11 +91,11 @@
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-header">
-                                            <h3 class="card-title">تفاصيل المبيعات</h3>
+                                            <h3 class="card-title">{{ _('تفاصيل المبيعات') }}</h3>
                                         </div>
                                         <div class="card-body">
-                                            <p><strong>عدد الفواتير:</strong> {{ financial_data.sales_count }}</p>
-                                            <p><strong>إجمالي المبيعات:</strong> {{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>{{ _('عدد الفواتير:') }}</strong> {{ financial_data.sales_count }}</p>
+                                            <p><strong>{{ _('إجمالي المبيعات:') }}</strong> {{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</p>
                                             <p><strong>{{ t('Paid Amount') }}</strong> {{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</p>
                                         </div>
                                     </div>
@@ -103,12 +103,12 @@
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-header">
-                                            <h3 class="card-title">تفاصيل المشتريات</h3>
+                                            <h3 class="card-title">{{ _('تفاصيل المشتريات') }}</h3>
                                         </div>
                                         <div class="card-body">
-                                            <p><strong>عدد فواتير الشراء:</strong> {{ financial_data.purchases_count }}</p>
-                                            <p><strong>إجمالي المشتريات:</strong> {{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol }}</p>
-                                            <p><strong>إجمالي الإيصالات:</strong> {{ "%.2f"|format(financial_data.receipts_total) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>{{ _('عدد فواتير الشراء:') }}</strong> {{ financial_data.purchases_count }}</p>
+                                            <p><strong>{{ _('إجمالي المشتريات:') }}</strong> {{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>{{ _('إجمالي الإيصالات:') }}</strong> {{ "%.2f"|format(financial_data.receipts_total) }} {{ tenant_currency_symbol }}</p>
                                         </div>
                                     </div>
                                 </div>

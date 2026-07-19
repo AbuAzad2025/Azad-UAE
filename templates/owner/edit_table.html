@@ -18,21 +18,21 @@
   <div class="card-header bg-primary text-white">
     <h3 class="card-title">
       <i class="fas fa-edit mr-2"></i>
-      تعديل مرئي: <code>{{ table_name }}</code>
+      {{ _('تعديل مرئي:') }} <code>{{ table_name }}</code>
     </h3>
   </div>
   <div class="card-body">
     <div class="alert alert-warning">
       <i class="fas fa-exclamation-triangle mr-2"></i>
-      <strong>{{ t('Warning') }}</strong> يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!
+      <strong>{{ t('Warning') }}</strong> {{ _('يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!') }}
     </div>
 
     <div class="alert alert-info">
-      <strong>📝 طريقة التعديل:</strong>
+      <strong>{{ _('📝 طريقة التعديل:') }}</strong>
       <ol class="mb-0">
-        <li>اضغط زر <span class="badge badge-warning">{{ t('Edit') }}</span> على السطر المطلوب</li>
-        <li>عدّل البيانات في الخانات</li>
-        <li>{{ t('اضغط') }}<span class="badge badge-success">{{ t('Save') }}</span> لحفظ التغييرات</li>
+        <li>{{ _('اضغط زر') }} <span class="badge badge-warning">{{ t('Edit') }}</span> {{ _('على السطر المطلوب') }}</li>
+        <li>{{ _('عدّل البيانات في الخانات') }}</li>
+        <li>{{ t('اضغط') }}<span class="badge badge-success">{{ t('Save') }}</span> {{ _('لحفظ التغييرات') }}</li>
       </ol>
     </div>
 
@@ -62,13 +62,13 @@
             {% endfor %}
             <td class="text-center">
               <button class="btn btn-warning edit-btn" onclick="enableEdit(this)">
-                <i class="fas fa-pencil-alt"></i> تعديل
+                <i class="fas fa-pencil-alt"></i> {{ _('تعديل') }}
               </button>
               <button class="btn btn-success save-btn ic-1" onclick="saveRow(this)">
-                <i class="fas fa-save"></i> حفظ
+                <i class="fas fa-save"></i> {{ _('حفظ') }}
               </button>
               <button class="btn btn-secondary cancel-btn ic-1" onclick="cancelEdit(this)">
-                <i class="fas fa-times"></i> إلغاء
+                <i class="fas fa-times"></i> {{ _('إلغاء') }}
               </button>
             </td>
           </tr>
@@ -80,16 +80,16 @@
     {% if not rows %}
     <div class="alert alert-warning text-center">
       <i class="fas fa-exclamation-triangle mr-2"></i>
-      لا توجد بيانات في هذا الجدول
+      {{ _('لا توجد بيانات في هذا الجدول') }}
     </div>
     {% endif %}
   </div>
   <div class="card-footer">
     <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i> العودة للجداول
+      <i class="fas fa-arrow-right mr-2"></i> {{ _('العودة للجداول') }}
     </a>
     <a href="{{ url_for('owner.sql_console') }}" class="btn btn-warning">
-      <i class="fas fa-code mr-2"></i> التعديل المتقدم (SQL)
+      <i class="fas fa-code mr-2"></i> {{ _('التعديل المتقدم (SQL)') }}
     </a>
   </div>
 </div>

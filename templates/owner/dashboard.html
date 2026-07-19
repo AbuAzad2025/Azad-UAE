@@ -12,7 +12,7 @@
 <div class="owner-warning-permanent d-flex align-items-center mb-4 ic-1">
   <i class="fas fa-shield-alt mr-3 text-danger ic-2"></i>
   <span class="ic-3">
-    منطقة الإدارة العليا - جميع العمليات في هذه اللوحة مسجلة لأغراض التدقيق والأمان.
+    {{ _('منطقة الإدارة العليا - جميع العمليات في هذه اللوحة مسجلة لأغراض التدقيق والأمان.') }}
   </span>
 </div>
 
@@ -21,7 +21,7 @@
     <div class="small-box bg-info shadow">
       <div class="inner">
         <h3>{{ stats.active_tenant_count }}</h3>
-        <p><i class="fas fa-building mr-1"></i> الشركات النشطة</p>
+        <p><i class="fas fa-building mr-1"></i> {{ _('الشركات النشطة') }}</p>
       </div>
       <div class="icon"><i class="fas fa-building"></i></div>
       <a href="{{ url_for('owner.tenants_list') }}" class="small-box-footer">{{ t('View_All') }}<i class="fas fa-arrow-circle-left ml-1"></i></a>
@@ -43,7 +43,7 @@
     <div class="small-box bg-warning shadow">
       <div class="inner">
         <h3 class="text-dark">{{ stats.new_tenants_month }}</h3>
-        <p class="text-dark"><i class="fas fa-user-plus mr-1"></i> اشتراكات جديدة (الشهر)</p>
+        <p class="text-dark"><i class="fas fa-user-plus mr-1"></i> {{ _('اشتراكات جديدة (الشهر)') }}</p>
       </div>
       <div class="icon"><i class="fas fa-chart-line"></i></div>
       <a href="{{ url_for('owner.tenants_list') }}" class="small-box-footer">{{ t('View_All') }}<i class="fas fa-arrow-circle-left ml-1"></i></a>
@@ -54,7 +54,7 @@
     <div class="small-box bg-danger shadow">
       <div class="inner">
         <h3>{{ stats.trial_tenant_count }}</h3>
-        <p><i class="fas fa-flask mr-1"></i> اشتراكات تجريبية</p>
+        <p><i class="fas fa-flask mr-1"></i> {{ _('اشتراكات تجريبية') }}</p>
       </div>
       <div class="icon"><i class="fas fa-vial"></i></div>
       <a href="{{ url_for('owner.reports') }}" class="small-box-footer">{{ t('Reports') }}<i class="fas fa-arrow-circle-left ml-1"></i></a>
@@ -67,7 +67,7 @@
     <div class="small-box bg-info">
       <div class="inner">
         <h3>{{ stats.suspended_tenant_count }}</h3>
-        <p>شركات معلقة/موقوفة</p>
+        <p>{{ _('شركات معلقة/موقوفة') }}</p>
       </div>
       <div class="icon"><i class="fas fa-pause-circle"></i></div>
     </div>
@@ -76,7 +76,7 @@
     <div class="small-box bg-warning">
       <div class="inner">
         <h3>{{ stats.expiring_soon_count }}</h3>
-        <p>اشتراكات تنتهي خلال 7 أيام</p>
+        <p>{{ _('اشتراكات تنتهي خلال 7 أيام') }}</p>
       </div>
       <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
     </div>
@@ -85,7 +85,7 @@
     <div class="small-box bg-secondary">
       <div class="inner">
         <h3>{{ stats.expired_subscription_count }}</h3>
-        <p>اشتراكات منتهية</p>
+        <p>{{ _('اشتراكات منتهية') }}</p>
       </div>
       <div class="icon"><i class="fas fa-calendar-times"></i></div>
     </div>
@@ -96,9 +96,9 @@
   <div class="col-12">
     <div class="card shadow hover-lift">
       <div class="card-header bg-purple text-white">
-        <h3 class="card-title"><i class="fas fa-layer-group mr-2"></i> توزيع الباقات (Subscription Plans)</h3>
+        <h3 class="card-title"><i class="fas fa-layer-group mr-2"></i> {{ _('توزيع الباقات (Subscription Plans)') }}</h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع" aria-label="طي/توسيع"><i class="fas fa-minus"></i></button>
+          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('طي/توسيع') }}" aria-label="{{ _('طي/توسيع') }}"><i class="fas fa-minus"></i></button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -106,9 +106,9 @@
           <table class="table table-striped table-hover mb-0">
             <thead class="thead-light">
               <tr>
-                <th>الباقة</th>
-                <th class="text-center">عدد الشركات</th>
-                <th class="text-center">النسبة</th>
+                <th>{{ _('الباقة') }}</th>
+                <th class="text-center">{{ _('عدد الشركات') }}</th>
+                <th class="text-center">{{ _('النسبة') }}</th>
               </tr>
             </thead>
             <tbody>

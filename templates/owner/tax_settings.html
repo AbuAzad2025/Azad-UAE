@@ -4,16 +4,16 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-info">
-      <i class="fas fa-dollar-sign"></i> العملات
+      <i class="fas fa-dollar-sign"></i> {{ _('العملات') }}
     </a>
   </div>
 
   <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    إعدادات الضريبة <strong>لكل شركة على حدة</strong>. إذا كانت شركتك لا تتعامل بالضريبة، أوقف التفعيل أدناه — لن تُحسب ضريبة في المبيعات/المشتريات ولن تظهر تقارير VAT.
+    {{ _('إعدادات الضريبة') }} <strong>{{ _('لكل شركة على حدة') }}</strong>{{ _('. إذا كانت شركتك لا تتعامل بالضريبة، أوقف التفعيل أدناه — لن تُحسب ضريبة في المبيعات/المشتريات ولن تظهر تقارير VAT.') }}
   </div>
 
   <div class="card">
@@ -32,15 +32,15 @@
                    name="enable_tax"
                    {% if tenant.enable_tax %}checked{% endif %} aria-label="enable tax">
             <label class="custom-control-label" for="enable_tax">
-              تفعيل الضريبة / VAT لهذه الشركة
+              {{ _('تفعيل الضريبة / VAT لهذه الشركة') }}
             </label>
           </div>
-          <small class="text-muted">عند الإيقاف: معدل الضريبة = 0 في كل الفواتير.</small>
+          <small class="text-muted">{{ _('عند الإيقاف: معدل الضريبة = 0 في كل الفواتير.') }}</small>
         </div>
 
         <div id="tax-fields">
           <div class="form-group">
-            <label>دولة الضريبة</label>
+            <label>{{ _('دولة الضريبة') }}</label>
             <select name="vat_country" class="form-control" id="vat_country" aria-label="vat country">
               {% for code, label in vat_countries.items() %}
               <option value="{{ code }}" {% if (tenant.vat_country or 'AE') == code %}selected{% endif %}>{{ label }}</option>
@@ -49,7 +49,7 @@
           </div>
 
           <div class="form-group">
-            <label>معدل الضريبة الافتراضي (%)</label>
+            <label>{{ _('معدل الضريبة الافتراضي (%)') }}</label>
             <input type="number"
                    name="default_tax_rate"
                    id="default_tax_rate"
@@ -61,7 +61,7 @@
           </div>
 
           <div class="form-group">
-            <label for="input_vat_number">رقم التسجيل الضريبي (VAT / TRN)</label>
+            <label for="input_vat_number">{{ _('رقم التسجيل الضريبي (VAT / TRN)') }}</label>
             <input type="text"
                    name="vat_number"
                    class="form-control"
@@ -70,7 +70,7 @@
           </div>
 
           <div class="form-group">
-            <label for="input_tax_number">الرقم الضريبي العام</label>
+            <label for="input_tax_number">{{ _('الرقم الضريبي العام') }}</label>
             <input type="text"
                    name="tax_number"
                    class="form-control"
@@ -79,7 +79,7 @@
         </div>
 
         <button type="submit" class="btn btn-success btn-lg">
-          <i class="fas fa-save"></i> حفظ
+          <i class="fas fa-save"></i> {{ _('حفظ') }}
         </button>
       </form>
     </div>

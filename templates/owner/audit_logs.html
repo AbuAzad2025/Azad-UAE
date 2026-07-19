@@ -9,14 +9,14 @@
       <div class="col-sm-6">
         <h1 class="m-0">
           <i class="fas fa-shield-alt text-primary mr-2"></i>
-          سجل التدقيق والمراقبة
+          {{ _('سجل التدقيق والمراقبة') }}
           <span class="badge badge-info ml-2">Audit Trail</span>
         </h1>
         </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
-            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ _('الرجوع للوحة المالك') }}">
+            <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -28,13 +28,13 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary" aria-label="سجل التدقيق">
+          <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary" aria-label="{{ _('سجل التدقيق') }}">
             <i class="fas fa-shield-alt"></i>{{ t('Audit_Log') }}</a>
-          <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger" aria-label="تنظيف البيانات">
-            <i class="fas fa-trash"></i> تنظيف البيانات
+          <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger" aria-label="{{ _('تنظيف البيانات') }}">
+            <i class="fas fa-trash"></i> {{ _('تنظيف البيانات') }}
           </a>
-          <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success" aria-label="التحقق من النسخ الاحتياطية">
-            <i class="fas fa-check-double"></i> التحقق من النسخ
+          <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success" aria-label="{{ _('التحقق من النسخ الاحتياطية') }}">
+            <i class="fas fa-check-double"></i> {{ _('التحقق من النسخ') }}
           </a>
         </div>
       </div>
@@ -50,7 +50,7 @@
         <div class="small-box bg-info">
           <div class="inner">
             <h3>{{ logs|length }}</h3>
-            <p>عمليات في هذه الصفحة</p>
+            <p>{{ _('عمليات في هذه الصفحة') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-list"></i>
@@ -62,7 +62,7 @@
         <div class="small-box bg-success">
           <div class="inner">
             <h3>{{ logs|selectattr('action', 'equalto', 'create')|list|length }}</h3>
-            <p>إضافة جديدة</p>
+            <p>{{ _('إضافة جديدة') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-plus-circle"></i>
@@ -74,7 +74,7 @@
         <div class="small-box bg-warning">
           <div class="inner">
             <h3>{{ logs|selectattr('action', 'equalto', 'update')|list|length }}</h3>
-            <p>تعديلات</p>
+            <p>{{ _('تعديلات') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-edit"></i>
@@ -99,10 +99,10 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header bg-primary">
         <h3 class="card-title">
-          <i class="fas fa-filter mr-2"></i>تصفية السجلات
+          <i class="fas fa-filter mr-2"></i>{{ _('تصفية السجلات') }}
         </h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع" aria-label="طي/توسيع">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('طي/توسيع') }}" aria-label="{{ _('طي/توسيع') }}">
             <i class="fas fa-minus"></i>
           </button>
         </div>
@@ -112,7 +112,7 @@
           <div class="form-row">
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-tasks text-primary mr-1"></i> العملية
+                <i class="fas fa-tasks text-primary mr-1"></i> {{ _('العملية') }}
               </label>
               <select name="action" class="form-control" aria-label="action">
                 <option value="">{{ t('None') }}</option>
@@ -128,7 +128,7 @@
 
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-user text-success mr-1"></i> المستخدم
+                <i class="fas fa-user text-success mr-1"></i> {{ _('المستخدم') }}
               </label>
               {% set unique_users = [] %}
               <select name="user" class="form-control" aria-label="user">
@@ -145,9 +145,9 @@
             </div>
 
             <div class="form-group col-md-4 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary mr-2" aria-label="تطبيق التصفية">
+              <button type="submit" class="btn btn-primary mr-2" aria-label="{{ _('تطبيق التصفية') }}">
                 <i class="fas fa-search mr-1"></i>{{ t('Apply') }}</button>
-              <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary" aria-label="إعادة تعيين التصفية">
+              <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary" aria-label="{{ _('إعادة تعيين التصفية') }}">
                 <i class="fas fa-redo mr-1"></i>إعادة تعيين
               </a>
             </div>
@@ -163,7 +163,7 @@
           <i class="fas fa-history mr-2"></i>سجل العمليات التفصيلي
         </h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-success" onclick="exportLogs()" aria-label="تصدير السجلات">
+          <button type="button" class="btn btn-success" onclick="exportLogs()" aria-label="{{ _('تصدير السجلات') }}">
             <i class="fas fa-download mr-1"></i>{{ t('Export') }}</button>
         </div>
       </div>

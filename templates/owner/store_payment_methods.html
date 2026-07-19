@@ -6,11 +6,11 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>طرق دفع المتاجر الإلكترونية</h1>
-        <p class="text-muted small mb-0">تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل</p>
+        <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ _('طرق دفع المتاجر الإلكترونية') }}</h1>
+        <p class="text-muted small mb-0">{{ _('تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل') }}</p>
       </div>
       <div class="col-sm-6 text-left">
-        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>إضافة طريقة</a>
+        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>{{ _('إضافة طريقة') }}</a>
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">{{ t('Back') }}</a>
       </div>
     </div>
@@ -21,7 +21,7 @@
   <div class="container-fluid">
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-1"></i>
-      العميل يرى في صفحة الدفع فقط الطرق <strong>المفعّلة</strong> هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها.
+      {{ _('العميل يرى في صفحة الدفع فقط الطرق') }} <strong>{{ _('المفعّلة') }}</strong> {{ _('هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها.') }}
     </div>
 
     <div class="card">
@@ -57,17 +57,17 @@
                 </form>
               </td>
               <td class="text-left">
-                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-outline-primary" title="تعديل" aria-label="تعديل"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-outline-primary" title="{{ _('تعديل') }}" aria-label="{{ _('تعديل') }}"><i class="fas fa-edit"></i></a>
                 {% if not m.is_builtin %}
                 <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id) }}" class="d-inline" onsubmit="return confirm('حذف طريقة الدفع؟');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <button type="submit" class="btn btn-outline-danger" title="حذف" aria-label="حذف"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn btn-outline-danger" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-trash"></i></button>
                 </form>
                 {% endif %}
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="6" class="text-center text-muted py-4">لا طرق دفع — سيتم إنشاء الافتراضية تلقائياً</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-4">{{ _('لا طرق دفع — سيتم إنشاء الافتراضية تلقائياً') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

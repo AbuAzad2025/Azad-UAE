@@ -42,11 +42,11 @@
             <div class="form-group">
               <label for="prices_include_vat">طريقة احتساب الضريبة في {{ t('Branch') }}</label>
               <select name="prices_include_vat" class="form-control" id="prices_include_vat" aria-label="prices include vat">
-                <option value="" {% if branch.prices_include_vat is none %}selected{% endif %}>الافتراضي (حسب الشركة)</option>
-                <option value="on" {% if branch.prices_include_vat is true %}selected{% endif %}>الأسعار شاملة الضريبة</option>
-                <option value="off" {% if branch.prices_include_vat is false %}selected{% endif %}>الأسعار غير شاملة الضريبة</option>
+                <option value="" {% if branch.prices_include_vat is none %}selected{% endif %}>{{ _('الافتراضي (حسب الشركة)') }}</option>
+                <option value="on" {% if branch.prices_include_vat is true %}selected{% endif %}>{{ _('الأسعار شاملة الضريبة') }}</option>
+                <option value="off" {% if branch.prices_include_vat is false %}selected{% endif %}>{{ _('الأسعار غير شاملة الضريبة') }}</option>
               </select>
-              <small class="text-muted">إذا اخترت "الافتراضي"، سيتم استخدام إعداد الشركة.</small>
+              <small class="text-muted">{{ _('إذا اخترت "الافتراضي"، سيتم استخدام إعداد الشركة.') }}</small>
             </div>
           </div>
         </div>

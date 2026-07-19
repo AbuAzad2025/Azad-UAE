@@ -4,24 +4,24 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info">
-      <i class="fas fa-chart-line"></i> المراقبة الحية
+      <i class="fas fa-chart-line"></i> {{ _('المراقبة الحية') }}
     </a>
     <a href="{{ url_for('owner.performance_metrics') }}" class="btn btn-warning">
-      <i class="fas fa-tachometer-alt"></i> الأداء
+      <i class="fas fa-tachometer-alt"></i> {{ _('الأداء') }}
     </a>
   </div>
   
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-heartbeat"></i> صحة النظام</h3>
+      <h3><i class="fas fa-heartbeat"></i> {{ _('صحة النظام') }}</h3>
       <div class="card-tools">
         <form class="needs-validation d-inline" method="post" action="{{ url_for('owner.database_optimize') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-tools"></i> تحسين قاعدة البيانات
+            <i class="fas fa-tools"></i> {{ _('تحسين قاعدة البيانات') }}
           </button>
         </form>
       </div>

@@ -57,9 +57,9 @@
     <h3 class="card-title mb-0">{{ t('Details') }} {{ t('Sales') }}</h3>
     <div class="d-flex align-items-center">
       <form class="needs-validation form-inline mr-2" method="get">
-        <label class="mr-2" for="input_date_from">من</label>
+        <label class="mr-2" for="input_date_from">{{ _('من') }}</label>
         <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من {{ t('History') }}">
-        <label class="mr-2" for="input_date_to">إلى</label>
+        <label class="mr-2" for="input_date_to">{{ _('إلى') }}</label>
         <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى {{ t('History') }}">
         <label class="mr-2" for="customer">{{ t('Customer_2') }}</label>
         <select name="customer" class="form-control form-control-sm mr-2 ic-1" id="customer">

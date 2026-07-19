@@ -8,11 +8,11 @@
         <div class="container-fluid">
             <div class="row mb-2 align-items-center">
                 <div class="col-sm-6">
-                    <h1 class="m-0">التكاملات</h1>
+                    <h1 class="m-0">{{ _('التكاملات') }}</h1>
                 </div>
                 <div class="col-sm-6 text-left">
                     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+                        <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
                     </a>
                 </div>
             </div>
@@ -30,14 +30,14 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h5>تكامل WhatsApp</h5>
+                                    <h5>{{ _('تكامل WhatsApp') }}</h5>
                                     <p class="text-muted">إرسال إشعارات الفواتير والمدفوعات عبر WhatsApp {{ t('للعملاء') }}</p>
                                 </div>
                                 <div>
                                     {% if integrations.whatsapp.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>مفعل</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ _('مفعل') }}</span>
                                     {% else %}
-                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>غير مفعل</span>
+                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>{{ _('غير مفعل') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -49,33 +49,33 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل WhatsApp
+                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ _('تفعيل WhatsApp') }}
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="whatsapp_enabled" name="enabled" {% if integrations.whatsapp.enabled %}checked{% endif %} aria-label="enabled">
-                                        <label class="custom-control-label" for="whatsapp_enabled">تفعيل الإرسال التلقائي عبر WhatsApp</label>
+                                        <label class="custom-control-label" for="whatsapp_enabled">{{ _('تفعيل الإرسال التلقائي عبر WhatsApp') }}</label>
                                     </div>
                                 </div>
                                 
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    <strong>{{ t('Note') }}</strong> يمكنك استخدام WhatsApp Business API أو خدمات مثل Twilio, MessageBird, أو واجهة مخصصة
+                                    <strong>{{ t('Note') }}</strong> {{ _('يمكنك استخدام WhatsApp Business API أو خدمات مثل Twilio, MessageBird, أو واجهة مخصصة') }}
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_api_token">
                                         <i class="fas fa-key text-warning mr-1"></i>API Token / Access Key
                                     </label>
-                                    <input type="text" class="form-control" name="api_token" id="whatsapp_api_token" placeholder="أدخل API Token هنا" value="{{ integrations.whatsapp.config.api_token or '' }}">
+                                    <input type="text" class="form-control" name="api_token" id="whatsapp_api_token" placeholder="{{ _('أدخل API Token هنا') }}" value="{{ integrations.whatsapp.config.api_token or '' }}">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_phone">
-                                        <i class="fas fa-phone text-primary mr-1"></i>رقم WhatsApp Business
+                                        <i class="fas fa-phone text-primary mr-1"></i>{{ _('رقم WhatsApp Business') }}
                                     </label>
                                     <input type="text" class="form-control" name="phone_number" id="whatsapp_phone" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}" pattern="^\+?[0-9\s\-]{8,20}$">
                                     <small class="form-text text-muted">
-                                        📱 <strong>{{ t('مثال') }}</strong> +971501234567 (بالصيغة الدولية مع +)
+                                        📱 <strong>{{ t('مثال') }}</strong> {{ _('+971501234567 (بالصيغة الدولية مع +)') }}
                                     </small>
                                 </div>
                                 
@@ -91,16 +91,16 @@
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_message_template">
-                                        <i class="fas fa-comment-dots text-success mr-1"></i>قالب الرسالة الافتراضي
+                                        <i class="fas fa-comment-dots text-success mr-1"></i>{{ _('قالب الرسالة الافتراضي') }}
                                     </label>
-                                    <textarea class="form-control" name="message_template" id="whatsapp_message_template" rows="3" placeholder="مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!">{{ integrations.whatsapp.config.message_template or "مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!" }}</textarea>
+                                    <textarea class="form-control" name="message_template" id="whatsapp_message_template" rows="3" placeholder="{{ _('مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!') }}">{{ integrations.whatsapp.config.message_template or "مرحباً {customer_name}، فاتورتك رقم {invoice_number} بمبلغ {amount} جاهزة!" }}</textarea>
                                     <small class="form-text text-muted">
                                         💬 <strong>{{ t('Available_Variables') }}</strong> {customer_name}, {invoice_number}, {amount}, {date}
                                     </small>
                                 </div>
                                 
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save mr-1"></i>حفظ إعدادات WhatsApp
+                                    <i class="fas fa-save mr-1"></i>{{ _('حفظ إعدادات WhatsApp') }}
                                 </button>
                             </form>
                         </div>
@@ -110,19 +110,19 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header bg-info">
-                            <h3 class="card-title"><i class="fas fa-envelope mr-2"></i>البريد الإلكتروني (SMTP)</h3>
+                            <h3 class="card-title"><i class="fas fa-envelope mr-2"></i>{{ _('البريد الإلكتروني (SMTP)') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h5>تكامل البريد الإلكتروني</h5>
-                                    <p class="text-muted">إرسال الفواتير والتقارير والإشعارات عبر البريد الإلكتروني</p>
+                                    <h5>{{ _('تكامل البريد الإلكتروني') }}</h5>
+                                    <p class="text-muted">{{ _('إرسال الفواتير والتقارير والإشعارات عبر البريد الإلكتروني') }}</p>
                                 </div>
                                 <div>
                                     {% if integrations.email.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>مفعل</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ _('مفعل') }}</span>
                                     {% else %}
-                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>غير مفعل</span>
+                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>{{ _('غير مفعل') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -134,11 +134,11 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل البريد الإلكتروني
+                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ _('تفعيل البريد الإلكتروني') }}
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="email_enabled" name="enabled" {% if integrations.email.enabled %}checked{% endif %} aria-label="enabled">
-                                        <label class="custom-control-label" for="email_enabled">تفعيل الإرسال التلقائي عبر Email</label>
+                                        <label class="custom-control-label" for="email_enabled">{{ _('تفعيل الإرسال التلقائي عبر Email') }}</label>
                                     </div>
                                 </div>
                                 
@@ -181,7 +181,7 @@
                                             </label>
                                             <input type="email" class="form-control" name="smtp_user" id="smtp_user" placeholder="your-email@gmail.com" value="{{ integrations.email.config.smtp_user or '' }}">
                                             <small class="form-text text-muted">
-                                                📧 عادةً نفس البريد الإلكتروني الذي ترسل منه
+                                                {{ _('📧 عادةً نفس البريد الإلكتروني الذي ترسل منه') }}
                                             </small>
                                         </div>
                                     </div>
@@ -194,7 +194,7 @@
                                             <input type="password" class="form-control" name="smtp_password" id="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}" minlength="6">
                                             <small class="form-text text-muted">
                                                 🔐 <strong>Gmail:</strong> {{ t('استخدم') }}App Password (ليس كلمة المرور العادية)<br>
-                                                <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">إنشاء App Password</a>
+                                                <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">{{ _('إنشاء App Password') }}</a>
                                             </small>
                                         </div>
                                     </div>
@@ -202,7 +202,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-shield-alt text-success mr-1"></i>التشفير (TLS/SSL)
+                                        <i class="fas fa-shield-alt text-success mr-1"></i>{{ _('التشفير (TLS/SSL)') }}
                                     </label>
                                     <select class="form-control" name="smtp_encryption" aria-label="smtp encryption">
                                         {% set encryption = integrations.email.config.smtp_encryption or 'tls' %}
@@ -219,7 +219,7 @@
                                     <label for="sender_name">
                                         <i class="fas fa-paper-plane text-info mr-1"></i>اسم المُرسل
                                     </label>
-                                    <input type="text" class="form-control" name="sender_name" id="sender_name" placeholder="كراج الامارات" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
+                                    <input type="text" class="form-control" name="sender_name" id="sender_name" placeholder="{{ _('كراج الامارات') }}" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
                                     <small class="form-text text-muted">
                                         ✉️ الاسم الذي سيظهر للمستلم (مثال: "كراج الامارات" &lt;no-reply&#64;garage.ae&gt;)
                                     </small>

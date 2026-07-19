@@ -8,7 +8,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-chart-bar mr-2"></i>إحصائيات النظام</h1>
+                    <h1 class="m-0"><i class="fas fa-chart-bar mr-2"></i>{{ _('إحصائيات النظام') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
@@ -28,7 +28,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">إحصائيات قاعدة البيانات</h3>
+                            <h3 class="card-title">{{ _('إحصائيات قاعدة البيانات') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -48,7 +48,7 @@
                                         {% endfor %}
                                         {% if restricted_tables %}
                                         <tr class="table-secondary">
-                                            <td><em>جداول محمية (أسماء وعدد السجلات مخفية)</em></td>
+                                            <td><em>{{ _('جداول محمية (أسماء وعدد السجلات مخفية)') }}</em></td>
                                             <td>{{ restricted_tables }}</td>
                                         </tr>
                                         {% endif %}

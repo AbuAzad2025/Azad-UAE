@@ -4,21 +4,21 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> اللوحة المالية
+      <i class="fas fa-link"></i> {{ _('اللوحة المالية') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-link"></i> المبيعات
+      <i class="fas fa-link"></i> {{ _('المبيعات') }}
     </a>
   </div>
   
 <div class="row">
-<div class="col-md-6"><div class="card bg-success"><div class="card-body"><h4>التنبؤ للشهر القادم</h4><h2>{{ "%.0f"|format(forecast.next_month) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
-<div class="col-md-6"><div class="card bg-info"><div class="card-body"><h4>التنبؤ لـ 3 أشهر</h4><h2>{{ "%.0f"|format(forecast.next_3_months) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+<div class="col-md-6"><div class="card bg-success"><div class="card-body"><h4>{{ _('التنبؤ للشهر القادم') }}</h4><h2>{{ "%.0f"|format(forecast.next_month) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+<div class="col-md-6"><div class="card bg-info"><div class="card-body"><h4>{{ _('التنبؤ لـ 3 أشهر') }}</h4><h2>{{ "%.0f"|format(forecast.next_3_months) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
 </div>
-<div class="card"><div class="card-header"><h3>البيانات التاريخية</h3></div><div class="card-body"><canvas id="forecastChart" height="80"></canvas></div></div>
+<div class="card"><div class="card-header"><h3>{{ _('البيانات التاريخية') }}</h3></div><div class="card-body"><canvas id="forecastChart" height="80"></canvas></div></div>
 </div>
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 <script>

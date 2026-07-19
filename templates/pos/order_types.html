@@ -3,62 +3,62 @@
 {% block title %}أنواع الطلبات - POS{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-list-alt mr-2"></i>أنواع الطلبات في نقطة البيع</h1>
+<h1 class="mb-0"><i class="fas fa-list-alt mr-2"></i>{{ _('أنواع الطلبات في نقطة البيع') }}</h1>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
   <div class="card mb-4">
-    <div class="card-header">إضافة نوع طلب جديد</div>
+    <div class="card-header">{{ _('إضافة نوع طلب جديد') }}</div>
     <div class="card-body">
       <form method="post" class="form-row align-items-end">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create">
         <div class="form-group col-md-2">
-          <label for="ot_code">الرمز (code)</label>
-          <input class="form-control" id="ot_code" name="code" required placeholder="مثال: in_store">
+          <label for="ot_code">{{ _('الرمز (code)') }}</label>
+          <input class="form-control" id="ot_code" name="code" required placeholder="{{ _('مثال: in_store') }}">
         </div>
         <div class="form-group col-md-3">
-          <label for="ot_name_ar">الاسم (عربي)</label>
-          <input class="form-control" id="ot_name_ar" name="name_ar" required placeholder="مثال: في المتجر">
+          <label for="ot_name_ar">{{ _('الاسم (عربي)') }}</label>
+          <input class="form-control" id="ot_name_ar" name="name_ar" required placeholder="{{ _('مثال: في المتجر') }}">
         </div>
         <div class="form-group col-md-3">
-          <label for="ot_name_en">الاسم (إنجليزي)</label>
+          <label for="ot_name_en">{{ _('الاسم (إنجليزي)') }}</label>
           <input class="form-control" id="ot_name_en" name="name_en" placeholder="e.g. In-store">
         </div>
         <div class="form-group col-md-2">
-          <label for="ot_sort_order">الترتيب</label>
+          <label for="ot_sort_order">{{ _('الترتيب') }}</label>
           <input class="form-control" id="ot_sort_order" type="number" name="sort_order" value="100">
         </div>
         <div class="form-group col-md-2 d-flex">
           <div class="form-check mr-3">
             <input class="form-check-input" type="checkbox" name="is_active" id="c_active" checked>
-            <label class="form-check-label" for="c_active">نشط</label>
+            <label class="form-check-label" for="c_active">{{ _('نشط') }}</label>
           </div>
           <div class="form-check mr-3">
             <input class="form-check-input" type="checkbox" name="is_default" id="c_def">
-            <label class="form-check-label" for="c_def">افتراضي</label>
+            <label class="form-check-label" for="c_def">{{ _('افتراضي') }}</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="checkbox" name="kds_enabled" id="c_kds">
-            <label class="form-check-label" for="c_kds">شاشة المطبخ</label>
+            <label class="form-check-label" for="c_kds">{{ _('شاشة المطبخ') }}</label>
           </div>
         </div>
         <div class="form-group col-md-12">
-          <button type="submit" class="btn btn-primary">إضافة</button>
-          <a href="{{ url_for('pos.index') }}" class="btn btn-secondary">العودة للـ POS</a>
+          <button type="submit" class="btn btn-primary">{{ _('إضافة') }}</button>
+          <a href="{{ url_for('pos.index') }}" class="btn btn-secondary">{{ _('العودة للـ POS') }}</a>
         </div>
       </form>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-header">أنواع الطلبات الحالية</div>
+    <div class="card-header">{{ _('أنواع الطلبات الحالية') }}</div>
     <div class="card-body p-0">
       <table class="table mb-0">
         <thead>
           <tr>
-            <th>الرمز</th><th>الاسم</th><th>الترتيب</th><th>نشط</th><th>افتراضي</th><th>شاشة المطبخ</th><th>إجراءات</th>
+            <th>{{ _('الرمز') }}</th><th>{{ _('الاسم') }}</th><th>{{ _('الترتيب') }}</th><th>{{ _('نشط') }}</th><th>{{ _('افتراضي') }}</th><th>{{ _('شاشة المطبخ') }}</th><th>{{ _('إجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -67,21 +67,21 @@
             <td><code>{{ ot.code }}</code></td>
             <td>{{ ot.display_name }}</td>
             <td>{{ ot.sort_order }}</td>
-            <td>{% if ot.is_active %}<span class="badge badge-success">نعم</span>{% else %}<span class="badge badge-secondary">لا</span>{% endif %}</td>
-            <td>{% if ot.is_default %}<span class="badge badge-primary">افتراضي</span>{% endif %}</td>
-            <td>{% if ot.kds_enabled %}<span class="badge badge-info">نعم</span>{% endif %}</td>
+            <td>{% if ot.is_active %}<span class="badge badge-success">{{ _('نعم') }}</span>{% else %}<span class="badge badge-secondary">{{ _('لا') }}</span>{% endif %}</td>
+            <td>{% if ot.is_default %}<span class="badge badge-primary">{{ _('افتراضي') }}</span>{% endif %}</td>
+            <td>{% if ot.kds_enabled %}<span class="badge badge-info">{{ _('نعم') }}</span>{% endif %}</td>
             <td>
               <form method="post" class="form-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="ot_id" value="{{ ot.id }}">
-                <button type="submit" name="action" value="set_default" class="btn btn-sm btn-outline-primary mr-1">افتراضي</button>
-                <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">تبديل النشط</button>
-                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف النوع؟')">حذف</button>
+                <button type="submit" name="action" value="set_default" class="btn btn-sm btn-outline-primary mr-1">{{ _('افتراضي') }}</button>
+                <button type="submit" name="action" value="toggle" class="btn btn-sm btn-outline-secondary mr-1">{{ _('تبديل النشط') }}</button>
+                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف النوع؟')">{{ _('حذف') }}</button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="7" class="text-center text-muted">لا توجد أنواع طلبات.</td></tr>
+          <tr><td colspan="7" class="text-center text-muted">{{ _('لا توجد أنواع طلبات.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

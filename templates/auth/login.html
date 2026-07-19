@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>شركة ازاد للأنظمة الذكية — دخول آمن</title>
+  <title>{{ _('شركة ازاد للأنظمة الذكية — دخول آمن') }}</title>
   <link rel="icon" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}" type="image/png">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
     <div class="azad-login-bg__noise"></div>
   </div>
 
-  <nav class="azad-login-lang" aria-label="تغيير اللغة">
+  <nav class="azad-login-lang" aria-label="{{ _('تغيير اللغة') }}">
     <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="{% if session.get('language', 'ar') == 'ar' %}is-active{% endif %}">AR</a>
     <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
   </nav>
@@ -30,36 +30,36 @@
       <div class="azad-login-brand__logo">
         <img
           src="{{ url_for('static', filename='assets/brand/azad/logos/logo-gold.png') }}"
-          alt="شعار شركة ازاد"
+          alt="{{ _('شعار شركة ازاد') }}"
           width="400" height="auto"
           loading="eager" decoding="async"
         >
       </div>
-      <h1 class="azad-login-brand__title">شركة ازاد للأنظمة الذكية</h1>
+      <h1 class="azad-login-brand__title">{{ _('شركة ازاد للأنظمة الذكية') }}</h1>
       <p class="azad-login-brand__sub">AZAD Company &mdash; Smart Systems &amp; ERP</p>
       <p class="azad-login-brand__text">
-        منصة إدارة مؤسسات متكاملة. دخول آمن للمستخدمين حسب صلاحياتهم.
-        بإدارة المهندس أحمد غنام.
+        {{ _('منصة إدارة مؤسسات متكاملة. دخول آمن للمستخدمين حسب صلاحياتهم.
+        بإدارة المهندس أحمد غنام.') }}
       </p>
       <div class="azad-login-trust">
-        <span><i class="fas fa-shield-halved"></i> أمان متقدم</span>
-        <span><i class="fas fa-server"></i> موثوقية عالية</span>
-        <span><i class="fas fa-gauge-high"></i> أداء استثنائي</span>
-        <span><i class="fas fa-cloud"></i> منصة سحابية</span>
+        <span><i class="fas fa-shield-halved"></i> {{ _('أمان متقدم') }}</span>
+        <span><i class="fas fa-server"></i> {{ _('موثوقية عالية') }}</span>
+        <span><i class="fas fa-gauge-high"></i> {{ _('أداء استثنائي') }}</span>
+        <span><i class="fas fa-cloud"></i> {{ _('منصة سحابية') }}</span>
       </div>
     </aside>
 
     <main class="azad-login-card-wrap">
       <div class="azad-login-card">
-        <h2 class="azad-login-card__title">تسجيل الدخول</h2>
-        <p class="azad-login-card__sub" id="loginModeHint">دخول مستخدمي الشركات</p>
+        <h2 class="azad-login-card__title">{{ _('تسجيل الدخول') }}</h2>
+        <p class="azad-login-card__sub" id="loginModeHint">{{ _('دخول مستخدمي الشركات') }}</p>
 
-        <div class="azad-login-tabs" role="tablist" aria-label="نوع الدخول">
+        <div class="azad-login-tabs" role="tablist" aria-label="{{ _('نوع الدخول') }}">
           <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true">
-            <i class="fas fa-user" aria-hidden="true"></i> دخول الشركات
+            <i class="fas fa-user" aria-hidden="true"></i> {{ _('دخول الشركات') }}
           </button>
           <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false">
-            <i class="fas fa-code" aria-hidden="true"></i> المنصة
+            <i class="fas fa-code" aria-hidden="true"></i> {{ _('المنصة') }}
           </button>
         </div>
 
@@ -81,7 +81,7 @@
             <div class="azad-login-input-wrap">
               <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
               <input type="text" id="username" name="username" class="azad-ltr"
-                value="{{ username_value or '' }}" placeholder="اسم المستخدم"
+                value="{{ username_value or '' }}" placeholder="{{ _('اسم المستخدم') }}"
                 required autofocus autocomplete="username" minlength="2" maxlength="100">
             </div>
           </div>
@@ -92,7 +92,7 @@
               <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
               <input type="password" id="password" name="password"
                 placeholder="••••••••" required autocomplete="current-password" minlength="6">
-              <button type="button" class="azad-login-toggle-pass" id="togglePassword" aria-label="إظهار أو إخفاء كلمة المرور" title="عرض">
+              <button type="button" class="azad-login-toggle-pass" id="togglePassword" aria-label="{{ _('إظهار أو إخفاء كلمة المرور') }}" title="{{ _('عرض') }}">
                 <i class="fas fa-eye"></i>
               </button>
             </div>

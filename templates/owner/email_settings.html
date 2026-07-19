@@ -4,20 +4,20 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
-      <i class="fas fa-link"></i> الرسائل
+      <i class="fas fa-link"></i> {{ _('الرسائل') }}
     </a>
     <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> واتساب
+      <i class="fas fa-link"></i> {{ _('واتساب') }}
     </a>
     <a href="{{ url_for('owner.notification_templates') }}" class="btn btn-info">
-      <i class="fas fa-link"></i> القوالب
+      <i class="fas fa-link"></i> {{ _('القوالب') }}
     </a>
   </div>
   <div class="card">
-    <div class="card-header"><h3>إعدادات البريد الإلكتروني</h3></div>
+    <div class="card-header"><h3>{{ _('إعدادات البريد الإلكتروني') }}</h3></div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
@@ -31,9 +31,9 @@
         </div>
         <div class="row">
           <div class="col-md-6"><div class="form-group"><label for="email_from">From Email</label><input type="email" name="email_from" id="email_from" class="form-control" value="{{ settings.email_from or '' }}"></div></div>
-          <div class="col-md-6"><div class="form-group"><div class="custom-control custom-switch mt-4"><input type="checkbox" class="custom-control-input" id="use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls %}checked{% endif %} aria-label="smtp use tls"><label class="custom-control-label" for="use_tls">استخدام TLS</label></div></div></div>
+          <div class="col-md-6"><div class="form-group"><div class="custom-control custom-switch mt-4"><input type="checkbox" class="custom-control-input" id="use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls %}checked{% endif %} aria-label="smtp use tls"><label class="custom-control-label" for="use_tls">{{ _('استخدام TLS') }}</label></div></div></div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ _('حفظ') }}</button>
       </form>
     </div>
   </div>

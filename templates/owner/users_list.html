@@ -10,7 +10,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0">👥 إدارة المستخدمين</h1>
+        <h1 class="m-0">{{ _('👥 إدارة المستخدمين') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
@@ -31,7 +31,7 @@
         <div class="small-box bg-info">
           <div class="inner">
             <h3>{{ stats.total }}</h3>
-            <p>إجمالي المستخدمين</p>
+            <p>{{ _('إجمالي المستخدمين') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-users"></i>
@@ -43,7 +43,7 @@
         <div class="small-box bg-success">
           <div class="inner">
             <h3>{{ stats.active }}</h3>
-            <p>المستخدمون النشطون</p>
+            <p>{{ _('المستخدمون النشطون') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-check"></i>
@@ -55,7 +55,7 @@
         <div class="small-box bg-warning">
           <div class="inner">
             <h3 class="ic-1">{{ stats.admins + stats.managers }}</h3>
-            <p class="ic-1">المدراء والإداريون</p>
+            <p class="ic-1">{{ _('المدراء والإداريون') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-tie"></i>
@@ -67,7 +67,7 @@
         <div class="small-box bg-danger">
           <div class="inner">
             <h3>{{ stats.sellers }}</h3>
-            <p>البائعون</p>
+            <p>{{ _('البائعون') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-tag"></i>
@@ -79,10 +79,10 @@
     
     <div class="row mb-3">
       <div class="col-12">
-        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="إضافة مستخدم جديد">
-          <i class="fas fa-user-plus mr-2"></i>إضافة مستخدم جديد
+        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="{{ _('إضافة مستخدم جديد') }}">
+          <i class="fas fa-user-plus mr-2"></i>{{ _('إضافة مستخدم جديد') }}
         </a>
-        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();" aria-label="تحديث القائمة">
+        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();" aria-label="{{ _('تحديث القائمة') }}">
           <i class="fas fa-sync mr-2"></i>{{ t('Update') }}</button>
       </div>
     </div>
@@ -91,7 +91,7 @@
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title text-white">
-          <i class="fas fa-users mr-2"></i>قائمة المستخدمين
+          <i class="fas fa-users mr-2"></i>{{ _('قائمة المستخدمين') }}
         </h3>
       </div>
       <div class="card-body">
@@ -99,14 +99,14 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>الصورة</th>
+              <th>{{ _('الصورة') }}</th>
               <th>{{ t('Username') }}</th>
               <th>{{ t('Full Name') }}</th>
               <th>{{ t('Email') }}</th>
               <th>{{ t('Role') }}</th>
               <th>{{ t('Branch') }}</th>
               <th>{{ t('Status') }}</th>
-              <th>آخر دخول</th>
+              <th>{{ _('آخر دخول') }}</th>
               <th>{{ t('الإجراءات') }}</th>
             </tr>
           </thead>
@@ -186,7 +186,7 @@
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="الملف الشخصي" aria-label="الملف الشخصي">
+                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="{{ _('الملف الشخصي') }}" aria-label="{{ _('الملف الشخصي') }}">
                     <i class="fas fa-eye"></i>
                   </a>
                   <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
@@ -195,7 +195,7 @@
                   {% if not user.is_owner and user.id != current_user.id %}
                   <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-danger" title="تعطيل" aria-label="تعطيل المستخدم">
+                    <button type="submit" class="btn btn-danger" title="{{ _('تعطيل') }}" aria-label="{{ _('تعطيل المستخدم') }}">
                       <i class="fas fa-ban"></i>
                     </button>
                   </form>

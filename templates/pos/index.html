@@ -34,9 +34,9 @@
     </div>
 
     <div class="pos-topbar-actions">
-      <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="إدارة الطاولات"><i class="fas fa-chair"></i></button>
-      <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="تعليق الفاتورة"><i class="fas fa-pause"></i></button>
-      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="عرض الشبكة"><i class="fas fa-th"></i></a>
+      <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair"></i></button>
+      <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause"></i></button>
+      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
       <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ t('Sales') }}"><i class="fas fa-file-invoice"></i></a>
       <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ t('Main_2') }}"><i class="fas fa-home"></i></a>
     </div>
@@ -74,7 +74,7 @@
       <div id="posCategories" class="pos-categories"></div>
 
       <div id="posProductGrid" class="pos-products">
-        <div class="pos-cart-empty">اختر فئة لعرض المنتجات</div>
+        <div class="pos-cart-empty">{{ _('اختر فئة لعرض المنتجات') }}</div>
       </div>
 
     </div>
@@ -170,7 +170,7 @@
             </div>
             <div class="field">
               <label for="orderNote">ملاحظة الطلب</label>
-              <textarea id="orderNote" class="form-control" rows="2" placeholder="ملاحظات على الفاتورة (اختياري)"></textarea>
+              <textarea id="orderNote" class="form-control" rows="2" placeholder="{{ _('ملاحظات على الفاتورة (اختياري)') }}"></textarea>
             </div>
           </div>
         </div>
@@ -196,7 +196,7 @@
 
 <div class="field">
               <label for="orderType">نوع الطلب (Order Type)
-                <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" title="إدارة أنواع الطلبات"><i class="fas fa-cog"></i></a>
+                <a href="{{ url_for('pos.order_type_settings') }}" class="btn btn-sm btn-link p-0 ml-1" target="_blank" title="{{ _('إدارة أنواع الطلبات') }}"><i class="fas fa-cog"></i></a>
               </label>
               <select id="orderType" class="form-control">
             <option value="">--</option>
@@ -205,7 +205,7 @@
 
         <div class="ref-field" id="refField">
           <label class="small text-muted" for="referenceNumber">رقم مرجع</label>
-          <input id="referenceNumber" class="form-control" placeholder="اختياري">
+          <input id="referenceNumber" class="form-control" placeholder="{{ _('اختياري') }}">
         </div>
 
         <div class="pos-actions">
@@ -262,7 +262,7 @@
         </div>
         <div class="form-group">
           <label for="openSessionNotes">ملاحظات</label>
-          <textarea id="openSessionNotes" class="form-control" rows="2" placeholder="اختياري"></textarea>
+          <textarea id="openSessionNotes" class="form-control" rows="2" placeholder="{{ _('اختياري') }}"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -293,7 +293,7 @@
         </div>
         <div class="form-group">
           <label for="closeSessionNotes">ملاحظات</label>
-          <textarea id="closeSessionNotes" class="form-control" rows="2" placeholder="اختياري"></textarea>
+          <textarea id="closeSessionNotes" class="form-control" rows="2" placeholder="{{ _('اختياري') }}"></textarea>
         </div>
       </div>
       <div class="modal-footer">

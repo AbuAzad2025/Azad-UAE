@@ -5,7 +5,7 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>أدوات قاعدة البيانات المتقدمة</h1>
+    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ _('أدوات قاعدة البيانات المتقدمة') }}</h1>
   </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
@@ -26,12 +26,12 @@
   <div class="col-md-12">
     <div class="card card-danger">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> منطقة خطرة - Owner فقط</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> {{ _('منطقة خطرة - Owner فقط') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
           <i class="fas fa-skull-crossbones"></i>
-          <strong>{{ t('Warning') }}</strong> هذه الأدوات قوية جداً. استخدمها بحذر شديد!
+          <strong>{{ t('Warning') }}</strong> {{ _('هذه الأدوات قوية جداً. استخدمها بحذر شديد!') }}
         </div>
         {% if restricted_tables %}
         <div class="alert alert-info">
@@ -45,7 +45,7 @@
             <div class="small-box bg-info">
               <div class="inner">
                 <h3>{{ tables|length }}</h3>
-                <p>عدد الجداول</p>
+                <p>{{ _('عدد الجداول') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-table"></i>
@@ -56,7 +56,7 @@
             <div class="small-box bg-success">
               <div class="inner">
                 <h3>{{ tables|sum(attribute='rows_count')|default(0) }}</h3>
-                <p>إجمالي السجلات</p>
+                <p>{{ _('إجمالي السجلات') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-database"></i>
@@ -67,7 +67,7 @@
             <div class="small-box bg-warning">
               <div class="inner">
                 <h3>PostgreSQL</h3>
-                <p>نوع قاعدة البيانات</p>
+                <p>{{ _('نوع قاعدة البيانات') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-hdd"></i>
@@ -76,12 +76,12 @@
           </div>
         </div>
 
-        <h4 class="mt-4">الجداول</h4>
+        <h4 class="mt-4">{{ _('الجداول') }}</h4>
         <div class="table-responsive">
           <table class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>اسم الجدول</th>
+                <th>{{ _('اسم الجدول') }}</th>
                 <th>{{ t('Description') }}</th>
                 <th>{{ t('Record_Count') }}</th>
                 <th>{{ t('الإجراءات') }}</th>
@@ -140,26 +140,26 @@
                 <td>
                   <a href="{{ url_for('owner.browse_table', table_name=table.name) }}" 
                      class="btn btn-browse" 
-                     title="عرض البيانات فقط - آمن">
-                    <i class="fas fa-eye"></i> تصفح
+                     title="{{ _('عرض البيانات فقط - آمن') }}">
+                    <i class="fas fa-eye"></i> {{ _('تصفح') }}
                   </a>
                   {% if table.name not in ['alembic_version'] %}
                   <a href="{{ url_for('owner.edit_table_data', table_name=table.name) }}" 
                      class="btn btn-edit"
-                     title="تعديل مرئي سهل - متوسط الخطورة">
-                    <i class="fas fa-edit"></i> تعديل مرئي
+                     title="{{ _('تعديل مرئي سهل - متوسط الخطورة') }}">
+                    <i class="fas fa-edit"></i> {{ _('تعديل مرئي') }}
                   </a>
                   <a href="{{ url_for('owner.sql_console') }}" 
                      class="btn btn-sql"
-                     title="تعديل متقدم بـ SQL - خطير!">
+                     title="{{ _('تعديل متقدم بـ SQL - خطير!') }}">
                     <i class="fas fa-code"></i> SQL
                   </a>
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
                   <button class="btn btn-danger" 
                           onclick="truncateTable({{ table.name|tojson }})"
-                          title="حذف كل البيانات - خطير جداً!">
-                    <i class="fas fa-trash"></i> مسح الكل
+                          title="{{ _('حذف كل البيانات - خطير جداً!') }}">
+                    <i class="fas fa-trash"></i> {{ _('مسح الكل') }}
                   </button>
                   {% endif %}
                 </td>
@@ -182,13 +182,13 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-file-export"></i> تصدير JSON
+                <i class="fas fa-file-export"></i> {{ _('تصدير JSON') }}
               </button>
             </form>
           </div>
           <div class="col-md-4">
             <a href="{{ url_for('owner.convert_database') }}" class="btn btn-warning btn-block btn-lg">
-              <i class="fas fa-exchange-alt"></i> تحويل Database
+              <i class="fas fa-exchange-alt"></i> {{ _('تحويل Database') }}
             </a>
           </div>
         </div>
@@ -201,12 +201,12 @@
                   onsubmit="return confirmMaintenance(this, 'FIX_COST_CENTERS')">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
-                <i class="fas fa-wrench mr-2"></i> إصلاح فهارس مراكز التكلفة
+                <i class="fas fa-wrench mr-2"></i> {{ _('إصلاح فهارس مراكز التكلفة') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                <strong>⚠ لا رجعة فيها</strong> — يزيل الفهرس القديم <code>ix_cost_centers_code</code>
-                وينظف السجلات ذات <code>tenant_id = NULL</code>.
-                <br>يتطلب كتابة: <kbd>FIX_COST_CENTERS</kbd>
+                <strong>{{ _('⚠ لا رجعة فيها') }}</strong> {{ _('— يزيل الفهرس القديم') }} <code>ix_cost_centers_code</code>
+                {{ _('وينظف السجلات ذات') }} <code>tenant_id = NULL</code>.
+                <br>{{ _('يتطلب كتابة:') }} <kbd>FIX_COST_CENTERS</kbd>
               </small>
             </form>
           </div>
@@ -217,15 +217,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_extra" name="cleanup_extra">
                 <label class="custom-control-label text-danger small" for="cleanup_extra">
-                  <i class="fas fa-exclamation-triangle"></i> تعطيل الحسابات الإضافية (خارج الشجرة الأساسية)
+                  <i class="fas fa-exclamation-triangle"></i> {{ _('تعطيل الحسابات الإضافية (خارج الشجرة الأساسية)') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-info btn-block btn-lg" id="btn-rebuild-gl-tree">
-                <i class="fas fa-sync-alt mr-2"></i> إعادة بناء شجرة الحسابات (GL)
+                <i class="fas fa-sync-alt mr-2"></i> {{ _('إعادة بناء شجرة الحسابات (GL)') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                يعيد بناء شجرة الحسابات المحاسبية لجميع المستأجرين باستخدام <code>GLTreeBuilder</code>.
-                <br>يتطلب كتابة: <kbd>REBUILD_GL_TREE</kbd>
+                {{ _('يعيد بناء شجرة الحسابات المحاسبية لجميع المستأجرين باستخدام') }} <code>GLTreeBuilder</code>.
+                <br>{{ _('يتطلب كتابة:') }} <kbd>REBUILD_GL_TREE</kbd>
               </small>
             </form>
           </div>
@@ -241,15 +241,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="maint_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="maint_dry_run">
-                  🔍 تجربة جافة (فحص فقط)
+                  {{ _('🔍 تجربة جافة (فحص فقط)') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-secondary btn-block btn-lg">
-                <i class="fas fa-user-shield mr-2"></i> صيانة المستأجر الافتراضي (Patch + Backup)
+                <i class="fas fa-user-shield mr-2"></i> {{ _('صيانة المستأجر الافتراضي (Patch + Backup)') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                يصحح أعمدة NOT NULL المفقودة ويعيد إنشاء النسخة الاحتياطية.
-                <br>يتطلب كتابة: <kbd>RUN_DEFAULT_TENANT_MAINTENANCE</kbd>
+                {{ _('يصحح أعمدة NOT NULL المفقودة ويعيد إنشاء النسخة الاحتياطية.') }}
+                <br>{{ _('يتطلب كتابة:') }} <kbd>RUN_DEFAULT_TENANT_MAINTENANCE</kbd>
               </small>
             </form>
           </div>
@@ -260,15 +260,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="cleanup_dry_run">
-                  🔍 تجربة جافة (فحص فقط)
+                  {{ _('🔍 تجربة جافة (فحص فقط)') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-danger btn-block btn-lg">
-                <i class="fas fa-trash-alt mr-2"></i> تنظيف قواعد البيانات الاختبارية
+                <i class="fas fa-trash-alt mr-2"></i> {{ _('تنظيف قواعد البيانات الاختبارية') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                يحذف قواعد البيانات القديمة: azadexa_test, azad_uae_test, azad_diag_*, إلخ.
-                <br>يتطلب كتابة: <kbd>CLEANUP_TEST_DBS</kbd>
+                {{ _('يحذف قواعد البيانات القديمة: azadexa_test, azad_uae_test, azad_diag_*, إلخ.') }}
+                <br>{{ _('يتطلب كتابة:') }} <kbd>CLEANUP_TEST_DBS</kbd>
               </small>
             </form>
           </div>
@@ -279,21 +279,21 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="fix_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="fix_dry_run">
-                  🔍 تجربة جافة
+                  {{ _('🔍 تجربة جافة') }}
                 </label>
               </div>
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="fix_no_backup" name="no_backup">
                 <label class="custom-control-label text-muted small" for="fix_no_backup">
-                  ⛔ تخطي تجديد النسخة الاحتياطية
+                  {{ _('⛔ تخطي تجديد النسخة الاحتياطية') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-dark btn-block btn-lg">
-                <i class="fas fa-database mr-2"></i> تصحيح المستأجر الافتراضي فقط
+                <i class="fas fa-database mr-2"></i> {{ _('تصحيح المستأجر الافتراضي فقط') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                يصحح أعمدة NOT NULL فقط (بدون backup افتراضيًا).
-                <br>يتطلب كتابة: <kbd>FIX_DEFAULT_TENANT</kbd>
+                {{ _('يصحح أعمدة NOT NULL فقط (بدون backup افتراضيًا).') }}
+                <br>{{ _('يتطلب كتابة:') }} <kbd>FIX_DEFAULT_TENANT</kbd>
               </small>
             </form>
           </div>
@@ -309,15 +309,15 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="backup_dry_run" name="dry_run">
                 <label class="custom-control-label text-muted small" for="backup_dry_run">
-                  🔍 تجربة جافة
+                  {{ _('🔍 تجربة جافة') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-sync-alt mr-2"></i> تجديد نسخة المستأجر الافتراضي الاحتياطية
+                <i class="fas fa-sync-alt mr-2"></i> {{ _('تجديد نسخة المستأجر الافتراضي الاحتياطية') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
-                يعيد إنشاء النسخة الاحتياطية scoped للمستأجر الافتراضي.
-                <br>يتطلب كتابة: <kbd>REGENERATE_DEFAULT_BACKUP</kbd>
+                {{ _('يعيد إنشاء النسخة الاحتياطية scoped للمستأجر الافتراضي.') }}
+                <br>{{ _('يتطلب كتابة:') }} <kbd>REGENERATE_DEFAULT_BACKUP</kbd>
               </small>
             </form>
           </div>
@@ -327,9 +327,9 @@
           <div class="col-12">
             <div class="card">
               <div class="card-header d-flex justify-content-between">
-                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>سجل عمليات الصيانة الأخيرة</h5>
+                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>{{ _('سجل عمليات الصيانة الأخيرة') }}</h5>
                 <button class="btn btn-sm btn-outline-secondary" onclick="refreshAuditLog()">
-                  <i class="fas fa-sync-alt"></i> تحديث
+                  <i class="fas fa-sync-alt"></i> {{ _('تحديث') }}
                 </button>
               </div>
               <div class="card-body p-0">
@@ -337,10 +337,10 @@
                   <table class="table table-hover mb-0" id="audit-log-table">
                     <thead class="thead-light">
                       <tr>
-                        <th>الوقت</th>
-                        <th>العملية</th>
-                        <th>النتيجة</th>
-                        <th>التفاصيل</th>
+                        <th>{{ _('الوقت') }}</th>
+                        <th>{{ _('العملية') }}</th>
+                        <th>{{ _('النتيجة') }}</th>
+                        <th>{{ _('التفاصيل') }}</th>
                       </tr>
                     </thead>
                     <tbody></tbody>

@@ -5,30 +5,30 @@
   <div class="mb-3">
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+        <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
       </a>
     {% else %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> رجوع للوحة التحكم
+        <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة التحكم') }}
       </a>
     {% endif %}
     <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
-      <i class="fas fa-archive"></i> النسخ الاحتياطية
+      <i class="fas fa-archive"></i> {{ _('النسخ الاحتياطية') }}
     </a>
     <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-      <i class="fas fa-trash"></i> التنظيف
+      <i class="fas fa-trash"></i> {{ _('التنظيف') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-check-double"></i> التحقق من النسخ الاحتياطية</h3>
+      <h3><i class="fas fa-check-double"></i> {{ _('التحقق من النسخ الاحتياطية') }}</h3>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table class="table table-bordered table-hover">
         <thead class="thead-light">
           <tr>
-            <th style="width: 40%">اسم الملف</th>
-            <th style="width: 15%">الحجم</th>
+            <th style="width: 40%">{{ _('اسم الملف') }}</th>
+            <th style="width: 15%">{{ _('الحجم') }}</th>
             <th style="width: 25%">{{ t('Created_Date') }}</th>
             <th style="width: 20%">{{ t('Status') }}</th>
           </tr>
@@ -43,11 +43,11 @@
               <td>
                 {% if backup.valid %}
                 <span class="badge badge-success">
-                  <i class="fas fa-check"></i> صحيح
+                  <i class="fas fa-check"></i> {{ _('صحيح') }}
                 </span>
                 {% else %}
                 <span class="badge badge-danger">
-                  <i class="fas fa-times"></i> تالف
+                  <i class="fas fa-times"></i> {{ _('تالف') }}
                 </span>
                 {% endif %}
               </td>
@@ -56,7 +56,7 @@
           {% else %}
             <tr>
               <td colspan="4" class="text-center text-muted">
-                <i class="fas fa-info-circle"></i> لا توجد نسخ احتياطية
+                <i class="fas fa-info-circle"></i> {{ _('لا توجد نسخ احتياطية') }}
               </td>
             </tr>
           {% endif %}

@@ -4,9 +4,9 @@
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center flex-wrap erp-gap-1">
-  <h1 class="mb-0"><i class="fas fa-plus-circle ml-2"></i>إضافة منتج جديد</h1>
+  <h1 class="mb-0"><i class="fas fa-plus-circle ml-2"></i>{{ _('إضافة منتج جديد') }}</h1>
   <a href="{{ url_for('products.index') }}" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-right ml-1"></i>العودة للمنتجات
+    <i class="fas fa-arrow-right ml-1"></i>{{ _('العودة للمنتجات') }}
   </a>
 </div>
 {% endblock %}
@@ -65,13 +65,13 @@
                 </select>
                 {% if current_user.has_permission('manage_products') %}
                 <div class="input-group-append">
-                  <button type="button" class="btn btn-outline-primary js-category-edit" disabled title="تعديل الفئة">
+                  <button type="button" class="btn btn-outline-primary js-category-edit" disabled title="{{ _('تعديل الفئة') }}">
                     <i class="fas fa-pen"></i>
                   </button>
-                  <button type="button" class="btn btn-outline-danger js-category-delete" disabled title="حذف الفئة">
+                  <button type="button" class="btn btn-outline-danger js-category-delete" disabled title="{{ _('حذف الفئة') }}">
                     <i class="fas fa-trash"></i>
                   </button>
-                  <button type="button" class="btn btn-outline-success js-category-add" title="إضافة فئة">
+                  <button type="button" class="btn btn-outline-success js-category-add" title="{{ _('إضافة فئة') }}">
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
@@ -118,7 +118,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="product_name_ar">الاسم (عربي)</label>
-                  <input type="text" id="product_name_ar" name="name_ar" class="form-control" value="{{ form_data.get('name_ar', '') }}" maxlength="200" placeholder="بطارية سيارة">
+                  <input type="text" id="product_name_ar" name="name_ar" class="form-control" value="{{ form_data.get('name_ar', '') }}" maxlength="200" placeholder="{{ _('بطارية سيارة') }}">
                 </div>
               </div>
             </div>
@@ -159,13 +159,13 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="product_sku">SKU</label>
-                <input type="text" id="product_sku" name="sku" class="form-control input-ltr" dir="ltr" value="{{ form_data.get('sku', '') }}" maxlength="50" placeholder="يُولَّد تلقائياً">
+                <input type="text" id="product_sku" name="sku" class="form-control input-ltr" dir="ltr" value="{{ form_data.get('sku', '') }}" maxlength="50" placeholder="{{ _('يُولَّد تلقائياً') }}">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="product_barcode">الباركود</label>
-                <input type="text" id="product_barcode" name="barcode" class="form-control input-ltr" dir="ltr" value="{{ form_data.get('barcode', '') }}" maxlength="100" placeholder="يُولَّد تلقائياً">
+                <input type="text" id="product_barcode" name="barcode" class="form-control input-ltr" dir="ltr" value="{{ form_data.get('barcode', '') }}" maxlength="100" placeholder="{{ _('يُولَّد تلقائياً') }}">
               </div>
             </div>
           </div>
@@ -305,7 +305,7 @@
           <div class="row">
             <div class="col-md-4">
               <label for="product_location">موقع بالمستودع</label>
-              <input type="text" id="product_location" name="location" class="form-control" value="{{ form_data.get('location', '') }}" placeholder="رف / ممر">
+              <input type="text" id="product_location" name="location" class="form-control" value="{{ form_data.get('location', '') }}" placeholder="{{ _('رف / ممر') }}">
             </div>
             <div class="col-md-4">
               <label for="product_image">صورة المنتج</label>

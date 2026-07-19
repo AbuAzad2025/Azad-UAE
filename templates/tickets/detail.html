@@ -56,7 +56,7 @@
         {% if ticket.status == 'open' or ticket.status == 'waiting' %}
         <form method="POST" action="{{ url_for('tickets.resolve_ticket', ticket_id=ticket.id) }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-sm btn-success"><i class="fas fa-check"></i> حل</button>
+          <button class="btn btn-sm btn-success"><i class="fas fa-check"></i> {{ _('حل') }}</button>
         </form>
         {% endif %}
         {% if ticket.status != 'closed' %}

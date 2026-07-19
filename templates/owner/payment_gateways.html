@@ -4,21 +4,21 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-info">
-      <i class="fas fa-dollar-sign"></i> العملات
+      <i class="fas fa-dollar-sign"></i> {{ _('العملات') }}
     </a>
   </div>
   
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-credit-card"></i> إعدادات بوابات الدفع</h3>
+      <h3><i class="fas fa-credit-card"></i> {{ _('إعدادات بوابات الدفع') }}</h3>
     </div>
     <div class="card-body">
       <div class="alert alert-warning">
         <i class="fas fa-lock"></i>
-        <strong>{{ t('Warning') }}</strong> هذه المعلومات حساسة وسرية. تأكد من حفظها بشكل آمن.
+        <strong>{{ t('Warning') }}</strong> {{ _('هذه المعلومات حساسة وسرية. تأكد من حفظها بشكل آمن.') }}
       </div>
       
       <form class="needs-validation" method="post" action="">
@@ -34,7 +34,7 @@
                      class="form-control" 
                      value="{{ vault.stripe_publishable_key or '' }}"
                      placeholder="pk_live_..." id="input_stripe_publishable_key">
-              <small class="text-muted">المفتاح العام للواجهة الأمامية</small>
+              <small class="text-muted">{{ _('المفتاح العام للواجهة الأمامية') }}</small>
             </div>
           </div>
           <div class="col-md-6">
@@ -45,7 +45,7 @@
                      class="form-control" 
                      value="{{ vault.stripe_secret_key or '' }}"
                      placeholder="sk_live_..." id="input_stripe_secret_key">
-              <small class="text-muted">المفتاح السري (لا تشاركه أبداً)</small>
+              <small class="text-muted">{{ _('المفتاح السري (لا تشاركه أبداً)') }}</small>
             </div>
           </div>
         </div>
@@ -88,14 +88,14 @@
                      class="form-control" 
                      value="{{ vault.nowpayments_api_key or '' }}"
                      placeholder="NP_API_..." id="input_nowpayments_api_key">
-              <small class="text-muted">مفتاح API للدفع بالعملات المشفرة</small>
+              <small class="text-muted">{{ _('مفتاح API للدفع بالعملات المشفرة') }}</small>
             </div>
           </div>
         </div>
         
         <div class="mt-4">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save"></i> حفظ جميع الإعدادات
+            <i class="fas fa-save"></i> {{ _('حفظ جميع الإعدادات') }}
           </button>
         </div>
       </form>

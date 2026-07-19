@@ -10,7 +10,7 @@
     <div class="small-box bg-info">
       <div class="inner">
         <h3>{{ stats.auto_count }}</h3>
-        <p>نسخة تلقائية</p>
+        <p>{{ _('نسخة تلقائية') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-robot"></i>
@@ -22,7 +22,7 @@
     <div class="small-box bg-success">
       <div class="inner">
         <h3>{{ stats.total_size_mb }}</h3>
-        <p>MB مساحة</p>
+        <p>{{ _('MB مساحة') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-hdd"></i>
@@ -34,7 +34,7 @@
     <div class="small-box bg-warning">
       <div class="inner">
         <h3>{{ settings.keep_count }}</h3>
-        <p>الحد الأقصى</p>
+        <p>{{ _('الحد الأقصى') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-layer-group"></i>
@@ -59,7 +59,7 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-danger">
-      <strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ في النسخ التلقائي:</strong>
+      <strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ _('آخر خطأ في النسخ التلقائي:') }}</strong>
       <div class="mt-2 ic-1">{{ schedule_state.last_error }}</div>
       <div class="mt-2 text-muted">
         {% if schedule_state.last_run_at %}<span>آخر تشغيل: {{ schedule_state.last_run_at }}</span>{% endif %}
@@ -72,7 +72,7 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-success">
-      <strong><i class="fas fa-check-circle mr-1"></i>آخر نسخة تلقائية ناجحة:</strong> {{ schedule_state.last_success_at }}
+      <strong><i class="fas fa-check-circle mr-1"></i>{{ _('آخر نسخة تلقائية ناجحة:') }}</strong> {{ schedule_state.last_success_at }}
       {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
     </div>
   </div>
@@ -84,41 +84,41 @@
   <div class="col-md-6">
     <div class="card card-primary">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cog"></i> إعدادات النسخ التلقائي</h3>
+        <h3 class="card-title"><i class="fas fa-cog"></i> {{ _('إعدادات النسخ التلقائي') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-info">
           <i class="fas fa-info-circle"></i>
-          <strong>نظام ذكي:</strong> يحتفظ تلقائياً بآخر {{ settings.keep_count }} نسخ ويحذف الأقدم
+          <strong>{{ _('نظام ذكي:') }}</strong> يحتفظ تلقائياً بآخر {{ settings.keep_count }} نسخ ويحذف الأقدم
         </div>
 
         <form class="needs-validation" method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
-            <label><i class="fas fa-sync"></i> التكرار:</label>
+            <label><i class="fas fa-sync"></i> {{ _('التكرار:') }}</label>
             <select name="frequency" class="form-control" required aria-label="frequency">
               <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>{{ t('Every_Hour') }}</option>
-              <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>يومياً (موصى به)</option>
-              <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>أسبوعياً</option>
-              <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>شهرياً</option>
+              <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>{{ _('يومياً (موصى به)') }}</option>
+              <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>{{ _('أسبوعياً') }}</option>
+              <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>{{ _('شهرياً') }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label><i class="fas fa-clock"></i> الوقت المفضل:</label>
+            <label><i class="fas fa-clock"></i> {{ _('الوقت المفضل:') }}</label>
             <input type="time" name="backup_time" class="form-control" 
                    value="{{ settings.backup_time }}" required aria-label="backup time">
             <small class="form-text text-muted">
-              يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)
+              {{ _('يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)') }}
             </small>
           </div>
 
           <div class="form-group">
-            <label><i class="fas fa-layer-group"></i> عدد النسخ المحفوظة:</label>
+            <label><i class="fas fa-layer-group"></i> {{ _('عدد النسخ المحفوظة:') }}</label>
             <input type="number" name="keep_count" class="form-control" 
                    value="{{ settings.keep_count }}" min="3" max="50" required aria-label="keep count">
             <small class="form-text text-muted">
-              الحد الأدنى: 3 | الحد الأقصى: 50
+              {{ _('الحد الأدنى: 3 | الحد الأقصى: 50') }}
             </small>
           </div>
 
@@ -126,12 +126,12 @@
             <input type="checkbox" class="custom-control-input" id="enableSchedule" 
                    name="enabled" {% if settings.enabled %}checked{% endif %} aria-label="enabled">
             <label class="custom-control-label" for="enableSchedule">
-              <strong>تفعيل النسخ الاحتياطي التلقائي</strong>
+              <strong>{{ _('تفعيل النسخ الاحتياطي التلقائي') }}</strong>
             </label>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-save"></i> حفظ الإعدادات
+            <i class="fas fa-save"></i> {{ _('حفظ الإعدادات') }}
           </button>
         </form>
 
@@ -141,12 +141,12 @@
           <form method="POST" action="{{ url_for('owner.backup_now') }}" class="ic-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success">
-              <i class="fas fa-download"></i> نسخة احتياطية الآن
+              <i class="fas fa-download"></i> {{ _('نسخة احتياطية الآن') }}
             </button>
           </form>
           
           <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
-            <i class="fas fa-list"></i> كل النسخ
+            <i class="fas fa-list"></i> {{ _('كل النسخ') }}
           </a>
         </div>
       </div>
@@ -157,7 +157,7 @@
   <div class="col-md-6">
     <div class="card card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-history"></i> آخر النسخ التلقائية</h3>
+        <h3 class="card-title"><i class="fas fa-history"></i> {{ _('آخر النسخ التلقائية') }}</h3>
       </div>
       <div class="card-body">
         {% if backups %}
@@ -165,8 +165,8 @@
           <table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>التاريخ والوقت</th>
-                <th>الحجم</th>
+                <th>{{ _('التاريخ والوقت') }}</th>
+                <th>{{ _('الحجم') }}</th>
                 <th><i class="fas fa-check-circle text-success"></i></th>
               </tr>
             </thead>
@@ -189,9 +189,9 @@
                   </span>
                 </td>
                 <td>
-                  <i class="fas fa-check-circle text-success" title="متاح"></i>
+                  <i class="fas fa-check-circle text-success" title="{{ _('متاح') }}"></i>
                   {% if backup.compressed %}
-                  <i class="fas fa-compress text-info" title="مضغوط"></i>
+                  <i class="fas fa-compress text-info" title="{{ _('مضغوط') }}"></i>
                   {% endif %}
                 </td>
               </tr>

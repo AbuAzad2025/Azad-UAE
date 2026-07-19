@@ -18,42 +18,42 @@
             <div class="card-body">
               {% if not method or not method.is_builtin %}
               <div class="form-group">
-                <label for="input_code">الرمز (code)</label>
+                <label for="input_code">{{ _('الرمز (code)') }}</label>
                 <input type="text" name="code" class="form-control" value="{{ method.code if method else '' }}" pattern="[a-z][a-z0-9_]+" dir="ltr" {% if method %}required{% else %}required{% endif %} placeholder="my_wallet" id="input_code">
-                <small class="text-muted">حروف إنجليزية صغيرة — يُستخدم داخلياً</small>
+                <small class="text-muted">{{ _('حروف إنجليزية صغيرة — يُستخدم داخلياً') }}</small>
               </div>
               {% else %}
               <div class="form-group">
                 <label>{{ t('Code_4') }}</label>
-                <input type="text" class="form-control" value="{{ method.code }}" disabled aria-label="الرمز">
+                <input type="text" class="form-control" value="{{ method.code }}" disabled aria-label="{{ _('الرمز') }}">
               </div>
               {% endif %}
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label for="input_name_ar">الاسم (عربي) *</label>
+                  <label for="input_name_ar">{{ _('الاسم (عربي) *') }}</label>
                   <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
                 <div class="col-md-6 form-group">
-                  <label for="input_name_en">الاسم (English) *</label>
+                  <label for="input_name_en">{{ _('الاسم (English) *') }}</label>
                   <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label>وصف للعميل (عربي)</label>
+                  <label>{{ _('وصف للعميل (عربي)') }}</label>
                   <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar" maxlength="500">{{ method.description_ar if method else '' }}</textarea>
                 </div>
                 <div class="col-md-6 form-group">
-                  <label>وصف للعميل (English)</label>
+                  <label>{{ _('وصف للعميل (English)') }}</label>
                   <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en" maxlength="500">{{ method.description_en if method else '' }}</textarea>
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-4 form-group">
-                  <label for="input_icon">أيقونة FontAwesome</label>
+                  <label for="input_icon">{{ _('أيقونة FontAwesome') }}</label>
                   <input type="text" name="icon" class="form-control" value="{{ method.icon if method else 'fas fa-money-bill-wave' }}" dir="ltr" id="input_icon" aria-label="icon">
                 </div>
                 <div class="col-md-4 form-group">
@@ -63,13 +63,13 @@
                 <div class="col-md-4 form-group pt-4">
                   <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if not method or method.is_enabled %}checked{% endif %} aria-label="is enabled">
-                    <label class="custom-control-label" for="is_enabled">مفعّلة للمتاجر</label>
+                    <label class="custom-control-label" for="is_enabled">{{ _('مفعّلة للمتاجر') }}</label>
                   </div>
                 </div>
               </div>
 
               <hr>
-              <h5 class="text-muted">بيانات إضافية (اختياري — تظهر للعميل)</h5>
+              <h5 class="text-muted">{{ _('بيانات إضافية (اختياري — تظهر للعميل)') }}</h5>
               {% set cfg = method.get_config() if method else {} %}
               <div class="row">
                 <div class="col-md-4 form-group">

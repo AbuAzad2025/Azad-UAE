@@ -7,15 +7,15 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">🏛️ إعدادات الشركة المطورة</h1>
+        <h1 class="m-0">{{ _('🏛️ إعدادات الشركة المطورة') }}</h1>
       </div>
       <div class="col-sm-6">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary float-left">
-          <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          <i class="fas fa-arrow-right mr-1"></i> {{ _('الرجوع للوحة المالك') }}
         </a>
         <ol class="breadcrumb float-sm-left mb-0">
           <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
-          <li class="breadcrumb-item active">الشركة المطورة</li>
+          <li class="breadcrumb-item active">{{ _('الشركة المطورة') }}</li>
         </ol>
       </div>
     </div>
@@ -25,7 +25,7 @@
 <div class="container-fluid">
   <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    <strong>{{ t('Note') }}</strong> هذه البيانات تظهر في تذييل الصفحات وروابط «طور بواسطة» و«واتساب المطور» — ولا علاقة لها ببيانات التينانت (النشاط/العميل).
+    <strong>{{ t('Note') }}</strong> {{ _('هذه البيانات تظهر في تذييل الصفحات وروابط «طور بواسطة» و«واتساب المطور» — ولا علاقة لها ببيانات التينانت (النشاط/العميل).') }}
   </div>
 
   <form class="needs-validation" method="POST" action="{{ url_for('owner.developer_settings') }}">
@@ -33,33 +33,33 @@
 
     <div class="card">
       <div class="card-header bg-secondary text-white">
-        <h3 class="card-title mb-0">الاسم والعبارة</h3>
+        <h3 class="card-title mb-0">{{ _('الاسم والعبارة') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_name_ar">الاسم بالعربي</label>
-              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="شركة أزاد للأنظمة الذكية" id="input_developer_name_ar" minlength="2" maxlength="100">
+              <label for="input_developer_name_ar">{{ _('الاسم بالعربي') }}</label>
+              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="{{ _('شركة أزاد للأنظمة الذكية') }}" id="input_developer_name_ar" minlength="2" maxlength="100">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_name">الاسم بالإنجليزي</label>
+              <label for="input_developer_name">{{ _('الاسم بالإنجليزي') }}</label>
               <input type="text" name="developer_name" class="form-control" value="{{ dev.developer_name or '' }}" placeholder="Azad Smart Systems" id="input_developer_name" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label for="input_developer_credit">عبارة «طور بواسطة» (تظهر في التذييل)</label>
-          <input type="text" name="developer_credit" class="form-control" value="{{ dev.developer_credit or '' }}" placeholder="تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems" id="input_developer_credit">
+          <label for="input_developer_credit">{{ _('عبارة «طور بواسطة» (تظهر في التذييل)') }}</label>
+          <input type="text" name="developer_credit" class="form-control" value="{{ dev.developer_credit or '' }}" placeholder="{{ _('تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems') }}" id="input_developer_credit">
         </div>
       </div>
     </div>
 
     <div class="card">
       <div class="card-header bg-primary text-white">
-        <h3 class="card-title mb-0">التواصل والدعم</h3>
+        <h3 class="card-title mb-0">{{ _('التواصل والدعم') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
@@ -71,7 +71,7 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_whatsapp">واتساب (رقم كامل مع مفتاح الدولة)</label>
+              <label for="input_developer_whatsapp">{{ _('واتساب (رقم كامل مع مفتاح الدولة)') }}</label>
               <input type="text" name="developer_whatsapp" class="form-control" value="{{ dev.developer_whatsapp or '' }}" placeholder="+972562150193" id="input_developer_whatsapp">
             </div>
           </div>
@@ -85,20 +85,20 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_website">الموقع الإلكتروني</label>
+              <label for="input_developer_website">{{ _('الموقع الإلكتروني') }}</label>
               <input type="url" name="developer_website" class="form-control" value="{{ dev.developer_website or '' }}" placeholder="https://azadsystems.com" id="input_developer_website">
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label for="input_developer_logo">مسار الشعار الرسمي (مثل: assets/brand/azad/logos/logo.png)</label>
+          <label for="input_developer_logo">{{ _('مسار الشعار الرسمي (مثل: assets/brand/azad/logos/logo.png)') }}</label>
           <input type="text" name="developer_logo" class="form-control" value="{{ dev.developer_logo or '' }}" placeholder="assets/brand/azad/logos/logo.png" id="input_developer_logo">
         </div>
       </div>
     </div>
 
     <div class="mb-4">
-      <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save mr-2"></i>حفظ إعدادات المطور</button>
+      <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save mr-2"></i>{{ _('حفظ إعدادات المطور') }}</button>
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">{{ t('Cancel') }}</a>
     </div>
   </form>

@@ -5,7 +5,7 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-exchange-alt text-info"></i> إدارة أسعار الصرف</h1>
+        <h1 class="m-0"><i class="fas fa-exchange-alt text-info"></i> {{ _('إدارة أسعار الصرف') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
@@ -22,7 +22,7 @@
       <div class="col-md-5">
         <div class="card">
           <div class="card-header bg-info text-white">
-            <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i> إضافة سعر يدوي</h3>
+            <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i> {{ _('إضافة سعر يدوي') }}</h3>
           </div>
           <div class="card-body">
             <form method="POST" action="{{ url_for('owner.exchange_rates') }}">
@@ -30,8 +30,8 @@
               <input type="hidden" name="action" value="save">
 
               <div class="form-group">
-                <label>من عملة</label>
-                <select name="from_currency" class="form-control" aria-label="من عملة">
+                <label>{{ _('من عملة') }}</label>
+                <select name="from_currency" class="form-control" aria-label="{{ _('من عملة') }}">
                   {% for c in currencies %}
                   <option value="{{ c }}" {{ 'selected' if c == 'USD' }}>{{ c }}</option>
                   {% endfor %}
@@ -39,8 +39,8 @@
               </div>
 
               <div class="form-group">
-                <label>إلى عملة</label>
-                <select name="to_currency" class="form-control" aria-label="إلى عملة">
+                <label>{{ _('إلى عملة') }}</label>
+                <select name="to_currency" class="form-control" aria-label="{{ _('إلى عملة') }}">
                   {% for c in currencies %}
                   <option value="{{ c }}" {{ 'selected' if c == 'AED' }}>{{ c }}</option>
                   {% endfor %}
@@ -48,17 +48,17 @@
               </div>
 
               <div class="form-group">
-                <label for="rate">سعر الصرف</label>
-                <input type="number" name="rate" id="rate" class="form-control" step="0.000001" min="0.000001" required placeholder="مثال: 3.6725">
+                <label for="rate">{{ _('سعر الصرف') }}</label>
+                <input type="number" name="rate" id="rate" class="form-control" step="0.000001" min="0.000001" required placeholder="{{ _('مثال: 3.6725') }}">
               </div>
 
               <div class="form-group">
-                <label>تاريخ السريان</label>
-                <input type="date" name="effective_date" class="form-control" value="{{ today }}" aria-label="تاريخ السريان">
+                <label>{{ _('تاريخ السريان') }}</label>
+                <input type="date" name="effective_date" class="form-control" value="{{ today }}" aria-label="{{ _('تاريخ السريان') }}">
               </div>
 
               <button type="submit" class="btn btn-info btn-block">
-                <i class="fas fa-save mr-1"></i> حفظ السعر
+                <i class="fas fa-save mr-1"></i> {{ _('حفظ السعر') }}
               </button>
             </form>
           </div>
@@ -68,18 +68,18 @@
       <div class="col-md-7">
         <div class="card">
           <div class="card-header bg-secondary text-white">
-            <h3 class="card-title"><i class="fas fa-history mr-2"></i> سجل الأسعار</h3>
+            <h3 class="card-title"><i class="fas fa-history mr-2"></i> {{ _('سجل الأسعار') }}</h3>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-sm table-hover mb-0">
                 <thead class="thead-light">
                   <tr>
-                    <th>من</th>
-                    <th>إلى</th>
-                    <th>السعر</th>
-                    <th>المصدر</th>
-                    <th>التاريخ</th>
+                    <th>{{ _('من') }}</th>
+                    <th>{{ _('إلى') }}</th>
+                    <th>{{ _('السعر') }}</th>
+                    <th>{{ _('المصدر') }}</th>
+                    <th>{{ _('التاريخ') }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -91,7 +91,7 @@
                     <td>{{ "%.6f"|format(r.rate|float) }}</td>
                     <td>
                       {% if r.source == 'manual' %}
-                      <span class="badge badge-primary">يدوي</span>
+                      <span class="badge badge-primary">{{ _('يدوي') }}</span>
                       {% elif r.source == 'api_primary' %}
                       <span class="badge badge-info">API</span>
                       {% else %}
@@ -104,14 +104,14 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="record_id" value="{{ r.id }}">
-                        <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="حذف" title="حذف">
+                        <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="{{ _('حذف') }}" title="{{ _('حذف') }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </form>
                     </td>
                   </tr>
                   {% else %}
-                  <tr><td colspan="6" class="text-center text-muted">لا توجد سجلات.</td></tr>
+                  <tr><td colspan="6" class="text-center text-muted">{{ _('لا توجد سجلات.') }}</td></tr>
                   {% endfor %}
                 </tbody>
               </table>

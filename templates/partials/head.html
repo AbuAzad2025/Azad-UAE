@@ -16,19 +16,19 @@
   
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
-  <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}">
+  <meta property="og:title" content="{{ _('{% block og_title %}{{ tenant_name_ar or company_name_ar or \'نظام المحاسبة\' }}{% endblock %}') }}">
   <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
   {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
   <meta property="og:image" content="{{ _logo_external }}">
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
-  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
+  <meta property="og:site_name" content="{{ _('{{ tenant_name_ar or company_name_ar or \'نظام المحاسبة\' }}') }}">
   
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
-  <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
+  <meta name="twitter:title" content="{{ _('{{ tenant_name_ar or company_name_ar or \'نظام المحاسبة\' }}') }}">
   <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('for Management') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
   

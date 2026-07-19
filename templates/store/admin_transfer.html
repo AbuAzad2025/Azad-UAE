@@ -2,7 +2,7 @@
 {% block title %}{{ t('نقل المخزون') }} — {{ t('المتجر') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2"></i>نقل المخزون — المتجر ↔ المستودعات</h1>
+<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2"></i>{{ _('نقل المخزون — المتجر ↔ المستودعات') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -10,29 +10,29 @@
   <div class="col-lg-8">
     <div class="card card-outline card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1"></i>تحويل مخزون</h3>
+        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1"></i>{{ _('تحويل مخزون') }}</h3>
       </div>
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="card-body">
           <div class="form-group">
-            <label class="font-weight-bold">اتجاه النقل</label>
+            <label class="font-weight-bold">{{ _('اتجاه النقل') }}</label>
             <div>
               <label class="radio-inline ml-3">
                 <input type="radio" name="direction" value="to_online" checked>
-                <i class="fas fa-arrow-right text-info"></i> إلى الأونلاين
+                <i class="fas fa-arrow-right text-info"></i> {{ _('إلى الأونلاين') }}
               </label>
               <label class="radio-inline">
                 <input type="radio" name="direction" value="from_online">
-                <i class="fas fa-arrow-left text-warning"></i> من الأونلاين
+                <i class="fas fa-arrow-left text-warning"></i> {{ _('من الأونلاين') }}
               </label>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">المستودع الفعلي</label>
+            <label class="font-weight-bold" for="source_warehouse_id" id="wh_label">{{ _('المستودع الفعلي') }}</label>
             <select name="source_warehouse_id" id="source_warehouse_id" class="form-control" required onchange="filterByWarehouse()">
-              <option value="">— اختر المستودع —</option>
+              <option value="">{{ _('— اختر المستودع —') }}</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
               {% endfor %}
@@ -41,9 +41,9 @@
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="product_id">المنتج</label>
+            <label class="font-weight-bold" for="product_id">{{ _('المنتج') }}</label>
             <select name="product_id" id="product_id" class="form-control" required size="10">
-              <option value="">— اختر مستودعاً أولاً —</option>
+              <option value="">{{ _('— اختر مستودعاً أولاً —') }}</option>
               {% for product in products %}
               <option value="{{ product.id }}"
                 {% for wh in physical_warehouses %}
@@ -53,22 +53,22 @@
               </option>
               {% endfor %}
             </select>
-            <small class="form-text text-muted" id="product_stock_detail">اختر مستودعاً لعرض المنتجات المتوفرة</small>
+            <small class="form-text text-muted" id="product_stock_detail">{{ _('اختر مستودعاً لعرض المنتجات المتوفرة') }}</small>
           </div>
 
           <div class="form-group">
-            <label class="font-weight-bold" for="input_quantity">الكمية</label>
-            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" placeholder="مثال: 10">
+            <label class="font-weight-bold" for="input_quantity">{{ _('الكمية') }}</label>
+            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" placeholder="{{ _('مثال: 10') }}">
           </div>
 
           <div class="form-group">
-            <label for="notes">ملاحظة (اختياري)</label>
+            <label for="notes">{{ _('ملاحظة (اختياري)') }}</label>
             <textarea name="notes" id="notes" class="form-control" rows="2" maxlength="500"></textarea>
           </div>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1"></i>تنفيذ النقل</button>
-          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">رجوع</a>
+          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1"></i>{{ _('تنفيذ النقل') }}</button>
+          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ _('رجوع') }}</a>
         </div>
       </form>
     </div>
@@ -77,7 +77,7 @@
   <div class="col-lg-4">
     <div class="card card-outline card-info">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cloud ml-1"></i>مستودع الأونلاين</h3>
+        <h3 class="card-title"><i class="fas fa-cloud ml-1"></i>{{ _('مستودع الأونلاين') }}</h3>
       </div>
       <div class="card-body">
         <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
@@ -85,7 +85,7 @@
         <hr>
         <p class="small text-muted mb-0">
           <i class="fas fa-info-circle ml-1"></i>
-          المتجر يقرأ فقط من هذا المستودع.
+          {{ _('المتجر يقرأ فقط من هذا المستودع.') }}
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
 {% macro badge_required() %}<span class="badge badge-danger ml-1">إلزامي</span>{% endmacro %}
-{% macro badge_optional() %}<span class="badge badge-secondary ml-1">اختياري</span>{% endmacro %}
-{% macro badge_auto() %}<span class="badge badge-info ml-1">تلقائي إن تُرك فارغاً</span>{% endmacro %}
+{% macro badge_optional() %}<span class="badge badge-secondary ml-1">{{ _('اختياري') }}</span>{% endmacro %}
+{% macro badge_auto() %}<span class="badge badge-info ml-1">{{ _('تلقائي إن تُرك فارغاً') }}</span>{% endmacro %}
 {% macro badge_conditional(text) %}<span class="badge badge-warning ml-1">{{ text }}</span>{% endmacro %}
