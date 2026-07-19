@@ -1647,6 +1647,7 @@ class LoggingCore:
         """
         from extensions import db
         from sqlalchemy import text
+        from utils.safe_sql import count_query
 
         db_stats: dict[str, int] = {}
         restricted_count = 0
@@ -1665,9 +1666,7 @@ class LoggingCore:
                     restricted_count += 1
                     continue
                 count: int = (
-                    db.session.execute(
-                        text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
-                    ).scalar()
+                    db.session.execute(count_query(db.engine, safe_table)).scalar()
                     or 0
                 )
                 db_stats[safe_table] = count

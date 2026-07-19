@@ -12,6 +12,9 @@ import os
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
+from sqlalchemy import Text, func, select, text
+from utils.safe_sql import assert_known_column, sa_table
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -260,7 +263,11 @@ def _fetch_rows(
 ) -> List[Dict[str, Any]]:
     from sqlalchemy import text
 
-    result = conn.execute(text(f'SELECT * FROM "{table}" WHERE {where_sql}'), params)  # nosec B608
+    tbl = sa_table(table)
+    if where_sql:
+        result = conn.execute(select(tbl).where(text(where_sql)), params)
+    else:
+        result = conn.execute(select(tbl))
     rows = []
     for row in result.fetchall():
         rows.append(_serialize_row(dict(zip(result.keys(), row))))
@@ -277,14 +284,11 @@ def _fetch_child_rows(
 ) -> List[Dict[str, Any]]:
     if not parent_ids:
         return []
-    from sqlalchemy import text
-
     if not table_exists(conn, child_table):
         return []
-    placeholders = ", ".join(f":p{i}" for i in range(len(parent_ids)))
-    params = {f"p{i}": pid for i, pid in enumerate(parent_ids)}
-    sql = f'SELECT * FROM "{child_table}" WHERE "{child_fk}" IN ({placeholders})'  # nosec B608
-    result = conn.execute(text(sql), params)
+    assert_known_column(conn, child_table, child_fk)
+    tbl = sa_table(child_table)
+    result = conn.execute(select(tbl).where(tbl.c[child_fk].in_(parent_ids)))
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
 
@@ -297,8 +301,6 @@ def _merge_product_customer_dependencies(
     unresolved: List[str],
 ) -> None:
     """Ensure customers referenced by products/product_partners are in the export."""
-    from sqlalchemy import text
-
     if not table_exists(conn, "customers"):
         return
     needed: Set[int] = set()
@@ -320,15 +322,12 @@ def _merge_product_customer_dependencies(
     missing = sorted(needed - existing)
     if not missing:
         return
-    placeholders = ", ".join(f":c{i}" for i in range(len(missing)))
-    params: Dict[str, Any] = {"tid": tenant_id}
-    params.update({f"c{i}": cid for i, cid in enumerate(missing)})
     try:
+        tbl = sa_table("customers")
         result = conn.execute(
-            text(
-                f"SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})"  # nosec B608
-            ),
-            params,
+            select(tbl).where(tbl.c.tenant_id == tenant_id).where(
+                tbl.c.id.in_(missing)
+            )
         )
         extra = [
             _serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()
@@ -476,14 +475,11 @@ def export_scoped_database(
             if u.get("role_id") is not None
         }
         if role_ids:
-            from sqlalchemy import text
-
-            placeholders = ", ".join(f":r{i}" for i in range(len(role_ids)))
-            params = {f"r{i}": rid for i, rid in enumerate(role_ids)}
             try:
                 result = conn.execute(
-                    text(f"SELECT * FROM roles WHERE id IN ({placeholders})"),  # nosec B608
-                    params,
+                    select(sa_table("roles")).where(
+                        sa_table("roles").c.id.in_(list(role_ids))
+                    )
                 )
                 rows = [
                     _serialize_row(dict(zip(result.keys(), row)))
@@ -639,9 +635,13 @@ def collect_scoped_upload_paths(
         if column not in cols:
             return
         try:
-            q = sa_text(
-                f'SELECT "{column}" AS p FROM "{table}" WHERE {where} '  # nosec B608
-                f'AND "{column}" IS NOT NULL AND TRIM("{column}"::text) <> \'\''
+            assert_known_column(conn, table, column)
+            tbl = sa_table(table)
+            q = (
+                select(tbl.c[column].label("p"))
+                .where(text(where))
+                .where(tbl.c[column].isnot(None))
+                .where(func.trim(tbl.c[column].cast(Text)) != "")
             )
             for row in conn.execute(q, bind):
                 p = _path_from_urlish(row[0], base_dir)

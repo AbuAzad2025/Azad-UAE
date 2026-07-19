@@ -17,6 +17,7 @@ from services.backup_scope_config import (
     normalize_row_to_target,
     read_data_directory,
 )
+from utils.safe_sql import delete_where_query, insert_query, select_where_query
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
@@ -211,13 +212,11 @@ def _delete_tenant_scoped_data(
                     )
                 elif branch_id is not None and "branch_id" in cols:
                     conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),  # nosec B608
-                        {"bid": branch_id},
+                        delete_where_query(conn, table, "branch_id", branch_id)
                     )
                 elif "tenant_id" in cols:
                     conn.execute(
-                        text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),  # nosec B608
-                        {"tid": tenant_id},
+                        delete_where_query(conn, table, "tenant_id", tenant_id)
                     )
         except Exception as exc:
             logger.debug("delete scoped %s: %s", table, exc)
@@ -238,8 +237,6 @@ def _run_import(
     result: Dict[str, Any],
 ) -> None:
     """Execute the scoped delete + insert loop against ``conn`` (no commit)."""
-    from sqlalchemy import text
-
     tgt_tid = target_tenant_id if target_tenant_id is not None else source_tenant_id
     order = [t for t in TABLE_EXPORT_ORDER if t in tables]
     for t in tables:
@@ -272,15 +269,16 @@ def _run_import(
                 new_store_id=new_store_id,
             )
             mapped = normalize_row_to_target(conn, table, mapped)
-            cols = list(mapped.keys())
-            col_list = ", ".join(f'"{c}"' for c in cols)
-            val_list = ", ".join(f":{c}" for c in cols)
             try:
                 with conn.begin_nested():
-                    sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'  # nosec B608
-                    if table == "roles":
-                        sql += " ON CONFLICT (id) DO NOTHING"
-                    conn.execute(text(sql), mapped)
+                    conn.execute(
+                        insert_query(
+                            conn,
+                            table,
+                            mapped,
+                            on_conflict_do_nothing=(table == "roles"),
+                        )
+                    )
                 inserted += 1
             except Exception as e:
                 table_errors += 1
@@ -433,18 +431,14 @@ def verify_scoped_restore(
                 with conn.begin_nested():
                     if table == "tenants":
                         actual = conn.execute(
-                            text(f'SELECT COUNT(*) FROM "{table}" WHERE id = :tid'),  # nosec B608
-                            {"tid": tid},
+                            select_where_query(conn, table, "id", tid)
                         ).scalar()
                     elif table_exists(
                         conn,
                         table,
                     ) and _table_has_column(conn, table, "tenant_id"):
                         actual = conn.execute(
-                            text(
-                                f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id = :tid'  # nosec B608
-                            ),
-                            {"tid": tid},
+                            select_where_query(conn, table, "tenant_id", tid)
                         ).scalar()
                     else:
                         continue

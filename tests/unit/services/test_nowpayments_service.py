@@ -33,7 +33,7 @@ def svc():
 
 
 def _ok_post(payload=None, payment_id="np-100"):
-    def fake_post(url, json_data=None, headers=None, timeout=None):
+    def fake_post(url, json=None, headers=None, timeout=None):
         resp = MagicMock()
         resp.status_code = 201
         base = {
@@ -41,7 +41,7 @@ def _ok_post(payload=None, payment_id="np-100"):
             "pay_address": "bc1qtest",
             "pay_amount": 0.001,
             "payment_url": f"https://pay.example/{payment_id}",
-            "order_id": json_data.get("order_id") if json_data else None,
+            "order_id": json.get("order_id") if json else None,
             "expires_at": "2026-12-31T00:00:00Z",
         }
         if payload:
@@ -122,10 +122,10 @@ class TestCreatePayment:
     def test_omits_optional_order_and_email(self, svc, mocker):
         captured = {}
 
-        def fake_post(url, json_data=None, headers=None, timeout=None):
-            captured.update(json_data or {})
+        def fake_post(url, json=None, headers=None, timeout=None):
+            captured.update(json or {})
             return _ok_post()(
-                url, json_data=json_data, headers=headers, timeout=timeout
+                url, json=json, headers=headers, timeout=timeout
             )
 
         mocker.patch(

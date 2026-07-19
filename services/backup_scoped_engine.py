@@ -17,7 +17,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import text
+from sqlalchemy import func, select, text
+from utils.safe_sql import delete_where_query, insert_query, nextval_query, sa_table
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
@@ -265,11 +266,12 @@ def _new_id(conn, table: str) -> int:
         {"t": table},
     ).scalar()
     if seq:
-        return int(
-            conn.execute(text(f"SELECT nextval('{seq}')")).scalar()  # nosec B608
-        )
+        return int(conn.execute(nextval_query(conn, seq)).scalar())
+    table_obj = sa_table(table)
     return int(
-        conn.execute(text(f'SELECT COALESCE(MAX(id), 0) + 1 FROM "{table}"')).scalar()  # nosec B608
+        conn.execute(
+            select(func.coalesce(func.max(table_obj.c.id), 0) + 1)
+        ).scalar()
     )
 
 
@@ -660,8 +662,6 @@ def _restore_scoped_table(
     outcome: Dict[str, Any],
 ) -> None:
     """Insert one table's rows (within the caller's transaction)."""
-    from sqlalchemy import text
-
     outcome.setdefault("inserted", {})
     try:
         conn.execute(text("SET session_replication_role = replica"))
@@ -684,8 +684,7 @@ def _restore_scoped_table(
         }
         if "tenant_id" in table_cols:
             conn.execute(
-                text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),  # nosec B608
-                {"tid": src_tid},
+                delete_where_query(conn, table, "tenant_id", src_tid)
             )
     elif not remap and scope == SCOPE_BRANCH and table not in ("tenants", "branches"):
         bid = int(manifest.get("branch_id") or manifest.get("source_branch_id") or 0)
@@ -701,8 +700,7 @@ def _restore_scoped_table(
         }
         if "branch_id" in branch_cols:
             conn.execute(
-                text(f'DELETE FROM "{table}" WHERE branch_id = :bid'),  # nosec B608
-                {"bid": bid},
+                delete_where_query(conn, table, "branch_id", bid)
             )
 
     inserted = 0
@@ -724,15 +722,16 @@ def _restore_scoped_table(
             else:
                 new_row["id"] = id_maps[table][int(old_pk)]
 
-        cols = list(new_row.keys())
-        col_list = ", ".join(f'"{c}"' for c in cols)
-        val_list = ", ".join(f":{c}" for c in cols)
         try:
             with conn.begin_nested():
-                sql = f'INSERT INTO "{table}" ({col_list}) VALUES ({val_list})'  # nosec B608
-                if table == "roles":
-                    sql += " ON CONFLICT (id) DO NOTHING"
-                conn.execute(text(sql), new_row)
+                conn.execute(
+                    insert_query(
+                        conn,
+                        table,
+                        new_row,
+                        on_conflict_do_nothing=(table == "roles"),
+                    )
+                )
             inserted += 1
         except Exception as exc:
             table_errors += 1

@@ -7,6 +7,7 @@ import re
 from sqlalchemy import text
 from extensions import db
 from models import AuditLog, Sale, User
+from utils.safe_sql import count_query
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ class MonitoringService:
                     restricted_count += 1
                     continue
                 count = db.session.execute(
-                    text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
+                    count_query(db.engine, safe_table)
                 ).scalar()
                 db_stats[safe_table] = count or 0
         except Exception:

@@ -5,8 +5,10 @@ Provides internal API endpoints for the Owner Dashboard database maintenance too
 """
 
 import os
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, func, select, text, update
+from sqlalchemy import table as sa_table
 from extensions import db
+from utils.safe_sql import assert_known_column
 
 
 class MaintenanceService:
@@ -235,10 +237,12 @@ class MaintenanceService:
             for name, dtype, default in cols:
                 if default is not None and str(default).upper() != "NULL":
                     continue  # DB will supply the default on insert/update
+                assert_known_column(engine, "tenants", name)
+                tenants_tbl = sa_table("tenants")
                 cur = conn.execute(
-                    text(
-                        f"SELECT \"{name}\" FROM tenants WHERE slug = 'default' LIMIT 1"  # nosec B608
-                    )
+                    select(tenants_tbl.c[name])
+                    .where(tenants_tbl.c.slug == "default")
+                    .limit(1)
                 ).scalar()
                 if cur is None:
                     val = MaintenanceService._default_for_type(dtype)
@@ -246,16 +250,15 @@ class MaintenanceService:
                     if not dry_run:
                         if isinstance(val, str) and val == "now()":
                             conn.execute(
-                                text(
-                                    f"UPDATE tenants SET {name} = now() WHERE slug = 'default'"  # nosec B608
-                                )
+                                update(tenants_tbl)
+                                .where(tenants_tbl.c.slug == "default")
+                                .values({name: func.now()})
                             )
                         else:
                             conn.execute(
-                                text(
-                                    f"UPDATE tenants SET \"{name}\" = :v WHERE slug = 'default'"  # nosec B608
-                                ),
-                                {"v": val},
+                                update(tenants_tbl)
+                                .where(tenants_tbl.c.slug == "default")
+                                .values({name: val})
                             )
         return fixed
 

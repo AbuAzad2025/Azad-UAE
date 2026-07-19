@@ -426,7 +426,7 @@ class TestBackupServicePgToolDiscovery:
             return []
 
         with (
-            patch("services.backup_service.shutil.which", return_value=None),
+            patch.object(BackupService, "_which", return_value=None),
             patch.object(BackupService, "_is_windows", return_value=True),
             patch("services.backup_service.os.path.isfile", return_value=True),
             patch.dict(

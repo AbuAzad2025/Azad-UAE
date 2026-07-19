@@ -762,7 +762,7 @@ class GLService:
         query = GLJournalEntry.query.filter(
             GLJournalEntry.reference_type.in_(variants),
             GLJournalEntry.reference_id == reference_id,
-            not GLJournalEntry.is_reversed,
+            GLJournalEntry.is_reversed == False,
         )
         if tenant_id is None:
             tenant_id = gl_helpers.resolve_tenant_id()

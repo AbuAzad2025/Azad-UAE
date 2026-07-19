@@ -1,4 +1,4 @@
-from models import User, Tenant, Role
+from models import User, Tenant, Role, Permission
 from utils.tenanting import scoped_user_query
 from sqlalchemy.orm import joinedload
 

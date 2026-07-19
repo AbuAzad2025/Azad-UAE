@@ -19,6 +19,13 @@ from routes.owner import (
 from services.logging_core import LoggingCore
 from routes.owner import owner_bp
 from utils.db_safety import atomic_transaction
+from utils.safe_sql import (
+    count_query,
+    delete_all_query,
+    insert_query,
+    select_all_query,
+    update_row_query,
+)
 from routes.owner.shared import (
     _invalidate_owner_changes,
     _audit_owner_db_action,
@@ -47,7 +54,7 @@ _EXPORT_FORMATS = frozenset({"sql", "json"})
 @owner_bp.route("/database-tools")
 @owner_required
 def database_tools():
-    from sqlalchemy import text, inspect
+    from sqlalchemy import inspect
 
     inspector = inspect(db.engine)
     tables_info = []
@@ -64,7 +71,7 @@ def database_tools():
         columns = inspector.get_columns(safe_table)
         indexes = inspector.get_indexes(safe_table)
         row_count = db.session.execute(
-            text(f'SELECT COUNT(*) FROM "{safe_table}"')  # nosec B608
+            count_query(db.engine, safe_table)
         ).scalar()
 
         tables_info.append(
@@ -190,7 +197,7 @@ def truncate_table():
 
     try:
         with atomic_transaction("truncate_table"):
-            db.session.execute(text(f"DELETE FROM {safe_table}"))  # nosec B608
+            db.session.execute(delete_all_query(db.engine, safe_table))
 
         LoggingCore.log_audit(
             "truncate_table",
@@ -219,12 +226,12 @@ def browse_table(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))  # nosec B608
+        count_result = db.session.execute(count_query(db.engine, safe_table))
         total = count_result.scalar()
 
         offset = (page - 1) * per_page
         result = db.session.execute(
-            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')  # nosec B608
+            select_all_query(db.engine, safe_table, limit=per_page, offset=offset)
         )
 
         rows = result.fetchall()
@@ -278,16 +285,9 @@ def update_row(table_name, row_id):
         if not safe_updates:
             return jsonify({"success": False, "error": "لا حقول صالحة للتحديث"}), 400
 
-        set_clause = ", ".join(f'"{k}" = :{k}' for k in safe_updates)
-        params = dict(safe_updates)
-        params["row_id"] = row_id
-
         with atomic_transaction("update_table_row"):
             db.session.execute(
-                text(
-                    f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'  # nosec B608
-                ),
-                params,
+                update_row_query(db.engine, safe_table, pk_name, row_id, safe_updates)
             )
 
         LoggingCore.log_audit(
@@ -312,7 +312,9 @@ def edit_table_data(table_name):
         return redirect(url_for("owner.database_tools"))
 
     try:
-        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))  # nosec B608
+        result = db.session.execute(
+            select_all_query(db.engine, safe_table, limit=100)
+        )
         rows = result.fetchall()
         columns = result.keys()
 
@@ -422,7 +424,7 @@ def export_database():
             for table_name in _known_tables_map().values():
                 if _is_blocked_table(table_name):
                     continue
-                result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
+                result = db.session.execute(select_all_query(db.engine, table_name))
                 rows = result.fetchall()
                 columns = result.keys()
 
@@ -489,7 +491,7 @@ def convert_database():
                     if not allowed_columns:
                         continue
 
-                    result = db.session.execute(text(f"SELECT * FROM {table_name}"))  # nosec B608
+                    result = db.session.execute(select_all_query(db.engine, table_name))
                     rows = result.fetchall()
                     if not rows:
                         continue
@@ -498,14 +500,10 @@ def convert_database():
                     if not row_columns:
                         continue
 
-                    quoted_cols = ", ".join(f'"{c}"' for c in row_columns)
-                    placeholders = ", ".join(f":{c}" for c in row_columns)
-                    insert_sql = f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})'  # nosec B608
-
                     for row in rows:
                         row_dict = dict(zip(result.keys(), row))
                         payload = {col: row_dict[col] for col in row_columns}
-                        conn.execute(text(insert_sql), payload)
+                        conn.execute(insert_query(db.engine, table_name, payload))
                         rows_copied += 1
 
                     tables_copied += 1
