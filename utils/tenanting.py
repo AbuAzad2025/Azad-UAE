@@ -169,7 +169,7 @@ def scoped_user_query(
     user = _resolve_user(user)
     query = User.query
     if exclude_owners:
-        query = query.filter(not User.is_owner)
+        query = query.filter(User.is_owner == False)
     if active_only:
         query = query.filter(User.is_active)
 
