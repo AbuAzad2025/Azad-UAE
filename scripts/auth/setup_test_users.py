@@ -44,6 +44,7 @@ def _seed(db):
 
     tenant = Tenant(
         name=f"AuthTest {uid}",
+        name_ar=f"اختبار الصلاحية {uid}",
         slug=f"authtest-{uid}",
         default_currency="AED",
         base_currency="AED",
