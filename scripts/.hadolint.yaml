@@ -5,12 +5,14 @@
 failure-threshold: warning
 
 override:
-  # DL3008: Pin versions in apt-get install (we use --no-install-recommends)
   warning:
-    - DL3008
     - DL3009
     - DL3013
     - DL3045
+  # DL3008: Pin versions in apt-get install — CI-only scan image, acceptable unpinned
+  info:
+    - DL3008
+    - DL3042
   # DL3042: Use COPY instead of ADD for non-remote paths
   info:
     - DL3042
