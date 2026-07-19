@@ -65,7 +65,7 @@ def _seed(db):
     branch = Branch(
         tenant_id=tenant.id,
         name=f"Main {uid}",
-        name_ar=f"الرئيسي {uid}",
+        code=f"BR{uid[:4].upper()}",
         is_active=True,
     )
     db.session.add(branch)
