@@ -135,6 +135,7 @@ class Wrapper(HTMLParser):
         self.skip_depth = 0  # >0 when inside script/style
         self.skip_tag = None
         self.in_jinja_block = False  # inside {% set %} / {% macro %} / etc.
+        self.mid_jinja = 0  # brace balance of unclosed {{ / {% / {# from prior chunks
 
     def _jinja_block_state(self, data):
         """Update multi-line {% set %}/{% macro %}/{% call %}/{% filter %}
@@ -170,6 +171,17 @@ class Wrapper(HTMLParser):
                 self.skip_tag = None
         self.out.append(f"</{tag}>")
 
+    def _jinja_balance(self, data):
+        """Update and return the running brace balance of Jinja markup across
+        the (possibly split) data chunks fed by html.parser. A positive value
+        means we are currently inside an unclosed Jinja expression."""
+        opens = len(re.findall(r"\{\{|\{%|\{#", data))
+        closes = len(re.findall(r"\}\}|\%\}|\#\}", data))
+        self.mid_jinja += opens - closes
+        if self.mid_jinja < 0:
+            self.mid_jinja = 0
+        return self.mid_jinja
+
     def handle_data(self, data):
         if self.skip_depth:
             self.out.append(data)
@@ -177,6 +189,16 @@ class Wrapper(HTMLParser):
         # Track {% set %} / {% macro %} etc. blocks and leave their bodies
         # (code/data definitions with escaped-quote literals) untouched.
         if self._jinja_block_state(data):
+            self.out.append(data)
+            return
+        # html.parser may split a single Jinja expression across multiple
+        # data() callbacks (e.g. at '&' entity boundaries). If we are inside an
+        # unclosed Jinja expression, leave the text untouched so we never wrap a
+        # fragment that is part of a {{ ... }} / {% ... %} block.
+        if self._jinja_balance(data) > 0:
+            self.out.append(data)
+            return
+        if JINJA.search(data):
             self.out.append(data)
             return
         self.out.append(wrap_text(data))
@@ -206,7 +228,16 @@ class Wrapper(HTMLParser):
         for k, v in attrs:
             if k.lower() in ATTR_DENYLIST:
                 continue
-            if v and RTL_SEQ.search(v) and not _already_wrapped(v):
+            # Never wrap an attribute value that contains Jinja markup
+            # (e.g. content="{% block %}...{{ }}...{% endblock %}") — wrapping
+            # it in {{ _('...') }} would nest translation calls and corrupt the
+            # template (Flask-Babel's gettext then treats %-format chars).
+            if (
+                v
+                and RTL_SEQ.search(v)
+                and not _already_wrapped(v)
+                and not JINJA.search(v)
+            ):
                 # match the exact attribute occurrence in the raw tag text
                 pat = re.compile(
                     r"(\s" + re.escape(k) + r'\s*=\s*)(["\'])(.*?)(\2)', re.DOTALL

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('{{ \'شركة أزاد للأنظمة الذكية - الأسعار والباقات\' if not is_en else \'Azad IntelliTech - Pricing') }} & Plans' }}</title>
-    <meta name="description" content="{{ _('{{ \'اختر باقة أزاد المناسبة: Starter $29/شهر، Pro $79/شهر، Enterprise $249/شهر. ERP، محاسبة، مخزون، AI، نقاط بيع. تجربة مجانية 30 يوم.\' if not is_en else \'Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial.\' }}') }}">
+    <title>{{ 'شركة أزاد للأنظمة الذكية - الأسعار والباقات' if not is_en else 'Azad IntelliTech - Pricing & Plans' }}</title>
+    <meta name="description" content="{{ 'اختر باقة أزاد المناسبة: Starter $29/شهر، Pro $79/شهر، Enterprise $249/شهر. ERP، محاسبة، مخزون، AI، نقاط بيع. تجربة مجانية 30 يوم.' if not is_en else 'Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial.' }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url_for('public.pricing', _external=True) }}">
 {% if is_en %}
@@ -317,7 +317,7 @@
     {% set _save_label = 'وفر شهرين' if not is_en else 'Save 2 months' %}
     <div class="billing-toggle">
         <span id="billingMonthly">{{ _monthly_label }}</span>
-        <div class="toggle-track" id="billingToggle" role="button" tabindex="0" aria-label="{{ _('{{ \'تبديل الفواتير\' if not is_en else \'Toggle billing\' }}') }}"></div>
+        <div class="toggle-track" id="billingToggle" role="button" tabindex="0" aria-label="{{ 'تبديل الفواتير' if not is_en else 'Toggle billing' }}"></div>
         <span id="billingYearly">{{ _yearly_label }} <span class="save-badge">{{ _save_label }}</span></span>
     </div>
 </section>
