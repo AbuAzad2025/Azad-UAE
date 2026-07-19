@@ -24,6 +24,9 @@ ADMIN_PASSWORD = "TestSuper@123456"
 
 
 def _setup():
+    # Skip startup maintenance that queries raw tables before schema exists
+    os.environ["SKIP_SYSTEM_INTEGRITY"] = "1"
+
     from app.factory import create_app
     from config import TestConfig
     from extensions import db
