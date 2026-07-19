@@ -175,3 +175,4 @@ load_tests/
 # Agent / tooling workspace state (not part of the application)
 .openclaw/
 
+nul
