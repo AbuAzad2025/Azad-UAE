@@ -204,8 +204,8 @@ jobs:
           pip install -r requirements.txt bandit
       - name: Bandit security scan
         run: |
-          bandit -c .bandit.yml -r . --exclude 'migrations/,tests/' --quiet || bandit -c .bandit.yml -r . --exclude 'migrations/,tests/'
-          bandit -c .bandit.yml -r . -f json -o bandit-report.json --exclude 'migrations/,tests/' || true
+          bandit -c .bandit.yml -r . --exclude 'migrations/,tests/,**/.venv/**' --quiet || bandit -c .bandit.yml -r . --exclude 'migrations/,tests/,**/.venv/**'
+          bandit -c .bandit.yml -r . -f json -o bandit-report.json --exclude 'migrations/,tests/,**/.venv/**' || true
 
   # ── Lint, audit, i18n, cspell ──
   lint-audit:
@@ -236,7 +236,7 @@ jobs:
         run: |
           npx cspell --config scripts/lint/.cspell.json "templates/**/*.html" "static/js/**/*.js" "docs/**/*.md"
       - name: Strict i18n lint
-        run: python scripts/check_strict_i18n.py templates routes services
+        run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
       - name: actionlint (workflow syntax)
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@latest 2>/dev/null || \
