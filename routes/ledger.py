@@ -638,7 +638,7 @@ def manual_entry():
                 LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
 
             flash(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح", "success")
-            return redirect(url_for("ledger.view_entry", id=entry.id))
+            return redirect(url_for("ledger.view_entry", entry_id=entry.id))
 
         except ValueError as e:
             flash(
@@ -720,14 +720,14 @@ def reverse_entry(entry_id):
             f"✅ تم عكس القيد بنجاح - القيد الجديد: {reversed_entry.entry_number}",
             "success",
         )
-        return redirect(url_for("ledger.view_entry", id=reversed_entry.id))
+        return redirect(url_for("ledger.view_entry", entry_id=reversed_entry.id))
 
     except ValueError as e:
         flash(f"❌ خطأ: {str(e)}", "danger")
-        return redirect(url_for("ledger.view_entry", id=id))
+        return redirect(url_for("ledger.view_entry", entry_id=entry_id))
     except Exception as e:
         flash(f"❌ خطأ: {str(e)}", "danger")
-        return redirect(url_for("ledger.view_entry", id=id))
+        return redirect(url_for("ledger.view_entry", entry_id=entry_id))
 
 
 @ledger_bp.route("/api/accounts/search")
