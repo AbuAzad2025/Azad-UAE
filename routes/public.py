@@ -2,6 +2,8 @@
 Public Routes - Landing Page, Pricing, User Guide, SEO
 """
 
+from flask_babel import gettext
+
 from flask import (
     Blueprint,
     render_template,
@@ -84,7 +86,6 @@ def features():
 @public_bp.route("/user-guide")
 def user_guide():
     """دليل المستخدم"""
-    # اختيار القالب حسب اللغة
     lang = session.get("language", "ar")
 
     if lang == "en":
@@ -140,11 +141,15 @@ def donate_azad_submit():
         amount = Decimal(str(request.form.get("amount", 0)))
         if amount < Decimal(str(vault.min_donation_amount or 10)):
             raise ValueError(
-                "المبلغ أقل من الحد الأدنى." if not is_en else "Amount below minimum."
+                gettext("المبلغ أقل من الحد الأدنى.")
+                if not is_en
+                else "Amount below minimum."
             )
         if amount > Decimal(str(vault.max_donation_amount or 10000)):
             raise ValueError(
-                "المبلغ يتجاوز الحد الأقصى." if not is_en else "Amount exceeds maximum."
+                gettext("المبلغ يتجاوز الحد الأقصى.")
+                if not is_en
+                else "Amount exceeds maximum."
             )
 
         method = (request.form.get("payment_method") or "bank_transfer").strip()
@@ -176,7 +181,9 @@ def donate_azad_submit():
 
         logging.getLogger(__name__).exception("Donation submit failed")
         flash(
-            "تعذر إرسال التبرع." if not is_en else "Could not submit donation.",
+            gettext("تعذر إرسال التبرع.")
+            if not is_en
+            else "Could not submit donation.",
             "danger",
         )
         return redirect(url_for("public.donate_azad"))
@@ -190,57 +197,48 @@ def sitemap():
     """
     from flask import Response
 
-    # الحصول على URL الأساسي
     base_url = request.url_root.rstrip("/")
 
-    # الصفحات الثابتة العامة (أولوية عالية)
     static_pages = [
-        # الصفحات الرئيسية - أعلى أولوية
         {
             "loc": f"{base_url}/",
             "priority": "1.0",
             "changefreq": "daily",
             "lastmod": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "keywords": "نظام إدارة مستودعات، برنامج محاسبة الإمارات",
+            "keywords": gettext("نظام إدارة مستودعات، برنامج محاسبة الإمارات"),
         },
-        # صفحات تسويقية مهمة
         {
             "loc": f"{base_url}/pricing",
             "priority": "0.95",
             "changefreq": "weekly",
-            "keywords": "أسعار برنامج المستودعات، باقات محاسبة",
+            "keywords": gettext("أسعار برنامج المستودعات، باقات محاسبة"),
         },
         {
             "loc": f"{base_url}/features",
             "priority": "0.95",
             "changefreq": "weekly",
-            "keywords": "مميزات نظام المستودعات، خصائص البرنامج",
+            "keywords": gettext("مميزات نظام المستودعات، خصائص البرنامج"),
         },
         {
             "loc": f"{base_url}/contact",
             "priority": "0.90",
             "changefreq": "monthly",
-            "keywords": "اتصل بنا، دبي، الإمارات",
+            "keywords": gettext("اتصل بنا، دبي، الإمارات"),
         },
         {
             "loc": f"{base_url}/user-guide",
             "priority": "0.85",
             "changefreq": "monthly",
-            "keywords": "دليل المستخدم، شرح البرنامج",
+            "keywords": gettext("دليل المستخدم، شرح البرنامج"),
         },
-        # صفحات عامة أخرى
         {
             "loc": f"{base_url}/auth/login",
             "priority": "0.80",
             "changefreq": "monthly",
-            "keywords": "تسجيل دخول",
+            "keywords": gettext("تسجيل دخول"),
         },
     ]
 
-    # المنتجات النشطة — لا تُدرج في sitemap العام (تسريب بيانات multi-tenant)
-    # استخدم sitemap المتجر: /s/{slug}/sitemap.xml
-
-    # بناء XML
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
 
@@ -277,22 +275,18 @@ Allow: /user-guide
 Allow: /contact
 Allow: /static/
 
-# منع الصفحات الإدارية والحساسة
 Disallow: /owner/
 Disallow: /dashboard
 Disallow: /auth/
 Disallow: /api/
 Disallow: /admin/
 
-# منع المجلدات الداخلية
 Disallow: /instance/
 Disallow: /logs/
 Disallow: /migrations/
 
-# خريطة الموقع
 Sitemap: {base_url}/sitemap.xml
 
-# معدل الزحف (Crawl-delay)
 Crawl-delay: 1
 """
     return Response(robots_content, mimetype="text/plain")

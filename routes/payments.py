@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from datetime import datetime, timezone
 
 from flask import (
@@ -230,7 +231,6 @@ def receipts():
         "direction", "", type=str
     )  # incoming, outgoing, all
 
-    # جمع سندات القبض والصرف
     receipts_query = tenant_query(Receipt)
     payments_query = tenant_query(Payment)
 
@@ -249,7 +249,6 @@ def receipts():
             )
         )
 
-    # فلترة الاتجاه
     if direction_filter == "incoming":
         receipts_query = receipts_query.filter(Receipt.direction == "incoming")
         payments_query = payments_query.filter(Payment.direction == "incoming")
@@ -257,7 +256,6 @@ def receipts():
         receipts_query = receipts_query.filter(Receipt.direction == "outgoing")
         payments_query = payments_query.filter(Payment.direction == "outgoing")
 
-    # إخفاء السندات المؤرشفة
     from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
@@ -287,7 +285,6 @@ def receipts():
     if branch_id is not None:
         receipts_query = receipts_query.filter(Receipt.branch_id == branch_id)
         payments_query = payments_query.filter(Payment.branch_id == branch_id)
-    # جمع النتائج مع حد ذكي لتجنب تحميل الجدول كاملاً
     fetch_limit = max(page * per_page, per_page)
     total = receipts_query.count() + payments_query.count()
     all_receipts = (
@@ -297,7 +294,6 @@ def receipts():
         payments_query.order_by(Payment.payment_date.desc()).limit(fetch_limit).all()
     )
 
-    # دمج النتائج مع إضافة نوع السند
     combined_items = []
 
     for receipt in all_receipts:
@@ -352,15 +348,12 @@ def receipts():
             }
         )
 
-    # ترتيب حسب التاريخ
     combined_items.sort(key=lambda x: x["date"], reverse=True)
 
-    # تطبيق pagination يدوياً
     start = (page - 1) * per_page
     end = start + per_page
     paginated_items = combined_items[start:end]
 
-    # إنشاء pagination object يدوياً
     class SimplePagination:
         def __init__(self, page, per_page, total, items):
             self.page = page
@@ -587,13 +580,13 @@ def archive_payment(**kwargs):
         archive_service = ArchiveService()
         with atomic_transaction("payment_archive"):
             archive_service.archive_record(
-                "payments", payment, reason="تم أرشفة سند الصرف"
+                "payments", payment, reason=gettext("تم أرشفة سند الصرف")
             )
             LoggingCore.log_audit("archive", "payments", payment.id)
 
     except Exception as e:
         current_app.logger.error(f"Failed to archive payment {record_id}: {e}")
-        flash(f"فشلت الأرشفة: {str(e)}", "danger")
+        flash(gettext(f"فشلت الأرشفة: {str(e)}"), "danger")
         return redirect(url_for("payments.receipts"))
 
     return redirect(url_for("payments.receipts"))
@@ -623,10 +616,10 @@ def restore_payment(**kwargs):
             LoggingCore.log_audit("restore", "payments", record_id)
     except Exception as exc:
         current_app.logger.error("Failed to restore payment %s: %s", record_id, exc)
-        flash("تعذر استعادة سند الصرف. يرجى المحاولة مرة أخرى.", "danger")
+        flash(gettext("تعذر استعادة سند الصرف. يرجى المحاولة مرة أخرى."), "danger")
         return redirect(url_for("payments.archived_receipts"))
 
-    flash("تم استعادة سند الصرف بنجاح.", "success")
+    flash(gettext("تم استعادة سند الصرف بنجاح."), "success")
     return redirect(url_for("payments.archived_receipts"))
 
 
@@ -684,7 +677,7 @@ def create_from_sale(sale_id):
             user_exchange_rate = request.form.get("exchange_rate", type=float)
             payment_method_value = (request.form.get("payment_method") or "").strip()
             if not payment_method_value:
-                flash("يرجى اختيار طريقة الدفع.", "warning")
+                flash(gettext("يرجى اختيار طريقة الدفع."), "warning")
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
                 suggested_amount = suggested_sale_amount
                 return render_template(
@@ -703,7 +696,6 @@ def create_from_sale(sale_id):
             bank_name = request.form.get("bank_name")
             notes = request.form.get("notes")
 
-            # تخصيص المبلغ للفاتورة المحددة
             allocate_to_sales = {sale.id: amount}
 
             receipt_data = {
@@ -725,12 +717,13 @@ def create_from_sale(sale_id):
                 receipt = PaymentService.create_receipt(receipt_data)
                 LoggingCore.log_audit("create", "receipts", receipt.id)
 
-            flash("تم إنشاء سند القبض بنجاح", "success")
+            flash(gettext("تم إنشاء سند القبض بنجاح"), "success")
             return redirect(url_for("payments.view_receipt", id=receipt.id))
 
         except Exception as e:
             flash(
-                f"حدث خطأ: {str(e)}\nتحقق من البيانات المدخلة وحاول مرة أخرى.", "danger"
+                gettext(f"حدث خطأ: {str(e)}\nتحقق من البيانات المدخلة وحاول مرة أخرى."),
+                "danger",
             )
 
     return redirect(
@@ -751,7 +744,6 @@ def create_from_sale(sale_id):
 @permission_required("manage_payments")
 def create_voucher():
     """عرض صفحة إنشاء سند مالي موحد (قبض/صرف)"""
-    # تحضير البيانات لـ JS
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
 
@@ -799,7 +791,6 @@ def create_voucher_submit():
         notes = request.form.get("notes")
         branch_id = _current_branch_id()
 
-        # العملة وسعر الصرف (افتراضي: AED بمعدل 1)
         try:
             default_currency = resolve_default_currency()
         except Exception as e:
@@ -826,23 +817,20 @@ def create_voucher_submit():
         currency = request.form.get("currency") or default_currency
         user_exchange_rate = request.form.get("exchange_rate", type=float, default=1.0)
 
-        # بيانات الشيك
         cheque_number = request.form.get("cheque_number")
         cheque_date = request.form.get("cheque_date")
         bank_name = request.form.get("bank_name")
 
         if not party_id or not amount:
-            flash("يرجى تعبئة جميع الحقول الإلزامية", "warning")
+            flash(gettext("يرجى تعبئة جميع الحقول الإلزامية"), "warning")
             return redirect(url_for("payments.create_voucher"))
 
-        # 1. معالجة سند القبض (Receipt) - وارد
         if direction == "incoming":
             if party_type == "customer":
                 customer = _ensure_customer_scope(party_id)
                 if not customer:
-                    flash("العميل المحدد خارج نطاق الفرع الحالي", "danger")
+                    flash(gettext("العميل المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
-                # سند قبض من عميل (المنطق الحالي)
                 receipt_data = {
                     "customer_id": customer.id,
                     "amount": amount,
@@ -860,15 +848,12 @@ def create_voucher_submit():
                 with atomic_transaction("receipt_creation_from_voucher"):
                     receipt = PaymentService.create_receipt(receipt_data)
                 flash(
-                    f"تم إنشاء سند القبض رقم {receipt.receipt_number} بنجاح", "success"
+                    gettext(f"تم إنشاء سند القبض رقم {receipt.receipt_number} بنجاح"),
+                    "success",
                 )
                 return redirect(url_for("payments.receipts"))
 
             elif party_type == "supplier":
-                # سند قبض من مورد (مرتجع مشتريات أو تسوية)
-                # نحتاج منطق جديد أو استخدام Payment بـ direction='incoming'
-                # حالياً Payment يدعم direction='incoming' حسب الموديل
-
                 from utils.helpers import generate_number
                 from decimal import Decimal
 
@@ -878,7 +863,7 @@ def create_voucher_submit():
 
                 supplier = _ensure_supplier_scope(party_id)
                 if not supplier:
-                    flash("المورد المحدد خارج نطاق الفرع الحالي", "danger")
+                    flash(gettext("المورد المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(
                     supplier, "tenant_id", None
@@ -929,13 +914,17 @@ def create_voucher_submit():
                                     payment_method
                                 ),
                                 "debit": payment.amount,
-                                "description": f"استرداد من مورد {supplier.name}",
+                                "description": gettext(
+                                    f"استرداد من مورد {supplier.name}"
+                                ),
                             },
                             {
                                 "account": "2110",
                                 "concept_code": "AP",
                                 "credit": payment.amount,
-                                "description": f"سند قبض {payment.payment_number}",
+                                "description": gettext(
+                                    f"سند قبض {payment.payment_number}"
+                                ),
                             },
                         ],
                         description=f"Supplier refund {payment.payment_number}",
@@ -950,10 +939,9 @@ def create_voucher_submit():
                     # entry above credits AP). Reduce the cached paid total so
                     # the supplier balance and statement reflect the refund.
                     supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
-                flash("تم إنشاء سند قبض من مورد بنجاح", "success")
+                flash(gettext("تم إنشاء سند قبض من مورد بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
-        # 2. معالجة سند الصرف (Payment) - صادر
         elif direction == "outgoing":
             from utils.helpers import generate_number
             from decimal import Decimal
@@ -963,10 +951,9 @@ def create_voucher_submit():
             amount_aed = amount_decimal * exchange_rate
 
             if party_type == "supplier":
-                # دفع لمورد (المنطق المعتاد)
                 supplier = _ensure_supplier_scope(party_id)
                 if not supplier:
-                    flash("المورد المحدد خارج نطاق الفرع الحالي", "danger")
+                    flash(gettext("المورد المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(
                     supplier, "tenant_id", None
@@ -1002,7 +989,6 @@ def create_voucher_submit():
                     db.session.add(payment)
                     db.session.flush()  # Flush to get ID
 
-                    # معالجة خاصة للشيكات (إنشاء سجل شيك + قيد محاسبي خاص)
                     if payment_method == "cheque" and cheque_number:
                         from models import Cheque
 
@@ -1055,7 +1041,9 @@ def create_voucher_submit():
                                 "account": "2110",
                                 "concept_code": "AP",
                                 "debit": payment.amount,
-                                "description": f"سداد للمورد {payment.supplier_name}",
+                                "description": gettext(
+                                    f"سداد للمورد {payment.supplier_name}"
+                                ),
                             },
                             {
                                 "account": credit_account,
@@ -1063,7 +1051,9 @@ def create_voucher_submit():
                                     payment_method
                                 ),
                                 "credit": payment.amount,
-                                "description": f"سند صرف {payment.payment_number}",
+                                "description": gettext(
+                                    f"سند صرف {payment.payment_number}"
+                                ),
                             },
                         ]
                         post_or_fail(
@@ -1077,18 +1067,16 @@ def create_voucher_submit():
                             tenant_id=tenant_id,
                         )
 
-                    # تحديث رصيد المورد
                     supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
 
-                flash("تم إنشاء سند صرف لمورد بنجاح", "success")
+                flash(gettext("تم إنشاء سند صرف لمورد بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
             elif party_type == "customer":
-                # دفع لعميل (استرداد أو تسوية أو سحب شريك)
                 # Payment model has customer_id field
                 customer = _ensure_customer_scope(party_id)
                 if not customer:
-                    flash("العميل المحدد خارج نطاق الفرع الحالي", "danger")
+                    flash(gettext("العميل المحدد خارج نطاق الفرع الحالي"), "danger")
                     return redirect(url_for("payments.create_voucher"))
                 tenant_id = getattr(
                     customer, "tenant_id", None
@@ -1123,7 +1111,6 @@ def create_voucher_submit():
                     db.session.add(payment)
                     db.session.flush()  # Flush to get ID
 
-                    # معالجة خاصة للشيكات (إنشاء سجل شيك + قيد محاسبي خاص)
                     if payment_method == "cheque" and cheque_number:
                         from models import Cheque
 
@@ -1183,7 +1170,7 @@ def create_voucher_submit():
                                     customer
                                 ),
                                 "debit": payment.amount,
-                                "description": f"سداد/سحب {customer.name}",
+                                "description": gettext(f"سداد/سحب {customer.name}"),
                             },
                             {
                                 "account": credit_account,
@@ -1191,7 +1178,9 @@ def create_voucher_submit():
                                     payment_method
                                 ),
                                 "credit": payment.amount,
-                                "description": f"سند صرف {payment.payment_number}",
+                                "description": gettext(
+                                    f"سند صرف {payment.payment_number}"
+                                ),
                             },
                         ]
                         post_or_fail(
@@ -1205,15 +1194,14 @@ def create_voucher_submit():
                             tenant_id=tenant_id,
                         )
 
-                    # تحديث رصيد العميل
                     customer.apply_receipt(-Decimal(str(payment.amount_aed or 0)))
 
-                flash("تم إنشاء سند صرف لعميل/شريك بنجاح", "success")
+                flash(gettext("تم إنشاء سند صرف لعميل/شريك بنجاح"), "success")
                 return redirect(url_for("payments.receipts"))
 
     except Exception as e:
         current_app.logger.error(f"Voucher creation error: {e}")
-        flash(f"حدث خطأ أثناء حفظ السند: {str(e)}", "danger")
+        flash(gettext(f"حدث خطأ أثناء حفظ السند: {str(e)}"), "danger")
         return redirect(url_for("payments.create_voucher"))
 
     return redirect(url_for("payments.receipts"))
@@ -1252,7 +1240,7 @@ def view_receipt(**kwargs):
         and not current_user.is_owner
         and receipt.user_id != current_user.id
     ):
-        flash("ليس لديك صلاحية لعرض هذا السند", "danger")
+        flash(gettext("ليس لديك صلاحية لعرض هذا السند"), "danger")
         return redirect(url_for("payments.receipts"))
 
     return render_template("payments/view_receipt.html", receipt=receipt)
@@ -1286,7 +1274,7 @@ def print_receipt(**kwargs):
         and not current_user.is_owner
         and receipt.user_id != current_user.id
     ):
-        flash("ليس لديك صلاحية لطباعة هذا السند", "danger")
+        flash(gettext("ليس لديك صلاحية لطباعة هذا السند"), "danger")
         return redirect(url_for("payments.receipts"))
 
     from utils.tenant_branding import get_print_header_context
@@ -1413,7 +1401,6 @@ def archived_receipts():
 
     tid = get_active_tenant_id(current_user)
 
-    # جلب السندات المؤرشفة
     archived_receipts_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == "receipts"
     )
@@ -1429,7 +1416,6 @@ def archived_receipts():
             ArchivedRecord.tenant_id == tid
         )
 
-    # دمج النتائج
     archived_items = []
 
     for archived in archived_receipts_query.all():
@@ -1484,7 +1470,6 @@ def archived_receipts():
             }
         )
 
-    # ترتيب حسب تاريخ الأرشفة
     archived_items.sort(key=lambda x: x["archived_at"], reverse=True)
 
     return render_template("payments/archived.html", archived_items=archived_items)
@@ -1506,7 +1491,7 @@ def archive_receipt(**kwargs):
         with atomic_transaction("receipt_archive"):
             archive_service = ArchiveService()
             archive_service.archive_record(
-                "receipts", receipt, reason="تم أرشفة سند القبض"
+                "receipts", receipt, reason=gettext("تم أرشفة سند القبض")
             )
             LoggingCore.log_audit("archive", "receipts", receipt.id)
     except Exception:
@@ -1557,7 +1542,6 @@ def delete_receipt(**kwargs):
     if not _in_scope_branch(receipt.branch_id):
         return render_template("errors/403.html"), 403
 
-    # التحقق من الارتباطات
     has_links = False
     if receipt.source_type == "sale" and receipt.source_id:
         has_links = True
@@ -1566,7 +1550,6 @@ def delete_receipt(**kwargs):
 
     try:
         with atomic_transaction("receipt_delete"):
-            # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
             if receipt.source_type == "sale" and receipt.source_id:
                 from models import Sale
 
@@ -1577,16 +1560,13 @@ def delete_receipt(**kwargs):
                     sale.paid_amount -= receipt.amount
                     sale.paid_amount_aed -= receipt.amount_aed
 
-                    # منع القيم السالبة
                     if sale.paid_amount < 0:
                         sale.paid_amount = 0
                     if sale.paid_amount_aed < 0:
                         sale.paid_amount_aed = 0
 
-                    # تحديث الرصيد المتبقي (باستخدام عملة الأساس AED)
                     sale.balance_due = sale.amount_aed - sale.paid_amount_aed
 
-                    # تحديث حالة الدفع
                     if sale.balance_due <= 0:
                         sale.payment_status = "paid"
                         sale.balance_due = 0
@@ -1595,29 +1575,27 @@ def delete_receipt(**kwargs):
                     else:
                         sale.payment_status = "unpaid"
 
-            # 2. القرار: أرشفة أو حذف
             if has_links:
-                # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
                 archive_service = ArchiveService()
                 archive_service.archive_record(
-                    "receipts", receipt, reason="تم أرشفة السند لوجود ارتباطات"
+                    "receipts", receipt, reason=gettext("تم أرشفة السند لوجود ارتباطات")
                 )
 
-                # أرشفة الشيكات المرتبطة
                 if receipt.cheque:
                     archive_service.archive_record(
                         "cheques",
                         receipt.cheque,
-                        reason="تم أرشفة الشيك لارتباطه بسند مؤرشف",
+                        reason=gettext("تم أرشفة الشيك لارتباطه بسند مؤرشف"),
                     )
 
                 LoggingCore.log_audit("archive", "receipts", record_id)
                 flash(
-                    f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)',
+                    gettext(
+                        f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)'
+                    ),
                     "warning",
                 )
             else:
-                # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
                 from services.gl_service import GLService
 
                 GLService.reverse_entry(
@@ -1627,19 +1605,20 @@ def delete_receipt(**kwargs):
                     tenant_id=receipt.tenant_id,
                 )
 
-                # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
-                # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
                 if receipt.cheque:
                     db.session.delete(receipt.cheque)
 
                 db.session.delete(receipt)
                 LoggingCore.log_audit("delete", "receipts", record_id)
-                flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', "success")
+                flash(
+                    gettext(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً'),
+                    "success",
+                )
 
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
-        flash(f"فشل الحذف: {str(e)}", "danger")
+        flash(gettext(f"فشل الحذف: {str(e)}"), "danger")
         return redirect(url_for("payments.view_receipt", id=record_id))
 
 
@@ -1657,37 +1636,33 @@ def delete_payment(**kwargs):
     if not _in_scope_branch(payment.branch_id):
         return render_template("errors/403.html"), 403
 
-    # التحقق من الارتباطات
     has_links = False
     if payment.cheque_id:
         has_links = True
-    # يمكن إضافة شروط أخرى للارتباط هنا
 
     try:
         with atomic_transaction("payment_delete"):
-            # 1. القرار: أرشفة أو حذف
             if has_links:
-                # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
                 archive_service = ArchiveService()
                 archive_service.archive_record(
-                    "payments", payment, reason="تم أرشفة السند لوجود ارتباطات"
+                    "payments", payment, reason=gettext("تم أرشفة السند لوجود ارتباطات")
                 )
 
-                # أرشفة الشيكات المرتبطة
                 if payment.cheque:
                     archive_service.archive_record(
                         "cheques",
                         payment.cheque,
-                        reason="تم أرشفة الشيك لارتباطه بسند مؤرشف",
+                        reason=gettext("تم أرشفة الشيك لارتباطه بسند مؤرشف"),
                     )
 
                 LoggingCore.log_audit("archive", "payments", record_id)
                 flash(
-                    f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)',
+                    gettext(
+                        f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)'
+                    ),
                     "warning",
                 )
             else:
-                # عكس القيود المحاسبية بدلاً من الحذف (للحفاظ على أثر التدقيق)
                 from services.gl_service import GLService
 
                 GLService.reverse_entry(
@@ -1697,7 +1672,6 @@ def delete_payment(**kwargs):
                     tenant_id=payment.tenant_id,
                 )
 
-                # عكس أثر المورد/الفاتورة إذا كان مربوطاً
                 if payment.supplier_id:
                     from models import Supplier
 
@@ -1707,19 +1681,20 @@ def delete_payment(**kwargs):
                     if supplier:
                         supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
 
-                # حذف نهائي (Hard Delete) - فقط للمسودات بلا قيود
-                # حذف الشيكات المرتبطة أولاً
                 if payment.cheque:
                     db.session.delete(payment.cheque)
 
                 db.session.delete(payment)
                 LoggingCore.log_audit("delete", "payments", record_id)
-                flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', "success")
+                flash(
+                    gettext(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً'),
+                    "success",
+                )
 
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
-        flash(f"فشل الحذف: {str(e)}", "danger")
+        flash(gettext(f"فشل الحذف: {str(e)}"), "danger")
         return redirect(url_for("payments.view_payment", id=record_id))
 
 
@@ -1741,7 +1716,6 @@ def create_payment(purchase_id):
         else None
     )
 
-    # حساب المبلغ المدفوع من جدول payments (مرتبط بالمشتريات عبر purchase_id)
     paid_amount = (
         db.session.query(func.sum(Payment.amount_aed))
         .filter(
@@ -1753,7 +1727,6 @@ def create_payment(purchase_id):
         or 0
     )
 
-    # حساب المبلغ المتبقي
     balance_aed = float(purchase.amount_aed or 0) - float(paid_amount)
     purchase_rate = float(purchase.exchange_rate or 1)
     from utils.currency_utils import get_system_default_currency
@@ -1784,7 +1757,7 @@ def create_payment(purchase_id):
             amount = request.form.get("amount", type=float)
             payment_method_value = (request.form.get("payment_method") or "").strip()
             if not payment_method_value:
-                flash("يرجى اختيار طريقة الدفع.", "warning")
+                flash(gettext("يرجى اختيار طريقة الدفع."), "warning")
                 return render_template(
                     "payments/create_receipt.html",
                     purchase=purchase,
@@ -1830,7 +1803,6 @@ def create_payment(purchase_id):
             cheque_number = request.form.get("cheque_number")
             cheque_date = request.form.get("cheque_date") or None
             bank_name = request.form.get("bank_name")
-            # حقول خاصة بطرق دفع معينة
             bank_name_transfer = request.form.get("bank_name_transfer")
             reference_number_transfer = request.form.get("reference_number_transfer")
             card_last4 = request.form.get("card_last4")
@@ -1838,13 +1810,13 @@ def create_payment(purchase_id):
 
             if amount <= 0:
                 flash(
-                    "المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.", "danger"
+                    gettext("المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى."),
+                    "danger",
                 )
                 return redirect(
                     url_for("payments.create_payment", purchase_id=purchase_id)
                 )
 
-            # تحويل إلى Decimal للحسابات الدقيقة
             amount_decimal = Decimal(str(amount))
             exchange_rate_decimal = _resolve_transaction_rate(
                 currency, user_exchange_rate
@@ -1852,13 +1824,13 @@ def create_payment(purchase_id):
             amount_aed = amount_decimal * exchange_rate_decimal
             if amount_aed > Decimal(str(balance_aed)):
                 flash(
-                    "المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.", "danger"
+                    gettext("المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى."),
+                    "danger",
                 )
                 return redirect(
                     url_for("payments.create_payment", purchase_id=purchase_id)
                 )
 
-            # إنشاء سند الصرف
             tenant_id = getattr(purchase, "tenant_id", None) or get_active_tenant_id(
                 current_user
             )
@@ -1888,7 +1860,6 @@ def create_payment(purchase_id):
                     branch_id=purchase.branch_id,
                 )
 
-                # تعيين حقول المرجع/البنك حسب الطريقة
                 if payment_method_value == "bank_transfer":
                     payment.bank_name = bank_name_transfer or bank_name
                     payment.reference_number = (
@@ -1897,9 +1868,9 @@ def create_payment(purchase_id):
                 elif payment_method_value == "card":
                     payment.reference_number = reference_number_card or reference_number
                     if card_last4:
-                        payment.notes = (
-                            f"{payment.notes or ''} بطاقة آخر 4: {card_last4}".strip()
-                        )
+                        payment.notes = gettext(
+                            f"{payment.notes or ''} بطاقة آخر 4: {card_last4}"
+                        ).strip()
                 elif payment_method_value == "e_wallet":
                     from flask import request as _req
 
@@ -1912,7 +1883,6 @@ def create_payment(purchase_id):
                 db.session.add(payment)
                 db.session.flush()
 
-                # إنشاء سجل الشيك وربطه إذا كانت طريقة الدفع شيك
                 if payment_method_value == "cheque" and cheque_number:
                     from models import Cheque
 
@@ -1954,7 +1924,9 @@ def create_payment(purchase_id):
                             "account": "2110",
                             "concept_code": "AP",
                             "debit": payment.amount,
-                            "description": f"سداد للمورد {payment.supplier_name}",
+                            "description": gettext(
+                                f"سداد للمورد {payment.supplier_name}"
+                            ),
                         },
                         {
                             "account": cash_or_bank,
@@ -1962,7 +1934,7 @@ def create_payment(purchase_id):
                                 payment_method_value
                             ),
                             "credit": payment.amount,
-                            "description": f"سند صرف {payment.payment_number}",
+                            "description": gettext(f"سند صرف {payment.payment_number}"),
                         },
                     ]
                     post_or_fail(
@@ -1978,20 +1950,19 @@ def create_payment(purchase_id):
 
                 supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
 
-            flash("تم إنشاء سند الصرف بنجاح", "success")
+            flash(gettext("تم إنشاء سند الصرف بنجاح"), "success")
             return redirect(url_for("purchases.view", id=purchase_id))
 
         except Exception as e:
-            flash(f"حدث خطأ: {str(e)}", "danger")
+            flash(gettext(f"حدث خطأ: {str(e)}"), "danger")
 
-    # استخدام نفس القالب الموحد لسندات القبض/الصرف
     return render_template(
         "payments/create_receipt.html",
         purchase=purchase,
         supplier=supplier,
         suggested_amount=suggested_amount,
         is_payment=True,
-    )  # علامة لتمييز سند الصرف
+    )
 
 
 @payments_bp.route("/api/customer-balance/<int:customer_id>")

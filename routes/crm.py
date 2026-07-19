@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import CRMStage, CRMTeam, Customer, User
@@ -74,10 +75,10 @@ def create_lead():
         try:
             with atomic_transaction("crm_create_lead"):
                 CRMLeadService.create_lead(request.form, current_user)
-            flash("تم إنشاء العميل المتوقع بنجاح", "success")
+            flash(gettext("تم إنشاء العميل المتوقع بنجاح"), "success")
             return redirect(url_for("crm.leads_list"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)
@@ -130,10 +131,10 @@ def edit_lead(lead_id):
         try:
             with atomic_transaction("crm_update_lead"):
                 CRMLeadService.update_lead(lead_id, request.form, current_user)
-            flash("تم تحديث العميل المتوقع بنجاح", "success")
+            flash(gettext("تم تحديث العميل المتوقع بنجاح"), "success")
             return redirect(url_for("crm.leads_list"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     tid = get_active_tenant_id(current_user)
     stages = _tenant_stages(tid)
     customers = _tenant_customers(tid)

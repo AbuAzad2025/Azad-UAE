@@ -1,5 +1,7 @@
 """Core dashboard, landing, config, and cards vault routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     render_template,
     request,
@@ -135,7 +137,7 @@ def system_stats():
         current_app.logger.error(
             "system_stats failed user_id=%s: %s", current_user.id, e
         )
-        flash("❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة.", "danger")
+        flash(gettext("❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة."), "danger")
         return redirect(url_for("owner.dashboard"))
 
     _audit_owner_db_action(

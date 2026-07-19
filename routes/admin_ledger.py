@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -54,39 +55,32 @@ def _vaults():
 def dashboard():
     """لوحة تحكم شاملة لدفتر الأستاذ"""
 
-    # إحصائيات عامة
     total_accounts = _accounts().count()
     active_accounts = _accounts().filter_by(is_active=True).count()
     total_entries = _entries().count()
     posted_entries = _entries().filter_by(is_posted=True).count()
 
-    # إحصائيات مالية
     cash_accounts = _accounts().filter(GLAccount.code.like("11%")).all()
     total_cash = sum(account.get_balance() for account in cash_accounts)
 
-    # آخر القيود
     recent_entries = (
         _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
     )
 
-    # الحسابات ذات الأرصدة العالية
     high_balance_accounts = []
     for account in (
         _accounts().filter_by(is_active=True, is_header=False).limit(500).all()
     ):
         balance = account.get_balance()
-        if abs(balance) > 1000:  # أرصدة أعلى من 1000
+        if abs(balance) > 1000:
             high_balance_accounts.append({"account": account, "balance": balance})
 
-    # ترتيب حسب الرصيد
     high_balance_accounts.sort(key=lambda x: abs(x["balance"]), reverse=True)
 
-    # إحصائيات الشيكات
     total_cheques = _cheques().count()
     pending_cheques = _cheques().filter_by(status="pending").count()
     cleared_cheques = _cheques().filter_by(status="cleared").count()
 
-    # إحصائيات المحافظ
     total_vaults = _vaults().count()
     active_vaults = _vaults().filter_by(is_locked=False).count()
 
@@ -144,7 +138,7 @@ def add_account():
             description = request.form.get("description")
 
             if not account_type:
-                flash("⚠️ يرجى اختيار نوع الحساب.", "warning")
+                flash(gettext("⚠️ يرجى اختيار نوع الحساب."), "warning")
                 form_values = request.form.to_dict()
                 form_values["is_header"] = "on" if is_header else "off"
                 form_values["is_active"] = "on" if is_active else "off"
@@ -154,10 +148,9 @@ def add_account():
                     form_data=form_values,
                 )
 
-            # التحقق من عدم تكرار الكود
             existing = _accounts().filter_by(code=code).first()
             if existing:
-                flash("❌ كود الحساب موجود مسبقاً", "danger")
+                flash(gettext("❌ كود الحساب موجود مسبقاً"), "danger")
                 form_values = request.form.to_dict()
                 form_values["is_header"] = "on" if is_header else "off"
                 form_values["is_active"] = "on" if is_active else "off"
@@ -167,7 +160,6 @@ def add_account():
                     form_data=form_values,
                 )
 
-            # حساب المستوى
             level = 0
             if parent_id:
                 parent = _accounts().filter_by(id=parent_id).first()
@@ -190,7 +182,7 @@ def add_account():
             with atomic_transaction("add_gl_account"):
                 db.session.add(account)
                 LoggingCore.log_audit("create", "gl_accounts", account.id)
-            flash(f"✅ تم إنشاء الحساب {account.full_name} بنجاح", "success")
+            flash(gettext(f"✅ تم إنشاء الحساب {account.full_name} بنجاح"), "success")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         except Exception as e:
@@ -242,7 +234,6 @@ def edit_account(**kwargs):
             account.description = request.form.get("description")
             account.is_active = bool(request.form.get("is_active"))
 
-            # حساب المستوى
             if account.parent_id:
                 parent = _accounts().filter_by(id=account.parent_id).first()
                 account.level = parent.level + 1 if parent else 0
@@ -252,7 +243,7 @@ def edit_account(**kwargs):
             with atomic_transaction("edit_gl_account"):
                 db.session.flush()
                 LoggingCore.log_audit("update", "gl_accounts", account.id)
-            flash(f"✅ تم تحديث الحساب {account.full_name} بنجاح", "success")
+            flash(gettext(f"✅ تم تحديث الحساب {account.full_name} بنجاح"), "success")
             return redirect(url_for("admin_ledger.accounts_management"))
 
         except Exception as e:
@@ -280,27 +271,27 @@ def delete_account(**kwargs):
     account = _accounts().filter_by(id=record_id).first_or_404()
 
     try:
-        # التحقق من وجود قيود مرتبطة
         has_entries = (
             scoped_model_query(GLJournalLine).filter_by(account_id=record_id).first()
         )
         if has_entries:
-            flash("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به", "danger")
+            flash(gettext("❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به"), "danger")
             return redirect(url_for("admin_ledger.accounts_management"))
 
-        # التحقق من وجود حسابات فرعية
         has_children = _accounts().filter_by(parent_id=record_id).first()
         if has_children:
-            flash("❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به", "danger")
+            flash(
+                gettext("❌ لا يمكن حذف الحساب لوجود حسابات فرعية مرتبطة به"), "danger"
+            )
             return redirect(url_for("admin_ledger.accounts_management"))
 
         with atomic_transaction("delete_gl_account"):
             db.session.delete(account)
             LoggingCore.log_audit("delete", "gl_accounts", record_id)
-        flash(f"✅ تم حذف الحساب {account.full_name} بنجاح", "success")
+        flash(gettext(f"✅ تم حذف الحساب {account.full_name} بنجاح"), "success")
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("admin_ledger.accounts_management"))
 
@@ -353,10 +344,10 @@ def reverse_journal(**kwargs):
         with atomic_transaction("reverse_journal"):
             entry.reverse_entry()
             LoggingCore.log_audit("reverse", "gl_journal_entries", record_id)
-        flash(f"✅ تم عكس القيد {entry.entry_number} بنجاح", "success")
+        flash(gettext(f"✅ تم عكس القيد {entry.entry_number} بنجاح"), "success")
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("admin_ledger.view_journal", id=record_id))
 
@@ -377,7 +368,6 @@ def trial_balance():
     date_from = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
     date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
-    # تحويل التواريخ
     try:
         date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
         date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
@@ -387,7 +377,6 @@ def trial_balance():
         )
         date_from = date_to = date.today()
 
-    # حساب أرصدة الحسابات — batch query (single SQL)
     from services.gl_service import GLService
 
     accounts = (
@@ -441,7 +430,6 @@ def balance_sheet():
         )
         as_of_date = date.today()
 
-    # الأصول — batch query (single SQL)
     from services.gl_service import GLService
 
     _all_balances = GLService.get_all_account_balances(as_of_date=as_of_date)
@@ -454,7 +442,6 @@ def balance_sheet():
     )
     assets_total = sum(_all_balances.get(a.id, 0) for a in assets)
 
-    # الخصوم
     liabilities = (
         _accounts()
         .filter_by(type="liability", is_active=True, is_header=False)
@@ -463,7 +450,6 @@ def balance_sheet():
     )
     liabilities_total = sum(abs(_all_balances.get(a.id, 0)) for a in liabilities)
 
-    # حقوق الملكية
     equity = (
         _accounts()
         .filter_by(type="equity", is_active=True, is_header=False)
@@ -504,7 +490,6 @@ def income_statement():
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
 
-    # الإيرادات — batch query (single SQL)
     from services.gl_service import GLService
 
     _all_balances = GLService.get_all_account_balances(
@@ -519,7 +504,6 @@ def income_statement():
     )
     revenues_total = sum(abs(_all_balances.get(a.id, 0)) for a in revenues)
 
-    # المصروفات
     expenses = (
         _accounts()
         .filter_by(type="expense", is_active=True, is_header=False)

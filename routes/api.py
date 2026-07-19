@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 import os
@@ -109,7 +110,7 @@ def _validate_public_telemetry_origin():
         current_app.logger.warning(
             "client_error telemetry rejected: origin=%s", origin[:120]
         )
-        return jsonify({"success": False, "error": "Origin غير مسموح"}), 403
+        return jsonify({"success": False, "error": gettext("Origin غير مسموح")}), 403
 
     if referer:
         ref_origin = _origin_from_referer(referer)
@@ -118,9 +119,9 @@ def _validate_public_telemetry_origin():
         current_app.logger.warning(
             "client_error telemetry rejected: referer=%s", referer[:120]
         )
-        return jsonify({"success": False, "error": "Referer غير مسموح"}), 403
+        return jsonify({"success": False, "error": gettext("Referer غير مسموح")}), 403
 
-    return jsonify({"success": False, "error": "Origin أو Referer مطلوب"}), 403
+    return jsonify({"success": False, "error": gettext("Origin أو Referer مطلوب")}), 403
 
 
 def _scoped_customer_query():
@@ -204,25 +205,29 @@ def version():
 @login_required
 def payment_fields(payment_method):
     fields = {
-        "cash": {"fields": [], "ar_title": "دفع نقدي", "en_title": "Cash Payment"},
+        "cash": {
+            "fields": [],
+            "ar_title": gettext("دفع نقدي"),
+            "en_title": "Cash Payment",
+        },
         "card": {
             "fields": [
                 {
                     "name": "reference_number",
                     "type": "text",
-                    "label_ar": "رقم المعاملة",
+                    "label_ar": gettext("رقم المعاملة"),
                     "label_en": "Transaction Number",
                     "required": False,
                 },
                 {
                     "name": "card_last4",
                     "type": "text",
-                    "label_ar": "آخر 4 أرقام البطاقة",
+                    "label_ar": gettext("آخر 4 أرقام البطاقة"),
                     "label_en": "Card Last 4 Digits",
                     "required": False,
                 },
             ],
-            "ar_title": "دفع ببطاقة",
+            "ar_title": gettext("دفع ببطاقة"),
             "en_title": "Card Payment",
         },
         "bank_transfer": {
@@ -230,19 +235,19 @@ def payment_fields(payment_method):
                 {
                     "name": "reference_number",
                     "type": "text",
-                    "label_ar": "رقم الحوالة",
+                    "label_ar": gettext("رقم الحوالة"),
                     "label_en": "Transfer Reference",
                     "required": True,
                 },
                 {
                     "name": "bank_name",
                     "type": "text",
-                    "label_ar": "اسم البنك",
+                    "label_ar": gettext("اسم البنك"),
                     "label_en": "Bank Name",
                     "required": False,
                 },
             ],
-            "ar_title": "تحويل بنكي",
+            "ar_title": gettext("تحويل بنكي"),
             "en_title": "Bank Transfer",
         },
         "cheque": {
@@ -250,26 +255,26 @@ def payment_fields(payment_method):
                 {
                     "name": "cheque_number",
                     "type": "text",
-                    "label_ar": "رقم الشيك",
+                    "label_ar": gettext("رقم الشيك"),
                     "label_en": "Cheque Number",
                     "required": True,
                 },
                 {
                     "name": "cheque_date",
                     "type": "date",
-                    "label_ar": "تاريخ الاستحقاق",
+                    "label_ar": gettext("تاريخ الاستحقاق"),
                     "label_en": "Due Date",
                     "required": True,
                 },
                 {
                     "name": "bank_name",
                     "type": "text",
-                    "label_ar": "اسم البنك",
+                    "label_ar": gettext("اسم البنك"),
                     "label_en": "Bank Name",
                     "required": True,
                 },
             ],
-            "ar_title": "دفع بشيك",
+            "ar_title": gettext("دفع بشيك"),
             "en_title": "Cheque Payment",
         },
         "e_wallet": {
@@ -277,14 +282,14 @@ def payment_fields(payment_method):
                 {
                     "name": "reference_number",
                     "type": "text",
-                    "label_ar": "رقم المعاملة",
+                    "label_ar": gettext("رقم المعاملة"),
                     "label_en": "Transaction ID",
                     "required": True,
                 },
                 {
                     "name": "wallet_provider",
                     "type": "select",
-                    "label_ar": "المحفظة",
+                    "label_ar": gettext("المحفظة"),
                     "label_en": "Wallet Provider",
                     "required": False,
                     "options": [
@@ -303,11 +308,15 @@ def payment_fields(payment_method):
                             "label_ar": "Samsung Pay",
                             "label_en": "Samsung Pay",
                         },
-                        {"value": "other", "label_ar": "أخرى", "label_en": "Other"},
+                        {
+                            "value": "other",
+                            "label_ar": gettext("أخرى"),
+                            "label_en": "Other",
+                        },
                     ],
                 },
             ],
-            "ar_title": "محفظة إلكترونية",
+            "ar_title": gettext("محفظة إلكترونية"),
             "en_title": "E-Wallet",
         },
     }
@@ -345,7 +354,9 @@ def currency_rate(from_currency, to_currency):
             jsonify(
                 {
                     "success": False,
-                    "error": "تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً.",
+                    "error": gettext(
+                        "تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً."
+                    ),
                     "manual_input_required": True,
                 }
             ),
@@ -376,7 +387,7 @@ def currencies():
 
 @api_bp.route("/search")
 @login_required
-@permission_required("view_reports")  # بحث موحد: منتجات، عملاء، موردين
+@permission_required("view_reports")
 def api_search():
     """
     🔍 API بحث موحد: زبائن، موردين، منتجات
@@ -386,9 +397,6 @@ def api_search():
     page = request.args.get("page", 1, type=int)
     per_page = 20
 
-    # ========================================
-    # 1. البحث عن المنتجات
-    # ========================================
     if search_type == "products":
         warehouse_id = request.args.get("warehouse_id", type=int)
         purpose = request.args.get("purpose", "").strip()
@@ -444,9 +452,6 @@ def api_search():
 
         return jsonify({"results": results, "has_more": len(results) >= per_page})
 
-    # ========================================
-    # 2. البحث عن الموردين
-    # ========================================
     elif search_type == "suppliers":
         base_query = (
             _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)
@@ -470,7 +475,9 @@ def api_search():
         results = [
             {
                 "id": s.id,
-                "text": f"{s.name} {('- ' + s.company_name) if s.company_name else ''} - {s.phone or 'لا يوجد رقم'}",
+                "text": gettext(
+                    f"{s.name} {('- ' + s.company_name) if s.company_name else ''} - {s.phone or 'لا يوجد رقم'}"
+                ),
                 "name": s.name,
                 "company_name": s.company_name,
                 "phone": s.phone,
@@ -486,9 +493,6 @@ def api_search():
 
         return jsonify({"results": results, "has_more": has_more})
 
-    # ========================================
-    # 3. البحث عن الزبائن (الافتراضي)
-    # ========================================
     else:
         base_query = (
             _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
@@ -511,7 +515,7 @@ def api_search():
         results = [
             {
                 "id": c.id,
-                "text": f"{c.name} - {c.phone or 'لا يوجد رقم'}",
+                "text": gettext(f"{c.name} - {c.phone or 'لا يوجد رقم'}"),
                 "name": c.name,
                 "phone": c.phone,
                 "email": c.email,
@@ -531,13 +535,13 @@ def check_username():
     username = request.args.get("username", "").strip()
 
     if not username or len(username) < 3:
-        return jsonify({"available": False, "error": "اسم المستخدم قصير جداً"})
+        return jsonify({"available": False, "error": gettext("اسم المستخدم قصير جداً")})
 
     import re
 
     if not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
         return jsonify(
-            {"available": False, "error": "استخدم حروف إنجليزية وأرقام و_ فقط"}
+            {"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")}
         )
 
     tid = get_active_tenant_id(current_user)
@@ -553,12 +557,12 @@ def check_username():
         return jsonify(
             {
                 "available": False,
-                "message": f'اسم المستخدم "{username}" موجود مسبقاً',
+                "message": gettext(f'اسم المستخدم "{username}" موجود مسبقاً'),
                 "suggestions": suggestions,
             }
         )
 
-    return jsonify({"available": True, "message": "اسم المستخدم متاح ✓"})
+    return jsonify({"available": True, "message": gettext("اسم المستخدم متاح ✓")})
 
 
 @api_bp.route("/products/low-stock")
@@ -599,7 +603,10 @@ def products_low_stock():
         current_app.logger.exception("products_low_stock failed")
         return (
             jsonify(
-                {"success": False, "error": "تعذر تحميل المنتجات قليلة المخزون حالياً"}
+                {
+                    "success": False,
+                    "error": gettext("تعذر تحميل المنتجات قليلة المخزون حالياً"),
+                }
             ),
             500,
         )
@@ -855,10 +862,10 @@ def api_product_info(pid):
     """معلومات منتج (سعر، مخزون)"""
     product = db.session.get(Product, pid)
     if not product:
-        return jsonify({"success": False, "error": "المنتج غير موجود"}), 404
+        return jsonify({"success": False, "error": gettext("المنتج غير موجود")}), 404
     tid = get_active_tenant_id(current_user)
     if tid is not None and product.tenant_id != tid:
-        return jsonify({"success": False, "error": "المنتج غير موجود"}), 404
+        return jsonify({"success": False, "error": gettext("المنتج غير موجود")}), 404
     warehouse_id = request.args.get("warehouse_id", type=int)
     if warehouse_id:
         from utils.branching import ensure_warehouse_access
@@ -867,7 +874,12 @@ def api_product_info(pid):
             ensure_warehouse_access(warehouse_id, user=current_user)
         except Exception:
             return (
-                jsonify({"success": False, "error": "غير مصرح بالوصول إلى المستودع"}),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": gettext("غير مصرح بالوصول إلى المستودع"),
+                    }
+                ),
                 403,
             )
     stock = float(product.current_stock or 0)
@@ -904,7 +916,10 @@ def api_product_by_barcode(code):
     if not product:
         return (
             jsonify(
-                {"success": False, "error": "لم يتم العثور على منتج بهذا الباركود"}
+                {
+                    "success": False,
+                    "error": gettext("لم يتم العثور على منتج بهذا الباركود"),
+                }
             ),
             404,
         )

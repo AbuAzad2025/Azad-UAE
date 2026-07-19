@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from decimal import Decimal
 
 
@@ -83,7 +84,9 @@ def admin_settings():
                 if store.platform_disabled and is_enabled:
                     is_enabled = False
                     flash(
-                        "تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله.",
+                        gettext(
+                            "تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله."
+                        ),
                         "warning",
                     )
                 title = (request.form.get("title") or "").strip()
@@ -96,7 +99,7 @@ def admin_settings():
                 slug = StoreService.ensure_unique_slug(slug, tenant_id=tenant_id)
 
                 if is_enabled and not title:
-                    raise ValueError("عنوان المتجر مطلوب عند التفعيل.")
+                    raise ValueError(gettext("عنوان المتجر مطلوب عند التفعيل."))
 
                 store.is_enabled = is_enabled
                 store.store_slug = slug
@@ -167,7 +170,7 @@ def admin_settings():
                         TenantStore.tenant_id != tenant_id,
                     ).first()
                     if clash:
-                        raise ValueError("النطاق المخصص مستخدم من متجر آخر.")
+                        raise ValueError(gettext("النطاق المخصص مستخدم من متجر آخر."))
                 store.custom_domain = custom_domain or None
 
                 logo_file = request.files.get("logo")
@@ -181,14 +184,14 @@ def admin_settings():
                         store.logo_path = logo_path
 
                 LoggingCore.log_audit("update", "tenant_stores", store.id)
-            flash("تم حفظ إعدادات المتجر.", "success")
+            flash(gettext("تم حفظ إعدادات المتجر."), "success")
             return redirect(url_for("store.admin_index"))
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in store settings: {exc}")
             flash(str(exc), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error saving store settings: {exc}")
-            flash(ErrorMessages.action_failed("حفظ الإعدادات"), "danger")
+            flash(ErrorMessages.action_failed(gettext("حفظ الإعدادات")), "danger")
 
     return render_template(
         "store/admin_settings.html",
@@ -250,21 +253,23 @@ def admin_transfer():
                 notes = (request.form.get("notes") or "").strip()
 
                 if not product_id or not quantity or quantity <= 0:
-                    raise ValueError("اختر منتجاً وكمية صحيحة.")
+                    raise ValueError(gettext("اختر منتجاً وكمية صحيحة."))
 
                 product = Product.query.filter_by(
                     id=product_id, tenant_id=tenant_id
                 ).first()
                 if not product:
-                    raise ValueError("المنتج غير موجود.")
+                    raise ValueError(gettext("المنتج غير موجود."))
 
                 if direction == "to_online":
                     if not source_id:
-                        raise ValueError("اختر المستودع المصدر.")
+                        raise ValueError(gettext("اختر المستودع المصدر."))
                     if source_id not in [w.id for w in physical_warehouses]:
-                        raise ValueError("المستودع المحدد غير صالح أو غير متاح لك.")
+                        raise ValueError(
+                            gettext("المستودع المحدد غير صالح أو غير متاح لك.")
+                        )
                     from_id, to_id = source_id, online_wh.id
-                    label = notes or "نشر للمتجر — تحويل إلى مستودع أونلاين"
+                    label = notes or gettext("نشر للمتجر — تحويل إلى مستودع أونلاين")
                 else:
                     if not source_id:
                         source_id = online_wh.id
@@ -272,9 +277,11 @@ def admin_transfer():
                         source_id not in [w.id for w in physical_warehouses]
                         and source_id != online_wh.id
                     ):
-                        raise ValueError("المستودع المحدد غير صالح أو غير متاح لك.")
+                        raise ValueError(
+                            gettext("المستودع المحدد غير صالح أو غير متاح لك.")
+                        )
                     from_id, to_id = online_wh.id, source_id
-                    label = notes or "سحب من المتجر — تحويل من مستودع أونلاين"
+                    label = notes or gettext("سحب من المتجر — تحويل من مستودع أونلاين")
 
                 StockService.transfer_stock(
                     product_id=product_id,
@@ -285,14 +292,14 @@ def admin_transfer():
                     user=current_user,
                 )
                 LoggingCore.log_audit("transfer", "stock_movements", product_id)
-            flash("تم تحويل المخزون بنجاح.", "success")
+            flash(gettext("تم تحويل المخزون بنجاح."), "success")
             return redirect(url_for("store.admin_catalog"))
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in stock transfer: {exc}")
             flash(str(exc), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error transferring stock: {exc}")
-            flash(ErrorMessages.action_failed("تحويل المخزون"), "danger")
+            flash(ErrorMessages.action_failed(gettext("تحويل المخزون")), "danger")
 
     online_stock = StoreService.online_stock_map(tenant_id, [p.id for p in products])
     physical_ids = [w.id for w in physical_warehouses]
@@ -389,13 +396,13 @@ def admin_order_confirm(order_id):
         with atomic_transaction("order_confirm"):
             StoreOrderService.confirm_order(sale, mark_paid=mark_paid)
             LoggingCore.log_audit("confirm", "store_orders", sale.id)
-        flash(f"تم تأكيد الطلب {sale.sale_number}.", "success")
+        flash(gettext(f"تم تأكيد الطلب {sale.sale_number}."), "success")
     except ValueError as exc:
         current_app.logger.warning(f"ValueError confirming order {order_id}: {exc}")
         flash(str(exc), "warning")
     except Exception as exc:
         current_app.logger.error(f"Error confirming order {order_id}: {exc}")
-        flash(ErrorMessages.action_failed("تأكيد الطلب"), "danger")
+        flash(ErrorMessages.action_failed(gettext("تأكيد الطلب")), "danger")
     return redirect(url_for("store.admin_order_detail", order_id=order_id))
 
 
@@ -411,13 +418,13 @@ def admin_order_cancel(order_id):
         with atomic_transaction("order_cancel"):
             StoreOrderService.cancel_order(sale)
             LoggingCore.log_audit("cancel", "store_orders", sale.id)
-        flash(f"تم إلغاء الطلب {sale.sale_number}.", "success")
+        flash(gettext(f"تم إلغاء الطلب {sale.sale_number}."), "success")
     except ValueError as exc:
         current_app.logger.warning(f"ValueError cancelling order {order_id}: {exc}")
         flash(str(exc), "warning")
     except Exception as exc:
         current_app.logger.error(f"Error cancelling order {order_id}: {exc}")
-        flash(ErrorMessages.action_failed("إلغاء الطلب"), "danger")
+        flash(ErrorMessages.action_failed(gettext("إلغاء الطلب")), "danger")
     return redirect(url_for("store.admin_order_detail", order_id=order_id))
 
 
@@ -480,20 +487,20 @@ def admin_coupons():
                             "is_active": request.form.get("is_active") == "on",
                         },
                     )
-                    flash("تم إنشاء الكوبون.", "success")
+                    flash(gettext("تم إنشاء الكوبون."), "success")
                 elif action == "toggle":
                     coupon_id = int(request.form.get("coupon_id", 0) or 0)
                     enabled = request.form.get("enabled") == "1"
                     StoreCouponService.update_coupon(
                         coupon_id, tenant_id, {"is_active": enabled}
                     )
-                    flash("تم تحديث الكوبون.", "success")
+                    flash(gettext("تم تحديث الكوبون."), "success")
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in coupon operation: {exc}")
             flash(str(exc), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error in coupon operation: {exc}")
-            flash(ErrorMessages.action_failed("العملية على الكوبون"), "danger")
+            flash(ErrorMessages.action_failed(gettext("العملية على الكوبون")), "danger")
         return redirect(url_for("store.admin_coupons"))
 
     coupons = StoreCouponService.list_for_tenant(tenant_id)

@@ -12,6 +12,8 @@ Endpoints:
   • /partners/<id>/tx        — إضافة حركة يدوية
 """
 
+from flask_babel import gettext
+
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
 
@@ -121,10 +123,10 @@ def create():
             )
             with atomic_transaction("partner_create"):
                 db.session.add(partner)
-            flash("✅ تم إضافة الشريك بنجاح.", "success")
+            flash(gettext("✅ تم إضافة الشريك بنجاح."), "success")
             return redirect(url_for("partners.index"))
         except Exception as e:
-            flash(f"❌ خطأ: {e}", "danger")
+            flash(gettext(f"❌ خطأ: {e}"), "danger")
 
     return render_template(
         "partners/create.html", branches=branches, warehouses=warehouses
@@ -225,10 +227,10 @@ def edit(**kwargs):
 
             with atomic_transaction("partner_edit"):
                 db.session.flush()
-            flash("✅ تم تحديث بيانات الشريك.", "success")
+            flash(gettext("✅ تم تحديث بيانات الشريك."), "success")
             return redirect(url_for("partners.view", id=record_id))
         except Exception as e:
-            flash(f"❌ خطأ: {e}", "danger")
+            flash(gettext(f"❌ خطأ: {e}"), "danger")
 
     return render_template(
         "partners/edit.html", partner=partner, branches=branches, warehouses=warehouses
@@ -294,10 +296,10 @@ def distribute():
                     period_end=period_end,
                     created_by=current_user.id,
                 )
-            flash(f"✅ تم إنشاء {len(dist_ids)} توزيع مسودة.", "success")
+            flash(gettext(f"✅ تم إنشاء {len(dist_ids)} توزيع مسودة."), "success")
             return redirect(url_for("partners.distributions"))
         except Exception as e:
-            flash(f"❌ خطأ: {e}", "danger")
+            flash(gettext(f"❌ خطأ: {e}"), "danger")
 
     today = datetime.now(timezone.utc).date()
     last_month_end = today.replace(day=1) - timedelta(days=1)
@@ -319,11 +321,11 @@ def approve_distribution(dist_id):
                 dist_id, current_user.id, tenant_id=_tenant_id()
             )
         if ok:
-            flash("✅ تم اعتماد التوزيع.", "success")
+            flash(gettext("✅ تم اعتماد التوزيع."), "success")
         else:
-            flash("❌ لم يتم اعتماد التوزيع.", "danger")
+            flash(gettext("❌ لم يتم اعتماد التوزيع."), "danger")
     except Exception as e:
-        flash(f"❌ خطأ: {e}", "danger")
+        flash(gettext(f"❌ خطأ: {e}"), "danger")
     return redirect(url_for("partners.distributions"))
 
 
@@ -335,11 +337,11 @@ def pay_distribution(dist_id):
         with atomic_transaction("partner_pay_distribution"):
             ok = PartnerService.pay_distribution(dist_id, tenant_id=_tenant_id())
         if ok:
-            flash("✅ تم تسجيل الدفع.", "success")
+            flash(gettext("✅ تم تسجيل الدفع."), "success")
         else:
-            flash("❌ لم يتم تسجيل الدفع.", "danger")
+            flash(gettext("❌ لم يتم تسجيل الدفع."), "danger")
     except Exception as e:
-        flash(f"❌ خطأ: {e}", "danger")
+        flash(gettext(f"❌ خطأ: {e}"), "danger")
     return redirect(url_for("partners.distributions"))
 
 
@@ -370,11 +372,11 @@ def add_transaction(**kwargs):
                 tenant_id=_tenant_id(),
             )
         if tx_id is None:
-            flash("❌ الشريك غير موجود أو خارج نطاق المستأجر.", "danger")
+            flash(gettext("❌ الشريك غير موجود أو خارج نطاق المستأجر."), "danger")
             return redirect(url_for("partners.index"))
-        flash("✅ تم تسجيل الحركة.", "success")
+        flash(gettext("✅ تم تسجيل الحركة."), "success")
     except Exception as e:
-        flash(f"❌ خطأ: {e}", "danger")
+        flash(gettext(f"❌ خطأ: {e}"), "danger")
     return redirect(url_for("partners.view", id=id))
 
 

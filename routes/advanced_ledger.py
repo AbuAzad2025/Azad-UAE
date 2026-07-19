@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -40,7 +41,6 @@ def _accounts():
 @permission_required("view_ledger")
 def professional_printing():
     """نظام الطباعة الاحترافي"""
-    # بيانات تجريبية للطباعة
     trial_balance_data = []
     accounts = _accounts().filter_by(is_active=True, is_header=False).limit(20).all()
 
@@ -120,7 +120,7 @@ def add_customs_tax():
         try:
             gl_account_id = request.form.get("gl_account_id", type=int)
             if not gl_account_id:
-                flash("⚠️ يرجى اختيار الحساب المحاسبي.", "warning")
+                flash(gettext("⚠️ يرجى اختيار الحساب المحاسبي."), "warning")
                 return render_template(
                     "ledger/advanced/add_customs_tax.html",
                     accounts=accounts,
@@ -153,7 +153,7 @@ def add_customs_tax():
             with atomic_transaction("add_customs_tax"):
                 db.session.add(tax)
                 LoggingCore.log_audit("create", "customs_taxes", tax.id)
-            flash(f"✅ تم إضافة {tax.name_ar} بنجاح", "success")
+            flash(gettext(f"✅ تم إضافة {tax.name_ar} بنجاح"), "success")
             return redirect(url_for("advanced_ledger.customs_taxes"))
 
         except Exception as e:
@@ -206,7 +206,7 @@ def add_expense_category():
         try:
             gl_account_id = request.form.get("gl_account_id", type=int)
             if not gl_account_id:
-                flash("⚠️ يرجى اختيار الحساب المحاسبي.", "warning")
+                flash(gettext("⚠️ يرجى اختيار الحساب المحاسبي."), "warning")
                 return render_template(
                     "ledger/advanced/add_expense_category.html",
                     parent_categories=parent_categories,
@@ -232,7 +232,10 @@ def add_expense_category():
             with atomic_transaction("add_expense_category"):
                 db.session.add(category)
                 LoggingCore.log_audit("create", "expense_categories", category.id)
-            flash(f"✅ تم إضافة فئة المصروفات {category.name_ar} بنجاح", "success")
+            flash(
+                gettext(f"✅ تم إضافة فئة المصروفات {category.name_ar} بنجاح"),
+                "success",
+            )
             return redirect(url_for("advanced_ledger.expense_categories"))
 
         except Exception as e:
@@ -325,13 +328,15 @@ def add_advanced_expense():
                 created_by=current_user.id,
             )
 
-            # حساب الضرائب والجمارك
             expense.calculate_taxes()
 
             with atomic_transaction("add_advanced_expense"):
                 db.session.add(expense)
                 LoggingCore.log_audit("create", "advanced_expenses", expense.id)
-            flash(f"✅ تم إضافة المصروف {expense.expense_number} بنجاح", "success")
+            flash(
+                gettext(f"✅ تم إضافة المصروف {expense.expense_number} بنجاح"),
+                "success",
+            )
             return redirect(url_for("advanced_ledger.advanced_expenses"))
 
         except Exception as e:
@@ -340,7 +345,6 @@ def add_advanced_expense():
 
             flash(ErrorMessages.unexpected_error(), "danger")
 
-    # الحصول على البيانات المطلوبة
     tid = active_tenant_id(current_user)
     categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
     from models import Supplier
@@ -383,7 +387,7 @@ def journal_management():
 def reverse_journal_entry(entry_id):
     """عكس قيد محاسبي"""
     try:
-        reason = request.form.get("reason", "عكس القيد")
+        reason = request.form.get("reason", gettext("عكس القيد"))
 
         with atomic_transaction("reverse_journal_entry"):
             reversal_entry = AdvancedJournalEntryManager.reverse_entry_advanced(
@@ -394,7 +398,9 @@ def reverse_journal_entry(entry_id):
             )
 
         flash(
-            f"✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}",
+            gettext(
+                f"✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}"
+            ),
             "success",
         )
 
@@ -413,14 +419,14 @@ def reverse_journal_entry(entry_id):
 def delete_journal_entry(entry_id):
     """حذف قيد محاسبي"""
     try:
-        reason = request.form.get("reason", "حذف القيد")
+        reason = request.form.get("reason", gettext("حذف القيد"))
 
         with atomic_transaction("delete_journal_entry"):
             AdvancedJournalEntryManager.delete_entry(
                 entry_id=entry_id, deleted_by=current_user, reason=reason
             )
 
-        flash("✅ تم إلغاء القيد بنجاح", "success")
+        flash(gettext("✅ تم إلغاء القيد بنجاح"), "success")
 
     except Exception as e:
         current_app.logger.error(f"Error deleting journal entry {entry_id}: {e}")
@@ -439,7 +445,7 @@ def delete_journal_entry(entry_id):
 def approve_journal_entry(entry_id):
     """الموافقة على قيد محاسبي"""
     try:
-        approval_notes = request.form.get("approval_notes", "موافقة على القيد")
+        approval_notes = request.form.get("approval_notes", gettext("موافقة على القيد"))
 
         with atomic_transaction("approve_journal_entry"):
             AdvancedJournalEntryManager.approve_entry(
@@ -448,7 +454,7 @@ def approve_journal_entry(entry_id):
                 approval_notes=approval_notes,
             )
 
-        flash("✅ تم الموافقة على القيد وترحيله بنجاح", "success")
+        flash(gettext("✅ تم الموافقة على القيد وترحيله بنجاح"), "success")
 
     except Exception as e:
         current_app.logger.error(f"Error approving journal entry {entry_id}: {e}")
@@ -465,7 +471,6 @@ def approve_journal_entry(entry_id):
 def cheque_integration():
     """تكامل الشيكات مع النظام المحاسبي"""
     tid = active_tenant_id(current_user)
-    # الحصول على الشيكات الأخيرة
     recent_cheques = (
         Cheque.query.filter_by(tenant_id=tid)
         .order_by(Cheque.updated_at.desc())
@@ -473,7 +478,6 @@ def cheque_integration():
         .all()
     )
 
-    # إحصائيات الشيكات
     stats = {
         "total_cheques": Cheque.query.filter_by(tenant_id=tid).count(),
         "pending_cheques": Cheque.query.filter_by(
@@ -513,7 +517,8 @@ def receive_cheque(cheque_id):
             )
 
         flash(
-            f"✅ تم تسجيل استلام الشيك بنجاح - القيد: {entry.entry_number}", "success"
+            gettext(f"✅ تم تسجيل استلام الشيك بنجاح - القيد: {entry.entry_number}"),
+            "success",
         )
 
     except Exception as e:
@@ -543,7 +548,10 @@ def clear_cheque(cheque_id):
                 exchange_gain_loss=exchange_gain_loss,
             )
 
-        flash(f"✅ تم تسجيل صرف الشيك بنجاح - القيد: {entry.entry_number}", "success")
+        flash(
+            gettext(f"✅ تم تسجيل صرف الشيك بنجاح - القيد: {entry.entry_number}"),
+            "success",
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error clearing cheque {cheque_id}: {e}")
@@ -559,10 +567,8 @@ def clear_cheque(cheque_id):
 @admin_required
 def real_time_events():
     """مستمعات الأحداث اللحظية"""
-    # الحصول على الأحداث الأخيرة
     recent_events = accounting_event_stream.get_recent_events(limit=100)
 
-    # إحصائيات الأحداث
     event_stats = {}
     for event in recent_events:
         event_type = event["type"]
@@ -608,18 +614,15 @@ def cheque_accounting_summary_api(cheque_id):
 @permission_required("view_ledger")
 def professional_reports():
     """تقارير مالية احترافية مع رسوم بيانية"""
-    # الحصول على البيانات
     trends = AdvancedFinancialAnalytics.get_trend_analysis(months=12)
     AdvancedFinancialAnalytics.get_expense_breakdown()
     AdvancedFinancialAnalytics.get_revenue_breakdown()
 
-    # حساب الإحصائيات
     total_revenue = sum(item["revenue"] for item in trends)
     total_expenses = sum(item["expenses"] for item in trends)
     net_profit = total_revenue - total_expenses
     profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
 
-    # تحضير البيانات للرسوم البيانية
     months = [item["month"] for item in trends]
     revenue_data = [item["revenue"] for item in trends]
     expense_data = [item["expenses"] for item in trends]
@@ -646,7 +649,6 @@ def professional_reports():
 @admin_required
 def advanced_analytics():
     """نظام التحليل المالي المتقدم"""
-    # الحصول على جميع البيانات التحليلية
     dashboard_summary = AdvancedFinancialAnalytics.get_dashboard_summary()
 
     return render_template(

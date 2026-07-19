@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from extensions import db
@@ -14,21 +15,21 @@ payroll_bp = Blueprint("payroll", __name__, url_prefix="/payroll")
 
 def _assert_employee_scope(employee, scoped_branch_id, tid):
     if not employee:
-        raise ValueError("الموظف غير موجود.")
+        raise ValueError(gettext("الموظف غير موجود."))
     if tid is not None and int(employee.tenant_id) != int(tid):
-        raise ValueError("الموظف لا ينتمي إلى شركتك النشطة.")
+        raise ValueError(gettext("الموظف لا ينتمي إلى شركتك النشطة."))
     if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
-        raise ValueError("لا يمكنك التعامل مع موظف من فرع آخر.")
+        raise ValueError(gettext("لا يمكنك التعامل مع موظف من فرع آخر."))
 
 
 def _assert_branch_scope(branch_id, scoped_branch_id, tid):
     branch = db.session.get(Branch, int(branch_id))
     if not branch:
-        raise ValueError("الفرع المحدد غير موجود.")
+        raise ValueError(gettext("الفرع المحدد غير موجود."))
     if tid is not None and int(branch.tenant_id) != int(tid):
-        raise ValueError("الفرع لا ينتمي إلى شركتك النشطة.")
+        raise ValueError(gettext("الفرع لا ينتمي إلى شركتك النشطة."))
     if scoped_branch_id is not None and int(branch_id) != int(scoped_branch_id):
-        raise ValueError("لا يمكنك معالجة رواتب فرع آخر.")
+        raise ValueError(gettext("لا يمكنك معالجة رواتب فرع آخر."))
 
 
 @payroll_bp.route("/employees")
@@ -58,11 +59,11 @@ def add_employee():
     if request.method == "POST":
         try:
             if not request.form.get("name"):
-                raise ValueError("اسم الموظف مطلوب.")
+                raise ValueError(gettext("اسم الموظف مطلوب."))
             if scoped_branch_id is not None:
                 form_branch_id = request.form.get("branch_id", type=int)
                 if form_branch_id != scoped_branch_id:
-                    flash("لا يمكنك ربط الموظف إلا بفرعك الحالي.", "danger")
+                    flash(gettext("لا يمكنك ربط الموظف إلا بفرعك الحالي."), "danger")
                     tid = get_active_tenant_id(current_user)
                     branches = Branch.query.filter_by(
                         id=scoped_branch_id, is_active=True
@@ -75,10 +76,10 @@ def add_employee():
                     )
             with atomic_transaction("payroll_add_employee"):
                 PayrollService.create_employee(request.form)
-            flash("تم إضافة الموظف بنجاح", "success")
+            flash(gettext("تم إضافة الموظف بنجاح"), "success")
             return redirect(url_for("payroll.employees_list"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
 
     tid = get_active_tenant_id(current_user)
     branches_query = Branch.query.filter_by(is_active=True)
@@ -100,11 +101,11 @@ def advances():
             tid = get_active_tenant_id(current_user)
             employee_id_str = request.form.get("employee_id")
             if not employee_id_str:
-                raise ValueError("معرف الموظف مطلوب.")
+                raise ValueError(gettext("معرف الموظف مطلوب."))
             employee_id = int(employee_id_str)
             amount_str = request.form.get("amount")
             if not amount_str:
-                raise ValueError("المبلغ مطلوب.")
+                raise ValueError(gettext("المبلغ مطلوب."))
             amount = float(amount_str)
             employee = db.session.get(Employee, employee_id)
             _assert_employee_scope(employee, scoped_branch_id, tid)
@@ -116,11 +117,11 @@ def advances():
                     user_id=current_user.id,
                     actor_user=current_user,
                 )
-            flash("تم تسجيل السلفة بنجاح", "success")
+            flash(gettext("تم تسجيل السلفة بنجاح"), "success")
         except ValueError as e:
-            flash(f"خطأ في البيانات: {e}", "danger")
+            flash(gettext(f"خطأ في البيانات: {e}"), "danger")
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
 
     scoped_branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
@@ -151,14 +152,14 @@ def process_payroll():
             try:
                 branch_id_str = request.form.get("branch_id")
                 if not branch_id_str:
-                    raise ValueError("معرف الفرع مطلوب.")
+                    raise ValueError(gettext("معرف الفرع مطلوب."))
                 branch_id = int(branch_id_str)
                 tid = get_active_tenant_id(current_user)
                 _assert_branch_scope(branch_id, scoped_branch_id, tid)
                 month_str = request.form.get("month")
                 year_str = request.form.get("year")
                 if not month_str or not year_str:
-                    raise ValueError("الشهر والسنة مطلوبان.")
+                    raise ValueError(gettext("الشهر والسنة مطلوبان."))
                 month = int(month_str)
                 year = int(year_str)
                 with atomic_transaction("payroll_generate_branch"):
@@ -166,18 +167,20 @@ def process_payroll():
                         branch_id, month, year, current_user.id
                     )
                 flash(
-                    f"تم توليد الرواتب بنجاح: {gen} موظف، وتم تخطي {skipped} (تمت معالجتهم سابقاً أو نظام مياومة)",
+                    gettext(
+                        f"تم توليد الرواتب بنجاح: {gen} موظف، وتم تخطي {skipped} (تمت معالجتهم سابقاً أو نظام مياومة)"
+                    ),
                     "success",
                 )
             except ValueError as e:
-                flash(f"خطأ في البيانات: {e}", "danger")
+                flash(gettext(f"خطأ في البيانات: {e}"), "danger")
             except Exception as e:
-                flash(f"حدث خطأ: {e}", "danger")
+                flash(gettext(f"حدث خطأ: {e}"), "danger")
         else:
             try:
                 employee_id_str = request.form.get("employee_id")
                 if not employee_id_str:
-                    raise ValueError("معرف الموظف مطلوب.")
+                    raise ValueError(gettext("معرف الموظف مطلوب."))
                 employee_id = int(employee_id_str)
                 tid = get_active_tenant_id(current_user)
                 employee = db.session.get(Employee, employee_id)
@@ -193,11 +196,11 @@ def process_payroll():
                         user_id=current_user.id,
                         actor_user=current_user,
                     )
-                flash("تم صرف الراتب بنجاح", "success")
+                flash(gettext("تم صرف الراتب بنجاح"), "success")
             except ValueError as e:
-                flash(f"خطأ في البيانات: {e}", "danger")
+                flash(gettext(f"خطأ في البيانات: {e}"), "danger")
             except Exception as e:
-                flash(f"حدث خطأ: {e}", "danger")
+                flash(gettext(f"حدث خطأ: {e}"), "danger")
 
     tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
@@ -274,15 +277,20 @@ def statement(**kwargs):
     history = []
     for a in advance_list:
         history.append(
-            {"date": a.date, "type": "سلفة", "amount": -a.amount, "desc": a.description}
+            {
+                "date": a.date,
+                "type": gettext("سلفة"),
+                "amount": -a.amount,
+                "desc": a.description,
+            }
         )
     for p in payments:
         history.append(
             {
                 "date": p.payment_date,
-                "type": "راتب",
+                "type": gettext("راتب"),
                 "amount": p.net_salary,
-                "desc": f"راتب {p.month}/{p.year}",
+                "desc": gettext(f"راتب {p.month}/{p.year}"),
             }
         )
 

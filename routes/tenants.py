@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, abort, flash, redirect, request
 from flask_login import current_user, login_required
 
@@ -19,15 +20,15 @@ def switch(tenant_id):
     if tenant_id == 0:
         set_active_tenant(None, user=current_user)
         clear_active_branch()
-        flash("تم إلغاء تحديد الشركة الحالية.", "success")
+        flash(gettext("تم إلغاء تحديد الشركة الحالية."), "success")
         return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
 
     tenant = db.session.get(Tenant, int(tenant_id))
     if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
-        flash("الشركة غير موجودة أو غير مفعلة أو معلقة.", "danger")
+        flash(gettext("الشركة غير موجودة أو غير مفعلة أو معلقة."), "danger")
         return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
 
     set_active_tenant(tenant.id, user=current_user)
     clear_active_branch()
-    flash(f"تم التبديل إلى: {tenant.name_ar or tenant.name}", "success")
+    flash(gettext(f"تم التبديل إلى: {tenant.name_ar or tenant.name}"), "success")
     return redirect(safe_redirect_target(request.referrer, "main.dashboard"))

@@ -1,5 +1,7 @@
 """AI assistant pages and Excel upload routes."""
 
+from flask_babel import gettext
+
 import os
 
 import logging
@@ -63,7 +65,7 @@ def config():
         provider = request.form.get("provider", "groq")
 
         if not api_key:
-            return jsonify({"success": False, "message": "المفتاح مطلوب"})
+            return jsonify({"success": False, "message": gettext("المفتاح مطلوب")})
 
         try:
             from pathlib import Path
@@ -108,15 +110,19 @@ def config():
             return jsonify(
                 {
                     "success": True,
-                    "message": f"تم حفظ مفتاح {provider.upper()} بنجاح! ✅",
+                    "message": gettext(f"تم حفظ مفتاح {provider.upper()} بنجاح! ✅"),
                     "provider": provider,
-                    "expires_in": "24 ساعة" if provider == "groq" else "حسب اشتراكك",
+                    "expires_in": gettext("24 ساعة")
+                    if provider == "groq"
+                    else gettext("حسب اشتراكك"),
                 }
             )
 
         except Exception:
             current_app.logger.exception("Failed to save AI API key")
-            return jsonify({"success": False, "message": "تعذر حفظ إعدادات AI حالياً"})
+            return jsonify(
+                {"success": False, "message": gettext("تعذر حفظ إعدادات AI حالياً")}
+            )
 
     current_groq = os.environ.get("GROQ_API_KEY", "")
     current_openai = os.environ.get("OPENAI_API_KEY", "")
@@ -141,10 +147,12 @@ def upload_excel():
             current_app.config.get("MAX_CONTENT_LENGTH") or (16 * 1024 * 1024)
         )
         if request.content_length and request.content_length > max_bytes:
-            return jsonify({"success": False, "error": "حجم الملف كبير جداً"}), 413
+            return jsonify(
+                {"success": False, "error": gettext("حجم الملف كبير جداً")}
+            ), 413
 
         if "file" not in request.files:
-            return jsonify({"success": False, "error": "لم يتم رفع ملف"}), 400
+            return jsonify({"success": False, "error": gettext("لم يتم رفع ملف")}), 400
 
         file = request.files["file"]
         warehouse_id = request.form.get("warehouse_id", type=int)
@@ -164,14 +172,16 @@ def upload_excel():
 
         filename = secure_filename(file.filename or "")
         if not filename:
-            return jsonify({"success": False, "error": "لم يتم اختيار ملف"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("لم يتم اختيار ملف")}
+            ), 400
 
         if not filename.lower().endswith((".xlsx", ".xls")):
             return (
                 jsonify(
                     {
                         "success": False,
-                        "error": "الملف يجب أن يكون Excel (.xlsx أو .xls)",
+                        "error": gettext("الملف يجب أن يكون Excel (.xlsx أو .xls)"),
                     }
                 ),
                 400,
@@ -181,7 +191,9 @@ def upload_excel():
         file_size = file.stream.tell()
         file.stream.seek(0)
         if file_size > max_bytes:
-            return jsonify({"success": False, "error": "حجم الملف كبير جداً"}), 413
+            return jsonify(
+                {"success": False, "error": gettext("حجم الملف كبير جداً")}
+            ), 413
 
         result = _process_excel_intelligently(file, warehouse_id, current_user)
 
@@ -189,7 +201,9 @@ def upload_excel():
 
     except Exception as e:
         return (
-            jsonify({"success": False, "error": f"خطأ في معالجة الملف: {str(e)}"}),
+            jsonify(
+                {"success": False, "error": gettext(f"خطأ في معالجة الملف: {str(e)}")}
+            ),
             500,
         )
 
@@ -207,12 +221,17 @@ def _process_excel_intelligently(file, warehouse_id, user):
         if not column_mapping:
             return {
                 "success": False,
-                "error": "لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر",
+                "error": gettext(
+                    "لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر"
+                ),
             }
 
         warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tid).first()
         if not warehouse:
-            return {"success": False, "error": f"المستودع #{warehouse_id} غير موجود"}
+            return {
+                "success": False,
+                "error": gettext(f"المستودع #{warehouse_id} غير موجود"),
+            }
 
         products_created = 0
         products_updated = 0
@@ -275,7 +294,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                         products_created += 1
 
                 except Exception as e:
-                    errors.append(f"السطر {cast(int, index) + 2}: {str(e)}")
+                    errors.append(gettext(f"السطر {cast(int, index) + 2}: {str(e)}"))
 
         _train_ai_from_excel(df, products_created, products_updated, user.id)
 
@@ -293,7 +312,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
 🧠 المصدر: GROQ + المحلي - معالج ذكي خارق"""
 
         if errors and len(errors) > 0:
-            message += f"\n\n⚠️ تفاصيل الأخطاء:\n{error_details}"
+            message += gettext(f"\n\n⚠️ تفاصيل الأخطاء:\n{error_details}")
 
         return {
             "success": True,
@@ -307,26 +326,51 @@ def _process_excel_intelligently(file, warehouse_id, user):
         }
 
     except Exception as e:
-        return {"success": False, "error": f"خطأ في المعالجة: {str(e)}"}
+        return {"success": False, "error": gettext(f"خطأ في المعالجة: {str(e)}")}
 
 
 def _intelligent_column_detector(df):
     """كاشف ذكي لأعمدة Excel - يفهم أي تسمية"""
     column_mapping = {}
 
-    name_keywords = ["اسم", "name", "product", "منتج", "item", "description", "وصف"]
-    part_keywords = ["رقم", "part", "code", "كود", "sku", "id", "reference", "مرجع"]
+    name_keywords = [
+        gettext("اسم"),
+        "name",
+        "product",
+        gettext("منتج"),
+        "item",
+        "description",
+        gettext("وصف"),
+    ]
+    part_keywords = [
+        gettext("رقم"),
+        "part",
+        "code",
+        gettext("كود"),
+        "sku",
+        "id",
+        "reference",
+        gettext("مرجع"),
+    ]
     price_keywords = [
-        "سعر",
+        gettext("سعر"),
         "price",
         "cost",
-        "تكلفة",
+        gettext("تكلفة"),
         "value",
-        "قيمة",
+        gettext("قيمة"),
         "amount",
-        "مبلغ",
+        gettext("مبلغ"),
     ]
-    quantity_keywords = ["كمية", "qty", "quantity", "stock", "مخزون", "عدد", "count"]
+    quantity_keywords = [
+        gettext("كمية"),
+        "qty",
+        "quantity",
+        "stock",
+        gettext("مخزون"),
+        gettext("عدد"),
+        "count",
+    ]
 
     columns_lower = [str(col).lower() for col in df.columns]
 
@@ -365,8 +409,6 @@ def _train_ai_from_excel(df, created, updated, user_id):
             "columns": list(df.columns),
             "sample_data": df.head(5).to_dict(),
         }
-
-        # learning_system.learn_from_user_data(learning_data)  # تعطيل مؤقت
 
     except Exception as e:
         print(f"AI training from Excel failed: {e}")

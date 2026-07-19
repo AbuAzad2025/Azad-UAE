@@ -3,6 +3,8 @@ Printing Routes — Unified Professional Printing
 طباعة احترافية مع دعم PDF ومعاينة وطباعة جماعية
 """
 
+from flask_babel import gettext
+
 from io import BytesIO
 
 from flask import (
@@ -68,7 +70,7 @@ def print_document(doc_type, **kwargs):
         return render_template("errors/404.html"), 404
 
     if not current_user.has_permission(entry["permission"]):
-        flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
+        flash(gettext("ليس لديك صلاحية للوصول لهذه الصفحة"), "danger")
         return render_template("errors/403.html"), 403
 
     tid = get_active_tenant_id(current_user)
@@ -110,7 +112,7 @@ def print_document_pdf(doc_type, **kwargs):
         return render_template("errors/404.html"), 404
 
     if not current_user.has_permission(entry["permission"]):
-        flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
+        flash(gettext("ليس لديك صلاحية للوصول لهذه الصفحة"), "danger")
         return render_template("errors/403.html"), 403
 
     tid = get_active_tenant_id(current_user)
@@ -367,7 +369,7 @@ def print_settings():
         settings.show_terms = request.form.get("show_terms") == "on"
         with atomic_transaction("print_settings"):
             pass
-        flash("تم حفظ إعدادات الطباعة", "success")
+        flash(gettext("تم حفظ إعدادات الطباعة"), "success")
         return redirect(url_for("printing.print_settings"))
 
     return render_template("printing/settings.html", settings=settings)

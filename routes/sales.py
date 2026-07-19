@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -191,13 +192,15 @@ def create():
             sales_rep_id = request.form.get("sales_rep_id", type=int)
             coupon_code = request.form.get("coupon_code", "").strip()
             if coupon_code:
-                notes = (notes or "") + f"\n[كوبون] {coupon_code}"
+                notes = (notes or "") + gettext(f"\n[كوبون] {coupon_code}")
             if exchange_rate_manual and exchange_rate_server and user_exchange_rate:
                 if user_exchange_rate < exchange_rate_server:
                     diff_pct = (
                         exchange_rate_diff if exchange_rate_diff is not None else 0
                     )
-                    audit_note = f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {diff_pct:.2f}%)"
+                    audit_note = gettext(
+                        f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {diff_pct:.2f}%)"
+                    )
                     notes = (notes or "") + audit_note
 
             payment_amount = request.form.get("payment_amount", type=float, default=0)
@@ -219,7 +222,6 @@ def create():
                 else None
             )
 
-            # قراءة warehouse_id من النموذج
             warehouse_id = request.form.get("warehouse_id", type=int)
             ensure_warehouse_access(warehouse_id, user=current_user)
 
@@ -241,20 +243,21 @@ def create():
 
             LoggingCore.log_audit("create", "sales", sale.id)
 
-            flash("✅ تم إنشاء الفاتورة بنجاح!", "success")
+            flash(gettext("✅ تم إنشاء الفاتورة بنجاح!"), "success")
             return redirect(url_for("sales.view", id=sale.id))
 
         except ValueError as e:
-            # رسالة الخطأ من SaleService (مثل: insufficient stock)
             current_app.logger.warning(f"ValueError creating sale: {e}")
-            flash(f"⚠️ {str(e)}\n💡 تحقق من الكميات المتوفرة في المخزون.", "danger")
+            flash(
+                gettext(f"⚠️ {str(e)}\n💡 تحقق من الكميات المتوفرة في المخزون."),
+                "danger",
+            )
         except Exception as e:
             from utils.error_messages import ErrorMessages
 
             current_app.logger.error(f"Error creating sale: {e}")
             flash(ErrorMessages.database_error(), "danger")
 
-    # تحميل المستودعات للقالب
     tid = get_active_tenant_id(current_user)
     if tid:
         warehouses = StoreService.get_physical_warehouses(tid, user=current_user)
@@ -293,7 +296,7 @@ def view(**kwargs):
     if current_user.is_seller() and sale.seller_id != current_user.id:
         from utils.error_messages import ErrorMessages
 
-        flash(ErrorMessages.permission_denied("عرض هذه الفاتورة"), "danger")
+        flash(ErrorMessages.permission_denied(gettext("عرض هذه الفاتورة")), "danger")
         return redirect(url_for("sales.index"))
 
     return render_template("sales/view.html", sale=sale)
@@ -314,7 +317,7 @@ def print_invoice(**kwargs):
     if current_user.is_seller() and sale.seller_id != current_user.id:
         from utils.error_messages import ErrorMessages
 
-        flash(ErrorMessages.permission_denied("طباعة هذه الفاتورة"), "danger")
+        flash(ErrorMessages.permission_denied(gettext("طباعة هذه الفاتورة")), "danger")
         return redirect(url_for("sales.index"))
 
     from config import Config
@@ -378,13 +381,11 @@ def print_invoice(**kwargs):
                 }
             )
 
-    # استخدام القالب النشط من الإعدادات
     template = (
         settings.active_template if settings and settings.active_template else "modern"
     )
     template_path = f"invoices/{template}.html"
 
-    # التحقق من وجود القالب، وإلا استخدام القالب الافتراضي
     try:
         return render_template(
             template_path,
@@ -429,17 +430,20 @@ def edit(**kwargs):
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
 
-    # منع التعديل للفواتير المدفوعة أو الملغاة أو المؤكدة/المنفذة مخزنياً
     if sale.payment_status == "paid":
         flash(
-            "⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً.",
+            gettext(
+                "⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً."
+            ),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
 
     if sale.status == "cancelled":
         flash(
-            "⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك.",
+            gettext(
+                "⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك."
+            ),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
@@ -452,11 +456,9 @@ def edit(**kwargs):
         try:
             with atomic_transaction("sale_update"):
                 if has_gl:
-                    # للفواتير المنفذة مخزنياً: السماح فقط بتعديل الملاحظات (لا تغيير في المبالغ المالية)
                     sale.notes = request.form.get("notes", sale.notes)
                     LoggingCore.log_audit("update", "sales", record_id)
                 else:
-                    # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
                     sale.notes = request.form.get("notes", "")
                     discount_amount = max(
                         0,
@@ -465,11 +467,13 @@ def edit(**kwargs):
                     sale.discount_amount = discount_amount
                     sale.calculate_totals()
                     LoggingCore.log_audit("update", "sales", record_id)
-            flash("✅ تم تحديث الفاتورة بنجاح!", "success")
+            flash(gettext("✅ تم تحديث الفاتورة بنجاح!"), "success")
             return redirect(url_for("sales.view", id=record_id))
 
         except Exception as e:
-            flash(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة.", "danger")
+            flash(
+                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة."), "danger"
+            )
 
     return render_template("sales/edit.html", sale=sale)
 
@@ -482,7 +486,7 @@ def cancel(**kwargs):
     if current_user.is_seller():
         from utils.error_messages import ErrorMessages
 
-        flash(ErrorMessages.permission_denied("إلغاء الفواتير"), "danger")
+        flash(ErrorMessages.permission_denied(gettext("إلغاء الفواتير")), "danger")
         return redirect(url_for("sales.index"))
 
     sale = tenant_get_or_404(Sale, record_id)
@@ -497,11 +501,13 @@ def cancel(**kwargs):
             SaleService.cancel_sale(sale)
             LoggingCore.log_audit("cancel", "sales", sale.id)
 
-        flash("✅ تم إلغاء الفاتورة بنجاح!", "success")
+        flash(gettext("✅ تم إلغاء الفاتورة بنجاح!"), "success")
 
     except Exception as e:
         flash(
-            f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+            gettext(
+                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+            ),
             "danger",
         )
 
@@ -537,7 +543,7 @@ def api_get_price():
                 float(product.cost_price) if current_user.can_see_costs() else None
             ),
             "current_stock": float(current_stock),
-            "unit": product.unit or "بلا",
+            "unit": product.unit or gettext("بلا"),
         }
     )
 
@@ -604,7 +610,7 @@ def delete(**kwargs):
     if not current_user.is_owner:
         from utils.error_messages import ErrorMessages
 
-        flash(ErrorMessages.permission_denied("حذف الفواتير"), "danger")
+        flash(ErrorMessages.permission_denied(gettext("حذف الفواتير")), "danger")
         return redirect(url_for("sales.index"))
 
     from services.archive_service import ArchiveService
@@ -618,25 +624,23 @@ def delete(**kwargs):
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
 
-    # منع الحذف المادي للفواتير المؤكدة أو المنفذة مخزنياً — استخدم الإلغاء بدلاً من الحذف
     if sale.status == "confirmed" or SaleService.has_inventory_posted(sale):
         flash(
-            "⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف.",
+            gettext(
+                "⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف."
+            ),
             "danger",
         )
         return redirect(url_for("sales.view", id=record_id))
 
-    # التحقق من الارتباطات
     has_links = False
 
-    # 1. التحقق من المدفوعات (Payments)
     linked_payments = Payment.query.filter_by(
         sale_id=sale.id, tenant_id=sale.tenant_id
     ).count()
     if linked_payments > 0:
         has_links = True
 
-    # 2. التحقق من الشيكات (Cheques)
     linked_cheques = Cheque.query.filter_by(
         sale_id=sale.id, tenant_id=sale.tenant_id
     ).count()
@@ -661,17 +665,17 @@ def delete(**kwargs):
             )
             archive_service = ArchiveService()
             archive_reason = (
-                "تم أرشفة الفاتورة لوجود ارتباطات مالية"
+                gettext("تم أرشفة الفاتورة لوجود ارتباطات مالية")
                 if has_links
-                else "تم أرشفة الفاتورة"
+                else gettext("تم أرشفة الفاتورة")
             )
             archive_service.archive_record("sales", sale, reason=archive_reason)
             LoggingCore.log_audit("archive", "sales", record_id)
-        flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"', "warning")
+        flash(gettext(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"'), "warning")
         return redirect(url_for("sales.index"))
 
     except Exception as e:
-        flash(f"❌ خطأ في الحذف: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في الحذف: {str(e)}"), "danger")
         return redirect(url_for("sales.index"))
 
 
@@ -697,11 +701,11 @@ def archive(**kwargs):
                 SaleService.cancel_sale(sale)
             archive_service = ArchiveService()
             archive_service.archive_record(
-                "sales", sale, reason="تم أرشفة فاتورة المبيعات"
+                "sales", sale, reason=gettext("تم أرشفة فاتورة المبيعات")
             )
             LoggingCore.log_audit("archive", "sales", sale.id)
     except Exception as e:
-        flash(f"❌ خطأ في الأرشفة: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في الأرشفة: {str(e)}"), "danger")
 
     return redirect(url_for("sales.index"))
 
@@ -727,13 +731,9 @@ def restore(**kwargs):
             db.session.delete(archived_record)
             LoggingCore.log_audit("restore", "sales", record_id)
     except Exception as e:
-        flash(f"❌ حدث خطأ في استعادة الفاتورة: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ في استعادة الفاتورة: {str(e)}"), "danger")
 
     return redirect(url_for("sales.archived"))
-
-
-# =====================================
-# =====================================
 
 
 @sales_bp.route("/api/calculate-totals", methods=["POST"])
@@ -757,7 +757,6 @@ def api_calculate_sale_totals():
 
         tax_rate = normalize_tax_rate(tax_rate)
 
-        # حساب المجموع الفرعي
         subtotal = Decimal("0")
         for line in lines:
             try:
@@ -773,7 +772,6 @@ def api_calculate_sale_totals():
             except (ValueError, TypeError, KeyError, InvalidOperation):
                 continue
 
-        # حساب الإجماليات
         after_discount = subtotal - discount_amount + shipping_cost
         if prices_include_vat:
             if tax_rate > 0:
@@ -830,4 +828,6 @@ def api_calculate_sale_totals():
 
     except Exception:
         current_app.logger.exception("calculate_sale_totals failed")
-        return jsonify({"success": False, "error": "تعذر حساب الإجماليات حالياً"}), 500
+        return jsonify(
+            {"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}
+        ), 500

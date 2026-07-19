@@ -2,6 +2,8 @@
 Language Routes - تبديل اللغة
 """
 
+from flask_babel import gettext
+
 from flask import Blueprint, request, redirect, session, flash
 from utils.safe_redirect import safe_redirect_target
 
@@ -14,7 +16,8 @@ def set_language(lang):
     if lang in ["ar", "en"]:
         session["language"] = lang
         flash(
-            f"تم تغيير اللغة إلى {'العربية' if lang == 'ar' else 'English'}", "success"
+            gettext(f"تم تغيير اللغة إلى {'العربية' if lang == 'ar' else 'English'}"),
+            "success",
         )
 
     next_url = request.args.get("next")

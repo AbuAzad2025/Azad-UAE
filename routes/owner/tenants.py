@@ -1,5 +1,7 @@
 """Tenant management routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     render_template,
     request,
@@ -75,7 +77,7 @@ def tenant_ai():
 def tenant_ai_toggle(tenant_id):
     tenant = db.session.get(Tenant, int(tenant_id))
     if not tenant:
-        flash("التينانت غير موجود.", "warning")
+        flash(gettext("التينانت غير موجود."), "warning")
         return redirect(url_for("owner.tenant_ai"))
 
     enabled = request.form.get("enable_ai") == "1"
@@ -105,11 +107,13 @@ def tenant_ai_toggle(tenant_id):
         )
         _invalidate_owner_changes()
         flash(
-            f"تم {'تفعيل' if enabled else 'إيقاف'} المساعد الذكي للتينانت: {tenant.name_ar or tenant.name}",
+            gettext(
+                f"تم {'تفعيل' if enabled else 'إيقاف'} المساعد الذكي للتينانت: {tenant.name_ar or tenant.name}"
+            ),
             "success",
         )
     except Exception as exc:
-        flash(f"تعذر تحديث إعداد AI: {exc}", "danger")
+        flash(gettext(f"تعذر تحديث إعداد AI: {exc}"), "danger")
     return redirect(url_for("owner.tenant_ai"))
 
 
@@ -122,7 +126,7 @@ def tenant_store_platform_toggle(store_id):
 
     store = db.session.get(TenantStore, int(store_id))
     if not store:
-        flash("المتجر غير موجود.", "warning")
+        flash(gettext("المتجر غير موجود."), "warning")
         return redirect(url_for("owner.tenant_stores"))
 
     disabled = request.form.get("platform_disabled") == "1"
@@ -136,14 +140,16 @@ def tenant_store_platform_toggle(store_id):
         _invalidate_owner_changes()
         flash(
             (
-                "تم تعطيل المتجر من مستوى المنصة. لا يستطيع مالك التينانت تفعيله."
+                gettext(
+                    "تم تعطيل المتجر من مستوى المنصة. لا يستطيع مالك التينانت تفعيله."
+                )
                 if disabled
-                else "تم فك القفل. أصبح التحكم بيد مالك التينانت."
+                else gettext("تم فك القفل. أصبح التحكم بيد مالك التينانت.")
             ),
             "success",
         )
     except Exception as exc:
-        flash(f"تعذر تحديث حالة المتجر: {exc}", "danger")
+        flash(gettext(f"تعذر تحديث حالة المتجر: {exc}"), "danger")
     return redirect(url_for("owner.tenant_stores"))
 
 
@@ -172,14 +178,14 @@ def tenant_create():
             name_en = request.form.get("name_en", "").strip() or name_ar
             slug = request.form.get("slug", "").strip()
             if not name_ar or not slug:
-                flash("الاسم العربي والـ Slug مطلوبان.", "danger")
+                flash(gettext("الاسم العربي والـ Slug مطلوبان."), "danger")
                 return redirect(url_for("owner.tenant_create"))
             default_currency = request.form.get("default_currency", "").strip().upper()
             if not default_currency:
-                flash("يجب اختيار العملة الافتراضية للتينانت.", "danger")
+                flash(gettext("يجب اختيار العملة الافتراضية للتينانت."), "danger")
                 return redirect(url_for("owner.tenant_create"))
             if Tenant.query.filter_by(slug=slug).first():
-                flash("الـ Slug مستخدم مسبقاً.", "danger")
+                flash(gettext("الـ Slug مستخدم مسبقاً."), "danger")
                 return redirect(url_for("owner.tenant_create"))
             tenant = Tenant(
                 name=name_ar,
@@ -233,10 +239,10 @@ def tenant_create():
             _audit_owner_db_action(
                 "tenant_create", {"tenant_id": tenant.id, "slug": slug}
             )
-            flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', "success")
+            flash(gettext(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.'), "success")
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
-            flash(f"خطأ في إنشاء التينانت: {str(e)}", "danger")
+            flash(gettext(f"خطأ في إنشاء التينانت: {str(e)}"), "danger")
     return render_template("owner/tenant_create.html")
 
 
@@ -249,7 +255,7 @@ def tenant_suspend(tenant_id):
 
     # Protect default tenant (id==1) from suspension
     if tenant.id == 1:
-        flash("⚠️ لا يمكن تعليق التينانت الرئيسي.", "danger")
+        flash(gettext("⚠️ لا يمكن تعليق التينانت الرئيسي."), "danger")
         return redirect(url_for("owner.tenants_list"))
 
     try:
@@ -259,11 +265,14 @@ def tenant_suspend(tenant_id):
             tenant.suspension_reason = reason or "Suspended by owner"
             tenant.updated_at = datetime.now(timezone.utc)
     except Exception as e:
-        flash(f"خطأ في تعليق التينانت: {str(e)}", "danger")
+        flash(gettext(f"خطأ في تعليق التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_suspend", {"tenant_id": tenant_id, "reason": reason})
-    flash(f'تم تعليق التينانت "{tenant.name_ar or tenant.name}" بنجاح.', "success")
+    flash(
+        gettext(f'تم تعليق التينانت "{tenant.name_ar or tenant.name}" بنجاح.'),
+        "success",
+    )
     return redirect(url_for("owner.tenants_list"))
 
 
@@ -280,11 +289,14 @@ def tenant_activate(tenant_id):
             tenant.suspension_reason = None
             tenant.updated_at = datetime.now(timezone.utc)
     except Exception as e:
-        flash(f"خطأ في تفعيل التينانت: {str(e)}", "danger")
+        flash(gettext(f"خطأ في تفعيل التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_activate", {"tenant_id": tenant_id})
-    flash(f'تم تفعيل التينانت "{tenant.name_ar or tenant.name}" بنجاح.', "success")
+    flash(
+        gettext(f'تم تفعيل التينانت "{tenant.name_ar or tenant.name}" بنجاح.'),
+        "success",
+    )
     return redirect(url_for("owner.tenants_list"))
 
 
@@ -368,10 +380,13 @@ def tenant_edit(tenant_id):
                 tenant.updated_at = datetime.now(timezone.utc)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
-            flash(f'تم تحديث بيانات التينانت "{tenant.name_ar}" بنجاح.', "success")
+            flash(
+                gettext(f'تم تحديث بيانات التينانت "{tenant.name_ar}" بنجاح.'),
+                "success",
+            )
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
-            flash(f"خطأ في تحديث التينانت: {str(e)}", "danger")
+            flash(gettext(f"خطأ في تحديث التينانت: {str(e)}"), "danger")
 
     return render_template("owner/tenant_edit.html", tenant=tenant)
 
@@ -384,14 +399,16 @@ def tenant_delete(tenant_id):
 
     # Protect default tenant (id==1) from deletion
     if tenant.id == 1:
-        flash("⚠️ لا يمكن حذف التينانت الرئيسي.", "danger")
+        flash(gettext("⚠️ لا يمكن حذف التينانت الرئيسي."), "danger")
         return redirect(url_for("owner.tenants_list"))
 
     # Check for active users
     active_users = User.query.filter_by(tenant_id=tenant_id, is_active=True).count()
     if active_users > 0:
         flash(
-            f"⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق.",
+            gettext(
+                f"⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق."
+            ),
             "warning",
         )
         return redirect(url_for("owner.tenants_list"))
@@ -403,11 +420,13 @@ def tenant_delete(tenant_id):
             tenant.suspension_reason = "Deleted by owner"
             tenant.updated_at = datetime.now(timezone.utc)
     except Exception as e:
-        flash(f"خطأ في حذف التينانت: {str(e)}", "danger")
+        flash(gettext(f"خطأ في حذف التينانت: {str(e)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_soft_delete", {"tenant_id": tenant_id})
-    flash(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.', "success")
+    flash(
+        gettext(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.'), "success"
+    )
     return redirect(url_for("owner.tenants_list"))
 
 
@@ -423,7 +442,12 @@ def api_tenant_toggle_status(tenant_id):
             return jsonify({"success": False, "error": "Tenant not found"}), 404
         if tenant.id == 1:
             return (
-                jsonify({"success": False, "error": "لا يمكن تعطيل التينانت الرئيسي"}),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": gettext("لا يمكن تعطيل التينانت الرئيسي"),
+                    }
+                ),
                 400,
             )
         with atomic_transaction("api_tenant_toggle_status"):
@@ -439,12 +463,14 @@ def api_tenant_toggle_status(tenant_id):
             "api_tenant_toggle_status",
             {"tenant_id": tenant_id, "is_active": tenant.is_active},
         )
-        status_label = "مفعل" if tenant.is_active else "معطل"
+        status_label = gettext("مفعل") if tenant.is_active else gettext("معطل")
         return jsonify(
             {
                 "success": True,
                 "is_active": tenant.is_active,
-                "message": f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح',
+                "message": gettext(
+                    f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح'
+                ),
             }
         )
     except Exception as e:
@@ -491,7 +517,7 @@ def api_tenant_update_package(tenant_id):
         return jsonify(
             {
                 "success": True,
-                "message": f"تم تحديث {field} إلى {value}",
+                "message": gettext(f"تم تحديث {field} إلى {value}"),
             }
         )
     except Exception as e:
@@ -508,7 +534,7 @@ def tenant_extend_subscription(tenant_id):
     try:
         days = int(days_raw)
     except (ValueError, TypeError):
-        flash("عدد الأيام غير صالح.", "danger")
+        flash(gettext("عدد الأيام غير صالح."), "danger")
         return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
 
     explicit_end = (request.form.get("subscription_end") or "").strip() or None
@@ -538,11 +564,13 @@ def tenant_extend_subscription(tenant_id):
             },
         )
         flash(
-            f'تم تحديث اشتراك التينانت "{tenant.name_ar or tenant.name}" بنجاح.',
+            gettext(
+                f'تم تحديث اشتراك التينانت "{tenant.name_ar or tenant.name}" بنجاح.'
+            ),
             "success",
         )
     except Exception as e:
-        flash(f"خطأ في تمديد الاشتراك: {e}", "danger")
+        flash(gettext(f"خطأ في تمديد الاشتراك: {e}"), "danger")
     return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
 
 
@@ -607,7 +635,9 @@ def api_tenant_extend_subscription(tenant_id):
                     else None
                 ),
                 "is_trial": bool(tenant.is_trial),
-                "message": f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'",
+                "message": gettext(
+                    f"تم تحديث اشتراك التينانت '{tenant.name_ar or tenant.name}'"
+                ),
             }
         )
     except Exception as e:

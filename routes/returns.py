@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, request, jsonify, render_template, current_app, abort
 from flask_login import login_required, current_user
 
@@ -117,7 +118,9 @@ def api_create_return():
         )
 
     except ValueError:
-        return jsonify({"success": False, "message": "بيانات المرتجع غير صالحة"}), 400
+        return jsonify(
+            {"success": False, "message": gettext("بيانات المرتجع غير صالحة")}
+        ), 400
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
         return jsonify({"success": False, "message": "Internal server error"}), 500

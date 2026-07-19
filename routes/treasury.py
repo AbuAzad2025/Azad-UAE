@@ -3,6 +3,8 @@ Treasury Routes - مسارات المركز المالي والخزينة
 Phase 8: Treasury & Cash Position Reporting
 """
 
+from flask_babel import gettext
+
 from datetime import datetime
 from extensions import db
 from flask import Blueprint, render_template, request, send_file
@@ -140,7 +142,9 @@ def wps_export():
 
     if not strategy.supports_wps:
         return (
-            render_template("errors/403.html", message="WPS غير متاح لهذه الدولة"),
+            render_template(
+                "errors/403.html", message=gettext("WPS غير متاح لهذه الدولة")
+            ),
             403,
         )
 

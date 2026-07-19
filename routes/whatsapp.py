@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, request, jsonify, flash
 from flask_login import current_user, login_required
 from services.whatsapp_service import WhatsAppService
@@ -29,7 +30,7 @@ def send_invoice(sale_id):
     )
 
     if result["success"]:
-        flash("تم إرسال الفاتورة عبر واتساب بنجاح", "success")
+        flash(gettext("تم إرسال الفاتورة عبر واتساب بنجاح"), "success")
     else:
         from flask import current_app
 
@@ -64,7 +65,7 @@ def send_reminder(customer_id):
     )
 
     if result["success"]:
-        flash("تم إرسال التذكير بنجاح", "success")
+        flash(gettext("تم إرسال التذكير بنجاح"), "success")
     else:
         from flask import current_app
 

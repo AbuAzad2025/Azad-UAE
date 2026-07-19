@@ -1,5 +1,7 @@
 """Chat and quick-query AI routes."""
 
+from flask_babel import gettext
+
 from flask import request, jsonify, Response, stream_with_context, g
 from flask_login import login_required, current_user
 from utils.decorators import permission_required
@@ -78,7 +80,7 @@ def check_stock():
     if alert:
         return jsonify(alert)
 
-    return jsonify({"type": "success", "message": "المخزون كافٍ"})
+    return jsonify({"type": "success", "message": gettext("المخزون كافٍ")})
 
 
 @ai_bp.route("/analyze-customer/<int:customer_id>", methods=["GET"])
@@ -122,7 +124,7 @@ def search_market_price(product_id):
         {
             "success": True,
             "product": product.name,
-            "message": "ميزة البحث العالمي قيد التطوير",
+            "message": gettext("ميزة البحث العالمي قيد التطوير"),
             "suggestions": [],
         }
     )
@@ -142,7 +144,7 @@ def find_compatible(product_id):
         {
             "success": True,
             "product": product.name,
-            "message": "ميزة البحث عن المركبات المتوافقة قيد التطوير",
+            "message": gettext("ميزة البحث عن المركبات المتوافقة قيد التطوير"),
             "compatible_vehicles": [],
         }
     )

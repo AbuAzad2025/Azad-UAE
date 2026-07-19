@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from extensions import db
@@ -40,7 +41,7 @@ def create():
         is_main = request.form.get("is_main") == "on"
 
         if not name or not code:
-            flash("الاسم والكود مطلوبان", "danger")
+            flash(gettext("الاسم والكود مطلوبان"), "danger")
             return redirect(url_for("branches.create"))
 
         # Check tenant branch limit
@@ -53,7 +54,7 @@ def create():
             return redirect(url_for("branches.create"))
 
         if tenant_query(Branch).filter_by(code=code).first():
-            flash("الكود مستخدم مسبقاً", "danger")
+            flash(gettext("الكود مستخدم مسبقاً"), "danger")
             return redirect(url_for("branches.create"))
 
         branch = Branch(
@@ -71,7 +72,7 @@ def create():
             db.session.flush()
             _sync_branch_financial_accounts(branch.tenant_id)
 
-        flash("تم إضافة الفرع بنجاح", "success")
+        flash(gettext("تم إضافة الفرع بنجاح"), "success")
         return redirect(url_for("branches.index"))
 
     return render_template("branches/create.html")
@@ -101,7 +102,7 @@ def edit(**kwargs):
             db.session.flush()
             _sync_branch_financial_accounts(branch.tenant_id)
 
-        flash("تم تحديث الفرع بنجاح", "success")
+        flash(gettext("تم تحديث الفرع بنجاح"), "success")
         return redirect(url_for("branches.index"))
 
     return render_template("branches/edit.html", branch=branch)
@@ -118,12 +119,14 @@ def delete(**kwargs):
     # This is a basic check. In a real system, you might want to soft-delete or strict check.
     if branch.users or branch.warehouses or branch.sales:
         flash(
-            "لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)",
+            gettext(
+                "لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)"
+            ),
             "danger",
         )
         return redirect(url_for("branches.index"))
 
     with atomic_transaction("branch_delete"):
         db.session.delete(branch)
-    flash("تم حذف الفرع بنجاح", "success")
+    flash(gettext("تم حذف الفرع بنجاح"), "success")
     return redirect(url_for("branches.index"))

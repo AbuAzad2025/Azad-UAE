@@ -1,5 +1,7 @@
 """AI learning, improvement, and knowledge management routes."""
 
+from flask_babel import gettext
+
 import logging
 from flask import request, jsonify
 from flask_login import login_required, current_user
@@ -96,7 +98,9 @@ def set_improvement_goal():
         timeframe = data.get("timeframe", "30_days")
 
         if not area or not target_score:
-            return jsonify({"success": False, "error": "المجال والهدف مطلوبان"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("المجال والهدف مطلوبان")}
+            ), 400
 
         result = self_improvement.set_improvement_goal(area, target_score, timeframe)
         return jsonify(result)
@@ -169,7 +173,7 @@ def add_knowledge_website():
         description = data.get("description", "")
 
         if not url:
-            return jsonify({"success": False, "error": "الرابط مطلوب"}), 400
+            return jsonify({"success": False, "error": gettext("الرابط مطلوب")}), 400
 
         result = knowledge_expander.add_website(url, category, description)
         return jsonify(result)
@@ -190,7 +194,9 @@ def add_knowledge_document():
         description = data.get("description", "")
 
         if not content or not title:
-            return jsonify({"success": False, "error": "المحتوى والعنوان مطلوبان"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("المحتوى والعنوان مطلوبان")}
+            ), 400
 
         result = knowledge_expander.add_document(content, title, category, description)
         return jsonify(result)
@@ -208,7 +214,9 @@ def search_knowledge():
         category = request.args.get("category")
 
         if not query:
-            return jsonify({"success": False, "error": "كلمة البحث مطلوبة"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("كلمة البحث مطلوبة")}
+            ), 400
 
         result = knowledge_expander.search_knowledge(query, category)
         return jsonify(result)

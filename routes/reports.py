@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
@@ -311,7 +312,7 @@ def partners():
             merchant_percentage = float(product.merchant_share or 100)
             merchant_amount = total_revenue * (Decimal(merchant_percentage) / 100)
             merchant = product.merchant_customer
-            merchant_name = merchant.name if merchant else "غير محدد"
+            merchant_name = merchant.name if merchant else gettext("غير محدد")
 
             merchants_data.append(
                 {
@@ -645,18 +646,18 @@ def sales_export():
     sales_list = query.order_by(Sale.sale_date.desc()).limit(5000).all()
 
     headers = [
-        "رقم الفاتورة",
-        "تاريخ الفاتورة",
-        "الزبون",
-        "البائع",
-        "الفرع",
-        "المستودع",
-        "العملة",
-        "سعر الصرف",
-        "إجمالي",
-        "مدفوع",
-        "المتبقي",
-        "حالة الدفع",
+        gettext("رقم الفاتورة"),
+        gettext("تاريخ الفاتورة"),
+        gettext("الزبون"),
+        gettext("البائع"),
+        gettext("الفرع"),
+        gettext("المستودع"),
+        gettext("العملة"),
+        gettext("سعر الصرف"),
+        gettext("إجمالي"),
+        gettext("مدفوع"),
+        gettext("المتبقي"),
+        gettext("حالة الدفع"),
     ]
 
     data = []
@@ -858,16 +859,16 @@ def purchases_export():
     purchases_list = query.order_by(Purchase.purchase_date.desc()).limit(5000).all()
 
     headers = [
-        "رقم الفاتورة",
-        "تاريخ الفاتورة",
-        "المورد",
-        "الفرع",
-        "المستودع",
-        "العملة",
-        "سعر الصرف",
-        "الإجمالي",
-        "الإجمالي (عملة الفاتورة)",
-        "الحالة",
+        gettext("رقم الفاتورة"),
+        gettext("تاريخ الفاتورة"),
+        gettext("المورد"),
+        gettext("الفرع"),
+        gettext("المستودع"),
+        gettext("العملة"),
+        gettext("سعر الصرف"),
+        gettext("الإجمالي"),
+        gettext("الإجمالي (عملة الفاتورة)"),
+        gettext("الحالة"),
     ]
 
     data = []
@@ -1242,7 +1243,7 @@ def receivables_export():
 
     def bucket_for(days_old: int) -> str:
         if days_old <= 30:
-            return "حالي (0-30)"
+            return gettext("حالي (0-30)")
         if days_old <= 60:
             return "31-60"
         if days_old <= 90:
@@ -1252,15 +1253,15 @@ def receivables_export():
         return "+120"
 
     headers = [
-        "الفئة",
-        "رقم الفاتورة",
-        "تاريخ الفاتورة",
-        "العمر (يوم)",
-        "الزبون",
-        "الفرع",
-        "العملة",
-        "سعر الصرف",
-        "الرصيد المستحق",
+        gettext("الفئة"),
+        gettext("رقم الفاتورة"),
+        gettext("تاريخ الفاتورة"),
+        gettext("العمر (يوم)"),
+        gettext("الزبون"),
+        gettext("الفرع"),
+        gettext("العملة"),
+        gettext("سعر الصرف"),
+        gettext("الرصيد المستحق"),
     ]
 
     data = []
@@ -1580,7 +1581,7 @@ def inventory_export():
         warehouse_label = selected_warehouse.name_ar or selected_warehouse.name
     elif warehouses:
         warehouse_ids = [w.id for w in warehouses]
-        warehouse_label = "متعدد"
+        warehouse_label = gettext("متعدد")
     else:
         warehouse_ids = [-1]
         warehouse_label = ""
@@ -1651,17 +1652,17 @@ def inventory_export():
     products = query.order_by(Product.name).all()
 
     headers = [
-        "المنتج",
+        gettext("المنتج"),
         "SKU",
         "Barcode",
-        "المستودع",
-        "الكمية المتاحة",
-        "إدخال (حسب التاريخ)",
-        "إخراج (حسب التاريخ)",
-        "مباع (حسب التاريخ)",
-        "سعر التكلفة",
-        "سعر البيع",
-        "قيمة المخزون (تكلفة)",
+        gettext("المستودع"),
+        gettext("الكمية المتاحة"),
+        gettext("إدخال (حسب التاريخ)"),
+        gettext("إخراج (حسب التاريخ)"),
+        gettext("مباع (حسب التاريخ)"),
+        gettext("سعر التكلفة"),
+        gettext("سعر البيع"),
+        gettext("قيمة المخزون (تكلفة)"),
     ]
 
     data = []
@@ -1866,7 +1867,7 @@ def entity_report_fragment(entity_type, **kwargs):
             ):
                 return render_template("errors/403.html"), 403
             context["entity"] = entity
-            context["type_label"] = "مورد"
+            context["type_label"] = gettext("مورد")
 
             # Products (Purchased)
             p_lines = (
@@ -1912,7 +1913,6 @@ def entity_report_fragment(entity_type, **kwargs):
                 purchases, key=lambda p: (p.purchase_date or datetime.min, p.id or 0)
             )
 
-            # مدفوعات المورد الأساسية
             supplier_payments_base = Payment.query.filter(
                 Payment.supplier_id == record_id,
                 Payment.direction == "outgoing",
@@ -1927,7 +1927,6 @@ def entity_report_fragment(entity_type, **kwargs):
                     Payment.branch_id == scoped_branch_id
                 )
 
-            # هل توجد مدفوعات مرتبطة مباشرة بفواتير محددة؟
             direct_payments = supplier_payments_base.filter(
                 Payment.purchase_id.isnot(None)
             ).all()
@@ -1937,7 +1936,6 @@ def entity_report_fragment(entity_type, **kwargs):
             has_direct_allocation = len(direct_payments) > 0
 
             if has_direct_allocation:
-                # التوزيع الفعلي (purchase_id لكل دفعة)
                 paid_map = {}
                 for pymt in direct_payments:
                     pid = pymt.purchase_id
@@ -1945,12 +1943,10 @@ def entity_report_fragment(entity_type, **kwargs):
                         paid_map[pid] = paid_map.get(pid, Decimal("0")) + Decimal(
                             str(pymt.amount_aed or 0)
                         )
-                # رصيد مورد غير موزع (مدفوعات بدون purchase_id)
                 unallocated_credit = sum(
                     Decimal(str(p.amount_aed or 0)) for p in unallocated_payments
                 )
             else:
-                # توزيع FIFO تقديري على مستوى المورد (كل المدفوعات غير موزعة)
                 total_paid_fifo = Decimal(
                     str(
                         supplier_payments_base.with_entities(
@@ -2004,7 +2000,7 @@ def entity_report_fragment(entity_type, **kwargs):
 
             # Balance
             context["balance"] = total_purchases_amount - total_payments_amount
-            context["balance_label"] = "مستحق للمورد"
+            context["balance_label"] = gettext("مستحق للمورد")
             context["transactions"] = [
                 {
                     "number": p.payment_number,
@@ -2028,11 +2024,11 @@ def entity_report_fragment(entity_type, **kwargs):
                 return render_template("errors/403.html"), 403
             context["entity"] = entity
             context["type_label"] = {
-                "partner": "شريك",
-                "merchant": "تاجر",
-                "regular": "زبون",
+                "partner": gettext("شريك"),
+                "merchant": gettext("تاجر"),
+                "regular": gettext("زبون"),
                 "vip": "VIP",
-            }.get(entity.customer_type, "زبون")
+            }.get(entity.customer_type, gettext("زبون"))
 
             # Balance calculation (Receivables/Payables)
             # Sales (He took goods) + Payments Out (He took money) - Receipts (He gave money)
@@ -2077,10 +2073,10 @@ def entity_report_fragment(entity_type, **kwargs):
             context["balance"] = (
                 total_sales + total_payments_to
             ) - total_receipts  # Positive means they owe us
-            context["balance_label"] = "مستحق لنا"
+            context["balance_label"] = gettext("مستحق لنا")
             if context["balance"] < 0:
                 context["balance"] = abs(context["balance"])
-                context["balance_label"] = "مستحق للعميل"
+                context["balance_label"] = gettext("مستحق للعميل")
 
             # Products (Sold) - Products the customer BOUGHT
             s_lines = (
@@ -2247,7 +2243,7 @@ def entity_report_fragment(entity_type, **kwargs):
                         "date": r.receipt_date,
                         "amount": r.amount_aed,
                         "method": r.payment_method,
-                        "notes": "قبض",
+                        "notes": gettext("قبض"),
                     }
                 )
             for p in payments_out:
@@ -2258,7 +2254,7 @@ def entity_report_fragment(entity_type, **kwargs):
                         "date": p.payment_date,
                         "amount": p.amount_aed,
                         "method": p.payment_method,
-                        "notes": p.notes or "دفع",
+                        "notes": p.notes or gettext("دفع"),
                     }
                 )
 

@@ -1,5 +1,7 @@
 """Settings, configuration, and communication routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from decimal import Decimal
 from routes.owner import (
     render_template,
@@ -56,15 +58,12 @@ def integrations():
 def update_integration(service):
     """تحديث إعدادات التكامل - حفظ حقيقي في قاعدة البيانات"""
     try:
-        # الحصول على أو إنشاء سجل الخدمة
         integration = IntegrationSettings.get_service_config(service)
 
-        # تحديث enabled
         integration.enabled = (
             request.form.get("enabled") == "true" or request.form.get("enabled") == "1"
         )
 
-        # بناء config_data حسب نوع الخدمة
         config_data = {}
 
         if service == "whatsapp":
@@ -102,16 +101,15 @@ def update_integration(service):
                 "update_frequency": request.form.get("update_frequency", "daily"),
             }
 
-        # حفظ الإعدادات
         with atomic_transaction("update_integration"):
             integration.set_config(config_data)
             integration.updated_by = current_user.id
             integration.updated_at = datetime.now(timezone.utc)
         _invalidate_owner_changes()
-        flash(f"✅ تم حفظ إعدادات {service} بنجاح!", "success")
+        flash(gettext(f"✅ تم حفظ إعدادات {service} بنجاح!"), "success")
 
     except Exception as e:
-        flash(f"❌ خطأ في حفظ الإعدادات: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في حفظ الإعدادات: {str(e)}"), "danger")
         current_app.logger.error(f"Error saving integration {service}: {e}")
 
     return redirect(url_for("owner.integrations"))
@@ -199,7 +197,6 @@ def company_info():
 
                 tenant.updated_by = current_user.id
 
-                # مزامنة اسم الشركة مع إعدادات الفواتير حتى يظهر في الترويسات وصفحة الدخول من مصدر واحد
                 try:
                     inv = InvoiceSettings.get_active()
                     if inv:
@@ -217,11 +214,11 @@ def company_info():
                 except Exception as exc:
                     logger.debug("sync invoice from tenant: %s", exc)
             _invalidate_owner_changes()
-            flash("تم حفظ معلومات الشركة بنجاح", "success")
+            flash(gettext("تم حفظ معلومات الشركة بنجاح"), "success")
             return redirect(url_for("owner.company_info"))
 
         except Exception as e:
-            flash(f"خطأ في حفظ المعلومات: {str(e)}", "error")
+            flash(gettext(f"خطأ في حفظ المعلومات: {str(e)}"), "error")
 
     return render_template("owner/company_info.html", tenant=tenant)
 
@@ -265,10 +262,10 @@ def developer_settings():
                 )
                 settings.updated_by = current_user.id
             _invalidate_owner_changes()
-            flash("تم حفظ إعدادات الشركة المطورة بنجاح", "success")
+            flash(gettext("تم حفظ إعدادات الشركة المطورة بنجاح"), "success")
             return redirect(url_for("owner.developer_settings"))
         except Exception as e:
-            flash(f"خطأ في الحفظ: {str(e)}", "error")
+            flash(gettext(f"خطأ في الحفظ: {str(e)}"), "error")
     return render_template(
         "owner/developer_settings.html", dev=dev, config=current_app.config
     )
@@ -361,11 +358,11 @@ def system_config():
 
                 settings.updated_by = current_user.id
             _invalidate_owner_changes()
-            flash("تم حفظ إعدادات النظام بنجاح", "success")
+            flash(gettext("تم حفظ إعدادات النظام بنجاح"), "success")
             return redirect(url_for("owner.system_config"))
 
         except Exception as e:
-            flash(f"خطأ في حفظ الإعدادات: {str(e)}", "error")
+            flash(gettext(f"خطأ في حفظ الإعدادات: {str(e)}"), "error")
 
     return render_template("owner/system_config.html", settings=settings)
 
@@ -406,12 +403,12 @@ def store_payment_method_create():
                 }
             )
             _invalidate_owner_changes()
-            flash("تمت إضافة طريقة الدفع.", "success")
+            flash(gettext("تمت إضافة طريقة الدفع."), "success")
             return redirect(url_for("owner.store_payment_methods"))
         except ValueError as exc:
             flash(str(exc), "warning")
         except Exception as exc:
-            flash(f"خطأ: {exc}", "danger")
+            flash(gettext(f"خطأ: {exc}"), "danger")
     return render_template("owner/store_payment_method_form.html", method=None)
 
 
@@ -423,7 +420,7 @@ def store_payment_method_edit(method_id):
 
     method = db.session.get(StorePaymentMethod, int(method_id))
     if not method:
-        flash("طريقة الدفع غير موجودة.", "warning")
+        flash(gettext("طريقة الدفع غير موجودة."), "warning")
         return redirect(url_for("owner.store_payment_methods"))
     if request.method == "POST":
         try:
@@ -446,12 +443,12 @@ def store_payment_method_edit(method_id):
                 },
             )
             _invalidate_owner_changes()
-            flash("تم تحديث طريقة الدفع.", "success")
+            flash(gettext("تم تحديث طريقة الدفع."), "success")
             return redirect(url_for("owner.store_payment_methods"))
         except ValueError as exc:
             flash(str(exc), "warning")
         except Exception as exc:
-            flash(f"خطأ: {exc}", "danger")
+            flash(gettext(f"خطأ: {exc}"), "danger")
     return render_template("owner/store_payment_method_form.html", method=method)
 
 
@@ -464,7 +461,7 @@ def store_payment_method_toggle(method_id):
         enabled = request.form.get("is_enabled") == "1"
         StorePaymentMethodService.toggle_enabled(method_id, enabled)
         _invalidate_owner_changes()
-        flash("تم تحديث حالة طريقة الدفع.", "success")
+        flash(gettext("تم تحديث حالة طريقة الدفع."), "success")
     except ValueError as exc:
         flash(str(exc), "warning")
     return redirect(url_for("owner.store_payment_methods"))
@@ -478,11 +475,11 @@ def store_payment_method_delete(method_id):
     try:
         StorePaymentMethodService.delete_method(method_id)
         _invalidate_owner_changes()
-        flash("تم حذف طريقة الدفع.", "success")
+        flash(gettext("تم حذف طريقة الدفع."), "success")
     except ValueError as exc:
         flash(str(exc), "warning")
     except Exception as exc:
-        flash(f"خطأ: {exc}", "danger")
+        flash(gettext(f"خطأ: {exc}"), "danger")
     return redirect(url_for("owner.store_payment_methods"))
 
 
@@ -640,11 +637,11 @@ def invoice_settings():
 
                 settings.updated_by = current_user.id
             _invalidate_owner_changes()
-            flash("تم حفظ إعدادات الترويسات بنجاح", "success")
+            flash(gettext("تم حفظ إعدادات الترويسات بنجاح"), "success")
             return redirect(url_for("owner.invoice_settings"))
 
         except Exception as e:
-            flash(f"خطأ في حفظ الإعدادات: {str(e)}", "error")
+            flash(gettext(f"خطأ في حفظ الإعدادات: {str(e)}"), "error")
 
     return render_template("owner/invoice_settings.html", settings=settings)
 
@@ -676,25 +673,25 @@ def preview_invoice(template):
 
     # Sample data for preview
     class SampleCustomer:
-        name = "عميل تجريبي"
+        name = gettext("عميل تجريبي")
         phone = "0501234567"
         email = "customer@example.com"
-        address = "دبي - الإمارات العربية المتحدة"
+        address = gettext("دبي - الإمارات العربية المتحدة")
 
     class SampleSeller:
-        full_name = "البائع التجريبي"
+        full_name = gettext("البائع التجريبي")
         username = "seller"
 
         def get_display_name(self, lang="ar"):
             return self.full_name
 
     class SampleBranch:
-        name = "الفرع الرئيسي"
+        name = gettext("الفرع الرئيسي")
         code = "BR01"
-        address = "دبي - شارع الشيخ زايد"
+        address = gettext("دبي - شارع الشيخ زايد")
 
     class SampleProduct:
-        name = "منتج تجريبي"
+        name = gettext("منتج تجريبي")
 
     class SampleLine:
         def __init__(self, name, qty, price, discount=0):
@@ -712,7 +709,7 @@ def preview_invoice(template):
             self.payment_method = "cheque"
             self.cheque_number = "123456"
             self.cheque_date = datetime.now().date()
-            self.bank_name = "بنك الإمارات دبي الوطني"
+            self.bank_name = gettext("بنك الإمارات دبي الوطني")
             self.reference_number = "REF-001"
 
     class SampleSale:
@@ -721,9 +718,9 @@ def preview_invoice(template):
         customer = SampleCustomer()
         seller = SampleSeller()
         lines = [
-            SampleLine("زيت محرك سينثتك 5W-30", 5, 120, 10),
-            SampleLine("فلتر هواء أصلي", 2, 85, 5),
-            SampleLine("فلتر زيت", 3, 45, 0),
+            SampleLine(gettext("زيت محرك سينثتك 5W-30"), 5, 120, 10),
+            SampleLine(gettext("فلتر هواء أصلي"), 2, 85, 5),
+            SampleLine(gettext("فلتر زيت"), 3, 45, 0),
         ]
         subtotal = Decimal("925.00")
         discount_amount = Decimal("25.00")
@@ -732,7 +729,7 @@ def preview_invoice(template):
         tax_amount = Decimal("47.50")
         total_amount = Decimal("997.50")
         currency = default_currency
-        notes = "فاتورة تجريبية للمعاينة"
+        notes = gettext("فاتورة تجريبية للمعاينة")
         payments = [SamplePayment()]
 
     sample_sale = SampleSale()
@@ -752,7 +749,7 @@ def preview_invoice(template):
                 "co": (
                     settings.company_name_ar
                     if settings and settings.company_name_ar
-                    else "نظام المحاسبة"
+                    else gettext("نظام المحاسبة")
                 ),
                 "u": sample_user_name,
                 "b": SampleBranch.name,
@@ -800,22 +797,22 @@ def preview_receipt(template):
 
     # Sample data for preview
     class SampleCustomer:
-        name = "عميل تجريبي"
+        name = gettext("عميل تجريبي")
         phone = "0501234567"
         email = "customer@example.com"
-        address = "دبي - الإمارات"
+        address = gettext("دبي - الإمارات")
 
     class SampleUser:
-        full_name = "المحصل التجريبي"
+        full_name = gettext("المحصل التجريبي")
         username = "collector"
 
         def get_display_name(self, lang="ar"):
             return self.full_name
 
     class SampleBranch:
-        name = "الفرع الرئيسي"
+        name = gettext("الفرع الرئيسي")
         code = "BR01"
-        address = "دبي - شارع الشيخ زايد"
+        address = gettext("دبي - شارع الشيخ زايد")
 
     class SampleSale:
         sale_number = "S-2025-0001"
@@ -839,9 +836,9 @@ def preview_receipt(template):
         payment_method = "cheque"
         cheque_number = "789456"
         cheque_date = datetime.now().date()
-        bank_name = "بنك الإمارات دبي الوطني"
+        bank_name = gettext("بنك الإمارات دبي الوطني")
         reference_number = "REF-2025-001"
-        notes = "تسديد ذمم فواتير سابقة - دفعة من مبيعات شهر أكتوبر 2025"
+        notes = gettext("تسديد ذمم فواتير سابقة - دفعة من مبيعات شهر أكتوبر 2025")
         allocations = [
             SampleAllocation("S-2025-0001", "800.00"),
             SampleAllocation("S-2025-0002", "700.00"),
@@ -850,7 +847,7 @@ def preview_receipt(template):
         @staticmethod
         def get_source_info():
             return {
-                "type": "فاتورة",
+                "type": gettext("فاتورة"),
                 "number": "S-2025-0001",
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "id": 1,
@@ -873,7 +870,7 @@ def preview_receipt(template):
                 "co": (
                     settings.company_name_ar
                     if settings and settings.company_name_ar
-                    else "نظام المحاسبة"
+                    else gettext("نظام المحاسبة")
                 ),
                 "u": sample_user_name,
                 "b": SampleBranch.name,
@@ -903,7 +900,7 @@ def tax_settings():
 
     tenant = Tenant.get_current()
     if not tenant:
-        flash("لا توجد شركة نشطة.", "danger")
+        flash(gettext("لا توجد شركة نشطة."), "danger")
         return redirect(url_for("owner.dashboard"))
 
     if request.method == "POST":
@@ -924,10 +921,10 @@ def tax_settings():
                     request.form.get("tax_number") or ""
                 ).strip() or tenant.tax_number
         except Exception as e:
-            flash(f"خطأ في حفظ إعدادات الضرائب: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ إعدادات الضرائب: {str(e)}"), "danger")
             return redirect(url_for("owner.tax_settings"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات الضرائب للشركة الحالية", "success")
+        flash(gettext("✅ تم تحديث إعدادات الضرائب للشركة الحالية"), "success")
         return redirect(url_for("owner.tax_settings"))
 
     return render_template(
@@ -960,10 +957,10 @@ def currency_settings():
                     request.form.get("auto_update_rates") == "on"
                 )
         except Exception as e:
-            flash(f"خطأ في حفظ إعدادات العملات: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ إعدادات العملات: {str(e)}"), "danger")
             return redirect(url_for("owner.currency_settings"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات العملات", "success")
+        flash(gettext("✅ تم تحديث إعدادات العملات"), "success")
         return redirect(url_for("owner.currency_settings"))
 
     settings = SystemSettings.get_current()
@@ -1008,11 +1005,13 @@ def exchange_rates():
                     created_by=current_user.id,
                 )
                 if result.get("ok"):
-                    flash("✅ تم حفظ سعر الصرف بنجاح!", "success")
+                    flash(gettext("✅ تم حفظ سعر الصرف بنجاح!"), "success")
                 else:
-                    flash(f"❌ خطأ: {result.get('error', 'unknown')}", "danger")
+                    flash(
+                        gettext(f"❌ خطأ: {result.get('error', 'unknown')}"), "danger"
+                    )
             else:
-                flash("⚠️ أدخل سعر صرف صالح أكبر من صفر.", "warning")
+                flash(gettext("⚠️ أدخل سعر صرف صالح أكبر من صفر."), "warning")
 
         elif action == "delete":
             record_id = request.form.get("record_id", type=int)
@@ -1023,9 +1022,9 @@ def exchange_rates():
                 if rec:
                     with atomic_transaction("exchange_rate_delete"):
                         db.session.delete(rec)
-                    flash("✅ تم حذف السجل.", "success")
+                    flash(gettext("✅ تم حذف السجل."), "success")
                 else:
-                    flash("⚠️ السجل غير موجود أو لا يخصك.", "warning")
+                    flash(gettext("⚠️ السجل غير موجود أو لا يخصك."), "warning")
 
         return redirect(url_for("owner.exchange_rates"))
 
@@ -1071,7 +1070,7 @@ def payment_gateways():
             vault.paypal_client_secret = request.form.get("paypal_client_secret")
             vault.nowpayments_api_key = request.form.get("nowpayments_api_key")
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات بوابات الدفع", "success")
+        flash(gettext("✅ تم تحديث إعدادات بوابات الدفع"), "success")
         return redirect(url_for("owner.payment_gateways"))
 
     return render_template("owner/payment_gateways.html", vault=vault)
@@ -1092,10 +1091,10 @@ def email_settings():
                 settings.smtp_use_tls = request.form.get("smtp_use_tls") == "on"
                 settings.email_from = request.form.get("email_from")
         except Exception as e:
-            flash(f"خطأ في حفظ إعدادات البريد: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ إعدادات البريد: {str(e)}"), "danger")
             return redirect(url_for("owner.email_settings"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات البريد الإلكتروني", "success")
+        flash(gettext("✅ تم تحديث إعدادات البريد الإلكتروني"), "success")
         return redirect(url_for("owner.email_settings"))
 
     settings = SystemSettings.get_current()
@@ -1117,10 +1116,10 @@ def sms_settings():
                 settings.sms_sender_name = request.form.get("sms_sender_name")
                 settings.sms_enabled = request.form.get("sms_enabled") == "on"
         except Exception as e:
-            flash(f"خطأ في حفظ إعدادات الرسائل النصية: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ إعدادات الرسائل النصية: {str(e)}"), "danger")
             return redirect(url_for("owner.sms_settings"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات الرسائل النصية", "success")
+        flash(gettext("✅ تم تحديث إعدادات الرسائل النصية"), "success")
         return redirect(url_for("owner.sms_settings"))
 
     settings = SystemSettings.get_current()
@@ -1143,10 +1142,10 @@ def whatsapp_settings():
                 )
                 settings.whatsapp_enabled = request.form.get("whatsapp_enabled") == "on"
         except Exception as e:
-            flash(f"خطأ في حفظ إعدادات واتساب: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ إعدادات واتساب: {str(e)}"), "danger")
             return redirect(url_for("owner.whatsapp_settings"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث إعدادات واتساب", "success")
+        flash(gettext("✅ تم تحديث إعدادات واتساب"), "success")
         return redirect(url_for("owner.whatsapp_settings"))
 
     settings = SystemSettings.get_current()
@@ -1170,10 +1169,10 @@ def notification_templates():
 
                 settings.notification_templates = templates
         except Exception as e:
-            flash(f"خطأ في حفظ قوالب الإشعارات: {str(e)}", "danger")
+            flash(gettext(f"خطأ في حفظ قوالب الإشعارات: {str(e)}"), "danger")
             return redirect(url_for("owner.notification_templates"))
         _invalidate_owner_changes()
-        flash("✅ تم تحديث قوالب الإشعارات", "success")
+        flash(gettext("✅ تم تحديث قوالب الإشعارات"), "success")
         return redirect(url_for("owner.notification_templates"))
 
     settings = SystemSettings.get_current()
@@ -1221,7 +1220,7 @@ def api_update_tenant_settings():
         _audit_owner_db_action(
             "api_update_tenant_settings", {"field": field, "tenant_id": tenant.id}
         )
-        return jsonify({"success": True, "message": f"تم تحديث {field} بنجاح"})
+        return jsonify({"success": True, "message": gettext(f"تم تحديث {field} بنجاح")})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -1275,20 +1274,29 @@ def api_supervisor_override():
         if not supervisor_id or not password:
             return (
                 jsonify(
-                    {"success": False, "error": "معرّف المشرف وكلمة المرور مطلوبان"}
+                    {
+                        "success": False,
+                        "error": gettext("معرّف المشرف وكلمة المرور مطلوبان"),
+                    }
                 ),
                 400,
             )
         supervisor = db.session.get(User, supervisor_id)
         if not supervisor or not supervisor.is_active:
             return (
-                jsonify({"success": False, "error": "المشرف غير موجود أو غير نشط"}),
+                jsonify(
+                    {"success": False, "error": gettext("المشرف غير موجود أو غير نشط")}
+                ),
                 404,
             )
         if not supervisor.is_manager() and not supervisor.is_admin():
-            return jsonify({"success": False, "error": "المستخدم ليس مشرفاً"}), 403
+            return jsonify(
+                {"success": False, "error": gettext("المستخدم ليس مشرفاً")}
+            ), 403
         if not supervisor.check_password(password):
-            return jsonify({"success": False, "error": "كلمة المرور غير صحيحة"}), 403
+            return jsonify(
+                {"success": False, "error": gettext("كلمة المرور غير صحيحة")}
+            ), 403
         LoggingCore.log_audit(
             "supervisor_override",
             "system",
@@ -1302,7 +1310,7 @@ def api_supervisor_override():
         return jsonify(
             {
                 "success": True,
-                "message": "تم تفويض المشرف بنجاح",
+                "message": gettext("تم تفويض المشرف بنجاح"),
                 "supervisor_username": supervisor.username,
             }
         )

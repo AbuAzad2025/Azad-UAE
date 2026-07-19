@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from datetime import datetime, timezone
 from decimal import Decimal
 from flask import (
@@ -375,7 +376,9 @@ def my_profile_update():
                         User.tenant_id == user.tenant_id,
                     ).first()
                     if existing:
-                        flash("⚠️ هذا البريد الإلكتروني مستخدم من قبل.", "warning")
+                        flash(
+                            gettext("⚠️ هذا البريد الإلكتروني مستخدم من قبل."), "warning"
+                        )
                         return redirect(url_for("main.my_profile"))
                     user.email = email
 
@@ -390,15 +393,15 @@ def my_profile_update():
 
             if new_password:
                 if not current_password:
-                    flash("⚠️ يجب إدخال كلمة المرور الحالية.", "warning")
+                    flash(gettext("⚠️ يجب إدخال كلمة المرور الحالية."), "warning")
                     return redirect(url_for("main.my_profile"))
 
                 if not check_password_hash(user.password_hash, current_password):
-                    flash("❌ كلمة المرور الحالية غير صحيحة.", "danger")
+                    flash(gettext("❌ كلمة المرور الحالية غير صحيحة."), "danger")
                     return redirect(url_for("main.my_profile"))
 
                 if new_password != confirm_password:
-                    flash("❌ كلمة المرور الجديدة غير متطابقة.", "danger")
+                    flash(gettext("❌ كلمة المرور الجديدة غير متطابقة."), "danger")
                     return redirect(url_for("main.my_profile"))
 
                 from utils.password_validator import PasswordValidator
@@ -413,17 +416,17 @@ def my_profile_update():
                 user.password_hash = generate_password_hash(
                     new_password, method="pbkdf2:sha256"
                 )
-                flash("✅ تم تغيير كلمة المرور بنجاح.", "success")
+                flash(gettext("✅ تم تغيير كلمة المرور بنجاح."), "success")
 
         if new_password:
             from utils.session_security import rotate_session
 
             rotate_session()
-        flash("✅ تم تحديث البيانات بنجاح.", "success")
+        flash(gettext("✅ تم تحديث البيانات بنجاح."), "success")
 
     except Exception as e:
         current_app.logger.error(f"My profile update error: {e}")
-        flash(f"❌ خطأ في التحديث: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في التحديث: {str(e)}"), "danger")
 
     return redirect(url_for("main.my_profile"))
 

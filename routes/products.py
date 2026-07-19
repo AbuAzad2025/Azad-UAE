@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from io import BytesIO
 from typing import cast
 
@@ -70,12 +71,12 @@ def _tenant_category_or_404(category_id):
 
 def _category_payload(data):
     if not data:
-        return None, None, None, "بيانات غير صحيحة"
+        return None, None, None, gettext("بيانات غير صحيحة")
     name = (data.get("name") or "").strip()
     name_ar = (data.get("name_ar") or "").strip() or None
     description = (data.get("description") or "").strip() or None
     if not name:
-        return None, None, None, "⚠️ يجب إدخال اسم الفئة."
+        return None, None, None, gettext("⚠️ يجب إدخال اسم الفئة.")
     return name, name_ar, description, None
 
 
@@ -124,12 +125,12 @@ def _category_to_json(category):
 
 def _parse_category_payload(data):
     if not data:
-        return None, None, None, "بيانات غير صحيحة"
+        return None, None, None, gettext("بيانات غير صحيحة")
     name = (data.get("name") or "").strip()
     name_ar = (data.get("name_ar") or "").strip() or None
     description = (data.get("description") or "").strip() or None
     if not name:
-        return None, None, None, "⚠️ يجب إدخال اسم الفئة."
+        return None, None, None, gettext("⚠️ يجب إدخال اسم الفئة.")
     return name, name_ar, description, None
 
 
@@ -137,20 +138,22 @@ def _validate_product_create_payload(form, *, warehouse_id, initial_stock, cost_
     """Server-side rules aligned with the create form legend."""
     errors = []
     if not (request.form.get("name") or "").strip():
-        errors.append("يرجى إدخال اسم المنتج باللغة الإنجليزية.")
+        errors.append(gettext("يرجى إدخال اسم المنتج باللغة الإنجليزية."))
     if form.regular_price.data is None:
-        errors.append("يرجى تحديد سعر البيع للمنتج.")
+        errors.append(gettext("يرجى تحديد سعر البيع للمنتج."))
     elif form.regular_price.data < 0:
-        errors.append("سعر البيع يجب أن يكون صفراً أو أكثر.")
+        errors.append(gettext("سعر البيع يجب أن يكون صفراً أو أكثر."))
     if not warehouse_id:
-        errors.append("يرجى اختيار المستودع الذي سيتم تخزين المنتج فيه.")
+        errors.append(gettext("يرجى اختيار المستودع الذي سيتم تخزين المنتج فيه."))
     if initial_stock < 0:
-        errors.append("المخزون الافتتاحي لا يمكن أن يكون سالباً.")
+        errors.append(gettext("المخزون الافتتاحي لا يمكن أن يكون سالباً."))
     has_positive_stock = initial_stock > 0
     missing_cost = cost_price <= 0
     if has_positive_stock and missing_cost:
         errors.append(
-            "عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي."
+            gettext(
+                "عند إدخال مخزون افتتاحي، يجب تحديد سعر التكلفة (أكبر من صفر) لإتمام التسجيل المحاسبي."
+            )
         )
     return errors
 
@@ -208,7 +211,7 @@ def require_float(value):
     try:
         return float(value)
     except (ValueError, TypeError):
-        raise ValueError("قيمة رقمية غير صحيحة")
+        raise ValueError(gettext("قيمة رقمية غير صحيحة"))
 
 
 def _parse_product_partners(form):
@@ -231,36 +234,36 @@ def _parse_product_partners(form):
             continue
 
         if not partner_id_raw or not percentage_raw:
-            return None, "⚠️ يرجى اختيار الشريك وإدخال نسبته في كل سطر."
+            return None, gettext("⚠️ يرجى اختيار الشريك وإدخال نسبته في كل سطر.")
 
         try:
             partner_id = int(partner_id_raw)
         except Exception:
-            return None, "⚠️ الشريك المحدد غير صالح."
+            return None, gettext("⚠️ الشريك المحدد غير صالح.")
 
         try:
             percentage = float(percentage_raw)
         except Exception:
-            return None, "⚠️ نسبة الشريك غير صحيحة."
+            return None, gettext("⚠️ نسبة الشريك غير صحيحة.")
 
         if percentage <= 0 or percentage > 100:
-            return None, "⚠️ نسبة الشريك يجب أن تكون بين 0 و 100."
+            return None, gettext("⚠️ نسبة الشريك يجب أن تكون بين 0 و 100.")
 
         if partner_id in seen_partner_ids:
-            return None, "⚠️ لا يمكن تكرار نفس الشريك أكثر من مرة لنفس المنتج."
+            return None, gettext("⚠️ لا يمكن تكرار نفس الشريك أكثر من مرة لنفس المنتج.")
 
         partner_customer = (
             _scoped_customers_query("partner").filter(Customer.id == partner_id).first()
         )
         if not partner_customer:
-            return None, "⚠️ الشريك المحدد غير موجود أو غير مُعرّف كـ شريك."
+            return None, gettext("⚠️ الشريك المحدد غير موجود أو غير مُعرّف كـ شريك.")
 
         seen_partner_ids.add(partner_id)
         total += percentage
         partners.append({"partner_customer_id": partner_id, "percentage": percentage})
 
     if total > 100.000001:
-        return None, "⚠️ مجموع نسب الشركاء لا يمكن أن يتجاوز 100%."
+        return None, gettext("⚠️ مجموع نسب الشركاء لا يمكن أن يتجاوز 100%.")
 
     return partners, None
 
@@ -346,15 +349,15 @@ def download_import_template():
 
         df = pd.DataFrame(
             columns=[
-                "اسم المنتج",
-                "السعر",
-                "التكلفة",
-                "الكمية",
+                gettext("اسم المنتج"),
+                gettext("السعر"),
+                gettext("التكلفة"),
+                gettext("الكمية"),
                 "SKU",
-                "الباركود",
-                "الوصف",
-                "التصنيف",
-                "مدة الكفالة",
+                gettext("الباركود"),
+                gettext("الوصف"),
+                gettext("التصنيف"),
+                gettext("مدة الكفالة"),
             ]
         )
         df.loc[0] = ["", 0, 0, 0, "", "", "", "", 0]
@@ -390,13 +393,16 @@ def import_products():
 
     if request.method == "POST":
         if "file" not in request.files:
-            flash("لم يتم اختيار ملف، يرجى اختيار ملف الإكسل أو CSV أولاً.", "warning")
+            flash(
+                gettext("لم يتم اختيار ملف، يرجى اختيار ملف الإكسل أو CSV أولاً."),
+                "warning",
+            )
             return redirect(request.url)
 
         file = request.files["file"]
         if file.filename == "":
             flash(
-                "لم يتم اختيار ملف صالح، يرجى اختيار ملف الإكسل أو CSV أولاً.",
+                gettext("لم يتم اختيار ملف صالح، يرجى اختيار ملف الإكسل أو CSV أولاً."),
                 "warning",
             )
             return redirect(request.url)
@@ -408,7 +414,10 @@ def import_products():
 
                 ext = os.path.splitext(secure_filename(file.filename or ""))[1].lower()
                 if ext not in (".csv", ".xlsx", ".xls"):
-                    flash("نوع الملف غير مدعوم. ندعم فقط ملفات Excel و CSV.", "warning")
+                    flash(
+                        gettext("نوع الملف غير مدعوم. ندعم فقط ملفات Excel و CSV."),
+                        "warning",
+                    )
                     return redirect(request.url)
                 filename = f"import_{uuid.uuid4().hex}{ext}"
                 filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
@@ -428,25 +437,27 @@ def import_products():
 
                 # Mapping Arabic headers to English if needed
                 column_map = {
-                    "اسم المنتج": "name",
-                    "السعر": "price",
-                    "سعر البيع": "price",
-                    "التكلفة": "cost",
-                    "الكمية": "stock",
-                    "المخزون": "stock",
-                    "الباركود": "barcode",
+                    gettext("اسم المنتج"): "name",
+                    gettext("السعر"): "price",
+                    gettext("سعر البيع"): "price",
+                    gettext("التكلفة"): "cost",
+                    gettext("الكمية"): "stock",
+                    gettext("المخزون"): "stock",
+                    gettext("الباركود"): "barcode",
                     "sku": "sku",
-                    "الوصف": "description",
-                    "التصنيف": "category",
-                    "الكفالة": "warranty",
-                    "مدة الكفالة": "warranty",
+                    gettext("الوصف"): "description",
+                    gettext("التصنيف"): "category",
+                    gettext("الكفالة"): "warranty",
+                    gettext("مدة الكفالة"): "warranty",
                 }
                 df.rename(columns=column_map, inplace=True)
 
                 # Validate minimal columns
                 if not {"name", "price"}.issubset(df.columns):
                     flash(
-                        "الملف يفتقد للأعمدة المطلوبة: اسم المنتج وسعر البيع. تأكد من أن الملف يحتوي على هذه الأعمدة.",
+                        gettext(
+                            "الملف يفتقد للأعمدة المطلوبة: اسم المنتج وسعر البيع. تأكد من أن الملف يحتوي على هذه الأعمدة."
+                        ),
                         "warning",
                     )
                     return redirect(request.url)
@@ -526,7 +537,9 @@ def import_products():
                                 else:
                                     error_count += 1
                                     errors.append(
-                                        f"المنتج {name} موجود مسبقاً (SKU: {sku})"
+                                        gettext(
+                                            f"المنتج {name} موجود مسبقاً (SKU: {sku})"
+                                        )
                                     )
                                 continue
 
@@ -569,7 +582,7 @@ def import_products():
                                 StockService.add_opening_stock(
                                     product_id=new_product.id,
                                     quantity=stock,
-                                    notes="مخزون افتتاحي من استيراد ملف",
+                                    notes=gettext("مخزون افتتاحي من استيراد ملف"),
                                     warehouse_id=warehouse.id if warehouse else None,
                                 )
 
@@ -578,15 +591,19 @@ def import_products():
                         except Exception as e:
                             error_count += 1
                             errors.append(
-                                f"خطأ في السطر {cast(int, index) + 2}: {str(e)}"
+                                gettext(
+                                    f"خطأ في السطر {cast(int, index) + 2}: {str(e)}"
+                                )
                             )
 
                 if success_count > 0:
-                    flash(f"تم استيراد {success_count} منتج بنجاح.", "success")
+                    flash(gettext(f"تم استيراد {success_count} منتج بنجاح."), "success")
 
                 if error_count > 0:
                     flash(
-                        f"لم يتم استيراد {error_count} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى.",
+                        gettext(
+                            f"لم يتم استيراد {error_count} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى."
+                        ),
                         "warning",
                     )
                     # Could log errors to file/session to show user
@@ -595,7 +612,9 @@ def import_products():
 
             except Exception as e:
                 flash(
-                    "حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة.",
+                    gettext(
+                        "حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."
+                    ),
                     "danger",
                 )
                 current_app.logger.error(f"Import Failed: {e}")
@@ -669,7 +688,7 @@ def import_grid():
                     StockService.add_opening_stock(
                         product_id=new_product.id,
                         quantity=stock,
-                        notes="مخزون افتتاحي من إدخال سريع",
+                        notes=gettext("مخزون افتتاحي من إدخال سريع"),
                         warehouse_id=warehouse.id if warehouse else None,
                     )
 
@@ -679,9 +698,12 @@ def import_grid():
                 current_app.logger.error(f"Grid Import Error: {e}")
 
     if count > 0:
-        flash(f"تم إضافة {count} منتج بنجاح.", "success")
+        flash(gettext(f"تم إضافة {count} منتج بنجاح."), "success")
     if errors > 0:
-        flash(f"حدث خطأ في {errors} صف أثناء الإضافة. يرجى مراجعة البيانات.", "warning")
+        flash(
+            gettext(f"حدث خطأ في {errors} صف أثناء الإضافة. يرجى مراجعة البيانات."),
+            "warning",
+        )
 
     return redirect(url_for("products.index"))
 
@@ -778,11 +800,12 @@ def create():
 
     form = ProductForm()
 
-    # تعيين choices للتصنيفات
     category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
-    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in category_list]
+    form.category_id.choices = [(0, gettext("بلا"))] + [
+        (c.id, c.name) for c in category_list
+    ]
     preselected_warehouse_id = request.args.get("warehouse_id", type=int)
     default_industry = _tenant_business_type_default()
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
@@ -823,7 +846,9 @@ def create():
                     warehouse = ensure_warehouse_access(warehouse_id, user=current_user)
                 except ValueError:
                     flash(
-                        "المستودع المحدد غير صالح أو غير متاح لك. يرجى اختيار مستودع من القائمة.",
+                        gettext(
+                            "المستودع المحدد غير صالح أو غير متاح لك. يرجى اختيار مستودع من القائمة."
+                        ),
                         "warning",
                     )
                     warehouses = get_accessible_warehouses(current_user)
@@ -848,7 +873,10 @@ def create():
                         .first()
                     )
                     if not merchant_customer:
-                        flash("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.", "warning")
+                        flash(
+                            gettext("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر."),
+                            "warning",
+                        )
                     warehouses = get_accessible_warehouses(current_user)
                     partners_json = [{"id": p.id, "name": p.name} for p in partners]
                     return render_template(
@@ -986,14 +1014,18 @@ def create():
                         StockService.add_opening_stock(
                             product_id=product.id,
                             quantity=initial_stock,
-                            notes=f"مخزون افتتاحي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}",
+                            notes=gettext(
+                                f"مخزون افتتاحي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}"
+                            ),
                             warehouse_id=warehouse_id,
                         )
 
                 LoggingCore.log_audit("create", "products", product.id)
 
                 flash(
-                    f'✓ تم إضافة المنتج "{product.name}" بنجاح إلى المستودع "{warehouse.name_ar or warehouse.name}"',
+                    gettext(
+                        f'✓ تم إضافة المنتج "{product.name}" بنجاح إلى المستودع "{warehouse.name_ar or warehouse.name}"'
+                    ),
                     "success",
                 )
                 return redirect(url_for("products.index"))
@@ -1001,7 +1033,9 @@ def create():
             except Exception as e:
                 current_app.logger.error(f"Error creating product: {str(e)}")
                 flash(
-                    f"❌ فشل إضافة المنتج: {str(e)}\n💡 تأكد من:\n   • اسم المنتج فريد\n   • الأسعار صحيحة\n   • SKU غير مكرر",
+                    gettext(
+                        f"❌ فشل إضافة المنتج: {str(e)}\n💡 تأكد من:\n   • اسم المنتج فريد\n   • الأسعار صحيحة\n   • SKU غير مكرر"
+                    ),
                     "danger",
                 )
         else:
@@ -1009,9 +1043,8 @@ def create():
             current_app.logger.warning(f"Form validation failed. Errors: {form.errors}")
             for field, errors in form.errors.items():
                 for error in errors:
-                    flash(f"⚠️ خطأ في حقل {field}: {error}", "danger")
+                    flash(gettext(f"⚠️ خطأ في حقل {field}: {error}"), "danger")
 
-    # GET request - إرسال البيانات للقالب
     category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
@@ -1068,11 +1101,12 @@ def edit(**kwargs):
 
     form = ProductForm(obj=product)
 
-    # تعيين choices للتصنيفات
     category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
     ).all()
-    form.category_id.choices = [(0, "بلا")] + [(c.id, c.name) for c in category_list]
+    form.category_id.choices = [(0, gettext("بلا"))] + [
+        (c.id, c.name) for c in category_list
+    ]
     warehouses = get_accessible_warehouses(current_user)
     merchants = _scoped_customers_query("merchant").order_by(Customer.name).all()
     partners = _scoped_customers_query("partner").order_by(Customer.name).all()
@@ -1099,7 +1133,7 @@ def edit(**kwargs):
             new_stock = safe_float(request.form.get("current_stock"), default=old_stock)
 
             if new_stock is not None and new_stock < 0:
-                flash("⚠️ لا يمكن أن تكون الكمية أقل من صفر.", "warning")
+                flash(gettext("⚠️ لا يمكن أن تكون الكمية أقل من صفر."), "warning")
                 return render_template(
                     "products/edit.html",
                     form=form,
@@ -1120,7 +1154,10 @@ def edit(**kwargs):
                     .first()
                 )
                 if not merchant_customer:
-                    flash("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر.", "warning")
+                    flash(
+                        gettext("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر."),
+                        "warning",
+                    )
                     return render_template(
                         "products/edit.html",
                         form=form,
@@ -1196,13 +1233,17 @@ def edit(**kwargs):
                                 jsonify(
                                     {
                                         "success": False,
-                                        "error": "لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.",
+                                        "error": gettext(
+                                            "لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."
+                                        ),
                                     }
                                 ),
                                 400,
                             )
                         flash(
-                            "⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.",
+                            gettext(
+                                "⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً."
+                            ),
                             "warning",
                         )
                         return render_template(
@@ -1217,7 +1258,10 @@ def edit(**kwargs):
                     product.cost_price = new_cost
 
             if partner_rows and not product.tenant_id:
-                flash("⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.", "warning")
+                flash(
+                    gettext("⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج."),
+                    "warning",
+                )
                 return render_template(
                     "products/edit.html",
                     form=form,
@@ -1237,10 +1281,10 @@ def edit(**kwargs):
                             id=row["partner_customer_id"], tenant_id=product_tid
                         ).first()
                         if not partner_customer:
-                            raise ValueError("الشريك المحدد غير موجود.")
+                            raise ValueError(gettext("الشريك المحدد غير موجود."))
                         p_tid = getattr(partner_customer, "tenant_id", None)
                         if p_tid is not None and int(p_tid or 0) != product_tid:
-                            raise ValueError("الشريك المحدد ينتمي لشركة أخرى.")
+                            raise ValueError(gettext("الشريك المحدد ينتمي لشركة أخرى."))
                         product.partner_shares.append(
                             ProductPartner(
                                 product_id=product.id,
@@ -1279,12 +1323,14 @@ def edit(**kwargs):
                 if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
                     if scoped_branch_id is not None and not warehouse_id:
                         raise ValueError(
-                            "يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع."
+                            gettext(
+                                "يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع."
+                            )
                         )
                     StockService.adjust_stock(
                         product_id=product.id,
                         quantity=new_stock - old_stock,
-                        notes=f"تعديل مخزون من {old_stock} إلى {new_stock}",
+                        notes=gettext(f"تعديل مخزون من {old_stock} إلى {new_stock}"),
                         warehouse_id=warehouse_id,
                         reference_type=GLRef.PRODUCT_UPDATE,
                         reference_id=product.id,
@@ -1301,11 +1347,11 @@ def edit(**kwargs):
 
             LoggingCore.log_audit("update", "products", product.id)
 
-            flash("✅ تم تحديث بيانات المنتج بنجاح!", "success")
+            flash(gettext("✅ تم تحديث بيانات المنتج بنجاح!"), "success")
             return redirect(url_for("products.view", id=product.id))
 
         except Exception as e:
-            flash(f"❌ فشل تحديث المنتج: {str(e)}", "danger")
+            flash(gettext(f"❌ فشل تحديث المنتج: {str(e)}"), "danger")
 
     category_list = ProductCategory.query.filter_by(
         is_active=True, tenant_id=get_active_tenant_id(current_user)
@@ -1340,7 +1386,9 @@ def delete(**kwargs):
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         if _wants_json():
-            return jsonify({"success": False, "error": "المنتج خارج النطاق"}), 403
+            return jsonify(
+                {"success": False, "error": gettext("المنتج خارج النطاق")}
+            ), 403
         return render_template("errors/403.html"), 403
 
     try:
@@ -1353,12 +1401,17 @@ def delete(**kwargs):
                     jsonify(
                         {
                             "success": False,
-                            "error": "لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً.",
+                            "error": gettext(
+                                "لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."
+                            ),
                         }
                     ),
                     400,
                 )
-            flash("⚠️ لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً.", "warning")
+            flash(
+                gettext("⚠️ لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً."),
+                "warning",
+            )
             return redirect(url_for("products.view", id=record_id))
 
         from models import SaleLine, PurchaseLine
@@ -1385,11 +1438,15 @@ def delete(**kwargs):
                 return jsonify(
                     {
                         "success": True,
-                        "message": f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).',
+                        "message": gettext(
+                            f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'
+                        ),
                     }
                 )
             flash(
-                f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.',
+                gettext(
+                    f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.'
+                ),
                 "warning",
             )
         else:
@@ -1397,10 +1454,10 @@ def delete(**kwargs):
                 return jsonify(
                     {
                         "success": True,
-                        "message": f'تم حذف المنتج "{product.name}" نهائياً!',
+                        "message": gettext(f'تم حذف المنتج "{product.name}" نهائياً!'),
                     }
                 )
-            flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', "success")
+            flash(gettext(f'✅ تم حذف المنتج "{product.name}" نهائياً!'), "success")
 
         return redirect(url_for("products.index"))
 
@@ -1409,11 +1466,14 @@ def delete(**kwargs):
         if _wants_json():
             return (
                 jsonify(
-                    {"success": False, "error": "فشل حذف المنتج. حدث خطأ غير متوقع."}
+                    {
+                        "success": False,
+                        "error": gettext("فشل حذف المنتج. حدث خطأ غير متوقع."),
+                    }
                 ),
                 500,
             )
-        flash("❌ فشل حذف المنتج. حدث خطأ غير متوقع.", "danger")
+        flash(gettext("❌ فشل حذف المنتج. حدث خطأ غير متوقع."), "danger")
         return redirect(url_for("products.view", id=record_id))
 
 
@@ -1487,10 +1547,11 @@ def categories():
 @permission_required("manage_products")
 def create_category():
     try:
-        # دعم JSON و Form Data
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify({"success": False, "error": "بيانات غير صحيحة"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("بيانات غير صحيحة")}
+            ), 400
 
         name, name_ar, description, err = _category_payload(data)
         if err:
@@ -1502,7 +1563,7 @@ def create_category():
 
         tid = get_active_tenant_id(current_user)
         if _category_name_taken(tid, name):
-            message = "⚠️ هذه الفئة موجودة مسبقاً."
+            message = gettext("⚠️ هذه الفئة موجودة مسبقاً.")
             if request.is_json:
                 return jsonify({"success": False, "error": message}), 400
             flash(message, "warning")
@@ -1523,19 +1584,19 @@ def create_category():
             return jsonify(
                 {
                     "success": True,
-                    "message": "تم إضافة الفئة بنجاح",
+                    "message": gettext("تم إضافة الفئة بنجاح"),
                     "category": _category_json(category),
                 }
             )
 
-        flash("✅ تم إضافة التصنيف بنجاح!", "success")
+        flash(gettext("✅ تم إضافة التصنيف بنجاح!"), "success")
         return redirect(url_for("products.categories"))
 
     except Exception as e:
         if request.is_json:
             return jsonify({"success": False, "error": str(e)}), 400
 
-        flash(f"❌ حدث خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
 
 
@@ -1557,7 +1618,9 @@ def update_category(**kwargs):
         category = _tenant_category_or_404(record_id)
         data = request.get_json(silent=True) if request.is_json else dict(request.form)
         if request.is_json and data is None:
-            return jsonify({"success": False, "error": "بيانات غير صحيحة"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("بيانات غير صحيحة")}
+            ), 400
 
         name, name_ar, description, err = _category_payload(data)
         if err:
@@ -1568,7 +1631,7 @@ def update_category(**kwargs):
 
         tid = get_active_tenant_id(current_user)
         if _category_name_taken(tid, name, exclude_id=category.id):
-            message = "⚠️ هذه الفئة موجودة مسبقاً."
+            message = gettext("⚠️ هذه الفئة موجودة مسبقاً.")
             if request.is_json:
                 return jsonify({"success": False, "error": message}), 400
             flash(message, "warning")
@@ -1584,16 +1647,16 @@ def update_category(**kwargs):
             return jsonify(
                 {
                     "success": True,
-                    "message": "تم تحديث الفئة بنجاح",
+                    "message": gettext("تم تحديث الفئة بنجاح"),
                     "category": _category_json(category),
                 }
             )
-        flash("✅ تم تحديث الفئة بنجاح!", "success")
+        flash(gettext("✅ تم تحديث الفئة بنجاح!"), "success")
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
             return jsonify({"success": False, "error": str(e)}), 400
-        flash(f"❌ حدث خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
 
 
@@ -1610,7 +1673,9 @@ def delete_category(**kwargs):
             category_id=category.id,
         ).count()
         if product_count > 0:
-            message = f"⚠️ لا يمكن حذف الفئة لأنها مرتبطة بـ {product_count} منتج. انقل المنتجات لفئة أخرى أولاً."
+            message = gettext(
+                f"⚠️ لا يمكن حذف الفئة لأنها مرتبطة بـ {product_count} منتج. انقل المنتجات لفئة أخرى أولاً."
+            )
             if request.is_json:
                 return (
                     jsonify(
@@ -1630,13 +1695,13 @@ def delete_category(**kwargs):
         LoggingCore.log_audit("delete", "product_categories", category.id)
 
         if request.is_json:
-            return jsonify({"success": True, "message": "تم حذف الفئة بنجاح"})
-        flash("✅ تم حذف الفئة بنجاح!", "success")
+            return jsonify({"success": True, "message": gettext("تم حذف الفئة بنجاح")})
+        flash(gettext("✅ تم حذف الفئة بنجاح!"), "success")
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
             return jsonify({"success": False, "error": str(e)}), 400
-        flash(f"❌ حدث خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("products.categories"))
 
 
@@ -1690,7 +1755,9 @@ def adjust_stock(**kwargs):
     product = tenant_get_or_404(Product, record_id)
     if not _ensure_product_scope(product):
         return (
-            jsonify({"success": False, "message": "المنتج خارج نطاق الفرع الحالي"}),
+            jsonify(
+                {"success": False, "message": gettext("المنتج خارج نطاق الفرع الحالي")}
+            ),
             403,
         )
 
@@ -1699,7 +1766,9 @@ def adjust_stock(**kwargs):
         try:
             quantity = require_float(str(request.form.get("quantity", 0)))
         except ValueError:
-            return jsonify({"success": False, "message": "الكمية غير صحيحة"}), 422
+            return jsonify(
+                {"success": False, "message": gettext("الكمية غير صحيحة")}
+            ), 422
         reason = request.form.get("reason", "adjustment")
         notes = request.form.get("notes", "")
         warehouse_id = request.form.get("warehouse_id", type=int)
@@ -1716,7 +1785,9 @@ def adjust_stock(**kwargs):
                     jsonify(
                         {
                             "success": False,
-                            "message": "يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون",
+                            "message": gettext(
+                                "يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون"
+                            ),
                         }
                     ),
                     400,
@@ -1725,7 +1796,10 @@ def adjust_stock(**kwargs):
         if quantity <= 0:
             return (
                 jsonify(
-                    {"success": False, "message": "الكمية يجب أن تكون أكبر من صفر"}
+                    {
+                        "success": False,
+                        "message": gettext("الكمية يجب أن تكون أكبر من صفر"),
+                    }
                 ),
                 400,
             )
@@ -1755,7 +1829,9 @@ def adjust_stock(**kwargs):
                     jsonify(
                         {
                             "success": False,
-                            "message": "لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ",
+                            "message": gettext(
+                                "لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ"
+                            ),
                             "insufficient": True,
                             "current_warehouse_id": warehouse.id if warehouse else None,
                             "requested_quantity": quantity,
@@ -1768,14 +1844,16 @@ def adjust_stock(**kwargs):
         elif adjustment_type == "set":
             new_stock = quantity
         else:
-            return jsonify({"success": False, "message": "نوع التعديل غير صحيح"}), 400
+            return jsonify(
+                {"success": False, "message": gettext("نوع التعديل غير صحيح")}
+            ), 400
 
         with atomic_transaction("product_adjust_stock"):
             delta = quantity if adjustment_type != "set" else (new_stock - old_stock)
             StockService.adjust_stock(
                 product_id=product.id,
                 quantity=delta if adjustment_type != "subtract" else -quantity,
-                notes=notes or f"تعديل يدوي - {reason}",
+                notes=notes or gettext(f"تعديل يدوي - {reason}"),
                 warehouse_id=warehouse.id if warehouse else None,
             )
 
@@ -1783,20 +1861,22 @@ def adjust_stock(**kwargs):
             "update",
             "products",
             product.id,
-            {"message": f"تعديل مخزون: {old_stock} → {new_stock}"},
+            {"message": gettext(f"تعديل مخزون: {old_stock} → {new_stock}")},
         )
 
         return jsonify(
             {
                 "success": True,
-                "message": f"تم تعديل المخزون من {old_stock} إلى {new_stock}",
+                "message": gettext(f"تم تعديل المخزون من {old_stock} إلى {new_stock}"),
                 "new_stock": new_stock,
             }
         )
 
     except Exception:
         current_app.logger.exception("Product stock update failed")
-        return jsonify({"success": False, "message": "تعذر تحديث المخزون حالياً"}), 500
+        return jsonify(
+            {"success": False, "message": gettext("تعذر تحديث المخزون حالياً")}
+        ), 500
 
 
 @products_bp.route("/<int:id>/print-label")
@@ -1833,7 +1913,7 @@ def print_labels():
     )
     ids = [int(i) for i in ids if str(i).isdigit()]
     if not ids:
-        flash("اختر منتجات للطباعة.", "warning")
+        flash(gettext("اختر منتجات للطباعة."), "warning")
         return redirect(url_for("products.index"))
     tenant_id = get_active_tenant_id(current_user)
     branch_id = None

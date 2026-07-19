@@ -1,5 +1,7 @@
 """User management and roles/permissions routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     render_template,
     request,
@@ -108,7 +110,7 @@ def create_user():
                     show_tenant_picker=True,
                     form_data=_form_values(),
                 )
-            password = request.form.get("password", "").strip()  # لا نعدل password
+            password = request.form.get("password", "").strip()
             full_name = InputSanitizer.sanitize_text(
                 request.form.get("full_name", ""), max_length=100
             )
@@ -118,7 +120,6 @@ def create_user():
             is_active = request.form.get("is_active") == "on"
             branch_id = request.form.get("branch_id", type=int) or None
 
-            # التحقق من البيانات
             if not username or not password:
                 from utils.error_messages import ErrorMessages
 
@@ -133,7 +134,7 @@ def create_user():
                 )
 
             if not role_id:
-                flash("⚠️ يرجى اختيار الدور الوظيفي.", "warning")
+                flash(gettext("⚠️ يرجى اختيار الدور الوظيفي."), "warning")
                 return render_template(
                     "owner/create_user.html",
                     roles=roles,
@@ -143,7 +144,6 @@ def create_user():
                     form_data=_form_values(),
                 )
 
-            # التحقق من قوة كلمة المرور
             is_valid, errors = PasswordValidator.validate(password)
             if not is_valid:
                 from utils.error_messages import ErrorMessages
@@ -158,7 +158,6 @@ def create_user():
                     form_data=_form_values(),
                 )
 
-            # التحقق من عدم وجود المستخدم في نفس التينانت
             target_tenant_id = request.form.get("tenant_id", type=int) or tid
             existing = User.query.filter_by(
                 username=username, tenant_id=target_tenant_id
@@ -180,7 +179,7 @@ def create_user():
             from utils.branching import role_requires_branch
 
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
-                flash("⚠️ يجب ربط هذا المستخدم بفرع محدد.", "warning")
+                flash(gettext("⚠️ يجب ربط هذا المستخدم بفرع محدد."), "warning")
                 return render_template(
                     "owner/create_user.html",
                     roles=roles,
@@ -190,7 +189,7 @@ def create_user():
                     form_data=_form_values(),
                 )
             if role_level_for(getattr(role, "slug", None)) > current_level:
-                flash("⚠️ لا يمكنك تعيين دور أعلى من دورك.", "danger")
+                flash(gettext("⚠️ لا يمكنك تعيين دور أعلى من دورك."), "danger")
                 return render_template(
                     "owner/create_user.html",
                     roles=roles,
@@ -202,7 +201,6 @@ def create_user():
 
             from utils.auth_helpers import enforce_company_user_tenant
 
-            # إنشاء المستخدم
             form_tenant_id = request.form.get("tenant_id", type=int)
             if is_global_owner_user(current_user):
                 if role and user_may_have_null_tenant(is_owner=is_owner, role=role):
@@ -230,7 +228,7 @@ def create_user():
             with atomic_transaction("create_user"):
                 db.session.add(user)
             _invalidate_owner_changes()
-            flash(f"تم إضافة المستخدم {username} بنجاح", "success")
+            flash(gettext(f"تم إضافة المستخدم {username} بنجاح"), "success")
             return redirect(url_for("owner.users_list"))
 
         except Exception as e:
@@ -287,12 +285,12 @@ def edit_user(user_id):
             from utils.branching import role_requires_branch
 
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
-                flash("⚠️ يجب ربط هذا المستخدم بفرع محدد.", "warning")
+                flash(gettext("⚠️ يجب ربط هذا المستخدم بفرع محدد."), "warning")
                 return render_template(
                     "owner/edit_user.html", user=user, roles=roles, branches=branches
                 )
             if role_level_for(getattr(role, "slug", None)) > current_level:
-                flash("⚠️ لا يمكنك تعيين دور أعلى من دورك.", "danger")
+                flash(gettext("⚠️ لا يمكنك تعيين دور أعلى من دورك."), "danger")
                 return render_template(
                     "owner/edit_user.html", user=user, roles=roles, branches=branches
                 )
@@ -324,7 +322,6 @@ def edit_user(user_id):
 
             enforce_company_user_tenant(user, role=role, is_owner=is_owner)
 
-            # تغيير كلمة المرور إن وجدت
             new_password = request.form.get("new_password", "").strip()
             if new_password:
                 user.password_hash = generate_password_hash(
@@ -336,11 +333,11 @@ def edit_user(user_id):
             with atomic_transaction("edit_user"):
                 pass
             _invalidate_owner_changes()
-            flash(f"تم تحديث المستخدم {user.username} بنجاح", "success")
+            flash(gettext(f"تم تحديث المستخدم {user.username} بنجاح"), "success")
             return redirect(url_for("owner.users_list"))
 
         except Exception as e:
-            flash(f"خطأ في تحديث المستخدم: {str(e)}", "error")
+            flash(gettext(f"خطأ في تحديث المستخدم: {str(e)}"), "error")
 
     return render_template(
         "owner/edit_user.html", user=user, roles=roles, branches=branches
@@ -404,7 +401,6 @@ def user_profile(user_id):
         ),
     }
 
-    # آخر النشاطات
     recent_sales = sale_q.order_by(Sale.sale_date.desc()).limit(5).all()
     recent_audits = AuditLog.query.filter_by(user_id=user_id)
     if tid:
@@ -426,14 +422,12 @@ def delete_user(user_id):
     """حذف مستخدم"""
     user = User.query.get_or_404(user_id)
 
-    # لا يمكن حذف المالك
     from utils.error_messages import ErrorMessages
 
     if user.is_owner:
         flash(ErrorMessages.user_delete_owner(), "error")
         return redirect(url_for("owner.users_list"))
 
-    # لا يمكن حذف نفسك
     if user.id == current_user.id:
         flash(ErrorMessages.user_delete_self(), "error")
         return redirect(url_for("owner.users_list"))
@@ -443,9 +437,9 @@ def delete_user(user_id):
             user.is_active = False
             user.updated_by = current_user.id
         _invalidate_owner_changes()
-        flash(f"تم تعطيل المستخدم {user.username}", "success")
+        flash(gettext(f"تم تعطيل المستخدم {user.username}"), "success")
     except Exception as e:
-        flash(f"خطأ في حذف المستخدم: {str(e)}", "error")
+        flash(gettext(f"خطأ في حذف المستخدم: {str(e)}"), "error")
 
     return redirect(url_for("owner.users_list"))
 

@@ -1,5 +1,7 @@
 """Database tools, SQL console, and maintenance routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     render_template,
     request,
@@ -131,7 +133,7 @@ def execute_query():
 
     except Exception:
         current_app.logger.exception("Owner database query failed")
-        return jsonify({"error": "تعذر تنفيذ الاستعلام حالياً"}), 400
+        return jsonify({"error": gettext("تعذر تنفيذ الاستعلام حالياً")}), 400
 
 
 @owner_bp.route("/clear-cache", methods=["POST"])
@@ -141,7 +143,7 @@ def clear_cache():
 
     try:
         cache.clear()
-        flash("✅ تم مسح الذاكرة المؤقتة بنجاح", "success")
+        flash(gettext("✅ تم مسح الذاكرة المؤقتة بنجاح"), "success")
     except Exception as e:
         LoggingCore.log_error(
             message=f"Cache clear failed: {e}",
@@ -158,7 +160,10 @@ def clear_cache():
                 app = cache.app if hasattr(cache, "app") else None
                 if app:
                     cache.init_app(app, config={"CACHE_TYPE": "null"})
-            flash("⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ", "warning")
+            flash(
+                gettext("⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ"),
+                "warning",
+            )
         except Exception as inner:
             LoggingCore.log_error(
                 message=f"Cache fallback to null also failed: {inner}",
@@ -167,7 +172,7 @@ def clear_cache():
                 source="routes.owner.clear_cache.fallback",
                 exception=inner,
             )
-            flash(f"❌ خطأ: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("owner.dashboard"))
 
@@ -180,7 +185,7 @@ def truncate_table():
     confirm = request.form.get("confirm")
 
     if confirm != "YES_DELETE_ALL":
-        flash("❌ يجب كتابة YES_DELETE_ALL للتأكيد", "danger")
+        flash(gettext("❌ يجب كتابة YES_DELETE_ALL للتأكيد"), "danger")
         return redirect(url_for("owner.database_tools"))
 
     safe_table = _resolve_truncatable_table(str(table_name or ""))
@@ -190,7 +195,7 @@ def truncate_table():
             table_name,
             current_user.id,
         )
-        flash("❌ جدول غير معروف أو محمي — لا يمكن مسحه", "danger")
+        flash(gettext("❌ جدول غير معروف أو محمي — لا يمكن مسحه"), "danger")
         return redirect(url_for("owner.database_tools"))
 
     try:
@@ -204,9 +209,9 @@ def truncate_table():
             {"table": safe_table, "requested_name": table_name},
         )
 
-        flash(f"✅ تم مسح جدول {safe_table} بنجاح", "success")
+        flash(gettext(f"✅ تم مسح جدول {safe_table} بنجاح"), "success")
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("owner.database_tools"))
 
@@ -220,7 +225,7 @@ def browse_table(table_name):
 
     safe_table = _resolve_browsable_table(table_name)
     if not safe_table:
-        flash("❌ جدول غير معروف أو غير مسموح", "danger")
+        flash(gettext("❌ جدول غير معروف أو غير مسموح"), "danger")
         return redirect(url_for("owner.database_tools"))
 
     try:
@@ -248,7 +253,7 @@ def browse_table(table_name):
         )
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
         return redirect(url_for("owner.database_tools"))
 
 
@@ -258,11 +263,13 @@ def update_row(table_name, row_id):
     """تحديث صف في جدول — للتعديل المرئي من أدوات قاعدة البيانات."""
     safe_table = _resolve_browsable_table(table_name)
     if not safe_table:
-        return jsonify({"success": False, "error": "جدول غير مسموح"}), 403
+        return jsonify({"success": False, "error": gettext("جدول غير مسموح")}), 403
 
     updates = request.get_json(silent=True) or {}
     if not updates:
-        return jsonify({"success": False, "error": "لا توجد بيانات للتحديث"}), 400
+        return jsonify(
+            {"success": False, "error": gettext("لا توجد بيانات للتحديث")}
+        ), 400
 
     try:
         inspector = inspect(db.engine)
@@ -271,7 +278,9 @@ def update_row(table_name, row_id):
             inspector.get_pk_constraint(safe_table).get("constrained_columns") or []
         )
         if not pk_cols:
-            return jsonify({"success": False, "error": "الجدول بدون مفتاح أساسي"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("الجدول بدون مفتاح أساسي")}
+            ), 400
         pk_name = pk_cols[0]
 
         safe_updates = {}
@@ -281,7 +290,9 @@ def update_row(table_name, row_id):
             safe_updates[col] = val if val != "" else None
 
         if not safe_updates:
-            return jsonify({"success": False, "error": "لا حقول صالحة للتحديث"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("لا حقول صالحة للتحديث")}
+            ), 400
 
         with atomic_transaction("update_table_row"):
             db.session.execute(
@@ -297,7 +308,9 @@ def update_row(table_name, row_id):
         return jsonify({"success": True})
     except Exception:
         current_app.logger.exception("Owner table row update failed")
-        return jsonify({"success": False, "error": "تعذر تحديث السجل حالياً"}), 500
+        return jsonify(
+            {"success": False, "error": gettext("تعذر تحديث السجل حالياً")}
+        ), 500
 
 
 @owner_bp.route("/edit-table-data/<table_name>")
@@ -306,7 +319,7 @@ def edit_table_data(table_name):
     """تعديل بيانات الجدول"""
     safe_table = _resolve_browsable_table(table_name)
     if not safe_table:
-        flash("❌ جدول غير معروف أو غير مسموح", "danger")
+        flash(gettext("❌ جدول غير معروف أو غير مسموح"), "danger")
         return redirect(url_for("owner.database_tools"))
 
     try:
@@ -319,7 +332,7 @@ def edit_table_data(table_name):
         )
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
         return redirect(url_for("owner.database_tools"))
 
 
@@ -366,7 +379,7 @@ def export_database():
     export_format = (request.form.get("format") or "sql").strip().lower()
 
     if export_format not in _EXPORT_FORMATS:
-        flash("❌ صيغة تصدير غير مدعومة", "danger")
+        flash(gettext("❌ صيغة تصدير غير مدعومة"), "danger")
         return redirect(url_for("owner.database_tools"))
 
     try:
@@ -384,7 +397,7 @@ def export_database():
             params = BackupService._parse_db_url()
             pg_dump = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
             if not params or not pg_dump:
-                flash("pg_dump غير متوفر", "danger")
+                flash(gettext("pg_dump غير متوفر"), "danger")
                 return redirect(url_for("owner.list_backups"))
             env = os.environ.copy()
             if params.get("password"):
@@ -407,7 +420,7 @@ def export_database():
                     (proc.stderr or proc.stdout or "pg_dump failed")[:200]
                 )
 
-            flash(f"✅ تم التصدير: {filename}", "success")
+            flash(gettext(f"✅ تم التصدير: {filename}"), "success")
             _audit_owner_db_action(
                 "export_database", {"format": "sql", "filename": filename}
             )
@@ -429,7 +442,7 @@ def export_database():
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=2, default=str)
 
-            flash(f"✅ تم التصدير: {filename}", "success")
+            flash(gettext(f"✅ تم التصدير: {filename}"), "success")
             _audit_owner_db_action(
                 "export_database",
                 {"format": "json", "filename": filename, "tables": len(export_data)},
@@ -439,7 +452,7 @@ def export_database():
         current_app.logger.error(
             "export_database failed user_id=%s: %s", current_user.id, e
         )
-        flash(f"❌ خطأ في التصدير: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في التصدير: {str(e)}"), "danger")
 
     return redirect(url_for("owner.database_tools"))
 
@@ -452,23 +465,23 @@ def convert_database():
         target_db = (request.form.get("target_db") or "").strip()
 
         if not target_db:
-            flash("⚠️ يرجى اختيار قاعدة البيانات المستهدفة.", "warning")
+            flash(gettext("⚠️ يرجى اختيار قاعدة البيانات المستهدفة."), "warning")
             return render_template("owner/convert_database.html")
 
         if target_db != "postgresql":
-            flash("❌ هذا النظام يدعم PostgreSQL فقط.", "danger")
+            flash(gettext("❌ هذا النظام يدعم PostgreSQL فقط."), "danger")
             return render_template("owner/convert_database.html")
 
         new_uri = (request.form.get("postgresql_uri") or "").strip()
         if not _validate_postgresql_uri(new_uri):
-            flash("❌ رابط PostgreSQL غير صالح.", "danger")
+            flash(gettext("❌ رابط PostgreSQL غير صالح."), "danger")
             current_app.logger.warning(
                 "convert_database rejected invalid URI user_id=%s",
                 current_user.id,
             )
             return render_template("owner/convert_database.html")
 
-        flash("🔄 جاري التحويل إلى PostgreSQL...", "info")
+        flash(gettext("🔄 جاري التحويل إلى PostgreSQL..."), "info")
 
         try:
             from sqlalchemy import create_engine
@@ -504,7 +517,7 @@ def convert_database():
 
                     tables_copied += 1
 
-            flash("✅ تم التحويل إلى PostgreSQL بنجاح!", "success")
+            flash(gettext("✅ تم التحويل إلى PostgreSQL بنجاح!"), "success")
             _audit_owner_db_action(
                 "convert_database",
                 {
@@ -521,7 +534,7 @@ def convert_database():
                 _mask_db_uri(new_uri),
                 e,
             )
-            flash(f"❌ خطأ في التحويل: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في التحويل: {str(e)}"), "danger")
 
     return render_template("owner/convert_database.html")
 
@@ -535,16 +548,16 @@ def database_optimize():
         vacuum_result = DatabaseOptimizer.vacuum_postgres()
         analyze_result = DatabaseOptimizer.analyze_tables()
         if vacuum_result.get("success") and analyze_result.get("success"):
-            flash("✅ تم تحسين قاعدة البيانات وتحليل الجداول بنجاح", "success")
+            flash(gettext("✅ تم تحسين قاعدة البيانات وتحليل الجداول بنجاح"), "success")
         else:
             msg = (
                 vacuum_result.get("error")
                 or analyze_result.get("error")
-                or "عملية التحسين لم تكتمل"
+                or gettext("عملية التحسين لم تكتمل")
             )
-            flash(f"⚠️ تحذير: {msg}", "warning")
+            flash(gettext(f"⚠️ تحذير: {msg}"), "warning")
     except Exception as e:
-        flash(f"❌ خطأ في التحسين: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في التحسين: {str(e)}"), "danger")
 
     return redirect(url_for("owner.system_health"))
 
@@ -577,7 +590,7 @@ def verify_backups():
         return render_template("owner/verify_backups.html", backups=verified)
 
     except Exception as e:
-        flash(f"خطأ في تحميل النسخ الاحتياطية: {str(e)}", "danger")
+        flash(gettext(f"خطأ في تحميل النسخ الاحتياطية: {str(e)}"), "danger")
         return redirect(url_for("owner.dashboard"))
 
 
@@ -589,7 +602,7 @@ def data_cleanup():
         cleanup_type = (request.form.get("cleanup_type") or "").strip()
 
         if not cleanup_type:
-            flash("⚠️ يرجى اختيار نوع البيانات للحذف.", "warning")
+            flash(gettext("⚠️ يرجى اختيار نوع البيانات للحذف."), "warning")
             stats = {
                 "old_logs": AuditLog.query.filter(
                     AuditLog.created_at
@@ -616,10 +629,10 @@ def data_cleanup():
                         ArchivedRecord.archived_at < cutoff_date
                     ).delete()
         except Exception as e:
-            flash(f"❌ خطأ في التنظيف: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في التنظيف: {str(e)}"), "danger")
             return redirect(url_for("owner.data_cleanup"))
         _invalidate_owner_changes()
-        flash(f"✅ تم حذف {deleted_count} سجل قديم", "success")
+        flash(gettext(f"✅ تم حذف {deleted_count} سجل قديم"), "success")
         return redirect(url_for("owner.data_cleanup"))
 
     stats = {
@@ -651,10 +664,12 @@ def export_excel(table_name):
             table_name,
             current_user.id,
         )
-        flash("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك", "danger")
+        flash(
+            gettext("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك"), "danger"
+        )
         return redirect(url_for("owner.import_export_tools"))
 
-    flash("❌ جدول غير موجود", "danger")
+    flash(gettext("❌ جدول غير موجود"), "danger")
     return redirect(url_for("owner.import_export_tools"))
 
 

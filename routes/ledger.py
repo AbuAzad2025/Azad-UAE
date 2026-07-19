@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -155,7 +156,10 @@ def vat_report():
 
     tenant = Tenant.get_current()
     if tenant and not is_tax_enabled(tenant.id):
-        flash("الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم.", "info")
+        flash(
+            gettext("الضريبة غير مفعّلة لهذه الشركة. فعّلها من إعدادات الضرائب إن لزم."),
+            "info",
+        )
         return redirect(url_for("ledger.index"))
 
     date_from = request.args.get("date_from", type=str)
@@ -199,7 +203,7 @@ def gl_periods():
             period.is_closed = action == "close"
             period.closed_at = datetime.now(timezone.utc) if period.is_closed else None
             period.closed_by = current_user.id if period.is_closed else None
-        flash("تم تحديث حالة الفترة المحاسبية.", "success")
+        flash(gettext("تم تحديث حالة الفترة المحاسبية."), "success")
         return redirect(url_for("ledger.gl_periods"))
 
     periods = (
@@ -226,12 +230,16 @@ def run_depreciation():
     )
     if result["errors"]:
         flash(
-            f"استهلاك: {result['posted']} أصل، أخطاء: {'; '.join(result['errors'][:3])}",
+            gettext(
+                f"استهلاك: {result['posted']} أصل، أخطاء: {'; '.join(result['errors'][:3])}"
+            ),
             "warning",
         )
     else:
         flash(
-            f"تم ترحيل استهلاك {result['posted']} أصل (تخطي {result['skipped']}).",
+            gettext(
+                f"تم ترحيل استهلاك {result['posted']} أصل (تخطي {result['skipped']})."
+            ),
             "success",
         )
     return redirect(url_for("ledger.gl_periods"))
@@ -500,7 +508,9 @@ def balance_sheet():
     net_profit_period = total_revenue_period - total_expense_period
 
     if net_profit_period != 0:
-        equity["الأرباح المبقاة (صافي الربح التراكمي)"] = float(net_profit_period)
+        equity[gettext("الأرباح المبقاة (صافي الربح التراكمي)")] = float(
+            net_profit_period
+        )
         total_equity += net_profit_period
 
     return render_template(
@@ -532,7 +542,10 @@ def accounts_tree():
     tenant_id = get_active_tenant_id()
     if tenant_id is None:
         if is_platform_owner() and Tenant.query.filter_by(is_active=True).count() == 0:
-            flash("لا يوجد مستأجرون بعد. أنشئ شركة من لوحة المالك أولاً.", "warning")
+            flash(
+                gettext("لا يوجد مستأجرون بعد. أنشئ شركة من لوحة المالك أولاً."),
+                "warning",
+            )
             return render_template("ledger/accounts_tree.html", accounts_tree=[])
         tenant_id = require_active_tenant_id()
 
@@ -573,14 +586,11 @@ def manual_entry():
             entry_date = request.form.get("entry_date")
             notes = request.form.get("notes")
 
-            # تحويل التاريخ
             if entry_date:
                 entry_date = datetime.strptime(entry_date, "%Y-%m-%d")
 
-            # جمع السطور
             lines = []
 
-            # جمع جميع السطور من الفورم
             i = 0
             while True:
                 account_code = request.form.get(f"line_{i}_account")
@@ -591,7 +601,6 @@ def manual_entry():
                 credit = request.form.get(f"line_{i}_credit", 0)
                 line_description = request.form.get(f"line_{i}_description", "")
 
-                # تحويل القيم الفارغة إلى صفر
                 try:
                     debit_value = float(debit) if debit and debit.strip() else 0
                     credit_value = float(credit) if credit and credit.strip() else 0
@@ -599,7 +608,6 @@ def manual_entry():
                     debit_value = 0
                     credit_value = 0
 
-                # إضافة السطر فقط إذا كان فيه قيمة
                 if debit_value > 0 or credit_value > 0:
                     lines.append(
                         {
@@ -637,17 +645,21 @@ def manual_entry():
                 )
                 LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
 
-            flash(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح", "success")
+            flash(gettext(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح"), "success")
             return redirect(url_for("ledger.view_entry", entry_id=entry.id))
 
         except ValueError as e:
             flash(
-                f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
         except Exception as e:
             flash(
-                f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -717,16 +729,18 @@ def reverse_entry(entry_id):
             )
 
         flash(
-            f"✅ تم عكس القيد بنجاح - القيد الجديد: {reversed_entry.entry_number}",
+            gettext(
+                f"✅ تم عكس القيد بنجاح - القيد الجديد: {reversed_entry.entry_number}"
+            ),
             "success",
         )
         return redirect(url_for("ledger.view_entry", entry_id=reversed_entry.id))
 
     except ValueError as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
         return redirect(url_for("ledger.view_entry", entry_id=entry_id))
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
         return redirect(url_for("ledger.view_entry", entry_id=entry_id))
 
 
@@ -815,7 +829,6 @@ def api_calculate_journal_balance():
 @permission_required("view_ledger")
 def cash_flow():
     """قائمة التدفقات النقدية"""
-    # الحصول على الفترة (آخر شهر افتراضياً)
     today = date.today()
     default_start = (today - timedelta(days=30)).strftime("%Y-%m-%d")
     default_end = today.strftime("%Y-%m-%d")
@@ -839,7 +852,9 @@ def cash_flow():
         )
     except Exception as e:
         flash(
-            f"❌ فشل إنشاء قائمة التدفقات: {str(e)}\n💡 تحقق من الفترة المحددة وحاول مرة أخرى.",
+            gettext(
+                f"❌ فشل إنشاء قائمة التدفقات: {str(e)}\n💡 تحقق من الفترة المحددة وحاول مرة أخرى."
+            ),
             "danger",
         )
         return redirect(url_for("ledger.index"))
@@ -861,7 +876,7 @@ def aging_analysis():
             report = AgingAnalysisService.get_receivables_aging(
                 as_of_date, branch_id=branch_id
             )
-            title = "تحليل عمر الذمم المدينة"
+            title = gettext("تحليل عمر الذمم المدينة")
             gl_verify = AgingAnalysisService.verify_receivables_with_gl(
                 as_of_date, branch_id=branch_id
             )
@@ -869,7 +884,7 @@ def aging_analysis():
             report = AgingAnalysisService.get_payables_aging(
                 as_of_date, branch_id=branch_id
             )
-            title = "تحليل عمر الذمم الدائنة"
+            title = gettext("تحليل عمر الذمم الدائنة")
             gl_verify = AgingAnalysisService.verify_payables_with_gl(
                 as_of_date, branch_id=branch_id
             )
@@ -886,13 +901,12 @@ def aging_analysis():
         )
     except Exception as e:
         flash(
-            f"❌ فشل إنشاء تحليل الأعمار: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.",
+            gettext(
+                f"❌ فشل إنشاء تحليل الأعمار: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."
+            ),
             "danger",
         )
         return redirect(url_for("ledger.index"))
-
-
-# ==================== لوحة التحكم الإدارية ====================
 
 
 @ledger_bp.route("/admin-dashboard")
@@ -909,13 +923,11 @@ def admin_dashboard():
     def _entries():
         return gl_entry_query()
 
-    # إحصائيات عامة
     total_accounts = _accounts().count()
     active_accounts = _accounts().filter_by(is_active=True).count()
     total_entries = _entries().count()
     posted_entries = _entries().filter_by(status="posted").count()
 
-    # إحصائيات مالية — batch query (single SQL for all accounts)
     from services.gl_service import GLService
 
     _all_balances = GLService.get_all_account_balances()
@@ -923,27 +935,22 @@ def admin_dashboard():
     cash_accounts = _accounts().filter(GLAccount.code.like("11%")).all()
     total_cash = sum(_all_balances.get(a.id, 0) for a in cash_accounts)
 
-    # آخر القيود
     recent_entries = (
         _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
     )
 
-    # الحسابات ذات الأرصدة العالية
     high_balance_accounts = []
     for account in _accounts().filter_by(is_active=True, is_header=False).all():
         balance = _all_balances.get(account.id, 0)
-        if abs(balance) > 1000:  # أرصدة أعلى من 1000
+        if abs(balance) > 1000:
             high_balance_accounts.append({"account": account, "balance": balance})
 
-    # ترتيب حسب الرصيد
     high_balance_accounts.sort(key=lambda x: abs(x["balance"]), reverse=True)
 
-    # إحصائيات الشيكات
     total_cheques = tenant_query(Cheque).count()
     pending_cheques = tenant_query(Cheque).filter_by(status="pending").count()
     cleared_cheques = tenant_query(Cheque).filter_by(status="cleared").count()
 
-    # إحصائيات المحافظ
     total_vaults = scoped_model_query(PaymentVault).count()
     active_vaults = scoped_model_query(PaymentVault).filter_by(is_locked=False).count()
 
@@ -1001,16 +1008,16 @@ def admin_add_account():
             bank_iban = request.form.get("bank_iban")
             bank_swift_code = request.form.get("bank_swift_code")
 
-            # التحقق من عدم تكرار الكود
             existing = gl_account_query().filter_by(code=code).first()
             if existing:
                 flash(
-                    "⚠️ كود الحساب موجود مسبقاً.\n💡 استخدم كود فريد أو اختر كود آخر.",
+                    gettext(
+                        "⚠️ كود الحساب موجود مسبقاً.\n💡 استخدم كود فريد أو اختر كود آخر."
+                    ),
                     "danger",
                 )
                 return redirect(url_for("ledger.admin_add_account"))
 
-            # حساب المستوى
             level = 0
             if parent_id:
                 parent = gl_account_query().filter_by(id=parent_id).first()
@@ -1036,16 +1043,17 @@ def admin_add_account():
             with atomic_transaction("create_gl_account"):
                 db.session.add(account)
             LoggingCore.log_audit("create", "gl_accounts", account.id)
-            flash(f"✅ تم إنشاء الحساب {account.full_name} بنجاح", "success")
+            flash(gettext(f"✅ تم إنشاء الحساب {account.full_name} بنجاح"), "success")
             return redirect(url_for("ledger.admin_accounts"))
 
         except Exception as e:
             flash(
-                f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
-    # الحصول على الحسابات الرئيسية للقائمة المنسدلة
     parent_accounts = (
         gl_account_query().filter_by(is_header=True).order_by(GLAccount.code).all()
     )
@@ -1100,7 +1108,6 @@ def admin_trial_balance():
     date_from = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
     date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
-    # تحويل التواريخ
     try:
         date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
         date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
@@ -1110,7 +1117,6 @@ def admin_trial_balance():
         )
         date_from = date_to = date.today()
 
-    # حساب أرصدة الحسابات — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
 
@@ -1165,7 +1171,6 @@ def admin_balance_sheet():
         )
         as_of_date = date.today()
 
-    # الأصول — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
 
@@ -1179,7 +1184,6 @@ def admin_balance_sheet():
     )
     assets_total = sum(_all_balances.get(a.id, 0) for a in assets)
 
-    # الخصوم
     liabilities = (
         gl_account_query()
         .filter_by(type="liability", is_active=True, is_header=False)
@@ -1188,7 +1192,6 @@ def admin_balance_sheet():
     )
     liabilities_total = sum(abs(_all_balances.get(a.id, 0)) for a in liabilities)
 
-    # حقوق الملكية
     equity = (
         gl_account_query()
         .filter_by(type="equity", is_active=True, is_header=False)
@@ -1284,7 +1287,6 @@ def admin_income_statement():
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
 
-    # الإيرادات — batch query (single SQL)
     from utils.gl_tenant import gl_account_query
     from services.gl_service import GLService
 
@@ -1300,7 +1302,6 @@ def admin_income_statement():
     )
     revenues_total = sum(abs(_all_balances.get(a.id, 0)) for a in revenues)
 
-    # المصروفات
     expenses = (
         gl_account_query()
         .filter_by(type="expense", is_active=True, is_header=False)

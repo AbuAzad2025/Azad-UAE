@@ -1,5 +1,7 @@
 """Shared helpers and sanitization utilities for AI routes."""
 
+from flask_babel import gettext
+
 import logging
 import re
 from flask import jsonify
@@ -34,25 +36,34 @@ def _conversation_clear(user_id: int, tenant_id: int | None = None):
     _clear_conversation_context(user_id, tenant_id)
 
 
-# ========== مستمعات ذكية ==========
 def smart_listener(message, context):
     """مستمع ذكي يفهم نية المستخدم"""
     msg_lower = message.lower().strip()
 
-    # كلمات العودة
-    if any(word in msg_lower for word in ["عودة", "رجوع", "إلغاء", "خروج", "إيقاف"]):
+    if any(
+        word in msg_lower
+        for word in [
+            gettext("عودة"),
+            gettext("رجوع"),
+            gettext("إلغاء"),
+            gettext("خروج"),
+            gettext("إيقاف"),
+        ]
+    ):
         return "back"
 
-    # كلمات المساعدة
-    if any(word in msg_lower for word in ["مساعدة", "help", "ساعدني"]):
+    if any(
+        word in msg_lower for word in [gettext("مساعدة"), "help", gettext("ساعدني")]
+    ):
         return "help"
 
-    # كلمات التأكيد
-    if any(word in msg_lower for word in ["نعم", "yes", "تأكيد", "موافق", "ok"]):
+    if any(
+        word in msg_lower
+        for word in [gettext("نعم"), "yes", gettext("تأكيد"), gettext("موافق"), "ok"]
+    ):
         return "confirm"
 
-    # كلمات الإلغاء
-    if any(word in msg_lower for word in ["لا", "no", "إلغاء"]):
+    if any(word in msg_lower for word in [gettext("لا"), "no", gettext("إلغاء")]):
         return "cancel"
 
     return "continue"
@@ -70,7 +81,6 @@ def train_local_ai(action, data, result):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-        # حفظ للتدريب المستقبلي
         import json
         import os
         from ai_knowledge import get_knowledge_path
@@ -84,7 +94,6 @@ def train_local_ai(action, data, result):
 
         training_history.append(training_data)
 
-        # الحفاظ على آخر 1000 عملية فقط
         if len(training_history) > 1000:
             training_history = training_history[-1000:]
 
@@ -131,30 +140,30 @@ def apply_smart_listeners(message, context, action_name):
 def create_final_options(action_name, item_name, item_id):
     """خيارات نهائية ذكية بعد كل عملية"""
     options = {
-        "عميل": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("عميل"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ إضافة عميل آخر
 2️⃣ عرض جميع العملاء
 3️⃣ إنشاء فاتورة لهذا العميل
 4️⃣ العودة للقائمة الرئيسية""",
-        "منتج": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("منتج"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ إضافة منتج آخر
 2️⃣ عرض جميع المنتجات
 3️⃣ إنشاء فاتورة بهذا المنتج
 4️⃣ العودة للقائمة الرئيسية""",
-        "فاتورة": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("فاتورة"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ إنشاء فاتورة أخرى
 2️⃣ عرض جميع الفواتير
 3️⃣ استلام دفعة من العميل
 4️⃣ العودة للقائمة الرئيسية""",
-        "مصروف": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("مصروف"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ إضافة مصروف آخر
 2️⃣ عرض جميع المصروفات
 3️⃣ العودة للقائمة الرئيسية""",
-        "استلام": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("استلام"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ استلام دفعة أخرى
 2️⃣ عرض جميع الدفعات
 3️⃣ العودة للقائمة الرئيسية""",
-        "إعطاء": """💡 **ماذا تريد أن تفعل الآن؟**
+        gettext("إعطاء"): """💡 **ماذا تريد أن تفعل الآن؟**
 1️⃣ إعطاء دفعة أخرى
 2️⃣ عرض جميع الدفعات
 3️⃣ العودة للقائمة الرئيسية""",
@@ -208,7 +217,7 @@ def _sanitize_ai_prompt(message, context):
         return None, (
             jsonify(
                 {
-                    "error": "الرسالة طويلة جداً. الحد الأقصى هو 8000 حرف.",
+                    "error": gettext("الرسالة طويلة جداً. الحد الأقصى هو 8000 حرف."),
                     "code": "TOO_LONG",
                 }
             ),
@@ -232,7 +241,9 @@ def _sanitize_ai_prompt(message, context):
         return None, (
             jsonify(
                 {
-                    "error": "تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك.",
+                    "error": gettext(
+                        "تم اكتشاف نمط غير مسموح به في الرسالة. يرجى إعادة صياغة سؤالك."
+                    ),
                     "code": "INJECTION_DETECTED",
                 }
             ),

@@ -1,5 +1,7 @@
 """AI Routes Package — Modular sub-blueprint structure."""
 
+from flask_babel import gettext
+
 from flask import (
     render_template,
     request,
@@ -89,7 +91,9 @@ def _enforce_ai_access_policy():
         if not state.get("is_platform_user") and not ai_level_allows(
             state.get("ai_level") or "", required_cap
         ):
-            msg = f"مستوى AI الحالي ({state.get('ai_level')}) لا يسمح بهذه العملية."
+            msg = gettext(
+                f"مستوى AI الحالي ({state.get('ai_level')}) لا يسمح بهذه العملية."
+            )
             wants_json = request.path.startswith("/ai/") and (
                 request.is_json
                 or "application/json" in (request.headers.get("Accept") or "")
@@ -104,13 +108,13 @@ def _enforce_ai_access_policy():
         return None
 
     reason = state.get("reason")
-    message = "المساعد الذكي غير متاح لهذا الحساب حالياً."
+    message = gettext("المساعد الذكي غير متاح لهذا الحساب حالياً.")
     if reason == "global_disabled":
-        message = "تم إيقاف المساعد الذكي من إعدادات المنصة."
+        message = gettext("تم إيقاف المساعد الذكي من إعدادات المنصة.")
     elif reason == "tenant_disabled":
-        message = "تم إيقاف المساعد الذكي لهذا التينانت من لوحة المنصة."
+        message = gettext("تم إيقاف المساعد الذكي لهذا التينانت من لوحة المنصة.")
     elif reason == "missing_tenant":
-        message = "لا يوجد تينانت نشط مرتبط بهذا الحساب."
+        message = gettext("لا يوجد تينانت نشط مرتبط بهذا الحساب.")
 
     wants_json = request.path.startswith("/ai/") and (
         request.is_json or "application/json" in (request.headers.get("Accept") or "")

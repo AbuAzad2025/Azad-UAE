@@ -1,5 +1,7 @@
 """Backup management routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     render_template,
     request,
@@ -64,17 +66,21 @@ def backup_now():
                 }
             )
         return (
-            jsonify({"success": False, "message": "فشل إنشاء النسخة الاحتياطية"}),
+            jsonify(
+                {"success": False, "message": gettext("فشل إنشاء النسخة الاحتياطية")}
+            ),
             400,
         )
     else:
         if backup:
             flash(
-                f"✅ تم إنشاء نسخة احتياطية: {backup['filename']} ({backup['size_mb']} MB)",
+                gettext(
+                    f"✅ تم إنشاء نسخة احتياطية: {backup['filename']} ({backup['size_mb']} MB)"
+                ),
                 "success",
             )
         else:
-            flash("❌ فشل إنشاء النسخة الاحتياطية", "danger")
+            flash(gettext("❌ فشل إنشاء النسخة الاحتياطية"), "danger")
         return redirect(safe_redirect_target(request.referrer, "owner.dashboard"))
 
 
@@ -101,7 +107,7 @@ def create_scoped_backup():
     elif scope in ("tenant", "branch", "store"):
         if is_global_owner_user(current_user):
             if not tenant_id:
-                flash("اختر الشركة (tenant) للنسخة", "warning")
+                flash(gettext("اختر الشركة (tenant) للنسخة"), "warning")
                 return redirect(url_for("owner.list_backups"))
         else:
             active_tid = get_active_tenant_id(current_user)
@@ -120,7 +126,7 @@ def create_scoped_backup():
             tenant_id = active_tid
         if scope == "branch":
             if not branch_id:
-                flash("اختر الفرع", "warning")
+                flash(gettext("اختر الفرع"), "warning")
                 return redirect(url_for("owner.list_backups"))
             if not is_global_owner_user(current_user):
                 if getattr(current_user, "branch_id", None) != branch_id:
@@ -130,10 +136,10 @@ def create_scoped_backup():
                     )
                     abort(403)
         if scope == "store" and not store_id:
-            flash("اختر المتجر", "warning")
+            flash(gettext("اختر المتجر"), "warning")
             return redirect(url_for("owner.list_backups"))
     else:
-        flash("نطاق النسخ غير مدعوم", "warning")
+        flash(gettext("نطاق النسخ غير مدعوم"), "warning")
         return redirect(url_for("owner.list_backups"))
 
     backup = BackupService.create_backup(
@@ -154,9 +160,9 @@ def create_scoped_backup():
                 "tenant_id": tenant_id,
             },
         )
-        flash(f"تم إنشاء النسخة: {backup['filename']}", "success")
+        flash(gettext(f"تم إنشاء النسخة: {backup['filename']}"), "success")
     else:
-        flash("فشل إنشاء النسخة الاحتياطية", "danger")
+        flash(gettext("فشل إنشاء النسخة الاحتياطية"), "danger")
     return redirect(url_for("owner.list_backups"))
 
 
@@ -225,7 +231,7 @@ def prepare_restore_backup(filename):
 
     safe = _owner_backup_filename(filename)
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
-        flash("❌ غير مصرح بالوصول لهذه النسخة", "danger")
+        flash(gettext("❌ غير مصرح بالوصول لهذه النسخة"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     target_hint = (request.form.get("target_database_url") or "").strip()
@@ -240,7 +246,7 @@ def prepare_restore_backup(filename):
     if request.method == "POST" or request.args.get("format") == "json":
         return jsonify(payload)
     if not payload.get("ok"):
-        flash(payload.get("error", "فشل تجهيز الأوامر"), "danger")
+        flash(payload.get("error", gettext("فشل تجهيز الأوامر")), "danger")
         return redirect(url_for("owner.list_backups"))
     return render_template(
         "owner/backup_restore_instructions.html",
@@ -260,7 +266,7 @@ def restore_backup_target(filename):
 
     safe = _owner_backup_filename(filename)
     if not safe or not is_global_owner_user(current_user):
-        flash("❌ غير مصرح", "danger")
+        flash(gettext("❌ غير مصرح"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     info = BackupService.get_backup_info(safe) or {}
@@ -270,7 +276,7 @@ def restore_backup_target(filename):
     if not target_url:
         target_url = (os.environ.get("TARGET_TEST_DATABASE_URL") or "").strip()
     if not target_url:
-        flash("❌ حدد TARGET_DATABASE_URL لقاعدة اختبار جديدة", "danger")
+        flash(gettext("❌ حدد TARGET_DATABASE_URL لقاعدة اختبار جديدة"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     confirmation = (request.form.get("restore_confirm") or "").strip()
@@ -303,10 +309,10 @@ def restore_backup_target(filename):
                 "masked_host": result.get("masked_host"),
             },
         )
-        flash("✅ تمت الاستعادة إلى قاعدة الهدف", "success")
+        flash(gettext("✅ تمت الاستعادة إلى قاعدة الهدف"), "success")
     else:
         err = "; ".join(result.get("errors") or ["restore failed"])
-        flash(f"❌ فشلت الاستعادة: {err[:300]}", "danger")
+        flash(gettext(f"❌ فشلت الاستعادة: {err[:300]}"), "danger")
     return redirect(url_for("owner.list_backups"))
 
 
@@ -319,23 +325,23 @@ def delete_backup():
     filename = request.form.get("filename")
     safe = _owner_backup_filename(filename or "")
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
-        flash("❌ اسم الملف مطلوب أو غير صالح!", "danger")
+        flash(gettext("❌ اسم الملف مطلوب أو غير صالح!"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     backups = BackupService.list_backups_for_user(current_user)
     backup_exists = any(b["filename"] == safe for b in backups)
 
     if not backup_exists:
-        flash("❌ النسخة الاحتياطية غير موجودة!", "danger")
+        flash(gettext("❌ النسخة الاحتياطية غير موجودة!"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     success = BackupService.delete_backup(safe)
 
     if success:
         _audit_owner_db_action("delete_backup", {"filename": safe})
-        flash(f"✅ تم حذف النسخة الاحتياطية: {safe}", "success")
+        flash(gettext(f"✅ تم حذف النسخة الاحتياطية: {safe}"), "success")
     else:
-        flash("❌ فشل حذف النسخة الاحتياطية!", "danger")
+        flash(gettext("❌ فشل حذف النسخة الاحتياطية!"), "danger")
 
     return redirect(url_for("owner.list_backups"))
 
@@ -351,12 +357,12 @@ def download_backup(filename):
     safe = _owner_backup_filename(filename)
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
         _audit_owner_db_action("download_backup_denied", {"filename": filename})
-        flash("❌ غير مصرح", "danger")
+        flash(gettext("❌ غير مصرح"), "danger")
         return redirect(url_for("owner.list_backups"))
     backup_path: str = os.path.join(BackupService.BACKUP_DIR, safe)
 
     if not os.path.exists(backup_path):
-        flash("❌ النسخة الاحتياطية غير موجودة!", "danger")
+        flash(gettext("❌ النسخة الاحتياطية غير موجودة!"), "danger")
         return redirect(url_for("owner.list_backups"))
 
     try:
@@ -368,7 +374,7 @@ def download_backup(filename):
             backup_path, as_attachment=True, download_name=safe, mimetype=mimetype
         )
     except Exception as e:
-        flash(f"❌ فشل التحميل: {str(e)}", "danger")
+        flash(gettext(f"❌ فشل التحميل: {str(e)}"), "danger")
         return redirect(url_for("owner.list_backups"))
 
 
@@ -379,7 +385,6 @@ def scheduled_backups():
     from services.backup_service import BackupService
 
     if request.method == "POST":
-        # حفظ إعدادات الجدولة
         settings = {
             "enabled": request.form.get("enabled") == "on",
             "frequency": request.form.get("frequency", "daily"),
@@ -388,14 +393,12 @@ def scheduled_backups():
         }
         BackupService.save_schedule_settings(settings)
 
-        flash("✅ تم حفظ إعدادات النسخ الاحتياطي", "success")
+        flash(gettext("✅ تم حفظ إعدادات النسخ الاحتياطي"), "success")
         return redirect(url_for("owner.scheduled_backups"))
 
-    # قراءة الإعدادات الحالية
     settings = BackupService.get_schedule_settings()
     schedule_state = BackupService.get_schedule_state()
 
-    # قائمة النسخ التلقائية
     backups = BackupService.list_backups(auto_only=True)
     stats = BackupService.get_backup_stats()
 

@@ -1,5 +1,7 @@
 """AI specialized routes — automotive, external sources, genius queries."""
 
+from flask_babel import gettext
+
 import logging
 from flask import request, jsonify
 from flask_login import login_required, current_user
@@ -90,7 +92,7 @@ def ask_genius():
         context = data.get("context", {})
 
         if not question:
-            return jsonify({"success": False, "error": "السؤال مطلوب"}), 400
+            return jsonify({"success": False, "error": gettext("السؤال مطلوب")}), 400
 
         result = AIService.ask_genius(
             question=question, context=context, user_id=current_user.id
@@ -113,7 +115,7 @@ def quick_calc():
         params = data.get("params", {})
 
         if not formula:
-            return jsonify({"success": False, "error": "الصيغة مطلوبة"}), 400
+            return jsonify({"success": False, "error": gettext("الصيغة مطلوبة")}), 400
 
         result = AIService.quick_calculate(formula, **params)
 
@@ -133,7 +135,7 @@ def transformers_understand():
         text = data.get("text", "")
 
         if not text:
-            return jsonify({"success": False, "error": "النص مطلوب"}), 400
+            return jsonify({"success": False, "error": gettext("النص مطلوب")}), 400
 
         understanding = AIService.understand_with_transformers(text)
 

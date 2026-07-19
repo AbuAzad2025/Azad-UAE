@@ -1,3 +1,5 @@
+from flask_babel import gettext
+from flask_babel import lazy_gettext
 from datetime import datetime, timezone
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
@@ -74,7 +76,7 @@ def _payment_id_known_locally(payment_id: str) -> bool:
     return False
 
 
-_DEFAULT_TENANT_NAME_AR = "نظام المحاسبة"
+_DEFAULT_TENANT_NAME_AR = lazy_gettext("نظام المحاسبة")
 _DEFAULT_TENANT_ADDRESS = ""
 
 
@@ -139,7 +141,7 @@ def _post_login_redirect(user, access_mode):
     if is_global_owner_user(user):
         return redirect(url_for("owner.dashboard"))
     if access_mode == "developer":
-        flash("⚠️ دخول المطور متاح لحساب مالك المنصة فقط.", "warning")
+        flash(gettext("⚠️ دخول المطور متاح لحساب مالك المنصة فقط."), "warning")
     role_slug = getattr(getattr(user, "role", None), "slug", None)
     if role_slug in ("super_admin", "manager") and not is_global_owner_user(user):
         return redirect(url_for("owner.company_dashboard"))
@@ -313,7 +315,6 @@ def support():
     """صفحة الدعم والشراء - متاحة قبل تسجيل الدخول"""
     from models import Package
 
-    # جلب الباقات النشطة
     packages = (
         Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc()).all()
     )
@@ -336,7 +337,9 @@ def login():
 
         if not username or not password:
             flash(
-                "⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول.",
+                gettext(
+                    "⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول."
+                ),
                 "danger",
             )
             return _render_login(
@@ -353,7 +356,9 @@ def login():
             and user.locked_until > datetime.now(timezone.utc)
         ):
             flash(
-                "⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة.",
+                gettext(
+                    "⚠️ حسابك مقفل بسبب محاولات دخول كثيرة. حاول مرة أخرى بعد 15 دقيقة."
+                ),
                 "warning",
             )
             _log_failed_login(username, user, False, "locked")
@@ -366,12 +371,16 @@ def login():
         if not user or (not user.check_password(password) and not master_used):
             reason = master_meta.get("reason")
             if user and user.is_owner and reason == "ip_denied":
-                flash("⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.", "warning")
+                flash(
+                    gettext("⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP."), "warning"
+                )
             elif user and user.is_owner and reason == "disabled":
-                flash("⚠️ دخول الطوارئ (master login) معطل حالياً.", "warning")
+                flash(gettext("⚠️ دخول الطوارئ (master login) معطل حالياً."), "warning")
             else:
                 flash(
-                    "❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.",
+                    gettext(
+                        "❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير."
+                    ),
                     "danger",
                 )
             _log_failed_login(
@@ -388,7 +397,8 @@ def login():
 
         if not user.is_active:
             flash(
-                "⚠️ حسابك غير نشط!\n💡 اتصل بمدير النظام لإعادة تفعيل حسابك.", "danger"
+                gettext("⚠️ حسابك غير نشط!\n💡 اتصل بمدير النظام لإعادة تفعيل حسابك."),
+                "danger",
             )
             return _render_login(
                 access_mode=access_mode,
@@ -433,7 +443,7 @@ def login():
                     ip=request.remote_addr or "-",
                     severity="high",
                 )
-                flash("⚠️ الشركة المحددة غير نشطة أو معلقة.", "danger")
+                flash(gettext("⚠️ الشركة المحددة غير نشطة أو معلقة."), "danger")
                 return _render_login(
                     access_mode=access_mode,
                     username_value=username,
@@ -448,7 +458,7 @@ def login():
                     ip=request.remote_addr or "-",
                     severity="high",
                 )
-                flash("⚠️ لا توجد شركة مرتبطة بهذا الحساب.", "danger")
+                flash(gettext("⚠️ لا توجد شركة مرتبطة بهذا الحساب."), "danger")
                 return _render_login(
                     access_mode=access_mode,
                     username_value=username,
@@ -463,7 +473,7 @@ def login():
                 ip=request.remote_addr or "-",
                 severity="high",
             )
-            flash("⚠️ الفرع المحدد لا ينتمي لنفس الشركة.", "danger")
+            flash(gettext("⚠️ الفرع المحدد لا ينتمي لنفس الشركة."), "danger")
             return _render_login(
                 access_mode=access_mode,
                 username_value=username,
@@ -493,7 +503,7 @@ def logout():
         LoggingCore.log_audit("logout", "users", current_user.id)
         logout_user()
         session.pop("last_activity", None)
-        flash("✅ تم تسجيل الخروج بنجاح. نراك قريباً!", "success")
+        flash(gettext("✅ تم تسجيل الخروج بنجاح. نراك قريباً!"), "success")
     clear_active_branch()
     clear_active_tenant()
     return redirect(url_for("public.landing"))
@@ -509,7 +519,7 @@ def payment_status(payment_id):
             "payment_status rejected: invalid or missing token (ip=%s)",
             request.remote_addr,
         )
-        return jsonify({"success": False, "error": "غير مصرح"}), 403
+        return jsonify({"success": False, "error": gettext("غير مصرح")}), 403
 
     try:
         nowpayments = NOWPaymentsService()
@@ -527,7 +537,9 @@ def payment_status(payment_id):
             request.remote_addr,
         )
         return (
-            jsonify({"success": False, "error": "خطأ في الحصول على حالة الدفعة"}),
+            jsonify(
+                {"success": False, "error": gettext("خطأ في الحصول على حالة الدفعة")}
+            ),
             500,
         )
 
@@ -592,7 +604,7 @@ def payment_callback():
                 "NOWPayments callback rejected: IP not in whitelist (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": "غير مصرح"}), 403
+            return jsonify({"error": gettext("غير مصرح")}), 403
 
         signature = request.headers.get("x-nowpayments-sig")
         if not signature:
@@ -600,7 +612,7 @@ def payment_callback():
                 "NOWPayments callback rejected: missing signature (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": "توقيع مفقود"}), 400
+            return jsonify({"error": gettext("توقيع مفقود")}), 400
 
         payment_data = request.get_json(silent=True)
         if not isinstance(payment_data, dict):
@@ -608,7 +620,7 @@ def payment_callback():
                 "NOWPayments callback rejected: invalid JSON body (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": "بيانات غير صحيحة"}), 400
+            return jsonify({"error": gettext("بيانات غير صحيحة")}), 400
 
         payment_id = payment_data.get("payment_id")
         if not payment_id:
@@ -616,7 +628,7 @@ def payment_callback():
                 "NOWPayments callback rejected: missing payment_id (ip=%s)",
                 remote_addr,
             )
-            return jsonify({"error": "payment_id مطلوب"}), 400
+            return jsonify({"error": gettext("payment_id مطلوب")}), 400
 
         current_status = payment_data.get("payment_status", "")
         if _is_duplicate_callback(str(payment_id), str(current_status)):
@@ -640,18 +652,18 @@ def payment_callback():
                 remote_addr,
                 payment_id,
             )
-            return jsonify({"error": "توقيع غير صحيح"}), 400
+            return jsonify({"error": gettext("توقيع غير صحيح")}), 400
 
         success = nowpayments.process_payment_callback(payment_data)
 
         if success:
             return jsonify({"status": "success"})
         else:
-            return jsonify({"error": "فشل في معالجة الدفعة"}), 500
+            return jsonify({"error": gettext("فشل في معالجة الدفعة")}), 500
 
     except Exception:
         current_app.logger.exception("Legacy NOWPayments callback failed")
-        return jsonify({"error": "خطأ في معالجة callback"}), 500
+        return jsonify({"error": gettext("خطأ في معالجة callback")}), 500
 
 
 @auth_bp.route("/payment/currencies")
@@ -669,7 +681,9 @@ def available_currencies():
 
     except Exception:
         current_app.logger.exception("available_currencies failed")
-        return jsonify({"success": False, "error": "خطأ في الحصول على العملات"}), 500
+        return jsonify(
+            {"success": False, "error": gettext("خطأ في الحصول على العملات")}
+        ), 500
 
 
 @auth_bp.route("/payment/estimate")
@@ -682,7 +696,9 @@ def estimate_amount():
         to_currency = request.args.get("to", "btc")
 
         if amount < 1:
-            return jsonify({"success": False, "error": "الحد الأدنى للتبرع هو $1"}), 400
+            return jsonify(
+                {"success": False, "error": gettext("الحد الأدنى للتبرع هو $1")}
+            ), 400
 
         nowpayments = NOWPaymentsService()
         result = nowpayments.get_estimated_amount(amount, from_currency, to_currency)
@@ -694,7 +710,7 @@ def estimate_amount():
 
     except Exception:
         current_app.logger.exception("estimate_amount failed")
-        return jsonify({"success": False, "error": "خطأ في التقدير"}), 500
+        return jsonify({"success": False, "error": gettext("خطأ في التقدير")}), 500
 
 
 @auth_bp.route("/thank-you")

@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import TaskStage, Task, ProjectMember, Customer, User
@@ -23,10 +24,10 @@ def create_project():
     if request.method == "POST":
         try:
             ProjectService.create_project(request.form, current_user)
-            flash("تم إنشاء المشروع بنجاح", "success")
+            flash(gettext("تم إنشاء المشروع بنجاح"), "success")
             return redirect(url_for("projects.list_projects"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     customers = (
         tenant_query(Customer).filter_by(is_active=True).order_by(Customer.name).all()
     )
@@ -83,10 +84,10 @@ def edit_project(project_id):
     if request.method == "POST":
         try:
             ProjectService.update_project(project_id, request.form, current_user)
-            flash("تم تحديث المشروع", "success")
+            flash(gettext("تم تحديث المشروع"), "success")
             return redirect(url_for("projects.project_detail", project_id=project_id))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     customers = tenant_query(Customer).filter_by(is_active=True).all()
     return render_template(
         "projects/task_form.html", project=project, customers=customers
@@ -99,7 +100,7 @@ def edit_project(project_id):
 def add_task(project_id):
     try:
         ProjectService.create_task(project_id, request.form, current_user)
-        flash("تم إنشاء المهمة", "success")
+        flash(gettext("تم إنشاء المهمة"), "success")
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("projects.project_detail", project_id=project_id))
@@ -151,7 +152,7 @@ def add_member(project_id):
             request.form.get("role", "member"),
             current_user,
         )
-        flash("تم إضافة العضو", "success")
+        flash(gettext("تم إضافة العضو"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("projects.project_detail", project_id=project_id))

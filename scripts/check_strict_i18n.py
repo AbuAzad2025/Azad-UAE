@@ -71,9 +71,83 @@ FLASK_ROUTE_BARE_STRING = re.compile(
 )
 
 
+# Tracks whether the current scan position is inside a triple-quoted string
+# literal (docstring / multi-line string).  Module-level state is reset per
+# file by ``scan_file``.
+_IN_TRIPLE = {"": None}
+
+
+def _strip_triple_quotes(line):
+    """Remove triple-quoted spans from ``line`` (single- or multi-line).
+
+    Returns ``(in_block, cleaned)`` where ``in_block`` is True when the line
+    ends inside an unterminated triple-quoted block, and ``cleaned`` is the
+    line with any *completed* triple-quoted spans replaced by spaces (so
+    single-line docstrings are dropped before literal extraction).
+    """
+    triples = ['"""', "'''"]
+    cleaned = []
+    i = 0
+    in_block = _IN_TRIPLE[""] is not None
+    open_quote = _IN_TRIPLE[""]
+    n = len(line)
+    while i < n:
+        if in_block:
+            end = line.find(open_quote, i)
+            if end == -1:
+                # Rest of line is inside the block.
+                cleaned.append(" " * (n - i))
+                i = n
+                break
+            cleaned.append(" " * (end - i))
+            cleaned.append("   ")
+            i = end + 3
+            in_block = False
+            open_quote = None
+            _IN_TRIPLE[""] = None
+        else:
+            opened = None
+            for t in triples:
+                pos = line.find(t, i)
+                if pos != -1 and (opened is None or pos < opened[1]):
+                    opened = (t, pos)
+            if opened is None:
+                cleaned.append(line[i:])
+                i = n
+                break
+            cleaned.append(line[i:opened[1]])
+            i = opened[1] + 3
+            in_block = True
+            open_quote = opened[0]
+            _IN_TRIPLE[""] = opened[0]
+    _IN_TRIPLE[""] = open_quote if in_block else None
+    return in_block, "".join(cleaned)
+
+
+def _strip_inline_comment(line):
+    """Remove a trailing ``# ...`` comment that lies outside of string literals.
+
+    A bare ``#`` (not preceded by an unescaped quote section) begins a comment.
+    Arabic string literals never contain a bare ``#``, so this is safe for the
+    purpose of the linter.
+    """
+    in_single = in_double = False
+    i = 0
+    while i < len(line):
+        ch = line[i]
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif ch == "#" and not in_single and not in_double:
+            return line[:i]
+        i += 1
+    return line
+
+
 def _should_skip_line(line):
     stripped = line.strip()
-    if not stripped or stripped.startswith("#") or stripped.startswith("//"):
+    if not stripped or stripped.startswith("//"):
         return True
     if stripped.startswith("{%") or stripped.startswith("{#"):
         return True
@@ -106,17 +180,33 @@ def scan_file(filepath):
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
     ext = os.path.splitext(filepath)[1].lower()
+    _IN_TRIPLE[""] = None
+    prev_wrapped = False
     for lineno, line in enumerate(lines, 1):
         if _should_skip_line(line):
             continue
-        if _is_translation_wrapped(line):
+        # Remove triple-quoted spans (docstrings / multi-line strings) and
+        # track block state; lines that are entirely inside a block are
+        # dropped from literal extraction.
+        in_block, stripped = _strip_triple_quotes(line)
+        if in_block:
+            continue
+        # Drop trailing # comments (outside of string literals) so developer
+        # comments are never treated as user-facing text.
+        code = _strip_inline_comment(stripped)
+        # A string on this line may be wrapped by a translation call that
+        # opened on the previous line (e.g. ruff splitting a long gettext(...)
+        # call across lines). Treat such lines as wrapped.
+        line_wrapped = _is_translation_wrapped(code) or prev_wrapped
+        prev_wrapped = _is_translation_wrapped(code)
+        if line_wrapped:
             continue
         if ext == ".html":
-            for s in _extract_string_literals(line):
+            for s in _extract_string_literals(code):
                 if _is_likely_user_facing(s) and not RTL_CONTENT_MARKER.match(s):
                     issues.append((lineno, s, "template string"))
         elif ext == ".py":
-            for s in _extract_string_literals(line):
+            for s in _extract_string_literals(code):
                 if _is_likely_user_facing(s) and RTL_CONTENT_MARKER.match(s):
                     issues.append((lineno, s, "python string"))
     return issues
@@ -178,13 +268,13 @@ def main():
                         all_issues.append((rel, lineno, text, ctx))
 
     if all_issues:
-        print("❌ STRICT I18N FAILURE: Un-wrapped user-facing strings detected\n")
+        print("STRICT I18N FAILURE: Un-wrapped user-facing strings detected\n")
         for rel, lineno, text, ctx in sorted(all_issues):
             print(f'  {rel}:{lineno}  [{ctx}] "{text[:80]}"')
         print(f"\nTotal: {len(all_issues)} issue(s)")
         sys.exit(1)
 
-    print("✅ Strict i18n check passed — all UI strings wrapped in translation calls")
+    print("Strict i18n check passed - all UI strings wrapped in translation calls")
     sys.exit(0)
 
 

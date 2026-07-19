@@ -3,6 +3,8 @@
 إدارة الموردين: عرض، إضافة، تعديل، تقارير
 """
 
+from flask_babel import gettext
+
 from flask import (
     Blueprint,
     render_template,
@@ -137,7 +139,6 @@ def index():
 
     query = _scoped_supplier_query().filter_by(is_active=True)
 
-    # البحث
     if search:
         search_filter = f"%{search}%"
         query = query.filter(
@@ -149,7 +150,6 @@ def index():
             )
         )
 
-    # الفلترة حسب النوع
     if supplier_type:
         query = query.filter_by(supplier_type=supplier_type)
 
@@ -157,7 +157,6 @@ def index():
         page=page, per_page=per_page, error_out=False
     )
 
-    # إحصائيات
     scoped_stats_query = _scoped_supplier_query().filter_by(is_active=True)
     stats = {
         "total": scoped_stats_query.count(),
@@ -189,7 +188,7 @@ def create():
         try:
             supplier_type_value = (request.form.get("supplier_type") or "").strip()
             if not supplier_type_value:
-                flash("⚠️ يرجى اختيار نوع المورد.", "warning")
+                flash(gettext("⚠️ يرجى اختيار نوع المورد."), "warning")
                 return render_template("suppliers/create.html")
 
             rating_value = (request.form.get("rating") or "").strip()
@@ -198,7 +197,7 @@ def create():
                 try:
                     rating = int(rating_value)
                 except ValueError:
-                    flash("⚠️ قيمة التقييم غير صحيحة.", "warning")
+                    flash(gettext("⚠️ قيمة التقييم غير صحيحة."), "warning")
                     return render_template("suppliers/create.html")
 
             from utils.field_validators import (
@@ -271,17 +270,21 @@ def create():
                                 "concept_code": "OPENING_BALANCE_EQUITY",
                                 "debit": initial_balance,
                                 "credit": 0,
-                                "description": f"رصيد افتتاحي للمورد {supplier.name}",
+                                "description": gettext(
+                                    f"رصيد افتتاحي للمورد {supplier.name}"
+                                ),
                             },
                             {
                                 "account": "2110",
                                 "concept_code": "ACCOUNTS_PAYABLE",
                                 "debit": 0,
                                 "credit": initial_balance,
-                                "description": f"رصيد افتتاحي للمورد {supplier.name}",
+                                "description": gettext(
+                                    f"رصيد افتتاحي للمورد {supplier.name}"
+                                ),
                             },
                         ],
-                        description=f"رصيد افتتاحي للمورد {supplier.name}",
+                        description=gettext(f"رصيد افتتاحي للمورد {supplier.name}"),
                         reference_type="supplier_opening",
                         reference_id=supplier.id,
                         tenant_id=tid,
@@ -290,7 +293,7 @@ def create():
                 LoggingCore.log_audit("create", "suppliers", supplier.id)
 
             log_mutation("create", "Supplier", supplier.id, {"name": supplier.name})
-            flash("✅ تم إضافة المورد بنجاح!", "success")
+            flash(gettext("✅ تم إضافة المورد بنجاح!"), "success")
             return redirect(url_for("suppliers.view", id=supplier.id))
 
         except Exception as e:
@@ -310,7 +313,6 @@ def view(**kwargs):
     if not _supplier_in_scope(record_id):
         return render_template("errors/403.html"), 403
 
-    # آخر المشتريات
     recent_purchases_query = supplier.purchases.filter_by(status="confirmed")
     if branch_scope_id() is not None:
         recent_purchases_query = recent_purchases_query.filter(
@@ -321,7 +323,6 @@ def view(**kwargs):
     )
     _, total_amount, total_paid = _supplier_scoped_totals(record_id)
 
-    # إحصائيات
     stats = {
         "total_purchases": recent_purchases_query.count(),
         "total_amount": float(total_amount or 0),
@@ -400,7 +401,7 @@ def edit(**kwargs):
 
             LoggingCore.log_audit("update", "suppliers", supplier.id)
 
-            flash("✅ تم تحديث المورد بنجاح!", "success")
+            flash(gettext("✅ تم تحديث المورد بنجاح!"), "success")
             return redirect(url_for("suppliers.view", id=supplier.id))
 
         except Exception as e:
@@ -440,14 +441,16 @@ def delete(**kwargs):
             with atomic_transaction("supplier_soft_delete"):
                 db.session.flush()
             flash(
-                f'⚠️ تم إلغاء تفعيل المورد "{supplier.name}" بدلاً من حذفه لوجود ({purchases_count} فاتورة شراء، {payments_count} دفعة) مرتبطة به.',
+                gettext(
+                    f'⚠️ تم إلغاء تفعيل المورد "{supplier.name}" بدلاً من حذفه لوجود ({purchases_count} فاتورة شراء، {payments_count} دفعة) مرتبطة به.'
+                ),
                 "warning",
             )
         else:
             db.session.delete(supplier)
             with atomic_transaction("supplier_hard_delete"):
                 db.session.flush()
-            flash(f'✅ تم حذف المورد "{supplier.name}" نهائياً!', "success")
+            flash(gettext(f'✅ تم حذف المورد "{supplier.name}" نهائياً!'), "success")
 
         LoggingCore.log_audit("delete", "suppliers", supplier.id)
 
@@ -458,7 +461,9 @@ def delete(**kwargs):
             with atomic_transaction("supplier_delete_fallback"):
                 db.session.flush()
             flash(
-                f'⚠️ تعذر الحذف النهائي للمورد "{supplier.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.',
+                gettext(
+                    f'⚠️ تعذر الحذف النهائي للمورد "{supplier.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.'
+                ),
                 "warning",
             )
         except Exception as inner_e:
@@ -515,7 +520,7 @@ def statement(**kwargs):
                 "balance": 0,
                 "currency": p.currency or "AED",
                 "exchange_rate": float(p.exchange_rate or 1),
-                "description": "فاتورة شراء",
+                "description": gettext("فاتورة شراء"),
                 "amount": float(p.total_amount or 0),
                 "base_amount": float(p.base_amount or 0),
             }
@@ -543,9 +548,9 @@ def statement(**kwargs):
                 "currency": pm.currency or "AED",
                 "exchange_rate": float(pm.exchange_rate or 1),
                 "description": (
-                    f"استرداد من المورد - {pm.payment_method}"
+                    gettext(f"استرداد من المورد - {pm.payment_method}")
                     if is_refund
-                    else f"دفعة - {pm.payment_method}"
+                    else gettext(f"دفعة - {pm.payment_method}")
                 ),
                 "amount": float(pm.amount or 0),
                 "base_amount": pm_amount,
@@ -562,8 +567,6 @@ def statement(**kwargs):
 
     transactions.sort(key=lambda x: x["date"] or datetime.min)
 
-    # الدلالة للموردين: موجب = مستحق للمورد، سالب = المورد مدين لنا
-    # المشتريات (debit) تزيد المستحق، المدفوعات (credit) تنقصه
     if date_from:
         opening_balance = 0
         for t in transactions:
@@ -583,7 +586,7 @@ def statement(**kwargs):
                 "balance": opening_balance,
                 "currency": "AED",
                 "exchange_rate": 1,
-                "description": "الرصيد الافتتاحي",
+                "description": gettext("الرصيد الافتتاحي"),
             },
         )
 
@@ -612,7 +615,6 @@ def api_search():
         request.args.get("page", 1, type=int)
         per_page = 20
 
-        # السماح بالبحث حتى بدون query (لعرض كل الموردين)
         if query and len(query) >= 1:
             suppliers = (
                 _scoped_supplier_query()
@@ -629,7 +631,6 @@ def api_search():
                 .all()
             )
         else:
-            # عرض كل الموردين (مرتبين أبجدياً)
             suppliers = (
                 _scoped_supplier_query()
                 .filter_by(is_active=True)

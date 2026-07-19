@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -298,7 +299,7 @@ def edit_warehouse(**kwargs):
                 )
 
                 if not warehouse.name:
-                    flash("اسم المستودع مطلوب", "warning")
+                    flash(gettext("اسم المستودع مطلوب"), "warning")
                     return render_template(
                         "warehouse/edit_warehouse.html",
                         warehouse=warehouse,
@@ -307,7 +308,7 @@ def edit_warehouse(**kwargs):
                         branches=branches,
                     )
                 if not warehouse.location:
-                    flash("الموقع مطلوب", "warning")
+                    flash(gettext("الموقع مطلوب"), "warning")
                     return render_template(
                         "warehouse/edit_warehouse.html",
                         warehouse=warehouse,
@@ -317,7 +318,7 @@ def edit_warehouse(**kwargs):
                     )
 
                 log_mutation("update", "Warehouse", warehouse.id)
-            flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', "success")
+            flash(gettext(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح'), "success")
             return redirect(url_for("warehouse.list_warehouses"))
         except Exception as e:
             current_app.logger.error(f"Error editing warehouse {record_id}: {e}")
@@ -383,10 +384,10 @@ def create_warehouse():
 
                     StoreService.assert_single_online_warehouse(tenant_id)
                 if not location:
-                    location = "Online / أونلاين"
+                    location = gettext("Online / أونلاين")
 
             if not name:
-                flash("اسم المستودع مطلوب", "warning")
+                flash(gettext("اسم المستودع مطلوب"), "warning")
                 return render_template(
                     "warehouse/create_warehouse.html",
                     parent_warehouses=parent_warehouses,
@@ -396,7 +397,7 @@ def create_warehouse():
                 )
 
             if not location:
-                flash("الموقع مطلوب", "warning")
+                flash(gettext("الموقع مطلوب"), "warning")
                 return render_template(
                     "warehouse/create_warehouse.html",
                     parent_warehouses=parent_warehouses,
@@ -410,7 +411,7 @@ def create_warehouse():
                     code=code, tenant_id=tenant_id
                 ).first()
                 if existing:
-                    flash("رمز المستودع موجود مسبقاً", "warning")
+                    flash(gettext("رمز المستودع موجود مسبقاً"), "warning")
                     return render_template(
                         "warehouse/create_warehouse.html",
                         parent_warehouses=parent_warehouses,
@@ -424,7 +425,7 @@ def create_warehouse():
                     id=parent_id, tenant_id=tenant_id
                 ).first()
                 if not parent_warehouse:
-                    flash("المستودع الأب غير موجود", "warning")
+                    flash(gettext("المستودع الأب غير موجود"), "warning")
                     return render_template(
                         "warehouse/create_warehouse.html",
                         parent_warehouses=parent_warehouses,
@@ -433,7 +434,7 @@ def create_warehouse():
                         form_data=request.form,
                     )
                 if not parent_warehouse.is_active:
-                    flash("المستودع الأب غير نشط", "warning")
+                    flash(gettext("المستودع الأب غير نشط"), "warning")
                     return render_template(
                         "warehouse/create_warehouse.html",
                         parent_warehouses=parent_warehouses,
@@ -476,14 +477,14 @@ def create_warehouse():
                 if store and store.warehouse_id != warehouse.id:
                     store.warehouse_id = warehouse.id
 
-            # (atomic_transaction ستقوم بالـ commit عند الخروج)
-
             type_label = (
-                "أونلاين"
+                gettext("أونلاين")
                 if warehouse_type == Warehouse.TYPE_ONLINE
-                else ("فرعي" if parent_id else "مستقل")
+                else (gettext("فرعي") if parent_id else gettext("مستقل"))
             )
-            flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', "success")
+            flash(
+                gettext(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح'), "success"
+            )
             return redirect(url_for("warehouse.list_warehouses"))
 
         except ValueError as e:
@@ -541,7 +542,7 @@ def delete_warehouse(**kwargs):
 
     # Check if main warehouse
     if warehouse.is_main:
-        flash("لا يمكن حذف المستودع الرئيسي", "danger")
+        flash(gettext("لا يمكن حذف المستودع الرئيسي"), "danger")
         return redirect(url_for("warehouse.list_warehouses"))
 
     try:
@@ -558,11 +559,13 @@ def delete_warehouse(**kwargs):
     else:
         if has_stock:
             flash(
-                f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به',
+                gettext(
+                    f'تم إلغاء تفعيل المستودع "{warehouse.name}" لوجود حركات مخزنية مرتبطة به'
+                ),
                 "warning",
             )
         else:
-            flash(f'تم حذف المستودع "{warehouse.name}" بنجاح', "success")
+            flash(gettext(f'تم حذف المستودع "{warehouse.name}" بنجاح'), "success")
 
     return redirect(url_for("warehouse.list_warehouses"))
 
@@ -580,7 +583,10 @@ def add_stock(product_id):
         if quantity <= 0:
             return (
                 jsonify(
-                    {"success": False, "message": "الكمية يجب أن تكون أكبر من صفر"}
+                    {
+                        "success": False,
+                        "message": gettext("الكمية يجب أن تكون أكبر من صفر"),
+                    }
                 ),
                 400,
             )
@@ -597,7 +603,9 @@ def add_stock(product_id):
             if not warehouse:
                 warehouse = accessible_query.order_by(Warehouse.name).first()
             if not warehouse:
-                return jsonify({"success": False, "message": "لا يوجد مستودع نشط"}), 400
+                return jsonify(
+                    {"success": False, "message": gettext("لا يوجد مستودع نشط")}
+                ), 400
             warehouse_id = warehouse.id
         else:
             ensure_warehouse_access(warehouse_id, current_user)
@@ -607,14 +615,14 @@ def add_stock(product_id):
                 product_id=product_id,
                 warehouse_id=warehouse_id,
                 quantity=quantity,
-                notes=notes or "إضافة كمية يدوية",
+                notes=notes or gettext("إضافة كمية يدوية"),
             )
             product = movement.product
 
         return jsonify(
             {
                 "success": True,
-                "message": f"تم إضافة {quantity} وحدة للمنتج {product.name}",
+                "message": gettext(f"تم إضافة {quantity} وحدة للمنتج {product.name}"),
                 "new_stock": float(product.current_stock),
             }
         )
@@ -649,7 +657,10 @@ def api_transfer():
     if not all([product_id, source_id, destination_id, quantity]):
         return (
             jsonify(
-                {"success": False, "message": "المنتج، المصدر، الوجهة، والكمية مطلوبة"}
+                {
+                    "success": False,
+                    "message": gettext("المنتج، المصدر، الوجهة، والكمية مطلوبة"),
+                }
             ),
             400,
         )
@@ -661,7 +672,7 @@ def api_transfer():
                 from_warehouse_id=source_id,
                 to_warehouse_id=destination_id,
                 quantity=quantity,
-                notes=notes or "تحويل يدوي",
+                notes=notes or gettext("تحويل يدوي"),
                 user=current_user,
             )
             from models.warehouse import ProductWarehouseStock
@@ -688,7 +699,7 @@ def api_transfer():
         return jsonify({"success": False, "message": str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"Stock transfer error: {e}")
-        return jsonify({"success": False, "message": "فشل نقل المخزون"}), 500
+        return jsonify({"success": False, "message": gettext("فشل نقل المخزون")}), 500
 
 
 @warehouse_bp.route("/exchange", methods=["POST"])
@@ -713,7 +724,12 @@ def api_exchange():
 
     if not warehouse_id or not product_id or not quantity:
         return (
-            jsonify({"success": False, "message": "المستودع، المنتج، والكمية مطلوبة"}),
+            jsonify(
+                {
+                    "success": False,
+                    "message": gettext("المستودع، المنتج، والكمية مطلوبة"),
+                }
+            ),
             400,
         )
 
@@ -723,7 +739,12 @@ def api_exchange():
             qty = -qty
         elif direction != "IN":
             return (
-                jsonify({"success": False, "message": "الاتجاه يجب أن يكون IN أو OUT"}),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": gettext("الاتجاه يجب أن يكون IN أو OUT"),
+                    }
+                ),
                 400,
             )
 
@@ -731,7 +752,7 @@ def api_exchange():
             movement = StockService.adjust_stock(
                 product_id=product_id,
                 quantity=qty,
-                notes=notes or f"تسوية مخزون ({direction})",
+                notes=notes or gettext(f"تسوية مخزون ({direction})"),
                 warehouse_id=warehouse_id,
             )
             from models.warehouse import ProductWarehouseStock
@@ -752,7 +773,7 @@ def api_exchange():
         return jsonify({"success": False, "message": str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"Stock exchange error: {e}")
-        return jsonify({"success": False, "message": "فشل تسوية المخزون"}), 500
+        return jsonify({"success": False, "message": gettext("فشل تسوية المخزون")}), 500
 
 
 @warehouse_bp.route("/api/upload_product_image", methods=["POST"])
@@ -764,7 +785,7 @@ def upload_product_image():
 
     file = request.files.get("file")
     if not file:
-        return jsonify({"ok": False, "error": "لم يتم إرسال ملف"}), 400
+        return jsonify({"ok": False, "error": gettext("لم يتم إرسال ملف")}), 400
     try:
         path = save_uploaded_file(
             file,
@@ -772,11 +793,11 @@ def upload_product_image():
             allowed_extensions={"png", "jpg", "jpeg", "gif", "webp"},
         )
         if not path:
-            return jsonify({"ok": False, "error": "فشل حفظ الملف"}), 500
+            return jsonify({"ok": False, "error": gettext("فشل حفظ الملف")}), 500
         url = "/" + path
         return jsonify({"ok": True, "url": url, "thumb_url": url})
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"upload_product_image error: {e}")
-        return jsonify({"ok": False, "error": "حدث خطأ أثناء رفع الصورة"}), 500
+        return jsonify({"ok": False, "error": gettext("حدث خطأ أثناء رفع الصورة")}), 500

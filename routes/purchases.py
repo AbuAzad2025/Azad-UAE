@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -79,7 +80,9 @@ def create():
 
             warehouse_id_val = request.form.get("warehouse_id", type=int)
             if not warehouse_id_val:
-                flash("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة.", "danger")
+                flash(
+                    gettext("⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة."), "danger"
+                )
                 return redirect(url_for("purchases.create"))
             ensure_warehouse_access(warehouse_id_val, user=current_user)
 
@@ -147,7 +150,7 @@ def create():
                     ),
                 )
 
-            flash("✅ تم إنشاء فاتورة الشراء بنجاح!", "success")
+            flash(gettext("✅ تم إنشاء فاتورة الشراء بنجاح!"), "success")
             return redirect(url_for("purchases.view", id=purchase.id))
 
         except ValueError as e:
@@ -159,7 +162,9 @@ def create():
 
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
             flash(
-                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -257,28 +262,28 @@ def edit(**kwargs):
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
 
-    # منع التعديل للفواتير المدفوعة
     if purchase.get_paid_amount() > 0:
         flash(
-            "⚠️ لا يمكن تعديل فاتورة شراء تم الدفع عليها.\n💡 للحفاظ على السجلات المحاسبية.",
+            gettext(
+                "⚠️ لا يمكن تعديل فاتورة شراء تم الدفع عليها.\n💡 للحفاظ على السجلات المحاسبية."
+            ),
             "danger",
         )
         return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
         try:
-            # تعديل الملاحظات فقط
             purchase.notes = request.form.get("notes", "")
 
             with atomic_transaction("purchase_edit"):
                 db.session.flush()
             LoggingCore.log_audit("update", "purchases", record_id)
 
-            flash("✅ تم تحديث فاتورة الشراء بنجاح!", "success")
+            flash(gettext("✅ تم تحديث فاتورة الشراء بنجاح!"), "success")
             return redirect(url_for("purchases.view", id=record_id))
 
         except Exception as e:
-            flash(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات.", "danger")
+            flash(gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات."), "danger")
 
     return render_template("purchases/edit.html", purchase=purchase)
 
@@ -299,24 +304,17 @@ def delete(**kwargs):
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
 
-    # التحقق من الارتباطات
     has_links = False
 
-    # 1. التحقق من المدفوعات (Payments - outgoing linked to this purchase)
-    # ملاحظة: المدفوعات للموردين قد لا تكون مرتبطة مباشرة بحقل purchase_id في جدول payments القديم،
-    # ولكن إذا كان هناك حقل purchase_id أو عبر supplier_id وتاريخ متزامن،
-    # لكن سنفترض وجود علاقة أو استخدام get_paid_amount() كمؤشر
     if purchase.get_paid_amount() > 0:
         has_links = True
 
-    # 2. التحقق من الشيكات (Cheques)
     linked_cheques = Cheque.query.filter_by(
         purchase_id=purchase.id, tenant_id=purchase.tenant_id
     ).count()
     if linked_cheques > 0:
         has_links = True
 
-    # التحقق من حركات المخزون (منع الحذف النهائي للفواتير التي أثرت على المخزون)
     from models.warehouse import StockMovement
 
     has_stock = (
@@ -329,35 +327,40 @@ def delete(**kwargs):
 
     try:
         if has_links:
-            # أرشفة فقط (بدون عكس القيد - الأرشفة إخفاء إداري)
             archive_service = ArchiveService()
             archive_service.archive_record(
-                "purchases", purchase, reason="تم أرشفة الفاتورة لوجود مدفوعات أو شيكات"
+                "purchases",
+                purchase,
+                reason=gettext("تم أرشفة الفاتورة لوجود مدفوعات أو شيكات"),
             )
 
             LoggingCore.log_audit("archive", "purchases", record_id)
             with atomic_transaction("purchase_archive"):
                 db.session.flush()
             flash(
-                f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)',
+                gettext(
+                    f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)'
+                ),
                 "warning",
             )
         elif has_stock:
-            # منع الحذف النهائي لفواتير الشراء التي أثرت على المخزون
             flash(
-                f'⚠️ لا يمكن حذف فاتورة الشراء "{purchase.purchase_number}" لأنها أثرت على المخزون. يمكنك أرشفتها بدلاً من ذلك.',
+                gettext(
+                    f'⚠️ لا يمكن حذف فاتورة الشراء "{purchase.purchase_number}" لأنها أثرت على المخزون. يمكنك أرشفتها بدلاً من ذلك.'
+                ),
                 "warning",
             )
             archive_service = ArchiveService()
             archive_service.archive_record(
-                "purchases", purchase, reason="تم أرشفة الفاتورة لوجود حركة مخزون"
+                "purchases",
+                purchase,
+                reason=gettext("تم أرشفة الفاتورة لوجود حركة مخزون"),
             )
             LoggingCore.log_audit("archive", "purchases", record_id)
             with atomic_transaction("purchase_archive_fallback"):
                 db.session.flush()
         else:
             with atomic_transaction("purchase_delete"):
-                # عكس القيود المحاسبية بدلاً من الحذف
                 from services.gl_service import GLService
 
                 GLService.reverse_entry(
@@ -367,7 +370,6 @@ def delete(**kwargs):
                     tenant_id=purchase.tenant_id,
                 )
 
-                # عكس أثر المورد
                 if purchase.supplier_id:
                     from models import Supplier
 
@@ -379,21 +381,20 @@ def delete(**kwargs):
 
                         supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
 
-                # حذف بنود الفاتورة
                 PurchaseLine.query.filter_by(
                     purchase_id=purchase.id, tenant_id=purchase.tenant_id
                 ).delete()
                 db.session.delete(purchase)
                 LoggingCore.log_audit("delete", "purchases", record_id)
             flash(
-                f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً',
+                gettext(f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً'),
                 "success",
             )
 
         return redirect(url_for("purchases.index"))
 
     except Exception as e:
-        flash(f"❌ حدث خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
         return redirect(url_for("purchases.view", id=record_id))
 
 
@@ -414,11 +415,11 @@ def cancel(**kwargs):
         with atomic_transaction("purchase_cancel"):
             PurchaseService.cancel_purchase(purchase)
         LoggingCore.log_audit("cancel", "purchases", purchase.id)
-        flash("✅ تم إلغاء فاتورة الشراء بنجاح!", "success")
+        flash(gettext("✅ تم إلغاء فاتورة الشراء بنجاح!"), "success")
     except ValueError as e:
         flash(f"❌ {str(e)}", "danger")
     except Exception as e:
-        flash(f"❌ حدث خطأ: {str(e)}", "danger")
+        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("purchases.view", id=record_id))
 
@@ -437,7 +438,10 @@ def purchase_return(**kwargs):
         return render_template("errors/403.html"), 403
 
     if purchase.status in ("draft", "cancelled"):
-        flash("❌ لا يمكن عمل مرتجع لفاتورة شراء في حالة مسودة أو ملغاة", "danger")
+        flash(
+            gettext("❌ لا يمكن عمل مرتجع لفاتورة شراء في حالة مسودة أو ملغاة"),
+            "danger",
+        )
         return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
@@ -450,7 +454,7 @@ def purchase_return(**kwargs):
         notes = request.form.get("notes", "")
 
         if not lines_data:
-            flash("❌ يجب تحديد منتج واحد على الأقل للإرجاع", "danger")
+            flash(gettext("❌ يجب تحديد منتج واحد على الأقل للإرجاع"), "danger")
             return redirect(url_for("purchases.purchase_return", id=id))
 
         try:
@@ -463,14 +467,16 @@ def purchase_return(**kwargs):
                     notes=notes,
                 )
             flash(
-                f"✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!",
+                gettext(
+                    f"✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!"
+                ),
                 "success",
             )
             return redirect(url_for("purchases.view", id=id))
         except ValueError as e:
             flash(f"❌ {str(e)}", "danger")
         except Exception as e:
-            flash(f"❌ حدث خطأ: {str(e)}", "danger")
+            flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
             current_app.logger.exception("Purchase return error")
 
     tid = get_active_tenant_id(current_user)
@@ -495,10 +501,6 @@ def purchase_return(**kwargs):
     )
 
 
-# =====================================
-# =====================================
-
-
 @purchases_bp.route("/api/calculate-totals", methods=["POST"])
 @login_required
 @permission_required("manage_purchases")
@@ -517,7 +519,6 @@ def api_calculate_purchase_totals():
 
         tax_rate = normalize_tax_rate(tax_rate)
 
-        # حساب المجموع الفرعي
         subtotal = Decimal("0")
         for line in lines:
             try:
@@ -533,14 +534,12 @@ def api_calculate_purchase_totals():
             except (ValueError, TypeError, KeyError, InvalidOperation):
                 continue
 
-        # حساب تكاليف الوصول
         freight = Decimal(str(data.get("freight", 0) or 0))
         insurance = Decimal(str(data.get("insurance", 0) or 0))
         customs_duty = Decimal(str(data.get("customs_duty", 0) or 0))
         other_landed_cost = Decimal(str(data.get("other_landed_cost", 0) or 0))
         landed_total = freight + insurance + customs_duty + other_landed_cost
 
-        # حساب الضريبة والإجمالي
         prices_include_vat = bool(data.get("prices_include_vat", False))
         if prices_include_vat:
             if tax_rate > 0:
@@ -582,4 +581,6 @@ def api_calculate_purchase_totals():
 
     except Exception:
         current_app.logger.exception("calculate_purchase_totals failed")
-        return jsonify({"success": False, "error": "تعذر حساب الإجماليات حالياً"}), 500
+        return jsonify(
+            {"success": False, "error": gettext("تعذر حساب الإجماليات حالياً")}
+        ), 500

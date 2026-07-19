@@ -1,5 +1,7 @@
 """Maintenance routes for the Owner Dashboard."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     request,
     jsonify,
@@ -26,7 +28,12 @@ def maintenance_fix_cost_centers():
     confirm = request.form.get("confirm")
     if confirm != "FIX_COST_CENTERS":
         return (
-            jsonify({"success": False, "error": "يجب كتابة FIX_COST_CENTERS للتأكيد"}),
+            jsonify(
+                {
+                    "success": False,
+                    "error": gettext("يجب كتابة FIX_COST_CENTERS للتأكيد"),
+                }
+            ),
             400,
         )
 
@@ -41,7 +48,10 @@ def maintenance_fix_cost_centers():
             {"status": "completed", "result": str(result)},
         )
         return jsonify(
-            {"success": True, "message": "✅ تم إصلاح فهارس مراكز التكلفة بنجاح"}
+            {
+                "success": True,
+                "message": gettext("✅ تم إصلاح فهارس مراكز التكلفة بنجاح"),
+            }
         )
     except Exception as e:
         current_app.logger.error("maintenance_fix_cost_centers failed: %s", e)
@@ -52,7 +62,7 @@ def maintenance_fix_cost_centers():
             source="routes.owner.maintenance_fix_cost_centers",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
 
 
 @owner_bp.route("/maintenance/rebuild-gl-tree", methods=["POST"])
@@ -62,7 +72,12 @@ def maintenance_rebuild_gl_tree():
     confirm = request.form.get("confirm")
     if confirm != "REBUILD_GL_TREE":
         return (
-            jsonify({"success": False, "error": "يجب كتابة REBUILD_GL_TREE للتأكيد"}),
+            jsonify(
+                {
+                    "success": False,
+                    "error": gettext("يجب كتابة REBUILD_GL_TREE للتأكيد"),
+                }
+            ),
             400,
         )
 
@@ -83,7 +98,9 @@ def maintenance_rebuild_gl_tree():
         return jsonify(
             {
                 "success": True,
-                "message": f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب",
+                "message": gettext(
+                    f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب"
+                ),
                 "result": result,
             }
         )
@@ -96,7 +113,7 @@ def maintenance_rebuild_gl_tree():
             source="routes.owner.maintenance_rebuild_gl_tree",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
 
 
 @owner_bp.route("/maintenance/fix-default-tenant", methods=["POST"])
@@ -107,7 +124,10 @@ def maintenance_fix_default_tenant():
     if confirm != "FIX_DEFAULT_TENANT":
         return (
             jsonify(
-                {"success": False, "error": "يجب كتابة FIX_DEFAULT_TENANT للتأكيد"}
+                {
+                    "success": False,
+                    "error": gettext("يجب كتابة FIX_DEFAULT_TENANT للتأكيد"),
+                }
             ),
             400,
         )
@@ -129,14 +149,16 @@ def maintenance_fix_default_tenant():
             return jsonify(
                 {
                     "success": True,
-                    "message": f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود",
+                    "message": gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود"),
                     "result": result,
                 }
             )
         return jsonify(
             {
                 "success": True,
-                "message": f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي",
+                "message": gettext(
+                    f"✅ تم تصحيح {patched} عمود في بيانات المستأجر الافتراضي"
+                ),
                 "result": result,
             }
         )
@@ -149,7 +171,7 @@ def maintenance_fix_default_tenant():
             source="routes.owner.maintenance_fix_default_tenant",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
 
 
 @owner_bp.route("/maintenance/regenerate-default-backup", methods=["POST"])
@@ -162,7 +184,7 @@ def maintenance_regenerate_default_backup():
             jsonify(
                 {
                     "success": False,
-                    "error": "يجب كتابة REGENERATE_DEFAULT_BACKUP للتأكيد",
+                    "error": gettext("يجب كتابة REGENERATE_DEFAULT_BACKUP للتأكيد"),
                 }
             ),
             400,
@@ -184,14 +206,16 @@ def maintenance_regenerate_default_backup():
             return jsonify(
                 {
                     "success": True,
-                    "message": "🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية",
+                    "message": gettext(
+                        "🔍 تجربة جافة: ستتم إعادة إنشاء النسخة الاحتياطية"
+                    ),
                     "result": result,
                 }
             )
         return jsonify(
             {
                 "success": True,
-                "message": f"✅ تم تجديد النسخة الاحتياطية: {result}",
+                "message": gettext(f"✅ تم تجديد النسخة الاحتياطية: {result}"),
                 "result": result,
             }
         )
@@ -204,7 +228,7 @@ def maintenance_regenerate_default_backup():
             source="routes.owner.maintenance_regenerate_default_backup",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
 
 
 @owner_bp.route("/maintenance/run-default-tenant-maintenance", methods=["POST"])
@@ -217,7 +241,9 @@ def maintenance_run_default_tenant_maintenance():
             jsonify(
                 {
                     "success": False,
-                    "error": "يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد",
+                    "error": gettext(
+                        "يجب كتابة RUN_DEFAULT_TENANT_MAINTENANCE للتأكيد"
+                    ),
                 }
             ),
             400,
@@ -240,7 +266,9 @@ def maintenance_run_default_tenant_maintenance():
             return jsonify(
                 {
                     "success": True,
-                    "message": f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة",
+                    "message": gettext(
+                        f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود وتجديد النسخة"
+                    ),
                     "result": result,
                 }
             )
@@ -248,7 +276,9 @@ def maintenance_run_default_tenant_maintenance():
         return jsonify(
             {
                 "success": True,
-                "message": f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}",
+                "message": gettext(
+                    f"✅ صيانة كاملة: {patched} عمود مصحح، نسخة احتياطية: {backup}"
+                ),
                 "result": result,
             }
         )
@@ -263,7 +293,7 @@ def maintenance_run_default_tenant_maintenance():
             source="routes.owner.maintenance_run_default_tenant_maintenance",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500
 
 
 @owner_bp.route("/maintenance/cleanup-test-dbs", methods=["POST"])
@@ -273,7 +303,12 @@ def maintenance_cleanup_test_dbs():
     confirm = request.form.get("confirm")
     if confirm != "CLEANUP_TEST_DBS":
         return (
-            jsonify({"success": False, "error": "يجب كتابة CLEANUP_TEST_DBS للتأكيد"}),
+            jsonify(
+                {
+                    "success": False,
+                    "error": gettext("يجب كتابة CLEANUP_TEST_DBS للتأكيد"),
+                }
+            ),
             400,
         )
 
@@ -294,14 +329,16 @@ def maintenance_cleanup_test_dbs():
             return jsonify(
                 {
                     "success": True,
-                    "message": f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات",
+                    "message": gettext(
+                        f"🔍 تجربة جافة: سيتم حذف {dropped} قاعدة بيانات"
+                    ),
                     "result": result,
                 }
             )
         return jsonify(
             {
                 "success": True,
-                "message": f"✅ تم حذف {dropped} قاعدة بيانات اختبار",
+                "message": gettext(f"✅ تم حذف {dropped} قاعدة بيانات اختبار"),
                 "result": result,
             }
         )
@@ -314,4 +351,4 @@ def maintenance_cleanup_test_dbs():
             source="routes.owner.maintenance_cleanup_test_dbs",
             exception=e,
         )
-        return jsonify({"success": False, "error": f"خطأ: {str(e)}"}), 500
+        return jsonify({"success": False, "error": gettext(f"خطأ: {str(e)}")}), 500

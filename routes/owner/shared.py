@@ -1,5 +1,7 @@
 """Shared helper functions for the owner blueprint."""
 
+from flask_babel import gettext
+
 from routes.owner import (
     current_app,
     current_user,
@@ -195,20 +197,22 @@ def _sql_references_blocked_table(sql_query: str) -> str | None:
 def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
     """Allow a single read-only SELECT that references no blocked tenant table."""
     if not sql_query or not sql_query.strip():
-        return False, "❌ استعلام فارغ."
+        return False, gettext("❌ استعلام فارغ.")
     stripped = sql_query.strip()
     if ";" in stripped.rstrip(";"):
-        return False, "❌ مسموح باستعلام واحد فقط (بدون ;)."
+        return False, gettext("❌ مسموح باستعلام واحد فقط (بدون ;).")
     sql_upper = stripped.upper()
     if not sql_upper.startswith("SELECT"):
-        return False, "❌ مسموح باستعلامات SELECT للقراءة فقط."
+        return False, gettext("❌ مسموح باستعلامات SELECT للقراءة فقط.")
     if any(kw in sql_upper for kw in _FORBIDDEN_SQL_KEYWORDS):
-        return False, "❌ استعلام غير مسموح — قراءة فقط (SELECT)."
+        return False, gettext("❌ استعلام غير مسموح — قراءة فقط (SELECT).")
     blocked = _sql_references_blocked_table(sql_query)
     if blocked:
         return (
             False,
-            "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables).",
+            gettext(
+                "❌ الوصول محظور لجداول بيانات المستأجرين (tenant business tables)."
+            ),
         )
     return True, None
 

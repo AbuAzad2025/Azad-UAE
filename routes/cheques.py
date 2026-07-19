@@ -3,6 +3,8 @@
 إدارة الشيكات الواردة والصادرة
 """
 
+from flask_babel import gettext
+
 from flask import (
     Blueprint,
     render_template,
@@ -136,7 +138,6 @@ def index():
     search = request.args.get("search", "", type=str)
 
     tid = get_active_tenant_id(current_user)
-    # تحديث حالة كل الشيكات
     scoped_branch_id = branch_scope_id()
     Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
 
@@ -254,7 +255,7 @@ def create():
 
             cheque_type = (request.form.get("cheque_type") or "").strip()
             if not cheque_type:
-                flash("⚠️ يرجى اختيار نوع الشيك.", "warning")
+                flash(gettext("⚠️ يرجى اختيار نوع الشيك."), "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 try:
@@ -294,13 +295,11 @@ def create():
                 default_currency = get_system_default_currency()
             currency = request.form.get("currency") or default_currency
 
-            # حساب سعر الصرف
             exchange_rate = _resolve_transaction_rate(
                 currency,
                 request.form.get("exchange_rate", type=float),
             )
 
-            # تحويل التواريخ
             issue_date = datetime.strptime(
                 request.form.get("issue_date") or "", "%Y-%m-%d"
             ).date()
@@ -315,7 +314,7 @@ def create():
                 .filter(Customer.id == customer_id)
                 .first()
             ):
-                flash("⚠️ العميل المحدد خارج نطاق الفرع الحالي.", "warning")
+                flash(gettext("⚠️ العميل المحدد خارج نطاق الفرع الحالي."), "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
@@ -331,7 +330,7 @@ def create():
                 .filter(Supplier.id == supplier_id)
                 .first()
             ):
-                flash("⚠️ المورد المحدد خارج نطاق الفرع الحالي.", "warning")
+                flash(gettext("⚠️ المورد المحدد خارج نطاق الفرع الحالي."), "warning")
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
@@ -377,7 +376,10 @@ def create():
                     process_cheque_issue(cheque)
                 LoggingCore.log_audit("create", "cheques", cheque.id)
 
-            flash(f"✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح", "success")
+            flash(
+                gettext(f"✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح"),
+                "success",
+            )
             return redirect(url_for("cheques.view", id=cheque.id))
 
         except Exception as e:
@@ -416,7 +418,6 @@ def view(**kwargs):
         return render_template("errors/403.html"), 403
     cheque.update_status_based_on_date()
 
-    # إضافة today للـ template
     today = datetime.now().strftime("%Y-%m-%d")
 
     from models import Tenant
@@ -445,10 +446,11 @@ def edit(**kwargs):
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
-    # لا يمكن تعديل شيك تم صرفه أو ملغي
     if cheque.status in ["cleared", "cancelled", "bounced"]:
         flash(
-            "⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات.",
+            gettext(
+                "⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات."
+            ),
             "danger",
         )
         return redirect(url_for("cheques.view", id=record_id))
@@ -510,7 +512,7 @@ def edit(**kwargs):
 
                 LoggingCore.log_audit("update", "cheques", record_id)
 
-            flash("✅ تم تحديث الشيك بنجاح", "success")
+            flash(gettext("✅ تم تحديث الشيك بنجاح"), "success")
             return redirect(url_for("cheques.view", id=record_id))
 
         except Exception as e:
@@ -563,16 +565,25 @@ def deposit_cheque(**kwargs):
                 "cheque_deposit",
                 "cheques",
                 record_id,
-                {"message": f"إيداع شيك رقم {cheque.cheque_bank_number} في البنك"},
+                {
+                    "message": gettext(
+                        f"إيداع شيك رقم {cheque.cheque_bank_number} في البنك"
+                    )
+                },
             )
 
-        flash(f"✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك", "success")
+        flash(
+            gettext(f"✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك"),
+            "success",
+        )
 
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f"❌ خطأ: {str(e)}", "error")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -595,7 +606,6 @@ def clear_cheque(**kwargs):
             else None
         )
 
-        # سعر الصرف وقت الصرف (اختياري)
         clearance_exchange_rate = request.form.get(
             "clearance_exchange_rate", type=float
         )
@@ -605,18 +615,20 @@ def clear_cheque(**kwargs):
         except Exception:
             default_currency = get_system_default_currency()
 
-        # تأكيد الصرف - هنا تحدث المحاسبة!
         with atomic_transaction("cheque_clear"):
             process_cheque_clear(cheque, clearance_date, clearance_exchange_rate)
 
-        # رسالة مفصلة عند وجود فرق عملة
         if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal(
             "0.01"
         ):
             if cheque.currency_gain_loss > 0:
-                gain_loss_msg = f" - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} {default_currency}"
+                gain_loss_msg = gettext(
+                    f" - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} {default_currency}"
+                )
             else:
-                gain_loss_msg = f" - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} {default_currency}"
+                gain_loss_msg = gettext(
+                    f" - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} {default_currency}"
+                )
         else:
             gain_loss_msg = ""
 
@@ -626,20 +638,26 @@ def clear_cheque(**kwargs):
                 "cheques",
                 record_id,
                 {
-                    "message": f"تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}"
+                    "message": gettext(
+                        f"تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}"
+                    )
                 },
             )
 
         flash(
-            f"✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}",
+            gettext(
+                f"✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}"
+            ),
             "success",
         )
 
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f"❌ خطأ: {str(e)}", "error")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -655,30 +673,37 @@ def bounce_cheque(**kwargs):
         return render_template("errors/403.html"), 403
 
     try:
-        reason = request.form.get("bounce_reason", "غير محدد")
+        reason = request.form.get("bounce_reason", gettext("غير محدد"))
         details = request.form.get("bounce_details", "")
         full_reason = f"{reason}. {details}" if details else reason
 
-        # رفض الشيك - إرجاع الدين
         with atomic_transaction("cheque_bounce"):
             process_cheque_bounce(cheque, full_reason)
             LoggingCore.log_audit(
                 "cheque_bounce",
                 "cheques",
                 record_id,
-                {"message": f"رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}"},
+                {
+                    "message": gettext(
+                        f"رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}"
+                    )
+                },
             )
 
         flash(
-            f"❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون",
+            gettext(
+                f"❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون"
+            ),
             "warning",
         )
 
     except ValueError as e:
         current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(f"❌ خطأ: {str(e)}", "error")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -695,7 +720,9 @@ def cancel(**kwargs):
 
     if cheque.status == "cleared":
         flash(
-            "⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه.",
+            gettext(
+                "⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه."
+            ),
             "danger",
         )
         return redirect(url_for("cheques.view", id=record_id))
@@ -707,10 +734,12 @@ def cancel(**kwargs):
             process_cheque_cancel(cheque, reason)
             LoggingCore.log_audit("cancel", "cheques", record_id)
 
-        flash(f"✅ تم إلغاء الشيك {cheque.cheque_bank_number}", "success")
+        flash(gettext(f"✅ تم إلغاء الشيك {cheque.cheque_bank_number}"), "success")
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -725,10 +754,8 @@ def delete(**kwargs):
     if not _ensure_cheque_scope(cheque):
         return render_template("errors/403.html"), 403
 
-    # التحقق من الارتباطات
     has_links = False
 
-    # 1. حالة الشيك (إذا لم يكن معلقاً، فهو جزء من التاريخ)
     if cheque.status in [
         "cleared",
         "deposited",
@@ -738,7 +765,6 @@ def delete(**kwargs):
     ]:
         has_links = True
 
-    # 2. ارتباطات بكيانات أخرى
     if (
         cheque.receipt_id
         or cheque.payment_id
@@ -750,21 +776,22 @@ def delete(**kwargs):
 
     try:
         if has_links:
-            # أرشفة (Soft Delete)
-            reason = request.form.get("delete_reason", "أرشفة بسبب وجود ارتباطات")
+            reason = request.form.get(
+                "delete_reason", gettext("أرشفة بسبب وجود ارتباطات")
+            )
 
-            # عكس القيد المحاسبي إذا كان نشطاً (يتم داخل دالة archive)
             with atomic_transaction("cheque_archive"):
                 cheque.archive(reason)
                 LoggingCore.log_audit("archive", "cheques", record_id)
             flash(
-                f"✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)",
+                gettext(
+                    f"✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)"
+                ),
                 "warning",
             )
 
         else:
             with atomic_transaction("cheque_delete_hard"):
-                # حذف القيود المحاسبية المرتبطة
                 from models import GLJournalEntry
 
                 ref_types = [
@@ -782,15 +809,19 @@ def delete(**kwargs):
                 )
                 gl_query.delete(synchronize_session=False)
 
-                # حذف الشيك
                 db.session.delete(cheque)
                 LoggingCore.log_audit("delete", "cheques", record_id)
-            flash(f"✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً", "success")
+            flash(
+                gettext(f"✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً"),
+                "success",
+            )
 
         return redirect(url_for("cheques.index"))
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
         return redirect(url_for("cheques.view", id=record_id))
 
 
@@ -809,10 +840,12 @@ def restore(**kwargs):
             cheque.restore()
             LoggingCore.log_audit("restore", "cheques", record_id)
 
-        flash(f"✅ تم استعادة الشيك {cheque.cheque_bank_number}", "success")
+        flash(gettext(f"✅ تم استعادة الشيك {cheque.cheque_bank_number}"), "success")
 
     except Exception as e:
-        flash(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.", "danger")
+        flash(
+            gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger"
+        )
 
     return redirect(url_for("cheques.view", id=record_id))
 

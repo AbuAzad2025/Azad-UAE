@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from services.email_marketing_service import EmailMarketingService
@@ -21,10 +22,10 @@ def create_campaign():
     if request.method == "POST":
         try:
             EmailMarketingService.create_campaign(request.form, current_user)
-            flash("تم إنشاء الحملة", "success")
+            flash(gettext("تم إنشاء الحملة"), "success")
             return redirect(url_for("email_marketing.campaigns"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     list_data = EmailMarketingService.list_lists(current_user)
     template_data = EmailMarketingService.list_templates(current_user)
     return render_template(
@@ -50,7 +51,7 @@ def campaign_detail(campaign_id):
 def send_campaign(campaign_id):
     try:
         EmailMarketingService.send_campaign(campaign_id, current_user)
-        flash("تم إرسال الحملة", "success")
+        flash(gettext("تم إرسال الحملة"), "success")
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("email_marketing.campaign_detail", campaign_id=campaign_id))
@@ -70,7 +71,7 @@ def lists():
 def create_list():
     try:
         EmailMarketingService.create_list(request.form, current_user)
-        flash("تم إنشاء القائمة", "success")
+        flash(gettext("تم إنشاء القائمة"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("email_marketing.lists"))
@@ -92,7 +93,7 @@ def templates():
 def create_template():
     try:
         EmailMarketingService.create_template(request.form, current_user)
-        flash("تم إنشاء القالب", "success")
+        flash(gettext("تم إنشاء القالب"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("email_marketing.templates"))

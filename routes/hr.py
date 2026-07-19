@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models import LeaveRequest, LeaveType, User
@@ -44,7 +45,10 @@ def clock_in():
     try:
         branch_id = request.form.get("branch_id")
         att = HRService.clock_in(current_user, branch_id)
-        flash(f"تم تسجيل الحضور الساعة {att.check_in.strftime('%H:%M')}", "success")
+        flash(
+            gettext(f"تم تسجيل الحضور الساعة {att.check_in.strftime('%H:%M')}"),
+            "success",
+        )
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.attendance"))
@@ -56,7 +60,9 @@ def clock_in():
 def clock_out():
     try:
         att = HRService.clock_out(current_user)
-        flash(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}", "success")
+        flash(
+            gettext(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}"), "success"
+        )
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.attendance"))
@@ -92,10 +98,10 @@ def request_leave():
     if request.method == "POST":
         try:
             HRService.request_leave(request.form, current_user)
-            flash("تم تقديم طلب الإجازة", "success")
+            flash(gettext("تم تقديم طلب الإجازة"), "success")
             return redirect(url_for("hr.leaves_list"))
         except Exception as e:
-            flash(f"حدث خطأ: {e}", "danger")
+            flash(gettext(f"حدث خطأ: {e}"), "danger")
     leave_types = (
         tenant_query(LeaveType).filter_by(is_active=True).all()
         if get_active_tenant_id(current_user)
@@ -111,7 +117,7 @@ def approve_leave(leave_id):
     tenant_get_or_404(LeaveRequest, leave_id)
     try:
         HRService.approve_leave(leave_id, current_user)
-        flash("تم الموافقة على طلب الإجازة", "success")
+        flash(gettext("تم الموافقة على طلب الإجازة"), "success")
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.leaves_list"))
@@ -125,7 +131,7 @@ def refuse_leave(leave_id):
     reason = request.form.get("rejected_reason", "")
     try:
         HRService.refuse_leave(leave_id, current_user, reason)
-        flash("تم رفض طلب الإجازة", "success")
+        flash(gettext("تم رفض طلب الإجازة"), "success")
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.leaves_list"))
@@ -147,7 +153,7 @@ def departments_list():
 def create_department():
     try:
         HRService.create_department(request.form, current_user)
-        flash("تم إنشاء القسم", "success")
+        flash(gettext("تم إنشاء القسم"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.departments_list"))
@@ -159,7 +165,7 @@ def create_department():
 def create_contract():
     try:
         HRService.create_contract(request.form, current_user)
-        flash("تم إنشاء العقد", "success")
+        flash(gettext("تم إنشاء العقد"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
     return redirect(url_for("hr.departments_list"))

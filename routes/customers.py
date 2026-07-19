@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -267,14 +268,14 @@ def export():
             )
 
     headers = [
-        "الاسم",
-        "الاسم (ع)",
-        "النوع",
-        "الهاتف",
-        "الإيميل",
-        "العملة المفضلة",
-        "الرصيد",
-        "تاريخ الإنشاء",
+        gettext("الاسم"),
+        gettext("الاسم (ع)"),
+        gettext("النوع"),
+        gettext("الهاتف"),
+        gettext("الإيميل"),
+        gettext("العملة المفضلة"),
+        gettext("الرصيد"),
+        gettext("تاريخ الإنشاء"),
     ]
 
     data = []
@@ -367,7 +368,7 @@ def create():
                 db.session.add(customer)
                 LoggingCore.log_audit("create", "customers", customer.id)
 
-            flash("✅ تم إضافة الزبون بنجاح!", "success")
+            flash(gettext("✅ تم إضافة الزبون بنجاح!"), "success")
             return redirect(url_for("customers.index"))
 
         except Exception as e:
@@ -447,7 +448,7 @@ def edit(**kwargs):
 
                 LoggingCore.log_audit("update", "customers", customer.id)
 
-            flash("✅ تم تحديث بيانات الزبون بنجاح!", "success")
+            flash(gettext("✅ تم تحديث بيانات الزبون بنجاح!"), "success")
             return redirect(url_for("customers.view", id=customer.id))
 
         except Exception as e:
@@ -501,11 +502,13 @@ def delete(**kwargs):
 
         if has_relations:
             flash(
-                f'⚠️ تم إلغاء تفعيل العميل "{customer.name}" بدلاً من حذفه لوجود ({sales_count} فاتورة، {payments_count} دفعة، {receipts_count} سند قبض) مرتبطة به.',
+                gettext(
+                    f'⚠️ تم إلغاء تفعيل العميل "{customer.name}" بدلاً من حذفه لوجود ({sales_count} فاتورة، {payments_count} دفعة، {receipts_count} سند قبض) مرتبطة به.'
+                ),
                 "warning",
             )
         else:
-            flash(f'✅ تم حذف العميل "{customer.name}" نهائياً!', "success")
+            flash(gettext(f'✅ تم حذف العميل "{customer.name}" نهائياً!'), "success")
 
     except Exception as e:
         current_app.logger.error(f"Error deleting customer {record_id}: {e}")
@@ -516,7 +519,9 @@ def delete(**kwargs):
                     customer.is_active = False
                     db.session.add(customer)
                     flash(
-                        f'⚠️ تعذر الحذف النهائي للعميل "{customer.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.',
+                        gettext(
+                            f'⚠️ تعذر الحذف النهائي للعميل "{customer.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.'
+                        ),
                         "warning",
                     )
         except Exception as inner_e:
@@ -525,7 +530,7 @@ def delete(**kwargs):
             )
             from utils.error_messages import ErrorMessages
 
-            flash(ErrorMessages.delete_failed("العميل"), "danger")
+            flash(ErrorMessages.delete_failed(gettext("العميل")), "danger")
 
     return redirect(url_for("customers.index"))
 
@@ -604,7 +609,7 @@ def statement(**kwargs):
                     "product_name": (
                         line.product.get_display_name("ar")
                         if line.product
-                        else "بند غير معرف"
+                        else gettext("بند غير معرف")
                     ),
                     "product_sku": (
                         line.product.sku if line.product and line.product.sku else None
@@ -652,7 +657,11 @@ def statement(**kwargs):
                     "status_ar": (
                         payment.status_ar
                         if hasattr(payment, "status_ar")
-                        else ("مؤكدة ✅" if payment.payment_confirmed else "معلقة ⏳")
+                        else (
+                            gettext("مؤكدة ✅")
+                            if payment.payment_confirmed
+                            else gettext("معلقة ⏳")
+                        )
                     ),
                     "payment_confirmed": payment.payment_confirmed,
                     "user": (
@@ -705,7 +714,7 @@ def statement(**kwargs):
                 "debit": float(sale.amount_aed or 0),
                 "credit": 0,
                 "balance": 0,
-                "description": "فاتورة بيع",
+                "description": gettext("فاتورة بيع"),
                 "currency": sale.currency or default_currency,
                 "exchange_rate": float(sale.exchange_rate or 1),
                 "paid_amount": float(sale.paid_amount_aed or 0),
@@ -731,11 +740,13 @@ def statement(**kwargs):
                 "type": "payment",
                 "reference": payment.reference_number
                 or payment.payment_number
-                or f"دفع #{payment.id}",
+                or gettext(f"دفع #{payment.id}"),
                 "debit": debit_amount,
                 "credit": credit_amount,
                 "balance": 0,
-                "description": f"دفعة - {payment.get_method_display('ar') if hasattr(payment, 'get_method_display') else payment.payment_method}",
+                "description": gettext(
+                    f"دفعة - {payment.get_method_display('ar') if hasattr(payment, 'get_method_display') else payment.payment_method}"
+                ),
                 "currency": payment.currency or default_currency,
                 "exchange_rate": float(payment.exchange_rate or 1),
                 "paid_amount": credit_amount,
@@ -743,7 +754,11 @@ def statement(**kwargs):
                 "status": (
                     payment.status_ar
                     if hasattr(payment, "status_ar")
-                    else ("مؤكدة ✅" if payment.payment_confirmed else "معلقة ⏳")
+                    else (
+                        gettext("مؤكدة ✅")
+                        if payment.payment_confirmed
+                        else gettext("معلقة ⏳")
+                    )
                 ),
                 "payment": {
                     "id": payment.id,
@@ -766,7 +781,11 @@ def statement(**kwargs):
                     "status_ar": (
                         payment.status_ar
                         if hasattr(payment, "status_ar")
-                        else ("مؤكدة ✅" if payment.payment_confirmed else "معلقة ⏳")
+                        else (
+                            gettext("مؤكدة ✅")
+                            if payment.payment_confirmed
+                            else gettext("معلقة ⏳")
+                        )
                     ),
                     "user": (
                         payment.user.get_display_name("ar")
@@ -796,7 +815,7 @@ def statement(**kwargs):
                 allocated_receipt_numbers.add(ref)
 
     for receipt in receipts:
-        receipt_ref = receipt.receipt_number or f"قبض #{receipt.id}"
+        receipt_ref = receipt.receipt_number or gettext(f"قبض #{receipt.id}")
         # If this receipt's number appears in any Payment's reference_number, the
         # receipt amount is already represented by the allocated Payment entries.
         if receipt_ref in allocated_receipt_numbers:
@@ -809,18 +828,19 @@ def statement(**kwargs):
                 "debit": 0,
                 "credit": float(receipt.amount_aed or 0),
                 "balance": 0,
-                "description": "سند قبض",
+                "description": gettext("سند قبض"),
                 "currency": default_currency,
                 "exchange_rate": 1.0,
                 "paid_amount": float(receipt.amount_aed or 0),
                 "balance_due": 0,
-                "status": "مؤكدة" if receipt.payment_confirmed else "معلقة",
+                "status": gettext("مؤكدة")
+                if receipt.payment_confirmed
+                else gettext("معلقة"),
             }
         )
 
     transactions.sort(key=lambda x: x["date"] or datetime.min)
 
-    # الدلالة: credit - debit (موجب = رصيد للعميل)
     opening_balance = 0
     if date_from:
         cutoff = (
@@ -838,7 +858,7 @@ def statement(**kwargs):
                     trans.get("payment", {}).get("payment_confirmed", True)
                     if trans["type"] == "payment"
                     else (
-                        trans.get("status") != "معلقة"
+                        trans.get("status") != gettext("معلقة")
                         if trans["type"] == "receipt"
                         else True
                     )
@@ -865,7 +885,7 @@ def statement(**kwargs):
                 "debit": 0,
                 "credit": 0,
                 "balance": opening_balance,
-                "description": "الرصيد الافتتاحي",
+                "description": gettext("الرصيد الافتتاحي"),
                 "currency": default_currency,
                 "exchange_rate": 1.0,
                 "paid_amount": 0,
@@ -875,7 +895,6 @@ def statement(**kwargs):
             },
         )
 
-    # الرصيد الجاري: المؤكد فقط (credit - debit)
     running_balance = opening_balance
     for trans in transactions:
         if trans["type"] == "opening":
@@ -885,7 +904,9 @@ def statement(**kwargs):
             trans.get("payment", {}).get("payment_confirmed", True)
             if trans["type"] == "payment"
             else (
-                trans.get("status") != "معلقة" if trans["type"] == "receipt" else True
+                trans.get("status") != gettext("معلقة")
+                if trans["type"] == "receipt"
+                else True
             )
         )
         if is_confirmed:
@@ -917,7 +938,6 @@ def api_search():
         _scoped_customer_query().filter(Customer.is_active).order_by(Customer.name)
     )
 
-    # السماح بالبحث حتى بدون query (لعرض كل العملاء)
     if query and len(query) >= 1:
         customers = (
             base_query.filter(
@@ -932,7 +952,6 @@ def api_search():
             .all()
         )
     else:
-        # عرض كل العملاء (مرتبين أبجدياً)
         customers = base_query.limit(per_page).all()
 
     results = [

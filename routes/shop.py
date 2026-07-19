@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from decimal import Decimal
 
 
@@ -971,14 +972,14 @@ def checkout(slug):
 
             if not address:
                 raise ValueError(
-                    "عنوان التوصيل مطلوب."
+                    gettext("عنوان التوصيل مطلوب.")
                     if ctx["lang"] == "ar"
                     else "Delivery address is required."
                 )
 
             if min_order > 0 and totals["subtotal"] < min_order:
                 raise ValueError(
-                    f"الحد الأدنى للطلب {min_order}"
+                    gettext(f"الحد الأدنى للطلب {min_order}")
                     if ctx["lang"] == "ar"
                     else f"Minimum order is {min_order}"
                 )
@@ -1014,14 +1015,15 @@ def checkout(slug):
                 except ValueError as pe:
                     with atomic_transaction("checkout_payment_fail"):
                         sale.payment_status = "init_failed"
-                        sale.notes = (
-                            sale.notes or ""
-                        ) + f"\n[فشل init الدفع الإلكتروني: {str(pe)}]"
+                        sale.notes = (sale.notes or "") + gettext(
+                            f"\n[فشل init الدفع الإلكتروني: {str(pe)}]"
+                        )
                     token = StoreCheckoutService.make_order_token(
                         sale.id, store.tenant_id
                     )
                     flash(
-                        str(pe) + " — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً.", "warning"
+                        str(pe) + gettext(" — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً."),
+                        "warning",
                     )
                     return redirect(
                         url_for(
@@ -1043,7 +1045,7 @@ def checkout(slug):
         except Exception:
             flash(
                 (
-                    "تعذر إتمام الطلب. حاول مجدداً."
+                    gettext("تعذر إتمام الطلب. حاول مجدداً.")
                     if ctx["lang"] == "ar"
                     else "Could not place order. Try again."
                 ),
@@ -1055,7 +1057,7 @@ def checkout(slug):
     if not payment_methods:
         flash(
             (
-                "لا توجد طرق دفع متاحة حالياً."
+                gettext("لا توجد طرق دفع متاحة حالياً.")
                 if ctx["lang"] == "ar"
                 else "No payment methods available."
             ),

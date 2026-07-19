@@ -1,5 +1,7 @@
 """Monitoring, analytics, and error audit routes for the owner blueprint."""
 
+from flask_babel import gettext
+
 from datetime import datetime, timezone
 from routes.owner import (
     render_template,
@@ -42,7 +44,7 @@ def system_health():
         health_data = HealthCheckService.get_health_data()
         return render_template("owner/system_health.html", health=health_data)
     except Exception as e:
-        flash(f"خطأ في تحميل معلومات النظام: {str(e)}", "danger")
+        flash(gettext(f"خطأ في تحميل معلومات النظام: {str(e)}"), "danger")
         return redirect(url_for("owner.dashboard"))
 
 
@@ -176,10 +178,10 @@ def resolve_alert(**kwargs):
             alert.resolved_at = datetime.now(timezone.utc)
             alert.resolved_by = current_user.id
     except Exception as e:
-        flash(f"❌ خطأ في حل التنبيه: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في حل التنبيه: {str(e)}"), "danger")
         return redirect(url_for("owner.security_alerts"))
     _invalidate_owner_changes()
-    flash("✅ تم حل التنبيه الأمني", "success")
+    flash(gettext("✅ تم حل التنبيه الأمني"), "success")
     return redirect(url_for("owner.security_alerts"))
 
 
@@ -198,10 +200,10 @@ def ip_whitelist():
                 whitelist.append({"ip": ip_address, "description": description})
                 settings.owner_whitelist_ips = whitelist
         except Exception as e:
-            flash(f"❌ خطأ في إضافة IP: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في إضافة IP: {str(e)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
         _invalidate_owner_changes()
-        flash("✅ تم إضافة IP للقائمة البيضاء", "success")
+        flash(gettext("✅ تم إضافة IP للقائمة البيضاء"), "success")
         return redirect(url_for("owner.ip_whitelist"))
 
     settings = SystemSettings.get_current()
@@ -222,10 +224,10 @@ def delete_ip_whitelist(index):
                 whitelist.pop(index)
                 settings.owner_whitelist_ips = whitelist
         except Exception as e:
-            flash(f"❌ خطأ في حذف IP: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في حذف IP: {str(e)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
         _invalidate_owner_changes()
-        flash("✅ تم حذف IP من القائمة البيضاء", "success")
+        flash(gettext("✅ تم حذف IP من القائمة البيضاء"), "success")
 
     return redirect(url_for("owner.ip_whitelist"))
 
@@ -248,10 +250,10 @@ def api_keys():
             with atomic_transaction("create_api_key"):
                 db.session.add(key)
         except Exception as e:
-            flash(f"❌ خطأ في إنشاء المفتاح: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في إنشاء المفتاح: {str(e)}"), "danger")
             return redirect(url_for("owner.api_keys"))
         _invalidate_owner_changes()
-        flash(f"✅ تم إنشاء API Key ({_mask_api_key(key.key)})", "success")
+        flash(gettext(f"✅ تم إنشاء API Key ({_mask_api_key(key.key)})"), "success")
         return redirect(url_for("owner.api_keys"))
 
     keys = APIKey.query.order_by(APIKey.created_at.desc()).all()
@@ -268,11 +270,11 @@ def toggle_api_key(**kwargs):
         with atomic_transaction("toggle_api_key"):
             key.is_active = not key.is_active
     except Exception as e:
-        flash(f"❌ خطأ في تحديث المفتاح: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في تحديث المفتاح: {str(e)}"), "danger")
         return redirect(url_for("owner.api_keys"))
     _invalidate_owner_changes()
-    status = "تفعيل" if key.is_active else "تعطيل"
-    flash(f"✅ تم {status} API Key", "success")
+    status = gettext("تفعيل") if key.is_active else gettext("تعطيل")
+    flash(gettext(f"✅ تم {status} API Key"), "success")
     return redirect(url_for("owner.api_keys"))
 
 
@@ -430,9 +432,9 @@ def resolve_error_log(log_id):
     note = request.form.get("note", "")
     ok = LoggingCore.mark_error_resolved(log_id, current_user.id, note)
     if ok:
-        flash("تم تحديث حالة الخطأ.", "success")
+        flash(gettext("تم تحديث حالة الخطأ."), "success")
     else:
-        flash("فشل تحديث حالة الخطأ.", "danger")
+        flash(gettext("فشل تحديث حالة الخطأ."), "danger")
     return redirect(safe_redirect_target(request.referrer, "owner.error_audit_logs"))
 
 
@@ -462,5 +464,5 @@ def export_error_audit_logs():
             },
         )
     except Exception:
-        flash("صيغة التصدير غير مدعومة أو فشل التصدير.", "danger")
+        flash(gettext("صيغة التصدير غير مدعومة أو فشل التصدير."), "danger")
         return redirect(url_for("owner.error_audit_logs"))

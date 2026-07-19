@@ -1,3 +1,4 @@
+from flask_babel import gettext
 from flask import (
     Blueprint,
     render_template,
@@ -90,7 +91,7 @@ def _build_expense_gl_lines(expense, tenant_id):
             "account": payment_account,
             "concept_code": payment_concept,
             "credit": expense.amount,
-            "description": f"دفع {expense.payment_method}",
+            "description": gettext(f"دفع {expense.payment_method}"),
         },
     ]
 
@@ -105,7 +106,6 @@ def index():
 
     query = tenant_query(Expense).filter_by(status="confirmed")
 
-    # إخفاء المصروفات المؤرشفة (مع نطاق التيننت)
     from models import ArchivedRecord
     from sqlalchemy import select
     from utils.tenanting import get_active_tenant_id
@@ -171,7 +171,7 @@ def create():
 
             amount_str = request.form.get("amount")
             if not amount_str:
-                raise ValueError("المبلغ مطلوب.")
+                raise ValueError(gettext("المبلغ مطلوب."))
             amount = Decimal(str(amount_str))
 
             cheque_date_str = request.form.get("cheque_date")
@@ -265,17 +265,21 @@ def create():
 
             LoggingCore.log_audit("create", "expenses", expense.id)
 
-            flash("✅ تم إضافة المصروف بنجاح!", "success")
+            flash(gettext("✅ تم إضافة المصروف بنجاح!"), "success")
             return redirect(url_for("expenses.view", id=expense.id))
 
         except ValueError as e:
             flash(
-                f"❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة.",
+                gettext(
+                    f"❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة."
+                ),
                 "danger",
             )
         except Exception as e:
             flash(
-                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -332,7 +336,6 @@ def edit(**kwargs):
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
-    # منع تعديل المصروف المؤرشف
     from models import ArchivedRecord
 
     is_archived = (
@@ -342,14 +345,13 @@ def edit(**kwargs):
         is not None
     )
     if is_archived:
-        flash("⚠️ لا يمكن تعديل مصروف مؤرشف.", "warning")
+        flash(gettext("⚠️ لا يمكن تعديل مصروف مؤرشف."), "warning")
         return redirect(url_for("expenses.view", id=record_id))
 
     expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
 
     if request.method == "POST":
         try:
-            # التحقق من أن الفترة المحاسبية مفتوحة
             from services.gl_helpers import assert_period_open
 
             assert_period_open(expense.expense_date, expense.tenant_id)
@@ -362,7 +364,7 @@ def edit(**kwargs):
             new_category_id = request.form.get("category_id", type=int)
             new_amount_str = request.form.get("amount")
             if not new_amount_str:
-                raise ValueError("المبلغ مطلوب.")
+                raise ValueError(gettext("المبلغ مطلوب."))
             new_amount = Decimal(str(new_amount_str))
             new_currency = (request.form.get("currency") or default_currency).strip()
             new_description = request.form.get("description", "").strip()
@@ -419,14 +421,16 @@ def edit(**kwargs):
                     )
 
             LoggingCore.log_audit("update", "expenses", record_id)
-            flash("✅ تم تحديث المصروف بنجاح!", "success")
+            flash(gettext("✅ تم تحديث المصروف بنجاح!"), "success")
             return redirect(url_for("expenses.view", id=record_id))
 
         except ValueError as e:
-            flash(f"❌ خطأ في البيانات: {str(e)}", "danger")
+            flash(gettext(f"❌ خطأ في البيانات: {str(e)}"), "danger")
         except Exception as e:
             flash(
-                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+                gettext(
+                    f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -448,10 +452,8 @@ def delete(**kwargs):
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
-    # التحقق من الارتباطات
     has_links = False
 
-    # 1. التحقق من الشيكات
     cheque = Cheque.query.filter_by(
         expense_id=expense.id, tenant_id=expense.tenant_id
     ).first()
@@ -463,15 +465,21 @@ def delete(**kwargs):
             with atomic_transaction("expense_archive_with_links"):
                 archive_service = ArchiveService()
                 archive_service.archive_record(
-                    "expenses", expense, reason="تم أرشفة المصروف لوجود ارتباطات"
+                    "expenses",
+                    expense,
+                    reason=gettext("تم أرشفة المصروف لوجود ارتباطات"),
                 )
                 if cheque:
                     archive_service.archive_record(
-                        "cheques", cheque, reason="تم أرشفة الشيك لارتباطه بمصروف مؤرشف"
+                        "cheques",
+                        cheque,
+                        reason=gettext("تم أرشفة الشيك لارتباطه بمصروف مؤرشف"),
                     )
                 LoggingCore.log_audit("archive", "expenses", record_id)
             flash(
-                f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)',
+                gettext(
+                    f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)'
+                ),
                 "warning",
             )
 
@@ -489,17 +497,22 @@ def delete(**kwargs):
                     from services.cheque_service import process_cheque_cancel
 
                     process_cheque_cancel(
-                        cheque, reason=f"حذف المصروف {expense.expense_number}"
+                        cheque, reason=gettext(f"حذف المصروف {expense.expense_number}")
                     )
                     db.session.delete(cheque)
                 db.session.delete(expense)
                 LoggingCore.log_audit("delete", "expenses", record_id)
-            flash(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً', "success")
+            flash(
+                gettext(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً'),
+                "success",
+            )
 
         return redirect(url_for("expenses.index"))
 
     except Exception as e:
-        flash(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة.", "danger")
+        flash(
+            gettext(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة."), "danger"
+        )
         return redirect(url_for("expenses.view", id=record_id))
 
 
@@ -531,7 +544,7 @@ def cancel(**kwargs):
 
                 process_cheque_cancel(
                     cheque,
-                    reason=f"إلغاء المصروف {expense.expense_number}",
+                    reason=gettext(f"إلغاء المصروف {expense.expense_number}"),
                     create_gl=True,
                 )
             else:
@@ -544,11 +557,13 @@ def cancel(**kwargs):
             expense.is_reversed = True
         LoggingCore.log_audit("cancel", "expenses", record_id)
         flash(
-            f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.',
+            gettext(
+                f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.'
+            ),
             "success",
         )
     except Exception as e:
-        flash(f"❌ خطأ في الإلغاء: {str(e)}", "danger")
+        flash(gettext(f"❌ خطأ في الإلغاء: {str(e)}"), "danger")
 
     return redirect(url_for("expenses.view", id=record_id))
 
@@ -569,7 +584,7 @@ def categories():
 def _validate_gl_account_code(gl_account_code, tenant_id):
     """التحقق من صحة حساب الأستاذ لفئة المصروف"""
     if not gl_account_code:
-        return True  # سيتم استخدام الحساب الافتراضي 6990
+        return True
     from models import GLAccount
 
     account = GLAccount.query.filter_by(
@@ -577,27 +592,28 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
         tenant_id=int(tenant_id) if tenant_id else None,
     ).first()
     if not account:
-        raise ValueError(f'⚠️ حساب الأستاذ "{gl_account_code}" غير موجود.')
+        raise ValueError(gettext(f'⚠️ حساب الأستاذ "{gl_account_code}" غير موجود.'))
     if account.is_header:
         raise ValueError(
-            f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.'
+            gettext(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.')
         )
     if not account.is_active:
-        raise ValueError(f'⚠️ حساب "{account.name}" غير نشط.')
-    # التحقق من أن الحساب مناسب للمصروفات
+        raise ValueError(gettext(f'⚠️ حساب "{account.name}" غير نشط.'))
     code_str = str(gl_account_code)
     first_digit = code_str[0] if code_str else ""
-    # حسابات الأصول (1xxx), الخصوم (2xxx), حقوق ملكية (3xxx), إيرادات (4xxx)
-    # وحسابات خاصة معروفة
     restricted_prefixes = ["1", "2", "3", "4"]
     restricted_codes = ["1130", "1150", "1160", "2110", "2120", "2140", "3130", "3350"]
     if code_str in restricted_codes:
         raise ValueError(
-            f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'
+            gettext(
+                f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'
+            )
         )
     if first_digit in restricted_prefixes and code_str != "6990":
         raise ValueError(
-            f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'
+            gettext(
+                f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'
+            )
         )
     return True
 
@@ -607,7 +623,6 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
 @permission_required("manage_expenses")
 def create_category():
     try:
-        # دعم JSON و Form Data
         if request.is_json:
             data = request.get_json(silent=True) or {}
         else:
@@ -615,7 +630,6 @@ def create_category():
 
         tenant_id = require_active_tenant_id(current_user)
 
-        # التحقق من حساب الأستاذ
         gl_account_code = data.get("gl_account_code")
         _validate_gl_account_code(gl_account_code, tenant_id)
 
@@ -629,12 +643,11 @@ def create_category():
         with atomic_transaction("expense_category_create"):
             db.session.flush()
 
-        # إرجاع JSON إذا كان الطلب JSON
         if request.is_json:
             return jsonify(
                 {
                     "success": True,
-                    "message": "تم إضافة الفئة بنجاح",
+                    "message": gettext("تم إضافة الفئة بنجاح"),
                     "category": {
                         "id": category.id,
                         "name": category.name,
@@ -643,7 +656,7 @@ def create_category():
                 }
             )
 
-        flash("✅ تم إضافة فئة المصروف بنجاح!", "success")
+        flash(gettext("✅ تم إضافة فئة المصروف بنجاح!"), "success")
         return redirect(url_for("expenses.categories"))
 
     except Exception as e:
@@ -651,7 +664,9 @@ def create_category():
             return jsonify({"success": False, "error": str(e)}), 400
 
         flash(
-            f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.",
+            gettext(
+                f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+            ),
             "danger",
         )
         return redirect(url_for("expenses.categories"))
@@ -719,15 +734,15 @@ def archive(**kwargs):
         with atomic_transaction("expense_archive"):
             archive_service = ArchiveService()
             archive_service.archive_record(
-                "expenses", expense, reason="تم أرشفة المصروف"
+                "expenses", expense, reason=gettext("تم أرشفة المصروف")
             )
             LoggingCore.log_audit("archive", "expenses", expense.id)
     except Exception as exc:
         current_app.logger.error("Failed to archive expense %s: %s", expense.id, exc)
-        flash("تعذر أرشفة المصروف. يرجى المحاولة مرة أخرى.", "danger")
+        flash(gettext("تعذر أرشفة المصروف. يرجى المحاولة مرة أخرى."), "danger")
         return redirect(url_for("expenses.index"))
 
-    flash("تم أرشفة المصروف بنجاح.", "success")
+    flash(gettext("تم أرشفة المصروف بنجاح."), "success")
     return redirect(url_for("expenses.index"))
 
 
@@ -753,6 +768,6 @@ def restore(**kwargs):
             db.session.flush()
         LoggingCore.log_audit("restore", "expenses", record_id)
     except Exception as e:
-        flash(f"تعذر الاستعادة: {str(e)}", "danger")
+        flash(gettext(f"تعذر الاستعادة: {str(e)}"), "danger")
         return redirect(url_for("expenses.archived"))
     return redirect(url_for("expenses.archived"))

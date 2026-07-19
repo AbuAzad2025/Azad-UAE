@@ -1,6 +1,7 @@
 """User management routes — list, create, edit, activate, delete."""
 
 from __future__ import annotations
+from flask_babel import gettext
 
 from flask import (
     Blueprint,
@@ -72,13 +73,13 @@ def _username_example():
 def _validate_user_branch(role_id, branch_id):
     role = db.session.get(Role, role_id) if role_id else None
     if not role:
-        raise ValueError("يرجى اختيار الدور الوظيفي.")
+        raise ValueError(gettext("يرجى اختيار الدور الوظيفي."))
 
     if role_requires_branch(role):
         if not branch_id:
-            raise ValueError("يجب ربط هذا المستخدم بفرع محدد.")
+            raise ValueError(gettext("يجب ربط هذا المستخدم بفرع محدد."))
         if not any(branch.id == branch_id for branch in _available_branches()):
-            raise ValueError("الفرع المحدد خارج نطاقك أو غير نشط.")
+            raise ValueError(gettext("الفرع المحدد خارج نطاقك أو غير نشط."))
     return role
 
 
@@ -156,7 +157,7 @@ def create():
         try:
             role_id = request.form.get("role_id", type=int)
             if not role_id:
-                flash("يرجى اختيار الدور الوظيفي.", "warning")
+                flash(gettext("يرجى اختيار الدور الوظيفي."), "warning")
                 return _create_form_context(roles, branches, form_values)
 
             is_active = request.form.get("is_active", "1") == "1"
@@ -164,12 +165,12 @@ def create():
             role = _validate_user_branch(role_id, branch_id)
 
             if role_level_for(getattr(role, "slug", None)) > current_level:
-                flash("لا يمكنك تعيين دور أعلى من دورك.", "danger")
+                flash(gettext("لا يمكنك تعيين دور أعلى من دورك."), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             username = (request.form.get("username") or "").strip()
             if is_platform_reserved(username):
-                flash("اسم المستخدم محجوز للمنصة (owner / azad).", "danger")
+                flash(gettext("اسم المستخدم محجوز للمنصة (owner / azad)."), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             tid = get_active_tenant_id(current_user)
@@ -179,7 +180,7 @@ def create():
             )
             if uname_err:
                 prefix = tenant_username_prefix(tenant) if tenant else "CODE"
-                flash(f"{uname_err}\nمثال: {prefix}_ahmad", "danger")
+                flash(gettext(f"{uname_err}\nمثال: {prefix}_ahmad"), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             try:
@@ -190,7 +191,7 @@ def create():
 
             conflict = User.query.filter(User.username.ilike(username)).first()
             if conflict:
-                flash("اسم المستخدم مستخدم مسبقاً على مستوى النظام.", "danger")
+                flash(gettext("اسم المستخدم مستخدم مسبقاً على مستوى النظام."), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             try:
@@ -226,7 +227,7 @@ def create():
                 LoggingCore.log_audit("create", "users", user.id)
 
             log_mutation("create", "User", user.id, {"username": user.username})
-            flash("تم إضافة المستخدم بنجاح!", "success")
+            flash(gettext("تم إضافة المستخدم بنجاح!"), "success")
             return redirect(url_for("users.index"))
 
         except Exception:
@@ -297,7 +298,7 @@ def edit(**kwargs):
                 role = _validate_user_branch(role_id, branch_id)
 
                 if role_level_for(getattr(role, "slug", None)) > current_level:
-                    flash("لا يمكنك تعيين دور أعلى من دورك.", "danger")
+                    flash(gettext("لا يمكنك تعيين دور أعلى من دورك."), "danger")
                     return render_template(
                         "users/edit.html", user=user, roles=roles, branches=branches
                     )
@@ -320,7 +321,7 @@ def edit(**kwargs):
 
                 LoggingCore.log_audit("update", "users", user.id)
 
-            flash("تم تحديث بيانات المستخدم بنجاح!", "success")
+            flash(gettext("تم تحديث بيانات المستخدم بنجاح!"), "success")
             return redirect(url_for("users.index"))
 
         except Exception as e:
@@ -349,8 +350,8 @@ def toggle_active(**kwargs):
         user.is_active = not user.is_active
         LoggingCore.log_audit("toggle_active", "users", user.id)
 
-    status_msg = "تفعيل" if user.is_active else "إلغاء تفعيل"
-    flash(f'تم {status_msg} المستخدم "{user.username}" بنجاح!', "success")
+    status_msg = gettext("تفعيل") if user.is_active else gettext("إلغاء تفعيل")
+    flash(gettext(f'تم {status_msg} المستخدم "{user.username}" بنجاح!'), "success")
 
     return redirect(url_for("users.index"))
 
@@ -371,12 +372,14 @@ def delete(**kwargs):
     target_role = getattr(user, "role", None)
     target_slug = getattr(target_role, "slug", None) if target_role else None
     if role_level_for(target_slug) > current_level:
-        flash("لا يمكنك حذف مستخدم بدور أعلى من دورك.", "danger")
+        flash(gettext("لا يمكنك حذف مستخدم بدور أعلى من دورك."), "danger")
         return redirect(url_for("users.index"))
 
     if user.id == current_user.id:
         flash(
-            "لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر.",
+            gettext(
+                "لا يمكنك حذف حسابك الخاص. اطلب من مدير آخر حذف حسابك إذا لزم الأمر."
+            ),
             "danger",
         )
         return redirect(url_for("users.index"))
@@ -400,12 +403,14 @@ def delete(**kwargs):
 
         if has_sales:
             flash(
-                f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '
-                "لا يمكن حذفه نهائياً للحفاظ على السجلات.",
+                gettext(
+                    f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '
+                ),
+                gettext("لا يمكن حذفه نهائياً للحفاظ على السجلات."),
                 "warning",
             )
         else:
-            flash(f'تم حذف المستخدم "{user.username}" نهائياً!', "success")
+            flash(gettext(f'تم حذف المستخدم "{user.username}" نهائياً!'), "success")
 
         return redirect(url_for("users.index"))
 
