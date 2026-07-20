@@ -330,7 +330,7 @@ jobs:
       - name: actionlint (workflow syntax — fails on findings)
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo \
-            ghcr.io/rhysd/actionlint:latest .github/workflows/*.yml
+            docker.io/rhysd/actionlint:latest .github/workflows/*.yml
 
   # ── Git & repository scanning ──
   repo-security:
