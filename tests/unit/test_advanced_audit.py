@@ -123,8 +123,7 @@ class TestLogSensitiveAction:
             patch("utils.advanced_audit.db.session", session),
             patch("logging.getLogger") as get_logger,
             patch("utils.advanced_audit.current_user", user),
-            patch("utils.advanced_audit.atomic_transaction", return_value=atomic_cm)
-            as atomic_patch,
+            patch("utils.advanced_audit.atomic_transaction", return_value=atomic_cm) as atomic_patch,
         ):
             with flask_app.test_request_context("/"):
                 from utils.advanced_audit import log_sensitive_action
