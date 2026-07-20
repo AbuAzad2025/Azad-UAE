@@ -48,7 +48,9 @@ def main() -> int:
     )
     for rel, line, message in failures:
         # GitHub Actions annotation format
-        print(f"::error file=templates/{rel},line={line}::Jinja syntax error: {message}")
+        print(
+            f"::error file=templates/{rel},line={line}::Jinja syntax error: {message}"
+        )
 
     if not templates:
         print("::error::No templates found — the gate itself must be misconfigured.")
