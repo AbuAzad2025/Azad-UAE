@@ -1,0 +1,27 @@
+# =============================================================================
+# OPTIONAL / RESERVE integrations — NOT installed by default.
+# These packages are not imported anywhere in the codebase today; install
+# only when the corresponding feature is actually wired and configured:
+#
+#   pip install -r requirements-optional.txt
+#
+# Keeping them out of requirements.txt shrinks the production image and
+# reduces the dependency-audit surface.
+# =============================================================================
+
+# POS Hardware (thermal printer, ESC/POS) — reserve for direct ESC/POS integration
+python-escpos>=3.1
+
+# Error monitoring — enable in app when SENTRY_DSN is configured
+sentry-sdk>=2.66.0,<3
+
+# Metrics endpoint — enable when the Prometheus exporter is wired into the app
+prometheus-flask-exporter==0.23.2
+
+# -----------------------------------------------------------------------------
+# AI provider SDKs — intentionally NOT dependencies.
+# services/ai_service.py calls OpenAI/Gemini via plain HTTP (requests), so the
+# SDKs below are unused. Add back only if code migrates to an official client:
+#   openai>=2.46.0
+#   anthropic>=0.117.0
+# -----------------------------------------------------------------------------

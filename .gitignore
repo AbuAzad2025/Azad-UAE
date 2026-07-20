@@ -108,6 +108,7 @@ package.json
 /check_*.py
 /*.txt
 !requirements.txt
+!requirements-optional.txt
 # Temporary files
 tmp/
 *.tmp

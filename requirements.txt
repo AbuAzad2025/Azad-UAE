@@ -3,6 +3,8 @@
 # (e.g. .venv or venv). Install: python -m venv .venv && .venv\Scripts\activate
 # then: pip install -r requirements.txt
 # Dev/CI: pip install -r requirements.txt
+# Optional/reserve integrations live in requirements-optional.txt (not
+# installed by default) — see that file for escpos / sentry / prometheus.
 # =============================================================================
 
 # Core Framework
@@ -64,22 +66,18 @@ Flask-Compress==1.24
 Brotli>=1.0.9
 
 # Data Processing & AI
+# NOTE: AI providers are called via plain HTTP (requests) in
+# services/ai_service.py — the openai/anthropic SDKs are intentionally NOT
+# dependencies (see requirements-optional.txt if an SDK is ever needed).
 numpy>=1.24.0
 pandas>=2.0.0
 scikit-learn>=1.3.0
 scipy>=1.10.0
 joblib>=1.3.0
-openai>=2.46.0
-anthropic>=0.117.0
 
-# POS Hardware (thermal printer, ESC/POS) — reserve for direct ESC/POS integration
-python-escpos>=3.1
-
-# Reporting & Documents
-reportlab>=4.0.7,<6
+# Reporting & Documents (PDF via WeasyPrint; Excel via openpyxl)
 weasyprint==69.0
 openpyxl==3.1.5
-xlsxwriter==3.2.9
 Pillow==12.3.0
 qrcode[pil]>=8.2
 
@@ -100,9 +98,7 @@ pytest-mock>=3.14
 bandit>=1.9.4
 tinycss2>=1.5.1
 
-# Monitoring — reserve; enable in app when SENTRY_DSN / Prometheus exporter is wired
-sentry-sdk>=2.66.0,<3
-prometheus-flask-exporter==0.23.2
+# Monitoring (system metrics used by services/health_service.py)
 psutil>=5.9.8,<8
 
 # Misc
