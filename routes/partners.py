@@ -377,7 +377,7 @@ def add_transaction(**kwargs):
         flash(gettext("✅ تم تسجيل الحركة."), "success")
     except Exception as e:
         flash(gettext(f"❌ خطأ: {e}"), "danger")
-    return redirect(url_for("partners.view", id=id))
+    return redirect(url_for("partners.view", id=record_id))
 
 
 # ── API: Scope P&L preview ──────────────────────────────────

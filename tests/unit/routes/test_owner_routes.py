@@ -213,6 +213,17 @@ def _model_class(**terminals):
     return cls
 
 
+def _login_history_class(**terminals):
+    """LoginHistory mock whose boolean columns behave like SQLAlchemy columns
+    (support .is_()) so routes can build filters such as
+    ``LoginHistory.success.is_(False)`` without a real DB session."""
+    cls = _model_class(**terminals)
+    col = MagicMock(name="success")
+    col.is_.return_value = MagicMock(name="is_false")
+    cls.success = col
+    return cls
+
+
 def _tenant_class(tenant, **terminals):
     cls = _model_class(all=[tenant], **terminals)
     cls.get_current = MagicMock(return_value=tenant)
@@ -446,7 +457,7 @@ def _owner_route_patches(mock_db=None, **overrides):
         ),
         (
             "routes.owner.LoginHistory",
-            patch("routes.owner.LoginHistory", _model_class(all=[])),
+            patch("routes.owner.LoginHistory", _login_history_class()),
         ),
         (
             "routes.owner.SecurityAlert",

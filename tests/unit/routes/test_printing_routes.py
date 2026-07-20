@@ -50,7 +50,7 @@ def printing_client(app_factory, bypass_permission_auth):
         patch("routes.printing.PrintService._get_model") as get_model,
         patch("routes.printing.branch_scope_id", return_value=None) as branch_scope,
         patch("routes.printing.render_template", return_value="403-page") as render_tpl,
-        patch("routes.printing.db.session", MagicMock()) as session,
+        patch("extensions.db.session", MagicMock()) as session,
         patch("routes.printing.InvoiceSettings.get_active") as get_settings,
         patch("routes.printing.PrintHistory") as history_model,
         patch(

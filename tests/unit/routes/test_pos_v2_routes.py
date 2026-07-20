@@ -12,6 +12,16 @@ from tests.unit.routes.conftest import (
     unauthenticated_client,
 )
 
+from requests import exceptions as _req_exc
+
+
+def _requests_response(payload, status=200):
+    """Build a MagicMock shaped like a requests.Response."""
+    resp = MagicMock()
+    resp.json.return_value = payload
+    resp.status_code = status
+    return resp
+
 
 def _mock_product(pid=1):
     p = MagicMock()
@@ -736,14 +746,10 @@ class TestPosSessionApi:
 
 class TestPosHardware:
     def test_print_receipt_success(self, pos_client):
-        response = MagicMock()
-        response.read.return_value = json.dumps({"ok": True}).encode()
-        response.status = 200
-        response.__enter__ = MagicMock(return_value=response)
-        response.__exit__ = MagicMock(return_value=False)
+        response = _requests_response({"ok": True}, 200)
         with (
             _pos_api_patches(),
-            patch("routes.pos.urllib.request.urlopen", return_value=response),
+            patch("routes.pos.requests.post", return_value=response),
         ):
             resp = pos_client.post(
                 "/pos/api/hardware/print-receipt", json={"lines": []}
@@ -751,27 +757,21 @@ class TestPosHardware:
         assert resp.status_code == 200
 
     def test_print_receipt_agent_down(self, pos_client):
-        import urllib.error
-
         with (
             _pos_api_patches(),
             patch(
-                "routes.pos.urllib.request.urlopen",
-                side_effect=urllib.error.URLError("down"),
+                "routes.pos.requests.post",
+                side_effect=_req_exc.ConnectionError("down"),
             ),
         ):
             resp = pos_client.post("/pos/api/hardware/print-receipt", json={})
         assert resp.status_code == 503
 
     def test_open_drawer_success(self, pos_client):
-        response = MagicMock()
-        response.read.return_value = json.dumps({"opened": True}).encode()
-        response.status = 200
-        response.__enter__ = MagicMock(return_value=response)
-        response.__exit__ = MagicMock(return_value=False)
+        response = _requests_response({"opened": True}, 200)
         with (
             _pos_api_patches(),
-            patch("routes.pos.urllib.request.urlopen", return_value=response),
+            patch("routes.pos.requests.post", return_value=response),
         ):
             resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
         assert resp.status_code == 200
@@ -779,46 +779,37 @@ class TestPosHardware:
     def test_open_drawer_generic_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch(
-                "routes.pos.urllib.request.urlopen", side_effect=RuntimeError("boom")
-            ),
+            patch("routes.pos.requests.post", side_effect=RuntimeError("boom")),
         ):
             resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
         assert resp.status_code == 500
 
     def test_open_drawer_agent_down(self, pos_client):
-        import urllib.error
-
         with (
             _pos_api_patches(),
             patch(
-                "routes.pos.urllib.request.urlopen",
-                side_effect=urllib.error.URLError("down"),
+                "routes.pos.requests.post",
+                side_effect=_req_exc.ConnectionError("down"),
             ),
         ):
             resp = pos_client.post("/pos/api/hardware/open-drawer", json={})
         assert resp.status_code == 503
 
     def test_hardware_status_connected(self, pos_client):
-        response = MagicMock()
-        response.read.return_value = json.dumps({"status": "ok"}).encode()
-        response.__enter__ = MagicMock(return_value=response)
-        response.__exit__ = MagicMock(return_value=False)
+        response = _requests_response({"status": "ok"}, 200)
         with (
             _pos_api_patches(),
-            patch("routes.pos.urllib.request.urlopen", return_value=response),
+            patch("routes.pos.requests.get", return_value=response),
         ):
             resp = pos_client.get("/pos/api/hardware/status")
         assert resp.get_json()["status"] == "ok"
 
     def test_hardware_status_agent_down(self, pos_client):
-        import urllib.error
-
         with (
             _pos_api_patches(),
             patch(
-                "routes.pos.urllib.request.urlopen",
-                side_effect=urllib.error.URLError("down"),
+                "routes.pos.requests.get",
+                side_effect=_req_exc.ConnectionError("down"),
             ),
         ):
             resp = pos_client.get("/pos/api/hardware/status")
@@ -828,9 +819,7 @@ class TestPosHardware:
     def test_hardware_status_generic_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch(
-                "routes.pos.urllib.request.urlopen", side_effect=RuntimeError("boom")
-            ),
+            patch("routes.pos.requests.get", side_effect=RuntimeError("boom")),
         ):
             resp = pos_client.get("/pos/api/hardware/status")
         data = resp.get_json()
@@ -949,9 +938,7 @@ class TestPosKds:
     def test_print_receipt_generic_error(self, pos_client):
         with (
             _pos_api_patches(),
-            patch(
-                "routes.pos.urllib.request.urlopen", side_effect=RuntimeError("boom")
-            ),
+            patch("routes.pos.requests.post", side_effect=RuntimeError("boom")),
         ):
             resp = pos_client.post("/pos/api/hardware/print-receipt", json={})
         assert resp.status_code == 500

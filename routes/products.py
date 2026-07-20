@@ -877,19 +877,19 @@ def create():
                             gettext("⚠️ التاجر المحدد غير موجود أو غير مُعرّف كتاجر."),
                             "warning",
                         )
-                    warehouses = get_accessible_warehouses(current_user)
-                    partners_json = [{"id": p.id, "name": p.name} for p in partners]
-                    return render_template(
-                        "products/create.html",
-                        form=form,
-                        categories=category_list,
-                        warehouses=warehouses,
-                        merchants=merchants,
-                        partners=partners,
-                        partners_json=partners_json,
-                        preselected_warehouse_id=preselected_warehouse_id,
-                        default_industry=default_industry,
-                    )
+                        warehouses = get_accessible_warehouses(current_user)
+                        partners_json = [{"id": p.id, "name": p.name} for p in partners]
+                        return render_template(
+                            "products/create.html",
+                            form=form,
+                            categories=category_list,
+                            warehouses=warehouses,
+                            merchants=merchants,
+                            partners=partners,
+                            partners_json=partners_json,
+                            preselected_warehouse_id=preselected_warehouse_id,
+                            default_industry=default_industry,
+                        )
 
                 partner_rows, partner_error = _parse_product_partners(request.form)
                 if partner_error:

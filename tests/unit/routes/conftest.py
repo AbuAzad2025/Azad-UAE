@@ -454,7 +454,7 @@ class TestFactory:
 
 
 @pytest.fixture
-def test_factory(db_session, auth_client):
+def test_factory(db_session, sample_user):
     """Provides a test data factory bound to the current authenticated user.
 
     Usage:
@@ -462,8 +462,7 @@ def test_factory(db_session, auth_client):
             customer = test_factory.create_customer(name="Test Customer")
             sale = test_factory.create_sale(customer, total_amount=100.00)
     """
-    client, user = auth_client
-    return TestFactory(db_session, user)
+    return TestFactory(db_session, sample_user)
 
 
 # ─── CHAIN QUERY HELPERS ───
@@ -910,6 +909,10 @@ def app_factory():
         if config_overrides:
             app.config.update(config_overrides)
         db.init_app(app)
+
+        from extensions import babel, get_locale
+
+        babel.init_app(app, locale_selector=get_locale)
 
         from utils.i18n import t
 

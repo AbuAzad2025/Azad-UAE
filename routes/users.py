@@ -388,7 +388,7 @@ def delete(**kwargs):
         with atomic_transaction("user_delete"):
             from models import Sale
 
-            sales_query = Sale.query.filter_by(seller_id=id)
+            sales_query = Sale.query.filter_by(seller_id=record_id)
             if tid is not None:
                 sales_query = sales_query.filter(Sale.tenant_id == tid)
             sales_count = sales_query.count()
@@ -396,10 +396,10 @@ def delete(**kwargs):
             has_sales = sales_count > 0
             if has_sales:
                 user.is_active = False
-                LoggingCore.log_audit("deactivate", "users", id)
+                LoggingCore.log_audit("deactivate", "users", record_id)
             else:
                 db.session.delete(user)
-                LoggingCore.log_audit("delete", "users", id)
+                LoggingCore.log_audit("delete", "users", record_id)
 
         if has_sales:
             flash(

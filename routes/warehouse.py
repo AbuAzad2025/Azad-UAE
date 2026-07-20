@@ -547,7 +547,7 @@ def delete_warehouse(**kwargs):
 
     try:
         with atomic_transaction("warehouse_delete"):
-            has_stock = StockMovement.query.filter_by(warehouse_id=id).first()
+            has_stock = StockMovement.query.filter_by(warehouse_id=record_id).first()
             if has_stock:
                 warehouse.is_active = False
             else:

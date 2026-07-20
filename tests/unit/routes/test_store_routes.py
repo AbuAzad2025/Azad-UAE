@@ -139,7 +139,7 @@ def store_service_mocks():
         patch("routes.store.ShopCustomerAccount.query", customer_query),
         patch("routes.store.TenantStore.query", tenant_store_query),
         patch("routes.store.render_template", return_value="ok"),
-        patch("routes.store.db.session"),
+        patch("extensions.db.session"),
         patch(
             "routes.store.save_uploaded_file",
             return_value="uploads/store_logos/logo.png",
@@ -481,7 +481,7 @@ class TestStoreAdminCoupons:
                 "routes.store.StoreCouponService.create_coupon",
                 side_effect=RuntimeError("db fail"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post(
                 "/store/admin/coupons",
@@ -531,10 +531,10 @@ class TestStoreSettingsExtended:
     def test_settings_post_generic_exception(self, store_client, store_service_mocks):
         with (
             patch(
-                "routes.store.db.session.commit",
+                "extensions.db.session.commit",
                 side_effect=RuntimeError("commit fail"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post(
                 "/store/admin/settings",
@@ -567,7 +567,7 @@ class TestStoreTransferExtended:
                 "routes.store.StockService.transfer_stock",
                 side_effect=RuntimeError("xfer fail"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post(
                 "/store/admin/transfer",
@@ -588,7 +588,7 @@ class TestStoreOrdersExtended:
                 "routes.store.StoreOrderService.confirm_order",
                 side_effect=RuntimeError("confirm fail"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post("/store/admin/orders/100/confirm")
         assert resp.status_code in (302, 303)
@@ -599,7 +599,7 @@ class TestStoreOrdersExtended:
                 "routes.store.StoreOrderService.cancel_order",
                 side_effect=RuntimeError("cancel fail"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post("/store/admin/orders/100/cancel")
         assert resp.status_code in (302, 303)
@@ -610,7 +610,7 @@ class TestStoreOrdersExtended:
                 "routes.store.StoreOrderService.cancel_order",
                 side_effect=ValueError("cannot cancel"),
             ),
-            patch("routes.store.db.session.rollback"),
+            patch("extensions.db.session.rollback"),
         ):
             resp = store_client.post("/store/admin/orders/100/cancel")
         assert resp.status_code in (302, 303)

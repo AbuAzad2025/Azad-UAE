@@ -455,7 +455,7 @@ def purchase_return(**kwargs):
 
         if not lines_data:
             flash(gettext("❌ يجب تحديد منتج واحد على الأقل للإرجاع"), "danger")
-            return redirect(url_for("purchases.purchase_return", id=id))
+            return redirect(url_for("purchases.purchase_return", id=record_id))
 
         try:
             with atomic_transaction("purchase_return"):
@@ -472,7 +472,7 @@ def purchase_return(**kwargs):
                 ),
                 "success",
             )
-            return redirect(url_for("purchases.view", id=id))
+            return redirect(url_for("purchases.view", id=record_id))
         except ValueError as e:
             flash(f"❌ {str(e)}", "danger")
         except Exception as e:

@@ -131,6 +131,10 @@ def app_factory():
         _app.config.from_object(TestConfig)
         if config_overrides:
             _app.config.update(config_overrides)
+        from extensions import db, babel, get_locale
+
+        db.init_app(_app)
+        babel.init_app(_app, locale_selector=get_locale)
         from flask_login import current_user
 
         _app.jinja_env.globals["current_user"] = current_user

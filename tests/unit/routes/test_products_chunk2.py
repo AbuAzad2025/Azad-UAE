@@ -443,7 +443,7 @@ class TestOnlineWarehouseIsolation:
         )
         mocker.patch(
             "routes.products.StockService.get_product_stock",
-            side_effect=lambda pid, warehouse_id=None, usr=None: {
+            side_effect=lambda pid, warehouse_id=None, user=None: {
                 201: Decimal("5"),
                 101: Decimal("105"),
             }.get(warehouse_id, Decimal("0")),

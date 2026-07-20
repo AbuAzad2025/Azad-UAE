@@ -853,6 +853,7 @@ def reports():
         .all()
     )
     purchases = [t for t in all_transactions if t.transaction_type == "purchase"]
+    donations = [t for t in all_transactions if t.transaction_type == "donation"]
 
     summary = {
         "total_revenue": sum(float(t.amount_usd or 0) for t in all_transactions),
@@ -930,9 +931,11 @@ def cards():
     card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
 
     total_cards = len(card_list)
-    total_amount = sum(float(c.amount or 0) for c in cards if c.status == "completed")
-    visa_count = sum(1 for c in cards if c.card_type == "Visa")
-    mastercard_count = sum(1 for c in cards if c.card_type == "Mastercard")
+    total_amount = sum(
+        float(c.amount or 0) for c in card_list if c.status == "completed"
+    )
+    visa_count = sum(1 for c in card_list if c.card_type == "Visa")
+    mastercard_count = sum(1 for c in card_list if c.card_type == "Mastercard")
 
     return render_template(
         "payment_vault/cards.html",
@@ -1577,7 +1580,7 @@ def activate_purchase(**kwargs):
     except Exception as e:
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
-    return redirect(url_for("payment_vault.purchase_detail", id=id))
+    return redirect(url_for("payment_vault.purchase_detail", id=record_id))
 
 
 @payment_vault_bp.route("/api/package-stats/<int:package_id>")
