@@ -48,3 +48,7 @@
 - GL debit/credit posting.
 - Stock movement and warehouse cost logic.
 - Public donation/package payment ownership.
+
+## Git Workflow
+- Owner works **directly on `main`** — no feature branches, no PR ceremony.
+- Commit in logical, reviewable units (conventional-commit style) and push to `origin/main`.
