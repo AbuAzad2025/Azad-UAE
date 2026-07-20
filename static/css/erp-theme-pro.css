@@ -1,0 +1,690 @@
+/**
+ * ============================================================================
+ * AZAD ERP — Professional Polish Layer (erp-theme-pro.css)
+ * Additive refinement layer loaded AFTER erp-theme.css.
+ * 100% token-aware: every color/shadow/radius comes from the active
+ * --az-* theme tokens, so it automatically follows all 4 variants
+ * (Palestinian/Gulf × Light/Dark) without a single hard-coded theme color.
+ * Nothing here removes or restructures existing rules — it only elevates.
+ * ============================================================================
+ */
+
+/* ───────────────────────── 1. GLOBAL REFINEMENT ───────────────────────── */
+
+::selection {
+	background: var(--az-primary);
+	color: var(--az-on-primary);
+}
+
+/* Accessible, consistent keyboard focus everywhere */
+:focus-visible {
+	outline: 2px solid var(--az-primary);
+	outline-offset: 2px;
+	border-radius: var(--az-radius-sm);
+}
+
+/* Financial/numeric data must align like a ledger — tabular figures */
+.table td,
+.stat-value,
+.erp-exchange-value,
+.total-box,
+.summary-card,
+.amount-box,
+.amount-display,
+.num,
+.money {
+	font-variant-numeric: tabular-nums lining-nums;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid var(--az-border);
+	margin: var(--az-space-4) 0;
+	opacity: 1;
+}
+
+kbd {
+	background: var(--az-surface-2);
+	border: 1px solid var(--az-border);
+	border-bottom-width: 2px;
+	border-radius: 6px;
+	padding: 2px 7px;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--az-text);
+	box-shadow: var(--az-shadow-sm);
+}
+
+code {
+	background: var(--az-surface-2);
+	border: 1px solid var(--az-border);
+	border-radius: 6px;
+	padding: 2px 8px;
+	font-size: 0.85em;
+	color: var(--az-accent);
+}
+
+blockquote {
+	border-inline-start: 4px solid var(--az-primary);
+	background: var(--az-surface-2);
+	border-radius: 0 var(--az-radius-sm) var(--az-radius-sm) 0;
+	padding: var(--az-space-3) var(--az-space-4);
+	color: var(--az-text-muted);
+	font-style: normal;
+}
+
+/* Thin themed scrollbars across the whole app */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--az-primary) transparent;
+}
+*::-webkit-scrollbar {
+	width: 9px;
+	height: 9px;
+}
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+	background: color-mix(in srgb, var(--az-primary) 55%, transparent);
+	border-radius: var(--az-radius-pill);
+	border: 2px solid transparent;
+	background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--az-primary);
+	background-clip: content-box;
+	border: 2px solid transparent;
+}
+
+/* ─────────────────────── 2. PAGE HEADER / BREADCRUMB ──────────────────── */
+
+.content-header {
+	padding: var(--az-space-4) var(--az-space-4) var(--az-space-2);
+}
+.content-header h1 {
+	font-size: var(--az-font-size-xl);
+	font-weight: 800;
+	letter-spacing: 0.01rem;
+	color: var(--az-text);
+}
+
+.breadcrumb {
+	background: transparent;
+	padding: 0;
+	margin: 0;
+	font-size: var(--az-font-size-sm);
+}
+.breadcrumb-item {
+	font-weight: 600;
+	color: var(--az-text-muted);
+}
+.breadcrumb-item a {
+	color: var(--az-primary);
+	text-decoration: none;
+	transition: opacity 0.15s ease;
+}
+.breadcrumb-item a:hover {
+	opacity: 0.8;
+	text-decoration: underline;
+}
+.breadcrumb-item.active {
+	color: var(--az-text-muted);
+}
+.breadcrumb-item + .breadcrumb-item::before {
+	color: var(--az-border);
+	font-weight: 700;
+}
+
+/* ───────────────────────────── 3. CARDS ───────────────────────────────── */
+
+.card {
+	border-top: 3px solid transparent;
+	background-clip: padding-box;
+}
+/* Colored outline cards keep their accent strip */
+.card.card-primary {
+	border-top-color: var(--az-primary);
+}
+.card.card-success {
+	border-top-color: var(--az-success);
+}
+.card.card-danger {
+	border-top-color: var(--az-danger);
+}
+.card.card-warning {
+	border-top-color: var(--az-warning);
+}
+.card.card-info {
+	border-top-color: var(--az-info);
+}
+
+.card-header .card-tools .btn {
+	min-height: 32px;
+}
+
+/* Card footer consistency */
+.card-footer {
+	background: var(--az-surface-2);
+	border-top: 1px solid var(--az-border);
+	border-radius: 0 0 var(--az-radius-md) var(--az-radius-md) !important;
+}
+
+/* ──────────────────────── 4. DASHBOARD WIDGETS ────────────────────────── */
+/* AdminLTE small-box / info-box brought into the token system */
+
+.small-box {
+	border-radius: var(--az-radius-md);
+	box-shadow: var(--az-shadow);
+	position: relative;
+	overflow: hidden;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+}
+.small-box:hover {
+	transform: translateY(-3px);
+	box-shadow: var(--az-shadow-md);
+}
+.small-box > .inner {
+	padding: var(--az-space-4) var(--az-space-5);
+}
+.small-box h3 {
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+.small-box .icon {
+	opacity: 0.28;
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
+}
+.small-box:hover .icon {
+	opacity: 0.4;
+	transform: scale(1.06);
+}
+.small-box > .small-box-footer {
+	background: rgba(0, 0, 0, 0.12);
+	padding: 6px 0;
+	font-weight: 700;
+	backdrop-filter: blur(2px);
+}
+
+.info-box {
+	border-radius: var(--az-radius-md);
+	box-shadow: var(--az-shadow);
+	background: var(--az-surface);
+	border: 1px solid var(--az-border);
+	min-height: 84px;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+}
+.info-box:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--az-shadow-md);
+}
+.info-box .info-box-icon {
+	border-radius: var(--az-radius-md) 0 0 var(--az-radius-md);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.info-box .info-box-content {
+	padding: var(--az-space-3) var(--az-space-4);
+}
+.info-box .info-box-number {
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ──────────────────────────── 5. BUTTONS ──────────────────────────────── */
+
+.btn {
+	letter-spacing: 0.01rem;
+	position: relative;
+}
+.btn:hover {
+	transform: translateY(-1px);
+}
+.btn:active {
+	transform: translateY(0) scale(0.98);
+}
+
+.btn:disabled,
+.btn.disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	transform: none !important;
+	box-shadow: none !important;
+}
+
+/* Token-driven variants so dark/gulf modes stay correct */
+.btn-success {
+	background: linear-gradient(
+		135deg,
+		var(--az-success) 0%,
+		color-mix(in srgb, var(--az-success) 72%, #000) 100%
+	) !important;
+	border: none !important;
+	color: #ffffff !important;
+}
+.btn-danger {
+	background: linear-gradient(
+		135deg,
+		var(--az-danger) 0%,
+		color-mix(in srgb, var(--az-danger) 72%, #000) 100%
+	) !important;
+	border: none !important;
+	color: #ffffff !important;
+}
+.btn-warning {
+	background: linear-gradient(
+		135deg,
+		var(--az-warning) 0%,
+		color-mix(in srgb, var(--az-warning) 72%, #000) 100%
+	) !important;
+	border: none !important;
+	color: #ffffff !important;
+}
+.btn-info {
+	background: linear-gradient(
+		135deg,
+		var(--az-info) 0%,
+		color-mix(in srgb, var(--az-info) 72%, #000) 100%
+	) !important;
+	border: none !important;
+	color: #ffffff !important;
+}
+
+/* Button loading state (add .is-loading + keep label) */
+.btn.is-loading {
+	pointer-events: none;
+	opacity: 0.75;
+}
+.btn.is-loading::after {
+	content: "";
+	width: 1em;
+	height: 1em;
+	margin-inline-start: 0.5em;
+	border: 2px solid currentColor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	display: inline-block;
+	vertical-align: -0.15em;
+	animation: az-pro-spin 0.7s linear infinite;
+}
+@keyframes az-pro-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* ───────────────────────────── 6. TABLES ──────────────────────────────── */
+
+/* Sticky header for long ledgers — opt-in via .table-sticky */
+.table-sticky thead th {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	background: var(--az-surface-2);
+	box-shadow: 0 2px 0 var(--az-border);
+}
+
+/* Dense mode for data-heavy screens — opt-in via .table-dense */
+.table-dense th,
+.table-dense td {
+	padding: 0.45rem 0.6rem;
+	font-size: var(--az-font-size-sm);
+}
+
+/* Numeric columns — opt-in via .col-num on th/td */
+.col-num {
+	text-align: end !important;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
+	white-space: nowrap;
+}
+
+/* Token-aware striped + hover (follows dark mode automatically) */
+.table-striped tbody tr:nth-of-type(odd) {
+	background: color-mix(in srgb, var(--az-surface-2) 55%, transparent);
+}
+.table-hover tbody tr:hover,
+.table tbody tr:hover {
+	background: color-mix(in srgb, var(--az-primary) 7%, transparent) !important;
+}
+
+/* Row selected state */
+.table tbody tr.row-selected {
+	background: color-mix(in srgb, var(--az-primary) 14%, transparent) !important;
+	box-shadow: inset 3px 0 0 var(--az-primary);
+}
+
+/* ───────────────────────────── 7. FORMS ───────────────────────────────── */
+
+label,
+.col-form-label {
+	font-weight: 700;
+	font-size: var(--az-font-size-sm);
+	color: var(--az-text);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+	background: var(--az-surface-2);
+	opacity: 0.75;
+}
+
+/* Validation states aligned to tokens */
+.form-control.is-valid,
+.was-validated .form-control:valid {
+	border-color: var(--az-success) !important;
+}
+.form-control.is-valid:focus,
+.was-validated .form-control:valid:focus {
+	box-shadow: 0 0 0 0.22rem
+		color-mix(in srgb, var(--az-success) 22%, transparent) !important;
+}
+.form-control.is-invalid,
+.was-validated .form-control:invalid {
+	border-color: var(--az-danger) !important;
+}
+.form-control.is-invalid:focus,
+.was-validated .form-control:invalid:focus {
+	box-shadow: 0 0 0 0.22rem
+		color-mix(in srgb, var(--az-danger) 22%, transparent) !important;
+}
+.valid-feedback {
+	color: var(--az-success);
+	font-weight: 600;
+}
+.invalid-feedback {
+	color: var(--az-danger);
+	font-weight: 600;
+}
+
+.input-group-text {
+	background: var(--az-surface-2);
+	border-color: var(--az-border);
+	color: var(--az-text-muted);
+	font-weight: 700;
+}
+
+/* ───────────────────────────── 8. MODALS ──────────────────────────────── */
+
+.modal-content {
+	border-radius: var(--az-radius-lg);
+	border: 1px solid var(--az-border);
+	background: var(--az-surface);
+	color: var(--az-text);
+	box-shadow: var(--az-shadow-lg);
+	overflow: hidden;
+}
+.modal-header {
+	background: var(--az-surface-2);
+	border-bottom: 1px solid var(--az-border);
+	padding: var(--az-space-4) var(--az-space-5);
+}
+.modal-title {
+	font-weight: 800;
+	font-size: var(--az-font-size-lg);
+}
+.modal-header .close {
+	color: var(--az-text);
+	opacity: 0.6;
+	text-shadow: none;
+	transition: opacity 0.15s ease;
+}
+.modal-header .close:hover {
+	opacity: 1;
+}
+.modal-body {
+	padding: var(--az-space-5);
+}
+.modal-footer {
+	background: var(--az-surface-2);
+	border-top: 1px solid var(--az-border);
+	padding: var(--az-space-3) var(--az-space-5);
+}
+.modal-backdrop.show {
+	opacity: 0.55;
+	backdrop-filter: blur(3px);
+}
+
+/* ────────────────────────── 9. DROPDOWN MENUS ─────────────────────────── */
+
+.dropdown-menu {
+	border-radius: var(--az-radius-md);
+	border: 1px solid var(--az-border);
+	background: var(--az-surface);
+	box-shadow: var(--az-shadow-md);
+	padding: 6px;
+	animation: az-pro-drop 0.16s ease;
+}
+@keyframes az-pro-drop {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.dropdown-divider {
+	border-top-color: var(--az-border);
+	margin: 4px 8px;
+}
+
+/* ─────────────────────── 10. BADGES — SOFT VARIANTS ───────────────────── */
+/* Soft professional badges (opt-in: .badge-soft-*) */
+
+.badge-soft-success {
+	background: color-mix(in srgb, var(--az-success) 14%, transparent);
+	color: var(--az-success);
+	border: 1px solid color-mix(in srgb, var(--az-success) 30%, transparent);
+}
+.badge-soft-danger {
+	background: color-mix(in srgb, var(--az-danger) 14%, transparent);
+	color: var(--az-danger);
+	border: 1px solid color-mix(in srgb, var(--az-danger) 30%, transparent);
+}
+.badge-soft-warning {
+	background: color-mix(in srgb, var(--az-warning) 16%, transparent);
+	color: var(--az-warning);
+	border: 1px solid color-mix(in srgb, var(--az-warning) 32%, transparent);
+}
+.badge-soft-info {
+	background: color-mix(in srgb, var(--az-info) 14%, transparent);
+	color: var(--az-info);
+	border: 1px solid color-mix(in srgb, var(--az-info) 30%, transparent);
+}
+.badge-soft-primary {
+	background: color-mix(in srgb, var(--az-primary) 14%, transparent);
+	color: var(--az-primary);
+	border: 1px solid color-mix(in srgb, var(--az-primary) 30%, transparent);
+}
+
+/* ───────────────────── 11. EMPTY STATES & SKELETONS ───────────────────── */
+
+.erp-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: var(--az-space-12) var(--az-space-6);
+	color: var(--az-text-muted);
+}
+.erp-empty-state i {
+	font-size: 3rem;
+	opacity: 0.35;
+	margin-bottom: var(--az-space-4);
+}
+.erp-empty-state .empty-title {
+	font-weight: 800;
+	font-size: var(--az-font-size-lg);
+	color: var(--az-text);
+	margin-bottom: var(--az-space-2);
+}
+.erp-empty-state .empty-hint {
+	font-size: var(--az-font-size-sm);
+	max-width: 420px;
+}
+
+/* Skeleton shimmer for loading blocks (add .skeleton to any element) */
+.skeleton {
+	position: relative;
+	overflow: hidden;
+	background: var(--az-surface-2);
+	border-radius: var(--az-radius-sm);
+	min-height: 1em;
+	color: transparent !important;
+	pointer-events: none;
+}
+.skeleton::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--az-surface) 75%, transparent) 50%,
+		transparent 100%
+	);
+	animation: az-pro-shimmer 1.4s infinite;
+	transform: translateX(-100%);
+}
+@keyframes az-pro-shimmer {
+	to {
+		transform: translateX(100%);
+	}
+}
+
+/* ───────────────────── 12. TABS / NAV-PILLS REFINEMENT ────────────────── */
+
+.nav-tabs {
+	border-bottom-color: var(--az-border);
+}
+.nav-tabs .nav-link {
+	color: var(--az-text-muted);
+	font-weight: 700;
+	border: none;
+	border-bottom: 3px solid transparent;
+	border-radius: 0;
+	padding: 10px 18px;
+	transition:
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+.nav-tabs .nav-link:hover {
+	color: var(--az-primary);
+	border-bottom-color: color-mix(in srgb, var(--az-primary) 40%, transparent);
+}
+.nav-tabs .nav-link.active {
+	color: var(--az-primary);
+	background: transparent;
+	border-bottom-color: var(--az-primary);
+}
+
+.nav-pills .nav-link {
+	border-radius: var(--az-radius-sm);
+	font-weight: 700;
+	color: var(--az-text-muted);
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+.nav-pills .nav-link.active {
+	background: linear-gradient(
+		135deg,
+		var(--az-primary) 0%,
+		var(--az-primary-2) 100%
+	);
+	color: var(--az-on-primary);
+	box-shadow: var(--az-shadow-sm);
+}
+
+/* ───────────────────────── 13. MISC PRO TOUCHES ───────────────────────── */
+
+/* Progress bars */
+.progress {
+	background: var(--az-surface-2);
+	border-radius: var(--az-radius-pill);
+	height: 0.6rem;
+	overflow: hidden;
+}
+.progress-bar {
+	background: linear-gradient(
+		135deg,
+		var(--az-primary) 0%,
+		var(--az-primary-2) 100%
+	);
+	border-radius: var(--az-radius-pill);
+}
+
+/* Toastr / SweetAlert alignment with the theme */
+.swal2-popup {
+	border-radius: var(--az-radius-lg) !important;
+	background: var(--az-surface) !important;
+	color: var(--az-text) !important;
+	box-shadow: var(--az-shadow-lg) !important;
+}
+.swal2-title {
+	color: var(--az-text) !important;
+	font-weight: 800 !important;
+}
+.swal2-html-container {
+	color: var(--az-text-muted) !important;
+}
+
+/* List groups */
+.list-group-item {
+	background: var(--az-surface);
+	border-color: var(--az-border);
+	color: var(--az-text);
+	transition: background 0.15s ease;
+}
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+	background: var(--az-surface-2);
+	color: var(--az-text);
+}
+.list-group-item.active {
+	background: var(--az-primary);
+	border-color: var(--az-primary);
+	color: var(--az-on-primary);
+}
+
+/* Timeline (AdminLTE) */
+.timeline::before {
+	background: var(--az-border);
+}
+.timeline > .time-label > span {
+	border-radius: var(--az-radius-pill);
+	font-weight: 700;
+}
+
+/* Subtle page entrance for content */
+.content-wrapper > .content {
+	animation: az-pro-fadein 0.25s ease;
+}
+@keyframes az-pro-fadein {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.content-wrapper > .content,
+	.dropdown-menu {
+		animation: none !important;
+	}
+	.skeleton::after {
+		animation: none !important;
+	}
+}
